@@ -8,7 +8,8 @@
 
 import os
 import subprocess
-import pytest  # type: ignore[import]
+
+import pytest
 
 
 def test_01_python_interpreter_exists(site):
@@ -24,7 +25,7 @@ def test_02_python_interpreter_path(site):
 def test_03_python_interpreter_version(site):
     p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("Python 3.8.6")
+    assert version.startswith("Python 3.8.11")
 
 
 def test_03_python_path(site):
@@ -53,45 +54,51 @@ def test_02_pip_path(site):
 def test_03_pip_interpreter_version(site):
     p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("pip 20.2.1")
+    assert version.startswith("pip 21.1.1")
 
 
 # TODO: Improve this test to automatically adapt the expected modules from our Pipfile
-@pytest.mark.parametrize("module_name", [
-    "netsnmp",
-    "ldap",
-    "OpenSSL",
-    "cryptography",
-    "pysmi",
-    "pysnmp",
-    "ldap",
-    "pymysql",
-    "psycopg2",
-    "dicttoxml",
-    "enum",
-    "PIL",
-    "reportlab",
-    "PyPDF2",
-    "psutil",
-    "ipaddress",
-    "requests",
-    "paramiko",
-    "pyghmi",
-    "typing",
-    "dateutil",
-    "snap7",
-    "rrdtool",
-    "werkzeug",
-    "boto3",
-    "kubernetes",
-    "numpy",
-])
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        "netsnmp",
+        "ldap",
+        "OpenSSL",
+        "cryptography",
+        "pysmi",
+        "pysnmp",
+        "ldap",
+        "pymysql",
+        "psycopg2",
+        "dicttoxml",
+        "enum",
+        "PIL",
+        "reportlab",
+        "PyPDF2",
+        "psutil",
+        "ipaddress",
+        "requests",
+        "paramiko",
+        "pyghmi",
+        "typing",
+        "dateutil",
+        "snap7",
+        "rrdtool",
+        "werkzeug",
+        "boto3",
+        "kubernetes",
+        "numpy",
+        "google.protobuf",
+    ],
+)
 def test_python_modules(site, module_name):
     import importlib  # pylint: disable=import-outside-toplevel
+
     module = importlib.import_module(module_name)
     assert module.__file__.startswith(site.root)
 
 
 def test_python_preferred_encoding():
     import locale  # pylint: disable=import-outside-toplevel
+
     assert locale.getpreferredencoding() == "UTF-8"

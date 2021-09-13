@@ -5,15 +5,14 @@
 
 #include "TableEventConsoleStatus.h"
 
-#include <cstdint>
 #include <vector>
 
 #include "Column.h"
-#include "DoubleLambdaColumn.h"
+#include "DoubleColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
-#include "StringLambdaColumn.h"
-#include "TimeLambdaColumn.h"
+#include "StringColumn.h"
+#include "TimeColumn.h"
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
     : TableEventConsole(mc) {
@@ -128,3 +127,5 @@ std::string TableEventConsoleStatus::name() const {
 std::string TableEventConsoleStatus::namePrefix() const {
     return "eventconsolestatus_";
 }
+
+Row TableEventConsoleStatus::getDefault() const { return Row{this}; }

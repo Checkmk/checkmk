@@ -9,5 +9,5 @@ description:
 
  This check requires the special agent configurable through "Nutanix Prism".
 
-inventory:
+discovery:
  One service is created if the configured server can be reached.

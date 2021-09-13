@@ -6,32 +6,37 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.df_section import parse_df
+
 checkname = 'df'
 
-info = [
+parsed = parse_df([
     ['C:\\\\', 'NTFS', '62553084', '16898384', '45654700', '28%', 'C:\\\\'],
     ['SQL_Database_[GROUPME]', 'NTFS', '10450940', '2932348', '7518592', '29%', 'D:\\\\'],
     ['Scratch_Volume_[GROUPME]', 'NTFS', '5208060', '791864', '4416196', '16%', 'E:\\\\'],
-]
+])
 
 discovery = {
     '': [
         (
             'C:\\\\ C://',
             {
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'SQL_Database_[GROUPME] D://',
             {
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'Scratch_Volume_[GROUPME] E://',
             {
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
     ],
@@ -51,7 +56,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [
                 (
@@ -77,7 +82,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [
                 (
@@ -103,7 +108,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [
                 (
@@ -120,6 +125,14 @@ checks = {
     ],
 }
 
-mock_host_conf = {'': [[('myGroup', 'GROUPME')]]}  # old-style rule spec
+mock_host_conf = {
+    '': [{
+        "groups": [{
+            'group_name': 'myGroup',
+            'patterns_include': ['GROUPME'],
+            'patterns_exclude': []
+        }]
+    }]
+}  # new-style rule spec, old ones are always transformed now
 
-mock_host_conf_merged = {'': {'include_volume_name': True}}
+mock_host_conf_merged = {'': {"item_appearance": "volume_name_and_mountpoint",}}

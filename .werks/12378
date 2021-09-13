@@ -1,0 +1,19 @@
+Title: HW/SW Inventory: Do not show inventory tree of same-named hosts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615462819
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+It's possible to have same-named hosts on different, connected sites. If the
+HW/SW Inventory is enabled on these hosts then the link to a host's inventory
+tree view displays the trees of all same-named hosts on the same page.
+
+In general it's not possible to display any of these inventory trees because
+it's undecidable which inventory tree data belongs to which host: the host
+inventory tree data was created locally or synced (eg. via liveproxyd). In this
+case the data of the local host might have been overwritten by the remote one
+(or the other way round).

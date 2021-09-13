@@ -6,6 +6,6 @@ distribution: check_mk
 description:
  This check displays general information (name and mode) of a FortiGate High-Availability cluster
 
-inventory:
+discovery:
  One service is created.
 

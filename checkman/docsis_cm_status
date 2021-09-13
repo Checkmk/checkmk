@@ -11,6 +11,6 @@ description:
 item:
  ID like reported in SNMP Output. Based on the Maclayer
 
-inventory:
+discovery:
  One service is created for each ID.
 

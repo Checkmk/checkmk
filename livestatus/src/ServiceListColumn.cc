@@ -8,8 +8,9 @@
 #include <algorithm>
 #include <iterator>
 
-#include "Renderer.h"
+#include "MonitoringCore.h"
 #include "Row.h"
+#include "auth.h"
 
 #ifdef CMC
 #include <memory>
@@ -23,52 +24,62 @@
 #else
 #include <unordered_map>
 
-#include "MonitoringCore.h"
 #include "TimeperiodsCache.h"
-#include "auth.h"
 #endif
 
-void ServiceListColumn::output(Row row, RowRenderer &r,
-                               const contact *auth_user,
-                               std::chrono::seconds /*timezone_offset*/) const {
-    ListRenderer l(r);
-    for (const auto &entry : getEntries(row, auth_user)) {
-        if (_info_depth == 0) {
+void ServiceListRenderer::output(
+    ListRenderer &l, const detail::service_list::Entry &entry) const {
+    switch (verbosity_) {
+        case verbosity::none:
             l.output(std::string(entry.description));
-        } else {
+            break;
+        case verbosity::low: {
             SublistRenderer s(l);
             s.output(entry.description);
-            if (_info_depth >= 1) {
-                s.output(static_cast<int>(entry.current_state));
-                s.output(static_cast<int>(entry.has_been_checked));
-            }
-            if (_info_depth >= 2) {
-                s.output(entry.plugin_output);
-            }
-            if (_info_depth >= 3) {
-                s.output(static_cast<int>(entry.last_hard_state));
-                s.output(entry.current_attempt);
-                s.output(entry.max_check_attempts);
-                s.output(entry.scheduled_downtime_depth);
-                s.output(static_cast<int>(entry.acknowledged));
-                s.output(static_cast<int>(entry.service_period_active));
-            }
+            s.output(static_cast<int>(entry.current_state));
+            s.output(static_cast<int>(entry.has_been_checked));
+            break;
+        }
+        case verbosity::medium: {
+            SublistRenderer s(l);
+            s.output(entry.description);
+            s.output(static_cast<int>(entry.current_state));
+            s.output(static_cast<int>(entry.has_been_checked));
+            s.output(entry.plugin_output);
+            break;
+        }
+        case verbosity::full: {
+            SublistRenderer s(l);
+            s.output(entry.description);
+            s.output(static_cast<int>(entry.current_state));
+            s.output(static_cast<int>(entry.has_been_checked));
+            s.output(entry.plugin_output);
+            s.output(static_cast<int>(entry.last_hard_state));
+            s.output(entry.current_attempt);
+            s.output(entry.max_check_attempts);
+            s.output(entry.scheduled_downtime_depth);
+            s.output(static_cast<int>(entry.acknowledged));
+            s.output(static_cast<int>(entry.service_period_active));
+            break;
         }
     }
 }
 
+/// \sa Apart from the lambda, the code is the same in
+///    * ServiceGroupMembersColumn::getValue()
+///    * ServiceListColumn::getValue()
 std::vector<std::string> ServiceListColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
-    auto entries = getEntries(row, auth_user);
-    std::vector<std::string> descriptions;
-    std::transform(entries.begin(), entries.end(),
-                   std::back_inserter(descriptions),
+    auto entries = getRawValue(row, auth_user);
+    std::vector<std::string> values;
+    std::transform(entries.begin(), entries.end(), std::back_inserter(values),
                    [](const auto &entry) { return entry.description; });
-    return descriptions;
+    return values;
 }
 
 #ifndef CMC
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
 
 namespace {
@@ -84,14 +95,14 @@ bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
 }  // namespace
 #endif
 
-std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
+std::vector<ServiceListColumn::Entry> ServiceListColumn::getRawValue(
     Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
-    (void)_mc;  // HACK
     if (const auto *mem = columnData<Host::services_t>(row)) {
         for (const auto &svc : *mem) {
-            if (auth_user == nullptr || svc->hasContact(auth_user)) {
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
+                                      svc.get())) {
                 entries.emplace_back(
                     svc->name(),
                     static_cast<ServiceState>(svc->state()->_current_state),
@@ -100,8 +111,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
                     static_cast<ServiceState>(svc->state()->_last_hard_state),
                     svc->state()->_current_attempt, svc->_max_check_attempts,
                     svc->state()->_scheduled_downtime_depth,
-                    svc->state()->_acknowledged,
-                    svc->_service_period->isActive());
+                    svc->acknowledged(), svc->_service_period->isActive());
             }
         }
     }
@@ -109,8 +119,8 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     if (const auto *const p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (auth_user == nullptr ||
-                is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
+                                      svc)) {
                 entries.emplace_back(
                     svc->description,
                     static_cast<ServiceState>(svc->current_state),
@@ -122,7 +132,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
                     svc->current_attempt, svc->max_attempts,
                     svc->scheduled_downtime_depth,
                     svc->problem_has_been_acknowledged != 0,
-                    inCustomTimeperiod(_mc, svc));
+                    inCustomTimeperiod(mc_, svc));
             }
         }
     }

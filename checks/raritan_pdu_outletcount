@@ -12,22 +12,23 @@ def inventory_raritan_pdu_outletcount(info):
 
 def check_raritan_pdu_outletcount(item, params, info):
     try:
-        yield check_levels(int(info[0][0]),
-                           "outletcount",
-                           params,
-                           human_readable_func=lambda f: "%.f" % f)
+        yield check_levels(
+            int(info[0][0]), "outletcount", params, human_readable_func=lambda f: "%.f" % f
+        )
     except IndexError:
         pass
 
 
-check_info['raritan_pdu_outletcount'] = {
-    "inventory_function"  : inventory_raritan_pdu_outletcount,
-    "check_function"      : check_raritan_pdu_outletcount,
-    "service_description" : "Outlet Count",
-    "group"               : "plug_count",
-    "has_perfdata"        : True,
-    "snmp_info"           : (".1.3.6.1.4.1.13742.6.3.2.2.1.4", ["1"]),  # outletCount
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6") and \
-                                      (oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2") or \
-                                      oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX3"))
+check_info["raritan_pdu_outletcount"] = {
+    "inventory_function": inventory_raritan_pdu_outletcount,
+    "check_function": check_raritan_pdu_outletcount,
+    "service_description": "Outlet Count",
+    "group": "plug_count",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.13742.6.3.2.2.1.4", ["1"]),  # outletCount
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6")
+    and (
+        oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2")
+        or oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX3")
+    ),
 }

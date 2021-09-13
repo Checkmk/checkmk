@@ -1,0 +1,16 @@
+Title: SIGNL4, iLert: Process response codes correctly
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1610102165
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+This werk fixes a bug in the processing of notification response
+codes for SIGNL4 and iLert. For example, without this fix, SIGNL4
+notifications failed with
+"Details for Status Code are not defined
+201: Created"
+even though they were actually successful.

@@ -56,7 +56,11 @@ checks = {
                             None, None
                         )
                     ]
-                ), (0, 'Dedup ratio: 15.95', [])
+                ),
+                (
+                    0, 'Dedup ratio: 15.95',
+                    [('dedup_rate', 15.945078260668, None, None, None, None)]
+                )
             ]
         )
     ]

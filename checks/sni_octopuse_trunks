@@ -4,15 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.3.1  "OpenStage 30"
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.3.2  "OpenStage 30"
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.3.7  "P. O. T."
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.3.9  "S0 extension"
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.3.11  "S0 trunk: extern"
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.3.13  "<not configured>: extern"
-#[...]
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.4.11  2
-#.1.3.6.1.4.1.231.7.2.9.3.8.1.4.13  1
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.3.1  "OpenStage 30"
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.3.2  "OpenStage 30"
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.3.7  "P. O. T."
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.3.9  "S0 extension"
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.3.11  "S0 trunk: extern"
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.3.13  "<not configured>: extern"
+# [...]
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.4.11  2
+# .1.3.6.1.4.1.231.7.2.9.3.8.1.4.13  1
 
 
 def inventory_octopus_trunks(info):
@@ -40,17 +40,21 @@ def check_octopus_trunks(item, _no_params, info):
 
     return (3, "UNKW - unknown data received from agent")
 
-check_info['sni_octopuse_trunks'] = {
-    'check_function'     : check_octopus_trunks,
-    'inventory_function' : inventory_octopus_trunks,
-    'service_description': "Trunk Port %s",
-    'snmp_scan_function' : lambda oid: "agent for hipath" in \
-                                  oid(".1.3.6.1.2.1.1.1.0").lower(),
-    'snmp_info'          : [ (".1.3.6.1.4.1.231.7.2.9.3.8.1", [
-                                 "1", # portIndex
-                                 "2", # port card index (slot)
-                                 "3", # PortType
-                                 "4", # Port State
-                                 ]),
-                            ]
+
+check_info["sni_octopuse_trunks"] = {
+    "check_function": check_octopus_trunks,
+    "inventory_function": inventory_octopus_trunks,
+    "service_description": "Trunk Port %s",
+    "snmp_scan_function": lambda oid: "agent for hipath" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.231.7.2.9.3.8.1",
+            [
+                "1",  # portIndex
+                "2",  # port card index (slot)
+                "3",  # PortType
+                "4",  # Port State
+            ],
+        ),
+    ],
 }

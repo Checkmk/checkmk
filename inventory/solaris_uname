@@ -18,6 +18,6 @@ def inv_solaris_uname(info):
     node["hostname"] = solaris_uname["Node"]
 
 
-inv_info['solaris_uname'] = {
+inv_info["solaris_uname"] = {
     "inv_function": inv_solaris_uname,
 }

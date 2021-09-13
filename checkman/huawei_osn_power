@@ -11,5 +11,5 @@ description:
 item:
  The slot ID of the Piu Board ({{BID}})
 
-inventory:
+discovery:
  One service is created for each PSU.

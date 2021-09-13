@@ -43,20 +43,21 @@ def parse_aix_hacmp_nodes(info):
         if len(line) == 1:
             parsed[line[0]] = {}
 
-        elif 'NODE' in line[0]:
-            if line[1].replace(':', '') in parsed:
-                node_name = line[1].replace(':', '')
+        elif "NODE" in line[0]:
+            if line[1].replace(":", "") in parsed:
+                node_name = line[1].replace(":", "")
                 get_details = True
             else:
                 get_details = False
 
-        elif 'Interfaces' in line[0] and get_details:
-            network_name = line[3].replace(',', '')
+        elif "Interfaces" in line[0] and get_details:
+            network_name = line[3].replace(",", "")
             parsed[node_name][network_name] = []
 
-        elif 'Communication' in line[0] and get_details:
+        elif "Communication" in line[0] and get_details:
             parsed[node_name][network_name].append(
-                (line[3].replace(',', ''), line[5].replace(',', ''), line[8].replace(',', '')))
+                (line[3].replace(",", ""), line[5].replace(",", ""), line[8].replace(",", ""))
+            )
 
     return parsed
 
@@ -76,9 +77,9 @@ def check_aix_hacmp_nodes(item, _no_params, parsed):
             return 0, infotext
 
 
-check_info['aix_hacmp_nodes'] = {
-    'parse_function': parse_aix_hacmp_nodes,
-    'inventory_function': inventory_aix_hacmp_nodes,
-    'check_function': check_aix_hacmp_nodes,
-    'service_description': 'HACMP Node %s',
+check_info["aix_hacmp_nodes"] = {
+    "parse_function": parse_aix_hacmp_nodes,
+    "inventory_function": inventory_aix_hacmp_nodes,
+    "check_function": check_aix_hacmp_nodes,
+    "service_description": "HACMP Node %s",
 }

@@ -1,0 +1,35 @@
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+])
+
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
+node (NODE) {
+    stage('checkout sources') {
+        checkout(scm)
+        notify = load 'buildscripts/scripts/lib/notify.groovy'
+        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+    }
+}
+
+try {
+    node (NODE) {
+        stage('test cmk-docker integration') {
+            withCredentials([usernameColonPassword(credentialsId: 'cmk-credentials', variable: 'CMK_CREDENTIALS')]) {
+                sh """
+                    mkdir -p /home/jenkins/
+                    echo "${CMK_CREDENTIALS}" > /home/jenkins/.cmk-credentials
+                """
+            }
+            dir ('tests') {
+                sh "bash -c \"make test-docker\""
+            }
+        }
+    }
+} catch(Exception e) {
+    notify.notify_error(e)
+}
+

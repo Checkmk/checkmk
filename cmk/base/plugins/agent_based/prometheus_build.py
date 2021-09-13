@@ -6,13 +6,12 @@
 """Prometheus Build Check"""
 
 import json
-from typing import Dict, Any, Optional
-from .agent_based_api.v1 import Result, register, type_defs, State as state, Service
+from typing import Any, Dict, Optional
 
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Section = Dict[str, Any]
 
@@ -87,7 +86,7 @@ def check_prometheus_build(section: Section) -> CheckResult:
 register.check_plugin(
     name="prometheus_build",
     service_name="Prometheus Build",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_function=discovery_prometheus_build,
     check_function=check_prometheus_build,
 )

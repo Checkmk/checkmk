@@ -7,9 +7,11 @@
 
 #include <cstdlib>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "RegExp.h"
 #include "StringUtils.h"
 
@@ -61,8 +63,6 @@ std::optional<std::string> UserMacroExpander::expand(
     if (mk::starts_with(str, "USER")) {
         int n = atoi(str.substr(4).c_str());
         if (1 <= n && n <= MAX_USER_MACROS) {
-            // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-            extern char *macro_user[MAX_USER_MACROS];
             return from_ptr(macro_user[n - 1]);
         }
     }

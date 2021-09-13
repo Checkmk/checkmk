@@ -1,0 +1,17 @@
+Title: Fixed source attribute of user comments
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1612784785
+Edition: cee
+Knowledge: doc
+Level: 3
+Version: 2.1.0i1
+
+The CMC always reported all comments as coming from an "external" source,
+even acknowledgements.  Nagios considers the latter as "internal", so we do
+the same now for consistency.
+
+There is no impact on Checkmk's GUI, it doesn't use the "source" column from
+the "comments" table.  You can only observe the change directly via
+Livestatus if you use that column, which is highly unlikely.

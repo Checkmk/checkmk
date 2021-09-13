@@ -4,20 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-import socket
 import re
+import socket
+import sys
 
 
 def parse_response(data):
     try:
-        parsed = dict([x.split('=') for x in data.split(";")][:-1])
-        response_type = parsed['type']
+        parsed = dict([x.split("=") for x in data.split(";")][:-1])
+        response_type = parsed["type"]
     except (ValueError, KeyError):
         sys.stdout.write("Invalid data: %s\n" % data)
         sys.exit(3)
 
-    if response_type == '1':
+    if response_type == "1":
         sys.stdout.write("Invalid response: %s\n" % data)
         sys.exit(3)
     return parsed
@@ -35,17 +35,20 @@ def check_job(job, s, sid, street, street_nr, city, regex):
         sendstring = "version:session=" + sid + "\n"
         data = send_and_receive(s, sendstring)
         try:
-            version = data['version_str']
+            version = data["version_str"]
         except KeyError:
-            return 3, 'Unknown version'
+            return 3, "Unknown version"
         return 0, "Version: %s" % version
 
     if job == "ADDRESS":
-        sendstring = "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n" % (
-            sid,
-            street,
-            street_nr,
-            city,
+        sendstring = (
+            "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n"
+            % (
+                sid,
+                street,
+                street_nr,
+                city,
+            )
         )
         _data = send_and_receive(s, sendstring)
 
@@ -53,14 +56,14 @@ def check_job(job, s, sid, street, street_nr, city, regex):
         data = send_and_receive(s, sendstring)
 
         try:
-            city_zip = data['out_zip']
-            city_name = data['out_city']
+            city_zip = data["out_zip"]
+            city_name = data["out_city"]
         except KeyError:
-            return 3, 'Unknown zip or city'
+            return 3, "Unknown zip or city"
 
         state = 0
         infotext = "Address: %s %s" % (city_zip, city_name)
-        if not re.match(regex, data['out_city']):
+        if not re.match(regex, data["out_city"]):
             infotext += " but expects %s" % regex
             state = 2
 
@@ -109,7 +112,7 @@ def main(sys_args=None):
 
     sendstring = "open:service=" + service + ";servicehost=" + host + "\n"
     data = send_and_receive(s, sendstring)
-    sid = data.get('session')
+    sid = data.get("session")
     if not sid:
         return 3, "Error getting SID. Response was: %s\n" % data
 

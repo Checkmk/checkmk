@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -23,11 +27,11 @@ def inventory_dell_om_mem(info):
 
 def check_dell_om_mem(item, _no_params, info):
     failure_modes = {
-        1: 'ECC single bit correction warning rate exceeded',
-        2: 'ECC single bit correction failure rate exceeded',
-        4: 'ECC multibit fault encountered',
-        8: 'ECC single bit correction logging disabled',
-        16: 'device disabled because of spare activation',
+        1: "ECC single bit correction warning rate exceeded",
+        2: "ECC single bit correction failure rate exceeded",
+        4: "ECC multibit fault encountered",
+        8: "ECC single bit correction logging disabled",
+        16: "device disabled because of spare activation",
     }
 
     for location, status, size, failuremode in info:
@@ -62,5 +66,6 @@ check_info["dell_om_mem"] = {
             "5.1",  # Status
             "14.1",  # Size
             "20.1",  # FailureMode
-        ]),
+        ],
+    ),
 }

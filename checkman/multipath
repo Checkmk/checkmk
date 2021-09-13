@@ -24,6 +24,6 @@ item:
  as item instead of the UUID. If the multipath device has an alias the alias will
  be used as item.
 
-inventory:
+discovery:
  One service is created for each multipath device.
 

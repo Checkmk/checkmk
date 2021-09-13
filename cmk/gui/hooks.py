@@ -3,20 +3,20 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import functools
 import sys
 import traceback
-from typing import Any, Callable, Dict, List, NamedTuple, Union
+from typing import Any, Callable, Dict, List, Literal, NamedTuple, Union
 
-import cmk.gui.config as config
 import cmk.gui.i18n
+from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 
-Hook = NamedTuple("Hook", [
-    ("handler", Callable),
-    ("is_builtin", bool),
-])
+
+class Hook(NamedTuple):
+    handler: Callable
+    is_builtin: bool
+
 
 hooks: Dict[str, List[Hook]] = {}
 
@@ -68,7 +68,7 @@ def get(name: str) -> List[Hook]:
 
 
 def registered(name: str) -> bool:
-    """ Returns True if at least one function is registered for the given hook """
+    """Returns True if at least one function is registered for the given hook"""
     return hooks.get(name, []) != []
 
 
@@ -82,6 +82,83 @@ def call(name: str, *args: Any) -> None:
             if config.debug:
                 t, v, tb = sys.exc_info()
                 msg = "".join(traceback.format_exception(t, v, tb, None))
-                html.show_error("<h1>" + _("Error executing hook") + " %s #%d: %s</h1>"
-                                "<pre>%s</pre>" % (name, n, e, msg))
+                html.show_error(
+                    "<h1>" + _("Error executing hook") + " %s #%d: %s</h1>"
+                    "<pre>%s</pre>" % (name, n, e, msg)
+                )
             raise
+
+
+ClearEvent = Literal[
+    "activate-changes",
+    "pre-activate-changes",
+    "all-hosts-changed",
+    "contactgroups-saved",
+    "hosts-changed",
+    "ldap-sync-finished",
+    "request-start",
+    "request-end",
+    "roles-saved",
+    "users-saved",
+]
+
+ClearEvents = Union[List[ClearEvent], ClearEvent]
+
+
+def _scoped_memoize(
+    clear_events: ClearEvents,
+    maxsize: int = 128,
+    typed: bool = False,
+):
+    """A scoped memoization decorator.
+
+    This caches the decorated function with a `functools.lru_cache`, however the cache will be
+    explicitly cleared whenever a
+
+    Args:
+        clear_events:
+            A list of hook events, which shall trigger a clearing of the cache.
+
+        maxsize:
+            As documented in @functools.lru_cache
+
+        typed:
+            As documented in @functools.lru_cache
+
+    Returns:
+        A wrapped function which caches through `functools.lru_cache`, and clears the cache
+        according to `clear_events`.
+
+    Raises:
+        ValueError - When no or unknown clear events are supplied.
+
+    """
+    if isinstance(clear_events, str):
+        clear_events = [clear_events]
+    if not clear_events:
+        raise ValueError(f"No clear-events specified. Use one of: {ClearEvent!r}")
+
+    def _decorator(func):
+        cached_func = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
+        for clear_event in clear_events:
+            register_builtin(clear_event, cached_func.cache_clear)  # hooks.register_builtin
+        return cached_func
+
+    return _decorator
+
+
+def request_memoize(maxsize: int = 128, typed: bool = False):
+    """A cache decorator which only has a scope for one request.
+
+    Args:
+        maxsize:
+            See `functools.lru_cache`
+
+        typed:
+            See `functools.lru_cache`
+
+    Returns:
+        A `_scoped_memoize` decorator which clears on every request-start.
+
+    """
+    return _scoped_memoize(clear_events=["request-end"], maxsize=maxsize, typed=typed)

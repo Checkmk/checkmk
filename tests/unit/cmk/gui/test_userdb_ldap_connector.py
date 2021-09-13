@@ -6,16 +6,17 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Union
 from pathlib import Path
+from typing import Dict, List, Union
 
-import pytest  # type: ignore[import]
-from mockldap import MockLdap, LDAPObject  # type: ignore[import]
+import pytest
+from mockldap import LDAPObject, MockLdap  # type: ignore[import]
+
+import cmk.gui.plugins.userdb.ldap_connector as ldap
+import cmk.gui.plugins.userdb.utils as userdb_utils
 
 # userdb is needed to make the module register the post-config-load-hooks
 import cmk.gui.userdb
-import cmk.gui.plugins.userdb.ldap_connector as ldap
-import cmk.gui.plugins.userdb.utils as userdb_utils
 
 
 def test_connector_info():
@@ -29,22 +30,25 @@ def test_connector_registered():
 
 
 def test_sync_plugins(load_config):
-    assert sorted(ldap.ldap_attribute_plugin_registry.keys()) == sorted([
-        'alias',
-        'auth_expire',
-        'email',
-        'groups_to_attributes',
-        'groups_to_contactgroups',
-        'groups_to_roles',
-        'icons_per_item',
-        'disable_notifications',
-        'force_authuser',
-        'pager',
-        'start_url',
-        'ui_theme',
-        'ui_sidebar_position',
-        'show_mode',
-    ])
+    assert sorted(ldap.ldap_attribute_plugin_registry.keys()) == sorted(
+        [
+            "alias",
+            "auth_expire",
+            "email",
+            "groups_to_attributes",
+            "groups_to_contactgroups",
+            "groups_to_roles",
+            "icons_per_item",
+            "disable_notifications",
+            "force_authuser",
+            "nav_hide_icons_title",
+            "pager",
+            "start_url",
+            "ui_theme",
+            "ui_sidebar_position",
+            "show_mode",
+        ]
+    )
 
 
 def _ldap_tree():
@@ -110,12 +114,14 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=admins,ou=groups,dc=check-mk,dc=org"],
             "cn": ["admins"],
-            "member": ["cn=admin,ou=users,dc=check-mk,dc=org",],
+            "member": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+            ],
         },
-        u"cn=älle,ou=groups,dc=check-mk,dc=org": {
+        "cn=älle,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
             "objectcategory": ["group"],
-            "dn": [u"cn=älle,ou=groups,dc=check-mk,dc=org"],
+            "dn": ["cn=älle,ou=groups,dc=check-mk,dc=org"],
             "cn": ["alle"],
             "member": [
                 "cn=admin,ou=users,dc=check-mk,dc=org",
@@ -137,7 +143,9 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=level1,ou=groups,dc=check-mk,dc=org"],
             "cn": ["level1"],
-            "member": ["cn=level2,ou=groups,dc=check-mk,dc=org",],
+            "member": [
+                "cn=level2,ou=groups,dc=check-mk,dc=org",
+            ],
         },
         "cn=level2,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
@@ -164,7 +172,9 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=loop2,ou=groups,dc=check-mk,dc=org"],
             "cn": ["loop2"],
-            "member": ["cn=loop3,ou=groups,dc=check-mk,dc=org",],
+            "member": [
+                "cn=loop3,ou=groups,dc=check-mk,dc=org",
+            ],
         },
         "cn=loop3,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
@@ -188,14 +198,18 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org"],
             "cn": ["member-out-of-scope"],
-            "member": ["cn=nono,ou=out-of-scope,dc=check-mk,dc=org",],
+            "member": [
+                "cn=nono,ou=out-of-scope,dc=check-mk,dc=org",
+            ],
         },
         "cn=out-of-scope,dc=check-mk,dc=org": {
             "objectclass": ["group"],
             "objectcategory": ["group"],
             "dn": ["cn=out-of-scope,ou=groups,dc=check-mk,dc=org"],
             "cn": ["out-of-scope"],
-            "member": ["cn=admin,ou=users,dc=check-mk,dc=org",],
+            "member": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+            ],
         },
         "cn=selfref,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
@@ -227,8 +241,7 @@ def _ldap_tree():
 def encode_to_byte_strings(inp):
     if isinstance(inp, dict):
         return {
-            encode_to_byte_strings(key): encode_to_byte_strings(value)
-            for key, value in inp.items()
+            encode_to_byte_strings(key): encode_to_byte_strings(value) for key, value in inp.items()
         }
     if isinstance(inp, list):
         return [encode_to_byte_strings(element) for element in inp]
@@ -244,16 +257,20 @@ def user_files():
     profile_dir = Path(cmk.utils.paths.var_dir, "web", "admin")
     profile_dir.mkdir(parents=True, exist_ok=True)
     with (profile_dir / "cached_profile.mk").open("w", encoding="utf-8") as f:
-        f.write(u"%r" % {
-            "alias": u"admin",
-            "connector": "default",
-        })
+        f.write(
+            "%r"
+            % {
+                "alias": "admin",
+                "connector": "default",
+            }
+        )
 
     Path(cmk.utils.paths.htpasswd_file).parent.mkdir(parents=True, exist_ok=True)
     with open(cmk.utils.paths.htpasswd_file, "w") as f:
         f.write(
             "automation:$5$rounds=535000$eDIHah5PgsY2widK$tiVBvDgq0Nwxy5zd/oNFRZ8faTlOPA2T.tx.lTeQoZ1\n"
-            "cmkadmin:Sl94oMGDJB/wQ\n")
+            "cmkadmin:Sl94oMGDJB/wQ\n"
+        )
 
 
 @pytest.fixture()
@@ -266,41 +283,36 @@ def mocked_ldap(monkeypatch):
     monkeypatch.setattr(ldap.LDAPUserConnector, "connect", connect)
     monkeypatch.setattr(ldap.LDAPUserConnector, "disconnect", lambda self: None)
 
-    ldap_connection = ldap.LDAPUserConnector({
-        "id": "default",
-        "type": "ldap",
-        "description": "Test connection",
-        "disabled": False,
-        "cache_livetime": 300,
-        "suffix": "testldap",
-        "active_plugins": {
-            'email': {},
-            'alias': {},
-            'auth_expire': {}
-        },
-        "directory_type": ("ad", {
-            "connect_to": ("fixed_list", {
-                "server": "127.0.0.1"
-            }),
-        }),
-        "bind": ("cn=sync-user,ou=users,dc=check-mk,dc=org", "sync-secret"),
-        "user_id_umlauts": "keep",
-        "user_scope": "sub",
-        "user_dn": "ou=users,dc=check-mk,dc=org",
-        "group_dn": "ou=groups,dc=check-mk,dc=org",
-        "group_scope": "sub",
-    })
+    ldap_connection = ldap.LDAPUserConnector(
+        {
+            "id": "default",
+            "type": "ldap",
+            "description": "Test connection",
+            "disabled": False,
+            "cache_livetime": 300,
+            "suffix": "testldap",
+            "active_plugins": {"email": {}, "alias": {}, "auth_expire": {}},
+            "directory_type": (
+                "ad",
+                {
+                    "connect_to": ("fixed_list", {"server": "127.0.0.1"}),
+                },
+            ),
+            "bind": ("cn=sync-user,ou=users,dc=check-mk,dc=org", ("password", "sync-secret")),
+            "user_id_umlauts": "keep",
+            "user_scope": "sub",
+            "user_dn": "ou=users,dc=check-mk,dc=org",
+            "group_dn": "ou=groups,dc=check-mk,dc=org",
+            "group_scope": "sub",
+        }
+    )
 
     ldap_mock.start()
     ldap_connection._ldap_obj = ldap_mock["ldap://127.0.0.1"]
 
-    def search_ext(self,
-                   base,
-                   scope,
-                   filterstr='(objectclass=*)',
-                   attrlist=None,
-                   attrsonly=0,
-                   serverctrls=None):
+    def search_ext(
+        self, base, scope, filterstr="(objectclass=*)", attrlist=None, attrsonly=0, serverctrls=None
+    ):
 
         # MockLdap does not exactly behave like python ldap library in terms of
         # encoding. The latter want's to have byte encoded strings and MockLdap
@@ -329,18 +341,18 @@ def _check_restored_bind_user(mocked_ldap):
     assert mocked_ldap._ldap_obj.whoami_s() == "dn:cn=sync-user,ou=users,dc=check-mk,dc=org"
 
 
-def test_check_credentials_success(register_builtin_html, mocked_ldap):
-    result = mocked_ldap.check_credentials("admin", "ldap-test")
+def test_check_credentials_success(request_context, mocked_ldap):
+    result = mocked_ldap.check_credentials("admin", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
 
-    result = mocked_ldap.check_credentials(u"admin", "ldap-test")
+    result = mocked_ldap.check_credentials("admin", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_invalid(register_builtin_html, mocked_ldap):
+def test_check_credentials_invalid(request_context, mocked_ldap):
     assert mocked_ldap.check_credentials("admin", "WRONG") is False
     _check_restored_bind_user(mocked_ldap)
 
@@ -350,8 +362,8 @@ def test_check_credentials_not_existing(mocked_ldap):
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_enforce_conn_success(register_builtin_html, mocked_ldap):
-    result = mocked_ldap.check_credentials("admin@testldap", "ldap-test")
+def test_check_credentials_enforce_conn_success(request_context, mocked_ldap):
+    result = mocked_ldap.check_credentials("admin@testldap", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
@@ -394,39 +406,39 @@ def test_group_base_dn_not_exists(mocked_ldap, monkeypatch):
 
 
 def test_locked_attributes(mocked_ldap):
-    assert set(mocked_ldap.locked_attributes()) == {'alias', 'password', 'locked', 'email'}
+    assert set(mocked_ldap.locked_attributes()) == {"alias", "password", "locked", "email"}
 
 
 def test_multisite_attributes(mocked_ldap):
-    assert mocked_ldap.multisite_attributes() == ['ldap_pw_last_changed']
+    assert mocked_ldap.multisite_attributes() == ["ldap_pw_last_changed"]
 
 
 def test_non_contact_attributes(mocked_ldap):
-    assert mocked_ldap.non_contact_attributes() == ['ldap_pw_last_changed']
+    assert mocked_ldap.non_contact_attributes() == ["ldap_pw_last_changed"]
 
 
 def test_get_users(mocked_ldap):
     users = mocked_ldap.get_users()
     assert len(users) == 3
 
-    assert u"härry" in users
+    assert "härry" in users
     assert "admin" in users
     assert "sync-user" in users
 
-    assert users[u"härry"] == {
-        'dn': u'cn=h\xe4rry,ou=users,dc=check-mk,dc=org',
-        'mail': [u'h\xe4rry@check-mk.org'],
-        'samaccountname': [u'h\xe4rry'],
-        'cn': [u'H\xe4rry H\xf6rsch']
+    assert users["härry"] == {
+        "dn": "cn=h\xe4rry,ou=users,dc=check-mk,dc=org",
+        "mail": ["h\xe4rry@check-mk.org"],
+        "samaccountname": ["h\xe4rry"],
+        "cn": ["H\xe4rry H\xf6rsch"],
     }
 
 
 @pytest.mark.parametrize("nested", [True, False])
 def test_get_group_memberships_simple(mocked_ldap, nested):
     assert mocked_ldap.get_group_memberships(["admins"], nested=nested) == {
-        u'cn=admins,ou=groups,dc=check-mk,dc=org': {
-            'cn': u'admins',
-            'members': [u'cn=admin,ou=users,dc=check-mk,dc=org'],
+        "cn=admins,ou=groups,dc=check-mk,dc=org": {
+            "cn": "admins",
+            "members": ["cn=admin,ou=users,dc=check-mk,dc=org"],
         }
     }
 
@@ -437,7 +449,7 @@ def test_get_group_memberships_flat_out_of_scope(mocked_ldap, nested):
 
 
 # TODO: Currently failing. Need to fix the code.
-#def test_get_group_memberships_out_of_scope_member(mocked_ldap):
+# def test_get_group_memberships_out_of_scope_member(mocked_ldap):
 #    assert mocked_ldap.get_group_memberships(["member-out-of-scope"]) == {
 #        u'cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org': {
 #            'cn': u'member-out-of-scope',
@@ -447,7 +459,7 @@ def test_get_group_memberships_flat_out_of_scope(mocked_ldap, nested):
 #    }
 #
 #
-#def test_get_group_memberships_flat_skip_group(mocked_ldap):
+# def test_get_group_memberships_flat_skip_group(mocked_ldap):
 #    assert mocked_ldap.get_group_memberships(["top-level"]) == {
 #        u'cn=top-level,ou=groups,dc=check-mk,dc=org': {
 #            'cn': u'top-level',
@@ -461,11 +473,11 @@ def test_get_group_memberships_flat_out_of_scope(mocked_ldap, nested):
 @pytest.mark.parametrize("nested", [True, False])
 def test_get_group_memberships_with_non_ascii(mocked_ldap, nested):
     assert mocked_ldap.get_group_memberships(["alle"], nested=nested) == {
-        u'cn=älle,ou=groups,dc=check-mk,dc=org': {
-            'cn': u'alle',
-            'members': [
-                u'cn=admin,ou=users,dc=check-mk,dc=org',
-                u'cn=härry,ou=users,dc=check-mk,dc=org',
+        "cn=älle,ou=groups,dc=check-mk,dc=org": {
+            "cn": "alle",
+            "members": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+                "cn=härry,ou=users,dc=check-mk,dc=org",
             ],
         }
     }
@@ -478,41 +490,59 @@ def test_get_group_memberships_not_existing(mocked_ldap, nested):
 
 def test_get_group_memberships_nested(mocked_ldap):
     memberships = mocked_ldap.get_group_memberships(
-        ["empty", "top-level", "level1", "level2", "selfref"], nested=True)
+        ["empty", "top-level", "level1", "level2", "selfref"], nested=True
+    )
 
     assert len(memberships) == 5
 
     needed_groups = [
-        (u'cn=empty,ou=groups,dc=check-mk,dc=org', {
-            'cn': u'empty',
-            'members': [],
-        }),
-        (u'cn=level2,ou=groups,dc=check-mk,dc=org', {
-            'cn': u'level2',
-            'members': [
-                u"cn=admin,ou=users,dc=check-mk,dc=org",
-                u"cn=härry,ou=users,dc=check-mk,dc=org",
-            ],
-        }),
-        (u'cn=level1,ou=groups,dc=check-mk,dc=org', {
-            'cn': u'level1',
-            'members': [
-                u"cn=admin,ou=users,dc=check-mk,dc=org",
-                u"cn=härry,ou=users,dc=check-mk,dc=org",
-            ],
-        }),
-        (u'cn=top-level,ou=groups,dc=check-mk,dc=org', {
-            'cn': u'top-level',
-            'members': [
-                u"cn=admin,ou=users,dc=check-mk,dc=org",
-                u"cn=härry,ou=users,dc=check-mk,dc=org",
-                u"cn=sync-user,ou=users,dc=check-mk,dc=org",
-            ],
-        }),
-        (u'cn=selfref,ou=groups,dc=check-mk,dc=org', {
-            'cn': u'selfref',
-            'members': [u"cn=admin,ou=users,dc=check-mk,dc=org",],
-        }),
+        (
+            "cn=empty,ou=groups,dc=check-mk,dc=org",
+            {
+                "cn": "empty",
+                "members": [],
+            },
+        ),
+        (
+            "cn=level2,ou=groups,dc=check-mk,dc=org",
+            {
+                "cn": "level2",
+                "members": [
+                    "cn=admin,ou=users,dc=check-mk,dc=org",
+                    "cn=härry,ou=users,dc=check-mk,dc=org",
+                ],
+            },
+        ),
+        (
+            "cn=level1,ou=groups,dc=check-mk,dc=org",
+            {
+                "cn": "level1",
+                "members": [
+                    "cn=admin,ou=users,dc=check-mk,dc=org",
+                    "cn=härry,ou=users,dc=check-mk,dc=org",
+                ],
+            },
+        ),
+        (
+            "cn=top-level,ou=groups,dc=check-mk,dc=org",
+            {
+                "cn": "top-level",
+                "members": [
+                    "cn=admin,ou=users,dc=check-mk,dc=org",
+                    "cn=härry,ou=users,dc=check-mk,dc=org",
+                    "cn=sync-user,ou=users,dc=check-mk,dc=org",
+                ],
+            },
+        ),
+        (
+            "cn=selfref,ou=groups,dc=check-mk,dc=org",
+            {
+                "cn": "selfref",
+                "members": [
+                    "cn=admin,ou=users,dc=check-mk,dc=org",
+                ],
+            },
+        ),
     ]
 
     for needed_group_dn, needed_group in needed_groups:

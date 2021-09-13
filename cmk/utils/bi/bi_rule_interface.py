@@ -5,20 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from marshmallow import Schema
-from typing import List, Dict, Any, Type, Sequence
+from typing import Any, Dict, List, Sequence, Type
+
 import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
     ABCBISearcher,
+    ABCWithSchema,
+    ActionArgument,
     BIParams,
-    ReqString,
     ReqBoolean,
     ReqDict,
-    ABCWithSchema,
+    ReqString,
 )
-
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
+from cmk.utils.bi.bi_schema import Schema
 
 
 class BIRulePropertiesSchema(Schema):
@@ -42,6 +43,15 @@ class BIRuleProperties(ABCWithSchema):
     def schema(cls) -> Type["BIRulePropertiesSchema"]:
         return BIRulePropertiesSchema
 
+    def serialize(self):
+        return {
+            "title": self.title,
+            "comment": self.comment,
+            "docu_url": self.docu_url,
+            "icon": self.icon,
+            "state_messages": self.state_messages,
+        }
+
 
 class BIRuleComputationOptionsSchema(Schema):
     disabled = ReqBoolean(default=False, example=False)
@@ -56,20 +66,28 @@ class BIRuleComputationOptions(ABCWithSchema):
     def schema(cls) -> Type[BIRuleComputationOptionsSchema]:
         return BIRuleComputationOptionsSchema
 
+    def serialize(self):
+        return {
+            "disabled": self.disabled,
+        }
+
 
 class ABCBIRule(ABCWithSchema):
     def __init__(self):
         self.id = ""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def params(self) -> BIParams:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def properties(self) -> BIRuleProperties:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
@@ -91,8 +109,9 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile(self, extern_arguments: List[str],
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def compile(
+        self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod

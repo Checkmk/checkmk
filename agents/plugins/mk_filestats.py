@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -56,12 +56,17 @@ described by the following four phases:
       Only further process a file, if its age in seconds matches the filter.
       See ``filter_size''.
 3. Grouping
-    Currently every section in the configuration file will result in one
-    group in the produced output (indicated by '[[[output_type group_name]]]',
-    where the group name will be taken from the sections name in the config
-    file.
-    Future versions may provide means to create more than one group per
-    section (grouped by subfolder, for instance).
+    It is possible to group files within a file group further into subgroups
+    using grouping criteria. The supported options are:
+    * ``grouping_regex: regular_expression''
+      Assign a file to a subgroup if its full path matches the given regular
+      expression.
+    A separate service is created for each subgroup, prefixed with its parent
+    group name (i.e. <parent group name> <subgroup name>). The order in which
+    subgroups and corresponding patterns are specified matters: rules are
+    processed in the given order.
+    Files that match the specified subgroups are shown as a separate service
+    and are excluded from the parent file group.
 4. Output
     You can choose from three different ways the output will be aggregated:
     * ``output: file_stats''
@@ -82,6 +87,11 @@ You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
+__version__ = "2.1.0i1"
+
+# this file has to work with both Python 2 and 3
+# pylint: disable=super-with-arguments
+
 import errno
 import glob
 import logging
@@ -100,10 +110,21 @@ from stat import S_ISDIR, S_ISREG
 #       2.7.18 this is not supported. The documentation explicitly states
 #       that the module 'configparser' is supported from python 3.
 #       https://docs.python.org/2/library/configparser.html
+
+try:
+    from collections import OrderedDict
+except ImportError:  # Python2
+    from ordereddict import OrderedDict  # type: ignore
+
 try:
     import configparser
 except ImportError:  # Python2
     import ConfigParser as configparser  # type: ignore
+
+try:
+    import typing
+except ImportError:
+    pass
 
 
 def ensure_str(s):
@@ -126,11 +147,11 @@ def ensure_text(s):
     return s
 
 
-DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "filestats.cfg")
+DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "filestats.cfg")
 
-DEFAULT_CFG_SECTION = {"output": "file_stats"}
+DEFAULT_CFG_SECTION = {"output": "file_stats", "subgroups_delimiter": "@"}
 
-FILTER_SPEC_PATTERN = re.compile('(?P<operator>[<>=]+)(?P<value>.+)')
+FILTER_SPEC_PATTERN = re.compile("(?P<operator>[<>=]+)(?P<value>.+)")
 
 LOGGER = logging.getLogger(__name__)
 
@@ -152,27 +173,28 @@ def parse_arguments(argv=None):
     else:
         LOGGER.propagate = False
 
-    parsed_args['cfg_file'] = DEFAULT_CFG_FILE
+    parsed_args["cfg_file"] = DEFAULT_CFG_FILE
     for opt in ("-c", "--config-file"):
         if opt in argv:
             try:
-                parsed_args['cfg_file'] = argv[argv.index(opt) + 1]
+                parsed_args["cfg_file"] = argv[argv.index(opt) + 1]
             except IndexError:
                 sys.stderr.write("missing value for option %r\n" % opt)
                 sys.exit(1)
     return parsed_args
 
 
-class FileStat(object):
+class FileStat(object):  # pylint: disable=useless-object-inheritance
     """Wrapper arount os.stat
 
     Only call os.stat once.
     """
+
     def __init__(self, path):
         super(FileStat, self).__init__()
         LOGGER.debug("Creating FileStat(%r)", path)
         self.path = ensure_text(path)
-        self.stat_status = 'ok'
+        self.stat_status = "ok"
         self.size = None
         self.age = None
         self._m_time = None
@@ -181,7 +203,7 @@ class FileStat(object):
         self.isdir = False
 
         LOGGER.debug("os.stat(%r)", self.path)
-        path = self.path.encode('utf8')
+        path = self.path.encode("utf8")
         try:
             stat = os.stat(path)
         except OSError as exc:
@@ -214,12 +236,12 @@ class FileStat(object):
             "stat_status": self.stat_status,
             "size": self.size,
             "age": self.age,
-            "mtime": self._m_time
+            "mtime": self._m_time,
         }
         return repr(data)
 
 
-#.
+# .
 #   .--Input---------------------------------------------------------------.
 #   |                      ___                   _                         |
 #   |                     |_ _|_ __  _ __  _   _| |_                       |
@@ -232,8 +254,9 @@ class FileStat(object):
 #   '----------------------------------------------------------------------'
 
 
-class PatternIterator(object):
+class PatternIterator(object):  # pylint: disable=useless-object-inheritance
     """Recursively iterate over all files"""
+
     def __init__(self, pattern_list):
         super(PatternIterator, self).__init__()
         self._patterns = [os.path.abspath(os.path.expanduser(p)) for p in pattern_list]
@@ -244,7 +267,7 @@ class PatternIterator(object):
             if filestat.isfile:
                 yield filestat
             elif filestat.isdir:
-                for filestat in self._iter_files(os.path.join(item, '*')):
+                for filestat in self._iter_files(os.path.join(item, "*")):
                     yield filestat
 
     def __iter__(self):
@@ -256,7 +279,7 @@ class PatternIterator(object):
 
 def get_file_iterator(config):
     """get a FileStat iterator"""
-    input_specs = [(k[6:], v) for k, v in config.items() if k.startswith('input_')]
+    input_specs = [(k[6:], v) for k, v in config.items() if k.startswith("input_")]
     if not input_specs:
         raise ValueError("missing input definition")
     if len(input_specs) != 1:  # currently not supported
@@ -268,7 +291,7 @@ def get_file_iterator(config):
     return PatternIterator(patterns)
 
 
-#.
+# .
 #   .--Filtering-----------------------------------------------------------.
 #   |                _____ _ _ _            _                              |
 #   |               |  ___(_) | |_ ___ _ __(_)_ __   __ _                  |
@@ -281,34 +304,36 @@ def get_file_iterator(config):
 #   '----------------------------------------------------------------------'
 
 
-class AbstractFilter(object):
+class AbstractFilter(object):  # pylint: disable=useless-object-inheritance
     """Abstract filter interface"""
+
     def matches(self, filestat):
         """return a boolean"""
         raise NotImplementedError()
 
 
 COMPARATORS = {
-    '<': operator.lt,
-    '<=': operator.le,
-    '>': operator.gt,
-    '>=': operator.ge,
-    '==': operator.eq,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+    "==": operator.eq,
 }
 
 
 class AbstractNumericFilter(AbstractFilter):
     """Common code for filtering by comparing integers"""
+
     def __init__(self, spec_string):
         super(AbstractNumericFilter, self).__init__()
         match = FILTER_SPEC_PATTERN.match(spec_string)
         if match is None:
             raise ValueError("unable to parse filter spec: %r" % spec_string)
         spec = match.groupdict()
-        comp = COMPARATORS.get(spec['operator'])
+        comp = COMPARATORS.get(spec["operator"])
         if comp is None:
-            raise ValueError("unknown operator for numeric filter: %r" % spec['operator'])
-        reference = int(spec['value'])
+            raise ValueError("unknown operator for numeric filter: %r" % spec["operator"])
+        reference = int(spec["value"])
         self._matches_value = lambda actual: comp(int(actual), reference)
 
     def matches(self, filestat):
@@ -353,7 +378,7 @@ class InverseRegexFilter(RegexFilter):
 
 
 def get_file_filters(config):
-    filter_specs = ((k[7:], v) for k, v in config.items() if k.startswith('filter_'))
+    filter_specs = ((k[7:], v) for k, v in config.items() if k.startswith("filter_"))
 
     filters = []
     for variety, spec_string in filter_specs:
@@ -380,7 +405,7 @@ def iter_filtered_files(file_filters, iterator):
             yield filestat
 
 
-#.
+# .
 #   .--Grouping------------------------------------------------------------.
 #   |               ____                       _                           |
 #   |              / ___|_ __ ___  _   _ _ __ (_)_ __   __ _               |
@@ -393,12 +418,96 @@ def iter_filtered_files(file_filters, iterator):
 #   '----------------------------------------------------------------------'
 
 
-def grouping_single_group(section_name, files_iter):
+def parse_grouping_config(
+    config,
+    raw_config_section_name,
+    options,
+    subgroups_delimiter,
+):
+    parent_group_name, child_group_name = raw_config_section_name.split(subgroups_delimiter, 1)
+
+    for option in options:
+        if option.startswith("grouping_"):
+            grouping_type = option.split("_", 1)[1]
+            grouping_rule = config.get(raw_config_section_name, option)
+
+    LOGGER.info("found subgroup: %s", raw_config_section_name)
+    return parent_group_name, (
+        child_group_name,
+        {
+            "type": grouping_type,
+            "rule": grouping_rule,
+        },
+    )
+
+
+def _grouping_construct_group_name(parent_group_name, child_group_name):
+    """allow the user to format the service name using '%s'.
+
+    >>> _grouping_construct_group_name('aard %s vark', 'banana')
+    'aard banana vark'
+
+    >>> _grouping_construct_group_name('aard %s vark %s %s', 'banana')
+    'aard banana vark %s %s'
+
+    >>> _grouping_construct_group_name('aard %s vark')
+    'aard  vark'
+
+    >>> _grouping_construct_group_name('aard %s', '')
+    'aard'
+    """
+
+    format_specifiers_count = parent_group_name.count("%s")
+    if not format_specifiers_count:
+        return ("%s %s" % (parent_group_name, child_group_name)).strip()
+    return (
+        parent_group_name % ((child_group_name,) + ("%s",) * (format_specifiers_count - 1))
+    ).strip()
+
+
+def _matches_regex(single_file, regex_pattern):
+    return bool(re.match(regex_pattern, single_file.path))
+
+
+def _get_matching_child_group(single_file, grouping_conditions):
+    for child_group_name, grouping_condition in grouping_conditions:
+        if _matches_regex(single_file, grouping_condition["rule"]):
+            return child_group_name
+    return ""
+
+
+def grouping_multiple_groups(config_section_name, files_iter, grouping_conditions):
+    """create multiple groups per section if the agent is configured
+    for grouping. each group is shown as a seperate service. if a file
+    does not belong to a group, it is added to the section."""
+    parent_group_name = config_section_name
+    # Initalise dict with parent and child group because they should be in the section
+    # with 0 count if there are no files for them.
+    grouped_files = {
+        "": [],  # parent
+    }  # type: typing.Dict[str, typing.List[FileStat]]
+    grouped_files.update({g[0]: [] for g in grouping_conditions})
+    for single_file in files_iter:
+        matching_child_group = _get_matching_child_group(single_file, grouping_conditions)
+        grouped_files[matching_child_group].append(single_file)
+
+    for matching_child_group, files in grouped_files.items():
+        yield _grouping_construct_group_name(parent_group_name, matching_child_group), files
+
+
+def grouping_single_group(config_section_name, files_iter, _grouping_conditions):
     """create one single group per section"""
-    yield section_name, files_iter
+    group_name = config_section_name
+    yield group_name, files_iter
 
 
-#.
+def get_grouper(grouping_conditions):
+    if grouping_conditions:
+        return grouping_multiple_groups
+    return grouping_single_group
+
+
+# .
 #   .--Output--------------------------------------------------------------.
 #   |                    ___        _               _                      |
 #   |                   / _ \ _   _| |_ _ __  _   _| |_                    |
@@ -412,7 +521,7 @@ def grouping_single_group(section_name, files_iter):
 
 
 def output_aggregator_count_only(group_name, files_iter):
-    yield '[[[count_only %s]]]' % group_name
+    yield "[[[count_only %s]]]" % group_name
     count = sum(1 for __ in files_iter)
     yield repr({"type": "summary", "count": count})
 
@@ -456,8 +565,9 @@ def output_aggregator_single_file(group_name, files_iter):
         if count_format_specifiers == 0:
             subsection_name = group_name
         else:
-            subsection_name = group_name % ((lazy_file.path,) + (('%s',) *
-                                                                 (count_format_specifiers - 1)))
+            subsection_name = group_name % (
+                (lazy_file.path,) + (("%s",) * (count_format_specifiers - 1))
+            )
         yield "[[[single_file %s]]]" % subsection_name
         yield lazy_file.dumps()
 
@@ -481,7 +591,7 @@ def write_output(groups, output_aggregator):
             sys.stdout.write("%s\n" % line)
 
 
-#.
+# .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -497,35 +607,67 @@ def write_output(groups, output_aggregator):
 def iter_config_section_dicts(cfg_file=None):
     if cfg_file is None:
         cfg_file = DEFAULT_CFG_FILE
-    config = configparser.ConfigParser(DEFAULT_CFG_SECTION)
+    # use OrderedDict for Python 2.6 compatibility: default type is a normal dict,
+    # which is unfortunately not insertion-ordered in Python 2.6
+    config = configparser.ConfigParser(
+        DEFAULT_CFG_SECTION,
+        dict_type=OrderedDict,
+    )
     LOGGER.debug("trying to read %r", cfg_file)
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
 
-    for section_name in config.sections():
-        options = config.options(section_name)
-        yield section_name, dict((k, config.get(section_name, k)) for k in options)
+    parsed_config = {}
+    for raw_cfg_section_name in config.sections():
+        options = config.options(raw_cfg_section_name)
+        subgroups_delimiter = config.get(raw_cfg_section_name, "subgroups_delimiter")
+        if subgroups_delimiter not in raw_cfg_section_name:
+            consolidated_cfg_section_name = raw_cfg_section_name
+            parsed_config[consolidated_cfg_section_name] = {
+                k: config.get(raw_cfg_section_name, k) for k in options
+            }
+            continue
+        parent_group_name, parsed_grouping_config = parse_grouping_config(
+            config,
+            raw_cfg_section_name,
+            options,
+            subgroups_delimiter,
+        )
+        consolidated_cfg_section_name = parent_group_name
+        # TODO: The below suppressions are due to the fact that typing the parsed config properly
+        # requires a more sophisticated type (perhaps a class) and a bigger refactoring to validate
+        # the options and dispatch immediately after parsing is complete.
+        parsed_config[consolidated_cfg_section_name].setdefault(
+            "grouping",
+            [],  # type: ignore[arg-type]
+        ).append(  # type: ignore[attr-defined]
+            parsed_grouping_config
+        )
+
+    for consolidated_cfg_section_name, parsed_option in parsed_config.items():
+        yield consolidated_cfg_section_name, parsed_option
 
 
 def main():
 
     args = parse_arguments()
 
-    sys.stdout.write('<<<filestats:sep(0)>>>\n')
-    for section_name, config in iter_config_section_dicts(args['cfg_file']):
+    sys.stdout.write("<<<filestats:sep(0)>>>\n")
+    for config_section_name, config in iter_config_section_dicts(args["cfg_file"]):
 
-        #1 input
+        # 1 input
         files_iter = get_file_iterator(config)
 
-        #2 filtering
+        # 2 filtering
         filters = get_file_filters(config)
         filtered_files = iter_filtered_files(filters, files_iter)
 
-        #3 grouping
-        grouper = grouping_single_group
-        groups = grouper(section_name, filtered_files)
+        # 3 grouping
+        grouping_conditions = config.get("grouping")
+        grouper = get_grouper(grouping_conditions)
+        groups = grouper(config_section_name, filtered_files, grouping_conditions)
 
-        #4 output
+        # 4 output
         output_aggregator = get_output_aggregator(config)
         write_output(groups, output_aggregator)
 

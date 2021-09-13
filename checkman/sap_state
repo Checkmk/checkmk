@@ -13,6 +13,6 @@ description:
 item:
  The name of the hostname of the monitored system.
 
-inventory:
+discovery:
  One service is created for each host configured in sap.cfg.
 

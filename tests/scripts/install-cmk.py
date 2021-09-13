@@ -6,27 +6,27 @@
 """Is executed in container from git top level as working directory to install
 the desired Checkmk version"""
 
-import os
-import sys
-import logging
-import subprocess
 import abc
-from typing import List, Optional, Dict
+import logging
+import os
+import subprocess
+import sys
 from pathlib import Path
+from typing import Dict, List, Optional
 
 import requests
 
-# Make the testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Make the tests.testlib available
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from testlib.utils import (
-    current_base_branch_name,
+from tests.testlib.utils import (
     add_python_paths,
+    current_base_branch_name,
+    get_cmk_download_credentials,
 )
-from testlib.version import CMKVersion
-from testlib.utils import get_cmk_download_credentials
+from tests.testlib.version import CMKVersion
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
 
 
@@ -98,14 +98,14 @@ def _read_os_release() -> Optional[Dict[str, str]]:
             if "=" not in l:
                 continue
             key, val = l.strip().split("=", 1)
-            os_spec[key] = val.strip("\"")
+            os_spec[key] = val.strip('"')
 
     return os_spec
 
 
 class ABCPackageManager(abc.ABC):
     @classmethod
-    def factory(cls) -> 'ABCPackageManager':
+    def factory(cls) -> "ABCPackageManager":
         distro_name = get_omd_distro_name()
         logger.info("Distro: %s", distro_name)
 
@@ -151,7 +151,8 @@ class ABCPackageManager(abc.ABC):
 
         logger.info("Downloading from: %s", package_url)
         response = requests.get(  # nosec
-            package_url, auth=get_cmk_download_credentials(), verify=False)
+            package_url, auth=get_cmk_download_credentials(), verify=False
+        )
         response.raise_for_status()
 
         with open(temp_package_path, "wb") as f:
@@ -160,7 +161,7 @@ class ABCPackageManager(abc.ABC):
         return temp_package_path
 
     def _package_url(self, version: str, package_name: str) -> str:
-        return "https://checkmk.com/support/%s/%s" % (version, package_name)
+        return "https://download.checkmk.com/checkmk/%s/%s" % (version, package_name)
 
     @abc.abstractmethod
     def _install_package(self, package_path: Path) -> None:
@@ -203,8 +204,7 @@ class ABCPackageManagerRPM(ABCPackageManager):
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
     def _install_package(self, package_path):
-        # TODO: Cleanup --no-gpg-checks
-        self._execute(["zypper", "--no-gpg-checks", "in", "-y", package_path])
+        self._execute(["zypper", "in", "-y", package_path])
 
 
 class PackageManagerRHEL(ABCPackageManagerRPM):

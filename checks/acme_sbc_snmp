@@ -4,7 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.acme import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # comNET GmbH, Fabian Binder
 
 # .1.3.6.1.4.1.9148.3.2.1.1.3 Health Score (apSysHealthScore)
@@ -56,17 +61,18 @@ def check_acme_sbc_snmp(_no_item, params, info):
         yield 0, score_msg
 
 
-check_info['acme_sbc_snmp'] = {
-    'inventory_function': inventory_acme_sbc_snmp,
-    'check_function': check_acme_sbc_snmp,
-    'service_description': 'ACME SBC health',
-    'snmp_info': (
-        '.1.3.6.1.4.1.9148.3.2.1.1',
+check_info["acme_sbc_snmp"] = {
+    "inventory_function": inventory_acme_sbc_snmp,
+    "check_function": check_acme_sbc_snmp,
+    "service_description": "ACME SBC health",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9148.3.2.1.1",
         [
             "3",  # APSYSMGMT-MIB::apSysHealthScore
             "4",  # APSYSMGMT-MIB::apSysRedundancy
-        ]),
-    'snmp_scan_function': scan_acme,
-    'group': 'acme_sbc_snmp',
-    'default_levels_variable': 'acme_sbc_snmp_default_levels',
+        ],
+    ),
+    "snmp_scan_function": scan_acme,
+    "group": "acme_sbc_snmp",
+    "default_levels_variable": "acme_sbc_snmp_default_levels",
 }

@@ -1,0 +1,16 @@
+Title: Fix GUI connection issues in distributed setups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615146985
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0i1
+
+In distributed setups where one site has a connection problem, the number of
+open connections to other sites could stack up and lead to a 100% livestatus
+usage which may result in a not responding GUI. Normally this issue was
+resolved automatically after some minutes but was then causing trouble again
+after some time.

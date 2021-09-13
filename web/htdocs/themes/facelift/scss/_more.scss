@@ -51,12 +51,14 @@ a.more {
 }
 
 a.more {
+  text-decoration: none;
+
   div.show_less {
     display: none;
   }
 
   div.show_more {
-    display: block;
+    display: flex;
 
     &:after {
       content: url("images/icon_show_more.svg");
@@ -69,7 +71,7 @@ a.more {
     }
 
     div.show_less {
-      display: block;
+      display: flex;
 
       &:after {
         content: url("images/icon_show_less.svg");
@@ -86,7 +88,7 @@ a.more {
     font-size: $font-size-small;
 
     &:hover {
-      color: $success;
+      color: $font-color-green;
 
       div.show_more::after {
         content: url("images/icon_show_more_green.svg");
@@ -99,11 +101,16 @@ a.more {
 
     div.show_more,
     div.show_less {
+      align-items: center;
+
       &:after {
-        position: relative;
-        top: 4px;
         margin-left: 6px;
       }
     }
   }
+}
+
+td .show_more,
+td .show_less {
+  margin: -3px 0;
 }

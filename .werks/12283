@@ -1,0 +1,12 @@
+Title: Service discovery page: Do not fail in case of unknown manual check rules
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1614843345
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

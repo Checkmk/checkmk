@@ -22,5 +22,5 @@ item:
  The naming is chosen to be compatible with the megaraid_pdisks check, so in
  dual monitoring one of them needs to be disabled using {disabled_checks}.
 
-inventory:
+discovery:
  One service is created for each disk.

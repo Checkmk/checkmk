@@ -3,15 +3,19 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import contextlib
 import hashlib
 import json
 import re
-from typing import Any, Dict, List, Optional, Union
+from http import HTTPStatus
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
 
-from cmk.gui.globals import request
+from cmk.utils.site import omd_site
+
+from cmk.gui.globals import config, request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
@@ -19,8 +23,8 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionObject,
     DomainObject,
     DomainType,
-    EndpointName,
     HTTPMethod,
+    LinkRelation,
     LinkType,
     ObjectProperty,
     PropertyFormat,
@@ -30,14 +34,64 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
 from cmk.gui.plugins.openapi.utils import ProblemException
 
 
+@contextlib.contextmanager
+def _request_context(secure=True):
+    import os
+
+    import mock
+    from werkzeug.test import create_environ
+
+    from cmk.gui.utils.script_helpers import request_context
+
+    if secure:
+        protocol = "https"
+    else:
+        protocol = "http"
+    # Previous tests already set the site to "heute", which makes this test fail.
+    omd_site.cache_clear()
+    with mock.patch.dict(os.environ, {"OMD_SITE": "NO_SITE"}), request_context(
+        create_environ(base_url=f"{protocol}://localhost:5000/")
+    ):
+        yield
+
+
+def absolute_url(href):
+    """Give an absolute URL.
+
+    Examples:
+
+
+        This function has to be used within an request context.
+
+        >>> with _request_context(secure=False):
+        ...     absolute_url("objects/host_config/example.com")
+        'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
+
+        >>> with _request_context(secure=True):
+        ...     absolute_url("objects/host_config/example.com")
+        'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
+
+    Args:
+        href:
+
+    Returns:
+
+    """
+    if href.startswith("/"):
+        href = href.lstrip("/")
+
+    return f"{request.host_url}{omd_site()}/check_mk/api/1.0/{href}"
+
+
 def link_rel(
-    rel: EndpointName,
+    rel: LinkRelation,
     href: str,
-    method: HTTPMethod = 'get',
-    content_type: str = 'application/json',
+    method: HTTPMethod = "get",
+    content_type: str = "application/json",
     profile: Optional[str] = None,
     title: Optional[str] = None,
     parameters: Optional[Dict[str, str]] = None,
+    body_params: Optional[Dict[str, str]] = None,
 ) -> LinkType:
     """Link to a separate entity
 
@@ -60,22 +114,26 @@ def link_rel(
         title:
             (Optional) A pretty printed string for UIs to render.
 
+        body_params:
+            (Optional) A dict of values which shall be sent as body paramaters.
+
         parameters:
             (Optional) Parameters for the rel-value. e.g. rel='foo', parameters={'baz': 'bar'}
             will result in a rel-value of 'foo;baz="bar"'
 
     Examples:
 
-        >>> link = link_rel('.../update', 'update',
-        ...                 method='get', profile='.../object', title='Update the object')
         >>> expected = {
         ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/update',
         ...     'title': 'Update the object',
-        ...     'href': 'update'
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/foo/update'
         ... }
+        >>> with _request_context():
+        ...     link = link_rel('.../update', '/objects/foo/update',
+        ...                     method='get', profile='.../object', title='Update the object')
         >>> assert link == expected, link
 
     Returns:
@@ -84,17 +142,19 @@ def link_rel(
     """
     content_type_params = {}
     if profile is not None:
-        content_type_params['profile'] = expand_rel(profile)
+        content_type_params["profile"] = expand_rel(profile)
 
     link_obj = {
-        'rel': expand_rel(rel, parameters),
-        'href': href,
-        'method': method.upper(),
-        'type': expand_rel(content_type, content_type_params),
-        'domainType': 'link',
+        "rel": expand_rel(rel, parameters),
+        "href": absolute_url(href),
+        "method": method.upper(),
+        "type": expand_rel(content_type, content_type_params),
+        "domainType": "link",
     }
+    if body_params is not None:
+        link_obj["body_params"] = body_params
     if title is not None:
-        link_obj['title'] = title
+        link_obj["title"] = title
     return link_obj
 
 
@@ -143,11 +203,21 @@ def require_etag(etag: ETags) -> None:
         etag: An Werkzeug ETag instance to compare the global request instance to.
 
     Raises:
-        ProblemException: When ETag doesn't match.
+        ProblemException: When If-Match missing or ETag doesn't match.
     """
+    etags_required = config.rest_api_etag_locking
+    if not request.if_match:
+        if not etags_required:
+            return
+        raise ProblemException(
+            HTTPStatus.PRECONDITION_REQUIRED,
+            "Precondition required",
+            "If-Match header required for this operation. See documentation.",
+        )
+
     if request.if_match.as_set() != etag.as_set():
         raise ProblemException(
-            412,
+            HTTPStatus.PRECONDITION_FAILED,
             "Precondition failed",
             "ETag didn't match. Probable cause: Object changed by another user.",
         )
@@ -158,7 +228,8 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
 
     Examples:
 
-        >>> action = object_action('move', {'from': 'to'}, '')
+        >>> with _request_context():
+        ...     action = object_action('move', {'from': 'to'}, '')
         >>> assert len(action['links']) > 0
 
     Args:
@@ -169,22 +240,20 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
     Returns:
 
     """
-    def _action(_name):
-        return '/actions/%s' % (_name,)
-
-    def _invoke(_name):
-        return _action(_name) + '/invoke'
 
     return {
-        'id': name,
-        'memberType': "action",
-        'links': [
-            link_rel('up', base),
-            link_rel('.../details', base + _action(name), parameters={'action': name}),
-            link_rel('.../invoke', base + _invoke(name), method='post',
-                     parameters={'action': name}),
+        "id": name,
+        "memberType": "action",
+        "links": [
+            link_rel("up", base),
+            link_rel(
+                ".../invoke",
+                base + f"/actions/{name}/invoke",
+                method="post",
+                parameters={"action": name},
+            ),
         ],
-        'parameters': parameters,
+        "parameters": parameters,
     }
 
 
@@ -217,14 +286,15 @@ def object_collection(
         ...     'links': [
         ...         {
         ...             'rel': 'self',
-        ...             'href': '/domain-types/host/collections/all',
+        ...             'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/domain-types/host/collections/all',
         ...             'method': 'GET',
         ...             'type': 'application/json',
         ...             'domainType': 'link',
         ...         }
         ...     ]
         ... }
-        >>> result = object_collection('all', 'host', [], '')
+        >>> with _request_context():
+        ...     result = object_collection('all', 'host', [], '')
         >>> assert result == expected, result
 
     Returns:
@@ -232,15 +302,15 @@ def object_collection(
 
     """
     links = [
-        link_rel('self', base + collection_href(domain_type)),
+        link_rel("self", base + collection_href(domain_type)),
     ]
     if base:
-        links.append(link_rel('up', base))
+        links.append(link_rel("up", base))
     return {
-        'id': name,
-        'memberType': "collection",
-        'value': entries,
-        'links': links,
+        "id": name,
+        "memberType": "collection",
+        "value": entries,
+        "links": links,
     }
 
 
@@ -252,16 +322,16 @@ def action_result(
 ) -> Dict:
     """Construct an Action Result resource
 
-    Described in Restful Objects, chapter 19.1-4 """
+    Described in Restful Objects, chapter 19.1-4"""
     if result_links is None:
         result_links = []
     return {
-        'links': action_links,
-        'resultType': result_type,
-        'result': {
-            'links': result_links,
-            'value': result_value,
-        }
+        "links": action_links,
+        "resultType": result_type,
+        "result": {
+            "links": result_links,
+            "value": result_value,
+        },
     }
 
 
@@ -279,8 +349,9 @@ class DomainObjectMembers:
         linkable=True,
         links: Optional[List[LinkType]] = None,
     ):
-        self.members[name] = object_property(name, value, prop_format, self.base, title, linkable,
-                                             links)
+        self.members[name] = object_property(
+            name, value, prop_format, self.base, title, linkable, links
+        )
         return self.members[name]
 
     def to_dict(self):
@@ -306,22 +377,61 @@ def object_sub_property(
     if extensions is None:
         extensions = {}
     ret: ObjectProperty = {
-        'id': f"{ident}_{name}",
-        'value': value,
-        'extensions': extensions,
+        "id": f"{ident}_{name}",
+        "value": value,
+        "extensions": extensions,
     }
     if disabled_reason is not None:
-        ret['disabledReason'] = disabled_reason
+        ret["disabledReason"] = disabled_reason
 
-    ret['links'] = [
+    ret["links"] = [
         link_rel(
-            rel='.../modify',
+            rel=".../modify",
             href=object_property_href(domain_type, ident, name),
-            method='put',
+            method="put",
         ),
     ]
 
     return ret
+
+
+def collection_property(
+    name: str,
+    value: List[Any],
+    base: str,
+):
+    """Represent a collection property.
+
+    This is a property on an object which hols a collection. This has to be stored in the "member"
+    section of the object.
+
+    Args:
+        name:
+            The name of the collection.
+        value:
+            The value of the collection, i.e. all the entries.
+
+        base:
+            The base url, i.e. the URL under which the collection is located.
+
+        >>> with _request_context(secure=False):
+        ...     _base = '/objects/host_config/example.com'
+        ...     _hosts = [{'name': 'host1'}, {'name': 'host2'}]
+        ...     collection_property('hosts', _hosts, _base)
+        {'id': 'hosts', 'memberType': 'property', 'value': [{'name': 'host1'}, {'name': 'host2'}], \
+'links': [{'rel': 'self', \
+'href': 'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/collections/hosts', \
+'method': 'GET', 'type': 'application/json', 'domainType': 'link'}]}
+
+    Returns:
+
+    """
+    return {
+        "id": name,
+        "memberType": "property",
+        "value": value,
+        "links": [link_rel(rel="self", href=base.rstrip("/") + f"/collections/{name}")],
+    }
 
 
 def object_property(
@@ -332,6 +442,8 @@ def object_property(
     title: Optional[str] = None,
     linkable: bool = True,
     links: Optional[List[LinkType]] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+    choices: Optional[List[Any]] = None,
 ) -> Dict[str, Any]:
     """Render an object-property
 
@@ -358,24 +470,35 @@ def object_property(
         links:
             (Optional) Additional links to be appended to the list.
 
+        extensions:
+            (Optional) Additional keywords which will be presented under the 'extensions' key.
+
+        choices:
+            (Optional) A list of informational values which can be used for 'value'.
+
     Returns:
         A dictionary representing an object-property.
 
     """
     property_obj = {
-        'id': name,
-        'memberType': "property",
-        'value': value,
-        'format': prop_format,
-        'title': title,
-        'choices': [],
+        "id": name,
+        "memberType": "property",
+        "value": value,
+        "format": prop_format,
+        "title": title,
     }
+    if choices is not None:
+        property_obj["choices"] = choices
+
     if linkable:
-        property_obj['links'] = [
-            link_rel('self', f"{base}/properties/{name}", profile='.../object_property')
-        ]
-        if links:
-            property_obj['links'].extend(links)
+        property_obj["links"] = [link_rel("self", f"{base}/properties/{name}")]
+
+    if links:
+        property_obj.setdefault("links", [])
+        property_obj["links"].extend(links)
+
+    if extensions:
+        property_obj["extensions"] = extensions
 
     return property_obj
 
@@ -401,7 +524,7 @@ def domain_type_action_href(domain_type: DomainType, action: str) -> str:
     return f"/domain-types/{domain_type}/actions/{action}/invoke"
 
 
-def domain_object_sub_collection_href(
+def domain_object_collection_href(
     domain_type: DomainType,
     obj_id: str,
     collection_name: str,
@@ -419,7 +542,7 @@ def domain_object_sub_collection_href(
             The name of the collection.
 
     Examples:
-        >>> domain_object_sub_collection_href('folder_config', 'stuff', 'hosts')
+        >>> domain_object_collection_href('folder_config', 'stuff', 'hosts')
         '/objects/folder_config/stuff/collections/hosts'
 
     Returns:
@@ -429,7 +552,7 @@ def domain_object_sub_collection_href(
     return f"/objects/{domain_type}/{url_safe(obj_id)}/collections/{collection_name}"
 
 
-def collection_href(domain_type: DomainType, name: str = 'all') -> str:
+def collection_href(domain_type: DomainType, name: str = "all") -> str:
     """Constructs a href to a collection.
 
     Please note that domain-types can have multiple collections.
@@ -450,13 +573,14 @@ def collection_href(domain_type: DomainType, name: str = 'all') -> str:
         The href as a string
 
     """
-    return f'/domain-types/{domain_type}/collections/{url_safe(name)}'
+    return f"/domain-types/{domain_type}/collections/{url_safe(name)}"
 
 
 def object_action_href(
     domain_type: DomainType,
     obj_id: Union[int, str],
     action_name: str,
+    query_params: Optional[List[Tuple[str, str]]] = None,
 ) -> str:
     """Construct a href of a domain-object action.
 
@@ -470,6 +594,9 @@ def object_action_href(
         action_name:
             The action-name to link to.
 
+        query_params:
+            The query parameters to be included with the action
+
     Examples:
 
         Don't try this at home. ;-)
@@ -477,11 +604,21 @@ def object_action_href(
         >>> object_action_href('folder_config', 'root', 'delete')
         '/objects/folder_config/root/actions/delete/invoke'
 
+        >>> object_action_href('folder_config', 'root', 'delete',
+        ... query_params=[('test', 'value one'), ('key', 'result')])
+        '/objects/folder_config/root/actions/delete/invoke?test=value+one&key=result'
+
     Returns:
         The href.
 
     """
-    return f"/objects/{domain_type}/{obj_id}/actions/{action_name}/invoke"
+    base_href = f"/objects/{domain_type}/{obj_id}/actions/{action_name}/invoke"
+    if query_params:
+        params_part = "&".join(
+            (f"{key}={quote(value, safe=' ').replace(' ', '+')}" for key, value in query_params)
+        )
+        return f"{base_href}?{params_part}"
+    return base_href
 
 
 def object_href(
@@ -509,7 +646,7 @@ def object_href(
         The URL.
 
     """
-    return f'/objects/{domain_type}/{url_safe(obj_id)}'
+    return f"/objects/{domain_type}/{url_safe(obj_id)}"
 
 
 def url_safe(part: Union[int, str]) -> str:
@@ -541,9 +678,9 @@ def url_safe(part: Union[int, str]) -> str:
     """
     _part = str(part)
     # We don't want to escape variable templates.
-    if re.match('^[{][a-z_]+[}]$', _part):
+    if re.match("^[{][a-z_]+[}]$", _part):
         return _part
-    return quote(quote(_part, safe=''))
+    return quote(quote(_part, safe=""))
 
 
 def domain_object(
@@ -555,6 +692,7 @@ def domain_object(
     editable: bool = True,
     deletable: bool = True,
     links: Optional[List[LinkType]] = None,
+    self_link: Optional[LinkType] = None,
 ) -> DomainObject:
     """Renders a domain-object dict structure.
 
@@ -587,35 +725,41 @@ def domain_object(
         links:
             (optional) A list of `link_rel` dicts.
 
+        self_link:
+            (optional) The manually provided self link. If not provided, the self link is
+            automatically generated
+
     """
     uri = object_href(domain_type, identifier)
     if extensions is None:
         extensions = {}
     if members is None:
         members = {}
-    _links = [
-        link_rel('self', uri, method='get'),
-    ]
+
+    _links = [self_link if self_link is not None else link_rel("self", uri, method="get")]
+
     if editable:
-        _links.append(link_rel('.../update', uri, method='put'))
+        _links.append(link_rel(".../update", uri, method="put"))
     if deletable:
-        _links.append(link_rel('.../delete', uri, method='delete'))
+        _links.append(link_rel(".../delete", uri, method="delete"))
     if links:
         _links.extend(links)
     return {
-        'domainType': domain_type,
-        'id': identifier,
-        'title': title,
-        'links': _links,
-        'members': members,
-        'extensions': extensions,
+        "domainType": domain_type,
+        "id": identifier,
+        "title": title,
+        "links": _links,
+        "members": members,
+        "extensions": extensions,
     }
 
 
-def collection_object(domain_type: DomainType,
-                      value: List[Union[CollectionItem, LinkType]],
-                      links: Optional[List[LinkType]] = None,
-                      extensions: Optional[Dict[str, Any]] = None) -> CollectionObject:
+def collection_object(
+    domain_type: DomainType,
+    value: List[Union[CollectionItem, LinkType]],
+    links: Optional[List[LinkType]] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+) -> CollectionObject:
     """A collection object as specified in C-115 (Page 121)
 
     Args:
@@ -638,24 +782,24 @@ def collection_object(domain_type: DomainType,
     if extensions is None:
         extensions = {}
     _links = [
-        link_rel('self', collection_href(domain_type)),
+        link_rel("self", collection_href(domain_type)),
     ]
     if links is not None:
         _links.extend(links)
     return {
-        'id': domain_type,
-        'domainType': domain_type,
-        'links': _links,
-        'value': value,
-        'extensions': extensions,
+        "id": domain_type,
+        "domainType": domain_type,
+        "links": _links,
+        "value": value,
+        "extensions": extensions,
     }
 
 
 def link_endpoint(
     module_name: str,
-    rel: EndpointName,
+    rel: LinkRelation,
     parameters: Dict[str, str],
-):
+) -> LinkType:
     """Link to a specific endpoint by name.
 
     Args:
@@ -672,16 +816,16 @@ def link_endpoint(
     """
     endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
     return link_rel(
-        href=endpoint['endpoint'].make_url(parameters),
-        rel=endpoint['rel'],
-        method=endpoint['method'],
+        href=endpoint["endpoint"].make_url(parameters),
+        rel=endpoint["rel"],
+        method=endpoint["method"],
     )
 
 
 def collection_item(
     domain_type: DomainType,
     obj: Dict[str, str],
-    collection_name: str = 'all',
+    collection_name: str = "all",
 ) -> CollectionItem:
     """A link for use in a collection object.
 
@@ -696,13 +840,14 @@ def collection_item(
 
         >>> expected = {
         ...     'domainType': 'link',
-        ...     'href': '/objects/folder_config/3',
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/folder_config/3',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
         ...     'title': 'Foo',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
-        >>> res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
+        >>> with _request_context():
+        ...     res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
         >>> assert res == expected, res
 
     Returns:
@@ -710,35 +855,36 @@ def collection_item(
 
     """
     return link_rel(
-        rel='.../value',
-        parameters={'collection': collection_name},
-        href=object_href(domain_type, obj['id']),
+        rel=".../value",
+        parameters={"collection": collection_name},
+        href=object_href(domain_type, obj["id"]),
         profile=".../object",
-        method='get',
-        title=obj['title'],
+        method="get",
+        title=obj["title"],
     )
 
 
 def serve_json(data: Serializable, profile: Optional[Dict[str, str]] = None) -> Response:
-    content_type = 'application/json'
+    content_type = "application/json"
     if profile is not None:
         content_type += ';profile="%s"' % (profile,)
     response = Response()
     response.set_content_type(content_type)
     response.set_data(json.dumps(data))
-    # HACK: See wrap_with_validation.
-    response.original_data = data  # type: ignore[attr-defined]
     return response
 
 
 def action_parameter(action, parameter, friendly_name, optional, pattern):
-    return (action, {
-        'id': '%s-%s' % (action, parameter),
-        'name': parameter,
-        'friendlyName': friendly_name,
-        'optional': optional,
-        'pattern': pattern,
-    })
+    return (
+        action,
+        {
+            "id": "%s-%s" % (action, parameter),
+            "name": parameter,
+            "friendlyName": friendly_name,
+            "optional": optional,
+            "pattern": pattern,
+        },
+    )
 
 
 def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
@@ -750,8 +896,14 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         >>> etag_of_dict({'a': 'b', 'c': 'd'})
         <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
 
+        >>> etag_of_dict({'c': 'd', 'a': 'b'})
+        <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
+
         >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
         <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
+
+        >>> etag_of_dict({'a': [{'b': 1, 'd': 2}, {'d': 2, 'b': 3}]})
+        <ETags '"6ea899bec9b061d54f1f8fcdb7405363126c0e96d198d09792eff0996590ee3e"'>
 
     Args:
         dict_ (dict): A dictionary.
@@ -760,37 +912,24 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         str: The hex-digest of the built hash.
 
     """
+
     def _update(_hash_obj, _d):
-        if isinstance(_d, list):
-            for value in sorted(_d):
+        if isinstance(_d, (list, tuple)):
+            for value in _d:
                 _update(_hash_obj, value)
         else:
-            for key, value in sorted(_d.items()):
-                _hash_obj.update(key.encode('utf-8'))
-                if isinstance(value, (dict, list)):
-                    _update(_hash_obj, value)
-                else:
-                    _hash_obj.update(value.encode('utf-8'))
+            if isinstance(_d, dict):
+                for key, value in sorted(_d.items()):
+                    _hash_obj.update(key.encode("utf-8"))
+                    if isinstance(value, (dict, list, tuple)):
+                        _update(_hash_obj, value)
+                    elif isinstance(value, bool):
+                        _hash_obj.update(str(value).lower().encode("utf-8"))
+                    else:
+                        _hash_obj.update(str(value).encode("utf-8"))
+            else:
+                _hash_obj.update(str(_d).encode("utf-8"))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)
     return ETags(strong_etags=[_hash.hexdigest()])
-
-
-def etag_of_obj(obj):
-    """Build an ETag from an objects last updated time.
-
-    Args:
-        obj: An object with a `updated_at` method.
-
-    Returns:
-        The value which the method returns, else raises a `ProblemException`.
-
-    """
-    updated_at = obj.updated_at()
-    assert updated_at is not None
-    if updated_at is None:
-        raise ProblemException(500, "Object %r has no meta_data." % (obj.name(),),
-                               "Can't create ETag.")
-
-    return ETags(strong_etags=[str(updated_at)])

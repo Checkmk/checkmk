@@ -8,6 +8,6 @@ description:
  The Check will return {OK} if the Service is running, {CRITICAL} if the state is fault, {WARNING} in each other case.
  It is possible to change the behavior in WATO.
 
-inventory:
+discovery:
  One service is created
 

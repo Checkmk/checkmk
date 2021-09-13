@@ -9,7 +9,7 @@ description:
 item:
  The VPN ID.
 
-inventory:
+discovery:
  One service is created for each VPN
  if the VPN
 

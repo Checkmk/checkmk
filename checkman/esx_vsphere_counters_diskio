@@ -12,6 +12,6 @@ description:
 item:
  The fixed statement {{SUMMARY}}
 
-inventory:
+discovery:
  One service is created for each ESX host.
 

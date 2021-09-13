@@ -5,7 +5,6 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
-import * as page_menu from "page_menu";
 
 //#   +--------------------------------------------------------------------+
 //#   | Handling of the asynchronous service discovery dialog              |
@@ -31,7 +30,7 @@ export function start(host_name, folder_path, discovery_options, transid, reques
         folder_path: folder_path,
         transid: transid,
         start_time: utils.time(),
-        is_finished_function: is_finished,
+        is_finished_function: response => response.is_finished,
         update_function: update,
         finish_function: finish,
         error_function: error,
@@ -51,7 +50,7 @@ function get_post_data(host_name, folder_path, discovery_options, transid, reque
         request = Object.assign(request, request_vars);
     }
 
-    if (discovery_options.action == "bulk_update") {
+    if (["bulk_update", "update_services"].includes(discovery_options.action)) {
         var checked_checkboxes = [];
         var checkboxes = document.getElementsByClassName("service_checkbox");
         for (var i = 0; i < checkboxes.length; i++) {
@@ -69,10 +68,6 @@ function get_post_data(host_name, folder_path, discovery_options, transid, reque
     if (transid !== undefined) post_data += "&_transid=" + encodeURIComponent(transid);
 
     return post_data;
-}
-
-function is_finished(response) {
-    return response.is_finished;
 }
 
 function finish(response) {
@@ -118,13 +113,24 @@ function update(handler_data, response) {
     page_menu_bar.outerHTML = response.page_menu;
     utils.execute_javascript_by_object(page_menu_bar);
 
+    // Update fix all button
+    var fixall_container = document.getElementById("fixall_container");
+    fixall_container.style.display = "block";
+    fixall_container.innerHTML = response.fixall;
+    utils.execute_javascript_by_object(fixall_container);
+
     // Update the content table
     var container = document.getElementById("service_container");
     container.style.display = "block";
     container.innerHTML = response.body;
     utils.execute_javascript_by_object(container);
 
-    page_menu.update_page_state_top_line(response.pending_changes_info);
+    if (response.pending_changes_info) {
+        utils.update_pending_changes(response.pending_changes_info);
+    }
+
+    // Also execute delayed active checks once to trigger delayed checks that are initially visible.
+    trigger_delayed_active_checks();
 }
 
 function get_state_independent_controls() {

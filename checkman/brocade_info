@@ -10,5 +10,5 @@ description:
  Depending on the firmware version only part of the information may be
  available.
 
-inventory:
+discovery:
  One service is created for each host.

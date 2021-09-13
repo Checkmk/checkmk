@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # Format of a response string according to the manufacturer documentation:
 # status@item_count@item[1].name@item[1].value@...item[n].name@item[n].value@$
 # Beware, though: Item names are not always unique!

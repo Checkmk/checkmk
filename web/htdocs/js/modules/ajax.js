@@ -48,6 +48,8 @@ export function call_ajax(url, optional_args) {
             method: "GET",
             post_data: null,
             sync: false,
+            for_license_usage: false,
+            authorization: null,
         },
         optional_args
     );
@@ -79,8 +81,17 @@ export function call_ajax(url, optional_args) {
         }
     }
 
+    if (args.authorization) {
+        // args.authorization contains base64 encoded 'username:password'
+        AJAX.setRequestHeader("Authorization", "Basic " + args.authorization);
+    }
+
     if (args.method == "POST") {
-        AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        if (args.for_license_usage) {
+            AJAX.setRequestHeader("Content-type", "application/json");
+        } else {
+            AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        }
     }
 
     if (!args.sync) {
@@ -100,7 +111,12 @@ export function call_ajax(url, optional_args) {
                     }
                 } else {
                     if (args.error_handler)
-                        args.error_handler(args.handler_data, AJAX.status, AJAX.statusText);
+                        args.error_handler(
+                            args.handler_data,
+                            AJAX.status,
+                            AJAX.statusText,
+                            AJAX.responseText
+                        );
                 }
             }
         };

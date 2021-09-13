@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Cisco Prime API response parser
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 see https://solutionpartner.cisco.com/media/prime-infrastructure-api-reference-v3-0/192.168.115.187/webacs/api/v1/data/ClientCountscc3b.html
 """
 
@@ -32,8 +32,4 @@ def parse_cisco_prime(key, info):
     }
     """
     elements = json.loads(info[0][0])["queryResponse"]["entity"]
-    return {
-        item["@id"]: item  #
-        for elem in elements  #
-        for item in (elem[key],)
-    }
+    return {item["@id"]: item for elem in elements for item in (elem[key],)}

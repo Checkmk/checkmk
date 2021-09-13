@@ -17,6 +17,7 @@
 #include "common/wtools.h"
 #include "player.h"
 #include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
@@ -144,19 +145,19 @@ TEST(PlayerTest, ConfigFolders) {
     {
         std::string s = "$BUILTIN_AGENT_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s = "$BUILTIN_PLUGINS_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s = "$CUSTOM_PLUGINS_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetUserPluginsDir()) + "\\");
     }
 
     {
@@ -170,7 +171,7 @@ static void CreateFileInTemp(const std::filesystem::path& Path) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -184,7 +185,7 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -242,35 +243,34 @@ static cma::PathVector GetFolderStructure() {
 
 TEST(PlayerTest, All) {
     using namespace std::chrono;
-    using namespace std;
 
-    vector<wstring> exe;
-    auto unit_test_path = G_TestPath;
-    exe.push_back(G_ProjectPath / L"a.exe");
-    exe.push_back(G_ProjectPath / L"b.cmd");
-    exe.push_back(G_ProjectPath / L"B.cmd");
+    std::vector<std::wstring> exe;
+    auto unit_test_path = tst::GetUnitTestFilesRoot();
+    exe.push_back(unit_test_path / L"a.exe");
+    exe.push_back(unit_test_path / L"b.cmd");
+    exe.push_back(unit_test_path / L"B.cmd");
     int expected = 0;
-    exe.push_back(G_TestPath / L"test_plugin.cmd");
+    exe.push_back(unit_test_path / L"test_plugin.cmd");
     expected++;
-    exe.push_back(G_TestPath / L"tESt_plugin.cmd");
-    exe.push_back(G_TestPath / L"TEst_plugin2.bat");
+    exe.push_back(unit_test_path / L"tESt_plugin.cmd");
+    exe.push_back(unit_test_path / L"TEst_plugin2.bat");
     expected++;
-    exe.push_back(G_TestPath / L"debug_print.exe");
-    exe.push_back(G_TestPath);
+    exe.push_back(unit_test_path / L"debug_print.exe");
+    exe.push_back(unit_test_path);
     expected = 3;
 
     auto test_plugin_output = cma::tools::ReadFileInVector(
-        (G_TestPath / L"test_plugin.output").wstring().c_str());
+        (unit_test_path / L"test_plugin.output").wstring().c_str());
     EXPECT_TRUE(test_plugin_output);
     if (test_plugin_output) EXPECT_EQ(test_plugin_output->size(), 36);
 
     auto test_plugin2_output = cma::tools::ReadFileInVector(
-        (G_TestPath / L"test_plugin2.output").wstring().c_str());
+        (unit_test_path / L"test_plugin2.output").wstring().c_str());
     EXPECT_TRUE(test_plugin2_output);
     if (test_plugin2_output) EXPECT_EQ(test_plugin2_output->size(), 56);
 
     auto summary_output = cma::tools::ReadFileInVector(
-        (G_TestPath / L"summary.output").wstring().c_str());
+        (unit_test_path / L"summary.output").wstring().c_str());
     EXPECT_TRUE(summary_output);
     if (summary_output) EXPECT_EQ(summary_output->size(), 92);
 
@@ -278,7 +278,7 @@ TEST(PlayerTest, All) {
     auto x = box.start(L"id", exe);
     box.waitForAllProcesses(10000ms, true);
 
-    vector<char> accu;
+    std::vector<char> accu;
     int count = 0;
 
     bool test_size_ok = false;
@@ -370,14 +370,14 @@ TEST(PlayerTest, RealLifeInventory_Long) {
             auto raw_data = reinterpret_cast<const wchar_t*>(Data.data() + 2);
             wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
             if (wdata.back() != 0) wdata += L'\0';
-            data = wtools::ConvertToUTF8(wdata);
+            data = wtools::ToUtf8(wdata);
         } else {
             data.assign(Data.begin(), Data.end());
         }
 
         if (data.back() != 0) data += '\0';
         XLOG::d("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+                wtools::ToUtf8(CmdLine), Pid, Code, data.data());
 
         cma::tools::AddVector(accu, data);
         count++;

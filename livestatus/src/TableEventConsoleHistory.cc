@@ -5,14 +5,12 @@
 
 #include "TableEventConsoleHistory.h"
 
-#include <cstdint>
-
 #include "Column.h"
 #include "IntLambdaColumn.h"
 #include "Row.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole(mc) {

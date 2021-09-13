@@ -119,7 +119,7 @@ export class AbstractLayoutStyle {
             .classed("button", true)
             .classed("reset_options", true)
             .attr("value", "Reset default values")
-            .on("click", d => {
+            .on("click", () => {
                 this.reset_default_options();
             });
         this.options_selection
@@ -492,6 +492,7 @@ export class AbstractLayoutStyle {
 class ForceSimulation {
     constructor() {
         this._simulation = d3.forceSimulation();
+        this._simulation.alpha(0);
         this._simulation.alphaMin(0.1);
         this._simulation.on("tick", () => this.tick_called());
         this._setup_forces();
@@ -857,16 +858,15 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     get_drag_callback(drag_function) {
         return d3
             .drag()
-            .on("start.drag", () => this.drag_start())
-            .on("drag.drag", () => {
-                drag_function(), this.changed_options();
-            })
-            .on("end.drag", () => this.drag_end());
+            .on("start.drag", event => this._drag_start(event))
+            .on("drag.drag", event => this._drag_drag(event, drag_function))
+            .on("end.drag", event => this._drag_end(event));
     }
 
-    drag_start() {
+    _drag_start(event) {
         this.drag_start_info = {};
-        this.drag_start_info.start_coords = d3.mouse(this.selection.node());
+        this.drag_start_info.start_coords = [event.x, event.y];
+        this.drag_start_info.delta = {x: 0, y: 0};
         this.drag_start_info.options = JSON.parse(JSON.stringify(this.style_config.options));
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
@@ -874,22 +874,23 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this._layout_manager.dragging = true;
     }
 
-    change_rotation() {
-        let coords = d3.mouse(this.selection.node());
-        let offset =
-            ((this.drag_start_info.start_coords[1] - coords[1]) *
-                this._layout_manager.viewport.last_zoom.k) %
-            360;
-        let rotation = (this.drag_start_info.options.rotation + offset) % 360;
-        if (rotation < 0) rotation += 360;
-
-        this.style_config.options.rotation = parseInt(rotation);
-        this.force_style_translation();
+    _drag_drag(event, drag_function) {
+        this.drag_start_info.delta.x += event.dx;
+        this.drag_start_info.delta.y += event.dy;
+        drag_function(event);
+        this.changed_options();
     }
 
-    drag_end() {
+    _drag_end(event) {
         this._layout_manager.dragging = false;
         this._layout_manager.create_undo_step();
+    }
+
+    change_rotation() {
+        let rotation = (this.drag_start_info.options.rotation - this.drag_start_info.delta.y) % 360;
+        if (rotation < 0) rotation += 360;
+        this.style_config.options.rotation = parseInt(rotation);
+        this.force_style_translation();
     }
 
     add_optional_transition(selection_with_node_data) {
@@ -984,10 +985,11 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                     let rad = (node.data.use_style.style_config.options.rotation / 180) * Math.PI;
                     let bounding_rect = {height: 10, width: 10};
                     if (node.data.use_style._no_rotation_vertices)
-                        bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(
-                            node.data.use_style._no_rotation_vertices,
-                            rad
-                        );
+                        bounding_rect =
+                            node_visualization_utils.get_bounding_rect_of_rotated_vertices(
+                                node.data.use_style._no_rotation_vertices,
+                                rad
+                            );
                     return [bounding_rect.height * 1.1 + 100, bounding_rect.width * 1.1 + 100];
                 }
 
@@ -1083,19 +1085,18 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     generate_overlay() {
         if (!this._layout_manager.edit_layout) return;
 
-        let theme_prefix = this._layout_manager.viewport.main_instance.get_theme_prefix();
         this.add_enclosing_hull(this.selection, this._vertices);
         let elements = [
             {
                 node: this.style_root_node,
                 type: "scale",
-                image: theme_prefix + "/images/icon_resize.png",
+                image: "themes/facelift/images/icon_resize.png",
                 call: this.get_drag_callback(() => this.resize_layer_drag()),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
-                image: theme_prefix + "/images/icon_rotate_left.png",
+                image: "themes/facelift/images/icon_rotate_left.png",
                 call: this.get_drag_callback(() => this.change_rotation()),
             },
         ];
@@ -1135,9 +1136,9 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         };
     }
 
-    resize_layer_drag() {
+    resize_layer_drag(event) {
         let rotation_rad = (this.style_config.options.rotation / 180) * Math.PI;
-        let coords = d3.mouse(this.selection.node());
+        let coords = d3.pointer(event);
         let offset_y = this.drag_start_info.start_coords[0] - coords[0];
         let offset_x = this.drag_start_info.start_coords[1] - coords[1];
 
@@ -1396,24 +1397,23 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this.add_optional_transition(path).attr("d", arc).style("opacity", null);
 
         // Icons
-        let theme_prefix = this._layout_manager.viewport.main_instance.get_theme_prefix();
         let elements = [
             {
                 node: this.style_root_node,
                 type: "radius",
-                image: theme_prefix + "/images/icon_resize.png",
+                image: "themes/facelift/images/icon_resize.png",
                 call: this.get_drag_callback(() => this.change_radius()),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
-                image: theme_prefix + "/images/icon_rotate_left.png",
+                image: "themes/facelift/images/icon_rotate_left.png",
                 call: this.get_drag_callback(() => this.change_rotation()),
             },
             {
                 node: this.style_root_node,
                 type: "degree",
-                image: theme_prefix + "/images/icon_pie_chart.png",
+                image: "themes/facelift/images/icon_pie_chart.png",
                 call: this.get_drag_callback(() => this.change_degree()),
             },
         ];
@@ -1428,12 +1428,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
         );
-        let coords = d3.mouse(this.selection.node());
-        let offset_x =
-            (this.drag_start_info.start_coords[1] - coords[1]) *
-            this._layout_manager.viewport.last_zoom.k;
         this.style_config.options.radius = parseInt(
-            Math.min(500, Math.max(10, this.drag_start_info.options.radius + offset_x))
+            Math.min(
+                500,
+                Math.max(10, this.drag_start_info.options.radius - this.drag_start_info.delta.y)
+            )
         );
         this.changed_options();
     }
@@ -1442,14 +1441,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
         );
-        let coords = d3.mouse(this.selection.node());
-
-        let offset_x =
-            (this.drag_start_info.start_coords[1] - coords[1]) *
-            2 *
-            this._layout_manager.viewport.last_zoom.k;
         let degree = parseInt(
-            Math.min(360, Math.max(10, this.drag_start_info.options.degree + offset_x))
+            Math.min(
+                360,
+                Math.max(10, this.drag_start_info.options.degree - this.drag_start_info.delta.y)
+            )
         );
         this.style_config.options.degree = degree;
         this.changed_options();
@@ -1759,7 +1755,7 @@ export class LayoutStyleExampleGenerator {
             .enter()
             .append("select")
             .attr("name", this._varprefix + "type")
-            .on("change", () => this._changed_style())
+            .on("change", event => this._changed_style(event))
             .selectAll("option")
             .data(style_choices)
             .enter()
@@ -1769,8 +1765,8 @@ export class LayoutStyleExampleGenerator {
             .text(d => d[1]);
     }
 
-    _changed_style() {
-        let new_style_id = d3.select(d3.event.target).property("value");
+    _changed_style(event) {
+        let new_style_id = d3.select(event.target).property("value");
         this._options_selection.selectAll("*").remove();
         this._viewport_selection.selectAll(".block_style_overlay").remove();
         this.create_example({type: new_style_id, style_config: {}});

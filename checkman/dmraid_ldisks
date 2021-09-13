@@ -16,5 +16,5 @@ description:
 item:
  Mountpoint of the logical disk
 
-inventory:
+discovery:
  One service is created for each logical disk.

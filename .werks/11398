@@ -1,0 +1,13 @@
+Title: Predefined graphs avaible on the grafana connector for RAW Edition
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1614000640
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Wenn using the grafana connector to a RAW edition site the graph modes
+predefined(graphs with metrics aggregated like in the service views) and
+single metric are now available.

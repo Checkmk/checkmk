@@ -6,7 +6,7 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Dict, Generator, get_args, List, Optional
+from typing import Any, Callable, Generator, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
@@ -14,19 +14,20 @@ from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
     DiscoveryFunction,
-    DiscoveryRuleSetType,
     IgnoreResults,
     Metric,
     Result,
     Service,
-    State,
 )
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
-    validate_function_arguments,
+    RuleSetType,
     validate_default_parameters,
+    validate_function_arguments,
+    validate_ruleset_type,
 )
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
@@ -44,8 +45,9 @@ def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> N
             "service name and description inconsistency: Please neither have your plugins "
             "name start with %r, nor the description with %r. In the rare case that you want to "
             "implement a check plugin explicitly designed for management boards (and nothing else),"
-            " you must do both of the above." %
-            (CheckPluginName.MANAGEMENT_PREFIX, MANAGEMENT_DESCR_PREFIX))
+            " you must do both of the above."
+            % (CheckPluginName.MANAGEMENT_PREFIX, MANAGEMENT_DESCR_PREFIX)
+        )
 
 
 def _requires_item(service_name: str) -> bool:
@@ -66,6 +68,7 @@ def _filter_discovery(
 
     This allows for better typing in base code.
     """
+
     @functools.wraps(generator)
     def filtered_generator(*args, **kwargs):
         for element in generator(*args, **kwargs):
@@ -78,11 +81,14 @@ def _filter_discovery(
     return filtered_generator
 
 
-def _filter_check(generator: Callable[..., Generator[Any, None, None]],) -> CheckFunction:
+def _filter_check(
+    generator: Callable[..., Generator[Any, None, None]],
+) -> CheckFunction:
     """Only let Result, Metric and IgnoreResults through
 
     This allows for better typing in base code.
     """
+
     @functools.wraps(generator)
     def filtered_generator(*args, **kwargs):
         for element in generator(*args, **kwargs):
@@ -93,36 +99,6 @@ def _filter_check(generator: Callable[..., Generator[Any, None, None]],) -> Chec
     return filtered_generator
 
 
-def _validate_discovery_ruleset(ruleset_name: Optional[str],
-                                default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
-        return
-
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
-def _validate_discovery_ruleset_type(ruleset_type: DiscoveryRuleSetType) -> None:
-    if ruleset_type not in get_args(DiscoveryRuleSetType):
-        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
-                         (ruleset_type, ",".join(repr(c) for c in get_args(DiscoveryRuleSetType))))
-
-
-def _validate_check_ruleset(ruleset_name: Optional[str],
-                            default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
-        return
-
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
 def _validate_kwargs(
     *,
     plugin_name: CheckPluginName,
@@ -130,11 +106,11 @@ def _validate_kwargs(
     service_name: str,
     requires_item: bool,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Dict],
+    discovery_default_parameters: Optional[ParametersTypeAlias],
     discovery_ruleset_name: Optional[str],
-    discovery_ruleset_type: DiscoveryRuleSetType,
+    discovery_ruleset_type: RuleSetType,
     check_function: Callable,
-    check_default_parameters: Optional[Dict],
+    check_default_parameters: Optional[ParametersTypeAlias],
     check_ruleset_name: Optional[str],
     cluster_check_function: Optional[Callable],
 ) -> None:
@@ -146,11 +122,7 @@ def _validate_kwargs(
         discovery_ruleset_name,
         discovery_default_parameters,
     )
-    # _validate_discovery_ruleset(
-    #     discovery_ruleset_name,
-    #     discovery_default_parameters,
-    # )
-    _validate_discovery_ruleset_type(discovery_ruleset_type,)
+    validate_ruleset_type(discovery_ruleset_type)
     validate_function_arguments(
         type_label="discovery",
         function=discovery_function,
@@ -164,10 +136,6 @@ def _validate_kwargs(
         check_ruleset_name,
         check_default_parameters,
     )
-    # _validate_check_ruleset(
-    #     check_ruleset_name,
-    #     check_default_parameters,
-    # )
     validate_function_arguments(
         type_label="check",
         function=check_function,
@@ -188,31 +156,17 @@ def _validate_kwargs(
     )
 
 
-def unfit_for_clustering_wrapper(check_function):
-    """Return a cluster_check_function that displays a generic warning"""
-    # copy signature of check_function
-    @functools.wraps(check_function, ("__attributes__",))
-    def unfit_for_clustering(*args, **kwargs):
-        yield Result(
-            state=State.UNKNOWN,
-            summary=("This service is not ready to handle clustered data. "
-                     "Please change your configuration."),
-        )
-
-    return unfit_for_clustering
-
-
 def create_check_plugin(
     *,
     name: str,
     sections: Optional[List[str]] = None,
     service_name: str,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Dict] = None,
+    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
-    check_default_parameters: Optional[Dict] = None,
+    check_default_parameters: Optional[ParametersTypeAlias] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
     module: Optional[str] = None,
@@ -249,9 +203,9 @@ def create_check_plugin(
     disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
-    cluster_check_function = (unfit_for_clustering_wrapper(check_function)
-                              if cluster_check_function is None else
-                              _filter_check(cluster_check_function))
+    cluster_check_function = (
+        None if cluster_check_function is None else _filter_check(cluster_check_function)
+    )
 
     return CheckPlugin(
         name=plugin_name,
@@ -260,7 +214,9 @@ def create_check_plugin(
         discovery_function=disco_func,
         discovery_default_parameters=discovery_default_parameters,
         discovery_ruleset_name=disco_ruleset_name,
-        discovery_ruleset_type=discovery_ruleset_type,
+        discovery_ruleset_type=(
+            "merged" if discovery_ruleset_type is RuleSetType.MERGED else "all"
+        ),
         check_function=_filter_check(check_function),
         check_default_parameters=check_default_parameters,
         check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,

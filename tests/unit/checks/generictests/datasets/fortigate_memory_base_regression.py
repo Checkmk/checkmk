@@ -18,7 +18,7 @@ info = [
 
 
 discovery = {
-    '': [(None, 'fortigate_memory_base_default_levels')],
+    '': [(None, {})],
 }
 
 
@@ -30,23 +30,23 @@ checks = {
             ]),
         ]),
         (None, {"levels": (15., 85.)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 15.0%/85.0% used)', [
+            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 15.00%/85.00% used)', [
                 ('mem_used', 367217213.44, 289908326.4, 1642813849.6, 0, 1932722176)
             ]),
         ]),
         (None, {"levels": (-85., -15.)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 85.0%/15.0% free)', [
+            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 85.00%/15.00% free)', [
                 ('mem_used', 367217213.44, 289908326.4000001, 1642813849.6, 0, 1932722176),
             ]),
         ]),
-        (None, {"levels": (367217200, 1565504900)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 350 MiB/1.46 GiB used)', [
-                ('mem_used', 367217213.44, 367217200.0, 1565504900.0, 0, 1932722176),
+        (None, {"levels": (340, 1500)}, [
+            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit at 340 MiB/1.46 GiB used)', [
+                ('mem_used', 367217213.44, 356515840.0, 1572864000.0, 0, 1932722176),
             ]),
         ]),
-        (None, {"levels": (-1717986918, -1024**2)}, [
-            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 1.60 GiB/1.00 MiB free)', [
-                ('mem_used', 367217213.44, 214735258.0, 1931673600.0, 0, 1932722176),
+        (None, {"levels": (-1717, -1)}, [
+            (1, 'Used: 19.0% - 350.21 MB of 1.80 GB (warn/crit below 1.68 GiB/1.00 MiB free)', [
+                ('mem_used', 367217213.44, 132317184.0, 1931673600.0, 0, 1932722176),
             ]),
         ]),
     ],

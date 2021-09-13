@@ -5,8 +5,10 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
 INSTALL_PREFIX=""
-CLANG_VERSION=10
+CLANG_VERSION=""
 TARGET_DIR=/opt
 
 failure() {
@@ -49,6 +51,21 @@ if [[ $# -ne 0 ]]; then
     failure "superfluous arguments:" "$@"
 fi
 
+if [ -z "$CLANG_VERSION" ]; then
+    cd "${SCRIPT_DIR}"
+    while true; do
+        if [ -e defines.make ]; then
+            CLANG_VERSION=$(make --no-print-directory --file=defines.make print-CLANG_VERSION)
+            break
+        elif [ $PWD == / ]; then
+            echo "could not determine Clang version" >&2
+            exit 1
+        else
+            cd ..
+        fi
+    done
+fi
+
 # The tag/version numbering scheme is a big mess...
 case $CLANG_VERSION in
 3.5) TAG_NAME="3.5" LIB_VERSION="3.5" ;;
@@ -63,6 +80,9 @@ case $CLANG_VERSION in
 8) TAG_NAME="8.0" LIB_VERSION="8" ;;
 9) TAG_NAME="9.0" LIB_VERSION="9" ;;
 10) TAG_NAME="10" LIB_VERSION="10" ;;
+11) TAG_NAME="11" LIB_VERSION="11" ;;
+12) TAG_NAME="12" LIB_VERSION="12" ;;
+12) TAG_NAME="13" LIB_VERSION="13" ;;
 *) failure "Unknown Clang version '${CLANG_VERSION}'" ;;
 esac
 
@@ -125,12 +145,9 @@ else
     cd $(dirname ${IWYU_PATH})
     rm -f iwyu
     ln --symbolic --force $(basename ${IWYU_PATH}) iwyu
-fi
 
-set_symlinks() {
+    # Hack for our containers
     echo "Set symlink"
     mkdir -p "${TARGET_DIR}/bin"
     ln -sf "${IWYU_PATH}/bin/"* "${TARGET_DIR}/bin"
-}
-
-set_symlinks
+fi

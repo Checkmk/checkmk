@@ -1,4 +1,6 @@
-FROM ubuntu:19.04
+ARG IMAGE_UBUNTU_19_04
+# hadolint ignore=DL3006
+FROM ${IMAGE_UBUNTU_19_04}
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -32,6 +34,8 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     apache2-dev \
     autoconf \
     build-essential \
+    chrpath \
+    curl \
     devscripts \
     dnsutils \
     dpatch \
@@ -39,7 +43,9 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     gawk \
     gettext \
     git-buildpackage \
-    curl \
+    gtk-doc-tools \
+    iputils-ping \
+    joe \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -63,6 +69,7 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     libssl-dev \
     libtool \
     libxml2-dev \
+    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \
@@ -71,9 +78,7 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     texinfo \
     tk-dev \
     uuid-dev \
-    chrpath \
-    joe \
-    iputils-ping \
+    valgrind \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
@@ -92,12 +97,14 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-cmake.sh
+RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-cmk-dependencies.sh
 
 # Exclusively for this distro at the moment, because it is used by several CI
 # jobs for special tasks (checking out git, "make dist", orchestrating other

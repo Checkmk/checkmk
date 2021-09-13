@@ -1,0 +1,17 @@
+Title: db2_mem, mssql_blocked_sessions: Fix usage of new service description
+Class: fix
+Compatible: incompat
+Component: multisite
+Date: 1614173056
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+New installations should use the new service descriptions on this checks.
+
+Furthermore, the option "DB2 memory usage" had no effect on updated
+installations.
+
+Please check your settings within "Use new service descriptions" in global settings.
+Rediscovery of db2_mem services might be necessary.

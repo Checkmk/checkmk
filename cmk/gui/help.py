@@ -5,15 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import cast
 
-import cmk.gui.config as config
 import cmk.gui.pages
-from cmk.gui.globals import html
+from cmk.gui.globals import request, response, user
 
 
 @cmk.gui.pages.register("ajax_switch_help")
 def ajax_switch_help() -> None:
-    state = html.request.var("enabled", "") != ""
-    cast(config.LoggedInUser, config.user).show_help = state
-    html.write(json.dumps(state))
+    state = request.var("enabled", "") != ""
+    user.show_help = state
+    response.set_data(json.dumps(state))

@@ -4,24 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Mapping,
-    Sequence,
-    Tuple,
-)
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters, StringTable
-
 import time
-from .agent_based_api.v1 import (
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    Service,
-)
-from .utils import interfaces, diskstat
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+
+from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import diskstat, interfaces
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -56,14 +44,16 @@ from .utils import interfaces, diskstat
 # ...
 # sys.uptime||630664|second
 
-Section = Dict[str, Dict[str, List[Tuple[List[str], str]]]]
+Values = Sequence[str]
+SubSectionCounter = Dict[str, List[Tuple[Values, str]]]
+Section = Dict[str, SubSectionCounter]
 
 
 def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_esx_vsphere_counters([
-    ... ['disk.numberRead', 'naa.5000cca05688e814', '0#0', 'number'],
+    ... ['disk.numberReadAveraged', 'naa.5000cca05688e814', '0#0', 'number'],
     ... ['disk.write',
     ...  'naa.6000eb39f31c58130000000000000015',
     ...  '0#0',
@@ -72,7 +62,7 @@ def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
     ... ['net.droppedRx', 'vmnic1', '0#0', 'number'],
     ... ['net.errorsRx', '', '0#0', 'number'],
     ... ]))
-    {'disk.numberRead': {'naa.5000cca05688e814': [(['0', '0'], 'number')]},
+    {'disk.numberReadAveraged': {'naa.5000cca05688e814': [(['0', '0'], 'number')]},
      'disk.write': {'naa.6000eb39f31c58130000000000000015': [(['0', '0'],
                                                               'kiloBytesPerSecond')]},
      'net.bytesRx': {'vmnic0': [(['1', '1'], 'kiloBytesPerSecond')]},
@@ -98,7 +88,7 @@ register.agent_section(
 )
 
 
-def average_parsed_data(values: Sequence[str]) -> float:
+def average_parsed_data(values: Values) -> float:
     """
     >>> average_parsed_data(['1', '2'])
     1.5
@@ -110,7 +100,7 @@ def average_parsed_data(values: Sequence[str]) -> float:
     return sum(map(int, values)) / len(values) if values else 0
 
 
-#.
+# .
 #   .--Interfaces----------------------------------------------------------.
 #   |           ___       _             __                                 |
 #   |          |_ _|_ __ | |_ ___ _ __ / _| __ _  ___ ___  ___             |
@@ -132,18 +122,18 @@ def _get_ctr_multiplier(ctr_name: str) -> int:
 
 
 _CTR_TO_IF_FIELDS = {
-    'bytesRx': 'in_octets',  # is in Kilobytes!
-    'packetsRx': 'in_ucast',
-    'multicastRx': 'in_mcast',
-    'broadcastRx': 'in_bcast',
-    'droppedRx': 'in_discards',
-    'errorsRx': 'in_errors',
-    'bytesTx': 'out_octets',  # is in Kilobytes!
-    'packetsTx': 'out_ucast',
-    'multicastTx': 'out_mcast',
-    'broadcastTx': 'out_bcast',
-    'droppedTx': 'out_discards',
-    'errorsTx': 'out_errors',
+    "bytesRx": "in_octets",  # is in Kilobytes!
+    "packetsRx": "in_ucast",
+    "multicastRx": "in_mcast",
+    "broadcastRx": "in_bcast",
+    "droppedRx": "in_discards",
+    "errorsRx": "in_errors",
+    "bytesTx": "out_octets",  # is in Kilobytes!
+    "packetsTx": "out_ucast",
+    "multicastTx": "out_mcast",
+    "broadcastTx": "out_bcast",
+    "droppedTx": "out_discards",
+    "errorsTx": "out_errors",
 }
 
 
@@ -171,7 +161,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
     ... 'net.unknownProtos': {'vmnic4': [(['0', '0'], 'number')]},
     ... 'net.usage': {'vmnic4': [(['53', '305'], 'kiloBytesPerSecond')]},
     ... }))
-    [Interface(index='0', descr='vmnic4', alias='vmnic4', type='6', speed=10000000000, oper_status='1', in_octets=105472, in_ucast=2437, in_mcast=113, in_bcast=208, in_discards=0, in_errors=0, out_octets=76800, out_ucast=1146, out_mcast=0, out_bcast=2, out_discards=0, out_errors=0, out_qlen=0, phys_address='dQ\x06ðÅÐ', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='0', descr='vmnic4', alias='vmnic4', type='6', speed=10000000000, oper_status='1', in_octets=105472, in_ucast=2437, in_mcast=113, in_bcast=208, in_discards=0, in_errors=0, out_octets=76800, out_ucast=1146, out_mcast=0, out_bcast=2, out_discards=0, out_errors=0, out_qlen=0, phys_address='dQ\x06ðÅÐ', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=182272)]
     """
     rates: Dict[str, Dict[str, int]] = {}
     mac_addresses: Dict[str, str] = {}
@@ -218,7 +208,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
             index=str(index),
             descr=name,
             alias=name,
-            type='6',  # Ethernet
+            type="6",  # Ethernet
             speed=iface_rates.get("bandwidth", 0),
             oper_status=str(iface_rates.get("state", 1)),
             phys_address=interfaces.mac_address_from_hexstring(mac_addresses.get(name, "")),
@@ -233,7 +223,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
 
 
 def discover_esx_vsphere_counters_if(
-    params: Sequence[Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -244,7 +234,7 @@ def discover_esx_vsphere_counters_if(
 
 def check_esx_vsphere_counters_if(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     if "net.bytesRx" not in section:
@@ -262,7 +252,7 @@ register.check_plugin(
     sections=["esx_vsphere_counters"],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_esx_vsphere_counters_if,
     check_ruleset_name="if",
@@ -276,12 +266,20 @@ def discover_esx_vsphere_counters_diskio(section: Section) -> DiscoveryResult:
         yield Service(item="SUMMARY")
 
 
-def _concat_instance_multivalues(parsed, key):
-    all_multivalues = []
-    for data in parsed.get(key, {}).values():
+def _sum_instance_counts(counts: SubSectionCounter) -> float:
+    summed_avgs = 0.0
+    for data in counts.values():
         multivalues, _unit = data[0]
-        all_multivalues.extend(multivalues)
-    return all_multivalues
+        summed_avgs += average_parsed_data(multivalues)
+    return summed_avgs
+
+
+def _max_latency(latencies: SubSectionCounter) -> Optional[int]:
+    all_latencies: List[int] = []
+    for data in latencies.values():
+        multivalues, _unit = data[0]
+        all_latencies.extend(map(int, multivalues))
+    return max(all_latencies) if all_latencies else None
 
 
 def check_esx_vsphere_counters_diskio(
@@ -296,17 +294,16 @@ def check_esx_vsphere_counters_diskio(
         data = section.get("disk.%s" % op_type, {}).get("")
         multivalues, _unit = data[0] if data else (None, None)
         if multivalues is not None:
-            summary['%s_throughput' % op_type] = average_parsed_data(multivalues) * 1024
+            summary["%s_throughput" % op_type] = average_parsed_data(multivalues) * 1024
 
         # sum up all instances
-        op_counts = _concat_instance_multivalues(section, "disk.number%s" % op_type.title())
-        if op_counts:
-            # these are absolute counts, every 20 seconds.
-            summary["%s_ios" % op_type] = average_parsed_data(op_counts) / 20.0
+        op_counts_key = "disk.number%sAveraged" % op_type.title()
+        if op_counts_key in section:
+            summary["%s_ios" % op_type] = _sum_instance_counts(section[op_counts_key])
 
-    latencies = _concat_instance_multivalues(section, "disk.deviceLatency")
-    if latencies:
-        summary['latency'] = max(int(l) for l in latencies) / 1000.0
+    latency = _max_latency(section.get("disk.deviceLatency", {}))
+    if latency is not None:
+        summary["latency"] = latency / 1000.0
 
     yield from diskstat.check_diskstat_dict(
         params=params,
@@ -317,10 +314,11 @@ def check_esx_vsphere_counters_diskio(
 
 
 register.check_plugin(
-    name='esx_vsphere_counters_diskio',
-    service_name='Disk IO %s',
+    name="esx_vsphere_counters_diskio",
+    sections=["esx_vsphere_counters"],
+    service_name="Disk IO %s",
     discovery_function=discover_esx_vsphere_counters_diskio,
     check_function=check_esx_vsphere_counters_diskio,
     check_default_parameters={},
-    check_ruleset_name='diskstat',
+    check_ruleset_name="diskstat",
 )

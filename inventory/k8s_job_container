@@ -15,13 +15,15 @@ def inv_k8s_job_container(info, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
 
     for container_name, container_data in sorted(parsed.items()):
-        inv_node.append({
-            'name': container_name,
-            'image': container_data['image'],
-            'image_pull_policy': container_data['image_pull_policy'],
-        })
+        inv_node.append(
+            {
+                "name": container_name,
+                "image": container_data["image"],
+                "image_pull_policy": container_data["image_pull_policy"],
+            }
+        )
 
 
-inv_info['k8s_job_container'] = {
-    'inv_function': inv_k8s_job_container,
+inv_info["k8s_job_container"] = {
+    "inv_function": inv_k8s_job_container,
 }

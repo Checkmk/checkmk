@@ -1,0 +1,14 @@
+Title: Reordered inventory of VMware ESX clusters
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1606988318
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The inventory table below Software>Applications>Vmwareesx had a clumsy layout
+and did not represent topology constraints of VMware clusters.
+This change introduces a Cluster->(Datacenter, Hostsystems, VMs) relationship.

@@ -6,17 +6,16 @@
 
 from typing import Any, Dict
 
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_registry,
-)
 
 
-def load_configuration_settings(site_specific=False, custom_site_path=None):
+def load_configuration_settings(site_specific=False, custom_site_path=None, full_config=False):
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
-        if site_specific:
+        if full_config:
+            settings.update(domain().load_full_config())
+        elif site_specific:
             settings.update(domain().load_site_globals(custom_site_path=custom_site_path))
         else:
             settings.update(domain().load())
@@ -36,24 +35,28 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
         varname = config_variable.ident()
         if varname not in vars_:
             continue
-        per_domain.setdefault(domain().ident, {})[varname] = vars_[varname]
+        per_domain.setdefault(domain().ident(), {})[varname] = vars_[varname]
 
-    # The global setting wato_enabled is not registered in the configuration domains
-    # since the user must not change it directly. It is set by D-WATO on slave sites.
-    if "wato_enabled" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident, {})["wato_enabled"] = vars_["wato_enabled"]
-    if "userdb_automatic_sync" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident,
-                              {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
-    if "user_login" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident, {})["user_login"] = vars_["user_login"]
+    # Some settings are handed over from the central site but are not registered in the
+    # configuration domains since the user must not change it directly.
+    for varname in [
+        "wato_enabled",
+        "userdb_automatic_sync",
+        "user_login",
+    ]:
+        if varname in vars_:
+            per_domain.setdefault(ConfigDomainGUI.ident(), {})[varname] = vars_[varname]
 
     for domain in ABCConfigDomain.enabled_domains():
-        domain_config = per_domain.get(domain().ident, {})
+        domain_config = per_domain.get(domain().ident(), {})
         if site_specific:
             domain().save_site_globals(domain_config, custom_site_path=custom_site_path)
         else:
             domain().save(domain_config, custom_site_path=custom_site_path)
+
+
+def load_site_global_settings(custom_site_path=None):
+    return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
 
 
 def save_site_global_settings(settings, custom_site_path=None):

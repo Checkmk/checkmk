@@ -19,7 +19,7 @@ description:
 item:
  Name of the resource
 
-inventory:
+discovery:
  One service is created for each resource group or resource
  if {heartbeat_crm_resources_naildown} is set to {True}.
 

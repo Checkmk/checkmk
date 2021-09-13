@@ -1,0 +1,19 @@
+Title: Fixed acknowledgement expiry
+Class: fix
+Compatible: compat
+Component: core
+Date: 1613414150
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0i1
+
+Previously, the expiration mechanism for acknowledgements ignored the
+"persistent" flag, so the corresponding comments always vanished after
+expiration.  Furthermore, the expiration of one acknowledgement didn't
+remove all other acknowledgements for the same host/service.
+
+Both aspects were inconsistent with the behavior of the manual removal of
+acknowledgements, which was quite confusing and unintended.  This has been
+fixed, so acknowledgement expiry is identical to manual removal at the given
+point in time.

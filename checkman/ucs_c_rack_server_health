@@ -31,7 +31,7 @@ description:
 
  - {UNKNOW} in case of any other health value than {Good}
 
-inventory:
+discovery:
  One service is created for each server rack included in the special agent output.
 
 item:

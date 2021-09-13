@@ -70,16 +70,16 @@ def parse_aix_hacmp_services(info):
     parsed = {}
     inst = None
     for line in info:
-        if line[0] == 'Details':
+        if line[0] == "Details":
             inst = None
 
-        elif line[0] == 'Status':
+        elif line[0] == "Status":
             subsystem_ty_name = line[3]
-            if subsystem_ty_name == 'PowerHA':
+            if subsystem_ty_name == "PowerHA":
                 subsystem_ty_name += " %s" % line[4]
             inst = parsed.setdefault(subsystem_ty_name, [])
 
-        elif line[0] == 'Subsystem':
+        elif line[0] == "Subsystem":
             # header line
             continue
 
@@ -95,16 +95,16 @@ def parse_aix_hacmp_services(info):
 @get_parsed_item_data
 def check_aix_hacmp_services(item, _no_params, data):
     for subsytem_name, status in data:
-        if status == 'active':
+        if status == "active":
             state = 0
         else:
             state = 2
         yield state, "Subsystem: %s, Status: %s" % (subsytem_name, status)
 
 
-check_info['aix_hacmp_services'] = {
-    'parse_function': parse_aix_hacmp_services,
-    'inventory_function': discover(),
-    'check_function': check_aix_hacmp_services,
-    'service_description': 'HACMP Service %s',
+check_info["aix_hacmp_services"] = {
+    "parse_function": parse_aix_hacmp_services,
+    "inventory_function": discover(),
+    "check_function": check_aix_hacmp_services,
+    "service_description": "HACMP Service %s",
 }

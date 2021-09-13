@@ -38,8 +38,9 @@ def check_emcvnx_sp_util(item, params, parsed):
     if busy_ticks_rate + idle_ticks_rate == 0:
         sp_util = 0
     else:
-        sp_util = 100 * (busy_ticks_rate /
-                         (busy_ticks_rate + idle_ticks_rate))  # fixed: true-division
+        sp_util = 100 * (
+            busy_ticks_rate / (busy_ticks_rate + idle_ticks_rate)
+        )  # fixed: true-division
     infotext = "%.1f%%" % sp_util
     if sp_util >= crit:
         state = 2
@@ -54,7 +55,7 @@ def check_emcvnx_sp_util(item, params, parsed):
     return state, infotext, [("storage_processor_util", sp_util, warn, crit, 0, 100.0)]
 
 
-check_info['emcvnx_sp_util'] = {
+check_info["emcvnx_sp_util"] = {
     "parse_function": parse_emcvnx_sp_util,
     "inventory_function": inventory_emcvnx_sp_util,
     "check_function": check_emcvnx_sp_util,

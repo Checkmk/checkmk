@@ -1,0 +1,19 @@
+Title: Make confirm dialog for downtimes more user friendly
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1614007259
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Previously, there were misunderstandings about setting downtimes in service
+views. Without the option "Schedule downtimes on the affected hosts instead of on the
+individual services" the downtime was "only" set for the services of that view,
+not the host itself.
+
+To make this clearer, the user can now choose between "Schedule downtime on
+host" and "Schedule downtime for services" in the confirm dialog for downtimes
+in such views. The above mentioned option for "...hosts instead of on the
+individual services" was removed.

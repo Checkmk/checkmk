@@ -9,8 +9,8 @@ SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; e
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-make all
-for lang in ??; do
+make mo
+for lang in ?? ??_??; do
     sudo mkdir -p $ROOT/share/check_mk/locale/$lang/LC_MESSAGES
     # Install the alias file
     sudo install -o $SITE -g $SITE -v -m 644 $lang/alias $ROOT/share/check_mk/locale/$lang/

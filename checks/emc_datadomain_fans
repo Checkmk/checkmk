@@ -44,6 +44,7 @@ check_info["emc_datadomain_fans"] = {
             4,  # fanDescription
             5,  # fanLevel
             6,  # fanStatus
-        ]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Data Domain OS")
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Data Domain OS"),
 }

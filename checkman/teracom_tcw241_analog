@@ -11,5 +11,5 @@ description:
 item:
  The first number of the object identifier
 
-inventory:
+discovery:
  One service is created for each sensor.

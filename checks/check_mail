@@ -6,55 +6,76 @@
 
 
 def check_mail_arguments(params):
-    args = []
+    """
+    >>> for a in check_mail_arguments({
+    ...     'service_description': 'Email',
+    ...     'fetch': (
+    ...       'IMAP', {
+    ...         'server': 'imap.gmx.com',
+    ...         'ssl': (True, None),
+    ...         'auth': ('me@gmx.de', ('password', 'p4ssw0rd'))}),
+    ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@tribe29.com',
+    ...     'cleanup': True}}):
+    ...   print(a)
+    --fetch-protocol=IMAP
+    --fetch-server=imap.gmx.com
+    --fetch-tls
+    --fetch-username=me@gmx.de
+    --fetch-password=p4ssw0rd
+    --forward-ec
+    --forward-facility=2
+    --forward-host=me.too@tribe29.com
+    --cleanup=delete
+    """
 
     fetch_proto, fetch_params = params["fetch"]
-    args.append("--fetch-protocol=%s" % fetch_proto)
 
-    if "server" in fetch_params:
-        args.append("--fetch-server=%s" % fetch_params["server"])
-    else:
-        args.append("--fetch-server=$HOSTADDRESS$")
+    args = []
+    args.append(f"--fetch-protocol={fetch_proto}")
+    args.append(f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}")
 
     fetch_use_ssl, fetch_port = fetch_params["ssl"]
     if fetch_use_ssl:
         args.append("--fetch-tls")
+
     if fetch_port is not None:
-        args.append("--fetch-port=%d" % fetch_port)
+        args.append(f"--fetch-port={fetch_port}")
 
     username, password = fetch_params["auth"]
-    args.append("--fetch-username=%s" % username)
+    args.append(f"--fetch-username={username}")
     args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 
     if "connect_timeout" in params:
-        args.append("--connect-timeout=%d" % params["connect_timeout"])
+        args.append(f"--connect-timeout={params['connect_timeout']}")
 
     if "forward" in params:
         forward = params["forward"]
-        args += ["--forward-ec"]
-        if "method" in forward:
-            args.append("--forward-method=%s" % forward["method"])
+        args.append("--forward-ec")
+        if forward.get("method"):
+            args.append(f"--forward-method={forward['method']}")
 
-        if "match_subject" in forward:
-            args.append("--match-subject=%s" % forward["match_subject"])
+        if forward.get("match_subject"):
+            args.append(f"--match-subject={forward['match_subject']}")
 
+        # int - can be 0
         if "facility" in forward:
-            args.append("--forward-facility=%d" % forward["facility"])
+            args.append(f"--forward-facility={forward['facility']}")
 
-        if "host" in forward:
-            args.append("--forward-host=%s" % forward["host"])
+        if forward.get("host"):
+            args.append(f"--forward-host={forward['host']}")
 
-        if "application" in forward:
-            args.append("--forward-app=%s" % forward["application"])
+        if forward.get("application"):
+            args.append(f"--forward-app={forward['application']}")
 
+        # int - can be 0
         if "body_limit" in forward:
-            args.append("--body-limit=%d" % forward["body_limit"])
+            args.append(f"--body-limit={forward['body_limit']}")
 
-        if "cleanup" in forward:
-            if forward["cleanup"] is True:
-                args.append("--cleanup=delete")
-            else:
-                args.append("--cleanup=%s" % forward["cleanup"])
+        if isinstance(forward.get("cleanup"), bool):  # can never be False
+            args.append("--cleanup=delete")
+        elif isinstance(forward.get("cleanup"), str):
+            move_to_subfolder = forward["cleanup"]
+            args.append(f"--cleanup={move_to_subfolder}")
 
     return args
 

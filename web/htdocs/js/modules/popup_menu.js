@@ -152,7 +152,7 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, o
     } else if (method.type === "ajax") {
         const content = generate_menu(trigger_obj.parentNode, resizable);
         content.innerHTML =
-            '<img src="themes/facelift/images/icon_reload.png" class="icon reloading">';
+            '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">';
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
         ajax.get_url(
             "ajax_popup_" + method.endpoint + ".py" + url_vars,
@@ -282,7 +282,8 @@ function rgb2hex(rgb) {
 function handle_render_popup_contents(data, response_text) {
     if (data.content) {
         data.content.innerHTML = response_text;
-        fix_popup_menu_position(data.event, data.content);
+        const menu = data.content.closest("div#popup_menu");
+        fix_popup_menu_position(data.event, menu);
     }
 }
 
@@ -387,7 +388,10 @@ export function pagetype_add_to_container(page_type, page_name) {
             // sidebar.
             if (response_body) {
                 var parts = response_body.split("\n");
-                if (parts[1] == "true") utils.reload_sidebar();
+                if (parts[1] == "true") {
+                    if (parts[0]) utils.reload_whole_page(parts[0]);
+                    else utils.reload_whole_page();
+                }
                 if (parts[0]) window.location.href = parts[0];
             }
         },
@@ -420,26 +424,43 @@ function resize_all_mega_menu_popups() {
     }
 }
 
-function resize_mega_menu_popup(menu_popup) {
-    /* Resize a mega menu to the size of its content. Two cases are considered here:
+export function resize_mega_menu_popup(menu_popup) {
+    /* Resize a mega menu to the size of its content. Three cases are considered here:
      *   1) The overview of all topics is opened.
      *   2) The extended menu that shows all items of a topic is opened.
+     *   3) The menu's search results are opened.
      */
     const topics = menu_popup.getElementsByClassName("topic");
     if (topics.length === 0) {
         return;
     }
 
+    const ncol = mega_menu_last_topic_grow(topics);
+    const search_results = menu_popup.getElementsByClassName("hidden").length;
     const extended_topic = Array.prototype.slice
         .call(topics)
         .find(e => utils.has_class(e, "extended"));
-    if (!extended_topic) {
+
+    if (!extended_topic || search_results) {
         const visible_topics = Array.prototype.slice.call(topics).filter(e => utils.is_visible(e));
         if (visible_topics.length === 0) {
             return;
         }
+
         const topic = visible_topics[visible_topics.length - 1];
-        const menu_width = Math.min(maximum_popup_width(), topic.offsetLeft + topic.offsetWidth);
+        let menu_width = Math.min(maximum_popup_width(), topic.offsetWidth * ncol);
+
+        // If we have only a single column, we need a bigger menu width, as the search field and
+        // the more button needs to have enough space
+        if (ncol === 1) {
+            topics.forEach(topic => utils.add_class(topic, "single_column"));
+            utils.add_class(menu_popup, "single_column");
+        } else if (utils.has_class(menu_popup, "single_column")) {
+            topics.forEach(topic => utils.remove_class(topic, "single_column"));
+            utils.remove_class(menu_popup, "single_column");
+            resize_mega_menu_popup(menu_popup);
+            return;
+        }
         menu_popup.style.width = menu_width + "px";
     } else {
         const items = extended_topic.getElementsByTagName("ul")[0];
@@ -458,6 +479,36 @@ function resize_mega_menu_popup(menu_popup) {
         items.style.width = items_width + "px";
         menu_popup.style.width = items_width + 40 + "px";
     }
+}
+
+function mega_menu_last_topic_grow(topics) {
+    // For each column, let the last topic grow by setting/removing the css class "grow"
+    // Return the number of columns
+    if (topics.length === 0) {
+        return 0;
+    }
+
+    let ncol = 1;
+    let previous_node = null;
+    topics.forEach(function (node) {
+        if (utils.get_computed_style(node, "display") == "none") {
+            utils.remove_class(node, "grow");
+            return;
+        }
+
+        if (previous_node) {
+            if (previous_node.offsetTop > node.offsetTop) {
+                utils.add_class(previous_node, "grow");
+                ncol += 1;
+            } else {
+                utils.remove_class(previous_node, "grow");
+            }
+        }
+        previous_node = node;
+    });
+    if (previous_node) utils.add_class(previous_node, "grow"); // last node needs to grow, too
+
+    return ncol;
 }
 
 function maximum_popup_width() {
@@ -484,10 +535,13 @@ export function mega_menu_show_all_topics(current_topic_id) {
 export function mega_menu_hide_entries(menu_id) {
     let menu = document.getElementById(menu_id);
     let more_is_active = menu.classList.contains("more");
-    let max_entry_number = 10;
     let topics = menu.getElementsByClassName("topic");
     topics.forEach(topic => {
         if (topic.classList.contains("extended")) return;
+        let max_entry_number = Number(topic.getAttribute("data-max-entries"));
+        if (!max_entry_number) {
+            return;
+        }
         let entries = topic.getElementsByTagName("li");
         let show_all_items_entry = entries[entries.length - 1];
         if (entries.length > max_entry_number + 1) {

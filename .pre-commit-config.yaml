@@ -17,26 +17,24 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.4.0
+      rev: v4.0.1
       hooks:
           - id: trailing-whitespace
           - id: check-merge-conflict
             types: [file]
-#         - id: check-docstring-first
           - id: check-yaml
           - id: end-of-file-fixer
-#    - repo: https://github.com/pre-commit/mirrors-scss-lint
-#      rev: v0.59.0
-#      hooks:
-#          - id: scss-lint
-#            files: \.scss$
-    - repo: local
+            exclude: .werks/*
+    - repo: https://github.com/pycqa/isort
+      rev: 5.9.3
       hooks:
-          - id: yapf
-            name: Check yapf
-            entry: scripts/check-yapf -i
-            language: script
-            types: [file, python]
+          - id: isort
+            name: isort (python)
+    - repo: https://github.com/psf/black
+      rev: 21.8b0
+      hooks:
+          - id: black
+    - repo: local
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules
@@ -66,7 +64,7 @@ repos:
             types: [file, python]
           - id: absolute-imports
             name: Check absolute imports
-            entry: scripts/check-absolute-imports
+            entry: scripts/check-absolute-imports.py
             language: script
             types: [file, python]
           - id: flake8
@@ -75,9 +73,3 @@ repos:
             language: script
             types: [file, python]
             verbose: true
-            #          - id: unit-tests
-            #name: Check affected unit tests
-            #entry: scripts/check-pytest-testmon 127
-            #language: script
-            #types: [file, python]
-            #verbose: true

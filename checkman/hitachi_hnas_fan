@@ -18,5 +18,5 @@ description:
 item:
  The ID of the PNode plus the ID of the Fan, separated by a dot. E. g. 1.2
 
-inventory:
+discovery:
  One service is created for each fan.

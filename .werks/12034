@@ -1,0 +1,24 @@
+Title: Distributed monitoring: Prevent remote site connection with [central]_bi sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1612195568
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Checkmk creates NagVis backends for all sites. For each site it creates two backends:
+
+<ul>
+<li>[site_id] - Livestatus connection to the sites core</li>
+<li>[site_id]_bi - Bacned to Checkmk BI for displaying aggregation states</li>
+</ul>
+
+In case one tries to add a site with a Site-ID <tt>[central_site]_bi</tt> this
+will result in a name conflict between the central site BI backend and the
+remote site livestatus backend.
+
+The distributed monitoring configuration prevents adding new remote sites with this
+name from now on.

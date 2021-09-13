@@ -9,5 +9,5 @@ description:
 item:
  The name of the memory unit
 
-inventory:
+discovery:
  One service is created for each memory unit.

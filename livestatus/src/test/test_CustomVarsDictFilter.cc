@@ -4,6 +4,8 @@
 // source code package.
 
 #include <iomanip>
+#include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -19,6 +21,8 @@
 #include "nagios.h"
 #include "opids.h"
 #include "test_utilities.h"
+class Comment;
+class Downtime;
 
 namespace {
 std::string b16encode(const std::string& str) {
@@ -43,7 +47,13 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
         return filter.accepts(Row{&test_host}, {}, {});
     }
 
-    NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
+    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
+    NagiosCore core{downtimes_,
+                    comments_,
+                    NagiosPaths{},
+                    NagiosLimits{},
+                    NagiosAuthorization{},
                     Encoding::utf8};
 
     TestHost test_host{

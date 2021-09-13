@@ -1,6 +1,6 @@
 //
 //
-// Support for the Zip Files
+// Support for the Zip and Cab Files
 //
 //
 
@@ -11,6 +11,7 @@
 #include <fmt/format.h>
 #include <shellapi.h>
 
+#include <array>
 #include <filesystem>
 
 #include "common/cfg_info.h"
@@ -70,25 +71,23 @@ static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
     auto hResult = dispatch->NameSpace(variantDir, &folder);
 
     if (!SUCCEEDED(hResult)) {
-        XLOG::l("Error during NameSpace 1 /unzip/ {:X}", hResult);
+        XLOG::l("Error during NameSpace 1 /unzip/ {:#X}", hResult);
         return nullptr;
     }
 
     return ReleasedResource<Folder>{folder};
 }
 
-static bool CheckTheParameters(std::wstring_view file_src,
-                               std::wstring_view dir_dest) {
+static bool CheckTheParameters(std::filesystem::path file,
+                               std::filesystem::path dir) {
     namespace fs = std::filesystem;
-    fs::path file = file_src;
-    fs::path dir = dir_dest;
     if (!fs::exists(file) || !fs::is_regular_file(file)) {
-        XLOG::l("File '{}' is absent or not suitable", file.u8string());
+        XLOG::l("File '{}' is absent or not suitable", file);
         return false;
     }
 
     if (!fs::exists(dir) || !fs::is_directory(dir)) {
-        XLOG::l("Dir '{}' is absent or not suitable to unzip", dir.u8string());
+        XLOG::l("Dir '{}' is absent or not suitable to unzip", dir);
         return false;
     }
 
@@ -127,55 +126,35 @@ static ReleasedResource<FolderItems> GetFolderItems(Folder *folder) {
     return ReleasedResource<FolderItems>{fi};
 }
 
-std::vector<std::wstring> List(std::wstring_view file_src) {
-    namespace fs = std::filesystem;
-    fs::path file = file_src;
-    if (!fs::exists(file) || !fs::is_regular_file(file)) {
-        XLOG::l("File '{}' is absent or not suitable", file.u8string());
-        return {};
+namespace {
+
+zip::Type GetFileType(std::wstring_view name) noexcept {
+    constexpr std::array<char, 2> cab_header{'M', 'S'};
+    constexpr std::array<char, 2> zip_header{'P', 'K'};
+    try {
+        std::ifstream f(name, std::ios::binary);
+        if (!f.good()) {
+            return zip::Type::unknown;
+        }
+
+        std::array<char, 2> header;
+        f.read(reinterpret_cast<char *>(header.data()), 2);
+        if (header == cab_header) {
+            return zip::Type::cab;
+        }
+        if (header == zip_header) {
+            return zip::Type::zip;
+        }
+        XLOG::l("Header is not known '{}{}'", header[0], header[1]);
+    } catch (const std::exception &e) {
+        // catching possible exceptions in the
+        // ifstream or memory allocations
+        XLOG::l("Exception '{}' generated reading header", e.what());
     }
-
-    wtools::Bstr src(file_src);
-
-    wtools::InitWindowsCom();
-
-    auto dispatch = CreateShellDispatch();
-    if (nullptr == dispatch) {
-        XLOG::l("Error during Create Instance /unzip/");
-        return {};
-    }
-
-    auto from_file = CreateFolder(dispatch.get(), src);
-    if (from_file == nullptr) {
-        XLOG::l("Error during NameSpace 1 /unzip/");
-        return {};
-    }
-
-    auto fi = GetFolderItems(from_file.get());
-    if (fi == nullptr) {
-        XLOG::l("Failed to get folder items /unzip/");
-        return {};
-    }
-
-    std::vector<std::wstring> vec;
-    long count = 0;
-    fi->get_Count(&count);
-    for (int i = 0; i < count; i++) {
-        auto item = GetItem(fi.get(), i);
-        if (item == nullptr) continue;
-
-        BSTR name;
-        item->get_Name(&name);
-        vec.emplace_back(name);
-        ::SysFreeString(name);
-    }
-
-    return vec;
+    return zip::Type::unknown;
 }
 
-bool Extract(std::wstring_view file_src, std::wstring_view dir_dest) {
-    if (!CheckTheParameters(file_src, dir_dest)) return false;
-
+bool UnzipFile(std::wstring_view file_src, std::wstring_view dir_dest) {
     wtools::Bstr src(file_src);
     wtools::Bstr dest(dir_dest);
 
@@ -195,25 +174,53 @@ bool Extract(std::wstring_view file_src, std::wstring_view dir_dest) {
 
     auto from_file = CreateFolder(dispatch.get(), src);  // in
     if (from_file == nullptr) {
-        XLOG::l("Error finding from file /unzip/");
+        XLOG::l("Error finding from file /unzip/. The file is '{}'",
+                wtools::ToUtf8(file_src));
         return false;
     }
 
     // files & folders
     auto file_items = GetFolderItems(from_file.get());
     if (file_items == nullptr) {
-        XLOG::l("Failed to get folder items /unzip/");
+        XLOG::l("Failed to get folder items /unzip/. The file is '{}'",
+                wtools::ToUtf8(file_src));
         return false;
     }
 
     auto hres = UnzipExec(to_folder.get(), file_items.get());
 
     if (hres != S_OK) {
-        XLOG::l("Error during copy here /unzip/ {:X}", hres);
+        XLOG::l("Error during copy here /unzip/ {:#X}", hres);
         return false;
     }
 
     XLOG::l.i("SUCCESS /unzip/");
     return true;
+}
+
+bool UncabFile(std::wstring_view file_src, std::wstring_view dir_dest) {
+    auto command_line = fmt::format(L"expand {} -F:* {}", file_src, dir_dest);
+    XLOG::l.i("Executing '{}'", wtools::ToUtf8(command_line));
+    return tools::RunCommandAndWait(command_line);
+}
+}  // namespace
+
+bool Extract(const std::filesystem::path &file_src,
+             const std::filesystem::path &dir_dest) {
+    if (!CheckTheParameters(file_src, dir_dest)) {
+        return false;
+    }
+
+    switch (GetFileType(file_src.wstring())) {
+        case zip::Type::zip:
+            return UnzipFile(file_src.wstring(), dir_dest.wstring());
+        case zip::Type::cab:
+            return UncabFile(file_src.wstring(), dir_dest.wstring());
+        case zip::Type::unknown:
+            return false;
+    }
+
+    // unreachable
+    return false;
 }
 }  // namespace cma::tools::zip

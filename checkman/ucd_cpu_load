@@ -15,7 +15,7 @@ description:
  the warn/crit levels are interpreted as {absolute} values - not
  as values {per cpu} (like the in agent based load check).
 
-inventory:
+discovery:
  One service is created for each device supporting the UCD
  MIB. Currently the SNMP scan function will only consider hosts
  with the text {linux} in their system description. You can

@@ -16,6 +16,6 @@ description:
 item:
  The temperature sensor designation
 
-inventory:
+discovery:
  One service is created for each sensor.
 

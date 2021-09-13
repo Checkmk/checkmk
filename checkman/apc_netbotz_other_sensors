@@ -22,5 +22,5 @@ description:
 
  This check uses the NETBOTZV2-MIB.
 
-inventory:
+discovery:
  One service is created if there is a valid state.

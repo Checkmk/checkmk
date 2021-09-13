@@ -76,7 +76,7 @@ def parse_emcvnx_mirrorview(info):
     parsed = {}
     instance = None
     for line in info:
-        if ' '.join(line).startswith("Unable to validate the identity of the server."):
+        if " ".join(line).startswith("Unable to validate the identity of the server."):
             break
 
         elif line[0] == "MirrorView Name":
@@ -105,9 +105,11 @@ def parse_emcvnx_mirrorview(info):
 
 
 def inventory_emcvnx_mirrorview(parsed):
-    return [(lun_name, None)
-            for lun_name, lun_states in parsed.items()
-            if lun_states["MirrorView State"].lower() == "active"]
+    return [
+        (lun_name, None)
+        for lun_name, lun_states in parsed.items()
+        if lun_states["MirrorView State"].lower() == "active"
+    ]
 
 
 def check_emcvnx_mirrorview(item, params, parsed):
@@ -122,14 +124,15 @@ def check_emcvnx_mirrorview(item, params, parsed):
         state, state_readable = map_state[parsed[item]["MirrorView State"].lower()]
         yield state, "Status: %s" % state_readable
 
-        _state_faulted, state_readable_faulted = map_state[parsed[item]
-                                                           ["MirrorView Faulted"].lower()]
+        _state_faulted, state_readable_faulted = map_state[
+            parsed[item]["MirrorView Faulted"].lower()
+        ]
         yield state, "Faulted: %s" % state_readable_faulted
 
 
-check_info['emcvnx_mirrorview'] = {
-    'parse_function': parse_emcvnx_mirrorview,
-    'inventory_function': inventory_emcvnx_mirrorview,
-    'check_function': check_emcvnx_mirrorview,
-    'service_description': 'Mirror view %s',
+check_info["emcvnx_mirrorview"] = {
+    "parse_function": parse_emcvnx_mirrorview,
+    "inventory_function": inventory_emcvnx_mirrorview,
+    "check_function": check_emcvnx_mirrorview,
+    "service_description": "Mirror view %s",
 }

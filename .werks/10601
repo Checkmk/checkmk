@@ -8,8 +8,13 @@ Knowledge: undoc
 Level: 2
 Version: 2.0.0i1
 
-We are now converting all plugins to the new format expected by
-the future API. Migrated are plugins from
+We are now converting all plugins to the format expected by
+the new API for check and inventory plugins.
+
+This 'auto-migration' is done in memory upon loading the plugins,
+all files will remain unchanged on disk.
+
+Migrated are plugins from
 
 <ul>
   <li>share/check_mk/checks</li>
@@ -20,22 +25,27 @@ the future API. Migrated are plugins from
 
 Although we are trying to migrate as many check and inventory plugins
 as possible on the fly, for some plugins this may fail.
+You can check for failing auto-migrations running the command `cmk -R`.
+You will be informed of any auto-migration failures.
+
+If that is the case, you have to migrate your plugin manually.
 
 These are the anticipated reasons why auto-migration may fail:
 
 <h4>A cluster aware checkplugin</h4>
 
-Checkmk refuses to auto-migrate cluster aware (those with node_info
-set to True) check plugins. Auto converting the data layout
-is too error prone. These plugins must be migrated manually.
+Checkmk refuses to auto-migrate cluster aware check plugins (those
+with node_info set to True). Auto converting the data layout is too
+error prone.
 
 <h4>Checkplugins using 'extra_sections'</h4>
 
 Checkmk refuses to auto-migrate check plugins that make use of the
 'extra_sections' feature. In the new API the destiction between the
 regular section and additional 'extra_sections' is not made, and all
-section content will be passed in its 'parsed' version.
-Therefore these Plugins have to be migrated manually.
+section content will be passed in its 'parsed' version. Please refer
+to the Sphinx documentation of `register.check_plugin` for details
+on the usage of the `sections` keyword.
 
 <h4>A missing SNMP scan function</h4>
 
@@ -61,6 +71,6 @@ to see what options are available.
 <h4> Known limitations</h4>
 
 <ul>
-  <li>HostLabels that are generated in a subchecks discovery function are lost</li>
+  <li>HostLabels are only supported via the new API (see werk #11117)</li>
 </ul>
 

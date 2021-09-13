@@ -43,12 +43,16 @@ def check_postgres_instances(item, _no_params, parsed):
     pid = parsed.get(item, {}).get("pid")
     if pid is not None:
         return 0, "Status: running with PID %s" % pid
-    return 2, "Instance %s not running" % item
+    return (
+        2,
+        "Instance %s not running or postgres DATADIR name is not identical with instance name."
+        % item,
+    )
 
 
-check_info['postgres_instances'] = {
-    'parse_function': parse_postgres_instances,
-    'inventory_function': discover(),
-    'check_function': check_postgres_instances,
-    'service_description': 'PostgreSQL Instance %s',
+check_info["postgres_instances"] = {
+    "parse_function": parse_postgres_instances,
+    "inventory_function": discover(),
+    "check_function": check_postgres_instances,
+    "service_description": "PostgreSQL Instance %s",
 }

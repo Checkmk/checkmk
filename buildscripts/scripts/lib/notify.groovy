@@ -40,7 +40,9 @@ Error Message:
 }
 
 def notify_error(error) {
-    mail_build_failed(error)
+    if(AUTHOR_MAIL != "weblate@checkmk.com" ) {
+        mail_build_failed(error)
+    }
     // Disabled for the moment. It currently does not work because of some
     // wrong configuration.
     //

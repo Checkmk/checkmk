@@ -13,5 +13,5 @@ description:
 item:
  The name or description of the module.
 
-inventory:
+discovery:
  One sevice is created for each module.

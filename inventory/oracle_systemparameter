@@ -46,16 +46,18 @@ def inv_oracle_systemparameter(info, inventory_tree):
     for inst, data in parsed.items():
         for param in sorted(data, key=lambda r: r.get("param_name")):
 
-            inv_systemparameters.append({
-                "sid": inst,
-                "name": param["param_name"],
-                "value": param["value"],
-                "isdefault": param["isdefault"]
-            })
+            inv_systemparameters.append(
+                {
+                    "sid": inst,
+                    "name": param["param_name"],
+                    "value": param["value"],
+                    "isdefault": param["isdefault"],
+                }
+            )
 
     inv_node.extend(sorted(inv_systemparameters, key=lambda r: r.get("sid")))
 
 
-inv_info['oracle_systemparameter'] = {
-    'inv_function': inv_oracle_systemparameter,
+inv_info["oracle_systemparameter"] = {
+    "inv_function": inv_oracle_systemparameter,
 }

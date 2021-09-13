@@ -189,7 +189,7 @@ def _host_name(host, proxy, params):
         return host.address
     if host.virtual:
         return host.virtual
-    if params['mode'][0] == 'cert':
+    if params["mode"][0] == "cert":
         return host.address
     # Don't return the address in this case, because check_http would
     # automatically set the HTTP Host header and use HTTP/1.1 instead of

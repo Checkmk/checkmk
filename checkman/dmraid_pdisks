@@ -16,5 +16,5 @@ description:
 item:
  Name of the filesystem
 
-inventory:
+discovery:
  One service is created for each logical disk.

@@ -6,7 +6,7 @@
 
 # <<<hpux_lvm:sep(58)>>>
 # vg_name=/dev/vg00:vg_write_access=read,write:vg_status=available:max_lv=255:\
-#cur_lv=8:open_lv=8:max_pv=16:cur_pv=4:act_pv=4:max_pe_per_pv=4384:vgda=8:pe_size=16:to
+# cur_lv=8:open_lv=8:max_pv=16:cur_pv=4:act_pv=4:max_pe_per_pv=4384:vgda=8:pe_size=16:to
 # tal_pe=17388:alloc_pe=13920:free_pe=3468:total_pvg=0:total_spare_pvs=0:total_spare_pvs_in_use=0:vg_version=1.0.0
 # lv_name=/dev/vg00/lvol1:lv_status=available,syncd:lv_size=1792:current_le=112:allocated_pe=224:used_pv=2
 # lv_name=/dev/vg00/lvol2:lv_status=available,syncd:lv_size=32768:current_le=2048:allocated_pe=4096:used_pv=2
@@ -48,7 +48,7 @@ def check_hpux_lvm(item, params, info):
 
 
 check_info["hpux_lvm"] = {
-    'check_function': check_hpux_lvm,
-    'inventory_function': inventory_hpux_lvm,
-    'service_description': 'Logical Volume %s',
+    "check_function": check_hpux_lvm,
+    "inventory_function": inventory_hpux_lvm,
+    "service_description": "Logical Volume %s",
 }

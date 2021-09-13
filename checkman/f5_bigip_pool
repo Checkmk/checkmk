@@ -21,7 +21,7 @@ description:
 item:
  Name of the pool
 
-inventory:
+discovery:
  One service is created for each pool defined on a system,
  even if the pool is not enabled, as this is considered a temporary state.
 

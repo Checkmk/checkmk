@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "stdafx.h"
 
@@ -18,7 +19,11 @@
 
 #include "Configurable.h"
 #include "Logger.h"
+#define memmove MemMove
+void MemMove(void *dst, const void *src, size_t count);
 #include "SimpleIni.h"
+#undef memmove
+
 #include "cfg.h"
 #include "cvt.h"
 #include "stringutil.h"
@@ -127,7 +132,7 @@ bool feedSection(const std::string &hostname, ConfigurableMap &configurables,
 
 }  // namespace
 
-bool Configuration::ReadSettings(std::filesystem::path Path,
+bool Configuration::ReadSettings(const std::filesystem::path &Path,
                                  bool Local) noexcept {
     try {
         for (const auto &cfg : _configurables) {
@@ -221,7 +226,7 @@ void Configuration::outputConfigurables(
                         else
                             out += "- include = " + entry.second + "\n";
                         cma::cfg::ReplaceInString(
-                            out, wtools::ConvertToUTF8(cma::cfg::GetUserDir()),
+                            out, wtools::ToUtf8(cma::cfg::GetUserDir()),
                             cma::cfg::vars::kProgramDataFolder);
                         mrpe_out += out;
                     }
@@ -854,7 +859,7 @@ void Parser::prepare() {
     pi_ = new ParserImplementation;
 }
 
-bool Parser::readIni(std::filesystem::path Path, bool) {
+bool Parser::readIni(const std::filesystem::path &Path, bool) {
     if (!pi_) return false;
     return pi_->parser.ReadSettings(Path, false);
 }
@@ -1052,3 +1057,17 @@ YAML::Node Parser::emitYaml() noexcept {
 }  // namespace cma::cfg::cvt
 
 }  // namespace cma::cfg::cvt
+
+/// \brief - memmove replacer for SimpleIni.h
+///
+/// asan  gives false positive when MSVC optimizer which replaces memmove with
+/// memcpy we don't want either to disable optimization or disable asan
+/// Not tested.
+void MemMove(void *dst, const void *src, size_t count) {
+    if (dst == nullptr || src == nullptr || count == 0) {
+        return;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        static_cast<char *>(dst)[i] = static_cast<const char *>(dst)[i];
+    }
+}

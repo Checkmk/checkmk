@@ -1,0 +1,12 @@
+Title: Status mapping params for haproxy
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1615544140
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+New parameters added for haproxy_frontend and haproxy_server.
+It's now possible to map haproxy statuses to checkmk states.

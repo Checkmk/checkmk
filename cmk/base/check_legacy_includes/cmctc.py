@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
 
 def cmctc_snmp_scan_function(oid):
@@ -12,12 +12,7 @@ def cmctc_snmp_scan_function(oid):
 
 
 def cmctc_translate_status(status):
-    return {
-        4: 0,  # ok
-        7: 1,  # warning
-        8: 1,  # too low
-        9: 2  # too high
-    }.get(status, 3)
+    return {4: 0, 7: 1, 8: 1, 9: 2}.get(status, 3)  # ok  # warning  # too low  # too high
 
 
 def cmctc_translate_status_text(status):

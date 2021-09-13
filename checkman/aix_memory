@@ -18,6 +18,6 @@ description:
  This check uses the same logic as {mem.used} - the memory check for Linux.
  Please see details there.
 
-inventory:
+discovery:
   One service is created for each RAM device.
 

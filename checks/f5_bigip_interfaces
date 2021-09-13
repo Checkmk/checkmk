@@ -24,8 +24,11 @@ def check_f5_bigip_interfaces(item, params, info):
             continue
 
         if int(ifstate) != 0:
-            return (2, "State of %s is %s" %
-                    (f5_bigip_interface_states.get(ifstate, "unhandled (%d)" % ifstate), port))
+            return (
+                2,
+                "State of %s is %s"
+                % (f5_bigip_interface_states.get(ifstate, "unhandled (%d)" % ifstate), port),
+            )
 
         this_time = int(time.time())
         in_per_sec = get_rate("f5_interface.in.%s" % item, this_time, saveint(inbytes))
@@ -43,12 +46,10 @@ def check_f5_bigip_interfaces(item, params, info):
 
 check_info["f5_bigip_interfaces"] = {
     "check_function": check_f5_bigip_interfaces,
-    "inventory_function": lambda info: [(x[0], {
-        'state': 0
-    }) for x in info if int(x[1]) == 0],
+    "inventory_function": lambda info: [(x[0], {"state": 0}) for x in info if int(x[1]) == 0],
     "service_description": "f5 Interface %s",
     "has_perfdata": True,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
-                          [".1.3.6.1.4.1.3375.2.1.3.4.10", ".1.3.6.1.4.1.3375.2.1.3.4.20"],
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
+    in [".1.3.6.1.4.1.3375.2.1.3.4.10", ".1.3.6.1.4.1.3375.2.1.3.4.20"],
     "snmp_info": (".1.3.6.1.4.1.3375.2.1.2.4", ["4.3.1.1", "1.2.1.17", "4.3.1.3", "4.3.1.5"]),
 }

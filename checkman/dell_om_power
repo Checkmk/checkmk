@@ -12,5 +12,5 @@ description:
 item:
  The index of a redundancy group
 
-inventory:
+discovery:
  One service is created for each redundancy group.

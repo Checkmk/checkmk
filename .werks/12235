@@ -1,0 +1,17 @@
+Title: Permissions issues for DB2 Linux agent plugin
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614154729
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The Linux agent plugin for monitoring DB2 instances (<tt>mk_db2</tt>) had a
+permissions issue when being deployed via the agent bakery. The plugin tried
+to call itself as a DB2 instance user, however, the directory where the plugin
+is located requires root permissions.
+
+For this fix to come into effect, users have to re-bake and update the Linux
+agent for all affected systems.

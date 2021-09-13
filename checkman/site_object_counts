@@ -41,10 +41,10 @@ description:
 
  {TAGS=snmp}
 
- {SERVICE_CHECK_COMMANDS=if}
+ {SERVICE_CHECK_COMMANDS=interfaces}
 
  With this configuration the agent plugin returns the amount of all SNMP hosts
- and the amount of all interface services of the type {if} of all sites.
+ and the amount of all interface services of the type {interfaces} of all sites.
 
 
  {Example 2}
@@ -53,10 +53,10 @@ description:
 
  {TAGS=snmp}
 
- {SERVICE_CHECK_COMMANDS=if}
+ {SERVICE_CHECK_COMMANDS=interfaces}
 
  With this configuration the agent plugin returns the amount of all SNMP hosts
- and the amount of all interface services of the type {if} of the sites
+ and the amount of all interface services of the type {interfaces} of the sites
  {site_a} and {site_b}.
 
 
@@ -64,7 +64,7 @@ description:
 
  {TAGS_site_a=snmp}
 
- {SERVICE_CHECK_COMMANDS_site_a=if}
+ {SERVICE_CHECK_COMMANDS_site_a=interfaces}
 
  {TAGS_site_b=agent}
 
@@ -73,7 +73,7 @@ description:
  With this configuration the agent plugin returns
 
  - the amount of all SNMP hosts and the amount of all interface services
- of the type {if} of the site {site_a} and
+ of the type {interfaces} of the site {site_a} and
 
  - the amount of all agent-based hosts and the amount of all Linux interface
  services of the type {lnx_if} of the site {site_b}.
@@ -87,7 +87,7 @@ description:
 
  {TAGS_site_a=snmp}
 
- {SERVICE_CHECK_COMMANDS_site_a=if}
+ {SERVICE_CHECK_COMMANDS_site_a=interfaces}
 
  {TAGS_site_b=agent}
 
@@ -99,7 +99,7 @@ description:
  {omd_status} of all sites.
 
  - additionally, the amount of all SNMP hosts and the amount of all interface
- services of the type {if} of the site {site_a} and
+ services of the type {interfaces} of the site {site_a} and
 
  - additionally, the amount of all agent-based hosts and the amount of all
  Linux interface services of the type {lnx_if} of the site {site_b}.
@@ -115,7 +115,7 @@ description:
 
  {TAGS_site_a=snmp}
 
- {SERVICE_CHECK_COMMANDS_site_a=if}
+ {SERVICE_CHECK_COMMANDS_site_a=interfaces}
 
  {TAGS_site_b=agent}
 
@@ -127,14 +127,14 @@ description:
  {omd_status} of the sites {site_a}, {site_b} and {site_c}.
 
  - additionally, the amount of all SNMP hosts and the amount of all interface
- services of the type {if} of the site {site_a} and
+ services of the type {interfaces} of the site {site_a} and
 
  - additionally, the amount of all agent-based hosts and the amount of all
  Linux interface services of the type {lnx_if} of the site {site_b}.
 
  The check is always in the state OK.
 
-inventory:
+discovery:
  One service is created.
 
 cluster:

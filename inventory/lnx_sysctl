@@ -26,8 +26,9 @@
 
 
 def _evaluate_patterns(par_name, include_patterns, exclude_patterns):
-    return (not any(re.match(pattern, par_name) for pattern in exclude_patterns)) and \
-           any(re.match(pattern, par_name) for pattern in include_patterns)
+    return (not any(re.match(pattern, par_name) for pattern in exclude_patterns)) and any(
+        re.match(pattern, par_name) for pattern in include_patterns
+    )
 
 
 def inv_lnx_sysctl(info, params, inventory_tree):
@@ -41,11 +42,11 @@ def inv_lnx_sysctl(info, params, inventory_tree):
     for line in info:
         par_name = line[0]
         if par_name in kernel_config or _evaluate_patterns(
-                par_name,
-                include_patterns,
-                exclude_patterns,
+            par_name,
+            include_patterns,
+            exclude_patterns,
         ):
-            kernel_config.setdefault(par_name, []).append(' '.join(line[2:]))
+            kernel_config.setdefault(par_name, []).append(" ".join(line[2:]))
 
     inventory_table = []
     for par, values in sorted(kernel_config.items()):
@@ -54,14 +55,14 @@ def inv_lnx_sysctl(info, params, inventory_tree):
         # the parameter exists
         values = [val for val in values if val]
         if not values:
-            values = ['']
+            values = [""]
 
         for value in values:
-            inventory_table.append({'parameter': par, 'value': value})
+            inventory_table.append({"parameter": par, "value": value})
 
     inventory_tree.get_list("software.kernel_config:").extend(inventory_table)
 
 
-inv_info['lnx_sysctl'] = {
+inv_info["lnx_sysctl"] = {
     "inv_function": inv_lnx_sysctl,
 }

@@ -10,5 +10,5 @@ description:
 item:
  Name of the watchdog device
 
-inventory:
+discovery:
  One service is created for each available humidity sensor.

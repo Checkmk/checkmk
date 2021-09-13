@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+from typing import Any, Dict
 
 
 def scan_infoblox(oid):
-    return "infoblox" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.7779.1")
+    return "infoblox" in oid(".1.3.6.1.2.1.1.1.0").lower() or oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.7779.1"
+    )
 
 
 def inventory_infoblox_statistics(info):
@@ -17,7 +18,7 @@ def inventory_infoblox_statistics(info):
 
 
 def check_infoblox_statistics(ty, stats):
-    texts = {}  # type: ignore[var-annotated]
+    texts: Dict[Any, Any] = {}
     perfdata = []
     for what, what_val, what_textfield, what_info in stats:
         texts.setdefault(what_textfield, [])

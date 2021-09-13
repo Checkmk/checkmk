@@ -7,16 +7,13 @@
 import abc
 
 import cmk.gui.sites as sites
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    bulletlink,
-)
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import bulletlink, SidebarSnapin, snapin_registry
+from cmk.gui.utils.urls import urlencode
 
 
-class GroupSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
+class GroupSnapin(SidebarSnapin, abc.ABC):
     @abc.abstractmethod
     def _group_type_ident(self):
         raise NotImplementedError()
@@ -25,7 +22,7 @@ class GroupSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
         group_type = self._group_type_ident()
         html.open_ul()
         for name, alias in sites.all_groups(group_type.replace("group", "")):
-            url = "view.py?view_name=%s&%s=%s" % (group_type, group_type, html.urlencode(name))
+            url = "view.py?view_name=%s&%s=%s" % (group_type, group_type, urlencode(name))
             bulletlink(alias or name, url)
         html.close_ul()
 
@@ -45,7 +42,7 @@ class HostGroups(GroupSnapin):
 
     @classmethod
     def title(cls):
-        return _("Host Groups")
+        return _("Host groups")
 
     @classmethod
     def description(cls):
@@ -63,7 +60,7 @@ class ServiceGroups(GroupSnapin):
 
     @classmethod
     def title(cls):
-        return _("Service Groups")
+        return _("Service groups")
 
     @classmethod
     def description(cls):

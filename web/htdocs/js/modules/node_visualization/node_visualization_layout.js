@@ -8,7 +8,6 @@ export class NodeVisualizationLayout {
         this.viewport = viewport;
         this.reference_size = {};
         this.style_configs = [];
-        this.overlay_config = {};
         this.line_config = {style: "round"};
     }
 
@@ -29,7 +28,6 @@ export class NodeVisualizationLayout {
         return {
             reference_size: this.reference_size,
             style_configs: this.style_configs,
-            overlay_config: this.overlay_config,
             line_config: this.line_config,
         };
     }
@@ -37,7 +35,6 @@ export class NodeVisualizationLayout {
     deserialize(data) {
         this.reference_size = data.reference_size;
         this.style_configs = data.style_configs;
-        this.overlay_config = data.overlay_config;
         this.line_config = data.line_config;
     }
 }

@@ -38,10 +38,10 @@ def check_decru_perf(item, _no_params, info):
 
 
 check_info["decru_perf"] = {
-    'check_function': check_decru_perf,
-    'inventory_function': inventory_decru_perf,
-    'service_description': 'COUNTER %s',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.4.1.12962.1.1.2.1.1', [1, 2]),
-    'snmp_scan_function': lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower(),
+    "check_function": check_decru_perf,
+    "inventory_function": inventory_decru_perf,
+    "service_description": "COUNTER %s",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.12962.1.1.2.1.1", [1, 2]),
+    "snmp_scan_function": lambda oid: "datafort" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

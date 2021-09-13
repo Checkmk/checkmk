@@ -4,26 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=consider-using-in
 
 # pylint: disable=no-else-continue
 
 # pylint: disable=no-else-return
 
-import time
 import re
+import time
 
-from cmk.base.check_api import clear_item_states_by_full_keys
-from cmk.base.check_api import get_all_item_states
-from cmk.base.check_api import host_name
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import host_extra_conf
-from cmk.base.check_api import get_age_human_readable
-from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import get_average
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_average,
+    get_bytes_human_readable,
+    get_percent_human_readable,
+    get_rate,
+    host_extra_conf,
+    host_name,
+)
 
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
 
@@ -45,41 +45,6 @@ diskstat_inventory = []
 # ]
 
 diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
-
-
-def with_unused_counter_removal(plugin_name):
-    '''Return decorator to clean up unused counters
-
-    The decorated parse function will clean up all couters for that plugin which are more
-    than ten times older than the youngest one to avoid growing up the item state.
-    '''
-    def is_plugin_counter_with_age(ident, value):
-        if not isinstance(value, tuple):
-            return False
-        if isinstance(ident, tuple):
-            return ident[0] == plugin_name
-        elif hasattr(ident, "startswith"):
-            return ident.startswith('%s.' % plugin_name)
-        return False
-
-    def decorator(parse_function):
-        def wrapped_parse_function(info):
-            this_time = time.time()
-
-            age_counters = [(this_time - value[0], ident)
-                            for (ident, value) in get_all_item_states().items()
-                            if is_plugin_counter_with_age(ident, value)]
-
-            if age_counters:
-                age_limit = 10 * min(age_counters)[0]
-                counters_to_delete = [ident for (age, ident) in age_counters if age >= age_limit]
-                clear_item_states_by_full_keys(counters_to_delete)
-
-            return parse_function(info)
-
-        return wrapped_parse_function
-
-    return decorator
 
 
 # ==================================================================================================
@@ -117,21 +82,16 @@ def inventory_diskstat_generic(parsed):
 
     for line in parsed:
         name = line[1]
-        if "physical" in modes and \
-           not ' ' in name and \
-           not diskstat_diskless_pattern.match(name):
+        if "physical" in modes and not " " in name and not diskstat_diskless_pattern.match(name):
             inventory.append((name, "diskstat_default_levels"))
 
-        if "lvm" in modes and \
-           name.startswith("LVM "):
+        if "lvm" in modes and name.startswith("LVM "):
             inventory.append((name, "diskstat_default_levels"))
 
-        if "vxvm" in modes and \
-           name.startswith("VxVM "):
+        if "vxvm" in modes and name.startswith("VxVM "):
             inventory.append((name, "diskstat_default_levels"))
 
-        if "diskless" in modes and \
-           diskstat_diskless_pattern.match(name):
+        if "diskless" in modes and diskstat_diskless_pattern.match(name):
             # Sort of partitions with disks - typical in XEN virtual setups.
             # Eg. there are xvda1, xvda2, but no xvda...
             inventory.append((name, "diskstat_default_levels"))
@@ -139,7 +99,7 @@ def inventory_diskstat_generic(parsed):
     return inventory
 
 
-def check_diskstat_line(this_time, item, params, line, mode='sectors'):
+def check_diskstat_line(this_time, item, params, line, mode="sectors"):
     average_range = params.get("average")
     if average_range == 0:
         average_range = None  # disable averaging when 0 is set
@@ -165,10 +125,10 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
             warn, crit = None, None
 
         per_sec = get_rate(countername, this_time, int(ctr))
-        if mode == 'sectors':
+        if mode == "sectors":
             # compute IO rate in bytes/sec
             bytes_per_sec = per_sec * 512
-        elif mode == 'bytes':
+        elif mode == "bytes":
             bytes_per_sec = per_sec
 
         dsname = what
@@ -176,19 +136,22 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         # compute average of the rate over ___ minutes
         if average_range is not None:
             perfdata.append((dsname, bytes_per_sec, warn, crit))
-            bytes_per_sec = get_average(countername + ".avg", this_time, bytes_per_sec,
-                                        average_range)
+            bytes_per_sec = get_average(
+                countername + ".avg", this_time, bytes_per_sec, average_range
+            )
             dsname += ".avg"
 
         # check levels
-        state, text, extraperf = check_levels(bytes_per_sec,
-                                              dsname,
-                                              levels,
-                                              scale=1048576,
-                                              statemarkers=True,
-                                              unit='/s',
-                                              human_readable_func=get_bytes_human_readable,
-                                              infoname=what)
+        state, text, extraperf = check_levels(
+            bytes_per_sec,
+            dsname,
+            levels,
+            scale=1048576,
+            statemarkers=True,
+            unit="/s",
+            human_readable_func=get_bytes_human_readable,
+            infoname=what,
+        )
         if text:
             infos.append(text)
         status = max(state, status)
@@ -205,20 +168,20 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         if "read_ios" in params:
             warn, crit = params["read_ios"]
             if reads >= crit:
-                infos.append('Read operations: %d (!!)' % (reads))
+                infos.append("Read operations: %d (!!)" % (reads))
                 status = 2
             elif reads >= warn:
-                infos.append('Read operations: %d (!)' % (reads))
+                infos.append("Read operations: %d (!)" % (reads))
                 status = max(status, 1)
         else:
             warn, crit = None, None
         if "write_ios" in params:
             warn, crit = params["write_ios"]
             if writes >= crit:
-                infos.append('Write operations: %d (!!)' % (writes))
+                infos.append("Write operations: %d (!!)" % (writes))
                 status = 2
             elif writes >= warn:
-                infos.append('Write operations: %d (!)' % (writes))
+                infos.append("Write operations: %d (!)" % (writes))
                 status = max(status, 1)
         else:
             warn, crit = None, None
@@ -282,9 +245,9 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     return (status, ", ".join(infos), perfdata)
 
 
-def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
+def check_diskstat_generic(item, params, this_time, info, mode="sectors"):
     # legacy version if item is "read" or "write"
-    if item in ['read', 'write']:
+    if item in ["read", "write"]:
         return _check_diskstat_old(item, params, this_time, info)
 
     # Sum up either all physical disks (if item is "SUMMARY") or
@@ -296,20 +259,20 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     matching = 0
 
     has_multiple_nodes = len(set(line[0] for line in info)) > 1
-    if item == 'SUMMARY' and has_multiple_nodes:
+    if item == "SUMMARY" and has_multiple_nodes:
         return 3, "summary mode not supported in a cluster"
 
     for line in info:
-        if item == 'SUMMARY' and ' ' in line[1]:
+        if item == "SUMMARY" and " " in line[1]:
             continue  # skip non-physical disks
 
-        elif item == 'SUMMARY' or line[1] == item:
+        elif item == "SUMMARY" or line[1] == item:
             matching += 1
             summed_up = [x + int(y) for x, y in zip(summed_up, line[2:])]
 
     if matching == 0:
         return 3, "No matching disk found"
-    return check_diskstat_line(this_time, item, params, [None, ''] + summed_up, mode)
+    return check_diskstat_line(this_time, item, params, [None, ""] + summed_up, mode)
 
 
 # This is the legacy version of diskstat as used in <= 1.1.10.
@@ -317,9 +280,9 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
 # old installations.
 def _check_diskstat_old(item, params, this_time, info):
     # sum up over all devices
-    if item == 'read':
+    if item == "read":
         index = 2  # sectors read
-    elif item == 'write':
+    elif item == "write":
         index = 3  # sectors written
     else:
         return (3, "invalid item %s" % (item,))
@@ -328,7 +291,7 @@ def _check_diskstat_old(item, params, this_time, info):
     for line in info:
         if line[0] is not None:
             return 3, "read/write mode not supported in a cluster"
-        if ' ' not in line[1]:
+        if " " not in line[1]:
             this_val += int(line[index])
 
     per_sec = get_rate("diskstat." + item, this_time, this_val)
@@ -338,7 +301,7 @@ def _check_diskstat_old(item, params, this_time, info):
     return (0, "%.1f MB/s" % mb_per_s, perfdata)
 
 
-#.
+# .
 #   .--Dict based API------------------------------------------------------.
 #   |  ____  _      _     _                        _      _    ____ ___    |
 #   | |  _ \(_) ___| |_  | |__   __ _ ___  ___  __| |    / \  |  _ \_ _|   |
@@ -403,11 +366,10 @@ def diskstat_select_disk(disks, item):
                 if device.startswith("LVM "):
                     continue  # skip LVM devices for summary
 
-                if True or disk["read_throughput"] + disk["write_throughput"] > 0:  # skip idle disks
-                    num_averaged += 1
-                    for key, value in disk.items():
-                        if key != "node":
-                            summarized[key] += value
+                num_averaged += 1
+                for key, value in disk.items():
+                    if key != "node":
+                        summarized[key] += value
 
             if num_averaged:
                 for key, value in summarized.items():
@@ -454,8 +416,7 @@ def diskstat_select_disk(disks, item):
 def check_diskstat_dict(item, params, disks):
     # Take care of previously discovered services
     if item in ("read", "write"):
-        yield 3, "Sorry, the new version of this check does not " \
-                  "support one service for read and one for write anymore."
+        yield 3, "Sorry, the new version of this check does not support one service for read and one for write anymore."
         return
 
     this_time = time.time()
@@ -474,8 +435,9 @@ def check_diskstat_dict(item, params, disks):
         avg_disk = {}  # Do not modify our arguments!!
         for key, value in disk.items():
             if isinstance(value, (int, float)):
-                avg_disk[key] = get_average("diskstat.%s.%s.avg" % (item, key), this_time, value,
-                                            averaging / 60.0)
+                avg_disk[key] = get_average(
+                    "diskstat.%s.%s.avg" % (item, key), this_time, value, averaging / 60.0
+                )
             else:
                 avg_disk[key] = value
         disk = avg_disk
@@ -484,49 +446,57 @@ def check_diskstat_dict(item, params, disks):
     # Utilization
     if "utilization" in disk:
         util = disk.pop("utilization")
-        yield check_levels(util,
-                           "disk_utilization",
-                           params.get("utilization"),
-                           human_readable_func=lambda x: get_percent_human_readable(x * 100.0),
-                           scale=0.01,
-                           statemarkers=False,
-                           infoname=prefix + "Utilization")
+        yield check_levels(
+            util,
+            "disk_utilization",
+            params.get("utilization"),
+            human_readable_func=lambda x: get_percent_human_readable(x * 100.0),
+            scale=0.01,
+            statemarkers=False,
+            infoname=prefix + "Utilization",
+        )
 
     # Throughput
     for what in "read", "write":
         if what + "_throughput" in disk:
             throughput = disk.pop(what + "_throughput")
-            yield check_levels(throughput,
-                               "disk_" + what + "_throughput",
-                               params.get(what),
-                               unit="/s",
-                               scale=1048576,
-                               statemarkers=False,
-                               human_readable_func=get_bytes_human_readable,
-                               infoname=what.title())
+            yield check_levels(
+                throughput,
+                "disk_" + what + "_throughput",
+                params.get(what),
+                unit="/s",
+                scale=1048576,
+                statemarkers=False,
+                human_readable_func=get_bytes_human_readable,
+                infoname=what.title(),
+            )
 
     # Average wait from end to end
     for what in ["wait", "read_wait", "write_wait"]:
         if "average_" + what in disk:
             wait = disk.pop("average_" + what)
-            yield check_levels(wait,
-                               "disk_average_" + what,
-                               params.get(what),
-                               unit="ms",
-                               scale=0.001,
-                               statemarkers=False,
-                               infoname="Average %s" % what.title().replace("_", " "))
+            yield check_levels(
+                wait,
+                "disk_average_" + what,
+                params.get(what),
+                unit="ms",
+                scale=0.001,
+                statemarkers=False,
+                infoname="Average %s" % what.title().replace("_", " "),
+            )
 
     # Average disk latency
     if "latency" in disk:
         latency = disk.pop("latency")
-        yield check_levels(latency,
-                           "disk_latency",
-                           params.get("latency"),
-                           unit="ms",
-                           scale=0.001,
-                           statemarkers=False,
-                           infoname='Latency')
+        yield check_levels(
+            latency,
+            "disk_latency",
+            params.get("latency"),
+            unit="ms",
+            scale=0.001,
+            statemarkers=False,
+            infoname="Latency",
+        )
 
     # Read/write disk latency
     for what in ["read", "write"]:
@@ -535,13 +505,15 @@ def check_diskstat_dict(item, params, disks):
             continue
         latency = disk.pop(latency_key)
         if latency is not None:
-            yield check_levels(latency,
-                               "disk_%s" % latency_key,
-                               params.get(latency_key),
-                               unit="ms",
-                               scale=0.001,
-                               statemarkers=False,
-                               infoname='%s latency' % what.title())
+            yield check_levels(
+                latency,
+                "disk_%s" % latency_key,
+                params.get(latency_key),
+                unit="ms",
+                scale=0.001,
+                statemarkers=False,
+                infoname="%s latency" % what.title(),
+            )
 
     # Queue lengths
     for what, plugin_text in [
@@ -551,11 +523,13 @@ def check_diskstat_dict(item, params, disks):
     ]:
         if what in disk:
             ql = disk.pop(what)
-            yield check_levels(ql,
-                               "disk_" + what,
-                               params.get(what),
-                               statemarkers=False,
-                               infoname="Average %s" % plugin_text)
+            yield check_levels(
+                ql,
+                "disk_" + what,
+                params.get(what),
+                statemarkers=False,
+                infoname="Average %s" % plugin_text,
+            )
 
     # I/O operations
     for what in "read", "write":
@@ -582,4 +556,4 @@ def check_diskstat_dict(item, params, disks):
             perfdata.append(("disk_" + key, value))
 
     if perfdata:
-        yield 0, '', perfdata
+        yield 0, "", perfdata

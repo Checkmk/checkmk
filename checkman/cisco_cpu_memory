@@ -13,5 +13,5 @@ description:
  kernel reserved memory while occupied memory incorporates it along with used
  memory.
 
-inventory:
+discovery:
  One service is created for each Cisco device.

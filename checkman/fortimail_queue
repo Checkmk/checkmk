@@ -1,0 +1,17 @@
+title: Fortinet FortiMail: Mail Queues
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the length of mail queues of Fortinet FortiMail servers
+ and goes {WARN} or {CRIT} if the length is too large. The default thresholds
+ are 100 and 200 mails. They can be changed via the ruleset "Fortinet
+ FortiMail queue length". Additionally, the check also reports the size of
+ the mail queues in bytes, but no thresholds can be set on this quantity.
+
+item:
+ Name of the queue.
+
+discovery:
+ One service is created per queue.

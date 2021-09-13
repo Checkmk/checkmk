@@ -4,40 +4,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,)
-from .utils import docker, legacy_docker
+from itertools import zip_longest
+from typing import Dict
 
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    HostLabelGenerator,
-)
+from .agent_based_api.v1 import HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
+from .utils import docker
 
-from .agent_based_api.v1 import (
-    register,
-    HostLabel,
-)
-
-Section = Dict  # either dict, or the inherited class to indicate legacy agent plugin
+Section = Dict
 
 
 def parse_docker_node_info(string_table: StringTable) -> Section:
-    version = docker.get_version(string_table)
-    if version is None:
-        return legacy_docker.parse_node_info(string_table)
-
-    if len(string_table) < 2:
-        return {}
-
     loaded: Section = {}
-    for line in string_table[1:]:
-        loaded.update(docker.json_get_obj(line) or {})
+    # docker_node_info section may be present multiple times,
+    # this is how the docker agent plugin reports errors.
+    # Key 'Unknown' is present if there is a python exception
+    # key 'Critical' is present if the python docker lib is not found
+    string_table_iter = iter(string_table)
+    for local_string_table in zip_longest(string_table_iter, string_table_iter):
+        # local_string_table holds two consecutive elements of string_table.
+        # first loop: [string_table[0], string_table[1]]
+        # second loop: [string_table[1], string_table[2]]
+        # etc
+        parsed = docker.parse(local_string_table).data
+        loaded.update(parsed)
     return loaded
 
 
 def host_labels_docker_node_info(section: Section) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+
+        cmk/docker_object:node :
+            This Label is set, if the corresponding host is a docker node.
+
+    """
     if section:
-        yield HostLabel(u"cmk/docker_object", u"node")
+        yield HostLabel("cmk/docker_object", "node")
 
 
 register.agent_section(

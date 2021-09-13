@@ -3,35 +3,40 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# type: ignore[attr-defined]
 """Helper to register a new-sytyle section based on config.check_info
 """
-from typing import Callable, Dict, List, Optional, Tuple
-from types import CodeType
-import os.path
 import ast
 import inspect
+import os.path
+from types import CodeType
+from typing import Callable, Dict, List, Optional, Tuple
 
-from cmk.snmplib.type_defs import SNMPDetectSpec  # pylint: disable=cmk-module-layer-violation
-
+from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,
     contains,
-    startswith,
     endswith,
-    exists,
-    not_exists,
     equals,
+    exists,
     not_equals,
+    not_exists,
+    startswith,
 )
-from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer, pulse_secure  # pylint: disable=cmk-module-layer-violation
+from cmk.base.plugins.agent_based.utils import (  # pylint: disable=cmk-module-layer-violation
+    checkpoint,
+    printer,
+    pulse_secure,
+    ucd_hr_detection,
+)
 
 from .detect_specs import PRECONVERTED_DETECT_SPECS
 
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
 
-MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpec] = {
+MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpecification] = {
     # I am not sure why the following suppressions are needed.
     # 'reveal_type(DETECT)' in checkpoint shows that mypy does know the type in principle
     # If I add an explicit typehint to 'DETECT' in checkpoint, these suppressions are not needed.
@@ -56,43 +61,44 @@ def _is_false(expr: ast.AST) -> bool:
     return isinstance(expr, ast.NameConstant) and expr.value is False
 
 
-def _explicit_conversions(function_name: str) -> SNMPDetectSpec:
+def _explicit_conversions(function_name: str) -> SNMPDetectSpecification:
     if function_name in MIGRATED_SCAN_FUNCTIONS:
         return MIGRATED_SCAN_FUNCTIONS[function_name]
 
-    if function_name == '_is_fsc_or_windows':
+    if function_name == "_is_fsc_or_windows":
         return any_of(
-            startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.231'),
-            startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.311'),
-            startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072'),
+            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.231"),
+            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311"),
+            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
         )
 
-    if function_name == 'is_fsc':
+    if function_name == "is_fsc":
         return all_of(
-            _explicit_conversions('_is_fsc_or_windows'),
-            exists('.1.3.6.1.4.1.231.2.10.2.1.1.0'),
+            _explicit_conversions("_is_fsc_or_windows"),
+            exists(".1.3.6.1.4.1.231.2.10.2.1.1.0"),
         )
 
-    if function_name == 'is_netapp_filer':
+    if function_name == "is_netapp_filer":
         return any_of(
             contains(".1.3.6.1.2.1.1.1.0", "ontap"),
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
         )
 
-    if function_name == '_has_table_2':
+    if function_name == "_has_table_2":
         return exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*")
 
-    if function_name == '_is_cisco':
+    if function_name == "_is_cisco":
         return contains(".1.3.6.1.2.1.1.1.0", "cisco")
 
-    if function_name == '_is_cisco_nexus':
+    if function_name == "_is_cisco_nexus":
         return contains(".1.3.6.1.2.1.1.1.0", "nx-os")
 
     raise NotImplementedError(function_name)
 
 
-def _get_scan_function_ast(name: str, snmp_scan_function: Callable,
-                           fallback_files: List[str]) -> ast.AST:
+def _get_scan_function_ast(
+    name: str, snmp_scan_function: Callable, fallback_files: List[str]
+) -> ast.AST:
     src_file_name = inspect.getsourcefile(snmp_scan_function)
     read_files = fallback_files if src_file_name is None else [src_file_name]
 
@@ -114,8 +120,11 @@ def _get_scan_function_ast(name: str, snmp_scan_function: Callable,
             continue
 
         target = statement.targets[0]
-        if not (isinstance(target, ast.Subscript) and isinstance(target.slice, ast.Index) and
-                isinstance(target.slice.value, ast.Str)):
+        if not (
+            isinstance(target, ast.Subscript)
+            and isinstance(target.slice, ast.Index)
+            and isinstance(target.slice.value, ast.Str)
+        ):
             continue
         if not (target.slice.value.s == name or target.slice.value.s.startswith("%s." % name)):
             continue
@@ -128,8 +137,9 @@ def _get_scan_function_ast(name: str, snmp_scan_function: Callable,
 
         if target.value.id in ("check_info", "inv_info") and isinstance(statement.value, ast.Dict):
             try:
-                idx = [k.s for k in statement.value.keys if isinstance(k, ast.Str)
-                      ].index("snmp_scan_function")
+                idx = [k.s for k in statement.value.keys if isinstance(k, ast.Str)].index(
+                    "snmp_scan_function"
+                )
                 return statement.value.values[idx]
             except ValueError:
                 pass
@@ -161,12 +171,12 @@ def _is_oid_function(expr: ast.AST) -> bool:
     if not isinstance(expr, ast.Call):
         return False
     if isinstance(expr.func, ast.Name):
-        return expr.func.id == 'oid'
+        return expr.func.id == "oid"
     if isinstance(expr.func, ast.Attribute):
-        if expr.func.attr in ('lower',):
+        if expr.func.attr in ("lower",):
             return _is_oid_function(expr.func.value)
-        if isinstance(expr.func.value, ast.Name) and expr.func.value.id == 're':
-            assert expr.func.attr == 'match'
+        if isinstance(expr.func.value, ast.Name) and expr.func.value.id == "re":
+            assert expr.func.attr == "match"
             return False
     raise ValueError(ast.dump(expr))
 
@@ -175,19 +185,19 @@ def _ast_convert_to_str(arg: ast.AST) -> str:
     if isinstance(arg, ast.Str):
         return arg.s
     if isinstance(arg, ast.Call):
-        if isinstance(arg.func, ast.Name) and arg.func.id == 'oid':
+        if isinstance(arg.func, ast.Name) and arg.func.id == "oid":
             assert isinstance(arg.args[0], ast.Str)
             assert isinstance(arg.args[-1], ast.Str)
-            assert len(arg.args) == 1 or (len(arg.args) == 2 and arg.args[-1].s == '')
+            assert len(arg.args) == 1 or (len(arg.args) == 2 and arg.args[-1].s == "")
             return arg.args[0].s
         if isinstance(arg.func, ast.Attribute):
-            if arg.func.attr == 'lower':
-                return getattr(_ast_convert_to_str(arg.func.value), 'lower')()
+            if arg.func.attr == "lower":
+                return getattr(_ast_convert_to_str(arg.func.value), "lower")()
 
     raise ValueError(ast.dump(arg))
 
 
-def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpec:
+def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpecification:
     assert len(comp_ast.ops) == 1
     if isinstance(comp_ast.ops[0], ast.In):
         assert len(comp_ast.comparators) == 1
@@ -196,10 +206,15 @@ def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpec:
             oid_str = _ast_convert_to_str(comp_ast.left)
 
             if isinstance(comp_ast.comparators[0], (ast.List, ast.Tuple)):
-                return any_of(*(equals(
-                    oid_str,
-                    _ast_convert_to_str(v),
-                ) for v in comp_ast.comparators[0].elts))
+                return any_of(
+                    *(
+                        equals(
+                            oid_str,
+                            _ast_convert_to_str(v),
+                        )
+                        for v in comp_ast.comparators[0].elts
+                    )
+                )
 
         if isinstance(comp_ast.left, ast.Str):
             assert _is_oid_function(comp_ast.comparators[0])
@@ -243,7 +258,7 @@ def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpec:
     raise ValueError(ast.dump(comp_ast))
 
 
-def _ast_convert_bool(bool_ast: ast.BoolOp) -> SNMPDetectSpec:
+def _ast_convert_bool(bool_ast: ast.BoolOp) -> SNMPDetectSpecification:
     if isinstance(bool_ast.op, ast.And):
         return all_of(*(_ast_convert_dispatcher(v) for v in bool_ast.values))
 
@@ -253,57 +268,57 @@ def _ast_convert_bool(bool_ast: ast.BoolOp) -> SNMPDetectSpec:
     raise ValueError(ast.dump(bool_ast))
 
 
-def _ast_convert_unary(unop_ast: ast.UnaryOp) -> SNMPDetectSpec:
+def _ast_convert_unary(unop_ast: ast.UnaryOp) -> SNMPDetectSpecification:
     if isinstance(unop_ast.op, ast.Not):
         operand = _ast_convert_dispatcher(unop_ast.operand)
         _validate_detect_spec(operand)
         # We can only negate atomic specs, for now
         if len(operand) == 1 and len(operand[0]) == 1:
             oidstr, pattern, result = operand[0][0]
-            return SNMPDetectSpec([[(oidstr, pattern, not result)]])
+            return SNMPDetectSpecification([[(oidstr, pattern, not result)]])
         raise NotImplementedError("cannot negate operand")
     raise ValueError(ast.dump(unop_ast))
 
 
-def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpec:
+def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpecification:
     if isinstance(call_ast.func, ast.Name):
-        if call_ast.func.id == 'bool':
+        if call_ast.func.id == "bool":
             assert _is_oid_function(call_ast.args[0])
             return exists(_ast_convert_to_str(call_ast.args[0]))
         if call_ast.func.id in (
-                'is_fsc',
-                '_is_ucd',
-                '_is_fsc_or_windows',
-                'scan_ricoh_printer',
-                'is_netapp_filer',
-                '_has_table_2',
-                '_is_cisco',
-                '_is_cisco_nexus',
+            "is_fsc",
+            "_is_ucd",
+            "_is_fsc_or_windows",
+            "scan_ricoh_printer",
+            "is_netapp_filer",
+            "_has_table_2",
+            "_is_cisco",
+            "_is_cisco_nexus",
         ):
             return _explicit_conversions(call_ast.func.id)
 
         if call_ast.func.id in (
-                'scan_f5_bigip_cluster_status_pre_11_2',
-                'scan_f5_bigip_cluster_status_11_2_upwards',
-                'scan_cisco_mem_asa64',
+            "scan_f5_bigip_cluster_status_pre_11_2",
+            "scan_f5_bigip_cluster_status_11_2_upwards",
+            "scan_cisco_mem_asa64",
         ):
             raise NotImplementedError(call_ast.func.id)
 
     if isinstance(call_ast.func, ast.Attribute):
         assert _is_oid_function(call_ast.func.value)
         assert len(call_ast.args) == 1
-        if call_ast.func.attr == 'startswith':
+        if call_ast.func.attr == "startswith":
             return startswith(
                 _ast_convert_to_str(call_ast.func.value),
                 _ast_convert_to_str(call_ast.args[0]),
             )
-        if call_ast.func.attr == 'endswith':
+        if call_ast.func.attr == "endswith":
             return endswith(
                 _ast_convert_to_str(call_ast.func.value),
                 _ast_convert_to_str(call_ast.args[0]),
             )
-        if isinstance(call_ast.func.value, ast.Name) and call_ast.func.value.id == 're':
-            assert call_ast.func.attr == 'match'
+        if isinstance(call_ast.func.value, ast.Name) and call_ast.func.value.id == "re":
+            assert call_ast.func.attr == "match"
             raise NotImplementedError("regular expression")
 
     if _is_oid_function(call_ast):
@@ -312,7 +327,7 @@ def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpec:
     raise ValueError(ast.dump(call_ast))
 
 
-def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpec:
+def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpecification:
 
     if isinstance(arg, ast.UnaryOp):
         return _ast_convert_unary(arg)
@@ -329,11 +344,11 @@ def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpec:
     raise ValueError(ast.dump(arg))
 
 
-def _lookup_migrated(snmp_scan_function: Callable) -> Optional[SNMPDetectSpec]:
+def _lookup_migrated(snmp_scan_function: Callable) -> Optional[SNMPDetectSpecification]:
     """Look in the dict of functions that have been migrated
 
-      * a spec is explicitily listed
-      * the left over scan function stub only raises NotImplementedError
+    * a spec is explicitily listed
+    * the left over scan function stub only raises NotImplementedError
     """
     migrated = MIGRATED_SCAN_FUNCTIONS.get(snmp_scan_function.__name__)
     if migrated is None:
@@ -361,23 +376,27 @@ def _compute_detect_spec(
     section_name: str,
     scan_function: Callable,
     fallback_files: List[str],
-) -> SNMPDetectSpec:
+) -> SNMPDetectSpecification:
 
     scan_func_ast = _get_scan_function_ast(section_name, scan_function, fallback_files)
 
     expression_ast = _get_expression_from_function(section_name, scan_func_ast)
 
     if _is_false(expression_ast):
-        return SNMPDetectSpec()
+        return SNMPDetectSpecification()
 
-    return _ast_convert_dispatcher(expression_ast)
+    try:
+        return _ast_convert_dispatcher(expression_ast)
+    except (ValueError, NotImplementedError) as exc:
+        msg = f"{section_name}: failed to convert scan function: {scan_function.__name__}"
+        raise NotImplementedError(msg) from exc
 
 
 def create_detect_spec(
     name: str,
     snmp_scan_function: Callable,
     fallback_files: List[str],
-) -> SNMPDetectSpec:
+) -> SNMPDetectSpecification:
 
     migrated = _lookup_migrated(snmp_scan_function)
     if migrated is not None:
@@ -386,13 +405,15 @@ def create_detect_spec(
     key = _lookup_key_from_code(snmp_scan_function.__code__)
     preconverted = PRECONVERTED_DETECT_SPECS.get(key)
     if preconverted is not None:
-        return SNMPDetectSpec(preconverted)
+        return SNMPDetectSpecification(preconverted)
 
-    return SNMPDetectSpec(
+    return SNMPDetectSpecification(
         PRECONVERTED_DETECT_SPECS.setdefault(
             key,
             _compute_detect_spec(
                 section_name=name,
                 scan_function=snmp_scan_function,
                 fallback_files=fallback_files,
-            )))
+            ),
+        )
+    )

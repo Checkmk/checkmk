@@ -4,8 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fortigate_sessions import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
 #
@@ -55,11 +65,14 @@ def parse_fortigate_node(info):
             item_name = "Node %s" % oid_end
 
         parsed.setdefault("nodes", {})
-        parsed["nodes"].setdefault(item_name, {
-            "cpu": float(cpu_str),
-            "memory": int(memory_str),
-            "sessions": int(sessions_str),
-        })
+        parsed["nodes"].setdefault(
+            item_name,
+            {
+                "cpu": float(cpu_str),
+                "memory": int(memory_str),
+                "sessions": int(sessions_str),
+            },
+        )
 
     return parsed
 
@@ -93,7 +106,8 @@ check_info["fortigate_node"] = {
             [
                 1,  # fgHaSystemMode
                 7,  # fgHaGroupName
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.12356.101.13.2.1.1",
             [
@@ -101,12 +115,13 @@ check_info["fortigate_node"] = {
                 3,  # fgHaStatsCpuUsage
                 4,  # fgHaStatsMemUsage
                 6,  # fgHaStatsSesCount
-                OID_END
-            ])
+                OID_END,
+            ],
+        ),
     ],
 }
 
-#.
+# .
 #   .--CPU-----------------------------------------------------------------.
 #   |                           ____ ____  _   _                           |
 #   |                          / ___|  _ \| | | |                          |
@@ -136,61 +151,7 @@ check_info["fortigate_node.cpu"] = {
     "has_perfdata": True,
 }
 
-#.
-#   .--Memory--------------------------------------------------------------.
-#   |               __  __                                                 |
-#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
-#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
-#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
-#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
-#   |                                                |___/                 |
-#   '----------------------------------------------------------------------'
-
-#fortigate_node_memory_default_levels = (70, 80)
-factory_settings['fortigate_node_memory_default_levels'] = {
-    'levels': (70.0, 80.0),
-}
-
-
-def inventory_fortigate_node_mem(parsed):
-    for hostname in parsed["nodes"]:
-        yield hostname, {}
-
-
-def check_fortigate_node_mem(item, params, parsed):
-    data = parsed.get("nodes", {}).get(item)
-    if data is None:
-        return
-
-    current = data["memory"]
-    # This check is only able to check the used space
-    # The checkgroup "memory" might set negative values which act as levels for free space
-    # These levels are converted to used space, too..
-    # But that's not the rule we are using. FIXME: CMK-3581
-    if isinstance(params, dict):
-        warn, crit = map(abs, params["levels"])
-    else:
-        warn, crit = map(abs, params)
-
-    yield check_levels(
-        current,
-        "mem_usage",  # FIXME: CMK-3581
-        (warn, crit),
-        infoname="Usage",
-        human_readable_func=get_percent_human_readable,
-    )
-
-
-check_info["fortigate_node.memory"] = {
-    "inventory_function": inventory_fortigate_node_mem,
-    "check_function": check_fortigate_node_mem,
-    "service_description": "Memory %s",
-    "has_perfdata": True,
-    "default_levels_variable": "fortigate_node_memory_default_levels",
-    "group": "fortigate_node_memory",
-}
-
-#.
+# .
 #   .--Sessions------------------------------------------------------------.
 #   |                ____                _                                 |
 #   |               / ___|  ___  ___ ___(_) ___  _ __  ___                 |

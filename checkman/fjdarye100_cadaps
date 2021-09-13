@@ -13,6 +13,6 @@ item:
  The index of the channel adapter in the SNMP table. It is of type
  integer. The first adapter has an index of {0}.
 
-inventory:
+discovery:
  One service is created for each channel adapter
  if the state is not {invalid} (4).

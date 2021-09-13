@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 300 210" style="enable-background:new 0 0 300 210;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#B894EE;stroke:#5A24AB;stroke-width:20;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#5A24AB;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#A580DD;}
+	.st3{fill:#5A24AB;}
+	.st4{font-family:'Rubik-Regular';}
+	.st5{font-size:90px;}
+	.st6{letter-spacing:-6;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Icons">
+	<g id="Artboard" transform="translate(-360.000000, -528.000000)">
+		<g id="tick-checkboxes" transform="translate(370.000000, 538.000000)">
+			<g id="checkbox">
+				<path id="Rectangle-Copy-2" class="st0" d="M30,0h220c16.6,0,30,13.4,30,30v100c0,16.6-13.4,30-30,30H30c-16.6,0-30-13.4-30-30
+					V30C0,13.4,13.4,0,30,0z"/>
+				<rect id="Rectangle" x="60" y="160" class="st1" width="160" height="40"/>
+			</g>
+			<path id="Rectangle-Copy-3" class="st2" d="M140,10h110c11,0,20,9,20,20v100c0,11-9,20-20,20H140l0,0V10z"/>
+			<text transform="matrix(1 0 0 1 26 108)" class="st3 st4 st5 st6">09:00</text>
+		</g>
+	</g>
+</g>
+</svg>

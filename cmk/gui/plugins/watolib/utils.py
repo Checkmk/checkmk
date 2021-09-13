@@ -12,28 +12,30 @@ from typing import Any, Dict, List, Optional, Type
 
 from six import ensure_str
 
-import cmk.utils.store as store
 import cmk.utils.plugin_registry
+import cmk.utils.store as store
 
-from cmk.gui.type_defs import ConfigDomainName
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.i18n import _
+from cmk.gui.type_defs import ConfigDomainName
+from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 
 
 def wato_fileheader() -> str:
-    return "# Created by WATO\n# encoding: utf-8\n\n"
+    return "# Created by WATO\n\n"
 
 
-class ABCConfigDomain(metaclass=abc.ABCMeta):
+class ABCConfigDomain(abc.ABC):
     needs_sync = True
     needs_activation = True
     always_activate = False
     in_global_settings = True
 
-    @abc.abstractproperty
-    def ident(self):
-        raise NotImplementedError()
+    @classmethod
+    @abc.abstractmethod
+    def ident(cls) -> ConfigDomainName:
+        ...
 
     @classmethod
     def enabled_domains(cls):
@@ -41,7 +43,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
 
     @classmethod
     def get_always_activate_domain_idents(cls) -> List[ConfigDomainName]:
-        return [d().ident for d in config_domain_registry.values() if d.always_activate]
+        return [d.ident() for d in config_domain_registry.values() if d.always_activate]
 
     @classmethod
     def get_class(cls, ident):
@@ -68,9 +70,9 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
         return os.path.join(self.config_dir(), "global.mk")
 
     def activate(self):
-        raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
+        raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
 
-    def load(self, site_specific=False, custom_site_path=None):
+    def load_full_config(self, site_specific=False, custom_site_path=None):
         filename = Path(self.config_file(site_specific))
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
@@ -81,18 +83,16 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
             return {}
 
         try:
-            # TODO: Can be changed to text IO with Python 3
             with filename.open("rb") as f:
                 exec(f.read(), settings, settings)
 
-            # FIXME: Do not modify the dict while iterating over it.
-            for varname in list(settings.keys()):
-                if varname not in config_variable_registry:
-                    del settings[varname]
-
             return settings
+
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
+
+    def load(self, site_specific=False, custom_site_path=None):
+        return filter_unknown_settings(self.load_full_config(site_specific, custom_site_path))
 
     def load_site_globals(self, custom_site_path=None):
         return self.load(site_specific=True, custom_site_path=custom_site_path)
@@ -100,15 +100,16 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
     def save(self, settings, site_specific=False, custom_site_path=None):
         filename = self.config_file(site_specific)
         if custom_site_path:
-            filename = os.path.join(custom_site_path,
-                                    os.path.relpath(filename, cmk.utils.paths.omd_root))
+            filename = os.path.join(
+                custom_site_path, os.path.relpath(filename, cmk.utils.paths.omd_root)
+            )
 
         output = wato_fileheader()
         for varname, value in settings.items():
             output += "%s = %s\n" % (varname, pprint.pformat(value))
 
         store.makedirs(os.path.dirname(filename))
-        store.save_file(filename, output)
+        store.save_text_to_file(filename, output)
 
     def save_site_globals(self, settings, custom_site_path=None):
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
@@ -123,20 +124,21 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
         """Returns a list of all global config variable names
         associated with this config domain."""
         return [
-            varname for (varname, v) in config_variable_registry.items()
+            varname
+            for (varname, v) in config_variable_registry.items()
             if v().domain() == self.__class__
         ]
 
 
 class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDomain]]):
     def plugin_name(self, instance):
-        return instance.ident
+        return instance.ident()
 
 
 config_domain_registry = ConfigDomainRegistry()
 
 
-class SampleConfigGenerator(metaclass=abc.ABCMeta):
+class SampleConfigGenerator(abc.ABC):
     @classmethod
     def ident(cls) -> str:
         """Unique key which can be used to identify a generator"""
@@ -154,8 +156,9 @@ class SampleConfigGenerator(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class SampleConfigGeneratorRegistry(cmk.utils.plugin_registry.Registry[Type[SampleConfigGenerator]]
-                                   ):
+class SampleConfigGeneratorRegistry(
+    cmk.utils.plugin_registry.Registry[Type[SampleConfigGenerator]]
+):
     def plugin_name(self, instance):
         return instance.ident()
 
@@ -166,7 +169,7 @@ class SampleConfigGeneratorRegistry(cmk.utils.plugin_registry.Registry[Type[Samp
 
 sample_config_generator_registry = SampleConfigGeneratorRegistry()
 
-#.
+# .
 #   .--Global configuration------------------------------------------------.
 #   |       ____ _       _           _                    __ _             |
 #   |      / ___| | ___ | |__   __ _| |   ___ ___  _ __  / _(_) __ _       |
@@ -200,7 +203,7 @@ class ConfigVariableGroup:
         """Returns an integer to control the sorting of the groups in lists"""
         raise NotImplementedError()
 
-    def config_variables(self) -> 'List[Type[ConfigVariable]]':
+    def config_variables(self) -> "List[Type[ConfigVariable]]":
         """Returns a list of configuration variable classes that belong to this group"""
         return [v for v in config_variable_registry.values() if v().group() == self.__class__]
 
@@ -214,8 +217,7 @@ config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
 class ConfigVariable:
-    def group(self):
-        # type () -> Type[ConfigVariableGroup]
+    def group(self) -> Type[ConfigVariableGroup]:
         """Returns the class of the configuration variable group this configuration variable belongs to"""
         raise NotImplementedError()
 
@@ -249,6 +251,9 @@ class ConfigVariable:
         """Whether or not to show this option on the global settings page"""
         return True
 
+    def hint(self) -> HTML:
+        return HTML()
+
 
 class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVariable]]):
     def plugin_name(self, instance):
@@ -258,20 +263,33 @@ class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVaria
 config_variable_registry = ConfigVariableRegistry()
 
 
+def filter_unknown_settings(settings):
+    removals: List[str] = []
+    for varname in list(settings.keys()):
+        if varname not in config_variable_registry:
+            removals.append(varname)
+    for removal in removals:
+        del settings[removal]
+    return settings
+
+
 def configvar_order():
     raise NotImplementedError(
-        "Please don't use this API anymore. Have a look at werk #6911 for further information.")
+        "Please don't use this API anymore. Have a look at werk #6911 for further information."
+    )
 
 
 # TODO: This function has been replaced with config_variable_registry and
 # ConfigVariable() in 1.6. Drop this API with 1.7 latest.
-def register_configvar(group,
-                       varname,
-                       valuespec,
-                       domain=None,
-                       need_restart=None,
-                       allow_reset=True,
-                       in_global_settings=True):
+def register_configvar(
+    group,
+    varname,
+    valuespec,
+    domain=None,
+    need_restart=None,
+    allow_reset=True,
+    in_global_settings=True,
+):
 
     if domain is None:
         domain = config_domain_registry["check_mk"]
@@ -286,7 +304,9 @@ def register_configvar(group,
         group = config_variable_group_registry[ensure_str(group)]
 
     cls = type(
-        "LegacyConfigVariable%s" % varname.title(), (ConfigVariable,), {
+        "LegacyConfigVariable%s" % varname.title(),
+        (ConfigVariable,),
+        {
             "group": lambda self: group,
             "ident": lambda self: varname,
             "valuespec": lambda self: valuespec,
@@ -294,5 +314,6 @@ def register_configvar(group,
             "need_restart": lambda self: need_restart,
             "allow_reset": lambda self: allow_reset,
             "in_global_settings": lambda self: in_global_settings,
-        })
+        },
+    )
     config_variable_registry.register(cls)

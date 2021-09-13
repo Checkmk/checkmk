@@ -8,6 +8,7 @@
 @import "~dc/web/css/dc";
 @import "~simplebar/dist/simplebar";
 
+@import "scss/_variables_common.scss";
 @import "scss/_variables.scss";
 @import "scss/_main.scss";
 @import "scss/_pages.scss";
@@ -27,21 +28,29 @@
 @import "scss/_mega_menu.scss";
 @import "scss/_page_menu.scss";
 @import "scss/_more.scss";
+@import "scss/_graphs.scss";
+@import "scss/_release_notes.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this
 // using symlinks in the git during development and replace the links with empty
 // files during the build procedure of other editions.
-@import "../facelift/scss/cee/_graphs.scss";
+// Note: In case you add something here, you will have to add some dummy files
+// to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
+@import "../facelift/scss/cee/_graphs_cee.scss";
 @import "../facelift/scss/cee/_reporting.scss";
 @import "../facelift/scss/cee/_ntop.scss";
-@if $ENTERPRISE = "yes" {
-  @include graphs;
+@import "../facelift/scss/cee/_license_usage.scss";
+@if $ENTERPRISE == "yes" {
+  @include graphs_cee;
   @include reporting;
   @include ntop;
+  @include license_usage;
 }
 
+// Note: In case you add something here, you will have to add some dummy files
+// to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
 @import "../facelift/scss/cme/_managed.scss";
-@if $MANAGED = "yes" {
+@if $MANAGED == "yes" {
   @include managed;
 }

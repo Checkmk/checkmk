@@ -9,23 +9,25 @@
 # fields: mode, title, icon, permission, help
 
 import time
+from typing import Iterable
+
 import cmk.utils.version as cmk_version
 
-from cmk.gui.i18n import _
+from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.globals import request
-from cmk.gui.utils.urls import makeuri_contextless_ruleset_group
-
+from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    main_module_registry,
     ABCMainModule,
-    MainModuleTopicHosts,
-    MainModuleTopicServices,
-    MainModuleTopicUsers,
+    main_module_registry,
     MainModuleTopicAgents,
     MainModuleTopicEvents,
     MainModuleTopicGeneral,
+    MainModuleTopicHosts,
     MainModuleTopicMaintenance,
+    MainModuleTopicServices,
+    MainModuleTopicUsers,
 )
+from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
 
 @main_module_registry.register
@@ -244,7 +246,7 @@ class MainModulePredefinedConditions(ABCMainModule):
 class MainModuleHostAndServiceParameters(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'host_monconf')
+        return makeuri_contextless_rulespec_group(request, "host_monconf")
 
     @property
     def topic(self):
@@ -252,11 +254,11 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 
     @property
     def title(self):
-        return _("Monitoring rules")
+        return _("Host monitoring rules")
 
     @property
     def icon(self):
-        return {"icon": "folder", "emblem": "settings"}
+        return {"icon": "folder", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -264,7 +266,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 
     @property
     def description(self):
-        return _("Check parameters and other configuration variables on hosts and services")
+        return _("Check parameters and other configuration variables for hosts")
 
     @property
     def sort_index(self):
@@ -279,7 +281,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 class MainModuleHWSWInventory(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'inventory')
+        return makeuri_contextless_rulespec_group(request, "inventory")
 
     @property
     def topic(self):
@@ -314,7 +316,7 @@ class MainModuleHWSWInventory(ABCMainModule):
 class MainModuleNetworkingServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'activechecks')
+        return makeuri_contextless_rulespec_group(request, "activechecks")
 
     @property
     def topic(self):
@@ -334,8 +336,10 @@ class MainModuleNetworkingServices(ABCMainModule):
 
     @property
     def description(self):
-        return _("Configure monitoring of networking services using classical nagios plugins"
-                 " (so called active checks)")
+        return _(
+            "Configure monitoring of networking services using classical nagios plugins"
+            " (so called active checks)"
+        )
 
     @property
     def sort_index(self):
@@ -350,7 +354,7 @@ class MainModuleNetworkingServices(ABCMainModule):
 class MainModuleOtherServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'custom_checks')
+        return makeuri_contextless_rulespec_group(request, "custom_checks")
 
     @property
     def topic(self):
@@ -370,8 +374,10 @@ class MainModuleOtherServices(ABCMainModule):
 
     @property
     def description(self):
-        return _("Integrate [cms_active_checks#mrpe|custom nagios plugins] into the "
-                 "monitoring as active checks.")
+        return _(
+            "Integrate [active_checks#mrpe|custom nagios plugins] into the "
+            "monitoring as active checks."
+        )
 
     @property
     def sort_index(self):
@@ -402,7 +408,7 @@ class MainModuleCheckPlugins(ABCMainModule):
 
     @property
     def permission(self):
-        return None
+        return "check_plugins"
 
     @property
     def description(self):
@@ -429,7 +435,7 @@ class MainModuleHostGroups(ABCMainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Host groups")
 
     @property
     def icon(self):
@@ -464,7 +470,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
 
     @property
     def title(self):
-        return _("Custom attributes")
+        return _("Custom host attributes")
 
     @property
     def icon(self):
@@ -499,7 +505,7 @@ class MainModuleServiceGroups(ABCMainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Service groups")
 
     @property
     def icon(self):
@@ -608,7 +614,7 @@ class MainModuleLDAP(ABCMainModule):
 
     @property
     def icon(self):
-        return "roles"
+        return "ldap"
 
     @property
     def permission(self):
@@ -639,7 +645,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
 
     @property
     def title(self):
-        return _("Custom attributes")
+        return _("Custom user attributes")
 
     @property
     def icon(self):
@@ -674,7 +680,7 @@ class MainModuleContactGroups(ABCMainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Contact groups")
 
     @property
     def icon(self):
@@ -757,7 +763,8 @@ class MainModuleTimeperiods(ABCMainModule):
     @property
     def description(self):
         return _(
-            "Timeperiods restrict notifications and other things to certain periods of the day.")
+            "Timeperiods restrict notifications and other things to certain periods of the day."
+        )
 
     @property
     def sort_index(self):
@@ -979,41 +986,6 @@ class MainModuleAnalyzeConfig(ABCMainModule):
 
 
 @main_module_registry.register
-class MainModuleReleaseNotes(ABCMainModule):
-    @property
-    def mode_or_url(self):
-        return "version.py"
-
-    @property
-    def topic(self):
-        return MainModuleTopicMaintenance
-
-    @property
-    def title(self):
-        return _("Release notes")
-
-    @property
-    def icon(self):
-        return "release_notes"
-
-    @property
-    def permission(self):
-        return None
-
-    @property
-    def description(self):
-        return _("Learn something about what changed at Checkmk.")
-
-    @property
-    def sort_index(self):
-        return 60
-
-    @property
-    def is_show_more(self):
-        return False
-
-
-@main_module_registry.register
 class MainModuleDiagnostics(ABCMainModule):
     @property
     def mode_or_url(self):
@@ -1055,7 +1027,7 @@ class MainModuleDiagnostics(ABCMainModule):
 class MainModuleMonitoringRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'monconf')
+        return makeuri_contextless_rulespec_group(request, "monconf")
 
     @property
     def topic(self):
@@ -1063,11 +1035,11 @@ class MainModuleMonitoringRules(ABCMainModule):
 
     @property
     def title(self):
-        return _("Monitoring rules")
+        return _("Service monitoring rules")
 
     @property
     def icon(self):
-        return {"icon": "services", "emblem": "settings"}
+        return {"icon": "services", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -1075,7 +1047,7 @@ class MainModuleMonitoringRules(ABCMainModule):
 
     @property
     def description(self):
-        return _("Monitoring rules")
+        return _("Service monitoring rules")
 
     @property
     def sort_index(self):
@@ -1090,7 +1062,7 @@ class MainModuleMonitoringRules(ABCMainModule):
 class MainModuleDiscoveryRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'checkparams')
+        return makeuri_contextless_rulespec_group(request, "checkparams")
 
     @property
     def topic(self):
@@ -1125,7 +1097,7 @@ class MainModuleDiscoveryRules(ABCMainModule):
 class MainModuleEnforcedServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'static')
+        return makeuri_contextless_rulespec_group(request, "static")
 
     @property
     def topic(self):
@@ -1171,7 +1143,7 @@ class MainModuleAgentsWindows(ABCMainModule):
 
     @property
     def icon(self):
-        return "download_agents_windows"
+        return "download_agents"
 
     @property
     def permission(self):
@@ -1205,7 +1177,7 @@ class MainModuleAgentsLinux(ABCMainModule):
 
     @property
     def icon(self):
-        return "download_agents_linux"
+        return "download_agents"
 
     @property
     def permission(self):
@@ -1229,6 +1201,56 @@ class MainModuleAgentsLinux(ABCMainModule):
 if cmk_version.is_raw_edition():
     main_module_registry.register(MainModuleAgentsWindows)
     main_module_registry.register(MainModuleAgentsLinux)
+
+
+@main_module_registry.register
+class MainModuleAgentRules(ABCMainModule):
+    @property
+    def enabled(self) -> bool:
+        return False
+
+    @property
+    def mode_or_url(self):
+        return makeuri_contextless_rulespec_group(request, "agents")
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Agent rules")
+
+    @property
+    def icon(self):
+        return {"icon": "agents", "emblem": "rulesets"}
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configuration of monitoring agents for Linux, Windows and Unix")
+
+    @property
+    def sort_index(self):
+        return 80
+
+    @property
+    def is_show_more(self):
+        return True
+
+    @classmethod
+    def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
+        yield BreadcrumbItem(
+            title="Windows, Linux, Solaris, AIX",
+            url=makeuri_contextless(
+                request,
+                [("mode", "agents")],
+                filename="wato.py",
+            ),
+        )
 
 
 @main_module_registry.register
@@ -1270,7 +1292,7 @@ class MainModuleOtherAgents(ABCMainModule):
 class MainModuleAgentAccessRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'agent')
+        return makeuri_contextless_rulespec_group(request, "agent")
 
     @property
     def topic(self):
@@ -1282,7 +1304,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
 
     @property
     def icon(self):
-        return {"icon": "agents", "emblem": "settings"}
+        return {"icon": "agents", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -1305,7 +1327,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
 class MainModuleSNMPRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'snmp')
+        return makeuri_contextless_rulespec_group(request, "snmp")
 
     @property
     def topic(self):
@@ -1340,7 +1362,7 @@ class MainModuleSNMPRules(ABCMainModule):
 class MainModuleVMCloudContainer(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'vm_cloud_container')
+        return makeuri_contextless_rulespec_group(request, "vm_cloud_container")
 
     @property
     def topic(self):
@@ -1375,7 +1397,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
 class MainModuleOtherIntegrations(ABCMainModule):
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, 'datasource_programs')
+        return makeuri_contextless_rulespec_group(request, "datasource_programs")
 
     @property
     def topic(self):

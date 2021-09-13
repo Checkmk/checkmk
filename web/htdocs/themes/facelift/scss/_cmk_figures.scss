@@ -27,8 +27,13 @@ div.cmk_tab {
       font-weight: bold;
       line-height: 2rem;
       text-align: center;
+      cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: border-bottom 0.5s;
+
+      &:hover {
+        background-color: $table-highlight-color;
+      }
     }
 
     li.active {
@@ -42,7 +47,7 @@ div.cmk_tab {
     z-index: 20;
     height: 100%;
     min-height: 2.5rem;
-    padding: 0.2rem;
+    padding: 0.4rem 0.3rem;
     margin: 0;
     border: 1px solid $color-table-border;
     border-radius: 5;
@@ -64,45 +69,59 @@ div.cmk_tab {
 
   rect.bar.bar_chart {
     fill: $bar-fill-color;
-    stroke: rgba(0, 0, 0, 0.2);
+    stroke: rgba($black, 0.2);
 
     &:hover {
       fill: $bar-hover-fill-color;
-      stroke: rgb(0, 0, 0);
+      stroke: $black;
     }
   }
 
   rect.bar.bar_chart.barbar_chart {
     fill: $barbar-fill-color;
-    stroke: rgba(0, 0, 0, 0.3);
+    stroke: rgba($black, 0.3);
 
     &:hover {
       fill: $barbar-hover-fill-color;
-      stroke: rgb(0, 0, 0);
+      stroke: $black;
     }
   }
 }
 
 div.cmk_figure {
+  div.loading_img_icon {
+    background-image: url("images/load_graph.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    background-size: 24px 24px;
+  }
+
   div.loading_img {
     position: relative;
     left: 50%;
     width: 48px;
-    height: 48px;
+    height: 100%;
     background-image: url("images/load_graph.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
   }
 
   div.tooltip {
     position: absolute;
     z-index: 1;
-    padding: 5px;
+    padding: 10px;
+    color: $font-color;
     pointer-events: none;
-    background-color: rgba($bg-color-secondary, 0.87);
-    border: $tooltip-border;
+    background-color: $graph-hover-popup-bg-color;
+    border: $graph-hover-popup-border;
+    box-shadow: $graph-hover-popup-box-shadow;
     border-radius: 5px;
 
-    td {
-      font-size: 11px;
+    div.loading_img {
+      left: 0;
+      width: 24px;
+      height: 24px;
     }
   }
 
@@ -111,19 +130,24 @@ div.cmk_figure {
     top: 5px;
     right: 6px;
     padding: 5px;
-    background-color: $timeseries-legend-bg-color;
-    border: $tooltip-border;
+    background-color: rgba($bg-color-secondary, 0.87);
     border-radius: 5px;
 
     div.legend_item {
       display: flex;
 
       div.color_code {
-        width: 12px;
-        height: 12px;
+        width: 6px;
+        height: 6px;
         margin-right: 4px;
+        margin-top: 6px;
+        border-radius: 2px;
       }
     }
+  }
+
+  g.axis {
+    color: transparent; // graph axis edges are invisible
   }
 
   &.average_scatterplot {
@@ -181,20 +205,12 @@ div.cmk_figure {
           }
         }
 
-        tr.mean td:nth-child(2) {
-          color: $dc-graph-color-1;
-        }
-
-        tr.median td:nth-child(2) {
-          color: $dc-graph-color-2;
-        }
-
         tr.top_matches td:nth-child(2) {
-          color: rgb(255, 40, 40);
+          color: $font-color-red;
         }
 
         tr.bottom_matches td:nth-child(2) {
-          color: rgb(31, 150, 240);
+          color: $font-color-green;
         }
       }
 
@@ -227,14 +243,6 @@ div.cmk_figure {
       stroke-width: 2px;
     }
 
-    path.mean_line {
-      stroke: $dc-graph-color-1;
-    }
-
-    path.median_line {
-      stroke: $dc-graph-color-2;
-    }
-
     path.pin {
       stroke: $font-color;
     }
@@ -249,6 +257,14 @@ div.cmk_figure {
       &.hilite {
         fill: $scatterdot-hilite-color;
       }
+    }
+  }
+
+  g.title rect {
+    fill: $dashlet-body-bg-color;
+
+    &.highlighted {
+      fill: $headline-color;
     }
   }
 }
@@ -324,7 +340,7 @@ div.dc_table .options {
       }
 
       input:disabled {
-        color: $grey-2;
+        color: $font-color-dimmed;
       }
 
       input:active,
@@ -338,4 +354,8 @@ div.dc_table .options {
       }
     }
   }
+}
+
+.dc-chart g.row text {
+  fill: $font-color;
 }

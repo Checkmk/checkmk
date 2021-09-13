@@ -5,22 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import (
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    Result,
-    State as state,
-    type_defs,
-)
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
+
+from .agent_based_api.v1 import register, Result
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils import interfaces
 
 # Example output from agent
@@ -127,9 +116,9 @@ def _parse_winperf_if_sub_section(
         if line[0] == terminating_key:
             break
 
-        if terminating_key == '[teaming_end]':
+        if terminating_key == "[teaming_end]":
             section.append(_parse_winperf_if_teaming_section_line(line, headers))
-        elif terminating_key == '[dhcp_end]':
+        elif terminating_key == "[dhcp_end]":
             section.append(_parse_winperf_if_dhcp_section_line(line, headers))
     return section
 
@@ -146,8 +135,8 @@ def _parse_winperf_if_dhcp_section_line(
     num_fields = len(headers)
 
     # assumption 2: only the leftmost field contains spaces
-    lm_field = " ".join(line[:(num_fields - 1) * -1])
-    line = [lm_field] + list(line[(len(line) - num_fields + 1):])
+    lm_field = " ".join(line[: (num_fields - 1) * -1])
+    line = [lm_field] + list(line[(len(line) - num_fields + 1) :])
     return dict(zip(headers, [x.rstrip() for x in line]))
 
 
@@ -187,7 +176,7 @@ def _parse_winperf_if_agent_section_timestamp_and_instance_names(
 
 
 def _parse_winperf_if_section(
-    string_table: type_defs.StringTable
+    string_table: type_defs.StringTable,
 ) -> Tuple[AgentTimestamp, NICNames, AgentSection, RawSubSection, RawSubSection, RawSubSection]:
     agent_timestamp = None
     raw_nic_names: NICNames = []
@@ -202,16 +191,18 @@ def _parse_winperf_if_section(
         if line[0] == "[dhcp_start]":
             dhcp_section_headers = next(lines)
             dhcp_section.extend(
-                _parse_winperf_if_sub_section(lines, '[dhcp_end]', dhcp_section_headers))
+                _parse_winperf_if_sub_section(lines, "[dhcp_end]", dhcp_section_headers)
+            )
             continue
 
         if line[0].startswith("[teaming_start]"):
             teaming_section_headers = next(lines)
             teaming_section.extend(
-                _parse_winperf_if_sub_section(lines, '[teaming_end]', teaming_section_headers))
+                _parse_winperf_if_sub_section(lines, "[teaming_end]", teaming_section_headers)
+            )
             continue
 
-        if {'Node', 'MACAddress', 'Name', 'NetConnectionID', 'NetConnectionStatus'}.issubset(line):
+        if {"Node", "MACAddress", "Name", "NetConnectionID", "NetConnectionStatus"}.issubset(line):
             plugin_section_header = line
             continue
 
@@ -219,8 +210,10 @@ def _parse_winperf_if_section(
             # Do not consider lines containing counters:
             # ['-122', '38840302775', 'bulk_count']
             # ['10', '10000000000', 'large_rawcount']
-            agent_timestamp, raw_nic_names = _parse_winperf_if_agent_section_timestamp_and_instance_names(
-                line, lines)
+            (
+                agent_timestamp,
+                raw_nic_names,
+            ) = _parse_winperf_if_agent_section_timestamp_and_instance_names(line, lines)
             plugin_section_header = None
             continue
 
@@ -230,7 +223,14 @@ def _parse_winperf_if_section(
         else:  # agent section
             agent_section.setdefault(line[0], line[1:])
 
-    return agent_timestamp, raw_nic_names, agent_section, plugin_section, dhcp_section, teaming_section
+    return (
+        agent_timestamp,
+        raw_nic_names,
+        agent_section,
+        plugin_section,
+        dhcp_section,
+        teaming_section,
+    )
 
 
 def _prepare_winperf_if_dhcp_section(
@@ -246,8 +246,9 @@ def _prepare_winperf_if_dhcp_section(
 
 def _prepare_winperf_if_teaming_section(teaming_section: RawSubSection) -> SubSection:
     return {
-        guid: {k: v.strip() for k, v in dict_entry.items()} for dict_entry in teaming_section
-        for guid in dict_entry.get('GUID', '').split(';')
+        guid: {k: v.strip() for k, v in dict_entry.items()}
+        for dict_entry in teaming_section
+        for guid in dict_entry.get("GUID", "").split(";")
     }
 
 
@@ -270,7 +271,8 @@ def _prepare_winperf_if_plugin_section(
         if guid in teaming_info:
             guid_entry = teaming_info[guid]
             guid_to_name = dict(
-                zip(guid_entry["GUID"].split(";"), guid_entry["MemberDescriptions"].split(";")))
+                zip(guid_entry["GUID"].split(";"), guid_entry["MemberDescriptions"].split(";"))
+            )
             nic_name = winperf_if_canonize_nic_name(guid_to_name[guid])
 
         elif "Name" in row:
@@ -310,19 +312,19 @@ def _prepare_winperf_if_plugin_section(
 # 6 notPresent
 # 7 lowerLayerDown
 _CONNECTION_STATES = {
-    '0': ('2', 'Disconnected'),
-    '1': ('2', 'Connecting'),
-    '2': ('1', 'Connected'),
-    '3': ('2', 'Disconnecting'),
-    '4': ('2', 'Hardware not present'),
-    '5': ('2', 'Hardware disabled'),
-    '6': ('2', 'Hardware malfunction'),
-    '7': ('7', 'Media disconnected'),
-    '8': ('2', 'Authenticating'),
-    '9': ('2', 'Authentication succeeded'),
-    '10': ('2', 'Authentication failed'),
-    '11': ('2', 'Invalid address'),
-    '12': ('2', 'Credentials required'),
+    "0": ("2", "Disconnected"),
+    "1": ("2", "Connecting"),
+    "2": ("1", "Connected"),
+    "3": ("2", "Disconnecting"),
+    "4": ("2", "Hardware not present"),
+    "5": ("2", "Hardware disabled"),
+    "6": ("2", "Hardware malfunction"),
+    "7": ("7", "Media disconnected"),
+    "8": ("2", "Authenticating"),
+    "9": ("2", "Authentication succeeded"),
+    "10": ("2", "Authentication failed"),
+    "11": ("2", "Invalid address"),
+    "12": ("2", "Credentials required"),
 }
 
 
@@ -335,12 +337,12 @@ def _get_if_table(
     if_table = []
     for nic_name, nic_attr in nic_attrs.items():
         nic = nic_attr.counters
-        nic.setdefault('index', nic_attr.index)
+        nic.setdefault("index", nic_attr.index)
         nic.update(plugin_info.get(nic_name, {}))
 
-        bandwidth = interfaces.saveint(nic.get('Speed'))
+        bandwidth = interfaces.saveint(nic.get("Speed"))
         # Some interfaces report several exabyte as bandwidth when down..
-        if bandwidth > 1024**5:
+        if bandwidth > 1024 ** 5:
             # Greater than petabyte
             bandwidth = 0
 
@@ -349,35 +351,36 @@ def _get_if_table(
         group = teaming_info.get(guid, {}).get("TeamName") if isinstance(guid, str) else None
 
         # if we have no status, but link information, we assume IF is connected
-        connection_status = nic.get('NetConnectionStatus')
+        connection_status = nic.get("NetConnectionStatus")
         if not connection_status:
-            connection_status = '2'
+            connection_status = "2"
 
         oper_status, oper_status_name = _CONNECTION_STATES[str(connection_status)]
 
         if_table.append(
             interfaces.Interface(
-                index=str(nic['index']),
+                index=str(nic["index"]),
                 descr=nic_name,
-                alias=str(nic.get('NetConnectionID', nic_name)),
-                type="loopback" in nic_name.lower() and '24' or '6',
-                speed=bandwidth or interfaces.saveint(nic['10']),
+                alias=str(nic.get("NetConnectionID", nic_name)),
+                type="loopback" in nic_name.lower() and "24" or "6",
+                speed=bandwidth or interfaces.saveint(nic["10"]),
                 oper_status=oper_status,
-                in_octets=interfaces.saveint(nic['-246']),
-                in_ucast=interfaces.saveint(nic['14']),
-                in_bcast=interfaces.saveint(nic['16']),
-                in_discards=interfaces.saveint(nic['18']),
-                in_errors=interfaces.saveint(nic['20']),
-                out_octets=interfaces.saveint(nic['-4']),
-                out_ucast=interfaces.saveint(nic['26']),
-                out_bcast=interfaces.saveint(nic['28']),
-                out_discards=interfaces.saveint(nic['30']),
-                out_errors=interfaces.saveint(nic['32']),
-                out_qlen=interfaces.saveint(nic['34']),
-                phys_address=interfaces.mac_address_from_hexstring(str(nic.get('MACAddress', ''))),
+                in_octets=interfaces.saveint(nic["-246"]),
+                in_ucast=interfaces.saveint(nic["14"]),
+                in_bcast=interfaces.saveint(nic["16"]),
+                in_discards=interfaces.saveint(nic["18"]),
+                in_errors=interfaces.saveint(nic["20"]),
+                out_octets=interfaces.saveint(nic["-4"]),
+                out_ucast=interfaces.saveint(nic["26"]),
+                out_bcast=interfaces.saveint(nic["28"]),
+                out_discards=interfaces.saveint(nic["30"]),
+                out_errors=interfaces.saveint(nic["32"]),
+                out_qlen=interfaces.saveint(nic["34"]),
+                phys_address=interfaces.mac_address_from_hexstring(str(nic.get("MACAddress", ""))),
                 oper_status_name=oper_status_name,
                 group=group,
-            ))
+            )
+        )
 
     return if_table
 
@@ -391,13 +394,20 @@ def _parse_winperf_if_nic_attrs(
         nic_name = winperf_if_canonize_nic_name(raw_nic_name)
         nic_attrs.setdefault(
             nic_name,
-            NICAttr(idx + 1, {counter: int(line[idx]) for counter, line in agent_section.items()}))
+            NICAttr(idx + 1, {counter: int(line[idx]) for counter, line in agent_section.items()}),
+        )
     return nic_attrs
 
 
 def parse_winperf_if(string_table: type_defs.StringTable) -> Section:
-    (agent_timestamp, raw_nic_names, agent_section, plugin_section, dhcp_section,
-     teaming_section) = _parse_winperf_if_section(string_table)
+    (
+        agent_timestamp,
+        raw_nic_names,
+        agent_section,
+        plugin_section,
+        dhcp_section,
+        teaming_section,
+    ) = _parse_winperf_if_section(string_table)
 
     # Based on the raw nic names we structure the interface table
     nic_attrs = _parse_winperf_if_nic_attrs(raw_nic_names, agent_section)
@@ -412,13 +422,14 @@ def parse_winperf_if(string_table: type_defs.StringTable) -> Section:
 
 
 register.agent_section(
-    name='winperf_if',
+    name="winperf_if",
     parse_function=parse_winperf_if,
+    supersedes=["if", "if64"],
 )
 
 
 def discover_winperf_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -429,7 +440,7 @@ def discover_winperf_if(
 
 def check_winperf_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     agent_timestamp, if_table, dhcp_info = section
@@ -452,7 +463,7 @@ def check_if_dhcp(
 ) -> Optional[Result]:
     for nic_name, attrs in dhcp_info.items():
         try:
-            match = int(attrs['index']) == int(item)
+            match = int(attrs["index"]) == int(item)
         except (KeyError, ValueError):
             match = nic_name == item
 
@@ -476,7 +487,7 @@ register.check_plugin(
     name="winperf_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_winperf_if,
     check_ruleset_name="if",

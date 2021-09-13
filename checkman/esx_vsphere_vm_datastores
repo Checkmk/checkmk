@@ -13,5 +13,5 @@ description:
  See "Monitoring VMWare ESX with Checkmk" in the online documentation
  as well.
 
-inventory:
+discovery:
  One service is created for each Virtual Machine.

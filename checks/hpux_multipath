@@ -46,20 +46,20 @@ hpux_multipath_pathstates = {
     "FAILED": 2,
     "UNOPEN": 3,
     "OPENING": 0,
-    "CLOSING": 1
+    "CLOSING": 1,
 }
 
 
 def parse_hpux_multipath(info):
     disks = {}
     for line in info:
-        if ':' in line:
+        if ":" in line:
             disk = line[-1]
         elif line[0] == "World":
             wwid = line[-1]
             paths = [0, 0, 0, 0]  # ACTIVE, STANBY, FAILED, UNOPEN
             disks[wwid] = (disk, paths)
-        elif '=' in line:
+        elif "=" in line:
             state = line[-1]
             paths[hpux_multipath_pathstates[state]] += 1
     return disks
@@ -90,19 +90,28 @@ def check_hpux_multipath(item, params, info):
     disk, pathcounts = disks[item]
 
     if pathcounts[2] > 0:
-        return (2, "%s: %d failed paths! (%s)" %
-                (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)))
+        return (
+            2,
+            "%s: %d failed paths! (%s)"
+            % (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)),
+        )
 
     elif list(pathcounts) != list(params):
-        return (1, "%s: Invalid path status %s (should be %s)" %
-                (disk, hpux_multipath_format_pathstatus(pathcounts),
-                 hpux_multipath_format_pathstatus(params)))
+        return (
+            1,
+            "%s: Invalid path status %s (should be %s)"
+            % (
+                disk,
+                hpux_multipath_format_pathstatus(pathcounts),
+                hpux_multipath_format_pathstatus(params),
+            ),
+        )
     return (0, "%s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
 
 
 check_info["hpux_multipath"] = {
-    'check_function': check_hpux_multipath,
-    'inventory_function': inventory_hpux_multipath,
-    'service_description': 'Multipath %s',
-    'group': 'hpux_multipath',
+    "check_function": check_hpux_multipath,
+    "inventory_function": inventory_hpux_multipath,
+    "service_description": "Multipath %s",
+    "group": "hpux_multipath",
 }

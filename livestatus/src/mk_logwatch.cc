@@ -5,7 +5,6 @@
 
 #include "mk_logwatch.h"
 
-#include <ostream>
 #include <system_error>
 
 #include "Logger.h"

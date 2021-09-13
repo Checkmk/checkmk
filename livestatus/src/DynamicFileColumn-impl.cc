@@ -4,8 +4,10 @@
 // source code package.
 
 #include <memory>
+#include <sstream>
+#include <string>
 
-#include "DynamicFileColumn.cc"
+#include "DynamicFileColumn.cc"  // NOLINT(bugprone-suspicious-include)
 #include "DynamicFileColumn.h"
 #include "nagios.h"
 class CrashReport;

@@ -8,6 +8,7 @@
 #include "common/cfg_info.h"
 #include "external_port.h"
 #include "onlyfrom.h"
+#include "test_tools.h"
 
 std::string network_list[] = {
     "2001:db8:abcd:0012::0/112",  // mask
@@ -135,10 +136,10 @@ TEST(OnlyFromTest, Validness) {
 }
 
 TEST(OnlyFromTest, Base) {
-    using namespace std::chrono;
-    using namespace xlog::internal;
+    tst::FirewallOpener fwo;
 
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     {
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kOnlyFrom] =
@@ -164,7 +165,6 @@ TEST(OnlyFromTest, Base) {
         EXPECT_TRUE(groups::global.isIpAddressAllowed("::FFFF:127.0.0.1"));
 
         bool address_ok = true;
-        int port = 64351;
         cma::world::ReplyFunc reply =
             [&address_ok](const std::string Ip) -> std::vector<uint8_t> {
             std::error_code ec;
@@ -182,14 +182,15 @@ TEST(OnlyFromTest, Base) {
         using namespace asio;
         // ipv4
         {
-            cma::world::ExternalPort test_port(nullptr, port);  //
-            auto ret = test_port.startIo(reply);                //
+            cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
+            auto ret = test_port.startIo(reply);                           //
             ASSERT_TRUE(ret);
 
             try {
                 io_context ios;
 
-                ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"), port);
+                ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"),
+                                           tst::TestPort());
 
                 asio::ip::tcp::socket socket(ios);
 
@@ -208,11 +209,12 @@ TEST(OnlyFromTest, Base) {
 
         // ipv6 connect
         {
-            cma::world::ExternalPort test_port(nullptr, port);  //
-            auto ret = test_port.startIo(reply);                //
+            cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
+            auto ret = test_port.startIo(reply);                           //
             ASSERT_TRUE(ret);
             io_context ios;
-            ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
+            ip::tcp::endpoint endpoint(ip::make_address("::1"),
+                                       tst::TestPort());
 
             asio::ip::tcp::socket socket(ios);
 
@@ -228,7 +230,7 @@ TEST(OnlyFromTest, Base) {
 
         // bad address
         {
-            cma::world::ExternalPort test_port(nullptr, port);  //
+            cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
             {
                 auto yaml = GetLoadedConfig();
                 yaml[groups::kGlobal][vars::kOnlyFrom] =
@@ -240,7 +242,8 @@ TEST(OnlyFromTest, Base) {
                 auto ret = test_port.startIo(reply);  //
                 ASSERT_TRUE(ret);
                 io_context ios;
-                ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
+                ip::tcp::endpoint endpoint(ip::make_address("::1"),
+                                           tst::TestPort());
 
                 asio::ip::tcp::socket socket(ios);
 
@@ -264,7 +267,8 @@ TEST(OnlyFromTest, Base) {
                 auto ret = test_port.startIo(reply);  //
                 ASSERT_FALSE(ret);
                 io_context ios;
-                ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
+                ip::tcp::endpoint endpoint(ip::make_address("::1"),
+                                           tst::TestPort());
 
                 asio::ip::tcp::socket socket(ios);
 
@@ -293,11 +297,12 @@ TEST(OnlyFromTest, Base) {
     }
 }
 
-TEST(OnlyFromTest, Ipv6) {
-    using namespace std::chrono;
-    using namespace xlog::internal;
+TEST(OnlyFromTest, Ipv6Integration) {
+    tst::FirewallOpener fwo;
 
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+
     {
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("::1 127.0.0.1");
@@ -311,7 +316,6 @@ TEST(OnlyFromTest, Ipv6) {
         EXPECT_TRUE(of::IsAddressV6(only_froms[2]));
 
         bool address_ok = true;
-        int port = 64351;
         cma::world::ReplyFunc reply =
             [&address_ok](const std::string Ip) -> std::vector<uint8_t> {
             std::error_code ec;
@@ -329,14 +333,15 @@ TEST(OnlyFromTest, Ipv6) {
         using namespace asio;
         // ipv4
         {
-            cma::world::ExternalPort test_port(nullptr, port);  //
-            auto ret = test_port.startIo(reply);                //
+            cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
+            auto ret = test_port.startIo(reply);                           //
             ASSERT_TRUE(ret);
 
             try {
                 io_context ios;
 
-                ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"), port);
+                ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"),
+                                           tst::TestPort());
 
                 asio::ip::tcp::socket socket(ios);
 
@@ -355,11 +360,12 @@ TEST(OnlyFromTest, Ipv6) {
 
         // ipv6 connect
         {
-            cma::world::ExternalPort test_port(nullptr, port);  //
-            auto ret = test_port.startIo(reply);                //
+            cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
+            auto ret = test_port.startIo(reply);                           //
             ASSERT_TRUE(ret);
             io_context ios;
-            ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
+            ip::tcp::endpoint endpoint(ip::make_address("::1"),
+                                       tst::TestPort());
 
             asio::ip::tcp::socket socket(ios);
 
@@ -386,11 +392,13 @@ TEST(OnlyFromTest, Ipv6) {
 
             //  ipv6 no connect
             {
-                cma::world::ExternalPort test_port(nullptr, port);  //
-                auto ret = test_port.startIo(reply);                //
+                cma::world::ExternalPort test_port(nullptr,
+                                                   tst::TestPort());  //
+                auto ret = test_port.startIo(reply);                  //
                 ASSERT_TRUE(ret);
                 io_context ios;
-                ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
+                ip::tcp::endpoint endpoint(ip::make_address("::1"),
+                                           tst::TestPort());
 
                 asio::ip::tcp::socket socket(ios);
 
@@ -406,11 +414,13 @@ TEST(OnlyFromTest, Ipv6) {
 
             //  ipv4 connected successfully
             {
-                cma::world::ExternalPort test_port(nullptr, port);  //
-                auto ret = test_port.startIo(reply);                //
+                cma::world::ExternalPort test_port(nullptr,
+                                                   tst::TestPort());  //
+                auto ret = test_port.startIo(reply);                  //
                 ASSERT_TRUE(ret);
                 io_context ios;
-                ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"), port);
+                ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"),
+                                           tst::TestPort());
 
                 asio::ip::tcp::socket socket(ios);
 

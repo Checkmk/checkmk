@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name
 
 import json
 
 import pytest
 
-from cmk.utils.cpu_tracking import Snapshot, CPUTracker
+from cmk.utils.cpu_tracking import Snapshot
 
 
 def json_identity(serializable):
@@ -20,7 +20,7 @@ def json_identity(serializable):
 @pytest.fixture
 def set_time(monkeypatch):
     def setter(value):
-        monkeypatch.setattr("time.time", lambda value=value: value)
+        monkeypatch.setattr("time.monotonic", lambda value=value: value)
 
     return setter
 
@@ -59,55 +59,3 @@ class TestCpuTracking:
 
     def test_json_serialization_now(self, now):
         assert Snapshot.deserialize(json_identity(now.serialize())) == now
-
-
-class TestCPUTracker:
-    def test_single_phase(self, set_time):
-        set_time(0.0)
-        with CPUTracker() as tracker:
-            set_time(2.0)
-
-        assert tracker.run_time == 2.0
-
-    def test_split_phase(self, set_time):
-        set_time(0.0)
-        with CPUTracker() as tracker0:
-            set_time(3.0)
-
-        with CPUTracker() as tracker1:
-            set_time(5.0)
-
-        with CPUTracker() as tracker2:
-            set_time(11.0)
-
-        assert sum(tracker.run_time for tracker in (tracker0, tracker1, tracker2)) == 11.0
-
-    def test_sequential_phases(self, set_time):
-        set_time(0.0)
-        with CPUTracker() as tracker1:
-            set_time(3.0)
-
-        with CPUTracker() as tracker2:
-            set_time(5.0)
-
-        with CPUTracker() as tracker3:
-            set_time(11.0)
-
-        assert tracker1.run_time == 3.0
-        assert tracker2.run_time == 5.0 - 3.0
-        assert tracker3.run_time == 11.0 - 5.0
-
-    def test_nested_phases(self, set_time):
-        set_time(0.0)
-        with CPUTracker() as tracker1:
-            set_time(3.0)
-
-            with CPUTracker() as tracker2:
-                set_time(5.0)
-
-                with CPUTracker() as tracker3:
-                    set_time(13.0)
-
-        assert tracker1.run_time == 13.0
-        assert tracker2.run_time == 13.0 - 3.0
-        assert tracker3.run_time == 13.0 - 5.0

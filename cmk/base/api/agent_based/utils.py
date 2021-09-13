@@ -9,17 +9,16 @@ These are meant to be exposed in the API
 """
 import itertools
 import re
-from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Union
+from typing import Any, Callable, Dict, Generator, MutableMapping, Optional, overload, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName
 
-from cmk.snmplib.type_defs import SNMPDetectSpec  # pylint: disable=cmk-module-layer-violation
-
-import cmk.base.check_api_utils as check_api_utils  # pylint: disable=cmk-module-layer-violation
+import cmk.base.plugin_contexts as plugin_contexts  # pylint: disable=cmk-module-layer-violation
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
-from cmk.base.api.agent_based.type_defs import ValueStore
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___
@@ -29,8 +28,11 @@ from cmk.base.api.agent_based.type_defs import ValueStore
 #                                      |_|
 
 
-def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
-           *specs: SNMPDetectSpec) -> SNMPDetectSpec:
+def all_of(
+    spec_0: SNMPDetectSpecification,
+    spec_1: SNMPDetectSpecification,
+    *specs: SNMPDetectSpecification,
+) -> SNMPDetectSpecification:
     """Detect the device if all passed specifications are met
 
     Args:
@@ -45,13 +47,13 @@ def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
         >>> DETECT = all_of(exists("1.2.3.4"), contains("1.2.3.5", "foo"))
 
     """
-    reduced = SNMPDetectSpec(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
+    reduced = SNMPDetectSpecification(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
     if not specs:
         return reduced
     return all_of(reduced, *specs)
 
 
-def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
+def any_of(*specs: SNMPDetectSpecification) -> SNMPDetectSpecification:
     """Detect the device if any of the passed specifications are met
 
     Args:
@@ -65,16 +67,16 @@ def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
         >>> DETECT = any_of(exists("1.2.3.4"), exists("1.2.3.5"))
 
     """
-    return SNMPDetectSpec(sum(specs, []))
+    return SNMPDetectSpecification(sum(specs, []))
 
 
-def _negate(spec: SNMPDetectSpec) -> SNMPDetectSpec:
+def _negate(spec: SNMPDetectSpecification) -> SNMPDetectSpecification:
     assert len(spec) == 1
     assert len(spec[0]) == 1
-    return SNMPDetectSpec([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
+    return SNMPDetectSpecification([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
 
 
-def matches(oidstr: str, value: str) -> SNMPDetectSpec:
+def matches(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID matches the expression
 
     Args:
@@ -89,10 +91,10 @@ def matches(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = matches("1.2.3.4", ".* Server")
 
     """
-    return SNMPDetectSpec([[(oidstr, value, True)]])
+    return SNMPDetectSpecification([[(oidstr, value, True)]])
 
 
-def contains(oidstr: str, value: str) -> SNMPDetectSpec:
+def contains(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID contains the given string
 
     Args:
@@ -107,10 +109,10 @@ def contains(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = contains("1.2.3", "isco")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, ".*%s.*" % re.escape(value), True)]])
 
 
-def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID starts with the given string
 
     Args:
@@ -125,10 +127,10 @@ def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = startswith("1.2.3", "Sol")
 
     """
-    return SNMPDetectSpec([[(oidstr, '%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, "%s.*" % re.escape(value), True)]])
 
 
-def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID ends with the given string
 
     Args:
@@ -143,10 +145,10 @@ def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = endswith("1.2.3", "nix")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, ".*%s" % re.escape(value), True)]])
 
 
-def equals(oidstr: str, value: str) -> SNMPDetectSpec:
+def equals(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID equals the given string
 
     Args:
@@ -161,10 +163,10 @@ def equals(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = equals("1.2.3", "MySwitch")
 
     """
-    return SNMPDetectSpec([[(oidstr, '%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, "%s" % re.escape(value), True)]])
 
 
-def exists(oidstr: str) -> SNMPDetectSpec:
+def exists(oidstr: str) -> SNMPDetectSpecification:
     """Detect the device if the OID exists at all
 
     Args:
@@ -178,35 +180,35 @@ def exists(oidstr: str) -> SNMPDetectSpec:
         >>> DETECT = exists("1.2.3")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*', True)]])
+    return SNMPDetectSpecification([[(oidstr, ".*", True)]])
 
 
-def not_matches(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_matches(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`matches`"""
     return _negate(matches(oidstr, value))
 
 
-def not_contains(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_contains(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`contains`"""
     return _negate(contains(oidstr, value))
 
 
-def not_startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`startswith`"""
     return _negate(startswith(oidstr, value))
 
 
-def not_endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`endswith`"""
     return _negate(endswith(oidstr, value))
 
 
-def not_equals(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_equals(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`equals`"""
     return _negate(equals(oidstr, value))
 
 
-def not_exists(oidstr: str) -> SNMPDetectSpec:
+def not_exists(oidstr: str) -> SNMPDetectSpecification:
     """The negation of :func:`exists`"""
     return _negate(exists(oidstr))
 
@@ -242,8 +244,9 @@ def _do_check_levels(
     return State.OK, ""
 
 
-def _levelsinfo_ty(preposition: str, levels: Tuple[float, float],
-                   render_func: Callable[[float], str]) -> str:
+def _levelsinfo_ty(
+    preposition: str, levels: Tuple[float, float], render_func: Callable[[float], str]
+) -> str:
     # Again we are forgiving if we get passed 'None' in the levels.
     warn_str = "never" if levels[0] is None else render_func(levels[0])
     crit_str = "never" if levels[1] is None else render_func(levels[1])
@@ -311,14 +314,17 @@ def check_levels(
 
     Example:
 
-        >>> result, = check_levels(
+        >>> result, metric = check_levels(
         ...     23.0,
         ...     levels_upper=(12., 42.),
+        ...     metric_name="temperature",
         ...     label="Fridge",
         ...     render_func=lambda v: "%.1f°" % v,
         ... )
         >>> print(result.summary)
         Fridge: 23.0° (warn/crit at 12.0°/42.0°)
+        >>> print(metric)
+        Metric('temperature', 23.0, levels=(12.0, 42.0))
 
     """
     if render_func is None:
@@ -367,15 +373,15 @@ def check_levels_predictive(
 
     """
     if render_func is None:
-        render_func = "%.2f".format
+        render_func = "{:.2f}".format
 
     # validate the metric name, before we can get the levels.
-    Metric.validate_name(metric_name)
+    _ = Metric(metric_name, value)
 
     try:
         ref_value, levels_tuple = cmk.base.prediction.get_levels(
-            check_api_utils.host_name(),
-            check_api_utils.service_description(),
+            HostName(plugin_contexts.host_name()),
+            plugin_contexts.service_description(),
             metric_name,
             levels,
             "MAX",
@@ -396,11 +402,17 @@ def check_levels_predictive(
         yield Result(state=State.UNKNOWN, summary="%s" % e)
         return
 
-    levels_upper = (None if levels_tuple[0] is None or levels_tuple[1] is None else
-                    (levels_tuple[0], levels_tuple[1]))
+    levels_upper = (
+        None
+        if levels_tuple[0] is None or levels_tuple[1] is None
+        else (levels_tuple[0], levels_tuple[1])
+    )
 
-    levels_lower = (None if levels_tuple[2] is None or levels_tuple[3] is None else
-                    (levels_tuple[2], levels_tuple[3]))
+    levels_lower = (
+        None
+        if levels_tuple[2] is None or levels_tuple[3] is None
+        else (levels_tuple[2], levels_tuple[3])
+    )
 
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
@@ -424,24 +436,67 @@ def check_levels_predictive(
 
 
 class GetRateError(IgnoreResultsError):
-    pass
+    """The exception raised by :func:`.get_rate`.
+    If unhandled, this exception will make the service go stale.
+    """
 
 
-def get_rate(value_store: ValueStore,
-             key: str,
-             time: float,
-             value: float,
-             *,
-             raise_overflow: bool = False) -> float:
+def get_rate(
+    value_store: MutableMapping[str, Any],
+    key: str,
+    time: float,
+    value: float,
+    *,
+    raise_overflow: bool = False,
+) -> float:
+    """Return a rate based on current value and time and last value and time
+
+    Args:
+
+        value_store:     The Mapping that holds the last value.
+                         Usually this will be the value store provided by the APIs
+                         :func:`get_value_store`.
+        key:             Unique ID for storing this average until the next check
+        time:            Timestamp of new value
+        value:           The new value
+        raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+
+    This function returns the rate of a measurement rₙ as the quotient of the
+    current value and time (xₙ, tₙ) and the last recorded value and time (xₙ₋₁, tₙ₋₁):
+
+        rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    A :class:`GetRateError` will be raised if one of the following happens:
+
+        * the function is called for the first time
+        * the time has not changed
+        * the rate is negative and `raise_overflow` is set to True (usefull
+          for instance when dealing with counters)
+
+    In general there is no need to catch a :class:`.GetRateError`, as it
+    inherits :class:`.IgnoreResultsError`.
+
+    Example:
+
+        >>> # in practice: my_store = get_value_store()
+        >>> my_store = {"cookies": (1600000000, 23)}
+        >>> get_rate(my_store, "cookies", 1600000060, 56)
+        0.55
+
+    Returns:
+
+        The computed rate
+
+    """
     last_state = value_store.get(key)
     value_store[key] = (time, value)
 
     if not last_state or len(last_state) != 2:
-        raise GetRateError('Initialized: %r' % key)
+        raise GetRateError("Initialized: %r" % key)
     last_time, last_value = last_state
 
     if time <= last_time:
-        raise GetRateError('No time difference')
+        raise GetRateError("No time difference")
 
     rate = float(value - last_value) / (time - last_time)
     if raise_overflow and rate < 0:
@@ -449,13 +504,18 @@ def get_rate(value_store: ValueStore,
         # wether they are 32 or 64 bit. It also could happen counter
         # reset (reboot, etc.). Better is to leave this value undefined
         # and wait for the next check interval.
-        raise GetRateError('Value overflow')
+        raise GetRateError("Value overflow")
 
     return rate
 
 
-def get_average(value_store: ValueStore, key: str, time: float, value: float,
-                backlog_minutes: float) -> float:
+def get_average(
+    value_store: MutableMapping[str, Any],
+    key: str,
+    time: float,
+    value: float,
+    backlog_minutes: float,
+) -> float:
     """Return new average based on current value and last average
 
     Args:
@@ -507,12 +567,12 @@ def get_average(value_store: ValueStore, key: str, time: float, value: float,
     if time_diff <= 0:
         # Gracefully handle time-anomaly of target systems
         return last_average
-    backlog_count = (backlog_minutes * 60.) / time_diff
+    backlog_count = (backlog_minutes * 60.0) / time_diff
 
     # go back to regular EMA once the timeseries is twice ↓ the backlog.
-    backlog_weight = 0.5**min(1, (time - start_time) / (2 * backlog_minutes * 60.))
+    backlog_weight = 0.5 ** min(1, (time - start_time) / (2 * backlog_minutes * 60.0))
 
-    weight = (1 - backlog_weight)**(1.0 / backlog_count)
+    weight = (1 - backlog_weight) ** (1.0 / backlog_count)
 
     average = (1.0 - weight) * value + weight * last_average
     value_store[key] = (start_time, time, average)

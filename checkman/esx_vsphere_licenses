@@ -9,6 +9,6 @@ description:
 item:
  Name of license
 
-inventory:
+discovery:
  One service is created for each license type.
 

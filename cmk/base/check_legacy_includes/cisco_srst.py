@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # .1.3.6.1.4.1.9.9.441.1.2.1.0 2 --> CISCO-SRST-MIB::csrstEnabled.0, 1:enabled, 2:disable
 
 # .1.3.6.1.4.1.9.9.441.1.3.1.0 2 --> CISCO-SRST-MIB::csrstState.0, 1:active, 2:inactive
@@ -14,5 +14,6 @@
 
 
 def cisco_srst_scan_function(oid):
-    return "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                      oid(".1.3.6.1.4.1.9.9.441.1.2.1.0") == "1"
+    return (
+        "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and oid(".1.3.6.1.4.1.9.9.441.1.2.1.0") == "1"
+    )

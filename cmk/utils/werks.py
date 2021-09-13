@@ -8,14 +8,13 @@ so it's best place is in the central library."""
 
 import itertools
 import json
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any, Dict
 
 from six import ensure_str
 
 import cmk.utils.paths
-
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -24,7 +23,7 @@ from cmk.utils.i18n import _
 # *all* translation values.
 class WerkTranslator:
     def __init__(self):
-        super(WerkTranslator, self).__init__()
+        super().__init__()
         self._classes = {
             "feature": _("New feature"),
             "fix": _("Bug fix"),
@@ -35,7 +34,7 @@ class WerkTranslator:
             "core": _("Core & setup"),
             "checks": _("Checks & agents"),
             "multisite": _("User interface"),
-            "wato": _("WATO"),
+            "wato": _("Setup"),
             "notifications": _("Notifications"),
             "bi": _("BI"),
             "reporting": _("Reporting & availability"),
@@ -43,7 +42,6 @@ class WerkTranslator:
             "livestatus": _("Livestatus"),
             "liveproxy": _("Livestatus proxy"),
             "inv": _("HW/SW inventory"),
-
             # CEE
             "cmc": _("The Checkmk Micro Core"),
             "setup": _("Setup, site management"),
@@ -52,7 +50,8 @@ class WerkTranslator:
             "agents": _("Agent bakery"),
             "metrics": _("Metrics system"),
             "alerts": _("Alert handlers"),
-
+            "dcd": _("Dynamic host configuration"),
+            "ntopng_integration": _("Ntopng integration"),
             # CMK-OMD
             "omd": _("Site management"),
             "rpm": _("RPM packaging"),
@@ -105,8 +104,9 @@ def _compiled_werks_dir():
 def load():
     werks: Dict[int, Dict[str, Any]] = {}
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
-    for file_name in itertools.chain(_compiled_werks_dir().glob("werks"),
-                                     _compiled_werks_dir().glob("werks-*")):
+    for file_name in itertools.chain(
+        _compiled_werks_dir().glob("werks"), _compiled_werks_dir().glob("werks-*")
+    ):
         werks.update(load_precompiled_werks_file(file_name))
     return werks
 
@@ -127,7 +127,7 @@ def load_raw_files(werks_dir):
             werk["id"] = werk_id
             werks[werk_id] = werk
         except Exception as e:
-            raise MKGeneralException(_("Failed to load werk \"%s\": %s") % (werk_id, e))
+            raise MKGeneralException(_('Failed to load werk "%s": %s') % (werk_id, e))
     return werks
 
 
@@ -200,8 +200,9 @@ def write_as_text(werks, f, write_version=True):
         # write_version=False is used by the announcement mails
         if write_version:
             f.write("%s:\n" % ensure_str(version))
-        for component, component_group in itertools.groupby(version_group,
-                                                            key=translator.component_of):
+        for component, component_group in itertools.groupby(
+            version_group, key=translator.component_of
+        ):
             f.write("    %s:\n" % ensure_str(component))
             for werk in component_group:
                 write_werk_as_text(f, werk)
@@ -243,17 +244,24 @@ _COMPATIBLE_SORTING_VALUE = {
 # sort by version and within one version by component
 def sort_by_version_and_component(werks):
     translator = WerkTranslator()
-    return sorted(werks,
-                  key=lambda w: (-parse_check_mk_version(w["version"]), translator.component_of(w),
-                                 _CLASS_SORTING_VALUE.get(w["class"], 99), -w["level"],
-                                 _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99), w["title"]))
+    return sorted(
+        werks,
+        key=lambda w: (
+            -parse_check_mk_version(w["version"]),
+            translator.component_of(w),
+            _CLASS_SORTING_VALUE.get(w["class"], 99),
+            -w["level"],
+            _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99),
+            w["title"],
+        ),
+    )
 
 
 def sort_by_date(werks):
     return sorted(werks, key=lambda w: w["date"], reverse=True)
 
 
-VERSION_PATTERN = re.compile(r'^([.\-a-z]+)?(\d+)')
+VERSION_PATTERN = re.compile(r"^([.\-a-z]+)?(\d+)")
 
 
 # Parses versions of Checkmk and converts them into comparable integers.
@@ -306,34 +314,34 @@ def parse_check_mk_version(v: str) -> int:
     True
 
     """
-    parts = v.split('.', 2)
+    parts = v.split(".", 2)
 
     while len(parts) < 3:
         parts.append("0")
 
     var_map = {
         # identifier: (base-val, multiplier)
-        's': (0, 1),  # sub
-        'i': (10000, 100),  # innovation
-        'b': (20000, 100),  # beta
-        'p': (50000, 1),  # patch-level
-        '-': (90000, 0),  # daily
-        '.': (90000, 0),  # daily
+        "s": (0, 1),  # sub
+        "i": (10000, 100),  # innovation
+        "b": (20000, 100),  # beta
+        "p": (50000, 1),  # patch-level
+        "-": (90000, 0),  # daily
+        ".": (90000, 0),  # daily
     }
 
     def _extract_rest(_rest):
         for match in VERSION_PATTERN.finditer(_rest):
-            _var_type = match.group(1) or 's'
+            _var_type = match.group(1) or "s"
             _num = match.group(2)
-            return _var_type, int(_num), _rest[match.end():]
+            return _var_type, int(_num), _rest[match.end() :]
         # Default fallback.
-        return 'p', 0, ''
+        return "p", 0, ""
 
     major, minor, rest = parts
     _, sub, rest = _extract_rest(rest)
 
     if rest.startswith("-sandbox"):
-        return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, 0))
+        return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, 0))
 
     # Only add the base once, else we could do it in the loop.
     var_type, num, rest = _extract_rest(rest)
@@ -346,4 +354,4 @@ def parse_check_mk_version(v: str) -> int:
         _, multiply = var_map[var_type]
         val += num * multiply
 
-    return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))
+    return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))

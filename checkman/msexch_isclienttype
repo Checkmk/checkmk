@@ -12,5 +12,5 @@ description:
  {WARN} and {CRIT} thresholds can be configured, defaults are based of
  suggestions published on microsofts technet.
 
-inventory:
+discovery:
  One service is created for each client type.

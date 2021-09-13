@@ -29,8 +29,8 @@ def check_emcvnx_writecache(item, params, info):
             return state, "State: %s" % state_readable
 
 
-check_info['emcvnx_writecache'] = {
-    'inventory_function': inventory_emcvnx_writecache,
-    'check_function': check_emcvnx_writecache,
-    'service_description': 'Write Cache State %s',
+check_info["emcvnx_writecache"] = {
+    "inventory_function": inventory_emcvnx_writecache,
+    "check_function": check_emcvnx_writecache,
+    "service_description": "Write Cache State %s",
 }

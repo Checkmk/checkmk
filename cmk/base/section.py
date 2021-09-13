@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.tty as tty
 import cmk.utils.log.console as console
+import cmk.utils.tty as tty
 
 
 # Note: section_begin|success|error|step is a naive and incomplete

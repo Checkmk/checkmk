@@ -11,7 +11,7 @@ description:
  The lower default levels are set to 28%/25%.
  Upper and lower levels are configurable.
 
-inventory:
+discovery:
  One service is created for each fan.
 
 item:

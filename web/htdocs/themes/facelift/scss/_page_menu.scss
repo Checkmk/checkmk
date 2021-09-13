@@ -4,13 +4,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 body.main {
-  tr#suggestions {
-    display: table-row;
-  }
-
   td.shortcuts {
     a.suggested {
-      display: none;
+      visibility: hidden;
     }
   }
 }
@@ -21,14 +17,14 @@ div#top_heading {
 
   div.titlebar {
     height: 53px;
-    padding: 5px 10px 0;
-    background-color: $color-background;
+    padding: 0.5 * $spacing $spacing 0;
+    background-color: $bg-color;
   }
 
   a.title {
     padding: 0;
     margin: 6px 0 0;
-    font-size: 18px;
+    font-size: $font-size-page-title;
     font-weight: bold;
     color: $font-color;
     text-decoration: none;
@@ -41,30 +37,38 @@ div#top_heading {
 
   div.page_state {
     position: absolute;
-    top: 10px;
-    right: 10px;
-
+    top: 14px;
+    right: 17px;
     display: flex;
     align-items: center;
-    height: 30px;
+    height: inherit;
 
-    div.text {
-      right: 45px;
-      text-align: right;
+    &.default {
+      top: 6px;
+    }
 
-      > span:first-child {
-        /* break between top and bottom line */
-        display: table;
+    > a {
+      display: inherit;
+      align-items: inherit;
+      text-decoration: none;
+
+      &:hover {
+        color: $font-color-green;
       }
     }
 
+    div.text_container span {
+      display: table;
+    }
+
     div.icon_container {
-      margin-left: 10px;
+      margin-top: -2px; // align icon with text
+      margin-left: 8px;
 
       img.icon {
         display: block;
-        width: 30px;
-        height: 30px;
+        width: 14px;
+        height: 14px;
 
         &:hover {
           /* disable hover effect */
@@ -74,12 +78,20 @@ div#top_heading {
     }
 
     &.default {
+      div.text_container {
+        position: absolute;
+        right: 5.5px;
+        bottom: 21px;
+        font-size: $font-size-small;
+        line-height: $font-size-small;
+      }
+
       div.icon_container,
       div.icon_container > img.icon {
-        width: 18px;
-        height: 18px;
-        border: 4px solid rgba($font-color, 0.5);
-        border-radius: 10px;
+        width: 25px;
+        height: 25px;
+        border: 3px solid rgba($font-color, 0.4);
+        border-radius: 15px;
         box-sizing: border-box;
         transition: clip-path 0.25s;
       }
@@ -87,14 +99,27 @@ div#top_heading {
       div.icon_container > img.icon {
         /* compensate border offset */
         position: relative;
-        top: -4px;
-        left: -4px;
+        top: -3px;
+        left: -3px;
+        border: 3px solid $font-color;
+        clip-path: polygon(0 0);
       }
+
+      > a:hover {
+        color: $font-color;
+
+        div.icon_container > img.icon {
+          border-color: $success;
+        }
+      }
+    }
+
+    span#headinfo {
+      display: none;
     }
   }
 
   div.breadcrumb {
-    font-size: 11px;
     white-space: nowrap;
 
     span,
@@ -102,7 +127,7 @@ div#top_heading {
       &:last-child:after {
         content: "";
       }
-      color: rgba($font-color, 0.5);
+      color: $font-color-dimmed;
       text-decoration: none;
     }
 
@@ -120,7 +145,7 @@ div#top_heading {
     width: 100%;
     padding: 0 0 $spacing;
     white-space: nowrap;
-    background-color: $color-background;
+    background-color: $bg-color;
     border-spacing: 0;
 
     td {
@@ -128,11 +153,15 @@ div#top_heading {
       margin: 0;
       vertical-align: middle;
 
+      // Needed to prevent a buggy menubar display on rule edit pages (FEED-5754)
+      &.menues {
+        width: 1px;
+      }
+
       &.shortcuts {
         width: 100%;
         padding: 0 3px;
         background-color: $page-menu-bg-color;
-        border-right: 1px solid $headline-color;
 
         a.disabled {
           pointer-events: none;
@@ -146,14 +175,29 @@ div#top_heading {
           filter: grayscale(100%) brightness(55%);
         }
       }
+
+      &.icon_container {
+        padding-right: 3px;
+        background-color: $page-menu-bg-color;
+        border-right: 1px solid $headline-color;
+
+        img {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+
+    td.menues div.menucontainer,
+    td.inpage_search {
+      background-color: $page-menu-bg-color;
+      border-bottom: 2px solid $page-menu-bg-color;
     }
 
     td.menues div.menucontainer {
       position: relative;
       display: inline-block;
       padding: 0;
-      background-color: $page-menu-bg-color;
-      border-bottom: 2px solid $page-menu-bg-color;
 
       &.disabled {
         pointer-events: none;
@@ -193,7 +237,6 @@ div#top_heading {
         h2 {
           padding: 6px 5px 4px;
           margin: 0;
-          font-size: 12px;
 
           &:hover {
             cursor: pointer;
@@ -221,6 +264,13 @@ div#top_heading {
           width: 14px;
           height: 14px;
           margin-right: 5px;
+
+          &.emblem {
+            right: 0;
+            bottom: -2px;
+            width: 10px;
+            height: 10px;
+          }
         }
 
         div.topic {
@@ -229,16 +279,14 @@ div#top_heading {
           }
 
           div.topic_title {
-            display: inline-block;
-            padding: $spacing 0 2px 32px;
-            font-size: $font-size-global;
+            padding: $spacing 0 2px 12px;
             font-weight: normal;
-            color: rgba($font-color, 0.5);
+            color: $font-color-dimmed;
             cursor: default;
           }
 
           div.entry {
-            padding-left: $spacing;
+            padding: 4px 0 0 $spacing;
 
             a {
               display: flex;
@@ -247,7 +295,7 @@ div#top_heading {
             }
 
             &.enabled a:hover {
-              color: $success;
+              color: $font-color-green;
             }
 
             &.disabled a {
@@ -268,7 +316,6 @@ div#top_heading {
 
             input.text {
               position: relative;
-              font-size: 11px;
             }
 
             input.button {
@@ -292,8 +339,7 @@ div#top_heading {
 
     &#page_menu_bar.hide_suggestions {
       td.shortcuts a.suggested {
-        display: inline-block;
-        line-height: 26px;
+        visibility: visible;
       }
 
       tr#suggestions {
@@ -304,10 +350,73 @@ div#top_heading {
         transform: rotate(180deg);
       }
     }
+
+    td.inpage_search {
+      padding: 2px 10px 0;
+
+      form {
+        padding: 0;
+        margin: 0;
+        background-color: $inpage-highlight-color;
+        border-radius: 2px;
+      }
+
+      input,
+      input:active,
+      input:focus {
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+        box-sizing: border-box;
+      }
+
+      input[type="text"] {
+        width: 110px !important;
+        height: 18px;
+      }
+
+      input#inpage_search_form_reset,
+      input.submit {
+        padding: 0;
+        margin: 0 4px;
+        background-repeat: no-repeat;
+
+        &:disabled,
+        &.hidden {
+          display: none;
+        }
+      }
+
+      input#inpage_search_form_reset {
+        width: 11px;
+        height: 11px;
+        background-image: url("images/icon_close.svg");
+        background-size: 11px 11px;
+        border-radius: 0;
+      }
+
+      input.submit {
+        width: 10px;
+        height: 10px;
+        background-image: url("images/icon_filter_line.svg");
+        background-size: 10px 10px;
+        filter: none;
+      }
+
+      img {
+        width: 10px;
+        height: 10px;
+        margin: 0 4px;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
   }
 
   tr#suggestions {
-    background-color: $color-background;
+    background-color: $bg-color;
 
     td {
       width: 100%;
@@ -328,40 +437,46 @@ div#top_heading {
         align-items: center;
         justify-content: center;
         float: left;
-        margin: 2px 5px;
-
-        &:nth-child(1) {
-          margin-left: 0;
-        }
+        margin: $spacing-quarter $spacing-half $spacing-quarter 0;
 
         &.disabled {
           pointer-events: none;
-          filter: grayscale(70%) brightness(125%);
+
+          a {
+            background-color: $input-button-hover-bg-color;
+            opacity: 0.5;
+          }
         }
 
         a {
           display: flex;
           align-items: center;
           justify-content: center;
-
           height: 30px;
           padding: 0 8px;
-          font-size: 12px;
-          font-weight: bold;
+          font-weight: $font-weight-bold;
           line-height: 16px;
-          color: $button-font-color-default;
+          color: $font-color;
           text-decoration: none;
           background-color: $button-bg-color-suggestions;
           border-radius: 4px;
+          box-sizing: border-box;
 
           img {
             width: 15px;
             height: 15px;
             padding: 0;
+            margin-top: -1.5px;
             margin-right: 5px;
 
             &:hover {
               opacity: 1;
+            }
+
+            &.emblem {
+              right: -2px;
+              width: 10px;
+              height: 10px;
             }
           }
 
@@ -380,10 +495,33 @@ div#top_heading {
 }
 
 div#page_menu_popups {
+  margin-right: $spacing;
+
+  .confirm_container {
+    position: static;
+    padding: 0;
+
+    .confirm_popup {
+      padding: 16px;
+      background-color: $headline-color;
+    }
+
+    .confirm_content {
+      padding: 0;
+      color: $font-color;
+      text-align: left;
+    }
+
+    .confirm_actions {
+      justify-content: flex-start;
+      margin: $spacing 0 0;
+    }
+  }
+
   div.page_menu_popup {
     position: relative;
     display: none;
-    padding: 10px;
+    margin-bottom: $spacing;
     background-color: $base-color;
     border: none;
     border-radius: $popup-filters-border-radius;
@@ -392,53 +530,75 @@ div#page_menu_popups {
       display: block;
     }
 
+    &.side_popup > .head {
+      background-color: inherit;
+    }
+
     > .head {
-      padding: 0;
+      padding: 6px 0 5px $spacing;
+      background-color: $headline-color;
 
       h3 {
         padding: 0;
-        margin: 8px 10px;
-        font-size: 14px;
-        font-weight: bold;
+        margin: 0;
+        font-weight: $font-weight-bold;
         color: $font-color;
       }
 
       a.close_popup img {
         position: absolute;
-        top: 1px;
-        right: 16px;
-        width: 16px;
+        top: 6px;
+        right: $spacing;
+        width: 12px;
         height: auto;
       }
     }
 
-    > .content {
+    &.side_popup > .content {
       padding: 0;
     }
 
-    form {
-      width: 456px;
+    div.group {
+      padding-top: $spacing;
 
-      span.checkbox {
-        white-space: initial;
+      &:first-of-type {
+        padding-top: 0;
       }
     }
 
-    select,
-    .tagify__input,
-    span.select2 .select2-selection,
-    input[type="checkbox"] + label::before,
-    input:not(.reset):not([type="submit"]) {
-      background-color: $bg-color;
+    form span.checkbox {
+      padding-right: $spacing;
+      white-space: initial;
+    }
+  }
+
+  button,
+  input.button {
+    padding: 8px 16px;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+/* Dashboard editor specific styling */
+body.dashboard {
+  div#page_menu_popups .confirm_container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    // Important needed to override swal2 internal definition
+    background-color: rgba($black, 0.2) !important; // sass-lint:disable-line no-important
+
+    .confirm_popup {
+      flex: 0 0 auto;
+      margin: auto;
     }
 
-    input.submit {
-      color: $black;
-      background-color: $success;
-    }
-
-    input[type="submit"]:not(.submit) {
-      border: $popup-button-border;
+    .confirm_content {
+      width: max-content;
+      min-width: 300px;
     }
   }
 }
@@ -474,7 +634,7 @@ div#page_menu_popups div.side_popup {
       box-shadow: none;
 
       input.neg[type="text"] {
-        width: 81%;
+        width: 74%;
       }
 
       div.content {
@@ -484,10 +644,6 @@ div#page_menu_popups div.side_popup {
 
       span.select2-container--default {
         display: inline-block;
-
-        &:last-child {
-          width: auto !important;
-        }
       }
 
       &.host_auxtags {
@@ -570,7 +726,7 @@ div#page_menu_popups div.side_popup {
         div.description {
           display: inline-block;
           margin: 5px 10px 0;
-          color: #5a6782;
+          color: $font-color-blue-1;
         }
 
         &:hover,
@@ -589,19 +745,12 @@ div#page_menu_popups div.side_popup {
       div.update_buttons {
         margin-left: auto;
 
-        input {
-          padding: 8px 16px;
-          margin: 0;
+        input.apply:disabled {
+          opacity: 0.5;
         }
 
         input.reset {
-          margin-right: 8px;
-          background-color: transparent;
-          border-color: $font-color;
-
-          &:disabled {
-            opacity: 0.5;
-          }
+          margin-right: 0;
         }
       }
     }
@@ -632,7 +781,7 @@ div#page_menu_popups div.side_popup {
       display: block;
       padding: 8px 10px;
       font-weight: bold;
-      color: $filter-group-title-font-color;
+      color: $font-color;
       cursor: pointer;
     }
 

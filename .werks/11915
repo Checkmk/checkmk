@@ -1,0 +1,15 @@
+Title: Fix error messages on check plugin page if check or catalog entry is missing
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1610654123
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Missing checks of check plugins with manual page lead to an undefined error message.
+If such an error occurs now, a meaningful error message is displayed.
+
+Also, in case of missing catalog entries in the manual page, the catalog is set
+to "unsorted" correctly now.

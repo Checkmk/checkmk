@@ -27,20 +27,8 @@ body.login {
     width: 770px;
     height: 605px;
     margin: auto;
+    color: $font-color;
     background: transparent;
-
-    #version::before {
-      position: absolute;
-      top: -8px;
-      left: -156px;
-      width: 200px;
-      height: 30px;
-      background-image: url("images/mk-logo.png");
-      background-position: 16px center;
-      background-repeat: no-repeat;
-      background-size: auto 30px;
-      content: " ";
-    }
   }
 
   #login_window {
@@ -51,9 +39,19 @@ body.login {
     height: 230px;
     margin: -30px auto 10px;
     background: $navigation-bg-color;
-    border: 2px solid $color-table-border-dark;
     border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  #logo {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+    width: 120px;
+    height: auto;
+
+    &.custom {
+      width: 60px;
+    }
   }
 
   #version {
@@ -61,20 +59,13 @@ body.login {
     top: 40px;
     right: 40px;
     width: 150px;
-    font-size: 11px;
     letter-spacing: $letter-spacing-table;
-    color: $lightgrey;
     text-align: right;
-  }
-
-  label {
-    color: rgb(255, 255, 255);
   }
 
   #label_user,
   #label_pass {
     left: 40px;
-    font-size: $font-size-global;
     letter-spacing: $letter-spacing-table;
   }
 
@@ -86,26 +77,26 @@ body.login {
   }
 
   #label_user {
-    top: 80px;
+    top: 86px;
   }
 
   #input_user {
-    top: 72px;
+    top: 79px;
   }
 
   #label_pass {
-    top: 120px;
+    top: 126px;
   }
 
   #input_pass {
-    top: 112px;
+    top: 119px;
   }
 
   #input_user,
   #input_pass {
-    left: 140px;
-    width: 171px;
-    height: 17px;
+    left: 135px;
+    width: 183px;
+    height: $input-field-height;
     background-repeat: no-repeat;
     border-radius: $theme-border-radius;
     outline: none;
@@ -114,41 +105,40 @@ body.login {
 
   #_login {
     position: absolute;
-    right: 15px;
-    bottom: 40px;
+    bottom: 29px;
     left: 40px;
     width: calc(100% - 80px);
+    height: 29px;
     padding: 8px 16px;
     margin: 0;
     font-weight: $font-weight-bold;
-    border-color: rgb(19, 211, 137);
+    border-color: $success;
   }
 
   #login_error {
     position: absolute;
-    bottom: 4px;
+    bottom: 6px;
     left: 92px;
     z-index: 100;
     width: 180px;
-    height: 30px;
+    height: 16px;
     padding: 0;
     margin: 0;
-    color: $lightgrey;
+    color: $font-color-light-grey;
     background-color: $color-state-2-background;
     background-image: none;
     background-repeat: no-repeat;
-    border: 1px solid $color-state-error-border;
     border-radius: $theme-border-radius;
-  }
 
-  #login_error div.error {
-    padding: 8px 0 0;
-    margin: 0;
-    color: $lightgrey;
-    background-color: transparent;
-    border-style: none;
-    border-radius: 0;
-    box-shadow: 0 0 0;
+    div.error {
+      padding: 1px 0 0;
+      margin: 0;
+      color: $font-color-light-grey;
+      background-color: transparent;
+      border-style: none;
+      border-radius: 0;
+      box-shadow: 0 0 0;
+    }
   }
 
   #foot {
@@ -157,14 +147,13 @@ body.login {
     left: 10px;
     width: 350px;
     margin: 0 auto 10px;
-    font-size: 11px;
-    color: $darkgrey;
+    color: $font-color-dimmed;
     text-align: center;
   }
 
   div#login div#foot a,
   div#login div#foot body.main .popup_menu span,
   body.main .popup_menu div#login div#foot span {
-    color: $darkgrey;
+    color: $font-color-dimmed;
   }
 }

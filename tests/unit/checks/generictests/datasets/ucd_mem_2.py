@@ -8,7 +8,6 @@
 # type: ignore
 from cmk.base.plugins.agent_based.ucd_mem import parse_ucd_mem
 
-
 checkname = 'ucd_mem'
 
 

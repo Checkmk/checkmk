@@ -8,5 +8,5 @@ description:
 
  It returns {OK} on Status {RUN} and {CRIT} otherwise.
 
-inventory:
+discovery:
  One service is created for each device.

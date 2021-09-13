@@ -1,0 +1,11 @@
+Title: BI configuration: Fixed exception when saving bi rule
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1615817427
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

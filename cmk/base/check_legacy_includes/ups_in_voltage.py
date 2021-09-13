@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-return
 
 
@@ -14,8 +14,7 @@ def check_ups_in_voltage(item, params, info):
         if line[0] == item:
             power = int(line[1])
             perfdata = [("in_voltage", power, warn, crit, 150)]
-            infotext = "in voltage: %dV, (warn/crit at %dV/%dV)" % \
-                 (power, warn, crit)
+            infotext = "in voltage: %dV, (warn/crit at %dV/%dV)" % (power, warn, crit)
 
             if power <= crit:
                 return (2, infotext, perfdata)

@@ -42,7 +42,7 @@ function handle_update(handler_data, response_json) {
         if (!handler_data.is_finished_function(response.result)) {
             setTimeout(function () {
                 return monitor(handler_data);
-            }, 100);
+            }, 500);
         } else {
             handler_data.finish_function(response.result);
         }

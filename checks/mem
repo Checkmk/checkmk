@@ -4,7 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.memory as memory
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
 #   |           _ __ ___   ___ _ __ ___   | (_)_ __  _   ___  __           |
@@ -16,8 +23,6 @@ from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-imp
 #   |  Specialized memory check for Linux that takes into account          |
 #   |  all of its specific information in /proc/meminfo.                   |
 #   '----------------------------------------------------------------------'
-
-import cmk.base.plugins.agent_based.utils.memory as memory
 
 factory_settings["mem_linux_default_levels"] = {
     "levels_virtual": ("perc_used", (80.0, 90.0)),
@@ -47,9 +52,14 @@ def check_mem_linux(_no_item, params, section):
     # See which ones we actually need.
 
     # SReclaimable is not available for older kernels
+    # SwapCached may be missing if swap is disabled, see crash 9d22dcb4-5260-11eb-8458-0b95bfca1bb1
     # Compute memory used by caches, that can be considered "free"
-    section["Caches"] = section["Cached"] + section["Buffers"] \
-                      + section["SwapCached"] + section.get("SReclaimable", 0)
+    section["Caches"] = (
+        section["Cached"]
+        + section["Buffers"]
+        + section.get("SwapCached", 0)
+        + section.get("SReclaimable", 0)
+    )
 
     section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
     section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]
@@ -57,40 +67,38 @@ def check_mem_linux(_no_item, params, section):
     section["TotalUsed"] = section["MemUsed"] + section["SwapUsed"]
 
     # Disk Writeback
-    section["Pending"] = \
-         section["Dirty"] \
-       + section.get("Writeback", 0) \
-       + section.get("NFS_Unstable", 0) \
-       + section.get("Bounce", 0) \
-       + section.get("WritebackTmp", 0)
+    section["Pending"] = (
+        section["Dirty"]
+        + section.get("Writeback", 0)
+        + section.get("NFS_Unstable", 0)
+        + section.get("Bounce", 0)
+        + section.get("WritebackTmp", 0)
+    )
 
     results = check_memory_dict(section, params)
 
     # show this always:
-    yield results.pop("virtual", (0, ""))[:2]
+    yield results.pop("virtual", (0, ""))
 
-    # show these if not OK:
-    ok_results = []
-    for key, (state, text, _perf) in results.items():
+    details_results = []
+    for state, text, metrics in results.values():
         if state:
-            yield state, text
-        elif key in ("ram", "swap"):
-            ok_results.append((state, text))
-    for state, text in ok_results:
-        yield state, f"\n{text}"
-
-    # add value of "mem_used_percent" metric to section
-    section["MemUsedPercent"] = results["ram"][2][-1][1]
+            yield state, text, metrics
+        else:
+            details_results.append((state, text, metrics))
+    MARK_AS_DETAILS = "\n"
+    for state, text, perf in details_results:
+        yield state, f"{MARK_AS_DETAILS}{text}", perf
 
     # Now send performance data. We simply output *all* fields of section
     # except for a few really useless values
     perfdata = []
-    items = sorted(section.items())
-    for name, value in items:
+    for name, value in sorted(section.items()):
         if name.startswith("DirectMap"):
             continue
-        if name.startswith(
-                "Vmalloc") and section["VmallocTotal"] > 2**40:  # useless on 64 Bit system
+        if (
+            name.startswith("Vmalloc") and section["VmallocTotal"] > 2 ** 40
+        ):  # useless on 64 Bit system
             continue
         if name.startswith("Huge"):
             if section["HugePages_Total"] == 0:  # omit useless data
@@ -98,7 +106,16 @@ def check_mem_linux(_no_item, params, section):
             if name == "Hugepagesize":
                 continue  # not needed
             value = value * section["Hugepagesize"]  # convert number to actual memory size
-        perfdata.append((camelcase_to_underscored(name.replace("(", "_").replace(")", "")), value))
+        metric_name = camelcase_to_underscored(name.replace("(", "_").replace(")", ""))
+        if metric_name not in {
+            "mem_used",
+            "mem_used_percent",
+            "swap_used",
+            "committed_as",
+            "shmem",
+            "page_tables",
+        }:
+            perfdata.append((metric_name, value))
     yield 0, "", perfdata
 
 
@@ -126,16 +143,15 @@ def camelcase_to_underscored(name):
 
 
 check_info["mem.linux"] = {
-    'inventory_function': inventory_mem_linux,
-    'check_function': check_mem_linux,
-    'service_description': 'Memory',
-    'default_levels_variable': 'mem_linux_default_levels',
-    'has_perfdata': True,
-    'group': 'memory_linux',
-    "handle_real_time_checks": True,
+    "inventory_function": inventory_mem_linux,
+    "check_function": check_mem_linux,
+    "service_description": "Memory",
+    "default_levels_variable": "mem_linux_default_levels",
+    "has_perfdata": True,
+    "group": "memory_linux",
 }
 
-#.
+# .
 #   .--mem.used------------------------------------------------------------.
 #   |                                                        _             |
 #   |           _ __ ___   ___ _ __ ___   _   _ ___  ___  __| |            |
@@ -152,7 +168,7 @@ check_info["mem.linux"] = {
 # won't fail if it's found in main.mk
 mem_extended_perfdata = None
 
-#.
+# .
 #   .--mem.win-------------------------------------------------------------.
 #   |                                                _                     |
 #   |              _ __ ___   ___ _ __ ___ __      _(_)_ __                |
@@ -198,9 +214,10 @@ def check_mem_windows(_no_item, params, section):
             crit = total_mb - levels[1]
         return warn, crit
 
-    for title, prefix, paramname, metric_name in [("RAM", "Mem", "memory", "mem_used"),
-                                                  ("Commit charge", "Page", "pagefile",
-                                                   "pagefile_used")]:
+    for title, prefix, paramname, metric_name in [
+        ("RAM", "Mem", "memory", "mem_used"),
+        ("Commit charge", "Page", "pagefile", "pagefile_used"),
+    ]:
 
         total = section.get("%sTotal" % prefix)
         free = section.get("%sFree" % prefix)
@@ -208,8 +225,8 @@ def check_mem_windows(_no_item, params, section):
             continue
         used = total - free
 
-        total_mb = total / 1024.0**2
-        free_mb = free / 1024.0**2
+        total_mb = total / 1024.0 ** 2
+        free_mb = free / 1024.0 ** 2
         used_mb = total_mb - free_mb
         perc = 100.0 * used / total
 
@@ -237,12 +254,15 @@ def check_mem_windows(_no_item, params, section):
                 now,
                 used / 1024.0,  # use kB for compatibility
                 average_min,
-                initialize_zero=False)
+                initialize_zero=False,
+            )
             used_mb = used_kb / 1024.0
             perc = 100.0 * used_mb / total_mb
-            infotext += ", %d min average: %s (%s)" % (average_min,
-                                                       get_percent_human_readable(perc),
-                                                       get_bytes_human_readable(used_kb * 1024))
+            infotext += ", %d min average: %s (%s)" % (
+                average_min,
+                get_percent_human_readable(perc),
+                get_bytes_human_readable(used_kb * 1024),
+            )
             perfdata.append((paramname + "_avg", used_mb))
 
         # Now check the levels
@@ -268,7 +288,8 @@ def check_mem_windows(_no_item, params, section):
                 params[paramname],
                 unit="GB",  # Levels are specified in GB...
                 scale=1024,  # ... in WATO ValueSpec
-                infoname=titleinfo)
+                infoname=titleinfo,
+            )
             if infoadd:
                 infotext += ", " + infoadd
             perfdata += perfadd
@@ -277,16 +298,15 @@ def check_mem_windows(_no_item, params, section):
 
 
 check_info["mem.win"] = {
-    'check_function': check_mem_windows,
-    'inventory_function': inventory_mem_win,
-    'service_description': 'Memory',
-    'has_perfdata': True,
-    'group': 'memory_pagefile_win',
-    'default_levels_variable': 'memory_win_default_levels',
-    "handle_real_time_checks": True,
+    "check_function": check_mem_windows,
+    "inventory_function": inventory_mem_win,
+    "service_description": "Memory",
+    "has_perfdata": True,
+    "group": "memory_pagefile_win",
+    "default_levels_variable": "memory_win_default_levels",
 }
 
-#.
+# .
 #   .--mem.vmalloc---------------------------------------------------------.
 #   |                                                   _ _                |
 #   |    _ __ ___   ___ _ __ ___ __   ___ __ ___   __ _| | | ___   ___     |
@@ -311,18 +331,19 @@ def inventory_mem_vmalloc(section):
 
     # newer kernel version report wrong data,
     # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocTotal" in section and not (section["VmallocUsed"] == 0 and
-                                          section["VmallocChunk"] == 0):
+    if "VmallocTotal" in section and not (
+        section["VmallocUsed"] == 0 and section["VmallocChunk"] == 0
+    ):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
-        if section["VmallocTotal"] < 4 * 1024**2:
+        if section["VmallocTotal"] < 4 * 1024 ** 2:
             yield None, "mem_vmalloc_default_levels"
 
 
 def check_mem_vmalloc(_item, params, section):
-    total_mb = section["VmallocTotal"] / 1024.0**2
-    used_mb = section["VmallocUsed"] / 1024.0**2
-    chunk_mb = section["VmallocChunk"] / 1024.0**2
+    total_mb = section["VmallocTotal"] / 1024.0 ** 2
+    used_mb = section["VmallocUsed"] / 1024.0 ** 2
+    chunk_mb = section["VmallocChunk"] / 1024.0 ** 2
     warn, crit, warn_chunk, crit_chunk = params
 
     state = 0
@@ -330,7 +351,7 @@ def check_mem_vmalloc(_item, params, section):
     perfdata = []
     for var, loop_warn, loop_crit, loop_val, neg, what in [
         ("used", warn, crit, used_mb, False, "used"),
-        ("chunk", warn_chunk, crit_chunk, chunk_mb, True, "largest chunk")
+        ("chunk", warn_chunk, crit_chunk, chunk_mb, True, "largest chunk"),
     ]:
 
         # convert levels from percentage to MB values
@@ -359,9 +380,8 @@ def check_mem_vmalloc(_item, params, section):
 
 
 check_info["mem.vmalloc"] = {
-    'inventory_function': inventory_mem_vmalloc,
-    'check_function': check_mem_vmalloc,
-    'service_description': 'Vmalloc address space',
-    'has_perfdata': True,
-    "handle_real_time_checks": True,
+    "inventory_function": inventory_mem_vmalloc,
+    "check_function": check_mem_vmalloc,
+    "service_description": "Vmalloc address space",
+    "has_perfdata": True,
 }

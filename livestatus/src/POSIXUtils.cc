@@ -12,118 +12,92 @@
 #include <unistd.h>
 
 #include <array>
+#include <ratio>
 #include <thread>
 
 #include "Logger.h"
+#include "Poller.h"
 
 using namespace std::chrono_literals;
 
-// static
-FileDescriptorPair FileDescriptorPair::createSocketPair(Mode mode,
-                                                        Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
-    int sock_type = SOCK_STREAM | SOCK_CLOEXEC;
-    if (::socketpair(AF_UNIX, sock_type, 0, &fd[0]) == -1) {
-        generic_error ge{"cannot create socket pair"};
-        Alert(logger) << ge;
-        return invalid();
-    }
-    // yes, we establish half-blocking channel
-    if (mode == Mode::nonblocking) {
-        if (fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-            generic_error ge{"cannot make socket non-blocking"};
-            Alert(logger) << ge;
-            ::close(fd[0]);
-            ::close(fd[1]);
-            return invalid();
-        }
-    }
-    return {fd[0], fd[1]};
+namespace {
+std::optional<SocketPair> fail(const std::string &message, Logger *logger,
+                               SocketPair &sp) {
+    generic_error ge{message};
+    Alert(logger) << ge;
+    sp.close();
+    return {};
 }
 
+void closeFD(int &fd) {
+    if (fd != -1) {
+        ::close(fd);
+    }
+    fd = -1;
+}
+}  // namespace
+
 // static
-FileDescriptorPair FileDescriptorPair::makeSocketPair(
-    FileDescriptorPair::Mode mode, Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
-    // TODO(ml): Set cloexec and nonblock in `type` param.
-    int sock_type = SOCK_STREAM;
-    if (::socketpair(AF_UNIX, sock_type, 0, &fd[0]) == -1) {
-        generic_error ge{"cannot create socket pair"};
-        Alert(logger) << ge;
-        return invalid();
+std::optional<SocketPair> SocketPair::make(Mode mode, Direction direction,
+                                           Logger *logger) {
+    // NOTE: Things are a bit tricky here: The close-on-exec flag is a file
+    // descriptor flag, i.e. it is kept in the entries of the per-process table
+    // of file descriptors. It is *not* part of the entries in the system-wide
+    // table of open files, so it is *not* shared between different file
+    // descriptors.
+    //
+    // Although it is necessary to avoid race conditions, specifying the
+    // SOCK_CLOEXEC flag in the socketpair() call is not part of the POSIX spec,
+    // but it is possible in Linux since kernel 2.6.27 and the various BSD
+    // flavors. It sets the close-on-exec flag on *both* file descriptors, which
+    // is fine: Before doing an execv(), we duplicate the wanted file
+    // descriptors via dup2(), which clears the flag in the duplicate, see
+    // Process::run().
+    SocketPair sp{-1, -1};
+    if (::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sp.fd_.data()) ==
+        -1) {
+        return fail("cannot create socket pair", logger, sp);
     }
-
-    if (::fcntl(fd[0], F_SETFD, FD_CLOEXEC) == -1) {
-        generic_error ge{"cannot close-on-exec bit on socket"};
-        Alert(logger) << ge;
-        ::close(fd[0]);
-        ::close(fd[1]);
-        return invalid();
+    // NOTE: Again, things are a bit tricky: The non-blocking flag is kept in
+    // the entries of the system-wide table of open files, so it is *shared*
+    // between different file descriptors pointing to the same open file.
+    // Nevertheless, socketpair() returns two file descriptors pointing to two
+    // *different* open files. Therefore, changing the non-blocking flag via a
+    // fcntl() on one of these file descriptors does *not* affect the
+    // non-blocking flag of the other one.
+    //
+    // The subprocesses we create always expect a standard blocking file, so we
+    // cannot use SOCK_NONBLOCK in the socketpair() call above: This would make
+    // *both* files non-blocking. We only want our own, local file to be
+    // non-blocking, so we have to use the separate fcntl() below.
+    switch (mode) {
+        case Mode::blocking:
+            break;
+        case Mode::local_non_blocking:
+            if (::fcntl(sp.local(), F_SETFL, O_NONBLOCK) == -1) {
+                return fail("cannot make socket non-blocking", logger, sp);
+            }
+            break;
     }
-
-    if (mode == FileDescriptorPair::Mode::nonblocking) {
-        if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-            generic_error ge{"cannot make socket non-blocking"};
-            Alert(logger) << ge;
-            ::close(fd[0]);
-            ::close(fd[1]);
-            return invalid();
-        }
+    switch (direction) {
+        case Direction::bidirectional:
+            break;
+        case Direction::remote_to_local:
+            if (::shutdown(sp.local(), SHUT_WR) == -1) {
+                return fail("cannot make socket one-directional", logger, sp);
+            }
+            break;
     }
-
-    return {fd[0], fd[1]};
+    return sp;
 }
 
-// static
-FileDescriptorPair FileDescriptorPair::createPipePair(Mode mode,
-                                                      Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
-    int pipe_mode = O_CLOEXEC;
-    if (mode == Mode::nonblocking) {
-        pipe_mode |= O_NONBLOCK;
-    }
-    if (::pipe2(&fd[0], pipe_mode) == -1) {
-        generic_error ge{"cannot create pipe pair"};
-        Alert(logger) << ge;
-        return invalid();
-    }
-    return {fd[0], fd[1]};
-}
-
-// static
-FileDescriptorPair FileDescriptorPair::makePipePair(
-    FileDescriptorPair::Mode mode, Logger *logger) {
-    std::array<int, 2> fd{-1, -1};
-    // TODO(ml): Set cloexec and nonblock in `flag` param to `pipe2`.
-    int pipe_mode = 0;
-    if (::pipe2(&fd[0], pipe_mode) == -1) {
-        generic_error ge{"cannot create pipe pair"};
-        Alert(logger) << ge;
-        return invalid();
-    }
-
-    if (::fcntl(fd[0], F_SETFD, FD_CLOEXEC) == -1) {
-        generic_error ge{"cannot close-on-exec bit on pipe"};
-        Alert(logger) << ge;
-        ::close(fd[0]);
-        ::close(fd[1]);
-        return invalid();
-    }
-
-    if (mode == FileDescriptorPair::Mode::nonblocking) {
-        if (::fcntl(fd[0], F_SETFL, O_NONBLOCK) == -1) {
-            generic_error ge{"cannot make pipe non-blocking"};
-            Alert(logger) << ge;
-            ::close(fd[0]);
-            ::close(fd[1]);
-            return invalid();
-        }
-    }
-
-    return {fd[0], fd[1]};
+void SocketPair::close() {
+    closeFD(fd_[0]);
+    closeFD(fd_[1]);
 }
 
 namespace {
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 thread_local std::string thread_name;
 }  // namespace
 
@@ -175,4 +149,29 @@ bool file_lock::try_lock_until_impl(const steady_clock::time_point &time,
         }
         std::this_thread::sleep_for(10ms);
     } while (true);
+}
+
+ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
+                              std::chrono::nanoseconds timeout,
+                              const std::function<bool()> &pred) {
+    auto size = buffer.size();
+    while (!buffer.empty() && pred()) {
+        auto ret = ::write(fd, buffer.data(), buffer.size());
+        if (ret == -1 && errno == EWOULDBLOCK) {
+            ret = Poller{}.wait(timeout, fd, PollEvents::out)
+                      ? ::write(fd, buffer.data(), buffer.size())
+                      : -1;
+        }
+        if (ret != -1) {
+            buffer = std::string_view{buffer.data() + ret, buffer.size() - ret};
+        } else if (errno != EINTR) {
+            return -1;
+        }
+    }
+    return size;
+}
+
+ssize_t writeWithTimeout(int fd, std::string_view buffer,
+                         std::chrono::nanoseconds timeout) {
+    return writeWithTimeoutWhile(fd, buffer, timeout, []() { return true; });
 }

@@ -15,5 +15,5 @@ description:
 item:
  The name of the OMD site.
 
-inventory:
+discovery:
  One service is created for each running OMD site.

@@ -4,21 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from .temperature import check_temperature
+from typing import Iterable, Optional, Tuple, Union
+
+from .temperature import check_temperature  # type: ignore[attr-defined]  # what's wrong?
+
 alcatel_cpu_default_levels = (90.0, 95.0)
 
 ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS = {
     "levels": (45, 50),
 }
 
+DiscoveryResult = Union[Iterable[Tuple[None, Optional[str]]], Iterable[Tuple[str, Optional[str]]]]
+
 
 def alcatel_networking_products_scan_function(oid):
     """
     Devices running until AOS6 (including).
     """
-    return oid(".1.3.6.1.2.1.1.2.0"  # MIB object "sysObjectID"
-              ).startswith(".1.3.6.1.4.1.6486.800")  # MIB object "alcatelIND1BaseMIB"
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(  # MIB object "sysObjectID"
+        ".1.3.6.1.4.1.6486.800"
+    )  # MIB object "alcatelIND1BaseMIB"
 
 
 def alcatel_new_networking_products_scan_function(oid):
@@ -26,11 +31,12 @@ def alcatel_new_networking_products_scan_function(oid):
     Devices running at least AOS7 (including).
     Refer to alcatelENT1BaseMIB for more information.
     """
-    return oid(".1.3.6.1.2.1.1.2.0"  # MIB object "sysObjectID"
-              ).startswith(".1.3.6.1.4.1.6486.801")  # MIB object "alcatelENT1BaseMIB"
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(  # MIB object "sysObjectID"
+        ".1.3.6.1.4.1.6486.801"
+    )  # MIB object "alcatelENT1BaseMIB"
 
 
-def inventory_alcatel_cpu(info):
+def inventory_alcatel_cpu(info) -> DiscoveryResult:
     return [(None, "alcatel_cpu_default_levels")]
 
 
@@ -49,9 +55,9 @@ def check_alcatel_cpu(_no_item, params, info):
     return status, "total: %.1f%%" % cpu_perc + levelstext, perfdata
 
 
-def inventory_alcatel_fans(info):
+def inventory_alcatel_fans(info) -> DiscoveryResult:
     for nr, _value in enumerate(info, 1):
-        yield nr, None
+        yield str(nr), None
 
 
 def check_alcatel_fans(item, _no_params, info):
@@ -70,11 +76,11 @@ def check_alcatel_fans(item, _no_params, info):
     return state, "Fan " + fan_states.get(fan_state, "unknown (%s)" % fan_state)
 
 
-def inventory_alcatel_temp(info):
+def inventory_alcatel_temp(info) -> DiscoveryResult:
     with_slot = len(info) != 1
     for index, row in enumerate(info):
         for oid, name in enumerate(["Board", "CPU"]):
-            if row[oid] != '0':
+            if row[oid] != "0":
                 if with_slot:
                     yield "Slot %s %s" % (index + 1, name), {}
                 else:

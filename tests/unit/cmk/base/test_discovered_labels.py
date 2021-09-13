@@ -6,17 +6,19 @@
 
 from collections.abc import MutableMapping
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.type_defs import HostName, SectionName
 
+import cmk.base.config as config
 from cmk.base.discovered_labels import (
-    DiscoveredHostLabelsDict,
     DiscoveredHostLabels,
-    HostLabel,
+    DiscoveredHostLabelsDict,
     DiscoveredServiceLabels,
+    HostLabel,
     ServiceLabel,
 )
 
@@ -93,26 +95,28 @@ def test_discovered_service_labels_to_dict():
 
 def test_discovered_service_labels_repr():
     labels = DiscoveredServiceLabels()
-    labels.add_label(ServiceLabel(u"äbc", u"123"))
-    labels.add_label(ServiceLabel(u"ccc", u"ddd"))
-    assert repr(
-        labels) == "DiscoveredServiceLabels(ServiceLabel('ccc', 'ddd'), ServiceLabel('äbc', '123'))"
+    labels.add_label(ServiceLabel("äbc", "123"))
+    labels.add_label(ServiceLabel("ccc", "ddd"))
+    assert (
+        repr(labels)
+        == "DiscoveredServiceLabels(ServiceLabel('ccc', 'ddd'), ServiceLabel('äbc', '123'))"
+    )
 
 
 def test_discovered_host_labels_to_dict():
     labels = DiscoveredHostLabels()
     assert labels.to_dict() == {}
 
-    labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
-    labels.add_label(HostLabel(u"xyz", u"blä", "plugin_2"))
+    labels.add_label(HostLabel("äbc", "123", SectionName("plugin_1")))
+    labels.add_label(HostLabel("xyz", "blä", SectionName("plugin_2")))
 
     assert labels.to_dict() == {
-        u"äbc": {
-            "value": u"123",
+        "äbc": {
+            "value": "123",
             "plugin_name": "plugin_1",
         },
-        u"xyz": {
-            "value": u"blä",
+        "xyz": {
+            "value": "blä",
             "plugin_name": "plugin_2",
         },
     }
@@ -122,23 +126,23 @@ def test_discovered_host_labels_to_list():
     labels = DiscoveredHostLabels()
     assert labels.to_list() == []
 
-    labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
-    labels.add_label(HostLabel(u"xyz", u"blä", "plugin_2"))
+    labels.add_label(HostLabel("äbc", "123", SectionName("plugin_1")))
+    labels.add_label(HostLabel("xyz", "blä", SectionName("plugin_2")))
 
     assert labels.to_list() == [
-        HostLabel(u"xyz", u"blä", "plugin_2"),
-        HostLabel(u"äbc", u"123", "plugin_1")
+        HostLabel("xyz", "blä", SectionName("plugin_2")),
+        HostLabel("äbc", "123", SectionName("plugin_1")),
     ]
 
 
 def test_discovered_host_labels_from_dict():
     label_dict: DiscoveredHostLabelsDict = {
-        u"äbc": {
-            "value": u"123",
+        "äbc": {
+            "value": "123",
             "plugin_name": "plugin_1",
         },
-        u"xyz": {
-            "value": u"blä",
+        "xyz": {
+            "value": "blä",
             "plugin_name": "plugin_2",
         },
     }
@@ -148,31 +152,31 @@ def test_discovered_host_labels_from_dict():
 
 def test_discovered_host_labels_add():
     labels_1 = DiscoveredHostLabels()
-    labels_1.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
+    labels_1.add_label(HostLabel("äbc", "123", SectionName("plugin_1")))
 
     labels_2 = DiscoveredHostLabels()
-    labels_2.add_label(HostLabel(u"xyz", u"blä", "plugin_2"))
+    labels_2.add_label(HostLabel("xyz", "blä", SectionName("plugin_2")))
 
     new_labels = labels_1 + labels_2
     assert new_labels.to_dict() == {
-        u"äbc": {
-            "value": u"123",
+        "äbc": {
+            "value": "123",
             "plugin_name": "plugin_1",
         },
-        u"xyz": {
-            "value": u"blä",
+        "xyz": {
+            "value": "blä",
             "plugin_name": "plugin_2",
         },
     }
 
     labels_1 += labels_2
     assert labels_1.to_dict() == {
-        u"äbc": {
-            "value": u"123",
+        "äbc": {
+            "value": "123",
             "plugin_name": "plugin_1",
         },
-        u"xyz": {
-            "value": u"blä",
+        "xyz": {
+            "value": "blä",
             "plugin_name": "plugin_2",
         },
     }
@@ -180,11 +184,11 @@ def test_discovered_host_labels_add():
 
 def test_discovered_host_labels_sub():
     labels_1 = DiscoveredHostLabels()
-    labels_1.add_label(HostLabel("foo", "bär", "plugin_1"))
-    labels_1.add_label(HostLabel("foo2", "bär2", "plugin_2"))
+    labels_1.add_label(HostLabel("foo", "bär", SectionName("plugin_1")))
+    labels_1.add_label(HostLabel("foo2", "bär2", SectionName("plugin_2")))
 
     labels_2 = DiscoveredHostLabels()
-    labels_2.add_label(HostLabel("foo", "bär", "plugin_1"))
+    labels_2.add_label(HostLabel("foo", "bär", SectionName("plugin_1")))
 
     assert (labels_1 - labels_2).to_dict() == {
         "foo2": {
@@ -198,16 +202,19 @@ def test_discovered_host_labels_sub():
 
 def test_discovered_host_labels_repr():
     labels = DiscoveredHostLabels()
-    labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
-    labels.add_label(HostLabel(u"ccc", u"ddd", "plugin_2"))
-    assert repr(
-        labels
-    ) == "DiscoveredHostLabels(HostLabel('ccc', 'ddd', plugin_name='plugin_2'), HostLabel('äbc', '123', plugin_name='plugin_1'))"
+    labels.add_label(HostLabel("äbc", "123", SectionName("plugin_1")))
+    labels.add_label(HostLabel("ccc", "ddd", SectionName("plugin_2")))
+    assert repr(labels) == (
+        "DiscoveredHostLabels("  #
+        "HostLabel('ccc', 'ddd', plugin_name=SectionName('plugin_2')), "  #
+        "HostLabel('äbc', '123', plugin_name=SectionName('plugin_1')))"
+    )
 
 
 def test_discovered_host_label_equal():
-    assert HostLabel(u"äbc", u"123") != HostLabel(u"xyz", u"blä")
-    assert HostLabel(u"äbc", u"123") == HostLabel(u"äbc", u"123")
+    sname = SectionName("sectionname")
+    assert HostLabel("äbc", "123", sname) != HostLabel("xyz", "blä", sname)
+    assert HostLabel("äbc", "123", sname) == HostLabel("äbc", "123", sname)
 
 
 @pytest.fixture(name="discovered_host_labels_dir")
@@ -218,9 +225,9 @@ def discovered_host_labels_dir_fixture(tmp_path, monkeypatch):
 
 
 def test_discovered_host_labels_store_save(discovered_host_labels_dir):
-    store = DiscoveredHostLabelsStore("host")
+    store = DiscoveredHostLabelsStore(HostName("host"))
 
-    labels = DiscoveredHostLabels(HostLabel(u"xyz", u"äbc"))
+    labels = DiscoveredHostLabels(HostLabel("xyz", "äbc", SectionName("sectionname")))
     label_dict = labels.to_dict()
 
     assert not store.file_path.exists()
@@ -232,17 +239,27 @@ def test_discovered_host_labels_store_save(discovered_host_labels_dir):
 
 @pytest.mark.parametrize("cls", [HostLabel, ServiceLabel])
 def test_label(cls):
-    name, value = u"äbc", u"d{--lulu--}dd"
+    name, value = "äbc", "d{--lulu--}dd"
     l = cls(name, value)
     assert l.name == name
     assert l.value == value
-    assert l.label == u"%s:%s" % (name, value)
+    assert l.label == "%s:%s" % (name, value)
 
 
 @pytest.mark.parametrize("cls", [HostLabel, ServiceLabel])
 def test_label_validation(cls):
     with pytest.raises(MKGeneralException, match="Invalid label name"):
-        cls(b"\xc3\xbcbc", u"abc")
+        cls(b"\xc3\xbcbc", "abc")
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
-        cls(u"äbc", b"\xc3\xbcbc")
+        cls("äbc", b"\xc3\xbcbc")
+
+
+def test_discovered_host_labels_path(discovered_host_labels_dir):
+    hostname = "test.host.de"
+    config.get_config_cache().initialize()
+    assert not (discovered_host_labels_dir / hostname).exists()
+    DiscoveredHostLabelsStore(HostName(hostname)).save(
+        DiscoveredHostLabels(HostLabel("foo", "1.5")).to_dict()
+    )
+    assert (discovered_host_labels_dir / (hostname + ".mk")).exists()

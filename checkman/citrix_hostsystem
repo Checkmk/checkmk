@@ -10,6 +10,6 @@ description:
  for this to work. Data for the hosts is collected on the controller and
  given to the monitoring server as piggyback data.
 
-inventory:
+discovery:
  One service is created for each controller.
 

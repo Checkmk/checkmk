@@ -10,7 +10,6 @@ be emitted in various formats for futher processing.
 """
 
 import argparse
-import collections
 import contextlib
 import distutils.sysconfig as sysconfig
 import gc
@@ -21,16 +20,20 @@ import os
 import subprocess
 import sys
 from types import FrameType
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Union
 
 # Some constants to help parse /proc/*/smaps
 KiB = 1024
 MiB = KiB * KiB
 
+
 # Struct to keep the values. We're only interested in the
 # private memory, as this is the only one the program has any
 # control over. We can't possibly reduce any other type of memory.
-Memory = collections.namedtuple('Memory', ['private', 'pss', 'rss'])
+class Memory(NamedTuple):
+    private: int
+    pss: int
+    rss: int
 
 
 def _get_python_stdlib() -> Iterator[str]:
@@ -41,11 +44,11 @@ def _get_python_stdlib() -> Iterator[str]:
             continue
 
         if "__init__.py" in files:
-            yield top[len(std_lib) + 1:]
+            yield top[len(std_lib) + 1 :]
 
         for nm in files:
-            if nm != '__init__.py' and nm[-3:] == '.py':
-                yield os.path.join(top, nm)[len(std_lib) + 1:-3].replace('/', '.')
+            if nm != "__init__.py" and nm[-3:] == ".py":
+                yield os.path.join(top, nm)[len(std_lib) + 1 : -3].replace("/", ".")
 
 
 # We pull a list of Python's stdlib so we can color it differently.
@@ -59,7 +62,7 @@ def log(msg, *args):
 
 
 class ConsoleFormatter:
-    __slots__ = ['out']
+    __slots__ = ["out"]
 
     def __init__(self, args):
         self.out = sys.stdout
@@ -92,7 +95,8 @@ class JSONFormatter:
 
 
     """
-    __slots__ = ('metric', 'stack', 'open')
+
+    __slots__ = ("metric", "stack", "open")
 
     def __init__(self, args):
         self.open = args.open
@@ -111,7 +115,7 @@ class JSONFormatter:
         already_added = [_n for _n in parent["children"] if _n["name"] == node["name"]]
         if len(already_added) == 1:
             _node = already_added[0]
-            _node["value"] += node.get('value', 0)
+            _node["value"] += node.get("value", 0)
             node = _node
         else:
             parent["children"].append(node)
@@ -151,7 +155,7 @@ class JSONFormatter:
 
 
 class GraphVizFormatter:
-    __slots__ = ('from_', 'to', 'out', 'open')
+    __slots__ = ("from_", "to", "out", "open")
 
     def __init__(self, args):
         self.open = args.open
@@ -193,8 +197,8 @@ class GraphVizFormatter:
                     args.append("color=blue")
 
                 if args:
-                    dot.write(" [%s]" % ','.join(args))
-                dot.write(';\n')
+                    dot.write(" [%s]" % ",".join(args))
+                dot.write(";\n")
 
             # Style nodes.
             for from_, to, _size in self.out:
@@ -229,12 +233,12 @@ class GraphVizFormatter:
 
 
 FORMATTERS = {
-    'json': JSONFormatter,
-    'dot': GraphVizFormatter,
-    'console': ConsoleFormatter,
+    "json": JSONFormatter,
+    "dot": GraphVizFormatter,
+    "console": ConsoleFormatter,
 }
 
-_FORMATTER: Optional['Formatter'] = None
+_FORMATTER: Optional["Formatter"] = None
 
 
 class Formatter:
@@ -269,7 +273,7 @@ def _get_mem(pid: int) -> Memory:
     rss = 0
 
     def _get_smaps(_pid):
-        with open('/proc/%d/smaps' % _pid) as fp:
+        with open("/proc/%d/smaps" % _pid) as fp:
             return fp.read()
 
     def _parse_amount(_line):
@@ -277,19 +281,19 @@ def _get_mem(pid: int) -> Memory:
         val = int(amount)
 
         # pylint: disable=raising-format-tuple
-        if unit == 'kB':
+        if unit == "kB":
             val *= KiB
-        elif unit == 'MB':
+        elif unit == "MB":
             val *= MiB
         else:
             raise RuntimeError(
-                'Unsupported memory unit for Private_* memory info '
-                'from /proc/%d/smaps', pid)
+                "Unsupported memory unit for Private_* memory info " "from /proc/%d/smaps", pid
+            )
         # pylint: enable=raising-format-tuple
         return val
 
-    for line in _get_smaps(pid).split('\n'):
-        if line.startswith('Private_'):
+    for line in _get_smaps(pid).split("\n"):
+        if line.startswith("Private_"):
             private += _parse_amount(line)
         elif line.startswith("Pss:"):
             pss += _parse_amount(line)
@@ -310,7 +314,7 @@ def _get_delta(mem1: Memory, mem2: Memory) -> Memory:
 
 
 class MeasureMemory:
-    __slots__ = ['pid', 'mem_before', 'mem_after']
+    __slots__ = ["pid", "mem_before", "mem_after"]
 
     def __init__(self):
         self.pid = os.getpid()
@@ -347,7 +351,7 @@ def track_growth(parent, module, fromlist):
 
 __imp = __import__
 
-stack = ['__main__']
+stack = ["__main__"]
 
 
 def _back(frame: Optional[FrameType]) -> FrameType:
@@ -357,11 +361,13 @@ def _back(frame: Optional[FrameType]) -> FrameType:
     return b
 
 
-def _importer(name: str,
-              _globals: Optional[dict] = None,
-              _locals: Optional[dict] = None,
-              fromlist: Optional[list] = None,
-              level: int = -1) -> Any:
+def _importer(
+    name: str,
+    _globals: Optional[dict] = None,
+    _locals: Optional[dict] = None,
+    fromlist: Optional[list] = None,
+    level: int = -1,
+) -> Any:
     # Wrap __import__ and do some shenanigans to actually track what's happening.
     if fromlist is None:
         fromlist = []
@@ -370,7 +376,7 @@ def _importer(name: str,
     without_us = [frame for frame in _stack if frame[1] != __file__]
 
     current = inspect.currentframe()
-    parent = _back(_back(_back(current))).f_globals.get('__name__')
+    parent = _back(_back(_back(current))).f_globals.get("__name__")
 
     if _globals is None or _locals is None:
         # Someone did call __import__('foo') without specifying
@@ -381,9 +387,9 @@ def _importer(name: str,
 
     def module_name_from_import_stmt(line):
         # may be 'exec("import foo as bar")'. Thank you reportlab.
-        if 'from' in line:
+        if "from" in line:
             ret = line.split("from")[1].split()[0]
-        elif 'import' in line:
+        elif "import" in line:
             ret = line.split("import")[1].split()[0]
         else:
             ret = "? (%s)" % line.strip()
@@ -391,7 +397,7 @@ def _importer(name: str,
 
     def looks_like_import(lines):
         # WARNING: `line` actually may be None
-        return lines and any([part in lines[0] for part in ('import', 'from')])
+        return lines and any([part in lines[0] for part in ("import", "from")])
 
     def hunt_for_module_name(frames):
         # Some crappy^H^H^H^H^H^H external packages do some weird stuff with exec and import.
@@ -408,17 +414,17 @@ def _importer(name: str,
             # We take the first one we can find.
             candidate = module_name_from_import_stmt(_frame[4][0])
             if candidate.startswith("."):
-                ret = _back(_back(current)).f_globals['__name__'] + module_name
+                ret = _back(_back(current)).f_globals["__name__"] + module_name
             else:
                 ret = candidate
             return ret
 
-    module_name = _globals.get('__name__')
+    module_name = _globals.get("__name__")
 
     # c-libraries sometimes don't have a name, or have no _globals and thus somehow fall through
     # to the base globals() so we figure out how they were called when they were imported and
     # reconstruct their real name that way.
-    if not module_name or module_name == '__main__':
+    if not module_name or module_name == "__main__":
         module_name = hunt_for_module_name(without_us)
 
         if not module_name:
@@ -440,7 +446,7 @@ def main(args):
     global _FORMATTER
     formatters = [FORMATTERS[key[0]](args) for key in (args.formatter or [])]
     if not args.formatter:
-        formatters.append(FORMATTERS['console'](args))
+        formatters.append(FORMATTERS["console"](args))
 
     _FORMATTER = Formatter(*formatters)
 
@@ -450,7 +456,7 @@ def main(args):
         # var:  Callable[[unicode, Optional[Mapping[str, Any]], Optional[Mapping[str, Any]], Sequence[str      ], int], Any]
         __builtins__.__import__ = _importer  # type: ignore[assignment]
     except AttributeError:
-        __builtins__['__import__'] = _importer  # type: ignore[index]
+        __builtins__["__import__"] = _importer  # type: ignore[index]
 
     # Not sure how much this helps.
     gc.disable()
@@ -465,7 +471,7 @@ def basedir():
     # type () -> Iterator
     root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
     # So cmk will actually be found...
-    sys.path.insert(0, root.decode('utf-8').strip())
+    sys.path.insert(0, root.decode("utf-8").strip())
     yield
 
 
@@ -473,42 +479,42 @@ def _spawn(*args):
     # Give the process it's own process group so it
     # won't be killed when the script exits.
     # Close stdout and stderr so we won't have an ugly terminal.
-    subprocess.Popen(args,
-                     stdout=open('/dev/null', 'w'),
-                     stderr=open('/dev/null', 'w'),
-                     start_new_session=True)
+    subprocess.Popen(
+        args, stdout=open("/dev/null", "w"), stderr=open("/dev/null", "w"), start_new_session=True
+    )
 
 
 def remove_zeros(param: dict) -> dict:
-    if 'children' not in param:
+    if "children" not in param:
         return param
 
     new_children = []
-    for kid in param['children']:
+    for kid in param["children"]:
         remove_zeros(kid)
-        if kid.get('value'):
+        if kid.get("value"):
             new_children.append(kid)
 
     if not new_children:
-        del param['children']
+        del param["children"]
     else:
-        param['children'][:] = new_children
+        param["children"][:] = new_children
 
     return param
 
 
 def remove_importlib(
-        val: Union[Dict[Any, Any], List[Any], str]) -> Union[Dict[Any, Any], List[Any], str]:
+    val: Union[Dict[Any, Any], List[Any], str]
+) -> Union[Dict[Any, Any], List[Any], str]:
     if isinstance(val, list):
         ret: List = []
         for entry in val:
-            if entry['name'] == 'importlib':
-                ret.extend(entry.get('children', []))
+            if entry["name"] == "importlib":
+                ret.extend(entry.get("children", []))
             else:
                 ret.append(entry)
         return ret
     if isinstance(val, dict):
-        if val['name'] == "importlib":
+        if val["name"] == "importlib":
             raise Exception("Too late!")
         return {key: remove_importlib(value) for key, value in val.items()}
     return val
@@ -525,11 +531,12 @@ def sum_values(node: dict) -> None:
     4
 
     """
-    for child in node.get('children', []):
+    for child in node.get("children", []):
         sum_values(child)
 
-    node['child_value'] = sum(
-        child.get('value', 0) + child.get('child_value', 0) for child in node.get('children', []))
+    node["child_value"] = sum(
+        child.get("value", 0) + child.get("child_value", 0) for child in node.get("children", [])
+    )
 
 
 def adjust_values(node: dict) -> None:
@@ -548,37 +555,38 @@ def adjust_values(node: dict) -> None:
     0
 
     """
-    for child in node.get('children', []):
+    for child in node.get("children", []):
         adjust_values(child)
 
-    value = node.get('value', 0)
-    child = node.get('child_value', 0)
+    value = node.get("value", 0)
+    child = node.get("child_value", 0)
 
     if value < child:
-        node['own'] = value
-        node['value'] = value + child
+        node["own"] = value
+        node["value"] = value + child
     elif value > child:
-        node['own'] = value - child
+        node["own"] = value - child
     elif value == child:
-        node['own'] = 0
+        node["own"] = 0
 
-    assert node['own'] + node['child_value'] == node['value']
+    assert node["own"] + node["child_value"] == node["value"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Track import memory", epilog=__doc__)
-    parser.add_argument("modules", metavar='MODULE', type=str, nargs='+')
-    parser.add_argument("-o",
-                        "--open",
-                        action="store_true",
-                        help="Direcly show the resulting file (if possible)")
-    parser.add_argument("-f",
-                        "--formatter",
-                        metavar='OUTPUT-FORMAT',
-                        type=str,
-                        help='May be one of: %s' % (', '.join(FORMATTERS.keys()),),
-                        action="append",
-                        nargs=1)
+    parser.add_argument("modules", metavar="MODULE", type=str, nargs="+")
+    parser.add_argument(
+        "-o", "--open", action="store_true", help="Direcly show the resulting file (if possible)"
+    )
+    parser.add_argument(
+        "-f",
+        "--formatter",
+        metavar="OUTPUT-FORMAT",
+        type=str,
+        help="May be one of: %s" % (", ".join(FORMATTERS.keys()),),
+        action="append",
+        nargs=1,
+    )
     _args = parser.parse_args()
 
     with basedir():

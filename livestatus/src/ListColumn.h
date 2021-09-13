@@ -21,6 +21,7 @@ class Aggregator;
 class Row;
 class RowRenderer;
 
+namespace deprecated {
 class ListColumn : public Column {
 public:
     using Column::Column;
@@ -43,5 +44,6 @@ public:
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const = 0;
 };
+}  // namespace deprecated
 
 #endif  // ListColumn_h

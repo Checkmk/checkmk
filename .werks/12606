@@ -1,0 +1,12 @@
+Title: CEE free edition: Fix limitation for number of hosts
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1616148746
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If Nagios core was used, an update failed because of a limit of 10 hosts.
+This limit has been increased to 25 hosts.

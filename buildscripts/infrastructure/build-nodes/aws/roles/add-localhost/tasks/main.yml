@@ -1,0 +1,15 @@
+---
+- name: Add localhost to Monitoring
+  template:
+    src: files/wato.conf.d.hosts.mk.j2
+    dest: /omd/sites/{{cmk_site}}/etc/check_mk/conf.d/wato/hosts.mk
+    owner: "{{cmk_site}}"
+    group: "{{cmk_site}}"
+    mode: "0644"
+
+- name: Save Change
+  become: true
+  become_method: sudo
+  become_user: root
+  shell: |
+    sudo su - {{cmk_site}} -c "cmk -vI;   cmk -R"

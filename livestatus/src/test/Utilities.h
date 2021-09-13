@@ -10,7 +10,7 @@
 // https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
 
 inline std::string random_string(const std::string::size_type length) {
-    static auto& chrs =
+    static const auto& chrs =
         "0123456789"
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

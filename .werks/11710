@@ -1,0 +1,21 @@
+Title: PySNMP: No longer return empty string
+Class: fix
+Compatible: compat
+Component: inline-snmp
+Date: 1606825410
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The SNMP Backend needs to return an empty string for walks if no result
+is found for one OID in the walk because Checkmk can't handle this.
+
+But PySNMP returned an empty string even if nothing was found for the
+walk OID.
+
+If no result is found for this OID the walk should be completely empty.
+This was not the case for PySNMP which caused some issues with certain checks.
+
+Now we return nothing if no result was found for the walk.

@@ -19,12 +19,15 @@ def parse_ucs_c_rack_server_psu(info):
     for psu in info:
         try:
             key_value_pairs = [kv.split(" ", 1) for kv in psu[1:]]
-            psu = key_value_pairs[0][1].replace("sys/",
-                                                "").replace("rack-unit-",
-                                                            "Rack Unit ").replace("/psu-", " PSU ")
+            psu = (
+                key_value_pairs[0][1]
+                .replace("sys/", "")
+                .replace("rack-unit-", "Rack Unit ")
+                .replace("/psu-", " PSU ")
+            )
             parsed[psu] = {
-                'operability': key_value_pairs[3][1],
-                'voltage': key_value_pairs[4][1],
+                "operability": key_value_pairs[3][1],
+                "voltage": key_value_pairs[4][1],
             }
         except IndexError:
             continue  # skip info line in case agent output is incomplete or invalid
@@ -89,10 +92,10 @@ def check_ucs_c_rack_server_psu(item, _no_params, data):
 
 
 check_info["ucs_c_rack_server_psu"] = {
-    'parse_function': parse_ucs_c_rack_server_psu,
-    'inventory_function': inventory_ucs_c_rack_server_psu,
-    'check_function': check_ucs_c_rack_server_psu,
-    'service_description': 'Output Power %s',
+    "parse_function": parse_ucs_c_rack_server_psu,
+    "inventory_function": inventory_ucs_c_rack_server_psu,
+    "check_function": check_ucs_c_rack_server_psu,
+    "service_description": "Output Power %s",
 }
 
 #################################
@@ -125,7 +128,7 @@ def check_ucs_c_rack_server_psu_voltage(item, _no_params, data):
 
 
 check_info["ucs_c_rack_server_psu.voltage"] = {
-    'inventory_function': inventory_ucs_c_rack_server_psu,
-    'check_function': check_ucs_c_rack_server_psu_voltage,
-    'service_description': 'Output Voltage %s',
+    "inventory_function": inventory_ucs_c_rack_server_psu,
+    "check_function": check_ucs_c_rack_server_psu_voltage,
+    "service_description": "Output Voltage %s",
 }

@@ -19,9 +19,9 @@
 #include "opids.h"
 class Row;
 
-class AttributeListAsIntColumn : public IntColumn {
+class AttributeListAsIntColumn : public deprecated::IntColumn {
 public:
-    using IntColumn::IntColumn;
+    using deprecated::IntColumn::IntColumn;
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

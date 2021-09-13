@@ -8,11 +8,10 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <ctime>
+#include <chrono>
 #include <string>
 
 #include "nagios.h"
-class MonitoringCore;
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */
@@ -69,7 +68,7 @@ public:
     bool _is_service;
     host *_host;
     service *_service;
-    time_t _entry_time;
+    std::chrono::system_clock::time_point _entry_time;
     std::string _author_name;
     std::string _comment;
     unsigned long _id;
@@ -77,30 +76,28 @@ public:
     virtual ~DowntimeOrComment();
 
 protected:
-    DowntimeOrComment(MonitoringCore *mc, nebstruct_downtime_struct *dt,
+    DowntimeOrComment(host *hst, service *svc, nebstruct_downtime_struct *dt,
                       unsigned long id);
 };
 
 class Downtime : public DowntimeOrComment {
 public:
-    time_t _start_time;
-    time_t _end_time;
+    std::chrono::system_clock::time_point _start_time;
+    std::chrono::system_clock::time_point _end_time;
     int _fixed;
-    // TODO(sp): Wrong types, caused by TableDowntimes accessing it via
-    // OffsetIntColumn, should be unsigned long
-    int _duration;
-    int _triggered_by;
-    explicit Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt);
+    std::chrono::seconds _duration;
+    unsigned long _triggered_by;
+    Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt);
 };
 
 class Comment : public DowntimeOrComment {
 public:
-    time_t _expire_time;
+    std::chrono::system_clock::time_point _expire_time;
     int _persistent;
     int _source;
     int _entry_type;
     int _expires;
-    explicit Comment(MonitoringCore *mc, nebstruct_comment_struct *co);
+    Comment(host *hst, service *svc, nebstruct_comment_struct *co);
 };
 
 #endif  // DowntimeOrComment_h

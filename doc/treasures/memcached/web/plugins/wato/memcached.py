@@ -6,7 +6,7 @@
 
 
 def memcached_upper_bounds(title, warn, crit, unit=None):
-    spec_type = {int: Integer, float: Float, str: TextAscii}
+    spec_type = {int: Integer, float: Float, str: TextInput}
     return Tuple(title=title,
                  elements=[
                      spec_type[type(warn)](title=_("Warning at"), unit=unit, default_value=warn),
@@ -15,7 +15,7 @@ def memcached_upper_bounds(title, warn, crit, unit=None):
 
 
 def memcached_lower_bounds(title, warn, crit, unit=None):
-    spec_type = {int: Integer, float: Float, str: TextAscii}
+    spec_type = {int: Integer, float: Float, str: TextInput}
     return Tuple(title=title,
                  elements=[
                      spec_type[type(warn)](title=_("Warning below"), unit=unit, default_value=warn),
@@ -71,6 +71,6 @@ register_check_parameters(
              memcached_upper_bounds("Number of times a request used memory from an expired key", 0,
                                     0))
         ]),
-    TextAscii(title=_("Instance")),
+    TextInput(title=_("Instance")),
     match_type='dict',
 )

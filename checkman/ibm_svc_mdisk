@@ -18,6 +18,6 @@ description:
 item:
  The name of the MDisk.
 
-inventory:
+discovery:
  One service is created for each MDisk.
 

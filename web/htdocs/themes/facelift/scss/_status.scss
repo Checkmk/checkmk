@@ -4,22 +4,21 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 /* Styles used for marking up Monitoring data, such as host and
-   service states, Perf-O-Meters und the like */
-
-/* States */
-
-/* Colors of the five possible host and service states
-  CRIT:    rgb(226, 0, 26)
-  UNKNOWN: rgb(247, 152, 2)
-  WARN:    rgb(230, 201, 8)
-  OK:      rgb(65, 166, 42)
-*/
-
-/* TODO: Get rid of important styles throughout this style sheet */
-
-.state {
-  box-shadow: none;
-}
+ * service states, Perf-O-Meters und the like.
+ *
+ * CSS classes for service states:
+ * state0 - OK
+ * state1 - WARN
+ * state2 - CRIT
+ * state3 - UNKN
+ *
+ * CSS classes for host states:
+ * hstate0 - UP
+ * hstate1 - DOWN
+ * hstate2 - UNREACH
+ *
+ * TODO: Get rid of important styles throughout this style sheet
+ */
 
 .stale .state {
   text-shadow: none !important;
@@ -29,48 +28,68 @@
 
 td.state {
   width: 32px;
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   text-align: center;
 }
 
 table.data tr.data td.stale,
 table.data td.perfometer.stale div.title {
-  color: rgb(136, 136, 136);
+  color: $font-color-dimmed;
 }
 
 table.data tr.data td.stale.state2,
 table.data tr.data td.stale.hstate1 {
-  color: $lightgrey !important;
+  color: $font-color-light-grey !important;
   text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
-/* OK/UP */
-.state0,
-.hstate0,
-.state0 a,
-.state0 body.main .popup_menu span,
-body.main .popup_menu .state0 span,
-.hstate0 a,
-.hstate0 body.main .popup_menu span,
-body.main .popup_menu .hstate0 span {
-  background-color: $color-state-success-background !important;
-  border-color: $color-state-success-border !important;
+tr.groupheader .state span {
+  padding: 2px 4px 0;
+  border-radius: $theme-border-radius;
 }
 
-/* TODO: Replace class "odd0" with "odd state0" */
-.odd0,
-.even0 {
-  .state0,
-  .hstate0,
-  .state0 a,
-  .state0 body.main .popup_menu span,
-  body.main .popup_menu & .state0 span,
-  .hstate0 a,
-  .hstate0 body.main .popup_menu span,
-  body.main .popup_menu & .hstate0 span {
-    color: $dark-font-color;
+tr.data,
+div.tile {
+  td.state,
+  td.hstate {
+    height: 100%;
+    padding: 0 1px;
+
+    span.state_rounded_fill {
+      display: flex;
+      align-items: center;
+      height: calc(100% - 3px);
+      border-radius: 2px;
+    }
+  }
+}
+
+td.state span.state_rounded_fill {
+  justify-content: center;
+}
+
+td.hstate span.state_rounded_fill {
+  padding: 0 5px;
+
+  &.host {
+    /* align with host names without state background-color */
+    padding: 0 8px;
+  }
+}
+
+/* OK/UP */
+.bibox_box.state0,
+span.content.state0,
+b.state0,
+td.count.state0,
+td.number.state0,
+td.fillbackground.state0,
+.state0 span,
+.hstate0 span {
+  &,
+  a {
+    color: $font-color-black !important;
     background-color: $color-state-success-background !important;
-    border-color: $color-state-success-border !important;
   }
 }
 
@@ -79,69 +98,50 @@ body.main .popup_menu .hstate0 span {
 }
 
 /* WARN */
-.state1,
-.even1 .state1,
-.state1 a,
-.state1 body.main .popup_menu span,
-body.main .popup_menu .state1 span,
-tr.groupheader td.state1 {
-  color: $black !important;
-  background-color: $color-state-1-background !important;
-  border-color: $color-state-1-border !important;
-}
-
-.odd0 .state1,
-.odd1 .state1 {
-  background-color: $color-state-1-background !important;
-  border-color: $color-state-1-border !important;
+.bibox_box.state1,
+span.content.state1,
+b.state1,
+td.count.state1,
+td.number.state1,
+td.fillbackground.state1,
+.state1 span {
+  &,
+  a {
+    color: $font-color-black !important;
+    background-color: $color-state-1-background !important;
+  }
 }
 
 /* CRIT/DOWN */
-.state2.state2.state2,
-.even0 .state2,
-.even2 .state2,
-.hstate1,
-.state2 a,
-.state2 body.main .popup_menu span,
-body.main .popup_menu .state2 span,
-.hstate2 a,
-.hstate2 body.main .popup_menu span,
-body.main .popup_menu .hstate2 span {
-  color: $lightgrey !important;
-  background-color: $color-state-2-background !important;
-  border-color: $color-state-2-border !important;
+.bibox_box.state2,
+span.content.state2,
+b.state2,
+td.count.state2,
+td.number.state2,
+td.fillbackground.state2,
+.state2 span,
+.hstate1 span {
+  &,
+  a {
+    color: $font-color-white !important;
+    background-color: $color-state-2-background !important;
+  }
 }
 
-.odd0 .state2,
-.odd2 .state2 {
-  color: $lightgrey !important;
-  background-color: $color-state-2-background !important;
-  border-color: $color-state-2-border !important;
-}
-
-/* TODO: Check whether these are supposed to be .hstate3 selectors not ...2 */
 /* UNKNOWN / UNREACH */
-.state3,
-.hstate2,
-.state3 a,
-.state3 body.main .popup_menu span,
-body.main .popup_menu .state3 span,
-.hstate2 a,
-.hstate2 body.main .popup_menu span,
-body.main .popup_menu .hstate2 span,
-.odd0 .state3,
-.odd3 .state3 {
-  color: $state3-font-color !important;
-  background-color: $color-state-3-background !important;
-  border-color: $color-state-3-border !important;
-}
-
-tr.odd3 {
-  background-color: $tr-odd3-bg-color;
-}
-
-tr.even3 {
-  background-color: $tr-even3-bg-color;
+.bibox_box.state3,
+span.content.state3,
+b.state3,
+td.count.state3,
+td.number.state3,
+td.fillbackground.state3,
+.state3 span,
+.hstate2 span {
+  &,
+  a {
+    color: $font-color-white !important;
+    background-color: $color-state-3-background !important;
+  }
 }
 
 /* PENDING / in DOWNTIME */
@@ -149,13 +149,11 @@ tr.even3 {
 .hstatep,
 .stated,
 .hstated {
-  &,
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span {
-    color: $statep-font-color !important;
-    background-color: $color-state-4-background !important;
-    border-color: $color-state-4-border !important;
+  span {
+    &,
+    a {
+      background-color: $color-state-4-background !important;
+    }
   }
 }
 
@@ -163,10 +161,9 @@ tr.even3 {
 b.stmark {
   position: relative;
   top: -1px;
-  padding: 1px 3px;
+  padding: 1.5px 3px;
   margin-left: 2px;
-  font-size: 9px;
-  border: 1px solid rgb(102, 102, 102);
+  font-size: $font-size-small;
   border-radius: 4px;
 }
 
@@ -179,45 +176,17 @@ img.pluginurl {
   vertical-align: middle;
 }
 
-/* *some* problem */
-.states,
-.hstates {
-  color: rgb(0, 0, 0);
-  background-image: url("images/someproblem.png");
-  background-position: center center;
-  background-repeat: repeat;
-
-  body.main & a,
-  table.data tr.data > & a {
-    &,
-    &:hover,
-    &:link,
-    &:link:hover {
-      color: $grey-7;
-    }
-  }
-}
-
-.states {
-  background-color: $color-nuance-6;
-  background-image: none;
-  transition: 0.15s ease-in-out;
-}
-
 /* Status of sites in sidebar and in WATO */
 .status_label {
   width: 56px;
   height: 16px;
   padding: 2px;
-  font-size: 9px;
+  font-size: $font-size-small;
   line-height: 12px;
-  color: rgb(255, 255, 255);
+  color: $font-color-white;
   text-align: center;
   cursor: default;
-  border-color: rgb(27, 51, 61) rgb(38, 76, 24) rgb(27, 51, 61) rgb(39, 65, 65);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: none;
   box-sizing: border-box;
 
@@ -232,8 +201,8 @@ img.pluginurl {
   }
 
   &.disabled {
-    color: rgb(178, 178, 178);
-    background-color: rgb(120, 120, 120);
+    color: $font-color-dimmed;
+    background-color: $inpage-highlight-color;
   }
 
   &.dead {
@@ -245,10 +214,8 @@ img.pluginurl {
   }
 
   &.online {
-    font-weight: 500;
-    color: $hot-font-color !important;
+    color: $font-color-light-bg;
     background-color: $color-state-success-background;
-    border-color: $color-state-success-border !important;
   }
 
   &.partial {
@@ -294,10 +261,7 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-size: $font-size-default;
-    font-weight: $font-weight-bold;
     letter-spacing: 0;
-    color: $color-perfometer-title;
   }
 
   .glass {
@@ -311,7 +275,7 @@ table.data tr.data > td.perfometer {
 
 td.perfometer {
   a {
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
     text-decoration: none;
   }
 
@@ -336,7 +300,9 @@ td.perfometer {
     width: 114px;
     margin: 0 3px;
     overflow: hidden;
+    font-weight: $font-weight-bold;
     line-height: 22px;
+    color: $font-color-light-bg;
     text-align: center;
     white-space: nowrap;
   }
@@ -385,82 +351,52 @@ table.data td.perfometer {
   }
 }
 
-td.statex {
-  /* zero count */
-  color: rgb(204, 204, 204);
-}
-
 /* Row coloring in case of the different states */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
-
-  td.state0 a,
-  td.state1 a,
-  td.state3 a {
-    color: $dark-font-color;
-  }
 }
 
 tr[class*="even"] {
   background-color: $even-tr-bg-color;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  td.state0 a,
-  td.state1 a,
-  td.state3 a {
-    color: $dark-font-color;
-  }
 }
 
 .data div.hostdown {
   padding-right: 3px;
   padding-left: 3px;
-  background-color: rgb(255, 34, 34);
-  border: 2px solid rgb(0, 0, 0);
+  background-color: $danger;
+  border: 2px solid $black;
   border-radius: 4px;
 }
 
 table.data {
   td.age {
-    color: $age-font-color;
+    color: $font-color-dimmed;
     white-space: nowrap;
 
     &.staletime {
       font-weight: bold;
-      color: rgb(255, 0, 0);
+      color: $font-color-red;
     }
 
     &.recent {
       font-weight: bold;
-      color: $primary-font-color;
+      color: $font-color;
     }
   }
 
   .state2 *,
   .state3 * {
-    color: rgb(255, 255, 255);
-  }
-
-  td.state {
-    border-top: none;
-  }
-
-  tr.data td.states {
-    color: $states-font-color;
-    background-color: $color-nuance-6;
+    color: $font-color-white;
   }
 }
 
-td.badflag {
+td.badflag span {
   font-weight: bold;
   background-color: rgb(255, 102, 68);
 }
 
 td.goodflag {
-  color: rgb(0, 136, 0);
+  color: $font-color-green !important;
 }
 
 td.icons {
@@ -468,7 +404,6 @@ td.icons {
   white-space: nowrap;
 
   img {
-    height: 20px;
     margin-right: 0;
   }
 }
@@ -487,13 +422,15 @@ img.tabicon {
 }
 
 /* Styles used by specific painters. These should be modularized later ... */
-/* TODO: Reproduce this html element */
 table.data div.objectlist div {
   float: left;
-  padding: 2px 6px;
-  margin: 2px;
-  border: none;
-  border-radius: $theme-border-radius;
+  margin: 2px $spacing-half 3px 0;
+
+  span {
+    display: inline-block;
+    padding: 2px $spacing-half;
+    border-radius: $theme-border-radius;
+  }
 }
 
 /*
@@ -524,31 +461,29 @@ table.data tr.data td table.customvars td {
 td.matchgroups span {
   padding: 0 3px;
   margin-right: 3px;
-  font-family: monospace;
-  background-color: rgb(255, 255, 255);
+  font-family: $font-family-monospace;
+  background-color: $white;
   border: 1px solid rgb(238, 238, 238);
   border-radius: 3px;
   box-shadow: 0 0 1px rgb(136, 136, 136);
 }
 
-table.data.availability tr.even0 td {
-  &.state0 {
-    background-color: $lightened-state0-bg-color !important;
+table.allhosts,
+table.hostmatrix,
+table.timeline {
+  .state0 {
+    background-color: $color-state-success-background;
   }
 
-  &.state1 {
-    background-color: $lightened-state1-bg-color !important;
+  .state1 {
+    background-color: $color-state-1-background;
   }
 
-  &.state2 {
-    background-color: $lightened-state2-bg-color !important;
+  .state2 {
+    background-color: $color-state-2-background;
   }
 
-  &.state3 {
-    background-color: $lightened-state3-bg-color !important;
+  .state3 {
+    background-color: $color-state-3-background;
   }
-}
-
-div.tile td.hstate0 {
-  color: $dark-font-color;
 }

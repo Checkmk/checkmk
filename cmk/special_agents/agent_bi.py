@@ -5,25 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import sys
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-import sys
 from typing import Dict, Set
 
 import requests
 import urllib3  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
 import cmk.utils.site
-from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKException
+from cmk.utils.regex import regex
+from cmk.utils.site import omd_site
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class AggregationData:
     def __init__(self, bi_rawdata, config, error):
-        super(AggregationData, self).__init__()
+        super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
 
@@ -61,10 +61,11 @@ class AggregationData:
         self._missing_sites = self._bi_rawdata["missing_sites"]
         self._missing_aggr = self._bi_rawdata["missing_aggr"]
 
-        for aggr_row in self._bi_rawdata["rows"]:
-            aggr_tree = aggr_row["tree"]
-            self._rewrite_aggregation(aggr_tree)
-            self._process_assignments(aggr_tree)
+        aggregations = self.parse_aggregation_response(self._bi_rawdata)
+
+        for aggr_name, aggr_data in aggregations.items():
+            self._rewrite_aggregation(aggr_data)
+            self._process_assignments(aggr_name, aggr_data)
 
         # Output result
         for target_host, aggregations in self._aggregation_targets.items():
@@ -76,31 +77,51 @@ class AggregationData:
             self._output.append("<<<bi_aggregation:sep(0)>>>")
             self._output.append(repr(aggregations))
 
-    def _rewrite_aggregation(self, aggr_tree):
-        aggr_state = aggr_tree["aggr_state"]
-        aggr_state["state_computed_by_agent"] = aggr_state["state"]
-        if aggr_state["in_downtime"] and "state_scheduled_downtime" in self._options:
-            aggr_state["state_computed_by_agent"] = self._options["state_scheduled_downtime"]
+    @classmethod
+    def parse_aggregation_response(cls, aggr_response):
+        if "rows" in aggr_response:
+            return AggregationData.parse_legacy_response(aggr_response["rows"])
+        return aggr_response["aggregations"]
 
-        if aggr_state["acknowledged"] and "state_acknowledged" in self._options:
-            aggr_state["state_computed_by_agent"] = self._options["state_acknowledged"]
+    @classmethod
+    def parse_legacy_response(cls, rows):
+        result = {}
+        for row in rows:
+            tree = row["tree"]
+            effective_state = tree["aggr_effective_state"]
+            result[tree["aggr_name"]] = {
+                "state": effective_state["state"],
+                "hosts": [x[1] for x in tree["aggr_hosts"]],
+                "acknowledged": effective_state["acknowledged"],
+                "in_downtime": effective_state["in_downtime"],
+                "in_service_period": effective_state["in_service_period"],
+                "infos": [],
+            }
+        return result
 
-    def _process_assignments(self, aggr):
-        aggr_name = aggr["aggr_name"]
+    def _rewrite_aggregation(self, aggr_data):
+        aggr_data["state_computed_by_agent"] = aggr_data["state"]
+        if aggr_data["in_downtime"] and "state_scheduled_downtime" in self._options:
+            aggr_data["state_computed_by_agent"] = self._options["state_scheduled_downtime"]
+
+        if aggr_data["acknowledged"] and "state_acknowledged" in self._options:
+            aggr_data["state_computed_by_agent"] = self._options["state_acknowledged"]
+
+    def _process_assignments(self, aggr_name, aggr_data):
         if not self._assignments:
-            self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr
+            self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr_data
             return
 
         if "querying_host" in self._assignments:
-            self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr
+            self._aggregation_targets.setdefault(None, {})[aggr_name] = aggr_data
 
         if "affected_hosts" in self._assignments:
-            for _site, hostname in aggr["aggr_hosts"]:
-                self._aggregation_targets.setdefault(hostname, {})[aggr_name] = aggr
+            for _site, hostname in aggr_data["hosts"]:
+                self._aggregation_targets.setdefault(hostname, {})[aggr_name] = aggr_data
 
         for pattern, target_host in self._assignments.get("regex", []):
             if regex(pattern).match(aggr_name):
-                self._aggregation_targets.setdefault(target_host, {})[aggr_name] = aggr
+                self._aggregation_targets.setdefault(target_host, {})[aggr_name] = aggr_data
 
 
 class RawdataException(MKException):
@@ -109,15 +130,16 @@ class RawdataException(MKException):
 
 class AggregationRawdataGenerator:
     def __init__(self, config):
-        super(AggregationRawdataGenerator, self).__init__()
+        super().__init__()
         self._config = config
 
         self._credentials = config["credentials"]
         if self._credentials == "automation":
             self._username = self._credentials
 
-            secret_file_path = Path(
-                cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
+            secret_file_path = (
+                Path(cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
+            )
 
             with secret_file_path.open(encoding="utf-8") as f:
                 self._secret = f.read()
@@ -127,8 +149,10 @@ class AggregationRawdataGenerator:
         site_config = config["site"]
 
         if site_config == "local":
-            self._site_url = "http://localhost:%d/%s" % (cmk.utils.site.get_apache_port(),
-                                                         cmk_version.omd_site())
+            self._site_url = "http://localhost:%d/%s" % (
+                cmk.utils.site.get_apache_port(),
+                omd_site(),
+            )
         else:
             self._site_url = site_config[1]
 
@@ -145,15 +169,16 @@ class AggregationRawdataGenerator:
             return AggregationData(None, self._config, "Request Error %s" % e)
 
     def _fetch_aggregation_data(self):
-        response = requests.post("%s/check_mk/webapi.py?action=get_bi_aggregations" %
-                                 self._site_url,
-                                 data={
-                                     "_username": self._username,
-                                     "_secret": self._secret,
-                                     "request": repr({"filter": self._config.get("filter", {})}),
-                                     "request_format": "python",
-                                     "output_format": "python"
-                                 })
+        response = requests.post(
+            "%s/check_mk/webapi.py?action=get_bi_aggregations" % self._site_url,
+            data={
+                "_username": self._username,
+                "_secret": self._secret,
+                "request": repr({"filter": self._config.get("filter", {})}),
+                "request_format": "python",
+                "output_format": "python",
+            },
+        )
         response.raise_for_status()
         return response.text
 
@@ -183,10 +208,7 @@ class AggregationRawdataGenerator:
 class AggregationOutputRenderer:
     def render(self, aggregation_data_results):
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info: Dict[str, Set[str]] = {
-            field: set()  #
-            for field in connection_info_fields
-        }
+        connection_info: Dict[str, Set[str]] = {field: set() for field in connection_info_fields}  #
 
         output = []
         for aggregation_result in aggregation_data_results:
@@ -199,8 +221,9 @@ class AggregationOutputRenderer:
 
         if not output:
             if connection_info["generic_errors"]:
-                sys.stderr.write("Agent error(s): %s\n" %
-                                 "\n".join(connection_info["generic_errors"]))
+                sys.stderr.write(
+                    "Agent error(s): %s\n" % "\n".join(connection_info["generic_errors"])
+                )
             else:
                 sys.stderr.write("Got no information. Did you configure a BI aggregation?\n")
             sys.exit(1)

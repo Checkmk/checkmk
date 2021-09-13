@@ -1,0 +1,14 @@
+Title: Backup: Fix adding / editing backup jobs with manual schedule
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615368095
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+When adding or editing backup jobs with a "manual schedule" configuration this
+lead to an exception "TypeError (argument of type 'NoneType' is not iterable)"
+in previous 2.0.0 releases.

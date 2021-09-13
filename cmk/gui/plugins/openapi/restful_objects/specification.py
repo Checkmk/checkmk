@@ -18,117 +18,348 @@ The API is documented in a machine-readable schema and a human-readable format i
 resources, their input and output parameters and the associated value ranges. The API is created
 with the OpenAPI specification 3.x, an API description format especially for REST APIs.
 
-The API documentation created with this specification is displayed to you with ReDoc, a responsive
-Web design for OpenAPI documents.
+The API documentation created with this specification is displayed to you with ReDoc (a
+responsive Web design for an OpenAPI document) or with Swagger UI (an OpenAPI document
+visualization for direct interaction with the API's resources).
 
 
 # Prerequisites
 
+* You know Checkmk and its principles of setup and configuration.
 * You are experienced in using an API, preferably a REST-API.
 * You are familiar with at least one of the applications for which sample code is available.
-* You know Checkmk and its principles of setup and configuration.
-
-
-# Using the API documentation
-
-The API documentation's Web design provides 3 panes.
-
-The left navigation pane is used for orientation, search and quick jump to the exact description of
-the entries in the middle content pane. The table of contents contains one entry for each API endpoint.
-An endpoint uses a URL to refer to the resource that the API provides (e.g., to collect hosts),
-along with the method used to access the resource (e.g., GET to display a host).
-The endpoints are organized in several folders.
-
-The middle content pane contains all information about the definition of a request (with parameters,
-value ranges, default values and descriptions) and the corresponding answers (also with all details).
-The possible answers are displayed in different colors, depending on whether the returned HTTP status
-code signals success or an error.
-
-The right example pane shows the method and URL for the endpoint selected in the content pane,
-followed by several examples of requests: the payload in JSON format (if relevant to the endpoint) and
-code examples, such as cURL, HTTPie, Python Requests, or Python Urllib. Then follow the responses
-according to the HTTP status. All code examples can be copied to the clipboard with the Copy button.
-
+* It helps if you have already worked with ReDoc and/or Swagger UI.
 
 # Responses
 
 As specified by the `Content-Type` of `application/json`, the response payload is serialized with
 JSON and encoded in UTF-8.
 
-All responses are well-formed according to the
-[Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects).
-There are a limited number of key concepts in the standard (e.g. object, action, collection, etc.)
-which enables the use of this API without having to understand the details of the implementation of
-each endpoint.
+## JSON envelope attributes for objects
+
+All objects are wrapped in a JSON structure called an "Domain Object" which take the following
+form:
+
+    {
+        "domainType": <domain type>,
+        "instanceId": <string to uniquely identify domain object>,
+        "title": <human readable header>,
+        "links": [<relation link>, ...],
+        "extensions": {
+            <attribute name>: <attribute value>,
+            ...
+        },
+        "members": {
+            <member name>: <member definition>,
+            ...
+        }
+     }
+
+The collections `members`, `extensions` and `links` are defined as such:
+
+ * domainType - The type of object this refers to, e.g. `host`, and `service`.
+ * instanceId - The globally unique identifier for this particular object.
+ * title - A human readable string which is only relevant for user interfaces.
+ * links - A collection of links to other resources or actions.
+ * extensions - The data container for all direct attributes of the object.
+ * members - The container for external resources, like linked foreign objects or actions.
+
+### Note
+
+Previously, an attribute called `members` has been used in these objects, but it will no longer be
+used. All relations to other objects will be listed in the `links` attribute.
+
+## JSON envelope for collections
+
+    {
+        "domainType": <domain type>,
+        "instanceId": <string to uniquely identify domain object>,
+        "title": <human readable header>,
+        "links": [<relation link>, ...],
+        "extensions": {
+            <attribute name>: <attribute value>,
+            ...
+        },
+        "members": {
+            <member name>: <member definition>,
+            ...
+        }
+    }
+
+## Link relations
 
 Every response comes with a collection of `links` to inform the API client on possible
 follow-up actions. For example, a folder response can have links to resources for updating,
 deleting and moving the folder. The client does not have to know about the URL structure, it
 just needs to follow the link. In this sense, the API is quasi self-documenting.
 This provision of additional information as a REST-API principle is also called
-[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS).
+[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS). In this context,
+a `rel` specifies the type of relationship of the concerning resource to the resource that generated
+this representation. The rel attribute is only of informational nature for the client.
 
+Objects may have these possible generic link relations:
+
+ * self - The API location of the current object
+ * help - Documentation for the currently requested endpoint
+ * collection - The API location for a list of object of the current objects' type
+ * edit - The API location to update the current object
+ * edit-form - The GUI location to edit the current object
+ * delete - The API location to delete the current object
+
+Members of collections have also:
+
+ * item - The API location of a member of the current collection
+
+Please note that these (except for self) are completely optional and may or may not be available on
+certain endpoints. More specialized link relations are also available:
+
+ * invoke - The API location to invoke an action
+ * start - The API location to start a long running process, which the current object represents
+ * cancel - The API location to abort the long running process, which the current object represents
+ * download - The URL to download the object described by the current endpoint
+ * move - The API location to move the current object to another destination
+
+Endpoint specific link relations are also possible.
+
+# Updating values
+
+When an object is updated by multiple requests at the same time, it can happen that the second
+request will overwrite important values from the first request. This is known as the "lost update
+problem" and can be prevented by a locking scheme. The scheme that Checkmk uses for this is called
+an "optimistic lock" and allows read access even when writes are happening. It works as follows:
+
+1. The user fetches the object to be modified.
+2. The server responds with the data and an HTTP `ETag` header containing a value which is something
+   like the "checksum" of the object.
+3. In order to modify the object, the user sends an update request with an HTTP `If-Match` header
+   which contains the value of the previously fetched `ETag`. This ensures that the writer has seen
+   the object to be modified. If any modifications by someone else were to happen between the
+   request (1) and the update (3) these values would not match and the update would fail.
+
+This scheme is used for most `PUT` requests throughout the REST API and always works the same way.
+Detailed documentation of the various involved fields as well as the possible error messages can
+be found on the documentation of each affected endpoint.
+
+# Querying Status Data
+
+The endpoints in the category "Monitoring" support arbitrary Livestatus expressions (including And,
+Or combinators) and all columns of some specific tables can be queried.
+
+
+### Note
+
+You can find an introduction to basic monitoring principles including host and service status in the
+[Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
+
+## Filter expressions
+
+A *filter expression* is a recursively defined structure containing *binary expression nodes*,
+*negation nodes* or *combination nodes*. With *filter expressions*, very complex Livestatus queries
+can be constructed.
+
+## Binary expression node
+
+A *binary expression node* represents one condition on which to filter. `left` is always a
+Livestatus column name, `right` is always a value.
+
+### Definition
+
+    {'op': <livestatus operator>, 'left': <livestatus column>, 'right': <value>}
+
+### Operators
+
+A list of all list of all possible
+[Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
+can be found in the Checkmk documentation.
+
+### Table definitions
+
+To check what columns are available and what kind of value each column can have, please consult
+these definition files on GitHub.
+
+ * [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
+ * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
+ * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
+
+### Example
+
+This example filters for an entry where the host_name equals to "example.com".
+
+    {'op': '=', 'left': 'host_name', 'right': 'example.com'}
+
+### Note
+
+For the specific table used, please consult the endpoint documentation.
+
+## Negation node
+
+There is only one negation node, the `not` expression, which logically negates a *filter
+expression*. `expr` is a valid *filter expression*, so any *binary expression node*, *negation
+node* or *combination node* may be used here.
+
+### Definition
+
+     {'op': 'not', 'expr': <any filter expr>}
+
+### Example
+
+This example filters for hosts which **do not** have the host_name "example.com".
+
+    {'op': 'not', 'expr': {'op': '=', 'left': 'host_name', 'right': 'example.com'}}
+
+This is equivalent to
+
+    {'op': '!=', 'left': 'host_name', 'right': 'example.com'}
+
+## Combination nodes
+
+`and` and `or` combinators are supported. They can be nested arbitrarily. `expr` is a list of
+valid *filter expressions*, so any number of *binary nodes*, *negation nodes* or *combination nodes*
+may be used there. These expression do not have to all be of the same type, so a mix of *binary
+expression nodes*, *negation nodes* and *combination nodes* is also possible.
+
+### Definition
+
+This results in a *filter expression* in which all the contained expression must be true:
+
+    {'op': 'and', 'expr': [<any filter expr>, ...]}
+
+This results in a *filter expression* in which only one of the contained expression needs to
+be true:
+
+    {'op': 'or', 'expr': [<any filter expr>, ...]}
+
+### Example
+
+This example filters for the host "example.com" only when the `state` column is set to `0`, which
+means the state is OK.
+
+    {'op': 'and', 'expr': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
+                            {'op': '=', 'left': 'state', 'right': 0}}
 
 # Authentication
 
-To use this API from a client, an *automation* user must be set up in Checkmk. Only this user is
-authorized to perform actions via the API. For a newly created site the automation user is
-already created. You can find it, like other users, in Checkmk at *Setup* > *Users*.
+To use this API from an automated client, a user needs to be set up in Checkmk. Any kind of user,
+be it *automation* or *GUI* users, can be used to access the REST API. On a newly created site
+some users are already created. You can configure them in Checkmk at *Setup* > *Users*.
 
-Username and password of the automation user must be transmitted in the HTTP header in the
-`Bearer` format in every request to the Checkmk server.
+For the various authentication methods that can be used please consult the following descriptions,
+which occur in the order of precedence. This means that on a request which receives multiple
+authentication methods, the one with the hightes priority "wins" and is used. This is especially
+convenient when developing automation scripts, as these can directly be used with either the
+currently logged in GUI user, or the "Bearer" authentication method which takes precedence over the
+GUI authentication method. The result is that the user doesn't have to log out to check that the
+scripts works with the other method.
 
 <SecurityDefinitions />
 
+# Compatibility
 
-# Client compatibility issues
-
-## Overriding request methods
+## HTTP client compatibility
 
 If you have a client which cannot do the HTTP PUT or DELETE methods, you can use the
 `X-HTTP-Method-Override` HTTP header to force the server into believing the client actually sent
 such a method. In these cases the HTTP method to use has to be POST. You cannot override from GET.
 
-## Backwards compatibility
+## Compatibility policy
 
-Future versions of this API may add additional fields in the responses. Clients must be written
-in a way to NOT expect the absence of a field, as we don't guarantee that.
-For backwards compatibility reasons we only keep the fields that have already been there in older
-versions. You can consult the documentation to see what changed in each API revision.
+It is our policy to keep all documented parts backwards compatible, as long as there is no
+compelling reason (like security, etc) to break compatibility.
+
+In the event of a break in backwards compatibility, these changes are documented and, if possible,
+announced by deprecating the field or endpoint in question beforehand. Please understand that this
+can't be promised for all cases (security, etc) though.
+
+## Versioning
+
+### Definition
+
+The REST API is versioned by a *major* and *minor* version number.
+
+The *major* number is incremented when backwards incompatible changes to the API have been made.
+This will reset the *minor* number to *0*. A *werk* which contains the details of the change and
+marking the change as incompatible will be released when this happens.
+
+Th *minor* number will be increased when backwards compatible changes are added to the API. A
+*werk* detailing the additions will be released when this happens.
+
+**Note:** Despite the noted backward compatibility, API consumers are best to ensure that their
+implementation does not disrupt use-case requirements.
+
+### Usage
+
+The *major* version is part of the URL of each endpoint, while the whole version (in the form
+*major*.*minor*) can be sent via the HTTP header `X-API-Version`. If the header is not sent,
+the most recent *minor* version of the through the URL selected *major* version is used.
+The header will also be present in the accompanying HTTP response.
+
+### Format
+
+ * URL: *v1*, *v2*, etc.
+ * X-API-Version HTTP header: *major.minor*
+
+### Notes
+
+ * In the first release, the version part in the URL has been documented as `1.0`. These
+   URLs will continue to work in the future, although using the `X-API-Version` header will not be
+   possible with this version identifier. You have to use the above documented format (v1, v2, ...)
+   in the URL to be able to use the `X-API-Version` header.
+
+## Undocumented behaviour
+
+We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an endpoint is not
+documented we may change it without incrementing the API version.
 
 """
-from typing import List, Literal, Sequence, Dict, TypedDict
+from typing import Dict, List, Literal, TypedDict
 
-import apispec.utils  # type: ignore[import]
 import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
+import apispec.utils  # type: ignore[import]
 import apispec_oneofschema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi import plugins
-from cmk.gui.plugins.openapi.restful_objects.parameters import (
-    ACCEPT_HEADER,)
-
+from cmk.gui.plugins.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
-from cmk.gui.plugins.openapi.restful_objects.type_defs import OpenAPIParameter
+
+SECURITY_SCHEMES = {
+    "headerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Use user credentials in the `Authorization` HTTP header. "
+        "The format of the header value is `$user $password`. This method has the "
+        "highest precedence. If it succeeds, all other authentication methods are "
+        "skipped.",
+        "bearerFormat": "username password",
+    },
+    "webserverAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Use the authentication method of the webserver ('basic' or 'digest'). To "
+        "use this, you'll either have to re-configure the site's Apache instance "
+        "yourself, or disable multi-site logins via `omd config`. This method "
+        "takes precedence over the `cookieAuth` method.",
+    },
+}
 
 DEFAULT_HEADERS = [
-    ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
+    ("Accept", "Media type(s) that is/are acceptable for the response.", "application/json"),
 ]
 
 OpenAPIInfoDict = TypedDict(
-    'OpenAPIInfoDict',
+    "OpenAPIInfoDict",
     {
-        'description': str,
-        'license': Dict[str, str],
-        'contact': Dict[str, str],
+        "description": str,
+        "license": Dict[str, str],
+        "contact": Dict[str, str],
     },
     total=True,
 )
 
 TagGroup = TypedDict(
-    'TagGroup',
+    "TagGroup",
     {
-        'name': str,
-        'tags': List[str],
+        "name": str,
+        "tags": List[str],
     },
     total=True,
 )
@@ -136,62 +367,49 @@ TagGroup = TypedDict(
 ReDocSpec = TypedDict(
     "ReDocSpec",
     {
-        'info': OpenAPIInfoDict,
-        'externalDocs': Dict[str, str],
-        'security': List[Dict[str, List[str]]],
-        'x-logo': Dict[str, str],
-        'x-tagGroups': List[TagGroup],
-        'x-ignoredHeaderParameters': List[str],
+        "info": OpenAPIInfoDict,
+        "externalDocs": Dict[str, str],
+        "security": List[Dict[str, List[str]]],
+        "x-logo": Dict[str, str],
+        "x-tagGroups": List[TagGroup],
+        "x-ignoredHeaderParameters": List[str],
     },
     total=True,
 )
 
 OPTIONS: ReDocSpec = {
-    'info': {
-        'description': apispec.utils.dedent(__doc__).strip(),
-        'license': {
-            'name': 'GNU General Public License version 2',
-            'url': 'https://checkmk.com/gpl.html',
+    "info": {
+        "description": apispec.utils.dedent(__doc__).strip(),
+        "license": {
+            "name": "GNU General Public License version 2",
+            "url": "https://checkmk.com/gpl.html",
         },
-        'contact': {
-            'name': 'Contact the Checkmk Team',
-            'url': 'https://checkmk.com/contact.php',
-            'email': 'feedback@checkmk.com'
+        "contact": {
+            "name": "Contact the Checkmk Team",
+            "url": "https://checkmk.com/contact.php",
+            "email": "feedback@checkmk.com",
         },
     },
-    'externalDocs': {
-        'description': 'The Checkmk Handbook',
-        'url': 'https://checkmk.com/cms.html',
+    "externalDocs": {
+        "description": "User guide",
+        "url": "https://docs.checkmk.com/master",
     },
-    'x-logo': {
-        'url': 'https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png',
-        'altText': 'Checkmk',
+    "x-logo": {
+        "url": "https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png",
+        "altText": "Checkmk",
     },
-    'x-tagGroups': [
-        {
-            'name': 'Monitoring',
-            'tags': []
-        },
-        {
-            'name': 'Setup',
-            'tags': []
-        },
-        # TODO: remove
-        {
-            'name': 'Endpoints',
-            'tags': []
-        },
+    "x-tagGroups": [
+        {"name": "Monitoring", "tags": []},
+        {"name": "Setup", "tags": []},
     ],
-    'x-ignoredHeaderParameters': [
-        'User-Agent',
-        'X-Test-Header',
+    "x-ignoredHeaderParameters": [
+        "User-Agent",
+        "X-Test-Header",
     ],
-    'security': [{
-        'BearerAuth': []
-    }]
+    "security": [{sec_scheme_name: []} for sec_scheme_name in SECURITY_SCHEMES],
 }
 
-__version__ = "0.3.2"
+__version__ = "1.0"
 
 
 def make_spec(options: ReDocSpec):
@@ -209,18 +427,8 @@ def make_spec(options: ReDocSpec):
 
 
 SPEC = make_spec(options=OPTIONS)
-SPEC.components.security_scheme(
-    'BearerAuth',
-    {
-        'type': 'http',
-        'scheme': 'bearer',
-        'in': 'header',
-        'description': 'The format of the header-value is "Bearer $automation_user '
-                       '$automation_user_password"\n\nExample: `Bearer hansdampf miezekatze123`',
-        'bearerFormat': 'username password',
-        'x-bearerInfoFunc': 'cmk.gui.wsgi.auth.bearer_auth',
-    },
-)
+for sec_scheme_name, sec_scheme_spec in SECURITY_SCHEMES.items():
+    SPEC.components.security_scheme(sec_scheme_name, sec_scheme_spec)
 
 # All the supported response headers by the spec.
 
@@ -234,70 +442,8 @@ SPEC.components.security_scheme(
 for header_name, field in ACCEPT_HEADER.items():
     SPEC.components.parameter(
         header_name,
-        'header',
-        to_openapi([{
-            header_name: field
-        }], 'header')[0],
+        "header",
+        to_openapi([{header_name: field}], "header")[0],
     )
 
-ErrorType = Literal['ignore', 'raise']
-
-
-def find_all_parameters(
-    params: Sequence[OpenAPIParameter],
-    errors: ErrorType = 'ignore',
-) -> List[OpenAPIParameter]:
-    """Find all parameters, while de-referencing string based parameters.
-
-    Parameters can come in dictionary, or string form. If they are a dictionary they are supposed
-    to be completely self-contained and can be specified with the same name multiple times for
-    different endpoints even with different values.
-
-    A string parameter is just a reference to a globally defined parameter, which can only be
-    defined once with that name.
-
-    This function de-references these string based parameters and emits a list of all parameters
-    that it has been given in their dictionary form.
-
-    Examples:
-
-        >>> find_all_parameters([{'name': 'fizz', 'in': 'query'}, 'foobar'])
-        [{'name': 'fizz', 'in': 'query'}]
-
-        >>> find_all_parameters(['foobar'])
-        []
-
-        >>> find_all_parameters(['foobar'], errors='raise')
-        Traceback (most recent call last):
-           ...
-        ValueError: Param 'foobar', assumed globally defined, was not found.
-
-    Args:
-        params:
-            Either as a dict or as a string. If it is a string it will be replaced
-            by it's globally defined parameter (if found).
-
-        errors:
-            What to do when an error is detected. Can be either 'raise' or 'ignore'.
-
-    Returns:
-        A list of parameters, all in their dictionary form.
-
-    Raises:
-        ValueError: Whenever a parameter could not be de-referenced.
-
-    """
-    result = []
-    global_params = SPEC.components.to_dict().get('parameters', {})
-
-    for _param in params:
-        if isinstance(_param, dict):
-            result.append(_param)
-        elif isinstance(_param, str):
-            if _param in global_params:
-                result.append(global_params[_param])
-                continue
-
-            if errors == 'raise':
-                raise ValueError(f"Param {_param!r}, assumed globally defined, was not found.")
-    return result
+ErrorType = Literal["ignore", "raise"]

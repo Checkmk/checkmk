@@ -8,5 +8,5 @@ description:
  name of the policy/filter ruleset.
  The status is {CRIT} if the module is missing, {OK} otherwise.
 
-inventory:
+discovery:
  One service is created.

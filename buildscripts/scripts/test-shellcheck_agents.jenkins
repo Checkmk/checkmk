@@ -1,0 +1,39 @@
+def NODE = "both"
+
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+  pipelineTriggers([pollSCM('H/3 * * * *')]),
+])
+
+node (NODE) {
+    stage('checkout sources') {
+        checkout(scm)
+        notify = load 'buildscripts/scripts/lib/notify.groovy'
+    }
+    try {
+        stage("Execute Test") {
+            sh("""
+                cd "$WORKSPACE/tests"
+                # CI specific arguments
+                make SHELLCHECK_OUTPUT_ARGS="-f gcc" test-shellcheck || true
+                exit 0
+               """)
+        }
+        stage("Analyse Issues") {
+            def GCC = scanForIssues(tool: gcc())
+            publishIssues(
+                issues:[GCC],
+                trendChartType: 'TOOLS_ONLY',
+                qualityGates: [
+                    [
+                        threshold: 178,
+                        type: 'TOTAL',
+                        unstable: false
+                    ]
+                ]
+            )
+        }
+    } catch(Exception e) {
+        notify.notify_error(e)
+    }
+}

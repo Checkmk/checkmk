@@ -25,6 +25,6 @@ description:
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
-inventory:
+discovery:
  One service is created for each sensor if the sensor is online.
 

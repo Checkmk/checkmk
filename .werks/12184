@@ -1,0 +1,17 @@
+Title: OIDCached not refreshing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614625450
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In Checkmk versions 2.0.0i1 to 2.0.0b7 SNMP data
+specified using the <tt>OIDCached</tt> class were
+not updated properly (i.e. on every discovery).
+As this class is specifically designed for OIDs
+whos values rarely change, this bug probably
+went unnoticed by most users.

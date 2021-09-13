@@ -32,13 +32,7 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from .agent_based_api.v1 import (
-    contains,
-    OIDEnd,
-    register,
-    SNMPTree,
-    TableRow,
-)
+from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, TableRow
 
 register.snmp_section(
     name="inv_cisco_vlans",
@@ -59,6 +53,7 @@ register.snmp_section(
 
 def parse_multi_vlan(vlan_multi):
     """compress a list of vlans into a readable format"""
+
     def concatenate_vlans(vlan, subinfo):
         if vlan not in subinfo:
             subinfo.append(vlan)
@@ -67,7 +62,7 @@ def parse_multi_vlan(vlan_multi):
     vlans = []
     for k, hex_ in enumerate(vlan_multi):
         for l, bit in enumerate(bin(ord(hex_))[2:]):
-            if bit == '1':
+            if bit == "1":
                 vlans.append(k * 8 + l + 1)
 
     if not vlans:
@@ -93,17 +88,17 @@ def parse_multi_vlan(vlan_multi):
 def inv_cisco_vlans(section):
     path = ["networking", "interfaces"]
     map_vlans = {
-        '1': 'static',
-        '2': 'dynamic',
-        '3': 'multi-VLAN',
+        "1": "static",
+        "2": "dynamic",
+        "3": "multi-VLAN",
     }
 
     for if_id, vlan_type, vlan_single, vlan_multi in section[0]:
         vlan_readable = map_vlans.get(vlan_type, "")
         vlans = None
-        if vlan_single != '0' and vlan_type in ['1', '2']:
+        if vlan_single != "0" and vlan_type in ["1", "2"]:
             vlans = vlan_single
-        elif vlan_type == '3':
+        elif vlan_type == "3":
             vlans = parse_multi_vlan(vlan_multi)
 
         if vlans:

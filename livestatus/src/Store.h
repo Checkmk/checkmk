@@ -12,7 +12,10 @@
 #include <list>
 #include <map>
 #include <string>
-#ifndef CMC
+#ifdef CMC
+#include <chrono>
+#include <optional>
+#else
 #include <utility>
 #include <vector>
 #endif
@@ -48,16 +51,11 @@ class MonitoringCore;
 class OutputBuffer;
 
 #ifdef CMC
-#include <cstdint>
-
 #include "TableCachedStatehist.h"
 class Core;
 class Object;
 #else
 #include <mutex>
-
-#include "DowntimesOrComments.h"
-#include "nagios.h"
 #endif
 
 class Store {
@@ -81,9 +79,6 @@ public:
 #else
     explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
-
-    void registerDowntime(nebstruct_downtime_data *data);
-    void registerComment(nebstruct_comment_data *data);
 #endif
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
@@ -101,14 +96,6 @@ private:
     MonitoringCore *_mc;
 #ifdef CMC
     Core *_core;
-#endif
-#ifndef CMC
-    // TODO(sp) These fields should better be somewhere else, e.g. module.cc
-public:
-    DowntimesOrComments _downtimes;
-    DowntimesOrComments _comments;
-
-private:
 #endif
     LogCache _log_cache;
 
@@ -151,7 +138,7 @@ private:
     void addTable(Table &table);
     Table &findTable(OutputBuffer &output, const std::string &name);
 #ifdef CMC
-    uint32_t horizon() const;
+    std::optional<std::chrono::seconds> horizon() const;
 #else
     void logRequest(const std::string &line,
                     const std::list<std::string> &lines) const;

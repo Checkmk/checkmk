@@ -5,12 +5,11 @@
 
 #include "TableEventConsole.h"
 
-#include <algorithm>  // IWYU pragma: keep
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
-#include <functional>  // IWYU pragma: keep
+#include <functional>
 #include <iosfwd>
 #include <iostream>
 #include <optional>
@@ -19,13 +18,16 @@
 #include <utility>
 
 #include "Column.h"
+#include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
 #include "ListColumn.h"
+#include "ListLambdaColumn.h"
 #include "Logger.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
+#include "TimeColumn.h"
 #include "auth.h"
 
 using namespace std::chrono_literals;
@@ -163,37 +165,37 @@ ECRow::ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
 }
 
 // static
-std::unique_ptr<StringLambdaColumn<ECRow>> ECRow::makeStringColumn(
+std::unique_ptr<StringColumn::Callback<ECRow>> ECRow::makeStringColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<StringLambdaColumn<ECRow>>(
+    return std::make_unique<StringColumn::Callback<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getString(name); });
 }
 
 // static
-std::unique_ptr<IntLambdaColumn<ECRow>> ECRow::makeIntColumn(
+std::unique_ptr<IntColumn::Callback<ECRow>> ECRow::makeIntColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<IntLambdaColumn<ECRow>>(
+    return std::make_unique<IntColumn::Callback<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getInt(name); });
 }
 
 // static
-std::unique_ptr<DoubleLambdaColumn<ECRow>> ECRow::makeDoubleColumn(
+std::unique_ptr<DoubleColumn::Callback<ECRow>> ECRow::makeDoubleColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<DoubleLambdaColumn<ECRow>>(
+    return std::make_unique<DoubleColumn::Callback<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getDouble(name); });
 }
 
 // static
-std::unique_ptr<TimeLambdaColumn<ECRow>> ECRow::makeTimeColumn(
+std::unique_ptr<TimeColumn::Callback<ECRow>> ECRow::makeTimeColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<TimeLambdaColumn<ECRow>>(
+    return std::make_unique<TimeColumn::Callback<ECRow>>(
         name, description, offsets, [name](const ECRow &r) {
             return std::chrono::system_clock::from_time_t(
                 static_cast<std::time_t>(r.getDouble(name)));
@@ -201,10 +203,10 @@ std::unique_ptr<TimeLambdaColumn<ECRow>> ECRow::makeTimeColumn(
 }
 
 // static
-std::unique_ptr<ListLambdaColumn<ECRow>> ECRow::makeListColumn(
+std::unique_ptr<ListColumn::Callback<ECRow>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<ListLambdaColumn<ECRow>>(
+    return std::make_unique<ListColumn::Callback<ECRow>>(
         name, description, offsets, [name](const ECRow &r) {
             auto result = r.getString(name);
             return result.empty() || result == "\002"
@@ -240,18 +242,21 @@ void TableEventConsole::answerQuery(Query *query) {
         try {
             ECTableConnection(core(), *this, query).run();
         } catch (const std::runtime_error &err) {
-            query->invalidRequest(err.what());
+            query->badGateway(err.what());
         }
     }
 }
 
 bool TableEventConsole::isAuthorizedForEvent(Row row,
                                              const contact *ctc) const {
+    if (ctc == no_auth_user()) {
+        return true;
+    }
     // TODO(sp) Remove evil casts below.
     const auto *c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
-    auto precedence = std::static_pointer_cast<StringColumn>(
+    auto precedence = std::static_pointer_cast<StringColumn::Callback<ECRow>>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
     if (precedence == "rule") {
@@ -270,8 +275,8 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     const MonitoringCore::Contact *ctc, Row row, bool &result) const {
-    auto col =
-        std::static_pointer_cast<ListColumn>(column("event_contact_groups"));
+    auto col = std::static_pointer_cast<deprecated::ListColumn>(
+        column("event_contact_groups"));
     if (const auto *r = col->columnData<ECRow>(row)) {
         // TODO(sp) This check for None is a hack...
         if (r->getString(col->name()) == "\002") {

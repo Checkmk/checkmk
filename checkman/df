@@ -60,7 +60,7 @@ item:
  letter in upper case followed by a colon (Windows). For groups
  the item is the name of the group.
 
-inventory:
+discovery:
  One service is created for each filesystem
  the agent reports except mount points listed in
  {inventory_df_exclude_mountpoints} and filesystem types

@@ -6,6 +6,7 @@ import * as utils from "utils";
 import "element-closest-polyfill";
 import * as foldable_container from "foldable_container";
 import * as popup_menu from "popup_menu";
+import * as forms from "forms";
 
 // Closes the active page menu dropdown
 export function close_active_dropdown() {
@@ -56,6 +57,10 @@ export function enable_menu_entry(id, enabled) {
     var oEntry = document.getElementById("menu_entry_" + id);
     utils.change_class(oEntry, from, to);
 
+    if (enabled && oEntry.getAttribute("title")) {
+        oEntry.removeAttribute("title");
+    }
+
     var oShortCut = document.getElementById("menu_shortcut_" + id);
     if (oShortCut) utils.change_class(oShortCut, from, to);
 
@@ -64,6 +69,11 @@ export function enable_menu_entry(id, enabled) {
 }
 
 export function enable_menu_entries(css_class, enabled) {
+    const page_menu = document.getElementById("page_menu_bar");
+    if (!page_menu) {
+        return;
+    }
+
     let from, to;
     if (enabled) {
         from = "disabled";
@@ -73,10 +83,7 @@ export function enable_menu_entries(css_class, enabled) {
         to = "disabled";
     }
 
-    const elements = document
-        .getElementById("page_menu_bar")
-        .querySelectorAll(".entry." + css_class);
-    for (const element of elements) {
+    for (const element of page_menu.querySelectorAll(".entry." + css_class)) {
         utils.change_class(element, from, to);
     }
 }
@@ -142,6 +149,12 @@ export function register_on_close_handler(popup_id, handler) {
     on_close[popup_id] = handler;
 }
 
+var on_toggle_suggestions = null;
+
+export function register_on_toggle_suggestions_handler(handler) {
+    on_toggle_suggestions = handler;
+}
+
 export function toggle_suggestions() {
     var oPageMenuBar = document.getElementById("page_menu_bar");
     var open;
@@ -153,16 +166,35 @@ export function toggle_suggestions() {
         open = "off";
     }
     foldable_container.persist_tree_state("suggestions", "all", open);
+
+    // Call registered hook
+    if (on_toggle_suggestions !== null) {
+        on_toggle_suggestions();
+    }
 }
 
 export function form_submit(form_name, button_name) {
-    var oForm = document.getElementById("form_" + form_name);
+    var form = document.getElementById("form_" + form_name);
     var field = document.createElement("input");
-    field.type = "hidden";
+    field.type = "submit";
     field.name = button_name;
     field.value = "SET";
-    oForm.appendChild(field);
-    oForm.submit();
+    field.style.display = "none";
+    form.appendChild(field);
+
+    field.click();
+}
+
+// Helper for building form submit links after confirming a dialog
+export function confirmed_form_submit(form_name, button_name, message) {
+    forms.confirm_dialog(
+        {
+            html: message,
+        },
+        () => {
+            form_submit(form_name, button_name);
+        }
+    );
 }
 
 // Show / hide all entries of this group
@@ -197,13 +229,20 @@ export function update_filter_list_scroll(filter_list_id) {
     }
 }
 
-export function update_page_state_top_line(text) {
-    let container = document.getElementById("page_state_top_line");
-    container.innerHTML = text;
-}
-
 export function side_popup_add_simplebar_scrollbar(popup_id) {
     let popup = document.getElementById(popup_id);
     let content = popup.getElementsByClassName("side_popup_content")[0];
     utils.add_simplebar_scrollbar_to_object(content);
+}
+
+export function inpage_search_init(reset_button_id, was_submitted) {
+    const reset_button = document.getElementById(reset_button_id);
+    if (!reset_button) return;
+
+    if (was_submitted) {
+        const submit_button = reset_button.parentNode.getElementsByClassName("button submit")[0];
+        utils.add_class(submit_button, "hidden");
+    } else {
+        reset_button.disabled = true;
+    }
 }

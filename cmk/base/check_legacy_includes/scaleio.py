@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-return
 
 
@@ -23,7 +23,7 @@ def parse_scaleio(info, section):
 # This converts data into MB for our df.include
 def convert_scaleio_space(unit, value):
     if unit == "Bytes":
-        return value / 1024.0**2
+        return value / 1024.0 ** 2
     elif unit == "KB":
         return value / 1024.0
     elif unit == "MB":
@@ -50,18 +50,16 @@ def convert_to_bytes(tp, unit):
 
 
 def get_disks(item, read_data, write_data):
-    read_tp = convert_to_bytes(int(read_data[-3].strip("(")), \
-                               read_data[-2].strip(")"))
-    write_tp = convert_to_bytes(int(write_data[-3].strip("(")), \
-                                write_data[-2].strip(")"))
+    read_tp = convert_to_bytes(int(read_data[-3].strip("(")), read_data[-2].strip(")"))
+    write_tp = convert_to_bytes(int(write_data[-3].strip("(")), write_data[-2].strip(")"))
 
     disks = {
         item: {
-            'node': None,
-            'read_ios': int(read_data[0]),
-            'read_throughput': read_tp,
-            'write_ios': int(write_data[0]),
-            'write_throughput': write_tp,
+            "node": None,
+            "read_ios": int(read_data[0]),
+            "read_throughput": read_tp,
+            "write_ios": int(write_data[0]),
+            "write_throughput": write_tp,
         }
     }
     return disks

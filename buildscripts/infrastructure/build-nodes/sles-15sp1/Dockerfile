@@ -1,4 +1,6 @@
-FROM registry.suse.com/suse/sle15:15.1
+ARG IMAGE_SLES_15SP1
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_15SP1}
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -31,6 +33,7 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
+    chrpath \
     curl \
     flex \
     freeradius-client-devel \
@@ -41,7 +44,10 @@ RUN zypper ref -s \
     git \
     glib2-devel \
     groff \
+    gtk-doc \
     intltool \
+    iputils \
+    joe \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -61,6 +67,9 @@ RUN zypper ref -s \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
+    libxmlsec1-1 \
+    xmlsec1-devel \
+    xmlsec1-openssl-devel \
     make \
     mysql \
     openldap2-devel \
@@ -78,12 +87,10 @@ RUN zypper ref -s \
     texinfo \
     tk-devel \
     unzip \
+    valgrind \
+    vim \
     wget \
     which \
-    chrpath \
-    joe \
-    iputils \
-    vim \
     && zypper clean -a
 
 # Install our standard tool chain for building
@@ -101,12 +108,14 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-cmake.sh
+RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-cmk-dependencies.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
 # using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can

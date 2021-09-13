@@ -9,5 +9,5 @@ description:
 
  This check works with KAV4FS.
 
-inventory:
+discovery:
  One service is created for each system.

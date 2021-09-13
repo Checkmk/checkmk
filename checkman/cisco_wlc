@@ -13,7 +13,7 @@ description:
  The checks directly connects to a Cisco Wireless LAN Controller. Currently its tested
  with the model 5508. This check is also cluster-aware.
 
-inventory:
+discovery:
  One service is created for each online accesspoint.
 
 cluster:

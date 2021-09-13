@@ -103,7 +103,7 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
             .duration(node_visualization_utils.DefaultTransition.duration())
             .style("opacity", 1);
 
-        this.viewport.selection.on("mousemove.translation_info", () => this.mousemove());
+        this.viewport.selection.on("mousemove.translation_info", event => this.mousemove(event));
         let rows = this.div_selection
             .append("table")
             .attr("id", "translation_infobox")
@@ -165,8 +165,8 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
             );
     }
 
-    mousemove() {
-        let coords = d3.mouse(this.anchor_info.node());
+    mousemove(event) {
+        let coords = d3.pointer(event);
         this.div_selection
             .selectAll("td#Mouse")
             .text("X:" + parseInt(coords[0]) + " / Y:" + parseInt(coords[1]));
@@ -185,18 +185,17 @@ export class LayeredIconOverlay extends node_visualization_viewport_utils.Layere
     update_gui() {
         let nodes = [];
         this.viewport.get_all_nodes().forEach(node => {
-            if (!node.data.icon) return;
+            if (!node.data.icon_image) return;
             nodes.push(node);
         });
 
         let icons = this.div_selection.selectAll("img").data(nodes, d => d.data.id);
+
         icons.exit().remove();
         icons = icons
             .enter()
             .append("img")
-            .attr("src", d => {
-                return "images/icons/" + d.data.icon + ".png";
-            })
+            .attr("src", d => "themes/facelift/images/icon_" + d.data.icon_image + ".svg")
             .classed("node_icon", true)
             .style("position", "absolute")
             .style("pointer-events", "none")
@@ -552,10 +551,7 @@ class TopologyCentralNode extends node_visualization_viewport_utils.TopologyNode
         this.selection.append("circle").attr("r", this.radius).classed("topology_center", true);
         this.selection
             .append("svg:image")
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/logo_cmk_small.png"
-            )
+            .attr("xlink:href", "themes/facelift/images/logo_cmk_small.png")
             .attr("x", -25)
             .attr("y", -25)
             .attr("width", 50)
@@ -578,10 +574,7 @@ class TopologySiteNode extends node_visualization_viewport_utils.TopologyNode {
         this.selection.append("circle").attr("r", this.radius).classed("topology_remote", true);
         this.selection
             .append("svg:image")
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/icon_sites.png"
-            )
+            .attr("xlink:href", "themes/facelift/images/icon_sites.svg")
             .attr("x", -15)
             .attr("y", -15)
             .attr("width", 30)
@@ -659,41 +652,24 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
     }
 
     _get_basic_quickinfo() {
-        let tokens = this.node.data.rule_id.function.split("!");
-
         let quickinfo = [];
-
         quickinfo.push({name: "Rule Title", value: this.node.data.name});
-        quickinfo.push({name: "Rule ID", value: this.node.data.rule_id.rule});
-
         quickinfo.push({
             name: "State",
             css_classes: ["state", "svcstate", "state" + this.node.data.state],
             value: this._state_to_text(this.node.data.state),
         });
-        if (tokens[0] == "worst" || tokens[0] == "best") {
-            let restriction_info = "Restrict severity to CRIT at worst.";
-            let infotext = "Take the " + tokens[0] + " state.";
-            if (tokens.length > 1) {
-                restriction_info =
-                    "Restrict severity to " + this._state_to_text(tokens[2]) + " at worst.";
-                let count = tokens[1];
-                if (count > 1) infotext = "Take the " + count + "'th " + tokens[0] + " state.";
-            }
-            quickinfo.push({name: "Condition", value: infotext});
-            quickinfo.push({name: "Severity settings", value: restriction_info});
-        } else if (tokens[0] == "count_ok") {
-            let infotext_ok = "Require " + tokens[1] + " OK-nodes for a total state of OK.";
-            let infotext_warn = "Require " + tokens[2] + " OK-nodes for a total state of WARN.";
-            // TODO: finish
-            quickinfo.push({name: "Condition", value: infotext_ok});
-        }
+        quickinfo.push({name: "Pack ID", value: this.node.data.rule_id.pack});
+        quickinfo.push({name: "Rule ID", value: this.node.data.rule_id.rule});
+        quickinfo.push({
+            name: "Aggregation Function",
+            value: this.node.data.rule_id.aggregation_function_description,
+        });
         return quickinfo;
     }
 
     get_context_menu_elements() {
         let elements = [];
-        let theme_prefix = this.viewport.main_instance.get_theme_prefix();
 
         // Local actions
         // TODO: provide aggregation ID (if available)
@@ -701,7 +677,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
         //        // This is the aggregation root node
         //            elements.push({text: "Edit aggregation (Missing: You need to configure an ID for this aggregation)", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
         //               "&pack=" + this.node.data.rule_id.pack,
-        //               img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
+        //               img: utils.get_theme() + "/images/icon_edit.png"})
 
         elements.push({
             text: "Edit rule",
@@ -710,53 +686,53 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
                 this.node.data.rule_id.rule +
                 "&pack=" +
                 this.node.data.rule_id.pack,
-            img: theme_prefix + "/images/icon_edit.png",
+            img: "themes/facelift/images/icon_edit.svg",
         });
 
         if (this.node.children != this.node._children)
             elements.push({
                 text: "Below this node, expand all nodes",
-                on: () => {
-                    d3.event.stopPropagation();
+                on: event => {
+                    event.stopPropagation();
                     this.expand_node_including_children(this.node);
                     this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
                     this.viewport.update_layers();
                 },
                 href: "",
-                img: theme_prefix + "/images/icon_expand.png",
+                img: "themes/facelift/images/icon_expand.png",
             });
         else
             elements.push({
                 text: "Collapse this node",
-                on: () => {
-                    d3.event.stopPropagation();
+                on: event => {
+                    event.stopPropagation();
                     this.collapse_node();
                 },
                 href: "",
-                img: theme_prefix + "/images/icon_collapse.png",
+                img: "themes/facelift/images/icon_collapse.png",
             });
 
         elements.push({
             text: "Expand all nodes",
-            on: () => {
-                d3.event.stopPropagation();
+            on: event => {
+                event.stopPropagation();
                 this.expand_node_including_children(this.node.data.chunk.tree);
                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
                 this.viewport.update_layers();
             },
             href: "",
-            img: theme_prefix + "/images/icon_expand.png",
+            img: "themes/facelift/images/icon_expand.png",
         });
 
         elements.push({
             text: "Below this node, show only problems",
-            on: () => {
-                d3.event.stopPropagation();
+            on: event => {
+                event.stopPropagation();
                 this._filter_root_cause(this.node);
                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
                 this.viewport.update_layers();
             },
-            img: theme_prefix + "/images/icon_error.png",
+            img: "themes/facelift/images/icon_error.png",
         });
         return elements;
     }
@@ -941,7 +917,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .style("width", "200px");
 
         let options = select
-            .on("change", () => this._change_line_style())
+            .on("change", event => this._change_line_style(event))
             .selectAll("option")
             .data(["straight", "round", "elbow"]);
         options.exit().remove();
@@ -958,8 +934,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .text(d => d);
     }
 
-    _change_line_style() {
-        let new_line_style = d3.select(d3.event.target).property("value");
+    _change_line_style(event) {
+        let new_line_style = d3.select(event.target).property("value");
         this.viewport.get_hierarchy_list().forEach(node_chunk => {
             node_chunk.layout_instance.line_config.style = new_line_style;
             node_chunk.layout_settings.config.line_config.style = new_line_style;
@@ -1014,6 +990,13 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         nodes_selection
             .exit()
             .each(node_data => this._remove_node(node_data))
+            .classed("node_element", false)
+            .transition()
+            .attr("transform", node => {
+                if (node.parent) return node.parent.selection.attr("transform");
+                else return node.selection.attr("transform");
+            })
+            .style("opacity", 0)
             .remove();
     }
 
@@ -1065,9 +1048,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             d3.select(this).datum(node_data);
         });
         // TODO: provide a function within the link instance to update its data
-        this.link_instances[
-            [link_data.source.data.id, link_data.target.data.id]
-        ].link_data = link_data;
+        this.link_instances[[link_data.source.data.id, link_data.target.data.id]].link_data =
+            link_data;
     }
 
     _remove_link(link_data) {
@@ -1094,7 +1076,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             this.node_instances[idx].node.data.transition_info.use_transition = false;
     }
 
-    render_context_menu(node_instance) {
+    render_context_menu(event, node_instance) {
         if (!this.viewport.layout_manager.edit_layout && !node_instance) return; // Nothing to show
 
         let node = null;
@@ -1105,13 +1087,13 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         } else {
             let last_zoom = this.viewport.last_zoom;
             coords = {
-                x: (d3.event.layerX - last_zoom.x) / last_zoom.k,
-                y: (d3.event.layerY - last_zoom.y) / last_zoom.k,
+                x: (event.layerX - last_zoom.x) / last_zoom.k,
+                y: (event.layerY - last_zoom.y) / last_zoom.k,
             };
         }
 
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
+        event.preventDefault();
+        event.stopPropagation();
 
         // TODO: remove this, apply general update pattern..
         this.div_selection.selectAll("#popup_menu").remove();
@@ -1137,7 +1119,6 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .merge(content);
 
         // Create li for each item
-        let elements = [];
         if (this.viewport.layout_manager.edit_layout) {
             // Add elements layout manager
             this._add_elements_to_context_menu(
@@ -1196,7 +1177,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         // Add optional click handler
         links.each((d, idx, nodes) => {
             if (d.on) {
-                d3.select(nodes[idx]).on("click", d => {
+                d3.select(nodes[idx]).on("click", (event, d) => {
                     d.on();
                     this.remove_context_menu();
                 });

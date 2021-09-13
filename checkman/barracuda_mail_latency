@@ -9,5 +9,5 @@ description:
  Upper levels of the mail latency are configurable. Default levels are
  set to 40, 60 seconds.
 
-inventory:
+discovery:
  One service is created.

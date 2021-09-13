@@ -98,7 +98,7 @@ div.node_vis {
 
   div.box,
   img.box {
-    background-color: $bg-color-default;
+    background-color: $bg-color;
     border: $node-vis-box-border;
     border-radius: 4px;
     box-shadow: $node-vis-box-shadow;
@@ -293,16 +293,16 @@ div.node_vis {
   }
 
   .state0 {
-    color: $black;
-    fill: rgb(19, 211, 137);
+    color: $font-color-black;
+    fill: $success;
   }
 
   .state1 {
-    fill: rgb(255, 254, 68);
+    fill: $warning;
   }
 
   .state2 {
-    fill: rgb(255, 50, 50);
+    fill: $danger;
   }
 
   .state3 {
@@ -349,7 +349,7 @@ div.node_vis {
 
   circle.style_indicator.focus {
     opacity: 0.5;
-    stroke: rgb(255, 254, 68);
+    stroke: $warning;
     stroke-width: 3;
   }
 
@@ -407,7 +407,7 @@ div.node_vis {
   }
 
   image.growth_possible {
-    filter: $node-vis-growth-img-filter;
+    filter: $dark-image-invert;
   }
 
   div#togglebuttons {
@@ -498,7 +498,7 @@ div.node_vis path.dashed,
 }
 
 svg text {
-  fill: $primary-font-color;
+  fill: $font-color;
 }
 
 div#main_window_layered {

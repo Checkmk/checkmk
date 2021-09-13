@@ -1,0 +1,14 @@
+Title: Fix service label notitification condition
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1628058679
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p9
+
+In previous 2.0 versions the service label condition, which can be configured
+in notification rules, was not working as intended. The condition never matched
+and as a result no notification was triggered anymore once the service label
+condition was configured.

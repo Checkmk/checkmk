@@ -41,8 +41,10 @@ def check_jenkins_instance(_no_item, _no_params, parsed):
     if inst_desc is not None:
         yield 0, "Description: %s" % inst_desc.title()
 
-    for key, value, infotext in [("quietingDown", False, "Quieting Down"),
-                                 ("useSecurity", True, "Security used")]:
+    for key, value, infotext in [
+        ("quietingDown", False, "Quieting Down"),
+        ("useSecurity", True, "Security used"),
+    ]:
 
         state = 0
         parsed_data = parsed.get(key)

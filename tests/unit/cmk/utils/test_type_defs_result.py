@@ -3,13 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.utils.type_defs import result as _result
-
-Error = _result.Error
-OK = _result.OK
-Result = _result.Result
+from cmk.utils.type_defs.result import *
 
 
 class TestOk:

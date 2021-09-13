@@ -4,28 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import (
-    Any,
-    List,
-    Dict,
-    Mapping,
-    NamedTuple,
-    Generator,
-)
-from .agent_based_api.v1 import (
-    Service,
-    regex,
-    Result,
-    register,
-    State,
-)
+from typing import Any, Dict, Generator, List, Mapping, NamedTuple
 
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-    Parameters,
-)
+from .agent_based_api.v1 import regex, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
 # Output of old agent (< 1.1.10i2):
 # AeLookupSvc        running  Application Experience Lookup Service
 # Alerter            stopped  Alerter
@@ -73,7 +56,7 @@ Section = List[WinService]  # deterministic order!
 
 def parse_windows_services(string_table: StringTable) -> Section:
     def to_service(name: str, status: str, description: str) -> WinService:
-        cur_state, start_type = status.split('/', 1) if "/" in status else (status, "unknown")
+        cur_state, start_type = status.split("/", 1) if "/" in status else (status, "unknown")
         return WinService(name, cur_state, start_type, description)
 
     return [
@@ -114,12 +97,12 @@ def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -
     # Therefore always skip the default settings which are the last element of the list.
     for value in params[:-1]:
         # Now extract the list of service regexes
-        svcs = value.get('services', [])
-        service_state = value.get('state', None)
-        start_mode = value.get('start_mode', None)
+        svcs = value.get("services", [])
+        service_state = value.get("state", None)
+        start_mode = value.get("start_mode", None)
         if svcs:
             for svc in svcs:
-                rules.append(('~' + svc, service_state, start_mode))
+                rules.append(("~" + svc, service_state, start_mode))
         else:
             rules.append((None, service_state, start_mode))
 
@@ -130,7 +113,7 @@ def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -
 
 def check_windows_services_single(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> Generator[Result, None, None]:
     """
@@ -139,7 +122,7 @@ def check_windows_services_single(
     ...    params={'additional_servicenames': [], 'else': 0, 'states': [('running', 'auto', 0)]},
     ...    section=[WinService(name='GoodService', state='stopped', start_type='demand', description='nixda')]):
     ...   print(result)
-    Result(state=<State.OK: 0>, summary='nixda: stopped (start type is demand)', details='nixda: stopped (start type is demand)')
+    Result(state=<State.OK: 0>, summary='nixda: stopped (start type is demand)')
     """
     # allow to match agains the internal name or agains the display name of the service
     additional_names = params.get("additional_servicenames", [])
@@ -148,8 +131,9 @@ def check_windows_services_single(
             continue
 
         for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
-            if ((t_state is None or t_state == service.state) and
-                (t_start_type is None or t_start_type == service.start_type)):
+            if (t_state is None or t_state == service.state) and (
+                t_start_type is None or t_start_type == service.start_type
+            ):
                 this_state = mon_state
                 break
             this_state = params.get("else", 2)
@@ -162,7 +146,7 @@ def check_windows_services_single(
 
 def check_windows_services(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> Generator[Result, None, None]:
     results = list(check_windows_services_single(item, params, section))
@@ -174,7 +158,7 @@ def check_windows_services(
 
 def cluster_check_windows_services(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     # A service may appear more than once (due to clusters).
@@ -202,7 +186,7 @@ def cluster_check_windows_services(
 register.check_plugin(
     name="services",
     service_name="Service %s",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_ruleset_name="inventory_services_rules",
     discovery_function=discovery_windows_services,
     discovery_default_parameters=WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
@@ -218,7 +202,7 @@ def discovery_services_summary(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def check_services_summary(params: Parameters, section: Section) -> CheckResult:
+def check_services_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
     blacklist = params.get("ignored", [])
     stoplist = []
     num_blacklist = 0
@@ -244,7 +228,7 @@ def check_services_summary(params: Parameters, section: Section) -> CheckResult:
     yield Result(
         state=State(params.get("state_if_stopped", 0)) if stoplist else State.OK,
         summary=f"Stopped services: {len(stoplist)}",
-        details=("Stopped services: %s" % ', '.join(stoplist)) if stoplist else None,
+        details=("Stopped services: %s" % ", ".join(stoplist)) if stoplist else None,
     )
 
     if num_blacklist:

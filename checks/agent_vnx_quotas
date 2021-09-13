@@ -23,4 +23,4 @@ def agent_vnx_quotas_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['vnx_quotas'] = agent_vnx_quotas_arguments
+special_agent_info["vnx_quotas"] = agent_vnx_quotas_arguments

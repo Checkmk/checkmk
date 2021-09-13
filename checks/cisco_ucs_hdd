@@ -4,7 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # comNET GmbH, Fabian Binder - 2018-05-07
 
 # .1.3.6.1.4.1.9.9.719.1.45.4.1.9  cucsStorageLocalDiskOperability
@@ -17,19 +22,27 @@ from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildca
 
 def inventory_cisco_ucs_hdd(info):
     for status, ident, _model, _vendor, _size, _serial in info:
-        if status != '6':  # do not discover removed HDDs
+        if status != "6":  # do not discover removed HDDs
             yield ident, None
 
 
 def check_cisco_ucs_hdd(item, _no_params, info):
     for status, ident, model, vendor, size, serial in info:
         if ident == item:
-            state, state_readable = map_operability.get(status,
-                                                        (3, "Unknown, status code %s" % status))
-            size_readable = get_bytes_human_readable(int(size) * 1024 *
-                                                     1024)  # size is returned in MB
-            return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % \
-                (state_readable, size_readable, model, vendor, serial)
+            state, state_readable = map_operability.get(
+                status,
+                (3, "Unknown, status code %s" % status),
+            )
+            # size is returned in MB
+            # on migration: check whether to use render.size (MB) or render.bytes (MiB)
+            size_readable = get_bytes_human_readable(int(size or "0") * 1024 * 1024)
+            return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % (
+                state_readable,
+                size_readable,
+                model,
+                vendor,
+                serial,
+            )
 
 
 check_info["cisco_ucs_hdd"] = {
@@ -46,5 +59,6 @@ check_info["cisco_ucs_hdd"] = {
             "14",  # cucsStorageLocalDiskVendor
             "13",  # cucsStorageLocalDiskSize
             "12",  # cucsStorageLocalDiskSerial
-        ]),
+        ],
+    ),
 }

@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+def agent_kube_arguments(params, hostname, ipaddress):
+    args = ["--token", passwordstore_get_cmdline("%s", params["token"])]
+
+    if params.get("no-cert-check"):
+        args += ["--no-cert-check"]
+
+    args.append("--api-server-endpoint")
+    configured_endpoint_name, configured_endpoint = params["api-server-endpoint"]
+    if configured_endpoint_name == "url_custom":
+        args.append(configured_endpoint)
+        return args
+
+    args.append(
+        "https://%s"
+        % {
+            "hostname": hostname,
+            "ipaddress": ipaddress,
+        }[configured_endpoint_name]
+    )
+
+    for arg_name, arg_value in configured_endpoint.items():
+        args.append(f"--{arg_name}")
+        args.append(str(arg_value))
+
+    return args
+
+
+special_agent_info["kube"] = agent_kube_arguments

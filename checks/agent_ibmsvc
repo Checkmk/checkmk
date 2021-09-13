@@ -16,4 +16,4 @@ def agent_ibmsvc_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['ibmsvc'] = agent_ibmsvc_arguments
+special_agent_info["ibmsvc"] = agent_ibmsvc_arguments

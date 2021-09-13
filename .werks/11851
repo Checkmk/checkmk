@@ -1,0 +1,31 @@
+Title: Windows agent MSI checks that Windows OS is appropriate for installation
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1614256116
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.1.0i1
+
+Previously, it was possible to configure the Windows agent in WATO in such 
+a way that installing on older operating systems would cause the Windows 
+agent updater to fail( or make such plugins as mk_jolokia or mk_logwatch more 
+inoperable). For example: setting of the <tt>Standard python environment(3.8+ )</tt> 
+and deploy such MSI on Windows 2008. This could cause complete falling out of the 
+host of the monitoring, because the installed standard Python, 3.8+, can't work 
+on Windows 2008.
+
+With this release the problem has been solved. If during deployment configuration 
+is not supported by Windows OS, the installation will not be performed: the 
+MSI will always check Windows version and stops own installation if, Windows OS 
+doesn't match to MSI requirements. The host will continue to operates normally in 
+any case. 
+
+Nevertheless, you need to fix the configuration in WATO in the order to make 
+the update for older Windows system. In the case of the aforementioned example, 
+you have to select <tt>Deploy legacy environment (Python 3.4 + standard set of modules)</tt> 
+in the rule <tt>Install Python runtime environment</tt>, activate changes and bake 
+the agent.
+
+

@@ -15,5 +15,5 @@ description:
 item:
  The channel dio index
 
-inventory:
+discovery:
  One service is created for each register found on the device.

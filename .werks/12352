@@ -1,0 +1,22 @@
+Title: Allow to disable management board checks in <i>Disabled checks</i>
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615299991
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Due to a regression no check plugins could be disabled for management
+interfaces from version 2.0.0i1 to 2.0.0.
+
+Users were unable to edit existing rules if they included check plugins
+starting with <tt>mgmt_</tt>, and to create new rules to disable check
+plugins discovered on management boards (unless they were separate Checkmk hosts).
+
+You can now disable check plugins for regular hosts and management boards
+separately in the ruleset <i>"Disabled checks"</i>.
+
+Previously configured rules will continue to work, and can be edited.

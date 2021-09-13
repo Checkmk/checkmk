@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.emcvnx import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -22,14 +26,14 @@ def check_emcvnx_agent(item, _no_params, parsed):
     for line in errors:
         # Only handle real errors here not e.g. certificate errors handled by
         # the info check.
-        if line.startswith('Error'):
+        if line.startswith("Error"):
             yield 2, line
 
     for key, value in output:
         yield 0, "%s: %s" % (key, value)
 
 
-check_info['emcvnx_agent'] = {
+check_info["emcvnx_agent"] = {
     "parse_function": parse_emcvnx_agent,
     "inventory_function": inventory_emcvnx_agent,
     "check_function": check_emcvnx_agent,

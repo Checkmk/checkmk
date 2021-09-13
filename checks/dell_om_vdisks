@@ -4,7 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # sample agent output:
 #
 # <<<omreport_vdisk>>>
@@ -38,9 +43,12 @@ def check_dell_om_vdisks(item, params, parsed):
         if parsed[item]["State"] != "Ready":
             status = 2
 
-        return status, "Device: %s, Status: %s, State: %s, Layout: %s" %\
-             (parsed[item]["Device Name"], parsed[item]["Status"],
-              parsed[item]["State"], parsed[item]["Layout"])
+        return status, "Device: %s, Status: %s, State: %s, Layout: %s" % (
+            parsed[item]["Device Name"],
+            parsed[item]["Status"],
+            parsed[item]["State"],
+            parsed[item]["Layout"],
+        )
 
 
 check_info["dell_om_vdisks"] = {

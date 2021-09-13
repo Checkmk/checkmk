@@ -6,7 +6,13 @@ Debug/
 Release/
 x86/
 x64/
+packages/
 *.ipch
 extlibs/
 .vs/
 *vcxproj.user
+*.h.hpp
+compile_commands.json
+
+.clang-tidy.cpt_backup
+.clang-tidy

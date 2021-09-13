@@ -36,8 +36,10 @@ raritan_pdu_ocprot_current_default_levels = (14.0, 15.0)
 
 
 def parse_raritan_pdu_ocprot(info):
-    flattened_info = [[end_oid, state, value, scale]
-                      for (end_oid, state, value), (scale,) in zip(info[0], info[1])]
+    flattened_info = [
+        [end_oid, state, value, scale]
+        for (end_oid, state, value), (scale,) in zip(info[0], info[1])
+    ]
     parsed = {}
     for end_oid, state, value, scale in flattened_info:
         protector_id = "C" + end_oid.split(".")[1]  # 1.5.1 --> Item will be "C5"
@@ -65,16 +67,23 @@ def check_raritan_pdu_ocprot(item, params, data):
 
 check_info["raritan_pdu_ocprot"] = {
     "parse_function": parse_raritan_pdu_ocprot,
-    "inventory_function": discover(lambda key, value: True,
-                                   default_params="raritan_pdu_ocprot_current_default_levels"),
+    "inventory_function": discover(
+        lambda key, value: True, default_params="raritan_pdu_ocprot_current_default_levels"
+    ),
     "check_function": check_raritan_pdu_ocprot,
     "has_perfdata": True,
     "service_description": "Overcurrent Protector %s",
     "group": "ocprot_current",
-    "snmp_info": [(".1.3.6.1.4.1.13742.6.5.3.3.1", [
-        OID_END,
-        "3",
-        "4",
-    ]), (".1.3.6.1.4.1.13742.6.3.4.4.1", ["7"])],
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.13742.6.5.3.3.1",
+            [
+                OID_END,
+                "3",
+                "4",
+            ],
+        ),
+        (".1.3.6.1.4.1.13742.6.3.4.4.1", ["7"]),
+    ],
     "snmp_scan_function": lambda oid: "13742" in oid(".1.3.6.1.2.1.1.2.0"),
 }

@@ -25,7 +25,7 @@ body.mobile {
   }
 
   div.command_group a {
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
   }
 
   table.data {
@@ -43,7 +43,7 @@ body.mobile {
     width: 100%;
 
     tr.header {
-      color: rgb(0, 0, 0);
+      color: $font-color-black;
     }
 
     > tbody > tr.data > td {
@@ -55,7 +55,7 @@ body.mobile {
   }
 
   td.nonstatus {
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
   }
 
   /* Forms for filters and commands */
@@ -91,53 +91,30 @@ body.mobile {
     }
   }
 
-  /* Perfometers */
-  td.perfometer {
-    width: 70px;
-    height: 14px;
-
-    * {
-      padding: 0;
-      font-size: 9px;
-      font-weight: normal;
-      color: rgb(51, 51, 51);
+  .ui-header,
+  .ui-footer {
+    .ui-title {
+      margin: 0.6em 46px 0.8em;
     }
-
-    div.content {
-      width: 69px;
-      background-color: rgb(255, 255, 0);
-    }
-
-    div.title {
-      top: 2px;
-      width: 70px;
-    }
-
-    div.glass {
-      width: 69px;
-      height: 14px;
-    }
-
-    table {
-      width: 70px;
-      height: 14px;
-    }
-  }
-
-  table.data td.perfometer td.inner {
-    height: 14px;
-  }
-
-  .ui-header .ui-title,
-  .ui-footer .ui-title {
-    margin: 0.6em 46px 0.8em;
   }
 
   .ui-li-aside.state {
+    &.state0 {
+      background-color: $color-state-success-background;
+    }
+
+    &.state1 {
+      background-color: $color-state-1-background;
+    }
+
+    &.state2 {
+      background-color: $color-state-2-background;
+    }
+
     width: 4.5em;
     text-align: center;
-    border-radius: 5px;
-    box-shadow: 0 0 2px rgb(68, 68, 68);
+    border-radius: $spacing;
+    padding: 2px;
   }
 
   td.pnpgraph img {
@@ -150,12 +127,16 @@ body.mobile {
 
   #loginhead,
   #loginfoot {
-    color: rgb(68, 68, 68);
+    color: $font-color-dimmed;
     text-align: center;
   }
 
   #loginhead {
     margin: 1em;
+  }
+
+  input {
+    height: initial;
   }
 
   #loginfoot {
@@ -196,7 +177,7 @@ body.mobile {
         display: inline-block;
         width: 40px;
         overflow: hidden;
-        color: rgb(0, 0, 0);
+        color: $font-color-black;
 
         img {
           margin-left: 0;
@@ -211,6 +192,23 @@ body.mobile {
       li {
         display: inline-block;
         margin: 0;
+      }
+    }
+  }
+
+  input.button {
+    width: 100%;
+    height: 100%;
+    margin-top: 0;
+    background-color: $white;
+    border-radius: $spacing;
+  }
+
+  input[type="checkbox"] {
+    &,
+    &:checked {
+      + label::before {
+        content: none;
       }
     }
   }

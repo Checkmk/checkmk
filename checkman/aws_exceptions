@@ -10,5 +10,5 @@ description:
  The service is {OK} if no exceptions occur
  otherwise it goes {CRIT}.
 
-inventory:
+discovery:
  One service is created.

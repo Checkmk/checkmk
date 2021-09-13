@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result
 
+from cmk.core_helpers.cache import FileCacheFactory
+
 import cmk.base.modes.check_mk as check_mk
-from cmk.base.checkers import FileCacheFactory
-from cmk.base.checkers.tcp import TCPSource
+from cmk.base.sources.tcp import TCPSource
 
 
 class TestModeDumpAgent:
@@ -30,7 +31,7 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPSource, "fetch", lambda self: result.OK(raw_data))
+        monkeypatch.setattr(TCPSource, "fetch", lambda self, mode: result.OK(raw_data))
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):

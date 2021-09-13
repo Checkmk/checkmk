@@ -4,20 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
 import argparse
-import logging
 import json
+import logging
 import sys
+from typing import NamedTuple
+
 import requests
-from requests.exceptions import ConnectionError as RequestsConnectionError
 import urllib3  # type: ignore[import]
+from requests.exceptions import ConnectionError as RequestsConnectionError
+
 import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 cmk.utils.password_store.replace_passwords()
 
-Section = namedtuple('Section', ['name', 'uri'])
+
+class Section(NamedTuple):
+    name: str
+    uri: str
 
 
 def main(argv=None):
@@ -29,74 +34,82 @@ def main(argv=None):
 
     # possible sections to query
     sections = [
-        Section(name="cluster",
-                uri="overview?columns="
-                "cluster_name,"
-                "object_totals.connections,"
-                "object_totals.channels,"
-                "object_totals.queues,"
-                "object_totals.consumers,"
-                "queue_totals.messages,"
-                "queue_totals.messages_ready,"
-                "queue_totals.messages_unacknowledged,"
-                "message_stats.publish,"
-                "message_stats.publish_details.rate,"
-                "message_stats.deliver_get,"
-                "message_stats.deliver_get.rate,"
-                "rabbitmq_version,"
-                "erlang_version,"),
-        Section(name="nodes",
-                uri="nodes?columns="
-                "mem_used,"
-                "mem_limit,"
-                "mem_alarm,"
-                "disk_free_limit,"
-                "disk_free_alarm,"
-                "fd_total,"
-                "fd_used,"
-                "io_file_handle_open_attempt_count,"
-                "io_file_handle_open_attempt_count_details,"
-                "sockets_total,"
-                "sockets_used,"
-                "message_stats.disk_reads,"
-                "message_stats.disk_writes,"
-                "gc_num,"
-                "gc_num_details,"
-                "gc_bytes_reclaimed,"
-                "gc_bytes_reclaimed_details,"
-                "proc_total,"
-                "proc_used,"
-                "run_queue,"
-                "name,"
-                "type,"
-                "running,"
-                "uptime"),
-        Section(name="vhosts",
-                uri="vhosts?columns="
-                "memory,"
-                "messages,"
-                "messages_ready,"
-                "messages_unacknowledged,"
-                "message_stats.publish,"
-                "message_stats.publish_details.rate,"
-                "message_stats.deliver_get,"
-                "message_stats.deliver_get.rate,"
-                "name,"
-                "description"),
-        Section(name="queues",
-                uri="queues?columns="
-                "memory,"
-                "messages,"
-                "messages_ready,"
-                "messages_unacknowledged,"
-                "message_stats.publish,"
-                "message_stats.publish_details.rate,"
-                "message_stats.deliver_get,"
-                "message_stats.deliver_get.rate,"
-                "name,"
-                "node,"
-                "type,"
-                "state"),
+        Section(
+            name="cluster",
+            uri="overview?columns="
+            "cluster_name,"
+            "object_totals.connections,"
+            "object_totals.channels,"
+            "object_totals.queues,"
+            "object_totals.consumers,"
+            "queue_totals.messages,"
+            "queue_totals.messages_ready,"
+            "queue_totals.messages_unacknowledged,"
+            "message_stats.publish,"
+            "message_stats.publish_details.rate,"
+            "message_stats.deliver_get,"
+            "message_stats.deliver_get.rate,"
+            "rabbitmq_version,"
+            "erlang_version,",
+        ),
+        Section(
+            name="nodes",
+            uri="nodes?columns="
+            "mem_used,"
+            "mem_limit,"
+            "mem_alarm,"
+            "disk_free_limit,"
+            "disk_free_alarm,"
+            "fd_total,"
+            "fd_used,"
+            "io_file_handle_open_attempt_count,"
+            "io_file_handle_open_attempt_count_details,"
+            "sockets_total,"
+            "sockets_used,"
+            "message_stats.disk_reads,"
+            "message_stats.disk_writes,"
+            "gc_num,"
+            "gc_num_details,"
+            "gc_bytes_reclaimed,"
+            "gc_bytes_reclaimed_details,"
+            "proc_total,"
+            "proc_used,"
+            "run_queue,"
+            "name,"
+            "type,"
+            "running,"
+            "uptime",
+        ),
+        Section(
+            name="vhosts",
+            uri="vhosts?columns="
+            "memory,"
+            "messages,"
+            "messages_ready,"
+            "messages_unacknowledged,"
+            "message_stats.publish,"
+            "message_stats.publish_details.rate,"
+            "message_stats.deliver_get,"
+            "message_stats.deliver_get.rate,"
+            "name,"
+            "description",
+        ),
+        Section(
+            name="queues",
+            uri="queues?columns="
+            "memory,"
+            "messages,"
+            "messages_ready,"
+            "messages_unacknowledged,"
+            "message_stats.publish,"
+            "message_stats.publish_details.rate,"
+            "message_stats.deliver_get,"
+            "message_stats.deliver_get.rate,"
+            "name,"
+            "node,"
+            "type,"
+            "state",
+        ),
     ]
 
     try:
@@ -164,7 +177,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
-    logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
+    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
 def parse_arguments(argv):
@@ -180,14 +193,14 @@ def parse_arguments(argv):
     parser.add_argument(
         "--debug",
         action="store_true",
-        help='''Debug mode: raise Python exceptions''',
+        help="""Debug mode: raise Python exceptions""",
     )
     parser.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
+        "-v",
+        "--verbose",
+        action="count",
         default=0,
-        help='Verbose mode (for even more output use -vvv)',
+        help="Verbose mode (for even more output use -vvv)",
     )
     parser.add_argument(
         "-P",
@@ -221,8 +234,8 @@ def parse_arguments(argv):
         "-m",
         "--sections",
         default=sections,
-        help="Comma separated list of data to query. Possible values: %s (default: all)" %
-        ",".join(sections),
+        help="Comma separated list of data to query. Possible values: %s (default: all)"
+        % ",".join(sections),
     )
     parser.add_argument(
         "--hostname",

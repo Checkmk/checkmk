@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.1.0i1"
+
 # Informix
 # Make ENV-VARs avail for subshells
 set -a
@@ -17,7 +25,7 @@ set -a
 #   '----------------------------------------------------------------------'
 
 
-function do_check () {
+do_check() {
     # $1:section, $2:excludelist
     if echo "$2" | grep -qe "${1}"; then
         return 1
@@ -27,16 +35,15 @@ function do_check () {
 }
 
 
-function sql () {
+sql() {
     db="sysmaster"
     sqltxt="$1"
-    dbaccess_par=
     export DBDELIMITER="|"
     echo "$sqltxt" | dbaccess ${db}
 }
 
 
-function set_excludes () {
+set_excludes() {
     excludes=""
     if [ "$EXCLUDES" = "ALL" ]; then
         excludes="$all_sections"
@@ -73,7 +80,7 @@ function set_excludes () {
 all_sections="sessions locks tabextents dbspaces logusage"
 
 
-function informix_status(){
+informix_status(){
     echo "<<<informix_status:sep(58)>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     $INFORMIXDIR/bin/onstat - >/dev/null 2>&1
@@ -85,7 +92,7 @@ function informix_status(){
 }
 
 
-function informix_sessions(){
+informix_sessions(){
     echo "<<<informix_sessions>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     # don't count our own session
@@ -93,7 +100,7 @@ function informix_sessions(){
 }
 
 
-function informix_locks(){
+informix_locks(){
     echo "<<<informix_locks>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     # don't count our own session
@@ -101,7 +108,7 @@ function informix_locks(){
 }
 
 
-function informix_tabextents(){
+informix_tabextents(){
     echo "<<<informix_tabextents>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select first 10
@@ -119,7 +126,7 @@ function informix_tabextents(){
 }
 
 
-function informix_dbspaces(){
+informix_dbspaces(){
     echo "<<<informix_dbspaces>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select
@@ -143,7 +150,7 @@ function informix_dbspaces(){
 }
 
 
-function informix_logusage(){
+informix_logusage(){
     echo "<<<informix_logusage>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select 'LOGUSAGE',

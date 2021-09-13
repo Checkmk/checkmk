@@ -1,8 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
-
-// provides basic api to start and stop service
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 #ifndef ps_h__
@@ -15,34 +14,31 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 namespace ps {
 constexpr std::wstring_view kSepString = L",";
 }
 
-time_t ConvertWmiTimeToHumanTime(const std::string& creation_date) noexcept;
+time_t ConvertWmiTimeToHumanTime(const std::string& creation_date);
 
 class Ps : public Asynchronous {
 public:
     Ps() : Asynchronous(cma::section::kPsName, '\t') {}
 
-    Ps(const std::string& Name, char Separator)
-        : Asynchronous(Name, Separator) {}
+    Ps(const std::string& name, char separator)
+        : Asynchronous(name, separator) {}
 
-    virtual void loadConfig();
+    void loadConfig() override;
 
 private:
     std::string makeBody() override;
     bool use_wmi_;
     bool full_path_;
 };
-std::string ProducePsWmi(bool FullPath);
+std::string ProducePsWmi(bool use_full_path);
 std::wstring GetProcessListFromWmi(std::wstring_view separator);
-}  // namespace provider
 
-};  // namespace cma
+};  // namespace cma::provider
 
 #endif  // ps_h__

@@ -10,13 +10,13 @@
 #   "Ingress Dequeue Packets" instead of "brcdTMStatsIngressDequeuePkts"
 
 factory_settings["brocade_tm_default_levels"] = {
-    'brcdTMStatsTotalIngressPktsCnt': (1000, 10000),
-    'brcdTMStatsIngressEnqueuePkts': (1000, 10000),
-    'brcdTMStatsEgressEnqueuePkts': (1000, 10000),
-    'brcdTMStatsIngressDequeuePkts': (1000, 10000),
-    'brcdTMStatsIngressTotalQDiscardPkts': (1000, 10000),
-    'brcdTMStatsIngressOldestDiscardPkts': (1000, 10000),
-    'brcdTMStatsEgressDiscardPkts': (1000, 10000),
+    "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
+    "brcdTMStatsIngressEnqueuePkts": (1000, 10000),
+    "brcdTMStatsEgressEnqueuePkts": (1000, 10000),
+    "brcdTMStatsIngressDequeuePkts": (1000, 10000),
+    "brcdTMStatsIngressTotalQDiscardPkts": (1000, 10000),
+    "brcdTMStatsIngressOldestDiscardPkts": (1000, 10000),
+    "brcdTMStatsEgressDiscardPkts": (1000, 10000),
 }
 
 
@@ -32,13 +32,13 @@ def check_brocade_tm(item, params, info):
         if line[0] == item:
             tm = {}
 
-            tm['TotalIngressPktsCnt'] = line[1]
-            tm['IngressEnqueuePkts'] = line[2]
-            tm['EgressEnqueuePkts'] = line[3]
-            tm['IngressDequeuePkts'] = line[4]
-            tm['IngressTotalQDiscardPkts'] = line[5]
-            tm['IngressOldestDiscardPkts'] = line[6]
-            tm['EgressDiscardPkts'] = line[7]
+            tm["TotalIngressPktsCnt"] = line[1]
+            tm["IngressEnqueuePkts"] = line[2]
+            tm["EgressEnqueuePkts"] = line[3]
+            tm["IngressDequeuePkts"] = line[4]
+            tm["IngressTotalQDiscardPkts"] = line[5]
+            tm["IngressOldestDiscardPkts"] = line[6]
+            tm["EgressDiscardPkts"] = line[7]
 
             now = time.time()
             infotext = ""
@@ -72,14 +72,14 @@ def check_brocade_tm(item, params, info):
 
 
 check_info["brocade_tm"] = {
-    'check_function': check_brocade_tm,
-    'inventory_function': inventory_brocade_tm,
-    'service_description': 'TM %s',
-    'has_perfdata': True,
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
-    'group': 'brocade_tm',
-    'default_levels_variable': 'brocade_tm_default_levels',
-    'snmp_info': (
+    "check_function": check_brocade_tm,
+    "inventory_function": inventory_brocade_tm,
+    "service_description": "TM %s",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
+    "group": "brocade_tm",
+    "default_levels_variable": "brocade_tm_default_levels",
+    "snmp_info": (
         ".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",
         [
             3,  # 'brcdTMStatsDescription',
@@ -90,5 +90,6 @@ check_info["brocade_tm"] = {
             11,  # 'brcdTMStatsIngressTotalQDiscardPkts',
             13,  # 'brcdTMStatsIngressOldestDiscardPkts',
             15,  # 'brcdTMStatsEgressDiscardPkts',
-        ]),
+        ],
+    ),
 }

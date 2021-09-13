@@ -4,8 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.arbor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.9694.1.6.2.3.0 2070 --> PRAVAIL-MIB::deviceCpuLoadAvg1min.0
 # .1.3.6.1.4.1.9694.1.6.2.4.0 2059 --> PRAVAIL-MIB::deviceCpuLoadAvg5min.0
 # .1.3.6.1.4.1.9694.1.6.2.5.0 2059 --> PRAVAIL-MIB::deviceCpuLoadAvg15min.0
@@ -14,7 +24,7 @@ from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcar
 # .1.3.6.1.4.1.9694.1.6.2.8.0 0 --> PRAVAIL-MIB::deviceSwapSpaceUsage.0
 # .1.3.6.1.4.1.9694.1.6.2.39.0 43 --> PRAVAIL-MIB::pravailOverrunDropRatePps.0
 
-factory_settings['arbor_memory_default_levels'] = ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS
+factory_settings["arbor_memory_default_levels"] = ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_pravail(info):
@@ -36,7 +46,7 @@ check_info["arbor_pravail"] = {
     "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory_arbor",
-    'default_levels_variable': 'arbor_memory_default_levels',
+    "default_levels_variable": "arbor_memory_default_levels",
     "snmp_info": (
         ".1.3.6.1.4.1.9694.1.6.2",
         [
@@ -48,7 +58,8 @@ check_info["arbor_pravail"] = {
             "8.0",  # deviceSwapSpaceUsage
             "1.0",  # pravailHostFault
             "39.0",  # pravailOverrunDropRatePps
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Pravail"),
 }
 

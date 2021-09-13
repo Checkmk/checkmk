@@ -12,7 +12,7 @@ description:
 item:
  Name of the group
 
-inventory:
+discovery:
  One service is created for each group.
 
 cluster:

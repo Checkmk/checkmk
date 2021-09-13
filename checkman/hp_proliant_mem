@@ -16,5 +16,5 @@ item:
  The slot in which the memory board or cartridge is installed.
  A value of 0 indicates memory installed directly on the system board.
 
-inventory:
+discovery:
  One check is automatically created for each present memory module.

@@ -16,12 +16,12 @@
 
 def inv_fritz(parsed):
 
-    node_hw = inv_tree('hardware.system.')
-    node_hw['model'] = parsed.get('VersionDevice')
-    node_sw = inv_tree('software.os.')
-    node_sw['version'] = parsed.get('VersionOS')
+    node_hw = inv_tree("hardware.system.")
+    node_hw["model"] = parsed.get("VersionDevice")
+    node_sw = inv_tree("software.os.")
+    node_sw["version"] = parsed.get("VersionOS")
 
 
-inv_info['fritz'] = {
+inv_info["fritz"] = {
     "inv_function": inv_fritz,
 }

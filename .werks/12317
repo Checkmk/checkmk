@@ -1,0 +1,23 @@
+Title: Windows agent reinstalls Python module instantly
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1615883858
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0i1
+
+Previously, automatic update of the Windows agent with Python module installed 
+has lead to long delays in the monitoring - up to few minutes, because the 
+installation of the Python module requires a lot of CPU time.
+
+Since this release the problem is solved. Windows agent instead of the 
+uninstalling of the Python module in it's uninstallation phase, moves the 
+module to the temporary cache. If incoming installation of the Windows agent 
+uses the same version og Python module, then Python module will be moved from 
+cache to the ProgramData directory. If the versions are different, then old 
+method will be used, i.e. full installation.
+
+Because changing of the version of the Python module happens very rarely, the 
+usual update of the Windows agent requires no more than few seconds.

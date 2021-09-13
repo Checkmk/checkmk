@@ -15,6 +15,6 @@ description:
 item:
  Number of the sensor
 
-inventory:
+discovery:
  One service is created for each sensor if they are in another state
  than "notPresent".

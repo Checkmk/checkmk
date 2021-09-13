@@ -29,6 +29,8 @@ def _local_path(global_path: Union[str, Path]) -> Path:
 omd_root = _path(os.environ.get("OMD_ROOT", ""))
 opt_root = _path("/opt" + omd_root)
 
+mkbackup_lock_dir = Path("/run/lock/mkbackup")
+trusted_ca_file = _omd_path("var/ssl/ca-certificates.crt")
 default_config_dir = _omd_path("etc/check_mk")
 main_config_file = _omd_path("etc/check_mk/main.mk")
 final_config_file = _omd_path("etc/check_mk/final.mk")
@@ -61,7 +63,6 @@ nagios_binary = _omd_path("bin/nagios")
 apache_config_dir = _omd_path("etc/apache")
 htpasswd_file = _omd_path("etc/htpasswd")
 livestatus_unix_socket = _omd_path("tmp/run/live")
-pnp_rraconf_dir = _omd_path("share/check_mk/pnp-rraconf")
 livebackendsdir = _omd_path("share/check_mk/livestatus")
 inventory_output_dir = _omd_path("var/check_mk/inventory")
 inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
@@ -70,6 +71,7 @@ base_discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_l
 discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
+profile_dir = Path(var_dir, "web")
 crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
@@ -95,6 +97,7 @@ agent_based_plugins_dir = _base_plugins_dir / "agent_based"
 
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
+local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_notifications_dir = _local_path(notifications_dir)
 local_inventory_dir = _local_path(inventory_dir)
 local_check_manpages_dir = _local_path(check_manpages_dir)
@@ -107,5 +110,16 @@ local_bin_dir = _local_path(bin_dir)
 local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 
-_local_base_plugins_dir = Path(local_lib_dir, "check_mk", "base", "plugins")
-local_agent_based_plugins_dir = _local_base_plugins_dir / "agent_based"
+local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
+
+license_usage_dir = Path(var_dir, "license_usage")
+
+
+def make_experimental_config_file() -> Path:
+    """Returns file with experimental settings to be used.
+    Used to enable features which is "in development" and not good enough to be enabled by default.
+    Example of experimental.mk:
+    config_storage_format = "raw"
+    microcore_config_format = "pb"
+    """
+    return Path(default_config_dir) / "experimental.mk"

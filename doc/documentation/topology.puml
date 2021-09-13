@@ -1,0 +1,59 @@
+@startuml
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam monochrome true
+' Remove shadows
+skinparam shadowing false
+scale 0.5
+
+package users {
+    actor "Operator" as operator
+    actor "Admin" as admin
+}
+
+package external_systems {
+}
+
+package "[[../arch-comp-omd.html OMD: CheckMK run-time environment]]" as omd {
+    component apache {
+            component UI
+            interface HTTP
+    }
+    component "[[../arch-comp-core.html Monitoring Core]]" as cmc {
+        component agent_special
+        component checker
+        component Fetcher
+        component ICMPReceiver
+        component ICMPSender
+        component "[[../arch-comp-checkengine.html check_engine]]" as check_engine
+        interface REST
+        interface WebAPI
+    }
+    component cron
+    component DCD
+    component mkeventd
+    component mknotifyd
+    component rrdcached
+    component "[[../arch-comp-livestatus.html liveproxyd]]" as liveproxyd {
+        interface Livestatus
+    }
+
+    component "[[../arch-comp-template.html template_component]]" as template_component
+}
+
+package "[[../arch-comp-hosts.html hosts]]" as hosts {
+    package agent_based_host {
+        interface TCP
+        interface Syslog
+    }
+
+    package snmp_host {
+        interface SNMP
+        interface trap
+    }
+}
+users -- UI
+external_systems -- cmc
+cmc -- hosts
+
+@enduml

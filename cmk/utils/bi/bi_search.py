@@ -4,27 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Type, Any, Union, Set
+from typing import Any, Dict, List, Set, Type, Union
 
-from marshmallow import Schema, validate, fields
+from marshmallow import fields, validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.utils.type_defs import HostName
 from cmk.utils.bi.bi_lib import (
-    MacroMappings,
-    replace_macros,
-    bi_search_registry,
     ABCBISearch,
-    ReqConstant,
-    ReqDict,
-    ReqList,
-    ReqString,
-    ReqNested,
     ABCBISearcher,
+    bi_search_registry,
     BIHostData,
     BIHostSearchMatch,
     BIServiceSearchMatch,
+    replace_macros,
+    ReqConstant,
+    ReqDict,
+    ReqList,
+    ReqNested,
+    ReqString,
 )
+from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.macros import MacroMapping
+from cmk.utils.type_defs import HostName
 
 
 class BIAllHostsChoiceSchema(Schema):
@@ -58,9 +59,9 @@ class HostConditionsSchema(Schema):
     host_folder = ReqString(default="", example="servers/groupA")
     host_labels = ReqDict(default={}, example={"db": "mssql"})
     host_tags = ReqDict(default={}, example={})
-    host_choice = ReqNested(BIHostChoice,
-                            default={"type": "all_hosts"},
-                            example={"type": "all_hosts"})
+    host_choice = ReqNested(
+        BIHostChoice, default={"type": "all_hosts"}, example={"type": "all_hosts"}
+    )
 
 
 class ServiceConditionsSchema(HostConditionsSchema):
@@ -88,8 +89,13 @@ class BIEmptySearch(ABCBISearch):
     def schema(cls) -> Type["BIEmptySearchSchema"]:
         return BIEmptySearchSchema
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         return [{}]
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+        }
 
 
 class BIEmptySearchSchema(Schema):
@@ -116,12 +122,19 @@ class BIHostSearch(ABCBISearch):
     def schema(cls) -> Type["BIHostSearchSchema"]:
         return BIHostSearchSchema
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "conditions": self.conditions,
+            "refer_to": self.refer_to,
+        }
+
     def __init__(self, search_config: Dict[str, Any]):
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: List[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
@@ -134,8 +147,9 @@ class BIHostSearch(ABCBISearch):
         if isinstance(self.refer_to, tuple):
             refer_type, refer_config = self.refer_to
             if refer_type == "child_with":
-                return self._refer_to_children_with_results(search_matches, bi_searcher,
-                                                            refer_config)
+                return self._refer_to_children_with_results(
+                    search_matches, bi_searcher, refer_config
+                )
 
         raise NotImplementedError("Invalid refer to type %r" % (self.refer_to,))
 
@@ -143,17 +157,18 @@ class BIHostSearch(ABCBISearch):
         search_results = []
         for search_match in search_matches:
             search_result = {
-                "$1$": search_match.host.name,
+                "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                 "$HOSTNAME$": search_match.host.name,
-                "$HOSTALIAS$": search_match.host.alias
+                "$HOSTALIAS$": search_match.host.alias,
             }
             for idx, group in enumerate(search_match.match_groups):
                 search_result["$HOST_MG_%d$" % idx] = group
             search_results.append(search_result)
         return search_results
 
-    def _refer_to_children_results(self, search_matches: List[BIHostSearchMatch],
-                                   bi_searcher: ABCBISearcher) -> List[Dict]:
+    def _refer_to_children_results(
+        self, search_matches: List[BIHostSearchMatch], bi_searcher: ABCBISearcher
+    ) -> List[Dict]:
         search_results = []
         handled_children = set()
         for search_match in search_matches:
@@ -162,9 +177,9 @@ class BIHostSearch(ABCBISearch):
                     continue
                 handled_children.add(child)
                 search_result = {
-                    "$1$": bi_searcher.hosts[child].name,
+                    "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                     "$HOSTNAME$": bi_searcher.hosts[child].name,
-                    "$HOSTALIAS$": bi_searcher.hosts[child].alias
+                    "$HOSTALIAS$": bi_searcher.hosts[child].alias,
                 }
                 search_results.append(search_result)
         return search_results
@@ -178,18 +193,21 @@ class BIHostSearch(ABCBISearch):
                     continue
                 handled_parents.add(parent)
                 search_result = {
-                    "$1$": search_match.host.name,
+                    "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                     "$HOSTNAME$": search_match.host.name,
-                    "$HOSTALIAS$": search_match.host.alias
+                    "$HOSTALIAS$": search_match.host.alias,
                 }
                 search_result["$2$"] = parent
                 search_results.append(search_result)
 
         return search_results
 
-    def _refer_to_children_with_results(self, search_matches: List[BIHostSearchMatch],
-                                        bi_searcher: ABCBISearcher,
-                                        refer_config: dict) -> List[Dict]:
+    def _refer_to_children_with_results(
+        self,
+        search_matches: List[BIHostSearchMatch],
+        bi_searcher: ABCBISearcher,
+        refer_config: dict,
+    ) -> List[Dict]:
         referred_tags, referred_host_choice = refer_config
         all_children: Set[HostName] = set()
 
@@ -204,11 +222,15 @@ class BIHostSearch(ABCBISearch):
 
         # Apply host choice and host tags search
         matched_hosts, _matched_re_groups = bi_searcher.filter_host_choice(
-            children_host_data, referred_host_choice)
+            children_host_data, referred_host_choice
+        )
         matched_hosts = bi_searcher.filter_host_tags(matched_hosts, referred_tags)
 
         search_results = []
         for host in matched_hosts:
+            # Note: The parameter $1$ does not reflect the first regex match group for the initial host
+            #       This information was lost when all children were put into the all_children pool
+            #       We can live with it. The option is not used sensibly anywhere anyway :)
             search_result = {"$1$": host.name, "$HOSTNAME$": host.name, "$HOSTALIAS$": host.alias}
             search_results.append(search_result)
 
@@ -241,22 +263,31 @@ class BIServiceSearch(ABCBISearch):
     def schema(cls) -> Type["BIServiceSearchSchema"]:
         return BIServiceSearchSchema
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "conditions": self.conditions,
+        }
+
     def __init__(self, search_config: Dict[str, Any]):
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: List[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
         search_results = []
         for search_match in sorted(search_matches, key=lambda x: x.service_description):
             search_result = {
-                "$1$": search_match.host.name,
-                "$HOSTNAME$": search_match.host.name,
-                "$HOSTALIAS$": search_match.host.alias
+                "$1$": next(iter(search_match.host_match.match_groups), ""),
+                "$HOSTNAME$": search_match.host_match.host.name,
+                "$HOSTALIAS$": search_match.host_match.host.alias,
             }
-            for idx, group in enumerate(search_match.match_groups):
-                search_result["$%d$" % (idx + 2)] = group
+            for idx, group in enumerate(search_match.match_groups, start=2):
+                search_result["$%d$" % (idx)] = group
+
+            for idx, group in enumerate(search_match.host_match.match_groups):
+                search_result["$HOST_MG_%d$" % idx] = group
             search_results.append(search_result)
         return search_results
 
@@ -282,6 +313,12 @@ class BIFixedArgumentsSearch(ABCBISearch):
     def type(cls) -> str:
         return "fixed_arguments"
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "arguments": self.arguments,
+        }
+
     @classmethod
     def schema(cls) -> Type["BIFixedArgumentsSearchSchema"]:
         return BIFixedArgumentsSearchSchema
@@ -290,7 +327,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         results: List[Dict] = []
         new_vars = replace_macros(self.arguments, macros)
         for argument in new_vars:

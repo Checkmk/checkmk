@@ -27,26 +27,8 @@
 }
 
 .wato table.data {
-  border-style: none;
-  box-shadow: none;
-
-  &.job_table {
-    border: none;
-    box-shadow: none;
-  }
-
-  &:not(.job_table) th {
-    background: transparent;
-    border-radius: 0;
-
-    &.header_state {
-      color: rgb(119, 119, 119) !important;
-      background: transparent !important;
-    }
-  }
-
-  tr {
-    background-color: $wato-tr-bg-color;
+  th.header_state {
+    color: $font-color-dimmed !important; // prevents state colors in table headers
   }
 
   /* TODO: Reproduce this html element */
@@ -64,30 +46,6 @@
   }
 }
 
-/* Tables renderes in forms. */
-/* TODO: Reproduce these data tables within nform tables */
-.wato table.nform table.data {
-  box-shadow: 1px 1px 2px rgb(68, 68, 68);
-
-  th {
-    background-color: rgb(82, 114, 128);
-  }
-}
-
-.wato th {
-  /* TODO: Reproduce this html element */
-  &.left {
-    border-left-style: none;
-    border-radius: 4px 0 0;
-  }
-
-  /* TODO: Reproduce these .right elements */
-  &.right {
-    border-right-style: none;
-    border-radius: 0 4px 0 0;
-  }
-}
-
 .wato td.right {
   text-align: right;
 }
@@ -100,7 +58,7 @@
 /* TODO: Reproduce this html element */
 .wato div.sitestatus {
   padding: 0 10px;
-  font-size: 9px;
+  font-size: $font-size-small;
   font-weight: bold;
   text-align: center;
   vertical-align: middle;
@@ -151,34 +109,21 @@
   margin-right: 10px;
 }
 
-/* TODO: Reproduce these .dns .dnserror and .error elements */
-.wato td.dns {
-  color: rgb(102, 102, 102);
-}
-
-.wato td.dnserror {
-  color: rgb(255, 0, 0);
-}
-
-.wato td.error {
-  color: rgb(255, 0, 0);
-}
-
 .wato div.inherited {
-  color: $wato-inherited-color;
+  color: $font-color-dimmed;
 
   a {
-    color: $wato-inherited-color;
+    color: $font-color-dimmed;
   }
 
   b {
     font-weight: normal;
-    color: $primary-font-color;
+    color: $font-color;
   }
 }
 
 .wato td.inherited {
-  color: rgb(102, 102, 102);
+  color: $font-color-dimmed;
 }
 
 /* host validation error */
@@ -235,45 +180,92 @@ div#service_container {
 
   table.data {
     tr.data > td {
-      height: auto;
       padding: 3px 7px;
 
-      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-        border-top: none;
-        border-bottom: none;
+      &.state {
+        height: 100%;
+        padding: 0 1px;
       }
 
       &.service {
         width: 250px;
         max-width: 250px;
         min-width: 250px;
+        overflow-wrap: break-word;
       }
-    }
 
-    tr.groupheader {
-      background-color: transparent;
-    }
+      &.labelstate {
+        width: 130px;
+        max-width: 130px;
+        min-width: 130px;
+        overflow-wrap: break-word;
+      }
 
-    th {
-      color: #777;
-    }
+      &.expanding {
+        width: 100%;
+        min-width: 500px;
+      }
 
-    td h3 {
-      margin-top: 13px;
+      &.plugins {
+        min-width: 200px;
+      }
+
+      a {
+        line-height: 20px;
+      }
     }
   }
 
   h3 {
-    margin-top: 13px;
-    font-size: 13px;
-    color: #aaa;
-    text-transform: uppercase;
+    margin-top: 2 * $spacing;
 
     img {
       position: relative;
-      top: -1px;
-      margin-left: 5px;
     }
+  }
+}
+
+div#fixall_container {
+  background-color: $headline-color;
+  border-radius: 2px;
+
+  img {
+    float: left;
+    margin: 10px 0 0 10px;
+  }
+
+  ul {
+    float: left;
+    list-style: none;
+    margin: 15px 0 0 0;
+    padding-left: 10px;
+  }
+
+  li {
+    display: inline-block;
+    padding: 0 10px;
+    border-right: 1px solid $font-color;
+  }
+
+  li:last-child {
+    border-right: none;
+  }
+
+  span {
+    padding: 2px;
+  }
+
+  span.changed {
+    color: $font-color-green;
+    font-weight: $font-weight-bold;
+  }
+
+  input.button {
+    height: 25px;
+    padding: 5px 10px;
+    margin-left: 10px;
+    background-color: $success;
+    color: $font-color-black;
   }
 }
 
@@ -394,8 +386,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: 0;
       left: 0;
       overflow: hidden;
-      font-size: $font-size-default;
-      color: $host-folder-font-color;
+      color: $font-color-white;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -421,7 +412,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     left: 20px;
     padding: 0;
     overflow: hidden;
-    color: rgb(255, 255, 255);
+    color: $font-color-white;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -445,7 +436,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   &.newfolder {
     font-size: 80px;
     line-height: 145px;
-    color: rgb(220, 220, 220);
+    color: $font-color-light-grey;
     text-align: center;
     opacity: 0.4;
   }
@@ -455,7 +446,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
 .wato div.floatfolder div.title body.main .popup_menu span,
 body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
-  font-size: 13px;
   font-weight: 500;
   color: $font-color;
 }
@@ -489,14 +479,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   clear: left;
 }
 
-/* Information boxes displayed directly in the data area */
-.wato div.info {
-  padding-left: 1px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  color: $font-color;
-}
-
 /* Controls for the audit log paged mechanism */
 .wato div.paged_controls {
   position: relative;
@@ -513,8 +495,8 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   width: 500px;
   height: 140px;
   margin-top: 10px;
-  background-color: rgba(255, 255, 255, 0.3);
-  border: 1px solid rgb(255, 255, 255);
+  background-color: rgba($white, 0.3);
+  border: 1px solid $white;
   border-radius: 4px;
 
   div.nr {
@@ -523,10 +505,10 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     left: 9px;
     width: 20px;
     height: 20px;
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
     text-align: center;
     background-color: rgb(252, 211, 64);
-    border: 1px solid rgb(255, 255, 255);
+    border: 1px solid $white;
     border-radius: 10px;
 
     b {
@@ -538,9 +520,8 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   div.title {
     position: absolute;
     top: 12px;
-    font-size: 13px;
     font-weight: bold;
-    color: rgb(255, 255, 255);
+    color: $font-color-white;
 
     &.conditions {
       left: 40px;
@@ -557,7 +538,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     height: 90px;
     padding: 5px;
     background-color: rgb(167, 190, 195);
-    border: 1px solid rgb(255, 255, 255);
+    border: 1px solid $white;
     border-radius: 4px;
 
     &.conditions {
@@ -604,6 +585,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 
     &.tagify.display[readonly] tag {
       padding: 0;
+      margin-right: 0;
 
       div {
         margin: 0;
@@ -637,22 +619,25 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   margin: 0;
 }
 
+span.tagify__tag-text {
+  white-space: pre;
+}
+
 .wato table.data.ruleset tr.disabled td {
   * {
-    color: rgb(153, 153, 153);
+    color: $font-color-dimmed;
   }
 
   .tagify__tag-text {
     color: inherit;
   }
 
-  tag > div::before {
+  tag > div {
     opacity: 0.5;
   }
 }
 
 table.data.oddeven > tbody > .matches_search > td {
-  color: $matches-search-font-color;
   background-color: $matches-search-bg-color;
 
   &.buttons {
@@ -679,7 +664,6 @@ form#form_timeperiod td.vlof_content {
 .wato pre.ve_textarea {
   padding: 0;
   margin: 0;
-  font-size: 11px;
 }
 
 /* main menu */
@@ -701,14 +685,15 @@ div.filter_buttons {
   body.main .popup_menu & span {
     display: block;
     width: 330px;
-    height: 80px;
+    height: 70px;
     margin: 0 8px 8px 0;
     background: $bg-color-secondary;
     border: 1px solid $color-table-border;
+    border-radius: $theme-border-radius;
     box-shadow: none;
 
     &:hover {
-      background: $wato-a-hover-bg-color;
+      background: $input-button-hover-bg-color;
     }
   }
 
@@ -716,12 +701,8 @@ div.filter_buttons {
     position: relative;
     float: left;
     width: 317px;
-    padding: 0 0 14px;
+    padding: $spacing 0 0;
     border: $wato-a-border;
-
-    &:hover div.title {
-      color: $secondary-font-color;
-    }
   }
 
   div {
@@ -733,7 +714,6 @@ div.filter_buttons {
       left: 72px;
       padding: 0;
       font-weight: bold;
-      color: $secondary-link-color;
     }
 
     &.subtitle {
@@ -741,23 +721,23 @@ div.filter_buttons {
       top: 20px;
       left: 72px;
       width: 234px;
-      padding: 16px 0;
+      padding: 16px 0 0;
       overflow: hidden;
       font-size: $font-size-small;
       font-weight: 500;
       line-height: 1.5;
       letter-spacing: $letter-spacing-table;
-      color: $wato-subtitle-color;
+      color: $font-color-dimmed;
       text-rendering: optimizeLegibility;
     }
   }
 
   img {
     position: absolute;
-    top: 16px;
+    top: 22px;
     left: 16px;
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -794,18 +774,13 @@ div.filter_buttons {
   }
 
   a {
-    margin-right: 3px;
-    color: $primary-font-color;
+    color: $font-color;
     text-decoration: none;
     white-space: nowrap;
 
     &:hover {
       text-decoration: underline;
     }
-  }
-
-  .dots {
-    overflow: hidden;
   }
 
   div.rulecount {
@@ -821,18 +796,9 @@ div.filter_buttons {
   }
 }
 
-/* Page edit_ruleset */
-/* TODO: Check whether this is still needed
- * with white color it wasn't visible anyways */
-div.varname {
-  font-family: monospace, sans-serif;
-  color: rgb(255, 255, 255);
-}
-
 /* page "global settings*/
 .wato div.globalvars {
   a {
-    color: $primary-font-color;
     text-decoration: none;
 
     &:hover {
@@ -843,10 +809,15 @@ div.varname {
   td.simple a.modified,
   td.simple div.toggle_switch_container.modified,
   td.content a.modified > table {
-    padding: 1px 4px 2px;
-    margin-left: -4px;
-    border: 1px solid $globalvars-modified-border-color;
-    border-radius: 5px;
+    padding: 2px;
+    margin-left: -2px;
+    border: 1px solid $font-color-dimmed;
+
+    &.on {
+      border: 1px solid $success;
+    }
+
+    border-radius: $spacing;
     box-shadow: $globalvars-modified-box-shadow;
   }
 
@@ -857,7 +828,8 @@ div.varname {
   }
 
   td.simple div.toggle_switch_container {
-    width: 56px;
+    width: $toggle-switch-width;
+    height: $toggle-switch-height;
   }
 
   /* TODO: Reproduce this html class "vs_dict_text" */
@@ -914,6 +886,14 @@ div.varname {
   pointer-events: none;
 }
 
+.wato .pending_changes_header {
+  #row_info {
+    float: right;
+    padding-right: $spacing;
+    font-weight: $font-weight-default;
+  }
+}
+
 .wato table.changes {
   width: 100%;
 
@@ -922,7 +902,7 @@ div.varname {
   }
 
   tr.foreign.not_permitted td {
-    color: rgb(255, 0, 0);
+    color: $font-color-red;
   }
 }
 
@@ -933,73 +913,74 @@ div.varname {
   vertical-align: middle;
 }
 
-/* Replication */
-.wato table.data td.repprogress {
-  position: relative;
-  width: 160px;
-  padding: 0;
-  margin: 0;
-}
+.wato table.activation {
+  td.details {
+    div.warning,
+    div.error {
+      margin: 2px 0;
+    }
 
-.wato td.repprogress {
-  div.msg {
-    position: absolute;
-    top: 10px;
-    left: 0;
-    z-index: 20;
-    width: 160px;
-    height: 16px;
-    text-align: center;
-
-    &.state_success,
-    &.state_warning {
-      color: $dark-font-color;
+    pre {
+      white-space: pre-wrap;
     }
   }
 
-  div.progress {
-    position: absolute;
-    top: 4px;
-    left: 0;
-    z-index: 0;
-    width: 160px;
-    height: 24px;
-    padding-top: 10px;
-    font-size: 11px;
-    color: $black;
-    border-radius: $theme-border-radius;
-    box-shadow: none;
-    box-sizing: border-box;
+  td.repprogress {
+    position: relative;
+    width: 140px;
+    min-width: 140px;
+    padding: 0;
+    margin: 0;
 
-    &.in_progress {
-      background: $repprogress-progress-bg-color;
-      border-color: $repprogress-progress-border-color;
+    div.msg {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      z-index: 20;
+      width: 160px;
+      height: 16px;
+      text-align: center;
+
+      &.state_success,
+      &.state_warning {
+        color: $font-color-light-bg;
+      }
     }
 
-    &.state_success {
-      background: $color-state-success-background;
-      border-color: $color-state-success-border;
-    }
+    div.progress {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      z-index: 0;
+      width: 160px;
+      height: 24px;
+      padding-top: 10px;
+      color: $font-color-black;
+      border-radius: $theme-border-radius;
+      box-shadow: none;
+      box-sizing: border-box;
 
-    &.state_error {
-      background: $color-state-2-background;
-      border-color: $color-state-2-border;
-    }
+      &.in_progress {
+        background: $repprogress-progress-bg-color;
+      }
 
-    &.state_warning {
-      background: $yellow;
-      border-color: $color-state-1-border;
+      &.state_success {
+        background: $color-state-success-background;
+      }
+
+      &.state_error {
+        background: $color-state-2-background;
+      }
+
+      &.state_warning {
+        background: $yellow;
+      }
     }
   }
 }
 
 .wato td.tag-ellipsis {
   max-width: 300px;
-}
-
-/* TODO: Reproduce this html element */
-.wato td#repmsg_local {
-  width: 280px;
 }
 
 table.data tr.notification_context table {
@@ -1009,7 +990,7 @@ table.data tr.notification_context table {
 
   th,
   td {
-    font-family: monospace;
+    font-family: $font-family-monospace;
   }
 
   th {
@@ -1029,9 +1010,9 @@ table.data tr.notification_context table {
 /* TODO: Reproduce this dcd_log_entries html class */
 table.data tr.data.dcd_log_entries {
   > td {
-    font-family: monospace, sans-serif;
-    color: rgb(255, 255, 255);
-    background-color: rgb(0, 0, 0);
+    font-family: $font-family-monospace;
+    color: $font-color-white;
+    background-color: $black;
   }
 
   pre {
@@ -1055,30 +1036,30 @@ table.data tr.data.dcd_log_entries {
 
 .wato table.progress {
   width: 50%;
-  color: rgb(0, 0, 0);
-  background: $bg-color-tertiary;
+  color: $font-color-black;
+  background: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
 
   th {
     padding: 3px 0;
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
   }
 
   td {
     /* Log window */
     &.log {
       padding: 12px 12px 0;
-      font-family: monospace, sans-serif;
+      font-family: $font-family-monospace;
 
       > div {
         height: 250px;
         padding: 8px 16px;
         margin: 16px;
         overflow: auto;
-        font-family: monospace;
+        font-family: $font-family-monospace;
         font-weight: $font-weight-default;
-        color: $lightgrey;
+        color: $font-color-light-grey;
         text-align: left;
         background: $navigation-bg-color;
         border: 1px solid $color-table-border-dark;
@@ -1104,7 +1085,7 @@ table.data tr.data.dcd_log_entries {
         top: 12px;
         width: 100%;
         height: 22px;
-        background-color: rgb(255, 255, 255);
+        background-color: $white;
         border-spacing: 1px 2px;
       }
 
@@ -1145,7 +1126,7 @@ table.data tr.data.dcd_log_entries {
       padding: 24px 12px 18px;
 
       table {
-        border: 1px solid rgb(255, 255, 255);
+        border: 1px solid $white;
         border-collapse: collapse;
         border-spacing: 0;
       }
@@ -1153,7 +1134,7 @@ table.data tr.data.dcd_log_entries {
       th,
       td {
         padding: 6px 0;
-        border-bottom: 1px solid rgb(255, 255, 255);
+        border-bottom: 1px solid $white;
         border-color: $color-table-border;
       }
 
@@ -1165,7 +1146,7 @@ table.data tr.data.dcd_log_entries {
       td {
         width: 4em;
         text-align: right;
-        background-color: rgba(255, 255, 255, 0.3);
+        background-color: rgba($white, 0.3);
       }
     }
 
@@ -1191,6 +1172,10 @@ table.data tr.data.dcd_log_entries {
   }
 }
 
+.wato div.error pre {
+  white-space: pre-wrap;
+}
+
 /* TODO: Reproduce this html element */
 .wato div.error div.err {
   position: relative;
@@ -1200,7 +1185,7 @@ table.data tr.data.dcd_log_entries {
   padding: 2px 5px;
   margin: 2px;
   font-weight: bold;
-  color: rgb(0, 0, 0);
+  color: $font-color-black;
   background-color: rgb(255, 255, 0);
   border-radius: 3px;
   opacity: 0.9;
@@ -1212,18 +1197,11 @@ table.data tr.data.dcd_log_entries {
   width: 99%;
 }
 
-/* TODO: Reproduce these table.logwatch elements */
-table.logwatch {
-  tr.noreason {
-    color: rgb(137, 137, 137);
-  }
-
-  span.match {
-    padding: 0 2px 2px;
-    background-color: rgb(255, 255, 255);
-    border: 1px solid rgb(73, 118, 139);
-    border-radius: 4px;
-  }
+table.logwatch span.match {
+  padding: 0 2px 2px;
+  color: $font-color-light-bg;
+  background-color: $color-state-6-background;
+  border-radius: $theme-border-radius;
 }
 
 /* TODO: Reproduce these .multisite_conn_method elements */
@@ -1241,7 +1219,7 @@ table.multisite_conn_method td {
 table.data td.bi_rule_tree {
   b.treeangle {
     font-weight: normal;
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
   }
 
   ul.treeangle {
@@ -1278,9 +1256,9 @@ table.data td.bi_rule_tree {
   height: 113px;
   padding: 5px;
   overflow-y: scroll;
-  font-family: monospace, sans-serif;
+  font-family: $font-family-monospace;
   vertical-align: top;
-  background-color: $bg-color-default;
+  background-color: $bg-color;
   box-shadow: 1px 1px 3px rgb(136, 136, 136) inset;
   /* below resize option is css3 */
   resize: both;
@@ -1326,7 +1304,7 @@ table.data td.bi_rule_tree {
     }
 
     &.diag_failed {
-      background-color: $host-diag-failed-bg-color;
+      background-color: $input-error-bg-color;
     }
   }
 
@@ -1376,12 +1354,10 @@ table.setting td.reason {
   display: inline-block;
   float: none;
   width: 180px;
-  font-style: italic;
-  color: rgb(255, 255, 255);
+  color: $font-color;
 
-  i {
-    /* default value */
-    color: rgb(182, 200, 209);
+  span {
+    color: $font-color-dimmed; /* default value */
   }
 
   a {
@@ -1395,12 +1371,11 @@ table.setting td.reason {
 
 td.settingvalue.unused,
 td.settingvalue.unused td {
-  font-style: italic;
-  color: $td-unused-color;
+  color: $font-color-dimmed;
 }
 
 .wato table.nform div.title a {
-  color: $primary-font-color;
+  color: $font-color;
   text-decoration: none;
 
   &:hover {
@@ -1431,7 +1406,7 @@ table.nform.rulesettings td.legend {
     padding: 2px;
     margin: 0 5px 5px 0;
     text-overflow: ellipsis;
-    background: $bg-color-tertiary;
+    background: $bg-color-secondary;
     border: 1px solid $color-table-border;
     border-radius: 6px;
     box-shadow: none;
@@ -1538,33 +1513,6 @@ table.data.analyze_config td.buttons {
   display: block;
 }
 
-.wato h2,
 .wato h3 {
-  margin-bottom: $wato-h3-margin-bottom;
-
-  + div.info {
-    padding: $wato-info-padding;
-    padding-top: 10px;
-    margin-top: 0;
-    background-color: $data-container-bg-color;
-    border: $primary-border;
-  }
-}
-
-.wato h3 {
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: $font-weight-default;
-  letter-spacing: $letter-spacing-table;
-  color: $wato-h3-font-color;
-  text-transform: uppercase;
-}
-
-.wato table.data.job_table {
-  td div.info {
-    padding: $wato-info-padding;
-    margin: $wato-info-margin;
-    background-color: $data-container-bg-color;
-    border: $primary-border;
-  }
+  @include table-header-mixin;
 }

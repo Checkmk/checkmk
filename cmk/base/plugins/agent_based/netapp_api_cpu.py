@@ -4,14 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    TypedDict,
-)
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import register, type_defs
+from .utils.netapp_api import CPUSection
 
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>
@@ -24,17 +18,8 @@ from .agent_based_api.v1 import (
 # cpu-info clu1-01        cpu_busy 5340000        nvram-battery-status battery_ok
 # cpu-info clu1-02        cpu_busy 5400000        nvram-battery-status battery_ok
 
-Section = TypedDict(
-    'Section',
-    {
-        'clustermode': Dict[str, Dict[str, str]],
-        '7mode': Dict[str, str],
-    },
-    total=False,
-)
 
-
-def parse_netapp_api_cpu(string_table: type_defs.StringTable) -> Section:
+def parse_netapp_api_cpu(string_table: type_defs.StringTable) -> CPUSection:
     """
     >>> from pprint import pprint
     >>> pprint(parse_netapp_api_cpu([
@@ -55,7 +40,7 @@ def parse_netapp_api_cpu(string_table: type_defs.StringTable) -> Section:
                                  'num_processors': '2',
                                  'nvram-battery-status': 'battery_ok'}}}
     """
-    cpu_info: Section = {}
+    cpu_info: CPUSection = {}
     for line in string_table:
         if line[0].startswith("cpu-info"):  # clustermode
             _, node_name = line[0].split()
@@ -71,6 +56,6 @@ def parse_netapp_api_cpu(string_table: type_defs.StringTable) -> Section:
 
 
 register.agent_section(
-    name='netapp_api_cpu',
+    name="netapp_api_cpu",
     parse_function=parse_netapp_api_cpu,
 )

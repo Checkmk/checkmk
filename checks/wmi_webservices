@@ -4,21 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def check_wmi_webservices(item, params, parsed):
-    yield wmi_yield_raw_persec(parsed[""],
-                               item,
-                               "CurrentConnections",
-                               infoname="Connections",
-                               perfvar="connections")
+    yield wmi_yield_raw_persec(
+        parsed[""], item, "CurrentConnections", infoname="Connections", perfvar="connections"
+    )
 
 
-check_info['wmi_webservices'] = {
-    'inventory_function': lambda p: inventory_wmi_table_instances(p),  # pylint: disable=unnecessary-lambda
-    'check_function': check_wmi_webservices,
-    'parse_function': parse_wmi_table,
-    'has_perfdata': True,
-    'service_description': "Web Service %s",
+check_info["wmi_webservices"] = {
+    "inventory_function": lambda p: inventory_wmi_table_instances(  # pylint: disable=unnecessary-lambda
+        p
+    ),
+    "check_function": check_wmi_webservices,
+    "parse_function": parse_wmi_table,
+    "has_perfdata": True,
+    "service_description": "Web Service %s",
 }

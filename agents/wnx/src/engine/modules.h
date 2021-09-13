@@ -21,9 +21,10 @@
 
 namespace cma::cfg::modules {
 constexpr std::string_view kNoExtension = ".";
-constexpr std::string_view kExtension = ".zip";
-constexpr std::string_view kTargetDir = ".target.dir";  // dir for installation
+constexpr std::string_view kExtension = ".cab";
 constexpr int kResonableDirLengthMin = 20;
+constexpr std::string_view g_module_uninstall_path =
+    "checkmk_uninstalled_modules";
 
 class Module {
 public:
@@ -38,19 +39,19 @@ public:
     [[nodiscard]] auto dir() const noexcept { return dir_; }
 
     [[nodiscard]] auto bin() const noexcept { return bin_; }
-    [[nodiscard]] auto zip() const noexcept { return zip_; }
+    [[nodiscard]] auto package() const noexcept { return package_; }
 
-    [[nodiscard]] bool isModuleZip(const std::filesystem::path& file) const
-        noexcept;
+    [[nodiscard]] bool isModuleZip(
+        const std::filesystem::path& file) const noexcept;
 
-    // finds the zip and executable
+    // finds the package and executable
     bool prepareToWork(const std::filesystem::path& backup_dir,
                        const std::filesystem::path& modules_dir);
 
     //
     bool isMyScript(const std::filesystem::path& script) const noexcept;
-    std::wstring buildCommandLine(const std::filesystem::path& script) const
-        noexcept;
+    std::wstring buildCommandLine(
+        const std::filesystem::path& script) const noexcept;
 
     // makes command line with script, if bin_ is empty returns nothing
     std::wstring buildCommandLineForced(
@@ -59,17 +60,19 @@ public:
     void removeExtension(std::string_view ext);
 
 private:
+    void runPostInstall();
+
     void reset() noexcept;
     std::string name_;
     std::vector<std::string> exts_;
     std::wstring exec_;
     std::string dir_;
 
-    std::filesystem::path bin_;  // executable from the exec:
-    std::filesystem::path zip_;  // path to valid zip file
+    std::filesystem::path bin_;      // executable from the exec:
+    std::filesystem::path package_;  // path to valid package file
 
-    std::filesystem::path findZip(const std::filesystem::path& backup_dir) const
-        noexcept;
+    std::filesystem::path findPackage(
+        const std::filesystem::path& backup_dir) const noexcept;
 
     std::filesystem::path findBin(
         const std::filesystem::path& modules_dir) const noexcept;
@@ -82,7 +85,7 @@ private:
     FRIEND_TEST(ModulesTest, IsMyScript);
 
     friend class ModuleCommanderTest;
-    FRIEND_TEST(ModuleCommanderTest, InstallModules);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
 
 #endif
 };
@@ -92,12 +95,20 @@ private:
 enum class InstallMode { normal, force };
 
 using StringViewPair = std::pair<std::string_view, std::string_view>;
+constexpr std::string_view post_install_script_name{"postinstall.cmd"};
 
 class ModuleCommander {
 public:
+    struct UninstallStore {
+        std::filesystem::path base_;
+        std::filesystem::path package_file_;
+        std::filesystem::path module_dir_;
+    };
     void LoadDefault() noexcept;
     void InstallDefault(InstallMode mode) noexcept;
     void readConfig(YAML::Node& node);
+
+    static bool IsQuickReinstallAllowed();
 
     void prepareToWork();
     bool isModuleScript(const std::string_view filename);
@@ -107,6 +118,8 @@ public:
     void installModules(const std::filesystem::path& root,
                         const std::filesystem::path& user,
                         InstallMode mode) const;
+
+    static void moveModulesToStore(const std::filesystem::path& user);
 
     std::vector<std::string> getExtensions() const;
 
@@ -120,13 +133,21 @@ public:
         return user / dirs::kUserModules;
     }
 
-    [[nodiscard]] static const std::vector<StringViewPair>
-    GetSystemExtensions();
+    [[nodiscard]] static std::vector<StringViewPair> GetSystemExtensions();
+
+    /// \brief Returns path in the %temp% where content of module will be moved
+    static std::filesystem::path GetMoveLocation(
+        const std::filesystem::path& module_file);
 
 private:
     void removeSystemExtensions(YAML::Node& node);
+
     // internals static API
-    static bool InstallModule(const Module& module,
+    static bool TryQuickInstall(const Module& mod,
+                                const std::filesystem::path& root,
+                                const std::filesystem::path& user);
+
+    static bool InstallModule(const Module& mod,
                               const std::filesystem::path& root,
                               const std::filesystem::path& user,
                               InstallMode mode);
@@ -135,12 +156,9 @@ private:
     static bool UninstallModuleZip(const std::filesystem::path& file,
                                    const std::filesystem::path& mod_root);
 
-    static bool RemoveContentByTargetDir(
-        const std::vector<std::wstring>& content,
-        const std::filesystem::path& target_dir);
-
-    static bool CreateFileForTargetDir(const std::filesystem::path& module_dir,
-                                       const std::filesystem::path& target_dir);
+    // \brief Validates that default move dir contains good module
+    static std::optional<UninstallStore> GetUninstallStore(
+        const std::filesystem::path& file);
 
     static bool BackupModule(const std::filesystem::path& module_file,
                              const std::filesystem::path& backup_file);
@@ -154,7 +172,7 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ModuleCommanderTest;
     FRIEND_TEST(ModuleCommanderTest, FindModules);
-    FRIEND_TEST(ModuleCommanderTest, InstallModules);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
     FRIEND_TEST(ModuleCommanderTest, Internal);
     FRIEND_TEST(ModuleCommanderTest, LowLevelFs);
     FRIEND_TEST(ModuleCommanderTest, PrepareToWork2);

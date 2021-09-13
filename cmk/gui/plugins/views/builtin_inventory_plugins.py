@@ -11,18 +11,16 @@
 # each_dict_entry_on_separate_line=False
 
 import cmk.gui.utils
-from cmk.gui.plugins.views import (
-    inventory_displayhints,)
 from cmk.gui.i18n import _
-
+from cmk.gui.plugins.views import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import (
-    FilterInvtableVersion,
-    FilterInvtableIDRange,
-    FilterInvtableOperStatus,
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
+    FilterInvtableIDRange,
     FilterInvtableInterfaceType,
+    FilterInvtableOperStatus,
     FilterInvtableTimestampAsAge,
+    FilterInvtableVersion,
 )
 
 # yapf: disable
@@ -513,11 +511,19 @@ inventory_displayhints.update({
         ]
     },
     ".software.applications.docker.version": {"title": _("Version")},
+    ".software.applications.docker.registry": {"title": _("Registry")},
+    ".software.applications.docker.swarm_state": {"title": _("Swarm State")},
+    ".software.applications.docker.swarm_node_id": {"title": _("Swarm Node ID")},
     ".software.applications.docker.num_containers_total": {"title": _("# Containers"), "short": _("Containers"),},
     ".software.applications.docker.num_containers_running": {"title": _("# Containers running"), "short": _("Running"),},
     ".software.applications.docker.num_containers_stopped": {"title": _("# Containers stopped"), "short": _("Stopped"),},
     ".software.applications.docker.num_containers_paused": {"title": _("# Containers paused"), "short": _("Paused"),},
     ".software.applications.docker.num_images": {"title": _("# Images")},
+    ".software.applications.docker.node_labels:": {"title": _("Node Labels")},
+    ".software.applications.docker.node_labels:*.label": {"title": _("Label")},
+    ".software.applications.docker.swarm_manager:": {"title": _("Swarm Managers")},
+    ".software.applications.docker.swarm_manager:*.NodeID": {"title": _("Node ID")},
+    ".software.applications.docker.swarm_manager:*.Addr": {"title": _("Address")},
     ".software.applications.docker.images:": {
         "title": _("Images"),
         "keyorder": ["id", "creation", "size", "labels", "amount_containers", "repotags", "repodigests"],
@@ -525,6 +531,7 @@ inventory_displayhints.update({
         "is_show_more": False,
     },
     ".software.applications.docker.images:*.id": {"title": _("ID")},
+    ".software.applications.docker.images:*.creation": {"title": _("Creation")},
     ".software.applications.docker.images:*.size": {"paint": "size"},
     ".software.applications.docker.images:*.labels": {"paint": "csv_labels"},
     ".software.applications.docker.images:*.amount_containers": {"title": _("# Containers")},
@@ -542,6 +549,9 @@ inventory_displayhints.update({
     ".software.applications.docker.containers:*.labels": {"paint": "csv_labels"},
     ".software.applications.docker.networks.*.": {"title": "Network %s"},
     ".software.applications.docker.networks.*.network_id": {"title": "Network ID"},
+    ".software.applications.docker.networks.*.name": {"title": "Name"},
+    ".software.applications.docker.networks.*.scope": {"title": "Scope"},
+    ".software.applications.docker.networks.*.labels": {"title": "Labels", "paint": "csv_labels"},
     ".software.applications.docker.container.": {"title": _("Container")},
     ".software.applications.docker.container.node_name": {"title": _("Node name")},
     ".software.applications.docker.container.ports:": {
@@ -853,35 +863,43 @@ inventory_displayhints.update({
     ".software.applications.mssql.instances:*.clustered": {
         "title": _("Clustered"), "paint": "mssql_is_clustered"
     },
-    ".software.applications.ibm_mq.": {"title": _("IBM MQ")},
+    ".software.applications.ibm_mq.": {
+        "title": _("IBM MQ"),
+        "keyorder": ["managers", "channels", "queues"],
+    },
     ".software.applications.ibm_mq.managers:": {
         "title": _("Managers"),
-        "keyorder": ["name", "instver", "instname", "standby", "status"],
+        "keyorder": ["name", "instver", "instname", "status", "standby", "ha"],
         "view": "invibmmqmanagers_of_host",
     },
-    ".software.applications.ibm_mq.managers:*.name": {"title": _("Name")},
+    ".software.applications.ibm_mq.managers:*.name": {"title": _("Queue Manager Name")},
     ".software.applications.ibm_mq.managers:*.instver": {"title": _("Version")},
-    ".software.applications.ibm_mq.managers:*.instname": {"title": _("Installation Name")},
-    ".software.applications.ibm_mq.managers:*.standby": {"title": _("Standby Status")},
-    ".software.applications.ibm_mq.managers:*.status": {"title": _("Manager Status")},
+    ".software.applications.ibm_mq.managers:*.instname": {"title": _("Installation")},
+    ".software.applications.ibm_mq.managers:*.status": {"title": _("Status")},
+    ".software.applications.ibm_mq.managers:*.standby": {"title": _("Standby")},
+    ".software.applications.ibm_mq.managers:*.ha": {"title": _("HA")},
     ".software.applications.ibm_mq.channels:": {
         "title": _("Channels"),
-        "keyorder": ["qmgr", "name", "type", "status"],
+        "keyorder": ["qmgr", "name", "type", "status", "monchl"],
         "view": "invibmmqchannels_of_host",
     },
     ".software.applications.ibm_mq.channels:*.qmgr": {"title": _("Queue Manager Name")},
-    ".software.applications.ibm_mq.channels:*.name": {"title": _("Name")},
+    ".software.applications.ibm_mq.channels:*.name": {"title": _("Channel")},
     ".software.applications.ibm_mq.channels:*.type": {"title": _("Type")},
     ".software.applications.ibm_mq.channels:*.status": {"title": _("Status")},
+    ".software.applications.ibm_mq.channels:*.monchl": {"title": _("Monitoring")},
     ".software.applications.ibm_mq.queues:": {
         "title": _("Queues"),
-        "keyorder": ["qmgr", "name", "maxdepth", "maxmsgl"],
+        "keyorder": ["qmgr", "name", "maxdepth", "maxmsgl", "created", "altered", "monq"],
         "view": "invibmmqqueues_of_host",
     },
     ".software.applications.ibm_mq.queues:*.qmgr": {"title": _("Queue Manager Name")},
-    ".software.applications.ibm_mq.queues:*.name": {"title": _("Name")},
-    ".software.applications.ibm_mq.queues:*.maxdepth": {"title": _("Max Number Of Messages")},
-    ".software.applications.ibm_mq.queues:*.maxmsgl": {"title": _("Max Message Size")},
+    ".software.applications.ibm_mq.queues:*.name": {"title": _("Queue")},
+    ".software.applications.ibm_mq.queues:*.maxdepth": {"title": _("Max Depth")},
+    ".software.applications.ibm_mq.queues:*.maxmsgl": {"title": _("Max Length")},
+    ".software.applications.ibm_mq.queues:*.created": {"title": _("Created")},
+    ".software.applications.ibm_mq.queues:*.altered": {"title": _("Altered")},
+    ".software.applications.ibm_mq.queues:*.monq": {"title": _("Monitoring")},
     ".networking.": {"title": _("Networking"), "icon": "networking"},
     ".networking.total_interfaces": {"title": _("Interfaces"), "paint": "count"},
     ".networking.total_ethernet_ports": {"title": _("Ports"), "paint": "count"},
@@ -980,6 +998,12 @@ inventory_displayhints.update({
     },
     ".software.kernel_config:*.parameter": {"title": _("Parameter")},
     ".software.kernel_config:*.value": {"title": _("Value")},
+    ".software.applications.fortinet.fortisandbox:": {"title": _("FortiSandbox Software")},
+    ".software.applications.fortinet.fortisandbox:*.name": {"title": _("Name")},
+    ".software.applications.fortinet.fortisandbox:*.version": {"title": _("Version")},
+    ".software.applications.fortinet.fortigate_high_availability.": {
+        "title": _("FortiGate HighAvailability"),
+    },
 }
 )
 

@@ -6,9 +6,8 @@
 // Assorted process management routines
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#include <shlobj.h>  // known path
-#include <windows.h>
+#include <Windows.h>
+#include <shlobj.h>
 
 #include <fstream>
 #include <string>
@@ -80,41 +79,41 @@ inline bool RunDetachedCommand(const std::string& Command) {
     return false;
 }
 
-// LAST and BEST attempt to have standard windows starter
-// returns process id
-// used during auto update
+// NOTE: LAST and BEST attempt to have standard windows starter
+// Returns process id on success
+/// IMPORTANT: SET inherit_handle to TRUE may prevent script form start
 inline uint32_t RunStdCommand(
-    std::wstring_view Command,   // full command with arguments
-    bool Wait,                   // important flag! set false  when you are sure
-    BOOL InheritHandle = FALSE,  // not optimal, but default
-    HANDLE Stdio = 0,            // when we want to catch output
-    HANDLE Stderr = 0,           // same
-    DWORD CreationFlags = 0,     // never checked this
-    DWORD StartFlags = 0) {
+    std::wstring_view command,    // full command with arguments
+    bool wait_for_end,            // important flag! set false when you are sure
+    BOOL inherit_handle = FALSE,  // recommended option
+    HANDLE stdio_handle = 0,      // when we want to catch output
+    HANDLE stderr_handle = 0,     // same
+    DWORD creation_flags = 0,     // never checked this
+    DWORD start_flags = 0) {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
-    si.dwFlags = StartFlags;
-    si.hStdOutput = Stdio;
-    si.hStdError = Stderr;
-    if (InheritHandle)
+    si.dwFlags = start_flags;
+    si.hStdOutput = stdio_handle;
+    si.hStdError = stderr_handle;
+    if (inherit_handle)
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
 
     PROCESS_INFORMATION pi{0};
     memset(&pi, 0, sizeof(pi));
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(Command.data()),  // win32!
-                         nullptr,        // security attribute
-                         nullptr,        // thread attribute
-                         InheritHandle,  // handle inheritance
-                         CreationFlags,  // Creation Flags
-                         nullptr,        // environment
-                         nullptr,        // current directory
+                         const_cast<wchar_t*>(command.data()),  // win32!
+                         nullptr,         // security attribute
+                         nullptr,         // thread attribute
+                         inherit_handle,  // handle inheritance
+                         creation_flags,  // Creation Flags
+                         nullptr,         // environment
+                         nullptr,         // current directory
                          &si, &pi)) {
         auto process_id = pi.dwProcessId;
-        if (Wait) WaitForSingleObject(pi.hProcess, INFINITE);
+        if (wait_for_end) WaitForSingleObject(pi.hProcess, INFINITE);
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         return process_id;
@@ -217,86 +216,5 @@ inline std::wstring GetTempFolder() {
 
 }  // namespace win
 
-inline bool IsFileExist(const std::wstring& File) noexcept {
-    try {
-        std::ifstream f(File.c_str(), std::ios::binary);
-
-        return f.good();
-    } catch (...) {
-    }
-    return false;
-}
 #endif
-inline bool IsFileExist(const std::string& File) noexcept {
-    try {
-        std::ifstream f(File.c_str(), std::ios::binary);
-
-        return f.good();
-    } catch (...) {
-    }
-    return false;
-}
-
-// check that update exists and exec it
-// returns true when update found and ready to exec
-inline bool RunExeAndForget(const std::wstring& Name,
-                            const std::wstring& CommandLine
-
-) {
-    /*
-        // check file existence
-        std::wstring msi_base = Path + L"\\" + Name;
-        if (!cma::tools::IsFileExist(msi_base)) return false;
-
-        switch (Update) {
-            case kMsiExec:
-            case kMsiExecQuiet:
-                break;
-            default:
-                xlog::l("Invalid Option %d", Update).print();
-                return false;
-        }
-
-        // Move file to temporary folder
-        auto msi_to_install = MakeTempFileNameInTempPath(Name);
-        if (msi_to_install.empty()) return false;
-
-        if (cma::tools::IsFileExist(msi_to_install)) {
-            auto ret = ::DeleteFile(msi_to_install.c_str());
-            if (!ret) {
-                xlog::l(
-                    "Updating is NOT possible, can't delete file %ls, error
-       %d\n", msi_to_install.c_str(), GetLastError()) .print(); return false;
-            }
-        }
-
-        // actual move
-        auto ret = ::MoveFile(msi_base.c_str(), msi_to_install.c_str());
-        if (!ret) {
-            xlog::l("Updating is NOT possible, can't move file, error %d\n",
-                    GetLastError())
-                .print();
-            return false;
-        }
-
-        // Prepare Command
-        std::wstring command = exe + L" ";
-        command = command + L" /i " + msi_to_install +
-                  L" REINSTALL=ALL REINSTALLMODE=amus ";
-
-        if (Update == kMsiExecQuiet)  // this is only normal method
-            command += L" /quiet";    // but MS doesn't care at all :)
-
-        xlog::l("File %ls exists\n Command is %ls", msi_to_install.c_str(),
-                command.c_str());
-
-        if (!StartUpdateProcess) {
-            xlog::l("Actual Updating is disabled").print();
-            return true;
-        }
-        return cma::tools::RunStdCommand(command, false, TRUE);
-    */
-    return true;
-}  // namespace srv
-
 }  // namespace cma::tools

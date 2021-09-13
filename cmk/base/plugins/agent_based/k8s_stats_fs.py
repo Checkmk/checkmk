@@ -5,29 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import collections
 from contextlib import suppress
+from typing import Any, Mapping, MutableMapping
 
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    GetRateError,
-    get_value_store,
-)
-
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    CheckResult,
-    Parameters,
-    ValueStore,
-)
-from .utils.k8s import (
-    Section,
-    Filesystem,
-    to_filesystem,
-)
-from .utils.df import (
-    df_check_filesystem_single,
-    FILESYSTEM_DEFAULT_LEVELS,
-)
+from .agent_based_api.v1 import get_value_store, GetRateError, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from .utils.k8s import Filesystem, Section, to_filesystem
 
 
 def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
@@ -38,20 +21,23 @@ def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
     ...     'timestamp': 1553765630.0,
     ... }):
     ...   print(service)
-    Service(item='/dev/sda1', parameters={}, labels=[])
+    Service(item='/dev/sda1')
     """
     yield from (
         Service(item=device)
         for device in section["filesystem"]
         if device not in {"tmpfs", "rootfs", "/dev/shm"}
-        if not (isinstance(device, str) and (device.startswith("/var/lib/docker/") or  #
-                                             device.startswith("overlay"))))
+        if not (
+            isinstance(device, str)
+            and (device.startswith("/var/lib/docker/") or device.startswith("overlay"))  #
+        )
+    )
 
 
 def _check__k8s_stats_fs__core(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -62,25 +48,28 @@ def _check__k8s_stats_fs__core(
     ... }):
     ...     print(result)
     Metric('fs_used', 4158.4921875, levels=(13193.91875, 14843.15859375), boundaries=(0.0, 16492.3984375))
-    Metric('fs_size', 16492.3984375)
-    Metric('fs_used_percent', 25.21459933956316)
-    Result(state=<State.OK: 0>, summary='25.2% used (4.06  of 16.1 GiB)', details='25.2% used (4.06  of 16.1 GiB)')
+    Metric('fs_size', 16492.3984375, boundaries=(0.0, None))
+    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0), boundaries=(0.0, 100.0))
+    Result(state=<State.OK: 0>, summary='25.21% used (4.06 of 16.1 GiB)')
     Metric('growth', 0.0)
-    Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0 B', details='trend per 1 day 0 hours: +0 B')
-    Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0%', details='trend per 1 day 0 hours: +0%')
+    Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0 B')
+    Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0%')
     Metric('trend', 0.0, boundaries=(0.0, 687.1832682291666))
     """
-    now = section['timestamp']
+    now = section["timestamp"]
     disk: Filesystem = to_filesystem(
-        sum((collections.Counter(interface) for interface in section["filesystem"][item]),
-            collections.Counter()))
+        sum(
+            (collections.Counter(interface) for interface in section["filesystem"][item]),
+            collections.Counter(),
+        )
+    )
 
     with suppress(GetRateError):
         yield from df_check_filesystem_single(
             value_store=value_store,
             mountpoint=item,
-            size_mb=disk["capacity"] / 1024**2,
-            avail_mb=disk["available"] / 1024**2,
+            size_mb=disk["capacity"] / 1024 ** 2,
+            avail_mb=disk["available"] / 1024 ** 2,
             reserved_mb=0,
             inodes_total=disk["inodes"],
             inodes_avail=disk["inodes_free"],
@@ -91,7 +80,7 @@ def _check__k8s_stats_fs__core(
 
 def check_k8s_stats_fs(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """This is an API conformant wrapper for the more functional base functions"""

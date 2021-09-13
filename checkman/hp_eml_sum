@@ -8,5 +8,5 @@ description:
  HP EML series. It has been developed and tested with EML 103e but should also
  work with other models. It uses information provided by the SEMI-MIB.
 
-inventory:
+discovery:
  One summary service is created for each system.

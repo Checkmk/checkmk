@@ -13,5 +13,5 @@ description:
 item:
  The ID of the overcurrent protector, eg. C1.
 
-inventory:
+discovery:
  One service is created for each overcurrent protector.

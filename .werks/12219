@@ -1,0 +1,15 @@
+Title: Fix GIT version control for WATO
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614588297
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If the local site needs no restart, no activation of changes is needed. But in
+earlier versions, the activation also triggered the commit command for done
+changes, so commits were no longer done.
+
+Commits are now done independent of activating changes.

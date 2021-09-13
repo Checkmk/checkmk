@@ -5,41 +5,47 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import json
 import re
 import traceback
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple
 from enum import Enum, unique
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import livestatus
 
 import cmk.utils.plugin_registry
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
-)
+from cmk.utils.exceptions import MKException, MKGeneralException
 
-from cmk.gui.type_defs import ABCMegaMenuSearch
-import cmk.gui.utils
-import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.log import logger
+import cmk.gui.utils
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.globals import config, html, output_funnel, request, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
+from cmk.gui.log import logger
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.sidebar import PageHandlers, SidebarSnapin, snapin_registry
+from cmk.gui.plugins.wato import main_module_registry
 from cmk.gui.type_defs import (
+    ABCMegaMenuSearch,
     HTTPVariables,
+    Icon,
+    Row,
+    Rows,
     SearchQuery,
     SearchResult,
     SearchResultsByTopic,
-    Row,
-    Rows,
     ViewName,
 )
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, get_index_store
+from cmk.gui.utils.labels import (
+    encode_labels_for_http,
+    encode_labels_for_livestatus,
+    label_help_text,
+    Labels,
+)
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -65,6 +71,7 @@ class LivestatusResult:
     url: str
     row: Row
     display_text: str
+    context: str = ""
 
 
 @unique
@@ -80,7 +87,7 @@ class FilterBehaviour(Enum):
 def _to_regex(s):
     """Ensures the provided search string is a regex, does some basic conversion
     and then tries to verify it is a regex"""
-    s = s.replace('*', '.*')
+    s = s.replace("*", ".*")
     cmk.gui.utils.validate_regex(s, varname=None)
 
     return s
@@ -90,12 +97,16 @@ class TooManyRowsError(MKException):
     pass
 
 
+class IncorrectLabelInputError(MKUserError):
+    pass
+
+
 def _build_url(url_params: HTTPVariables) -> str:
     new_params = url_params[:]
     return makeuri(request, new_params, delvars=["q"], filename="view.py")
 
 
-class ABCQuicksearchConductor(metaclass=abc.ABCMeta):
+class ABCQuicksearchConductor(abc.ABC):
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         self._used_filters = used_filters
@@ -151,7 +162,8 @@ class ABCQuicksearchConductor(metaclass=abc.ABCMeta):
 class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
     """Passes queries through to a non livestatus plugin
 
-    There is no aggregation done by this conductor. It deals with a single search plugin.  """
+    There is no aggregation done by this conductor. It deals with a single search plugin."""
+
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
         self._results: List[SearchResult] = []
@@ -184,7 +196,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         raise NotImplementedError()  # TODO: Implement this
 
     def create_results(self) -> List[SearchResult]:
-        return self._results[:config.quicksearch_dropdown_limit]
+        return self._results[: config.quicksearch_dropdown_limit]
 
 
 class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
@@ -201,6 +213,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
     livestatus query with the help of all search plugins that support searching the previously
     selected table.
     """
+
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
 
@@ -264,7 +277,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             name = plugin.name
             livestatus_filter_domains.setdefault(name, [])
             livestatus_filter_domains[name].append(
-                plugin.get_livestatus_filters(self.livestatus_table, self._used_filters))
+                plugin.get_livestatus_filters(self.livestatus_table, self._used_filters)
+            )
 
         # Combine filters of same domain (h/s/sg/hg/..)
         livestatus_filters = []
@@ -289,7 +303,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
     def _get_used_search_plugins(self) -> List["ABCLivestatusMatchPlugin"]:
         return [
-            plugin for plugin in match_plugin_registry.get_livestatus_match_plugins()
+            plugin
+            for plugin in match_plugin_registry.get_livestatus_match_plugins()
             if plugin.is_used_for_table(self.livestatus_table, self._used_filters)
         ]
 
@@ -331,7 +346,9 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
+        }.get(
+            self.livestatus_table, []
+        )  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self) -> HTTPVariables:
         exact_match = self.num_rows() == 1
@@ -344,8 +361,13 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         ]
 
         for plugin in self._used_search_plugins:
-            match_info = plugin.get_matches(target_view, self._rows[0] if exact_match else None,
-                                            self.livestatus_table, self._used_filters, self._rows)
+            match_info = plugin.get_matches(
+                target_view,
+                self._rows[0] if exact_match else None,
+                self.livestatus_table,
+                self._used_filters,
+                self._rows,
+            )
             if not match_info:
                 continue
             _text, url_filters = match_info
@@ -373,8 +395,9 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 if plugin.is_group_match():
                     skip_site = True
 
-                match_info = plugin.get_matches(target_view, row, self.livestatus_table,
-                                                self._used_filters, [])
+                match_info = plugin.get_matches(
+                    target_view, row, self.livestatus_table, self._used_filters, []
+                )
                 if not match_info:
                     continue
                 text, url_filters = match_info
@@ -394,7 +417,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                     url=_build_url(url_tokens),
                     row=row,
                     display_text="",  # Is created later by self._generate_display_texts
-                ))
+                )
+            )
 
         return self._generate_display_texts(elements)
 
@@ -455,12 +479,12 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
             for shortname, text in element.text_tokens:
                 if shortname in ["h", "al"] and text not in element.display_text:
-                    element.display_text += " <b>%s</b>" % text
+                    element.context = text
                     break
             else:
-                element.display_text += " <b>%s</b>" % hostname
+                element.context = hostname
 
-        return [SearchResult(title=e.display_text, url=e.url) for e in elements]
+        return [SearchResult(title=e.display_text, url=e.url, context=e.context) for e in elements]
 
     def _element_texts_unique(self, elements: List[LivestatusResult]) -> bool:
         used_texts: Set[str] = set()
@@ -473,6 +497,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
 class QuicksearchManager:
     """Producing the results for the given search query"""
+
     def __init__(self, raise_too_many_rows_error: bool = True):
         self.raise_too_many_rows_error = raise_too_many_rows_error
 
@@ -483,6 +508,13 @@ class QuicksearchManager:
 
     def generate_search_url(self, query: SearchQuery) -> str:
         search_objects = self._determine_search_objects(query)
+
+        # Hitting enter on the search field to open the search in the
+        # page content area is currently only supported for livestatus
+        # search plugins
+        search_objects = [
+            s for s in search_objects if isinstance(s, LivestatusQuicksearchConductor)
+        ]
 
         try:
             self._conduct_search(search_objects)
@@ -496,12 +528,14 @@ class QuicksearchManager:
                 url_params.extend(search_object.get_search_url_params())
                 break
         else:
-            url_params.extend([
-                ("view_name", "allservices"),
-                ("filled_in", "filter"),
-                ("_show_filter_form", "0"),
-                ("service_regex", query),
-            ])
+            url_params.extend(
+                [
+                    ("view_name", "allservices"),
+                    ("filled_in", "filter"),
+                    ("_show_filter_form", "0"),
+                    ("service_regex", query),
+                ]
+            )
 
         return _build_url(url_params)
 
@@ -525,14 +559,19 @@ class QuicksearchManager:
                 LivestatusQuicksearchConductor(
                     used_filters,
                     FilterBehaviour.CONTINUE,
-                ))
+                )
+            )
         else:
             # No explicit filters specified by search expression. Execute the quicksearch plugins in
             # the order they are configured to let them answer the query.
             for filter_name, filter_behaviour_str in config.quicksearch_search_order:
                 search_objects.append(
-                    self._make_conductor(filter_name, {filter_name: [_to_regex(query)]},
-                                         FilterBehaviour[filter_behaviour_str.upper()]))
+                    self._make_conductor(
+                        filter_name,
+                        {filter_name: [_to_regex(query)]},
+                        FilterBehaviour[filter_behaviour_str.upper()],
+                    )
+                )
 
         return search_objects
 
@@ -567,7 +606,7 @@ class QuicksearchManager:
         used_filters: Dict[str, List[str]] = {}
         current_string = query
         for filter_type, offset in found_filters[-1::-1]:
-            filter_text = _to_regex(current_string[offset + len(filter_type):]).strip()
+            filter_text = _to_regex(current_string[offset + len(filter_type) :]).strip()
             filter_name = filter_type.strip().rstrip(":")
             used_filters.setdefault(filter_name, []).append(filter_text)
             current_string = current_string[:offset]
@@ -601,15 +640,19 @@ class QuicksearchManager:
                 search_object.remove_rows_from_end(total_rows - config.quicksearch_dropdown_limit)
                 if self.raise_too_many_rows_error:
                     raise TooManyRowsError(
-                        _("More than %d results") % config.quicksearch_dropdown_limit)
+                        _("More than %d results") % config.quicksearch_dropdown_limit
+                    )
 
             if search_object.row_limit_exceeded():
                 if self.raise_too_many_rows_error:
                     raise TooManyRowsError(
-                        _("More than %d results") % config.quicksearch_dropdown_limit)
+                        _("More than %d results") % config.quicksearch_dropdown_limit
+                    )
 
-            if (search_object.num_rows() > 0 and
-                    search_object.filter_behaviour is not FilterBehaviour.CONTINUE):
+            if (
+                search_object.num_rows() > 0
+                and search_object.filter_behaviour is not FilterBehaviour.CONTINUE
+            ):
                 if search_object.filter_behaviour is FilterBehaviour.FINISHED_DISTINCT:
                     # Discard all data of previous filters and break
                     for i in range(idx - 1, -1, -1):
@@ -621,12 +664,15 @@ class QuicksearchManager:
         search_objects: List[ABCQuicksearchConductor],
     ) -> SearchResultsByTopic:
         """Generates elements out of the raw data"""
-        results_by_topic: Dict[str, List[SearchResult]] = {}
-        for search_object in search_objects:
-            results = search_object.create_results()
-            if results:
-                results_by_topic[search_object.get_match_topic()] = results
-        return results_by_topic
+        yield from (
+            (
+                search_object.get_match_topic(),
+                results,
+            )
+            for search_object in search_objects
+            for results in [search_object.create_results()]
+            if results
+        )
 
 
 def _maybe_strip(param: Optional[str]) -> Optional[str]:
@@ -652,23 +698,22 @@ class QuicksearchSnapin(SidebarSnapin):
     @classmethod
     def description(cls):
         return _(
-            "Interactive search field for direct access to hosts, services, host- and "
-            "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "
-            "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
+            "Interactive search field for direct access to monitoring instances (hosts, services, "
+            "host- and servicegroups).<br>You can use the following filters: <i>h:</i> Host,<br> "
+            "<i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> Service group,<br><i>ad:</i> "
+            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hl:</i> Host label, <i>sl:</i> "
+            "Service label"
         )
 
     def show(self):
         id_ = "mk_side_search_field"
-        html.open_div(id_="mk_side_search",
-                      class_="content_center",
-                      onclick="cmk.quicksearch.close_popup();")
+        html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
         html.input(id_=id_, type_="text", name="search", autocomplete="off")
-        html.icon_button("#",
-                         _("Search"),
-                         "quicksearch",
-                         onclick="cmk.quicksearch.on_search_click();")
+        html.icon_button(
+            "#", _("Search"), "quicksearch", onclick="cmk.quicksearch.on_search_click();"
+        )
         html.close_div()
-        html.div('', id_="mk_side_clear")
+        html.div("", id_="mk_side_clear")
         html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
 
     @classmethod
@@ -683,7 +728,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def _ajax_search(self) -> None:
         """Generate the search result list"""
-        query = _maybe_strip(html.request.get_unicode_input('q'))
+        query = _maybe_strip(request.get_unicode_input("q"))
         if not query:
             return
 
@@ -693,6 +738,9 @@ class QuicksearchSnapin(SidebarSnapin):
 
         except TooManyRowsError as e:
             html.show_warning(str(e))
+
+        except IncorrectLabelInputError:
+            pass
 
         except MKException as e:
             html.show_error("%s" % e)
@@ -705,7 +753,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def _page_search_open(self) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""
-        query = _maybe_strip(html.request.var('q'))
+        query = _maybe_strip(request.var("q"))
         if not query:
             return
 
@@ -714,19 +762,25 @@ class QuicksearchSnapin(SidebarSnapin):
 
 class QuicksearchResultRenderer:
     """HTML rendering the matched results"""
+
     def show(self, results_by_topic: SearchResultsByTopic, query: SearchQuery) -> None:
         """Renders the elements
 
         Show search topic if at least two search objects provide elements
         """
-        show_match_topics = len(results_by_topic) > 1
+        sorted_results = sorted(results_by_topic, key=lambda x: x[0])
+        show_match_topics = len(sorted_results) > 1
 
-        for match_topic, results in sorted(results_by_topic.items(), key=lambda x: x[0]):
+        for match_topic, results in sorted_results:
             if show_match_topics:
                 html.div(match_topic, class_="topic")
 
             for result in sorted(results, key=lambda x: x.title):
-                html.a(result.title, id="result_%s" % query, href=result.url, target="main")
+                html.open_a(id_="result_%s" % query, href=result.url, target="main")
+                html.write_text(
+                    result.title + (" %s" % html.render_b(result.context) if result.context else "")
+                )
+                html.close_a()
 
 
 #   .--Quicksearch Plugins-------------------------------------------------.
@@ -747,8 +801,9 @@ class QuicksearchResultRenderer:
 #   '----------------------------------------------------------------------'
 
 
-class ABCMatchPlugin(metaclass=abc.ABCMeta):
+class ABCMatchPlugin(abc.ABC):
     """Base class for all match plugins"""
+
     def __init__(self, name: str):
         super().__init__()
         self._name = name
@@ -764,6 +819,7 @@ class ABCMatchPlugin(metaclass=abc.ABCMeta):
 
 class ABCBasicMatchPlugin(ABCMatchPlugin):
     """Base class for all non livestatus based match plugins"""
+
     @abc.abstractmethod
     def get_results(self, query: str) -> List[SearchResult]:
         raise NotImplementedError()
@@ -771,8 +827,13 @@ class ABCBasicMatchPlugin(ABCMatchPlugin):
 
 class ABCLivestatusMatchPlugin(ABCMatchPlugin):
     """Base class for all livestatus based match plugins"""
-    def __init__(self, supported_livestatus_tables: List[LivestatusTable],
-                 preferred_livestatus_table: LivestatusTable, name: str):
+
+    def __init__(
+        self,
+        supported_livestatus_tables: List[LivestatusTable],
+        preferred_livestatus_table: LivestatusTable,
+        name: str,
+    ):
         super().__init__(name)
         self._supported_livestatus_tables = supported_livestatus_tables
         self._preferred_livestatus_table = preferred_livestatus_table
@@ -795,8 +856,9 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_livestatus_filters(self, livestatus_table: LivestatusTable,
-                               used_filters: UsedFilters) -> LivestatusFilterHeaders:
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
         raise NotImplementedError()
 
     def is_group_match(self) -> bool:
@@ -809,8 +871,14 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
         return patterns[0]
 
     @abc.abstractmethod
-    def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows) -> Matches:
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
         raise NotImplementedError()
 
 
@@ -827,7 +895,7 @@ match_plugin_registry = MatchPluginRegistry()
 
 class GroupMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, group_type: str, name: str):
-        super(GroupMatchPlugin, self).__init__(
+        super().__init__(
             ["%sgroups" % group_type, "%ss" % group_type, "services"],
             "%sgroups" % group_type,
             name,
@@ -847,8 +915,9 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
             return ["name"]
         return ["%s_groups" % self._group_type]
 
-    def get_livestatus_filters(self, livestatus_table: LivestatusTable,
-                               used_filters: UsedFilters) -> LivestatusFilterHeaders:
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
         filter_lines = []
         filter_prefix = ""
         if livestatus_table == "%sgroups" % self._group_type:
@@ -864,8 +933,14 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
 
         return "\n".join(filter_lines)
 
-    def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows) -> Matches:
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
         supported_views = {
             # View name    url fieldname,                  key in row
             # Group domains (hostgroups, servicegroups)
@@ -873,18 +948,16 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
             "hostgroups": ["hostgroup_regex", "name"],
             "servicegroup": ["servicegroup", "name"],
             "svcgroups": ["servicegroup_regex", "name"],
-
             # Host/Service domain (hosts, services)
-            "allservices": ["%sgroups" % self._group_type,
-                            "%s_groups" % self._group_type],
+            "allservices": ["%sgroups" % self._group_type, "%s_groups" % self._group_type],
             "searchsvc": [
-                "%sgroups" % self._group_type, self._group_type == "service" and "groups" or
-                "host_groups"
+                "%sgroups" % self._group_type,
+                self._group_type == "service" and "groups" or "host_groups",
             ],
             "searchhost": [
-                "%sgroups" % self._group_type, self._group_type == "service" and "groups" or
-                "host_groups"
-            ]
+                "%sgroups" % self._group_type,
+                self._group_type == "service" and "groups" or "host_groups",
+            ],
         }
 
         view_info = supported_views.get(for_view)
@@ -899,20 +972,24 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
         return filter_value, [(filter_name, filter_value)]
 
 
-match_plugin_registry.register(GroupMatchPlugin(
-    group_type="service",
-    name="sg",
-))
+match_plugin_registry.register(
+    GroupMatchPlugin(
+        group_type="service",
+        name="sg",
+    )
+)
 
-match_plugin_registry.register(GroupMatchPlugin(
-    group_type="host",
-    name="hg",
-))
+match_plugin_registry.register(
+    GroupMatchPlugin(
+        group_type="host",
+        name="hg",
+    )
+)
 
 
 class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
-        super(ServiceMatchPlugin, self).__init__(["services"], "services", "s")
+        super().__init__(["services"], "services", "s")
 
     def get_match_topic(self) -> str:
         return _("Service Description")
@@ -920,8 +997,9 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
         return ["service_description"]
 
-    def get_livestatus_filters(self, livestatus_table: LivestatusTable,
-                               used_filters: UsedFilters) -> LivestatusFilterHeaders:
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
         filter_lines = []
         for entry in used_filters.get(self.name, []):
             filter_lines.append("Filter: service_description ~~ %s" % entry)
@@ -931,8 +1009,14 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
 
         return "\n".join(filter_lines)
 
-    def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows) -> Matches:
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
         supported_views = ["allservices", "searchsvc"]
         if for_view not in supported_views:
             return None
@@ -952,7 +1036,7 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, livestatus_field, name):
-        super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", name)
+        super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
     def get_match_topic(self) -> str:
@@ -970,44 +1054,36 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
     def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
         return [self._get_real_fieldname(livestatus_table), "host_name"]
 
-    def get_livestatus_filters(self, livestatus_table: LivestatusTable,
-                               used_filters: UsedFilters) -> LivestatusFilterHeaders:
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
         filter_lines = []
         for entry in used_filters.get(self.name, []):
-            filter_lines.append("Filter: %s ~~ %s" %
-                                (self._get_real_fieldname(livestatus_table), entry))
+            filter_lines.append(
+                "Filter: %s ~~ %s" % (self._get_real_fieldname(livestatus_table), entry)
+            )
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
 
         return "\n".join(filter_lines)
 
-    def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows) -> Matches:
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
         supported_views = {
             # View name     Filter name
             # Exact matches (always uses hostname as filter)
-            "host": {
-                "name": "host",
-                "address": "host",
-                "alias": "host"
-            },
-            "allservices": {
-                "name": "host_regex",
-                "address": "host_regex",
-                "alias": "host_regex"
-            },
+            "host": {"name": "host", "address": "host", "alias": "host"},
+            "allservices": {"name": "host_regex", "address": "host_regex", "alias": "host_regex"},
             # Multi matches
-            "searchhost": {
-                "name": "host_regex",
-                "address": "host_address",
-                "alias": "hostalias"
-            },
-            "searchsvc": {
-                "name": "host_regex",
-                "address": "host_address",
-                "alias": "hostalias"
-            }
+            "searchhost": {"name": "host_regex", "address": "host_address", "alias": "hostalias"},
+            "searchsvc": {"name": "host_regex", "address": "host_address", "alias": "hostalias"},
         }
 
         view_info = supported_views.get(for_view)
@@ -1018,7 +1094,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
         if row:
             field_value: str = row[self._get_real_fieldname(livestatus_table)]
-            hostname = row.get("host_name", row["name"])
+            hostname = row.get("host_name", row.get("name"))
             url_info = [(filter_name, hostname)]
         else:
             field_value = self._create_textfilter_regex(used_filters)
@@ -1029,25 +1105,31 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
         return field_value, url_info
 
 
-match_plugin_registry.register(HostMatchPlugin(
-    livestatus_field="name",
-    name="h",
-))
+match_plugin_registry.register(
+    HostMatchPlugin(
+        livestatus_field="name",
+        name="h",
+    )
+)
 
-match_plugin_registry.register(HostMatchPlugin(
-    livestatus_field="alias",
-    name="al",
-))
+match_plugin_registry.register(
+    HostMatchPlugin(
+        livestatus_field="alias",
+        name="al",
+    )
+)
 
-match_plugin_registry.register(HostMatchPlugin(
-    livestatus_field="address",
-    name="ad",
-))
+match_plugin_registry.register(
+    HostMatchPlugin(
+        livestatus_field="address",
+        name="ad",
+    )
+)
 
 
 class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
-        super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "hosts", "tg")
+        super().__init__(["hosts", "services"], "hosts", "tg")
 
     def _get_hosttag_dict(self):
         lookup_dict = {}
@@ -1068,8 +1150,9 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def get_livestatus_columns(self, livestatus_table):
         return ["tags"]
 
-    def get_livestatus_filters(self, livestatus_table: LivestatusTable,
-                               used_filters: UsedFilters) -> LivestatusFilterHeaders:
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
         filter_lines = []
 
         entries = used_filters.get(self.name, [])
@@ -1084,16 +1167,24 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
                 continue
 
             tag_key, tag_value = entry.split(":", 1)
-            filter_lines.append("Filter: tags = %s %s" %
-                                (livestatus.lqencode(tag_key), livestatus.lqencode(tag_value)))
+            filter_lines.append(
+                "Filter: tags = %s %s"
+                % (livestatus.lqencode(tag_key), livestatus.lqencode(tag_value))
+            )
 
         if len(filter_lines) > 1:
             filter_lines.append("And: %d" % len(filter_lines))
 
         return "\n".join(filter_lines)
 
-    def get_matches(self, for_view: ViewName, row: Optional[Row], livestatus_table: LivestatusTable,
-                    used_filters: UsedFilters, rows: Rows) -> Matches:
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
         supported_views = {"searchhost": "host_regex", "host": "host"}
 
         filter_name = supported_views.get(for_view)
@@ -1136,6 +1227,114 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
 match_plugin_registry.register(HosttagMatchPlugin())
 
+
+class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
+    @staticmethod
+    def _input_to_key_value(inpt: str) -> Tuple[str, str]:
+        if ":" not in inpt:
+            raise IncorrectLabelInputError(None, label_help_text())
+        key, value = inpt.split(":", maxsplit=1)
+        if not key or not value:
+            raise IncorrectLabelInputError(None, label_help_text())
+        return key, value
+
+    def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
+        yield from (self._input_to_key_value(inpt) for inpt in user_inputs)
+
+    def _user_inputs_to_http(self, user_inputs: Iterable[str]) -> str:
+        return encode_labels_for_http(self._user_inputs_to_labels(user_inputs))
+
+    def get_livestatus_filters(
+        self,
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+    ) -> LivestatusFilterHeaders:
+        user_inputs = used_filters.get(self.name, [])
+        return encode_labels_for_livestatus(
+            self.get_livestatus_columns(livestatus_table)[0],
+            self._user_inputs_to_labels(user_inputs),
+        )
+
+
+class HostLabelMatchPlugin(ABCLabelMatchPlugin):
+    def __init__(self) -> None:
+        super().__init__(["hosts", "services"], "hosts", "hl")
+        self._supported_views = {"host", "searchhost", "allservices", "searchsvc"}
+
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+        return ["labels"] if livestatus_table == "hosts" else ["host_labels"]
+
+    def get_match_topic(self) -> str:
+        return _("Host labels")
+
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        _rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+        if for_view == "host" and row:
+            return row["name"], [("host", row["name"])]
+        return "", [("host_label", self._user_inputs_to_http(used_filters[self.name]))]
+
+
+class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
+    def __init__(self) -> None:
+        super().__init__(["services"], "services", "sl")
+        self._supported_views = {"allservices", "searchsvc"}
+
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+        return ["labels"]
+
+    def get_match_topic(self) -> str:
+        return _("Service labels")
+
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        _rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+        if row:
+            return "", [("service", row["description"])]
+        return "", [("service_label", self._user_inputs_to_http(used_filters[self.name]))]
+
+
+match_plugin_registry.register(HostLabelMatchPlugin())
+match_plugin_registry.register(ServiceLabelMatchPlugin())
+
+
+class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
+    """Create matches for the entries of the monitor menu"""
+
+    def __init__(self) -> None:
+        super().__init__("menu")
+
+    def get_match_topic(self) -> str:
+        return _("Monitor")
+
+    def get_results(self, query: str) -> List[SearchResult]:
+        return [
+            SearchResult(
+                title=topic_menu_item.title,
+                url=topic_menu_item.url,
+            )
+            for topic_menu_topic in mega_menu_registry["monitoring"].topics()
+            for topic_menu_item in topic_menu_topic.items
+            if query.lower() in topic_menu_item.title.lower()
+        ]
+
+
+match_plugin_registry.register(MonitorMenuMatchPlugin())
+
 #   .--Menu Search---------------------------------------------------------.
 #   |      __  __                    ____                      _           |
 #   |     |  \/  | ___ _ __  _   _  / ___|  ___  __ _ _ __ ___| |__        |
@@ -1156,111 +1355,236 @@ class MenuSearchResultsRenderer:
         # TODO: In the future, we should separate the rendering and the generation of the results
         if search_type == "monitoring":
             self._generate_results = QuicksearchManager(
-                raise_too_many_rows_error=False).generate_results
+                raise_too_many_rows_error=False
+            ).generate_results
         elif search_type == "setup":
-            self._generate_results = IndexSearcher(get_index_store()).search
+            self._generate_results = IndexSearcher().search
         else:
             raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
+        self.search_type = search_type
 
     def render(self, query: str) -> str:
-        results = self._generate_results(query)
-        with html.plugged():
-            for topic, search_results in results.items():
-                html.open_div(id_=topic, class_="topic")
-                self._render_topic(topic)
+        try:
+            results = self._generate_results(query)
+        # Don't render the IncorrectLapelInputError in Mega Menu to make the handling of
+        # incorrect inputs consistent with other search querys
+        except IncorrectLabelInputError:
+            return ""
+        except MKException as error:
+            return self._render_error(error)
+        return self._render_results(results)
+
+    def _render_error(self, error: MKException) -> str:
+        with output_funnel.plugged():
+            html.open_div(class_="error")
+            html.write_text(f"{error}")
+            html.close_div()
+            error_as_html = output_funnel.drain()
+        return error_as_html
+
+    def _get_icon_mapping(
+        self,
+        default_icons: Tuple[Icon, Icon],
+    ) -> Dict[str, Tuple[Icon, Icon]]:
+        # {topic: (Icon(Topic): green, Icon(Item): colorful)}
+        mapping: Dict[str, Tuple[Icon, Icon]] = {}
+        for menu in [
+            mega_menu_registry.menu_setup(),
+            mega_menu_registry.menu_monitoring(),
+        ]:
+            mapping[menu.title] = (
+                menu.icon + "_active" if isinstance(menu.icon, str) else default_icons[0],
+                menu.icon if menu.icon else default_icons[1],
+            )
+
+            for topic in menu.topics():
+                mapping[topic.title] = (
+                    topic.icon if topic.icon else default_icons[0],
+                    topic.icon if topic.icon else default_icons[1],
+                )
+                for item in topic.items:
+                    mapping[item.title] = (
+                        topic.icon if topic.icon else default_icons[0],
+                        item.icon if item.icon else default_icons[1],
+                    )
+        for module_class in main_module_registry.values():
+            module = module_class()
+            if module.title not in mapping:
+                mapping[module.title] = (
+                    module.topic.icon_name
+                    if module.topic and module.topic.icon_name
+                    else default_icons[0],
+                    module.icon if module.icon else default_icons[1],
+                )
+        return mapping
+
+    def _render_results(
+        self,
+        results: SearchResultsByTopic,
+    ) -> str:
+        with output_funnel.plugged():
+            default_icons = ("main_" + self.search_type + "_active", "main_" + self.search_type)
+            icon_mapping = self._get_icon_mapping(default_icons)
+
+            for topic, search_results in results:
+                max_num_displayed_results_exceeded = (
+                    len(list(search_results)) >= self._max_num_displayed_results
+                )
+
+                icons = icon_mapping.get(topic, default_icons)
+                html.open_div(
+                    id_=topic,
+                    class_=["topic", "extendable" if max_num_displayed_results_exceeded else ""],
+                )
+                self._render_topic(topic, icons)
                 html.open_ul()
-                for result in list(search_results)[:self._max_num_displayed_results]:
-                    self._render_result(result)
+                for count, result in enumerate(list(search_results)):
+                    self._render_result(
+                        result,
+                        hidden=count >= self._max_num_displayed_results,
+                    )
+
                 # TODO: Remove this as soon as the index search does limit its search results
-                if len(list(search_results)) >= self._max_num_displayed_results:
-                    html.div(
-                        content=_(f"Showing only first {self._max_num_displayed_results} results."))
+                if max_num_displayed_results_exceeded:
+                    html.open_li(class_="show_all_items")
+                    html.open_a(
+                        href="",
+                        onclick=f"cmk.search.on_click_show_all_results({json.dumps(topic)}, 'popup_menu_{self.search_type}');",
+                    )
+                    html.write_text(_("Show all results"))
+                    html.close_a()
+                    html.close_li()
+
                 html.close_ul()
                 html.close_div()
-            html.div(None, class_=["topic", "sentinel"])
-            html_text = html.drain()
+            html_text = output_funnel.drain()
         return html_text
 
-    def _render_topic(self, topic):
+    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
         html.open_h2()
         html.div(class_="spacer", content="")
-        # TODO: Add the corresponding icon
-        html.icon("topic_overview")
+
+        html.open_a(
+            class_="show_all_topics",
+            href="",
+            onclick=f"cmk.search.on_click_show_all_topics({json.dumps(topic)})",
+        )
+        html.icon(icon="collapse_arrow", title=_("Show all topics"))
+        html.close_a()
+
+        if not user.get_attribute("icons_per_item"):
+            html.icon(icons[0])
+        else:
+            html.icon(icons[1])
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result):
-        html.open_li()
-        html.open_a(href=result.url, target="main", onclick="cmk.popup_menu.close_popup()")
-        html.write_text(result.title)
+    def _render_result(self, result, hidden=False):
+        html.open_li(
+            class_="hidden" if hidden else "",
+            **{"data-extended": "false" if hidden else ""},
+        )
+        html.open_a(
+            href=result.url,
+            target="main",
+            onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
+            title=result.title + (" %s" % result.context if result.context else ""),
+        )
+        html.write_text(
+            result.title + (" %s" % html.render_b(result.context) if result.context else "")
+        )
         html.close_a()
         html.close_li()
 
 
 class MonitoringSearch(ABCMegaMenuSearch):
     """Search field in the monitoring menu"""
+
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_monitoring",
-            class_="content_center",
+        html.open_div(id_="mk_side_search_monitoring")
+        # TODO: Implement submit action (e.g. show all results of current query)
+        html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _(
+            "Search for menu entries, hosts, services or host- and servicegroups.\n"
+            "You can use the following filters:\n"
+            "h: Host\n"
+            "s: Service\n"
+            "hg: Host group\n"
+            "sg: Service group\n"
+            "ad: Address\n"
+            "al: Alias\n"
+            "tg: Host tag\n"
+            "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+            "sl: Service label (e.g. sl: cmk/os_family:linux)"
         )
-        html.input(id_=f"mk_side_search_field_{self.name}",
-                   type_="text",
-                   name="search",
-                   autocomplete="off",
-                   placeholder=_("Search in Monitoring"),
-                   onkeydown="cmk.search.on_key_down('monitoring')",
-                   oninput="cmk.search.on_input_search('monitoring')")
-        # TODO: Check if this icon button can be removed
-        html.icon_button("#",
-                         _("Search"),
-                         "quicksearch",
-                         onclick="cmk.quicksearch.on_search_click();")
+        html.input(
+            id_=f"mk_side_search_field_{self.name}",
+            type_="text",
+            name="search",
+            title=tooltip,
+            autocomplete="off",
+            placeholder=_("Search in Monitoring"),
+            onkeydown="cmk.search.on_key_down('monitoring')",
+            oninput="cmk.search.on_input_search('monitoring')",
+        )
+        html.input(
+            id_=f"mk_side_search_field_clear_{self.name}",
+            name="reset",
+            type_="button",
+            onclick="cmk.search.on_click_reset('monitoring');",
+        )
+        html.end_form()
         html.close_div()
-        html.div('', id_="mk_side_clear")
+        html.div("", id_="mk_side_clear")
 
 
 @page_registry.register_page("ajax_search_monitoring")
 class PageSearchMonitoring(AjaxPage):
     def page(self):
-        query = html.request.get_unicode_input_mandatory("q")
+        query = request.get_unicode_input_mandatory("q")
         return MenuSearchResultsRenderer("monitoring").render(query)
 
 
 class SetupSearch(ABCMegaMenuSearch):
     """Search field in the setup menu"""
+
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_setup",
-            class_="content_center",
+        html.open_div(id_="mk_side_search_setup")
+        # TODO: Implement submit action (e.g. show all results of current query)
+        html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _("Search for menu entries, settings, hosts and rulesets.")
+        html.input(
+            id_=f"mk_side_search_field_{self.name}",
+            type_="text",
+            name="search",
+            title=tooltip,
+            autocomplete="off",
+            placeholder=_("Search in Setup"),
+            onkeydown="cmk.search.on_key_down('setup')",
+            oninput="cmk.search.on_input_search('setup');",
         )
-        html.input(id_=f"mk_side_search_field_{self.name}",
-                   type_="text",
-                   name="search",
-                   autocomplete="off",
-                   placeholder=_("Search in Setup"),
-                   onkeydown="cmk.search.on_key_down('setup')",
-                   oninput="cmk.search.on_input_search('setup');")
-        # TODO: Check if this icon button can be removed
-        html.icon_button("#",
-                         _("Search"),
-                         "quicksearch",
-                         onclick="cmk.quicksearch.on_search_click();")
+        html.input(
+            id_=f"mk_side_search_field_clear_{self.name}",
+            name="reset",
+            type_="button",
+            onclick="cmk.search.on_click_reset('setup');",
+        )
+        html.end_form()
         html.close_div()
-        html.div('', id_="mk_side_clear")
+        html.div("", id_="mk_side_clear")
 
 
 @page_registry.register_page("ajax_search_setup")
 class PageSearchSetup(AjaxPage):
     def page(self):
-        query = html.request.get_unicode_input_mandatory("q")
+        query = request.get_unicode_input_mandatory("q")
         try:
             return MenuSearchResultsRenderer("setup").render(query)
         except IndexNotFoundException:
-            with html.plugged():
+            with output_funnel.plugged():
                 html.open_div(class_="topic")
                 html.open_ul()
                 html.write_text(_("Currently indexing, please try again shortly."))
                 html.close_ul()
                 html.close_div()
-                return html.drain()
+                return output_funnel.drain()

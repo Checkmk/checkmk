@@ -9,19 +9,28 @@ def inv_ibm_mq_queues(parsed, inventory_tree, status_data_tree):
     path = "software.applications.ibm_mq.queues:"
     inv_node = inventory_tree.get_list(path)
     for item in sorted(parsed):
-        if ':' not in item:
+        if ":" not in item:
             # Do not show queue manager in inventory
             continue
         attrs = parsed[item]
         qmname, qname = item.split(":")
-        inv_node.append({
-            "qmgr": qmname,
-            "name": qname,
-            "maxdepth": attrs["MAXDEPTH"],
-            "maxmsgl": attrs.get("MAXMSGL", "n/a"),
-        })
+        inv_node.append(
+            {
+                "qmgr": qmname,
+                "name": qname,
+                "maxdepth": attrs["MAXDEPTH"],
+                "maxmsgl": attrs.get("MAXMSGL", "n/a"),
+                "created": (
+                    attrs.get("CRDATE", "n/a") + " " + (attrs.get("CRTIME", "").replace(".", ":"))
+                ),
+                "altered": (
+                    attrs.get("ALTDATE", "n/a") + " " + (attrs.get("ALTTIME", "").replace(".", ":"))
+                ),
+                "monq": attrs.get("MONQ", "n/a"),
+            }
+        )
 
 
-inv_info['ibm_mq_queues'] = {
-    'inv_function': inv_ibm_mq_queues,
+inv_info["ibm_mq_queues"] = {
+    "inv_function": inv_ibm_mq_queues,
 }

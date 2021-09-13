@@ -12,8 +12,8 @@
 
 #include <bitset>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
-#include <ctime>
 #include <functional>
 #include <list>
 #include <map>
@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "Aggregator.h"  // IWYU pragma: keep
@@ -31,7 +32,6 @@
 #include "StatsColumn.h"
 #include "Triggers.h"
 #include "contact_fwd.h"
-#include "data_encoding.h"
 class Column;
 class Logger;
 class OutputBuffer;
@@ -51,13 +51,13 @@ public:
 
     bool timelimitReached() const;
     void invalidRequest(const std::string &message) const;
+    void badGateway(const std::string &message) const;
 
     const contact *authUser() const { return _auth_user; }
     std::chrono::seconds timezoneOffset() const { return _timezone_offset; }
 
-    std::unique_ptr<Filter> partialFilter(
-        const std::string &message,
-        std::function<bool(const Column &)> predicate) const;
+    std::unique_ptr<Filter> partialFilter(const std::string &message,
+                                          columnNamePredicate predicate) const;
     std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     std::optional<int32_t> greatestLowerBoundFor(
@@ -92,8 +92,9 @@ private:
     bool _show_column_headers;
     OutputFormat _output_format;
     int _limit;
-    int _time_limit;
-    time_t _time_limit_timeout;
+    std::optional<
+        std::pair<std::chrono::seconds, std::chrono::steady_clock::time_point>>
+        _time_limit;
     unsigned _current_line;
     std::chrono::seconds _timezone_offset;
     Logger *const _logger;
@@ -114,18 +115,18 @@ private:
     void parseNegateLine(char *line, FilterStack &filters);
     void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
     void parseStatsNegateLine(char *line);
-    void parseColumnsLine(char *line);
+    void parseColumnsLine(const char *line);
     void parseColumnHeadersLine(char *line);
     void parseLimitLine(char *line);
     void parseTimelimitLine(char *line);
     void parseSeparatorsLine(char *line);
-    void parseOutputFormatLine(char *line);
+    void parseOutputFormatLine(const char *line);
     void parseKeepAliveLine(char *line);
     void parseResponseHeaderLine(char *line);
-    void parseAuthUserHeader(char *line);
+    void parseAuthUserHeader(const char *line);
     void parseWaitTimeoutLine(char *line);
     void parseWaitTriggerLine(char *line);
-    void parseWaitObjectLine(char *line);
+    void parseWaitObjectLine(const char *line);
     void parseLocaltimeLine(char *line);
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);

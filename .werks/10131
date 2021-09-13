@@ -1,0 +1,12 @@
+Title: Bumped shipped Python version from 3.8.6 to 3.8.7
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1612346186
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0i1
+
+Python 3.8.7 contains quite a few bug fixes, see
+https://docs.python.org/release/3.8.7/whatsnew/changelog.html.

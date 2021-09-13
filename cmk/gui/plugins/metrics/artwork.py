@@ -6,19 +6,15 @@
 
 import math
 import time
-from typing import List, Tuple, Union, Optional, Callable, Iterable
 from functools import partial
 from itertools import zip_longest
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.render
 
-from cmk.gui import config
+from cmk.gui.globals import request, theme, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.plugins.metrics import unit_info
-
-from cmk.gui.plugins.metrics import timeseries
-from cmk.gui.plugins.metrics import rrd_fetch
+from cmk.gui.plugins.metrics import rrd_fetch, timeseries, unit_info
 
 Label = Tuple[int, Optional[str], int]
 
@@ -75,30 +71,29 @@ def _graph_colors(theme_id):
             "foreground_color": "#000000",
             "canvas_color": "#ffffff",
         },
-    }.get(theme_id, {
-        "background_color": "#f0f2f4",
-        "foreground_color": "#000000",
-        "canvas_color": "#ffffff",
-    })
+    }.get(
+        theme_id,
+        {
+            "background_color": None,
+            "foreground_color": "#000000",
+            "canvas_color": None,
+        },
+    )
 
 
 def add_default_render_options(graph_render_options, render_unthemed=False):
     options = get_default_graph_render_options()
     options.update(graph_render_options)
-    options.setdefault("size", config.user.load_file("graph_size", (70, 16)))
+    options.setdefault("size", user.load_file("graph_size", (70, 16)))
 
-    # Update the graph colors that are set to "default" with the theme specific colors.
-    # When rendering to PDF the theme colors must not be applied, but the regular colors
-    # have to be used.
-    theme_colors = _graph_colors(html.get_theme() if not render_unthemed else "pdf")
-    for attr_name in ["background_color", "foreground_color", "canvas_color"]:
-        if options[attr_name] == "default":
-            options[attr_name] = theme_colors[attr_name]
+    # Users can't modify graph colors. Only defaults are allowed
+    theme_colors = _graph_colors(theme.get() if not render_unthemed else "pdf")
+    options.update(theme_colors)
 
     return options
 
 
-#.
+# .
 #   .--Create graph artwork------------------------------------------------.
 #   |                 _         _                      _                   |
 #   |                / \   _ __| |___      _____  _ __| | __               |
@@ -127,7 +122,7 @@ def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
     width, height = graph_render_options["size"]
 
     try:
-        start_time, end_time, step = curves[0]['rrddata'].twindow
+        start_time, end_time, step = curves[0]["rrddata"].twindow
     except IndexError:  # Empty graph
         (start_time, end_time), step = graph_data_range["time_range"], 60
 
@@ -137,14 +132,13 @@ def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
         "width": width,  # in widths of lower case 'x'
         "height": height,
         "mirrored": mirrored,
-
         # Actual data and axes
         "curves": layouted_curves,
         "horizontal_rules": graph_recipe["horizontal_rules"],
-        "vertical_axis": compute_graph_v_axis(graph_recipe, graph_data_range, height,
-                                              layouted_curves, mirrored),
+        "vertical_axis": compute_graph_v_axis(
+            graph_recipe, graph_data_range, height, layouted_curves, mirrored
+        ),
         "time_axis": compute_graph_t_axis(start_time, end_time, width, step),
-
         # Displayed range
         "start_time": start_time,
         "end_time": end_time,
@@ -155,13 +149,12 @@ def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
         "requested_end_time": graph_data_range["time_range"][1],
         "requested_step": graph_data_range["step"],
         "pin_time": pin_time,
-
         # Definition itself, for reproducing the graph
         "definition": graph_recipe,
     }
 
 
-#.
+# .
 #   .--Layout Curves-------------------------------------------------------.
 #   |  _                            _      ____                            |
 #   | | |    __ _ _   _  ___  _   _| |_   / ___|   _ _ ____   _____  ___   |
@@ -198,6 +191,13 @@ def layout_graph_curves(curves):
         if curve.get("dont_paint"):
             continue
 
+        line_type = curve["line_type"]
+        raw_points = halfstep_interpolation(curve["rrddata"])
+
+        if line_type == "ref":  # Only for forecast graphs
+            stacks[1] = raw_points
+            continue
+
         layouted_curve = {
             "color": curve["color"],
             "title": curve["title"],
@@ -205,9 +205,7 @@ def layout_graph_curves(curves):
         }
         layouted_curves.append(layouted_curve)
 
-        line_type = curve["line_type"]
-        raw_points = halfstep_interpolation(curve["rrddata"])
-        if line_type[0] == '-':
+        if line_type[0] == "-":
             raw_points = list(map(mirror_point, raw_points))
             line_type = line_type[1:]
             mirrored = True
@@ -291,7 +289,7 @@ def halfstep_interpolation(rrddata):
     return points
 
 
-#.
+# .
 #   .--Scalars-------------------------------------------------------------.
 #   |                  ____            _                                   |
 #   |                 / ___|  ___ __ _| | __ _ _ __ ___                    |
@@ -326,7 +324,7 @@ def _compute_scalars(graph_recipe, curves, pin_time):
                 "last": rrddata[-1],
                 "max": max(rrddata),
                 "min": min(rrddata),
-                "average": sum(rrddata) / float(len(rrddata))
+                "average": sum(rrddata) / float(len(rrddata)),
             }
         else:
             scalars = {x: None for x in ["pin", "first", "last", "max", "min", "average"]}
@@ -348,11 +346,13 @@ def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time):
 
         value = _get_value_at_timestamp(hover_time, rrddata)
 
-        curve_values.append({
-            "title": curve["title"],
-            "color": curve["color"],
-            "rendered_value": _render_scalar_value(value, unit),
-        })
+        curve_values.append(
+            {
+                "title": curve["title"],
+                "color": curve["color"],
+                "rendered_value": _render_scalar_value(value, unit),
+            }
+        )
 
     return curve_values
 
@@ -370,7 +370,7 @@ def _get_value_at_timestamp(pin_time, rrddata):
         return rrddata[nth_value]
 
 
-#.
+# .
 #   .--Vertical Axis-------------------------------------------------------.
 #   |      __     __        _   _           _      _          _            |
 #   |      \ \   / /__ _ __| |_(_) ___ __ _| |    / \   __  _(_)___        |
@@ -399,9 +399,9 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
     # vrange     -> amount of values visible in vaxis (max_value - min_value)
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
-    real_range, vrange, min_value, max_value = compute_v_axis_min_max(graph_recipe,
-                                                                      graph_data_range, height_ex,
-                                                                      layouted_curves, mirrored)
+    real_range, vrange, min_value, max_value = compute_v_axis_min_max(
+        graph_recipe, graph_data_range, height_ex, layouted_curves, mirrored
+    )
 
     # Guestimate a useful number of vertical labels
     # max(2, ...)               -> show at least two labels
@@ -464,8 +464,8 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
     # Both are in value ranges, not coordinates or similar. These are calculated later
     # by create_vertical_axis_labels().
-    label_distance = mantissa * (base**exponent) * divide_by
-    sub_distance = submantissa * (base**exponent) * divide_by
+    label_distance = mantissa * (base ** exponent) * divide_by
+    sub_distance = submantissa * (base ** exponent) * divide_by
 
     # We need to round the position of the labels. Otherwise some
     # strange things can happen due to internal precision limitation.
@@ -482,8 +482,10 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
     # Adds "labels", "max_label_length" and updates "axis_label" in case
     # of units which use a graph global unit
     v_axis.update(
-        create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_distance,
-                                    mirrored))
+        create_vertical_axis_labels(
+            min_value, max_value, unit, label_distance, sub_distance, mirrored
+        )
+    )
     return v_axis
 
 
@@ -631,7 +633,7 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
                 line_width = 2
             else:
                 label_value = None
-                line_width = 1
+                line_width = 0
 
             label_specs.append((pos, label_value, line_width))
             if len(label_specs) > 1000:
@@ -640,7 +642,7 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
         # Make sure that we increase position at least that much that it
         # will not fall back to its old value due to rounding! This once created
         # a nice endless loop.
-        pos += max(sub_distance, 10**-round_to)
+        pos += max(sub_distance, 10 ** -round_to)
 
     # Now render the single label values. When the unit has a function to calculate
     # a graph global unit, use it. Otherwise add units to all labels individually.
@@ -702,13 +704,13 @@ def render_labels(label_specs, render_func=None):
 
 
 def remove_useless_zeroes(label):
-    if '.' not in label:
+    if "." not in label:
         return label
 
     return label.replace(".00 ", " ").replace(".0 ", " ")
 
 
-#.
+# .
 #   .--Time Axis-----------------------------------------------------------.
 #   |            _____ _                     _          _                  |
 #   |           |_   _(_)_ __ ___   ___     / \   __  _(_)___              |
@@ -745,7 +747,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     if start_date == end_date:
         title_label = str(cmk.utils.render.date(start_time))
     else:
-        title_label = u"%s \u2014 %s" % (
+        title_label = "%s \u2014 %s" % (
             str(cmk.utils.render.date(start_time)),
             str(cmk.utils.render.date(end_time)),
         )
@@ -777,7 +779,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # vertical axis, but here the division is not done by 1, 2 and
     # 5 but we need to stick to user friendly time sections - that
     # might even not be equal in size (like months!)
-    num_t_labels = int((width - 7) / label_size)
+    num_t_labels = max(int((width - 7) / label_size), 2)
     label_distance_at_least = max(label_distance_at_least, time_range / num_t_labels)
 
     # Get a distribution function. The function is called with start_time end
@@ -786,16 +788,28 @@ def compute_graph_t_axis(start_time, end_time, width, step):
 
     # If the distance of the lables is less than one day, we have a distance aligned
     # at minutes.
-    for dist_minutes, subdivision in [(1, 0.25), (2, 0.5), (5, 1), (10, 2), (20, 5), (30, 5),
-                                      (60, 10), (120, 20), (240, 30), (360, 60), (480, 60),
-                                      (720, 120), (1440, 360), (2880, 480), (4320, 720),
-                                      (5760, 720)]:
+    for dist_minutes, subdivision in [
+        (1, 0.25),
+        (2, 0.5),
+        (5, 1),
+        (10, 2),
+        (20, 5),
+        (30, 5),
+        (60, 10),
+        (120, 20),
+        (240, 30),
+        (360, 60),
+        (480, 60),
+        (720, 120),
+        (1440, 360),
+        (2880, 480),
+        (4320, 720),
+        (5760, 720),
+    ]:
         if label_distance_at_least <= dist_minutes * 60:
-            dist_function: Callable[[int, int],
-                                    Iterable[Tuple[int, int,
-                                                   bool]]] = partial(dist_equal,
-                                                                     distance=dist_minutes * 60,
-                                                                     subdivision=subdivision * 60)
+            dist_function: Callable[[int, int], Iterable[Tuple[int, int, bool]]] = partial(
+                dist_equal, distance=dist_minutes * 60, subdivision=subdivision * 60
+            )
             break
 
     else:
@@ -885,17 +899,19 @@ def dist_month(start_time, end_time, months):
     broken_tm_isdst = 0
 
     while True:
-        pos = time.mktime((
-            broken_tm_year,
-            broken_tm_mon,
-            broken_tm_mday,
-            broken_tm_hour,
-            broken_tm_min,
-            broken_tm_sec,
-            broken_tm_wday,
-            broken_tm_yday,
-            broken_tm_isdst,
-        ))
+        pos = time.mktime(
+            (
+                broken_tm_year,
+                broken_tm_mon,
+                broken_tm_mday,
+                broken_tm_hour,
+                broken_tm_min,
+                broken_tm_sec,
+                broken_tm_wday,
+                broken_tm_yday,
+                broken_tm_isdst,
+            )
+        )
         if pos > end_time:
             break
 
@@ -909,24 +925,20 @@ def dist_month(start_time, end_time, months):
                 broken_tm_mon -= 12
 
             if months > 2:
-                pos = time.mktime((
-                    broken_tm_year,
-                    broken_tm_mon,
-                    broken_tm_mday,
-                    broken_tm_hour,
-                    broken_tm_min,
-                    broken_tm_sec,
-                    broken_tm_wday,
-                    broken_tm_yday,
-                    broken_tm_isdst,
-                ))
-                yield pos, 1, False
-
-    # Add weeks if months are low
-    if months <= 2:
-        for pos, line_width, _has_label in dist_week(start_time, end_time):
-            if line_width == 2:
-                yield pos, 1, False
+                pos = time.mktime(
+                    (
+                        broken_tm_year,
+                        broken_tm_mon,
+                        broken_tm_mday,
+                        broken_tm_hour,
+                        broken_tm_min,
+                        broken_tm_sec,
+                        broken_tm_wday,
+                        broken_tm_yday,
+                        broken_tm_isdst,
+                    )
+                )
+                yield pos, 0, False
 
 
 # These distance functions yield a sequence of useful
@@ -938,17 +950,19 @@ def dist_equal(start_time, end_time, distance, subdivision):
     # First align start_time to the next time that can be divided
     # distance, but align this at 00:00 localtime!
     align_broken = time.localtime(start_time)
-    align = time.mktime((
-        align_broken[0],
-        align_broken[1],
-        align_broken[2],
-        0,
-        0,
-        0,
-        align_broken[6],
-        align_broken[7],
-        align_broken[8],
-    ))
+    align = time.mktime(
+        (
+            align_broken[0],
+            align_broken[1],
+            align_broken[2],
+            0,
+            0,
+            0,
+            align_broken[6],
+            align_broken[7],
+            align_broken[8],
+        )
+    )
     fract, wholes = math.modf((start_time - align) / subdivision)
 
     pos = align + wholes * subdivision
@@ -960,11 +974,11 @@ def dist_equal(start_time, end_time, distance, subdivision):
         if f <= 0.0000001 or f >= 0.9999999:
             yield (pos, 2, True)
         else:
-            yield (pos, 1, False)
+            yield (pos, 0, False)
         pos += subdivision
 
 
-#.
+# .
 #   .--Graph-Pin-----------------------------------------------------------.
 #   |            ____                 _           ____  _                  |
 #   |           / ___|_ __ __ _ _ __ | |__       |  _ \(_)_ __             |
@@ -979,12 +993,12 @@ def dist_equal(start_time, end_time, distance, subdivision):
 
 
 def load_graph_pin():
-    return config.user.load_file("graph_pin", None)
+    return user.load_file("graph_pin", None)
 
 
 def save_graph_pin() -> None:
     try:
-        pin_timestamp = html.request.get_integer_input("pin")
+        pin_timestamp = request.get_integer_input("pin")
     except ValueError:
         pin_timestamp = None
-    config.user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)
+    user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)

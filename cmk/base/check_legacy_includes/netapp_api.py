@@ -4,9 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import host_name
-from cmk.base.check_api import host_extra_conf_merged
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+from cmk.base.check_api import host_extra_conf_merged, host_name
 from cmk.base.plugins.agent_based.utils import netapp_api
 
 

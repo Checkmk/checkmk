@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # The OpenManage module attaches itself to the SNMP agent of the
 # operating system. We trigger on all Windows and Linux systems.
 # This is not optimal but still enough for excluding network
@@ -12,9 +12,11 @@
 
 
 def scan_dell_om(oid):
-    return "Open Manage" in oid(".1.3.6.1.2.1.1.1.0") or \
-           "Linux" in oid(".1.3.6.1.2.1.1.1.0") or \
-           "Software: Windows" in oid(".1.3.6.1.2.1.1.1.0")
+    return (
+        "Open Manage" in oid(".1.3.6.1.2.1.1.1.0")
+        or "Linux" in oid(".1.3.6.1.2.1.1.1.0")
+        or "Software: Windows" in oid(".1.3.6.1.2.1.1.1.0")
+    )
 
 
 def parse_omreport(info):
@@ -32,7 +34,7 @@ def parse_omreport(info):
             # no colon in the line
             continue
         key = " ".join(line[:idx])
-        value = " ".join(line[idx + 1:])
+        value = " ".join(line[idx + 1 :])
         if key == "ID" and current_obj:
             insert(current_obj)
 

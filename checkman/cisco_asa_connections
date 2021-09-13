@@ -10,6 +10,6 @@ description:
 
  Upper levels for currently connections can be set. There are no default levels.
 
-inventory:
+discovery:
  One service is created.
 

@@ -8,22 +8,22 @@
 # pylint: disable=redefined-outer-name,wrong-import-order
 
 import collections
+import enum
 import errno
 import shutil
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from _pytest.doctest import DoctestItem
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
-    "testlib",  #
-    "unit.checks.checktestlib",  #
-    "unit.checks.generictests.run")
+    "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
+)
 
-import testlib
+import tests.testlib as testlib
 
-#TODO Hack: Exclude cee tests in cre repo
+# TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():
     collect_ignore_glob = ["*/cee/*"]
 
@@ -38,19 +38,25 @@ if not Path(testlib.utils.cmc_path()).exists():
 # the other type will be skipped.
 #
 
-EXECUTE_IN_SITE, EXECUTE_IN_VENV = True, False
 
-test_types = collections.OrderedDict([
-    ("unit", EXECUTE_IN_VENV),
-    ("pylint", EXECUTE_IN_VENV),
-    ("docker", EXECUTE_IN_VENV),
-    ("agent-integration", EXECUTE_IN_VENV),
-    ("agent-plugin-unit", EXECUTE_IN_VENV),
-    ("integration", EXECUTE_IN_SITE),
-    ("gui_crawl", EXECUTE_IN_VENV),
-    ("packaging", EXECUTE_IN_VENV),
-    ("composition", EXECUTE_IN_VENV),
-])
+class ExecutionType(enum.Enum):
+    Site = enum.auto()
+    VirtualEnv = enum.auto()
+
+
+test_types = collections.OrderedDict(
+    [
+        ("unit", ExecutionType.VirtualEnv),
+        ("pylint", ExecutionType.VirtualEnv),
+        ("docker", ExecutionType.VirtualEnv),
+        ("agent-integration", ExecutionType.VirtualEnv),
+        ("agent-plugin-unit", ExecutionType.VirtualEnv),
+        ("integration", ExecutionType.Site),
+        ("gui_crawl", ExecutionType.VirtualEnv),
+        ("packaging", ExecutionType.VirtualEnv),
+        ("composition", ExecutionType.VirtualEnv),
+    ]
+)
 
 
 def pytest_addoption(parser):
@@ -61,18 +67,28 @@ def pytest_addoption(parser):
     if "-T" in options:
         return
 
-    parser.addoption("-T",
-                     action="store",
-                     metavar="TYPE",
-                     default=None,
-                     help="Run tests of the given TYPE. Available types are: %s" %
-                     ", ".join(test_types.keys()))
+    parser.addoption(
+        "-T",
+        action="store",
+        metavar="TYPE",
+        default=None,
+        help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types.keys()),
+    )
 
 
 def pytest_configure(config):
-    """Register the type marker to pytest"""
+    """Registers custom markers to pytest"""
     config.addinivalue_line(
-        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys()))
+        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys())
+    )
+    config.addinivalue_line(
+        "markers",
+        "non_resilient:"
+        " Tests marked as non-resilient are allowed to fail when run in resilience test.",
+    )
+    config.addinivalue_line(
+        "markers", "registry_reset: Marker to add arguments to `registry_reset` fixture."
+    )
 
 
 def pytest_collection_modifyitems(items):
@@ -128,16 +144,23 @@ def pytest_cmdline_main(config):
         return  # missing option is handled later
 
     context = test_types[config.getoption("-T")]
-    if context == EXECUTE_IN_SITE and not testlib.is_running_as_site_user():
-        raise Exception()
+    if context == ExecutionType.VirtualEnv:
+        verify_virtualenv()
+    elif context == ExecutionType.Site:
+        verify_site()
 
-    verify_virtualenv()
+
+def verify_site():
+    if not testlib.is_running_as_site_user():
+        raise RuntimeError("Please run tests as site user.")
 
 
 def verify_virtualenv():
     if not testlib.virtualenv_path():
-        raise SystemExit("ERROR: Please load virtual environment first "
-                         "(Use \"pipenv shell\" or configure direnv)")
+        raise SystemExit(
+            "ERROR: Please load virtual environment first "
+            '(Use "pipenv shell" or configure direnv)'
+        )
 
 
 #

@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -36,12 +40,15 @@ def check_datapower_ldrive(item, _no_params, info):
         if item == "%s-%s" % (controller, ldrive):
             state, state_txt = datapower_ldrive_status[status]
             raid_level = datapower_ldrive_raid[raid_level]
-            infotext = "Status: %s, RAID Level: %s, Number of Drives: %s"\
-                    % (state_txt, raid_level, num_drives)
+            infotext = "Status: %s, RAID Level: %s, Number of Drives: %s" % (
+                state_txt,
+                raid_level,
+                num_drives,
+            )
             return state, infotext
 
 
-check_info['datapower_ldrive'] = {
+check_info["datapower_ldrive"] = {
     "inventory_function": inventory_datapower_ldrive,
     "check_function": check_datapower_ldrive,
     "service_description": "Logical Drive %s",
@@ -53,6 +60,7 @@ check_info['datapower_ldrive'] = {
             "4",  # dpStatusRaidLogicaldrivetatusRaidLevel
             "5",  # dpStatusRaidLogicaldrivetatusNumPhysicalDrives
             "6",  # dpStatusRaidLogicaldrivetatusState
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_datapower,
 }

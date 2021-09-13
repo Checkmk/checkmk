@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -22,7 +26,7 @@ def parse_jolokia_generic(info):
     return parsed
 
 
-#.
+# .
 #   .--String--------------------------------------------------------------.
 #   |                    ____  _        _                                  |
 #   |                   / ___|| |_ _ __(_)_ __   __ _                      |
@@ -52,7 +56,7 @@ check_info["jolokia_generic.string"] = {
     "group": "generic_string",
 }
 
-#.
+# .
 #   .--Rate----------------------------------------------------------------.
 #   |                         ____       _                                 |
 #   |                        |  _ \ __ _| |_ ___                           |
@@ -78,7 +82,7 @@ check_info["jolokia_generic.rate"] = {
     "group": "generic_rate",
 }
 
-#.
+# .
 #   .--Number--------------------------------------------------------------.
 #   |                _   _                 _                               |
 #   |               | \ | |_   _ _ __ ___ | |__   ___ _ __                 |

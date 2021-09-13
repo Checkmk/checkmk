@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.postgres import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils import postgres
+
 # <<<postgres_locks>>>
 # [databases_start]
 # postgres
@@ -66,8 +67,8 @@ def check_postgres_locks(item, params, parsed):
             yield 1, "too high (Levels at %d/%d)" % (warn, crit)
 
 
-check_info['postgres_locks'] = {
-    "parse_function": parse_postgres_dbs,
+check_info["postgres_locks"] = {
+    "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_locks,
     "inventory_function": inventory_postgres_locks,
     "service_description": "PostgreSQL Locks %s",

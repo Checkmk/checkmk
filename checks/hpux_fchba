@@ -59,9 +59,9 @@ def check_hpux_fchba(item, _no_params, info):
 
     infos.append("Topology: %s" % hba.get("Topology", "(none)"))
     if hba.get("Topology") not in [
-            "PTTOPT_FABRIC",
-            "PRIVATE_LOOP",
-            "PUBLIC_LOOP",
+        "PTTOPT_FABRIC",
+        "PRIVATE_LOOP",
+        "PUBLIC_LOOP",
     ]:
         state = 2
         infos[-1] += "(!!)"
@@ -73,7 +73,7 @@ def check_hpux_fchba(item, _no_params, info):
     return (state, ", ".join(infos))
 
 
-check_info['hpux_fchba'] = {
+check_info["hpux_fchba"] = {
     "check_function": check_hpux_fchba,
     "inventory_function": inventory_hpux_fchba,
     "service_description": "FC HBA %s",

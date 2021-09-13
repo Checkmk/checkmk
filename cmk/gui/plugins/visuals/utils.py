@@ -9,41 +9,56 @@
 
 import abc
 import time
-from typing import Dict, List, Optional, Tuple, Union, Type, Iterator
+from itertools import chain
+from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Set, Tuple, Type, Union
 
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.valuespec import ValueSpec
+from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, user_errors
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import ColumnName, HTTPVariables
-from cmk.gui.htmllib import Choices
 from cmk.gui.page_menu import PageMenuEntry
+from cmk.gui.sites import get_site_config
+from cmk.gui.type_defs import (
+    Choices,
+    ColumnName,
+    FilterHeader,
+    FilterHTTPVariables,
+    FilterName,
+    Row,
+    Rows,
+    VisualContext,
+)
+from cmk.gui.valuespec import ValueSpec
+from cmk.gui.view_utils import get_labels
 
 
-class VisualInfo(metaclass=abc.ABCMeta):
+class VisualInfo(abc.ABC):
     """Base class for all visual info classes"""
-    @abc.abstractproperty
+
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a visual type. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """The human readable GUI title"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title_plural(self) -> str:
         """The human readable GUI title for multiple items"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         """The key / valuespec pairs (choices) to identify a single row"""
         raise NotImplementedError()
@@ -87,41 +102,49 @@ class VisualInfoRegistry(cmk.utils.plugin_registry.Registry[Type[VisualInfo]]):
 visual_info_registry = VisualInfoRegistry()
 
 
-class VisualType(metaclass=abc.ABCMeta):
+class VisualType(abc.ABC):
     """Base class for all filters"""
-    @abc.abstractproperty
+
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a visual type. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """The human readable GUI title"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident_attr(self) -> str:
         """The name of the attribute that is used to identify a visual of this type"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def multicontext_links(self) -> bool:
         """Whether or not to show context buttons even if not single infos present"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def plural_title(self) -> str:
         """The plural title to use in the GUI"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def show_url(self) -> str:
         """The URL filename that can be used to show visuals of this type"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def add_visual_handler(self, target_visual_name: str, add_type: str, context: Dict,
-                           parameters: Dict) -> None:
+    def add_visual_handler(
+        self, target_visual_name: str, add_type: str, context: Dict, parameters: Dict
+    ) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError()
 
@@ -135,10 +158,15 @@ class VisualType(metaclass=abc.ABCMeta):
         """Load all visuals of this type"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def permitted_visuals(self) -> Dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
+
+    @property
+    def choices(self) -> Choices:
+        return [(k, v["title"]) for k, v in self.permitted_visuals.items()]
 
     def link_from(self, linking_view, linking_view_rows, visual, context_vars):
         """Dynamically show/hide links to other visuals (e.g. reports, dashboards, views) from views
@@ -168,7 +196,8 @@ class VisualType(metaclass=abc.ABCMeta):
 
         single_info_condition = link_from.get("single_infos")
         if single_info_condition and not set(single_info_condition).issubset(
-                linking_view.spec["single_infos"]):
+            linking_view.spec["single_infos"]
+        ):
             return False  # Not matching required single infos
 
         # Currently implemented very specific for the cases we need at the moment. Build something
@@ -201,18 +230,21 @@ class VisualTypeRegistry(cmk.utils.plugin_registry.Registry[Type[VisualType]]):
 visual_type_registry = VisualTypeRegistry()
 
 
-class Filter(metaclass=abc.ABCMeta):
+class Filter(abc.ABC):
     """Base class for all filters"""
-    def __init__(self,
-                 *,
-                 ident: str,
-                 title: str,
-                 sort_index: int,
-                 info: str,
-                 htmlvars: List[str],
-                 link_columns: List[ColumnName],
-                 description: Optional[str] = None,
-                 is_show_more: bool = False) -> None:
+
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        sort_index: int,
+        info: str,
+        htmlvars: List[str],
+        link_columns: List[ColumnName],
+        description: Optional[str] = None,
+        is_show_more: bool = False,
+    ) -> None:
         """
         info:          The datasource info this filter needs to work. If this
                        is "service", the filter will also be available in tables
@@ -250,107 +282,118 @@ class Filter(metaclass=abc.ABCMeta):
         return True
 
     @abc.abstractmethod
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         raise NotImplementedError()
 
-    def filter(self, infoname: str) -> str:
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
-    def need_inventory(self) -> bool:
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
         """Whether this filter needs to load host inventory data"""
         return False
 
-    def validate_value(self, value: Dict) -> None:
+    def validate_value(self, value: FilterHTTPVariables) -> None:
         return
 
-    def filter_table(self, rows: List[dict]) -> List[dict]:
+    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
+        """Columns needed to perform post-Livestatus filtering"""
+        return []
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
-    def variable_settings(self, row: dict) -> HTTPVariables:
-        """return pairs of htmlvar and name according to dataset in row"""
-        return []
+    def request_vars_from_row(self, row: Row) -> FilterHTTPVariables:
+        """return filter request variables built from the given row"""
+        return {}
 
     def infoprefix(self, infoname: str) -> str:
         if self.info == infoname:
             return ""
         return self.info[:-1] + "_"
 
-    def heading_info(self) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 
-    def value(self):
+    def value(self) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
-        val = {}
-        for varname in self.htmlvars:
-            val[varname] = html.request.var(varname, '')
-        return val
+        return {varname: request.get_str_input_mandatory(varname, "") for varname in self.htmlvars}
 
-    def set_value(self, value):
-        """Is used to populate a value, for example loaded from persistance, into
-        the HTML context where it can be used by e.g. the display() method."""
-        for varname in self.htmlvars:
-            var_value = value.get(varname)
-            if var_value is not None:
-                html.request.set_var(varname, var_value)
+
+def display_filter_radiobuttons(
+    *, varname: str, options: List[Tuple[str, str]], default: str, value: FilterHTTPVariables
+) -> None:
+    pick = value.get(varname, default)
+    html.begin_radio_group(horizontal=True)
+    for state, text in options:
+        html.radiobutton(varname, state, pick == state, text + " &nbsp; ")
+    html.end_radio_group()
 
 
 class FilterTristate(Filter):
-    def __init__(self,
-                 *,
-                 ident: str,
-                 title: str,
-                 sort_index: int,
-                 info: str,
-                 column: Optional[str],
-                 deflt: int = -1,
-                 is_show_more: bool = False):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        sort_index: int,
+        info: str,
+        column: Optional[str],
+        deflt: int = -1,
+        is_show_more: bool = False,
+    ):
         self.column = column
         self.varname = "is_" + ident
-        super().__init__(ident=ident,
-                         title=title,
-                         sort_index=sort_index,
-                         info=info,
-                         htmlvars=[self.varname],
-                         link_columns=[],
-                         is_show_more=is_show_more)
+        super().__init__(
+            ident=ident,
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            htmlvars=[self.varname],
+            link_columns=[],
+            is_show_more=is_show_more,
+        )
         self.deflt = deflt
 
-    def display(self):
-        current = html.request.var(self.varname)
-        html.begin_radio_group(horizontal=True)
-        for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
-            checked = current == value or (current in [None, ""] and int(value) == self.deflt)
-            html.radiobutton(self.varname, value, checked, text + u" &nbsp; ")
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(
+            varname=self.varname,
+            options=[("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))],
+            default=str(self.deflt),
+            value=value,
+        )
 
-    def tristate_value(self):
-        return html.request.get_integer_input_mandatory(self.varname, self.deflt)
+    def tristate_value(self, value: FilterHTTPVariables) -> int:
+        try:
+            return int(value.get(self.varname, ""))
+        except ValueError:
+            return self.deflt
 
-    def filter(self, infoname):
-        current = self.tristate_value()
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        current = self.tristate_value(value)
         if current == -1:  # ignore
             return ""
-        if current == 1:
-            return self.filter_code(infoname, True)
-        return self.filter_code(infoname, False)
+        return self.filter_code(current == 1)
 
-    def filter_code(self, infoname, positive):
+    def filter_code(self, positive) -> str:
         raise NotImplementedError()
 
 
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
-    def __init__(self,
-                 *,
-                 ident: str,
-                 title: str,
-                 sort_index: int,
-                 info: str,
-                 column: Optional[str],
-                 is_show_more: bool = False):
+
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        sort_index: int,
+        info: str,
+        column: Optional[str],
+        is_show_more: bool = False,
+    ):
         self.column = column
         self.ranges = [
             (86400, _("days")),
@@ -365,15 +408,17 @@ class FilterTime(Filter):
             ident + "_until_range",
         ]
 
-        super().__init__(ident=ident,
-                         title=title,
-                         sort_index=sort_index,
-                         info=info,
-                         htmlvars=varnames,
-                         link_columns=[column] if column is not None else [],
-                         is_show_more=is_show_more)
+        super().__init__(
+            ident=ident,
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            htmlvars=varnames,
+            link_columns=[column] if column is not None else [],
+            is_show_more=is_show_more,
+        )
 
-    def display(self):
+    def display(self, value: FilterHTTPVariables):
         choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]
         choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
 
@@ -381,9 +426,7 @@ class FilterTime(Filter):
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what
             html.open_tr()
-            html.open_td()
-            html.write("%s:" % whatname)
-            html.close_td()
+            html.td("%s:" % whatname)
             html.open_td()
             html.text_input(varprefix)
             html.close_td()
@@ -393,8 +436,8 @@ class FilterTime(Filter):
             html.close_tr()
         html.close_table()
 
-    def filter(self, infoname):
-        fromsecs, untilsecs = self.get_time_range()
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        fromsecs, untilsecs = self.get_time_range(value)
         filtertext = ""
         if fromsecs is not None:
             filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
@@ -403,51 +446,163 @@ class FilterTime(Filter):
         return filtertext
 
     # Extract timerange user has selected from HTML variables
-    def get_time_range(self):
-        return self._get_time_range_of("from"), \
-               self._get_time_range_of("until")
+    def get_time_range(self, value: FilterHTTPVariables):
+        return self._get_time_range_of(value, "from"), self._get_time_range_of(value, "until")
 
-    def _get_time_range_of(self, what: str) -> Union[None, int, float]:
+    def _get_time_range_of(self, value: FilterHTTPVariables, what: str) -> Union[None, int, float]:
         varprefix = self.ident + "_" + what
 
-        rangename = html.request.var(varprefix + "_range")
+        rangename = value.get(varprefix + "_range")
         if rangename == "abs":
             try:
-                return time.mktime(
-                    time.strptime(html.request.get_str_input_mandatory(varprefix), "%Y-%m-%d"))
+                return time.mktime(time.strptime(value[varprefix], "%Y-%m-%d"))
             except Exception:
-                html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
+                user_errors.add(
+                    MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
+                )
                 return None
 
         if rangename == "unix":
-            return html.request.get_integer_input_mandatory(varprefix)
+            return int(value[varprefix])
         if rangename is None:
             return None
 
         try:
-            count = html.request.get_integer_input_mandatory(varprefix)
+            count = int(value[varprefix])
             secs = count * int(rangename)
             return int(time.time()) - secs
         except Exception:
-            html.request.set_var(varprefix, "")
             return None
 
 
 def filter_cre_choices():
-    return sorted([(sitename, config.site(sitename)["alias"])
-                   for sitename, state in sites.states().items()
-                   if state["state"] == "online"],
-                  key=lambda a: a[1].lower())
+    return sorted(
+        [
+            (sitename, get_site_config(sitename)["alias"])
+            for sitename, state in sites.states().items()
+            if state["state"] == "online"
+        ],
+        key=lambda a: a[1].lower(),
+    )
 
 
-def filter_cre_heading_info():
-    current_value = html.request.var("site")
-    return config.site(current_value)["alias"] if current_value else None
+def filter_cre_heading_info(value: FilterHTTPVariables) -> Optional[str]:
+    current_value = value.get("site")
+    return get_site_config(current_value)["alias"] if current_value else None
 
 
 class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
+    def __init__(self) -> None:
+        super().__init__()
+        self.htmlvars_to_filter: Dict[str, FilterName] = {}
+
+    def registration_hook(self, instance: Filter) -> None:
+        # Know Exceptions, to this rule
+        # siteopt is indistinguishable from site with the difference it
+        # allows empty string.  This inverse mapping is to reconstruct
+        # filters, from crosslinks, and in those we never set siteopt.
+        # Because we use test first with may_add_site_hint. We set siteopt
+        # over the filter menu, and there we already set the active flag.
+        if instance.ident == "siteopt":
+            return None
+
+        # host_metrics_hist & svc_metrics_hist. These filters work at the
+        # filter_table instant. We actually only need host_metric_hist, because
+        # it has "host" info and thus, it is available in host & service infos.
+        # However, the filter would only on the host filter menu. The poor
+        # reason for duplication, is that as a post-processing filter, we
+        # actually need to offer it on both host & service menus in case one of
+        # those is a single context. It would be better to have post-processing
+        # on a separte filter, as they aren't based on context.
+        if instance.ident == "svc_metrics_hist":
+            return None
+
+        if any(
+            self.htmlvars_to_filter.get(htmlvar, instance.ident) != instance.ident
+            for htmlvar in instance.htmlvars
+        ):
+            # Will explode as soon as any dev tries to reuse htmlvars for different filters
+            raise MKGeneralException(
+                "Conflicting filter htmlvars: one of %r is already regitered" % instance.htmlvars
+            )
+
+        htmlvars_to_filter: Mapping[str, FilterName] = {
+            htmlvar: instance.ident for htmlvar in instance.htmlvars
+        }
+        self.htmlvars_to_filter.update(htmlvars_to_filter)
+
     def plugin_name(self, instance):
         return instance.ident
 
 
 filter_registry = FilterRegistry()
+
+
+def filters_allowed_for_info(info: str) -> Iterator[Tuple[str, Filter]]:
+    """Returns a map of filter names and filter objects that are registered for the given info"""
+    for fname, filt in filter_registry.items():
+        if filt.info is None or info == filt.info:
+            yield fname, filt
+
+
+def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
+    """Same as filters_allowed_for_info() but for multiple infos"""
+    return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
+
+
+def active_filter_flag(allowed_filters: Set[str], url_vars: Iterator[Tuple[str, str]]) -> str:
+    active_filters = {
+        filt
+        for var, value in url_vars  #
+        if (filt := filter_registry.htmlvars_to_filter.get(var)) and filt in allowed_filters
+    }
+    return ";".join(sorted(active_filters))
+
+
+def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
+    """Gather possible existing "only sites" information from context
+
+    We need to deal with all possible site filters (sites, site and siteopt).
+
+    VisualContext is structured like this:
+
+    {"site": {"site": "sitename"}}
+    {"siteopt": {"site": "sitename"}}
+    {"sites": {"sites": "sitename|second"}}
+
+    The difference is no fault or "old" data structure. We can have both kind of structures.
+    These are the data structure the visuals work with.
+
+    "site" and "sites" are conflicting filters. The new optional filter
+    "sites" for many sites filter is only used if the view is configured
+    to only this filter.
+    """
+
+    if "sites" in context and "site" not in context:
+        only_sites = context["sites"]["sites"]
+        only_sites_list = [SiteId(site) for site in only_sites.strip().split("|") if site]
+        return only_sites_list if only_sites_list else None
+
+    for var in ["site", "siteopt"]:
+        if site_name := context.get(var, {}).get("site"):
+            return [SiteId(site_name)]
+    return None
+
+
+# TODO: When this is used by the reporting then *all* filters are active.
+# That way the inventory data will always be loaded. When we convert this to the
+# visuals principle the we need to optimize this.
+def get_livestatus_filter_headers(
+    context: VisualContext, filters: Iterable[Filter]
+) -> Iterable[FilterHeader]:
+    """Prepare Filter headers for Livestatus"""
+    for filt in filters:
+        try:
+            value = context.get(filt.ident, {})
+            if isinstance(value, str):
+                value = {filt.htmlvars[0]: value}
+            filt.validate_value(value)
+            if header := filt.filter(value):
+                yield header
+        except MKUserError as e:
+            user_errors.add(e)

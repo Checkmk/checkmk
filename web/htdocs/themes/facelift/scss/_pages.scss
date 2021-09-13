@@ -25,10 +25,20 @@ h4 {
   color: $font-color;
 }
 
-h3 {
-  margin-bottom: 2px;
-  font-size: 16px;
+h3:not(.table) {
+  font-size: $font-size-large;
   font-weight: normal;
+}
+
+@mixin table-header-mixin {
+  padding: 6px 0 4px 8px;
+  font-weight: $font-weight-bold;
+  background-color: $headline-color;
+  border-radius: $theme-border-radius $theme-border-radius 0 0;
+}
+
+h3.table {
+  @include table-header-mixin;
 }
 
 /*-------------------------------------------------------------------------.
@@ -58,7 +68,7 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba($black, 0.5);
     content: "";
   }
 
@@ -67,13 +77,12 @@ body {
     flex-direction: column;
     flex-wrap: nowrap;
     height: 100%;
-    padding: $main-body-padding;
+    padding: 0 0 0 $spacing;
     margin: 0;
     font-family: $font-family-default;
-    font-size: $font-size-default;
     font-weight: $font-weight-default;
     color: $font-color;
-    background: $color-background;
+    background: $bg-color;
 
     /* Can be toggled with N/n display option */
     &.inline {
@@ -85,7 +94,7 @@ body {
        This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
        on the URL */
     &.screenshotmode {
-      background-color: rgb(255, 255, 255);
+      background-color: $white;
       background-image: url("");
     }
 
@@ -102,13 +111,13 @@ body {
       max-width: 100%;
       padding: 8px 20px;
       margin: 0 0 5px;
-      color: rgb(255, 255, 255);
-      background: $bg-color-default;
+      color: $font-color-white;
+      background: $bg-color;
       border-spacing: 0;
 
       td {
         overflow: hidden;
-        color: rgb(255, 255, 255);
+        color: $font-color-white;
         text-overflow: ellipsis;
         -o-text-overflow: ellipsis;
         vertical-align: middle;
@@ -118,7 +127,7 @@ body {
           height: 31px;
           max-width: 100px;
           padding-left: 0;
-          font-size: 21px;
+          font-size: $font-size-page-title;
 
           img {
             width: 24px;
@@ -137,34 +146,10 @@ body {
           .popup_menu & span {
             color: $font-color;
           }
-
-          div.breadcrumb {
-            font-size: 11px;
-            white-space: nowrap;
-
-            span,
-            a {
-              &:last-child:after {
-                content: "";
-              }
-              color: #ccc;
-              text-decoration: none;
-            }
-
-            a:hover {
-              color: #fff;
-            }
-
-            :after {
-              text-decoration: none;
-              content: " > ";
-            }
-          }
         }
 
         &.right {
           width: 1%;
-          font-size: 13px;
           color: $font-color;
           text-align: right;
 
@@ -186,7 +171,7 @@ body {
           }
 
           * {
-            color: $primary-link-color;
+            color: $font-color-dimmed;
           }
         }
       }
@@ -197,9 +182,8 @@ body {
       position: relative;
       top: -14px;
       width: 100%;
-      font-family: monospace;
-      font-size: 11px;
-      color: rgb(255, 255, 255);
+      font-family: $font-family-monospace;
+      color: $font-color-white;
     }
 
     div#main_page_content {
@@ -244,7 +228,7 @@ body {
   height: 60px;
   margin-top: 5px;
   margin-bottom: 5px;
-  background-color: rgb(255, 255, 255);
+  background-color: $white;
   border-radius: 5px;
   opacity: 0.9;
   filter: alpha(opacity=90); /* For IE8 and earlier */
@@ -261,9 +245,9 @@ body {
 }
 
 #reload_pause_counter {
-  font-size: 120%;
+  font-size: $font-size-large;
   font-weight: bold;
-  color: $lightgrey;
+  color: $font-color-light-grey;
   text-align: center;
   text-decoration: none;
 
@@ -286,19 +270,21 @@ body {
 
 #data_container {
   min-width: min-content;
-  padding: 10px;
-  background: $data-container-bg-color;
-  border: $data-container-border;
-  border-radius: $primary-border-radius;
 }
 
 table.data {
   width: 100%;
+  // This basically has no effect since it is treated as a minimum height.
+  // It is needed so that the height attribute of nested elements has an
+  // effect. It is used e.g. in td.state of _status.scss.
+  // See: https://www.w3.org/TR/CSS22/tables.html#height-layout
+  // And: https://stackoverflow.com/a/56913789
+  height: 1px;
   padding: 0;
   margin: 0;
   color: $font-color;
-  border-collapse: $data-table-border-collapse;
-  border-spacing: $data-table-border-spacing;
+  border-collapse: collapse;
+  border-spacing: 0;
   empty-cells: show;
 
   .checkbox_hover {
@@ -307,29 +293,25 @@ table.data {
   }
 
   th {
-    padding: 0 8px 2px;
-    font-size: $font-size-default;
-    font-weight: $font-weight-bold;
+    height: 24px;
+    padding: 0 8px;
     letter-spacing: $letter-spacing-table;
-    color: $primary-link-color;
+    color: $font-color-dimmed;
     text-align: left;
-    text-transform: uppercase;
-    background: transparent;
-    border: none;
+    vertical-align: middle;
+    background-color: $odd-tr-bg-color;
 
-    &:first-child {
-      padding-left: 0; /* left align first column header with group header */
+    &.center {
+      text-align: center;
     }
 
-    /* TODO: Check whether this style is redundant due to a .last_col style in
-     *       _views.scss */
-    &:last-child {
-      border-right-style: none;
+    &.right {
+      text-align: right;
     }
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: $primary-hover-font-color;
+      color: $font-color;
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
@@ -341,13 +323,8 @@ table.data {
   }
 
   td {
-    padding: 4px 8px;
-    font-size: $font-size-default;
-    font-weight: 500;
-    line-height: 1.3;
     letter-spacing: $letter-spacing-default;
     color: $font-color;
-    border: none;
 
     &.buttons {
       width: 1%;
@@ -358,19 +335,14 @@ table.data {
       }
     }
 
-    /* TODO: Reproduce this html element */
+    /* e.g. numeric columns on alert statistics views */
     &.count {
-      font-family: sans-serif;
       font-weight: bold;
       text-align: right;
-
-      &[class*="state"] {
-        border-color: $data-table-td-count-state-border-color;
-      }
+      white-space: nowrap;
     }
 
     &.number {
-      text-align: right;
       white-space: nowrap;
     }
 
@@ -383,22 +355,12 @@ table.data {
     }
 
     &.unused {
-      color: rgb(136, 136, 136);
-    }
-
-    &:not(.state) {
-      color: $secondary-font-color;
+      color: $font-color-dimmed;
     }
 
     &.nowrap {
       white-space: nowrap;
     }
-  }
-
-  &.oddeven > tbody > tr:nth-child(odd),
-  &.oddeven > tbody > tr:nth-child(even),
-  &.oddeven > tbody > tr.groupheader {
-    background-color: $oddeven-table-bg-color;
   }
 
   /* Two-lined header, for example in WATO: ChangeLog->Site Status */
@@ -414,62 +376,21 @@ table.data {
 
     /* TODO: Refactor these messy and complicated styles */
     > td {
-      height: 26px;
-      padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
-      background-color: $data-td-bg-color;
-      border-right: none;
 
-      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-        border-top: $data-table-border-top;
-        border-bottom: $data-table-border-bottom;
+      a:hover {
+        color: $font-color;
       }
 
-      &:first-child {
-        border-radius: $first-child-border-radius;
-
-        &:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
-          border-left: 1px solid $color-table-border;
-        }
-      }
-
-      &:last-child:not(.fillup):not(.bulkactions),
-      &.last_col {
-        border-right: 1px solid $color-table-border;
-        border-radius: $table-cell-last-child-border-radius;
-      }
-
-      &:only-child {
-        border: 1px solid $color-table-border;
-        border-radius: $theme-border-radius;
-      }
-
-      a {
-        color: $secondary-font-color;
-
-        &:hover {
-          color: $primary-hover-font-color;
-        }
-      }
-
-      &:not(.gap):not(.last_col) {
-        border-left: $td-border-left-right;
-        border-right: $td-border-left-right;
-      }
-
-      &.state {
-        border-top: $data-table-state-border-top;
-        border-bottom: $data-table-state-border-bottom;
-      }
-
-      &:not(.state) {
+      &:not(.state):not(.hstate) {
+        height: 26px;
+        padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;
       }
     }
 
     td.checkbox {
       width: 20px;
-      text-align: center;
 
       input {
         margin: 0;
@@ -497,8 +418,7 @@ table.data {
     height: 16px;
     padding: 4px;
     margin: 0;
-    margin-left: 11px;
-    font-size: 10px;
+    font-size: $font-size-small;
     font-weight: bold;
     line-height: 5px;
     text-align: center;
@@ -510,7 +430,7 @@ table.data {
   td.host {
     padding-top: 1ex;
     padding-left: 0;
-    font-size: 120%;
+    font-size: $font-size-large;
     font-weight: bold;
     border-style: none;
   }
@@ -545,10 +465,6 @@ table.data {
     }
   }
 
-  tr th {
-    vertical-align: baseline;
-  }
-
   tr div.toggle_actions {
     position: relative;
     padding-left: 14px;
@@ -564,33 +480,17 @@ table.data {
     img {
       position: relative;
       top: 2px;
-      width: 12px;
-      height: 13px;
+      width: 8px;
+      height: auto;
       padding: 0;
       vertical-align: top;
     }
-  }
-
-  tr th a.toggle_actions img,
-  tr th body.main .popup_menu span.toggle_actions img,
-  body.main .popup_menu & tr th span.toggle_actions img {
-    filter: $treeangle-img-filter;
-  }
-
-  tr.groupheader,
-  tr.groupheader.td {
-    background-color: transparent;
   }
 }
 
 table.data .popup_menu,
 body.main table.data .popup_menu {
   color: $font-color;
-}
-
-/* Give each table's topmost row a top border */
-table.data tr:not(.data) + tr.data > td:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-  border-top: $data-table-border-topmost;
 }
 
 /* TODO: Check whether these narrow and wide styles are deprecated */
@@ -604,19 +504,34 @@ td.wide {
 
 /* Group header used in table, box and tiled layout */
 table.groupheader {
-  padding: 6px 0 3px;
-  margin: 0;
-  border: none;
+  @include table-header-mixin;
+  width: 100%;
+  margin: 0 0 $h3-margin-bottom;
 
-  tr.groupheader td,
-  tr.groupheader td a {
-    font-size: $theme-font-table-header;
-    font-weight: $font-weight-default;
+  td {
+    text-align: left;
+    white-space: nowrap;
+
+    &:last-child {
+      width: 100%;
+    }
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &:not(:first-child) {
+    margin-top: 2 * $spacing;
   }
 }
 
-tr.groupheader a:hover {
-  text-decoration: underline;
+tr.groupheader:not(:first-child) table.groupheader {
+  margin-top: 2 * $spacing;
 }
 
 /* TODO: Reproduce these .grouped_row_header elements */
@@ -634,101 +549,35 @@ tr.data.group_end {
   border-bottom: 2px solid rgb(204, 204, 204);
 }
 
-/* state in group header must have fixed width */
-.groupheader td.state {
-  width: 50px;
-  padding: 2px 5px;
-  border: 1px solid rgb(0, 0, 0);
-  border-radius: 5px;
-  box-shadow: 1px 1px 2px rgb(68, 68, 68);
-}
-
-tr.groupheader {
-  td {
-    padding: 0;
-    margin: 0;
-    font-weight: bold;
-    color: $font-color;
-    background: transparent;
-    border-style: none;
-
-    &.groupheader .groupheader tbody tr td {
-      display: inline-block;
-      padding: 12px 0 4px;
-      font-size: $theme-font-table-header;
-      font-weight: $font-weight-default;
-      letter-spacing: $letter-spacing-table;
-      color: $font-color;
-      vertical-align: baseline;
-
-      &.state {
-        width: auto;
-        padding: 0 8px;
-        margin-top: 12px;
-        font-size: 14px;
-        text-transform: uppercase;
-        box-shadow: none;
-      }
-
-      a,
-      body.main .popup_menu span,
-      body.main .popup_menu & span {
-        display: inline-block;
-        font-size: $theme-font-table-header;
-        font-weight: $font-weight-default;
-        letter-spacing: $letter-spacing-table;
-        color: $font-color;
-      }
-
-      &.state a,
-      &.state body.main .popup_menu span,
-      body.main .popup_menu &.state span {
-        font-size: 14px;
-        text-transform: uppercase;
-      }
-
-      &.state.hstate1 a,
-      &.state.hstate1 body.main .popup_menu span,
-      body.main .popup_menu &.state.hstate1 span {
-        color: $lightgrey;
-      }
-    }
-  }
-
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span {
-    color: $font-color;
-    text-decoration: none;
-  }
-
-  &:first-of-type td.groupheader table.groupheader {
-    &,
-    tbody tr td {
-      padding-top: 0;
-
-      .state {
-        margin-top: 0;
-      }
-    }
-  }
+tr.groupheader td {
+  padding: 0;
+  margin: 0;
+  font-weight: $font-weight-bold;
+  color: $font-color;
+  background: transparent;
 }
 
 img.iconbutton,
 img.icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   padding: 0 2px;
+  vertical-align: middle;
 
-  &:hover {
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
+  &.png {
+    width: 20px;
+    height: 20px;
   }
 
   &.reload_failed {
     filter: sepia(100%);
     -webkit-filter: sepia(100%);
   }
+}
+
+img.iconbutton:hover {
+  opacity: 0.5;
+  filter: alpha(opacity=50); /* For IE8 and earlier */
 }
 
 /* TODO: Reproduce this html item */
@@ -763,43 +612,32 @@ img.icon.reloading {
 }
 
 /* Table with captions on the left side. Used e.g. for man pages and werks */
-table.data.headerleft {
-  border-spacing: 0;
-
+table.data.headerleft tr {
   th {
-    text-align: left;
+    // Override generic th styling in a single header row
+    font-weight: $font-weight-bold;
+    color: $font-color;
+    background-color: inherit;
   }
 
-  tbody tr th,
-  tbody tr td {
-    &:nth-child(odd),
-    &:nth-child(even) {
-      padding: 5px 16px;
-      vertical-align: top;
-      background: $bg-color-tertiary;
-      border-top: 1px solid $color-table-border;
-      border-bottom: $table-headerleft-border-bottom;
-      border-left: 1px solid $color-table-border;
-      border-radius: 0;
-    }
+  th,
+  td {
+    padding: 5px $spacing;
+    vertical-align: top;
   }
 
-  tbody tr th {
-    text-transform: none;
-    border-right: none;
+  td.nowiki p {
+    margin: 0;
+  }
+}
+
+table.data.headerleft > tbody {
+  & > tr:nth-child(even) {
+    background-color: $even-tr-bg-color;
   }
 
-  tbody tr td {
-    border-right: 1px solid $color-table-border;
-
-    &.nowiki p {
-      margin: 0;
-    }
-  }
-
-  tbody tr:last-of-type td,
-  tbody tr:last-of-type th {
-    border-bottom: 1px solid $color-table-border;
+  & > tr:nth-child(odd) {
+    background-color: $odd-tr-bg-color;
   }
 }
 
@@ -819,32 +657,38 @@ input[type="text"],
 input[type="password"],
 select,
 textarea,
-div.snapin textarea,
+div.snapin textarea,  // TODO: reproduce this element
 #mk_side_search_field,
 .tagify__input {
-  height: auto;
-  padding: 3px 6px;
+  $padding: 3px;
+
+  height: ($input-field-height - 2 * $padding);
+  padding: $padding 6px;
   color: $font-color;
-  background: $bg-color-default;
+  background-color: $inpage-highlight-color;
   background-image: none;
-  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
-
-  &:focus,
-  &:active {
-    box-shadow: 0 0 1px $input-focus-box-shadow-color inset;
-  }
 }
 
 span.select2 .select2-selection {
-  background-color: $bg-color-default;
-  border-color: $select2-border-color;
+  background-color: $inpage-highlight-color;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 input[type="text"],
 textarea {
   position: relative;
+}
+
+select,
+textarea,
+input[type="file"] {
+  // textareas like e.g. comment fields should not have a fixed height
+  height: auto;
 }
 
 input[type="text"],
@@ -865,35 +709,37 @@ input[type="checkbox"] {
   margin-left: 0;
 }
 
+@mixin button-mixin {
+  display: inline-block;
+  width: auto;
+  margin-top: 8px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  margin-left: 0;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-table;
+  color: $font-color;
+  background-color: $input-button-bg-color;
+  box-shadow: none;
+
+  &:hover,
+  &:active {
+    background-color: $input-button-hover-bg-color;
+  }
+}
+
+button {
+  @include button-mixin;
+}
+
 input,
-select,
-textarea,
-div.snapin select,
-div.snapin textarea,
-#mk_side_search_field {
+select {
   &.number {
-    text-align: left;
+    text-align: right;
   }
 
   &.button {
-    display: inline-block;
-    width: auto;
-    margin-top: 8px;
-    margin-right: 8px;
-    margin-bottom: 8px;
-    margin-left: 0;
-    font-size: $font-size-default;
-    letter-spacing: $letter-spacing-table;
-    color: $input-button-color;
-    background-color: $input-button-bg-color;
-    border-color: $input-button-bg-color;
-    box-shadow: none;
-
-    &:hover,
-    &:active {
-      background-color: $input-button-hover-bg-color;
-      border-color: $input-button-hover-bg-color;
-    }
+    @include button-mixin;
   }
 
   &[type="radio"] {
@@ -905,13 +751,7 @@ div.snapin textarea,
 input.button {
   &:not([type="text"]),
   &:not([type="password"]) {
-    padding: 4px 8px;
-    border: 1px solid $input-button-bg-color;
-
-    &:hover,
-    &:active {
-      border: 1px solid $input-button-hover-bg-color;
-    }
+    padding: 5px 8px;
   }
 }
 
@@ -932,7 +772,7 @@ input.toggle_timespecific_parameter {
 /* TODO: Reproduce this html element */
 td.content hr {
   height: 1px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba($white, 0.2);
   border-style: none;
 }
 
@@ -946,7 +786,7 @@ input.tabactive#results {
 
 input.date,
 input.time {
-  font-family: monospace;
+  font-family: $font-family-monospace;
 }
 
 .inputerror {
@@ -961,7 +801,7 @@ input.time {
   span.checkbox,
   span.select2 .select2-selection,
   > select {
-    background-color: $color-nuance-15;
+    background-color: $input-error-bg-color;
   }
 
   span.checkbox {
@@ -991,11 +831,11 @@ span.checkbox {
 table.nform {
   width: 100%;
   padding: 0;
-  margin: 5px 0;
+  margin: $spacing 0;
   background: $bg-color-secondary;
   border-spacing: 0 0;
-  border-radius: $primary-border-radius;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+  border-radius: $theme-border-radius;
+  box-shadow: 0 0 0 rgba($black, 0.1);
   empty-cells: show;
 
   &.closed {
@@ -1005,7 +845,7 @@ table.nform {
   }
 
   body.main.screenshotmode & {
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
     background-image: none;
   }
 
@@ -1015,23 +855,21 @@ table.nform {
 
   tr.heading {
     height: auto;
-    background: $headline-color;
 
     > td {
       vertical-align: middle;
       cursor: pointer;
       background-color: transparent;
-      border-radius: 5px 5px 0 0;
+      border-radius: $theme-border-radius $theme-border-radius 0 0;
     }
 
     td {
       position: relative;
       height: auto;
       padding: 4px 10px 3px 9px;
-      font-size: $font-size-global;
+      font-weight: $font-weight-bold;
       letter-spacing: $letter-spacing-table;
-      color: $secondary-font-color;
-      text-transform: uppercase;
+      background-color: $headline-color;
     }
 
     img.treeangle.nform {
@@ -1043,21 +881,14 @@ table.nform {
 
       div::after {
         position: relative;
-        top: 2px;
+        top: 1px;
       }
     }
   }
 
-  > tbody > tr td {
-    color: $primary-font-color;
-  }
-
   > tbody > tr > td {
-    vertical-align: middle;
-
-    &.simple {
-      line-height: 20px;
-    }
+    padding-bottom: $spacing-half;
+    vertical-align: top;
   }
 
   tr td.legend {
@@ -1066,27 +897,17 @@ table.nform {
     padding-right: 8px;
     padding-left: 10px;
     overflow: hidden;
-    line-height: 28px;
     text-align: left;
-    word-wrap: break-word;
-    vertical-align: baseline;
+    vertical-align: top;
+    overflow-wrap: break-word;
 
     div.title {
       float: left;
       max-width: 390px;
       padding: 0 8px 0 0;
       overflow: hidden;
-      font-weight: $font-weight-bold;
+      letter-spacing: $letter-spacing-default;
       white-space: nowrap;
-
-      .dots {
-        opacity: 0.2;
-      }
-
-      &.withcheckbox {
-        max-width: 361px;
-        margin: 5px 6px 5px 0;
-      }
     }
 
     div.checkbox {
@@ -1095,33 +916,16 @@ table.nform {
     }
   }
 
-  td.legend.simple {
-    padding-top: 5px;
-  }
-
   &.narrow td.legend {
     height: 18px;
-  }
-
-  .dots {
-    margin-left: 5px;
-    color: $span-dots-color;
   }
 
   td.content {
     padding-right: 10px;
     padding-left: 10px;
 
-    &.simple {
-      padding-bottom: 0;
-    }
-
     span.checkbox {
       display: inline-block;
-
-      &:not(first-of-type) {
-        margin-top: 4px;
-      }
     }
   }
 
@@ -1155,7 +959,7 @@ table.nform {
     }
 
     &.button {
-      margin: 1px 5px 0 0;
+      margin-right: 5px;
     }
   }
 
@@ -1175,7 +979,7 @@ table.nform {
   }
 
   .listchoice td {
-    height: 24px;
+    height: $input-field-height;
     vertical-align: middle;
   }
 
@@ -1187,76 +991,58 @@ table.nform {
     border-spacing: 4px;
   }
 
-  tbody tr:nth-child(1) td {
-    padding-top: 4px;
+  > tbody > tr:nth-child(1) > td {
+    padding-top: $spacing-half;
   }
 
   tr td.legend {
-    width: 280px;
-    min-width: 280px;
+    width: 240px;
+    min-width: 240px;
+
+    div.title {
+      max-width: 230px;
+
+      &.withcheckbox {
+        max-width: 200px;
+      }
+    }
+  }
+
+  &.wide tr td.legend {
+    width: 460px;
+    min-width: 460px;
     line-height: 22px;
 
     div.title {
-      max-width: 270px;
+      max-width: 450px;
 
       &.withcheckbox {
-        max-width: 241px;
+        max-width: 420px;
       }
     }
+  }
+
+  span.select2-container {
+    margin: $input-field-margin;
+    vertical-align: top;
+  }
+
+  input {
+    margin: $input-field-margin;
+    vertical-align: initial;
+  }
+
+  .vs_floating_text {
+    display: inline-block;
+    height: $input-field-height;
+    box-sizing: border-box;
+    margin: $input-field-margin;
+    line-height: $input-field-height;
   }
 }
 
 form.visual {
   margin-right: $spacing;
-}
-
-/*-------------------------------------------------------------------------.
-|                     _        _   _                                       |
-|                    / \   ___| |_(_) ___  _ __  ___                       |
-|                   / _ \ / __| __| |/ _ \| '_ \/ __|                      |
-|                  / ___ \ (__| |_| | (_) | | | \__ \                      |
-|                 /_/   \_\___|\__|_|\___/|_| |_|___/                      |
-|                                                                          |
-+--------------------------------------------------------------------------+
-| Confirmation dialogs, success and error messages when performing actions |
-'-------------------------------------------------------------------------*/
-div.really,
-div.success,
-div.error,
-div.message,
-div.warning {
-  padding: 1em 2em;
-  margin: 2em 0;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
-
-  h1 {
-    margin-bottom: 5px;
-    margin-left: 0;
-    font-size: 16px;
-    font-weight: bold;
-    color: rgb(255, 255, 255);
-  }
-}
-
-// TODO: Check whether this must be $primary-font-color as is for .success
-div.message {
-  color: rgb(0, 0, 0);
-}
-
-div.really {
-  color: $black;
-}
-
-div.success {
-  color: $primary-font-color;
-}
-
-/* TODO: Reproduce this html element */
-form.confirm {
-  position: relative;
-  left: -1px;
-  margin-top: 8px;
 }
 
 /*-------------------------------------------------------------------------.
@@ -1275,9 +1061,8 @@ div.help {
   width: auto;
   padding: 8px 16px;
   margin: 8px 0;
-  font-size: 12px;
   font-weight: normal;
-  color: rgb(0, 0, 0);
+  color: $font-color-black;
   text-align: left;
   text-transform: none; /* Neccessary due to help in H3 */
   background-color: $help-bg-color;
@@ -1288,10 +1073,9 @@ div.help {
   &:before {
     display: inline-block;
     height: 100%;
-    margin-right: 12px;
+    margin-right: $spacing;
     font-family: serif;
-    font-size: 16px;
-    font-style: italic;
+    font-size: $font-size-large;
     font-weight: $font-weight-bold;
     content: "i";
   }
@@ -1299,7 +1083,7 @@ div.help {
   a,
   a:link,
   a:visited {
-    color: $help-link-color;
+    color: $font-color-light-bg;
 
     &:hover {
       text-decoration: none;
@@ -1313,21 +1097,17 @@ div.help {
 
   table.help td {
     vertical-align: top;
-    border: 1px solid rgb(0, 0, 0);
+    border: 1px solid $black;
   }
 
   table.help td.tt {
-    font-family: courier, monospace;
+    font-family: $font-family-courier;
   }
 
   tt {
-    font-family: courier, monospace;
-    color: rgb(0, 0, 153);
+    font-family: $font-family-courier;
+    color: $font-color-blue-2;
   }
-}
-
-table.data div.help {
-  box-shadow: 0 0 3px rgb(0, 0, 0);
 }
 
 /*--Popupmenu--------------------------------------------------------------.
@@ -1343,12 +1123,12 @@ body.main .popup_menu {
   position: absolute;
   z-index: 50;
   min-width: 300px;
-  color: rgb(255, 255, 255);
+  color: $font-color-white;
   white-space: normal;
-  background-color: $bg-color-tertiary;
+  background-color: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: 5px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba($black, 0.1);
 
   div.wrapper {
     position: relative;
@@ -1403,7 +1183,6 @@ body.main .popup_menu {
   }
 }
 
-body.main .popup_menu,
 body.main .popup_menu {
   a,
   span {
@@ -1425,7 +1204,7 @@ body.main .popup_menu {
   position: relative;
   width: 100%;
   height: 100%;
-  min-width: 312px;
+  min-width: 392px;
   min-height: 150px;
 
   ul {
@@ -1446,14 +1225,14 @@ body.main .popup_menu {
       line-height: 21px;
 
       &:hover {
-        color: rgb(255, 255, 255);
+        color: $font-color-white;
         text-decoration: none;
         background-color: rgb(98, 155, 177);
       }
     }
 
     &.active a {
-      color: $primary-font-color;
+      color: $font-color;
       border-bottom: 1px solid rgb(80, 138, 161);
     }
   }
@@ -1478,11 +1257,11 @@ body.main .popup_menu {
   }
 
   &.show_names a.icon {
-    width: 100px;
+    width: 180px;
 
     span {
       display: inline-block;
-      width: 62px;
+      width: 142px;
       margin: 0;
       overflow: hidden;
       font-weight: normal;
@@ -1522,11 +1301,10 @@ div.log_output,
 .crash_report pre {
   padding: 8px 16px;
   margin: 16px;
-  font-family: monospace;
+  font-family: $font-family-monospace;
   font-weight: $font-weight-default;
-  color: $lightgrey;
-  background: $navigation-bg-color;
-  border: 1px solid $color-table-border-dark;
+  background: $log-output-color;
+  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
@@ -1536,8 +1314,7 @@ div.log_output {
   vertical-align: top;
 
   pre {
-    font-family: monospace;
-    font-size: $font-size-global;
+    font-family: $font-family-monospace;
     color: $font-color;
   }
 }
@@ -1555,7 +1332,7 @@ a.element_dragger {
   cursor: move;
   background-color: $dragging-bg-color;
   transform: scale(1.005);
-  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 10px 0 rgba($black, 0.6);
   -webkit-transform: scale(1.005);
   -moz-transform: scale(1.005);
   -ms-transform: scale(1.005);
@@ -1585,18 +1362,18 @@ table.debug_vars {
 
   td {
     padding: 2px 6px;
-    font-family: courier, monospace;
+    font-family: $font-family-courier;
     border: 1px solid rgb(0, 85, 0);
 
     &.left {
       font-weight: bold;
-      color: rgb(255, 255, 255);
+      color: $font-color-white;
       background-color: rgb(51, 153, 85);
     }
 
     &.right {
       font-weight: bold;
-      color: rgb(0, 0, 0);
+      color: $font-color-black;
       background-color: rgb(136, 255, 204);
     }
   }
@@ -1617,6 +1394,7 @@ div.popup_trigger {
   }
 }
 
+/* TODO: Can we remove PNP4Nagios styling? */
 div.pnp_graph a {
   &.popup_trigger {
     position: absolute;
@@ -1638,6 +1416,7 @@ div.pnp_graph a {
   }
 }
 
+/* TODO: Can we remove PNP4Nagios styling? */
 table.data tr.data td.pnpgraph {
   padding: 0;
 
@@ -1655,86 +1434,65 @@ table.data tr.data td.pnpgraph {
   }
 }
 
-td.job_state {
-  font-weight: bold;
-  color: rgb(255, 255, 255);
-  text-align: center;
-  box-shadow: 0.5px 0.5px 2px rgb(0, 0, 0) inset;
-}
-
-table.data > tbody > tr > td.job_state {
-  &.job_finished {
-    color: $grey-6;
-    background-color: $color-state-success-background;
-    box-shadow: none;
+table.data.job_details {
+  th {
+    width: 150px;
   }
 
-  &.job_exception {
-    background-color: $hot-bg-color;
-    box-shadow: none;
+  td.state {
+    text-align: left;
   }
 
-  &.job_running {
-    background-color: $color-state-9-background;
-    box-shadow: none;
-  }
-
-  &.job_initialized {
-    color: $black;
-    background-color: rgb(204, 204, 204);
+  div.log_output {
+    margin: 0;
   }
 }
 
-table.data.job_details > tbody > tr > th {
-  width: 150px;
-}
-
-table.data.job_details div.log_output > pre {
-  margin: 0;
-}
-
-/* Fixed job columns */
-table.data.job_table {
-  td {
-    padding: 0;
+table.data.job_table td {
+  &.job_actions {
+    width: 50px;
   }
 
-  > tbody > tr > td {
-    &.job_actions {
-      width: 50px;
-    }
+  &.state {
+    width: 50px;
+    text-align: left;
+  }
 
-    &.job_state {
-      width: 50px;
-    }
+  &.job_started {
+    width: 160px;
+  }
 
-    &.job_started {
-      width: 160px;
-    }
+  &.job_pid {
+    width: 40px;
+    text-align: right;
+  }
 
-    &.job_pid {
-      width: 40px;
-      text-align: right;
-    }
+  div.info {
+    padding: $wato-info-padding;
+    margin: $wato-info-margin;
+    background-color: $data-container-bg-color;
   }
 }
 
 /* Tags */
+/* FIXME: This section is really messy and should be cleaned up */
 .tagify {
   $self: &;
 
   border: none;
 
   #{ $self }__input {
+    flex-grow: 0;
     padding: $tag-padding;
-    margin: $tag-margin;
+    margin-left: 0;
   }
 
-  &.hasMaxTags #{ $self }__input {
+  &.tagify--hasMaxTags #{ $self }__input {
     display: none;
   }
 
   &__input::before {
+    line-height: 1.2em;
     color: inherit;
   }
 
@@ -1748,30 +1506,36 @@ table.data.job_table {
     }
   }
 
+  a {
+    margin-right: $spacing;
+
+    tag {
+      margin-right: 0;
+    }
+  }
+
   tag {
-    margin: 0 5px 2px 0;
+    margin-right: $spacing;
 
     > div {
+      position: relative;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
-      margin: $tag-margin;
-      color: $tag-font-color;
+      color: $font-color;
     }
 
     x {
-      top: 45%;
-      right: 7px;
-      font-size: 10px;
+      position: absolute;
+      right: 0;
+      z-index: 1;
+      margin-right: 0;
+      font-size: $font-size-small;
       line-height: 14px;
     }
 
     &,
     &.discovered {
-      &:hover:not([readonly]) div::before {
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
+      &:hover:not([readonly]) div {
         opacity: $tag-hover-opacity;
         box-shadow: none;
       }
@@ -1780,45 +1544,44 @@ table.data.job_table {
 
   // Display input always non-colored
   &:not([readonly]) tag {
-    > div::before,
-    &:hover > div::before {
+    > div,
+    &:hover > div {
       background: $tag-input-bg-color;
       opacity: 1;
     }
 
     > div {
-      color: rgb(0, 0, 0);
+      color: $font-color-black;
     }
   }
 
   &__tag-text {
-    color: $tag-dropdown-active-color;
+    color: $font-color;
   }
 
   tag,
   &[readonly] tag {
-    > div::before {
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      background: rgb(0, 168, 181);
-      opacity: $tag-opacity;
+    > div {
+      background: rgba(0, 168, 181, $tag-opacity);
+      border-radius: $theme-border-radius;
       box-shadow: none;
       animation: none;
+
+      &::before {
+        content: none; /* don't apply normal tagify style */
+      }
     }
 
-    &.explicit > div::before {
-      background: rgb(119, 72, 152);
+    &.explicit > div {
+      background: rgba(119, 72, 152, $tag-opacity);
     }
 
-    &.discovered > div::before {
-      background: rgb(243, 174, 75);
-      opacity: $tag-discovered-opacity;
+    &.discovered > div {
+      background: rgba(243, 174, 75, $tag-discovered-opacity);
     }
 
-    &.ruleset > div::before {
-      background: rgb(222, 67, 131);
+    &.ruleset > div {
+      background: rgba(222, 67, 131, $tag-opacity);
     }
   }
 
@@ -1831,23 +1594,31 @@ table.data.job_table {
   }
 
   &__dropdown {
-    background: none;
+    /* filter forms have z-index: 1000 and this needs to be above */
+    z-index: 1001;
+
+    background: $tag-input-bg-color;
     border: none;
     box-shadow: none;
+
+    &__wrapper {
+      background: $tag-input-bg-color;
+      border: 1px solid $tag-dropdown-hover-border-color;
+      border-radius: 4px;
+    }
 
     &__item {
       margin: 1px;
 
       &--active {
-        color: $tag-dropdown-active-color;
-        background-color: $tag-dropdown-active-bg-color;
-        border: $primary-table-border;
+        color: $font-color-green;
+        background-color: $tag-dropdown-hover-bg-color;
+        border: $tag-dropdown-hover-border-color;
       }
     }
   }
 }
 
 .tagify.display[readonly] tag {
-  padding: 1px 0;
-  margin: 0;
+  padding: 2px 0;
 }

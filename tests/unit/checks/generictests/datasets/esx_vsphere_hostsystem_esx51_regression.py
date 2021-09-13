@@ -9,7 +9,6 @@
 
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
 
-
 checkname = 'esx_vsphere_hostsystem'
 
 parsed = parse_esx_vsphere_hostsystem([

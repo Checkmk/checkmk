@@ -16,11 +16,10 @@
 #include <vector>
 
 #include "Metric.h"
-#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "data_encoding.h"
+enum class Encoding;
 class Logger;
 
 struct Command {
@@ -97,13 +96,10 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
-    virtual std::vector<DowntimeData> downtimes_for_host(
-        const Host *) const = 0;
-    virtual std::vector<DowntimeData> downtimes_for_service(
-        const Service *) const = 0;
-    virtual std::vector<CommentData> comments_for_host(const Host *) const = 0;
-    virtual std::vector<CommentData> comments_for_service(
-        const Service *) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const Host *) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const Service *) const = 0;
+    virtual std::vector<CommentData> comments(const Host *) const = 0;
+    virtual std::vector<CommentData> comments(const Service *) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 
@@ -124,8 +120,8 @@ public:
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
 
-    [[nodiscard]] virtual AuthorizationKind serviceAuthorization() const = 0;
-    [[nodiscard]] virtual AuthorizationKind groupAuthorization() const = 0;
+    [[nodiscard]] virtual ServiceAuthorization serviceAuthorization() const = 0;
+    [[nodiscard]] virtual GroupAuthorization groupAuthorization() const = 0;
 
     virtual Logger *loggerLivestatus() = 0;
     virtual Logger *loggerRRD() = 0;

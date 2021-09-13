@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as crossfilter from "crossfilter2";
+import * as utils from "utils";
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry {
@@ -73,6 +74,7 @@ class Scheduler {
 
     _schedule() {
         if (!this._enabled) return;
+        if (!utils.is_window_active()) return;
         let now = Math.floor(new Date().getTime() / 1000);
         if (now < this._suspend_updates_until) return;
         // This function is called every second. Add 0.5 seconds grace time
@@ -134,6 +136,7 @@ export class MultiDataFetcher {
     }
 
     _schedule_operations() {
+        if (!utils.is_window_active()) return;
         for (let url_id in this._fetch_operations) {
             for (let body_id in this._fetch_operations[url_id]) {
                 this._process_operation(url_id, body_id);
@@ -352,8 +355,8 @@ export class FigureBase {
             },
         })
             .then(json_data => this._process_api_response(json_data))
-            .catch(() => {
-                this._show_error_info("Error fetching data");
+            .catch(e => {
+                this._show_error_info("Error fetching data", "error");
                 this.remove_loading_image();
             });
     }
@@ -367,7 +370,7 @@ export class FigureBase {
         //      },
         // }}
         if (api_response.result_code != 0) {
-            this._show_error_info(api_response.result);
+            this._show_error_info(api_response.result, api_response.severity);
             return;
         }
         this._clear_error_info();
@@ -386,14 +389,22 @@ export class FigureBase {
         this._call_post_render_hooks(data);
     }
 
-    _show_error_info(error_info) {
-        let error = this._div_selection.selectAll("label#figure_error").data([null]);
-        error = error.enter().append("label").attr("id", "figure_error").merge(error);
-        error.text(error_info);
+    _show_error_info(error_info, div_class) {
+        this._div_selection
+            .selectAll("div#figure_error")
+            .data([null])
+            .join("div")
+            .attr("id", "figure_error")
+            .attr("class", div_class)
+            .text(error_info);
+        if (!this.svg) return;
+        this.svg.style("display", "none");
     }
 
     _clear_error_info() {
         this._div_selection.select("#figure_error").remove();
+        if (!this.svg) return;
+        this.svg.style("display", null);
     }
 
     _call_pre_render_hooks(data) {
@@ -445,11 +456,9 @@ export class FigureBase {
             .on("click", () => this.scheduler.force_update());
     }
 
-    render_title(title) {
+    render_title(title, title_url) {
         if (!this.svg) return;
-
-        if (title) title = [title];
-        else title = [];
+        title = title ? [{title: title, url: title_url}] : [];
 
         let title_component = this.svg
             .selectAll(".title")
@@ -457,28 +466,82 @@ export class FigureBase {
             .join("g")
             .classed("title", true);
 
+        let config = new URLSearchParams(this._post_body);
+        let settings = config.get("settings");
+        let highlight_container = false;
+        if (settings != undefined) highlight_container = JSON.parse(settings).show_title == true;
+
         title_component
             .selectAll("rect")
             .data(d => [d])
             .join("rect")
             .attr("x", 0)
-            .attr("y", 0)
+            .attr("y", 0.5)
             .attr("width", this.figure_size.width)
-            .attr("height", 24)
-            .style("fill", "#262f38"); // fill gets toggled in UX project
+            .attr("height", 22)
+            .classed(highlight_container ? "highlighted" : "", true);
+
+        if (title_url) {
+            title_component = title_component
+                .selectAll("a")
+                .data(d => [d])
+                .join("a")
+                .attr("xlink:href", d => d.url || "#");
+        }
 
         title_component
             .selectAll("text")
             .data(d => [d])
             .join("text")
-            .text(d => d)
-            .attr("y", 18)
+            .text(d => d.title)
+            .classed("title", true)
+            .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
-            .style("font-size", "12px")
             .attr("text-anchor", "middle");
+    }
+
+    get_scale_render_function() {
+        if (this._data.plot_definitions.length > 0)
+            return plot_render_function(this._data.plot_definitions[0]);
+        return plot_render_function({});
     }
 }
 
+export function calculate_domain(data) {
+    const [lower, upper] = d3.extent(data, d => d.value);
+    return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
+}
+
+export function adjust_domain(domain, metrics) {
+    let [dmin, dmax] = domain;
+
+    if (metrics.max != null && metrics.max <= dmax) dmax = metrics.max;
+    if (metrics.min != null && dmin <= metrics.min) dmin = metrics.min;
+    return [dmin, dmax];
+}
+
+export function clamp(value, domain) {
+    return Math.min(Math.max(value, domain[0]), domain[1]);
+}
+
+export function make_levels(domain, bounds) {
+    let [dmin, dmax] = domain;
+    if (bounds.warn == null || bounds.crit == null) return [];
+
+    if (bounds.warn >= dmax) bounds.warn = dmax;
+    if (bounds.crit >= dmax) bounds.crit = dmax;
+    if (bounds.warn <= dmin) dmin = bounds.warn;
+
+    return [
+        {from: bounds.crit, to: dmax, style: "metricstate state2"},
+        {
+            from: bounds.warn,
+            to: bounds.crit,
+            style: "metricstate state1",
+        },
+        {from: dmin, to: bounds.warn, style: "metricstate state0"},
+    ];
+}
 // Base class for dc.js based figures (using crossfilter)
 export class DCFigureBase extends FigureBase {
     constructor(div_selector, crossfilter, graph_group) {
@@ -508,31 +571,29 @@ export class FigureTooltip {
         this.plot_size = plot_size;
     }
 
-    update_position() {
-        let ev = "sourceEvent" in d3.event ? d3.event.sourceEvent : d3.event;
+    update_position(event) {
+        if (!this.active()) return;
+
         let tooltip_size = {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
         };
-        let render_to_the_left = this.figure_size.width - ev.layerX < tooltip_size.width + 20;
-        let render_upwards = this.figure_size.height - ev.layerY < tooltip_size.height - 16;
+        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+        let render_to_the_left = this.figure_size.width - x < tooltip_size.width + 20;
+        let render_upwards = this.figure_size.height - y < tooltip_size.height - 16;
 
         this._tooltip
             .style("left", () => {
-                if (!render_to_the_left) return ev.layerX + 20 + "px";
-                return "auto";
+                return !render_to_the_left ? x + 20 + "px" : "auto";
             })
             .style("right", () => {
-                if (render_to_the_left) return this.plot_size.width - ev.layerX + 75 + "px";
-                return "auto";
+                return render_to_the_left ? this.plot_size.width - x + 75 + "px" : "auto";
             })
             .style("bottom", () => {
-                if (render_upwards) return "6px";
-                return "auto";
+                return render_upwards ? "6px" : "auto";
             })
             .style("top", () => {
-                if (!render_upwards) return ev.layerY - 20 + "px";
-                return "auto";
+                return !render_upwards ? y - 20 + "px" : "auto";
             })
             .style("pointer-events", "none")
             .style("opacity", 1);
@@ -541,142 +602,209 @@ export class FigureTooltip {
     add_support(node) {
         let element = d3.select(node);
         element
-            .on("mouseover", () => this._mouseover())
-            .on("mouseleave", () => this._mouseleave())
-            .on("mousemove", () => this._mousemove());
+            .on("mouseover", event => this._mouseover(event))
+            .on("mouseleave", event => this._mouseleave(event))
+            .on("mousemove", event => this._mousemove(event));
     }
 
-    _mouseover() {
-        let node_data = d3.select(d3.event.target).datum();
+    activate() {
+        this._tooltip.style("display", null);
+    }
+
+    deactivate() {
+        this._tooltip.style("display", "none");
+    }
+
+    active() {
+        return this._tooltip.style("display") != "none";
+    }
+
+    _mouseover(event) {
+        let node_data = d3.select(event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined) return;
-
-        this._tooltip.style("opacity", 1);
+        this.activate();
     }
 
-    _mousemove() {
-        let node_data = d3.select(d3.event.target).datum();
+    _mousemove(event) {
+        let node_data = d3.select(event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined) return;
         this._tooltip.html(node_data.tooltip);
-        this.update_position();
+        this.update_position(event);
     }
 
-    _mouseleave() {
-        this._tooltip.style("opacity", 0);
-    }
-}
-
-export class FigureLegend {
-    constructor(legend_selection) {
-        this._legend = legend_selection;
-        this._legend.classed("legend", true);
-    }
-
-    _dragstart() {
-        this._dragged_object = d3.select(d3.event.sourceEvent.currentTarget);
-    }
-
-    _drag() {
-        this._dragged_object
-            .style("position", "absolute")
-            .style("top", d3.event.y + "px")
-            .style("right", -d3.event.x + "px");
-    }
-
-    _dragend() {
-        this._dragged_object.remove();
-
-        let point_in_rect = (r, p) => p.x > r.x1 && p.x < r.x2 && p.y > r.y1 && p.y < r.y2;
-        let renderer_instances = d3.selectAll("svg.renderer");
-        let target_renderer = null;
-        renderer_instances.each((d, idx, nodes) => {
-            let rect = nodes[idx].getBoundingClientRect();
-            let x1 = rect.left;
-            let x2 = x1 + rect.width;
-            let y1 = rect.top;
-            let y2 = y1 + rect.height;
-            if (
-                point_in_rect(
-                    {x1: x1, y1: y1, x2: x2, y2: y2},
-                    {x: d3.event.sourceEvent.clientX, y: d3.event.sourceEvent.clientY}
-                )
-            )
-                target_renderer = d;
-        });
-
-        if (target_renderer != null && target_renderer != d3.event.subject.renderer)
-            d3.event.subject.migrate_to(target_renderer);
+    _mouseleave(event) {
+        this.deactivate();
     }
 }
 
+/**
+ * Component to draw a label at the bottom of the dashlet
+ * @param {FigureBase} figurebase - Draw label on this dashlet
+ * @param {Object} options - Configuration of the label
+ * @param {string} options.label - Text to draw in the label
+ * @param {string} options.css_class - Css classes to append to the label
+ * @param {boolean} options.visible - Whether to draw the label at all
+ */
 // Figure which inherited from FigureBase. Needs access to svg and size
-export function state_component(figurebase, state) {
+export function state_component(figurebase, options) {
+    // TODO: use figurebase.svg as first parameter and move size to options
+    if (!options.visible) {
+        figurebase.svg.selectAll(".state_component").remove();
+        return;
+    }
     //hard fix for the moment
-    var border_width = 2;
-    let font_size = 16;
-
+    let font_size = 14;
     let state_component = figurebase.svg
         .selectAll(".state_component")
-        .data([state])
+        .data([options])
         .join("g")
-        .attr("class", d => d.style)
-        .classed("state_component", true);
-    let the_rect = state_component
-        .selectAll("rect")
+        .classed("state_component", true)
+        .attr(
+            "transform",
+            "translate(" +
+                (figurebase.figure_size.width - font_size * 8) / 2 +
+                ", " +
+                (figurebase.figure_size.height - font_size * 2) +
+                ")"
+        );
+    let label_box = state_component
+        .selectAll("rect.status_label")
         .data(d => [d])
-        .join("rect");
-    the_rect
-        .attr("x", border_width / 2)
-        .attr("y", border_width / 2)
-        .attr("width", figurebase.figure_size.width - 2 * border_width)
-        .attr("height", figurebase.figure_size.height - 2 * border_width)
-        .style("fill", "none")
-        .style("stroke-width", border_width);
+        .join("rect")
+        .attr("class", d => `status_label ${d.css_class}`)
+        // status_label css class is also defined for WATO and not encapsulated
+        // it predifines other sizes, we use thus style instead of attr for size
+        // to override that
+        .style("width", font_size * 8)
+        .style("height", font_size * 1.5)
+        .attr("rx", 2);
 
     let the_text = state_component
         .selectAll("text")
         .data(d => [d])
-        .join("text");
-    the_text
-        .attr("x", figurebase.figure_size.width / 2)
-        .attr("y", figurebase.figure_size.height - font_size)
+        .join("text")
         .attr("text-anchor", "middle")
+        .attr("dx", font_size * 4)
+        .attr("dy", font_size * 1.2)
         .style("font-size", font_size + "px")
-        .text(d => d.msg);
+        .style("fill", "black")
+        .style("font-weight", "bold")
+        .text(d => d.label);
+}
+
+export function renderable_value(value, domain, plot) {
+    const formatter = plot_render_function(plot);
+    return {
+        ...split_unit(formatter(value.value)),
+        url: value.url || "",
+    };
 }
 
 // Adhoc hack to extract the unit from a formatted string, which has units
 // Once we migrate metric system to the frontend drop this
-export function split_unit(recipe) {
-    if (!recipe) return {};
-    if (!recipe.formatted_value) return {};
-    let text = recipe.formatted_value;
+export function split_unit(formatted_value) {
+    if (!formatted_value) return {};
     // Separated by space, most rendered quantities
-    let splitted_text = text.split(" ");
-    if (splitted_text.length == 2)
-        return {value: splitted_text[0], unit: splitted_text[1], url: recipe.url};
+    let splitted_text = formatted_value.split(" ");
+    if (splitted_text.length == 2) return {value: splitted_text[0], unit: splitted_text[1]};
 
     // Percentages have no space
-    if (text.endsWith("%")) return {value: text.slice(0, -1), unit: "%", url: recipe.url};
+    if (formatted_value.endsWith("%")) return {value: formatted_value.slice(0, -1), unit: "%"};
 
     // It's a counter, unitless
-    return {value: text, unit: "", url: recipe.url};
+    return {value: formatted_value, unit: ""};
 }
 
-export function metric_value_component(selection, value, font_size, x, y) {
+export function getIn(object, ...args) {
+    return args.reduce((obj, level) => obj && obj[level], object);
+}
+export function get_function(render_string) {
+    return new Function(`"use strict"; return ${render_string}`)();
+}
+export function plot_render_function(plot) {
+    let js_render = getIn(plot, "metric", "unit", "js_render");
+    if (js_render) return get_function(js_render);
+    return get_function(
+        "function(v) { return cmk.number_format.fmt_number_with_precision(v, 1000, 2, true); }"
+    );
+}
+export function svc_status_css(paint, params) {
+    let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
+    if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
+    return status_cls;
+}
+
+/**
+ * Draw an individual shape
+ *
+ * @callback pathCallback
+ * @param {d3.path} path - d3 path object to draw a shape with, it is filled with color to reflect the status.
+ */
+
+/**
+ * Component to draw a background color on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the background
+ * @param {Object} options.size - When path_callback is not given draw a rect
+ * @param {number} options.size.height - Height of the background rect
+ * @param {number} options.size.width - Width of the background rect
+ * @param {pathCallback} options.path_callback - Draw individual shape instead of rect
+ * @param {string} options.css_class - Css classes to append to the background
+ * @param {boolean} options.visible - Whether to draw the background at all
+ */
+export function background_status_component(selection, options) {
+    const data = options.visible ? [null] : [];
+
+    let path_callback =
+        options.path_callback ||
+        function (path) {
+            path.rect(0, 0, options.size.width, options.size.height);
+        };
+
+    let background_path = d3.path();
+    path_callback(background_path);
+
+    selection
+        .selectAll("path.status_background")
+        .data(data)
+        .join(enter => enter.insert("path", ":first-child"))
+        .attr("class", `status_background ${options.css_class}`)
+        .attr("d", background_path.toString());
+}
+
+/**
+ * Component to draw a big centered value on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the value
+ * @param {Object} options.value - Configuration of the text to draw
+ * @param {string} options.value.url - When given, add a link to the text
+ * @param {string} options.value.unit - Append a unit to the value. e.g. '%'
+ * @param {string} options.value.value - Text to display
+ * @param {Object} options.position - Where to draw the Text
+ * @param {number} options.position.x - X position relative to the center of the text
+ * @param {number} options.position.y - Y position relative to the baseline of the text
+ * @param {number} options.font_size - Size of the font, clamped to [12, 50]
+ * @param {boolean} options.visible - Whether to draw the value at all
+ */
+export function metric_value_component(selection, options) {
+    const font_size = clamp(options.font_size, [12, 50]);
+    const data = options.visible ? [options.value] : [];
+
     let link = selection
         .selectAll("a.single_value")
-        .data([value])
+        .data(data)
         .join("a")
         .classed("single_value", true)
-        .attr("xlink:href", d => d.url || "");
+        .attr("xlink:href", d => d.url || null);
     let text = link
         .selectAll("text")
         .data(d => [d])
         .join("text")
         .text(d => d.value)
-        .attr("x", x)
-        .attr("y", y)
+        .attr("x", options.position.x)
+        .attr("y", options.position.y)
         .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
         .style("font-size", font_size + "px");
 
     let unit = text
@@ -684,5 +812,7 @@ export function metric_value_component(selection, value, font_size, x, y) {
         .data(d => [d])
         .join("tspan")
         .style("font-size", font_size / 2 + "px")
+        .style("font-weight", "lighter")
         .text(d => d.unit);
+    if (options.value.unit !== "%") unit.attr("x", options.position.x).attr("dy", "1em");
 }

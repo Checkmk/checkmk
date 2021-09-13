@@ -5,53 +5,37 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from marshmallow import Schema, fields, pre_dump
-
 from pathlib import Path
-from cmk.utils.i18n import _
-import cmk.utils.store as store
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Type
+
+from marshmallow import fields, pre_dump
+
 import cmk.utils.paths
-
-from typing import (
-    List,
-    Dict,
-    Set,
-    Tuple,
-    Type,
-    Optional,
-    Any,
-    NamedTuple,
-)
-
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.bi.bi_lib import (
-    ReqList,
-    ReqString,
-    ReqNested,
-    ReqBoolean,
-)
-
-from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_sample_configs import bi_sample_config
-from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.utils.bi.bi_node_generator import BINodeGenerator
+import cmk.utils.store as store
 from cmk.utils.bi.bi_actions import (
     BICallARuleAction,
     BIStateOfHostAction,
-    BIStateOfServiceAction,
     BIStateOfRemainingServicesAction,
+    BIStateOfServiceAction,
 )
-from cmk.utils.bi.bi_search import (
-    BIHostSearch,
-    BIServiceSearch,
-)
+from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
+from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqNested, ReqString, String
+from cmk.utils.bi.bi_node_generator import BINodeGenerator
+from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
+from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
+from cmk.utils.bi.bi_sample_configs import bi_sample_config
+from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.bi.bi_search import BIHostSearch, BIServiceSearch
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 
-RuleReferencesResult = NamedTuple("RuleReferencesResult", [
-    ("aggr_refs", int),
-    ("rule_refs", int),
-    ("level", int),
-])
+
+class RuleReferencesResult(NamedTuple):
+    aggr_refs: int
+    rule_refs: int
+    level: int
+
+
 #   .--Packs---------------------------------------------------------------.
 #   |                      ____            _                               |
 #   |                     |  _ \ __ _  ___| | _____                        |
@@ -67,17 +51,29 @@ class BIAggregationPack:
         super().__init__()
         self.id = pack_config["id"]
         self.title = pack_config["title"]
+        self.comment = pack_config.get("comment", "")
         self.contact_groups = pack_config["contact_groups"]
         self.public = pack_config["public"]
 
-        self.rules = {x["id"]: BIRule(x, self.id) for x in pack_config["rules"]}
+        self.rules = {x["id"]: BIRule(x, self.id) for x in pack_config.get("rules", [])}
         self.aggregations = {
-            x["id"]: BIAggregation(x, self.id) for x in pack_config["aggregations"]
+            x["id"]: BIAggregation(x, self.id) for x in pack_config.get("aggregations", [])
         }
 
     @classmethod
     def schema(cls) -> Type["BIAggregationPackSchema"]:
         return BIAggregationPackSchema
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "comment": self.comment,
+            "contact_groups": self.contact_groups,
+            "public": self.public,
+            "rules": [rule.serialize() for rule in self.rules.values()],
+            "aggregations": [aggr.serialize() for aggr in self.aggregations.values()],
+        }
 
     def num_aggregations(self) -> int:
         return len(self.aggregations)
@@ -95,6 +91,7 @@ class BIAggregationPack:
         self.rules[bi_rule.id] = bi_rule
 
     def delete_rule(self, rule_id: str) -> None:
+        """Deletes a rule without rule tree integrity check"""
         del self.rules[rule_id]
 
     def get_rule(self, rule_id: str) -> Optional[BIRule]:
@@ -161,6 +158,24 @@ class BIAggregationPacks:
             return bi_rule
         assert False
 
+    def delete_rule(self, rule_id: str) -> None:
+        # Only delete a rule if it is not referenced by other rules/aggregations
+        references = self.count_rule_references(rule_id)
+        if references.aggr_refs:
+            raise MKGeneralException(
+                _("You cannot delete this rule: it is still used by other aggregations.")
+            )
+        if references.rule_refs:
+            raise MKGeneralException(
+                _("You cannot delete this rule: it is still used by other rules.")
+            )
+
+        for bi_pack in self.packs.values():
+            bi_rule = bi_pack.get_rule(rule_id)
+            if bi_rule:
+                bi_pack.delete_rule(rule_id)
+                break
+
     def get_all_rules(self) -> List[BIRule]:
         return [
             bi_rule for bi_pack in self.packs.values() for bi_rule in bi_pack.get_rules().values()
@@ -175,7 +190,7 @@ class BIAggregationPacks:
         return sorted(all_groups)
 
     def get_aggregation_group_choices(self) -> List[Tuple[str, str]]:
-        """ Return a list of all available group names and fully combined group paths"""
+        """Return a list of all available group names and fully combined group paths"""
         all_groups: Set[str] = set()
         for aggregation in self.get_all_aggregations():
             if aggregation.computation_options.disabled:
@@ -190,6 +205,13 @@ class BIAggregationPacks:
             if bi_aggregation:
                 return bi_aggregation
         return None
+
+    def delete_aggregation(self, aggregation_id: str) -> None:
+        for bi_pack in self.packs.values():
+            bi_aggregation = bi_pack.get_aggregation(aggregation_id)
+            if bi_aggregation:
+                bi_pack.delete_aggregation(aggregation_id)
+                break
 
     def get_aggregation_mandatory(self, aggregation_id: str) -> BIAggregation:
         bi_aggregation = self.get_aggregation(aggregation_id)
@@ -239,46 +261,68 @@ class BIAggregationPacks:
                     bi_pack.add_rule(bi_rule)
 
                 for bi_node in bi_rule.get_nodes():
-                    if isinstance(bi_node.action,
-                                  BICallARuleAction) and bi_node.action.rule_id == old_id:
+                    if (
+                        isinstance(bi_node.action, BICallARuleAction)
+                        and bi_node.action.rule_id == old_id
+                    ):
                         bi_node.action.rule_id = new_id
 
             for bi_aggregation in bi_pack.get_aggregations().values():
-                if isinstance(bi_aggregation.node.action,
-                              BICallARuleAction) and bi_aggregation.node.action.rule_id == old_id:
+                if (
+                    isinstance(bi_aggregation.node.action, BICallARuleAction)
+                    and bi_aggregation.node.action.rule_id == old_id
+                ):
                     bi_aggregation.node.action.rule_id = new_id
 
     def load_config(self) -> None:
         if not Path(self._bi_configuration_file).exists():
-            self.load_config_from_schema(bi_sample_config)
+            self._load_config(bi_sample_config)
             return
+        self._load_config(store.load_object_from_file(self._bi_configuration_file, default=None))
 
-        self.load_config_from_schema(store.load_object_from_file(self._bi_configuration_file))
-
-    def load_config_from_schema(self, config_packs_schema: Dict) -> None:
+    def _load_config(self, config: Dict) -> None:
         self.cleanup()
-        data = BIAggregationPacksSchema().load(config_packs_schema)
-        self._instantiate_packs(data["packs"])
+        self._instantiate_packs(config["packs"])
 
     def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):
         self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
 
     def save_config(self) -> None:
-        store.save_file(self._bi_configuration_file, repr(self.generate_config()))
+        store.save_text_to_file(self._bi_configuration_file, repr(self.generate_config()))
         enabled_aggregations = str(
-            len([
-                bi_aggr for bi_aggr in self.get_all_aggregations()
-                if not bi_aggr.computation_options.disabled
-            ]))
+            len(
+                [
+                    bi_aggr
+                    for bi_aggr in self.get_all_aggregations()
+                    if not bi_aggr.computation_options.disabled
+                ]
+            )
+        )
 
-        enabled_info_path = os.path.join(cmk.utils.paths.var_dir, "wato")
-        store.makedirs(enabled_info_path)
-        store.save_file(os.path.join(enabled_info_path, "num_enabled_aggregations"),
-                        enabled_aggregations)
+        store.makedirs(self._num_enabled_aggregations_dir())
+        store.save_text_to_file(self._num_enabled_aggregations_path(), enabled_aggregations)
+
+    @classmethod
+    def _num_enabled_aggregations_dir(cls):
+        return os.path.join(cmk.utils.paths.var_dir, "wato")
+
+    @classmethod
+    def _num_enabled_aggregations_path(cls):
+        return os.path.join(cls._num_enabled_aggregations_dir(), "num_enabled_aggregations")
+
+    @classmethod
+    def get_num_enabled_aggregations(cls):
+        try:
+            return int(store.load_text_from_file(cls._num_enabled_aggregations_path()))
+        except (TypeError, ValueError):
+            return 0
 
     def generate_config(self) -> Dict[str, Any]:
         self._check_rule_cycles()
-        return BIAggregationPacksSchema().dump(self)
+        return self.serialize()
+
+    def serialize(self):
+        return {"packs": [pack.serialize() for pack in self.packs.values()]}
 
     def _check_rule_cycles(self) -> None:
         toplevel_rules = {
@@ -297,8 +341,12 @@ class BIAggregationPacks:
         if bi_rule.id in parents:
             parents.append(bi_rule.id)
             raise MKGeneralException(
-                _("There is a cycle in your rules. This rule calls itself - "
-                  "either directly or indirectly: %s") % "->".join(parents))
+                _(
+                    "There is a cycle in your rules. This rule calls itself - "
+                    "either directly or indirectly: %s"
+                )
+                % "->".join(parents)
+            )
 
         parents.append(bi_rule.id)
         for node in bi_rule.nodes:
@@ -339,9 +387,14 @@ class BIAggregationPacks:
 class BIAggregationPackSchema(Schema):
     id = ReqString(default="", example="bi_pack1")
     title = ReqString(default="", example="BI Title")
-    contact_groups = ReqList(fields.String(),
-                             default=[],
-                             example=["contactgroup_a", "contactgroup_b"])
+    comment = String(
+        description="An optional comment that may be used to explain the purpose of this object.",
+        allow_none=True,
+        example="Rule comment",
+    )
+    contact_groups = ReqList(
+        fields.String(), default=[], example=["contactgroup_a", "contactgroup_b"]
+    )
     public = ReqBoolean(default=False)
     rules = ReqList(fields.Nested(BIRuleSchema()), default=[])
     aggregations = ReqList(fields.Nested(BIAggregationSchema()), default=[])
@@ -352,6 +405,7 @@ class BIAggregationPackSchema(Schema):
         return {
             "id": obj.id,
             "title": obj.title,
+            "comment": obj.comment,
             "contact_groups": obj.contact_groups,
             "public": obj.public,
             "rules": obj.get_rules().values(),
@@ -368,7 +422,7 @@ class BIAggregationPacksSchema(Schema):
         return {"packs": obj.packs.values()}
 
 
-#.
+# .
 #   .--Rename Hosts--------------------------------------------------------.
 #   |   ____                                   _   _           _           |
 #   |  |  _ \ ___ _ __   __ _ _ __ ___   ___  | | | | ___  ___| |_ ___     |
@@ -407,8 +461,9 @@ class BIHostRenamer:
     def rename_node_action(self, bi_node: BINodeGenerator, oldname: str, newname: str) -> int:
         # TODO: renaming can be moved into the action class itself. allows easier plugins
         if isinstance(
-                bi_node.action,
-            (BIStateOfHostAction, BIStateOfServiceAction, BIStateOfRemainingServicesAction)):
+            bi_node.action,
+            (BIStateOfHostAction, BIStateOfServiceAction, BIStateOfRemainingServicesAction),
+        ):
             if bi_node.action.host_regex == oldname:
                 bi_node.action.host_regex = newname
                 return 1
@@ -425,9 +480,10 @@ class BIHostRenamer:
     def rename_node_search(self, bi_node: BINodeGenerator, oldname: str, newname: str) -> int:
         # TODO: renaming can be moved into the search class itself. allows easier plugins
         if isinstance(bi_node.search, (BIHostSearch, BIServiceSearch)):
-            if bi_node.search.conditions["host_choice"][
-                    "type"] == "host_name_regex" and bi_node.search.conditions["host_choice"][
-                        "pattern"] == oldname:
+            if (
+                bi_node.search.conditions["host_choice"]["type"] == "host_name_regex"
+                and bi_node.search.conditions["host_choice"]["pattern"] == oldname
+            ):
                 bi_node.search.conditions["host_choice"]["pattern"] = newname
                 return 1
 

@@ -3,6 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.1.0i1"
+
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 # This will be called on LSI based raidcontrollers and accesses
 # the SMART data of SATA disks attached to a SAS Raid HBA via
 # SCSI protocol interface.
@@ -73,9 +87,12 @@ if which smartctl > /dev/null 2>&1 ; then
         echo "tw_cli not found" >&2
     fi
 
+    INPATH_UDEVADM=$(inpath udevadm && echo "udevadm_present")
+
     echo '<<<smart>>>'
     SEEN=
-    for D in /dev/disk/by-id/{scsi,ata,nvme}-*; do
+    # don't use brace expansion here to stay POSIX conform
+    for D in /dev/disk/by-id/scsi-* /dev/disk/by-id/ata-* /dev/disk/by-id/nvme-*; do
         [ "$D" != "${D%scsi-\*}" ] && continue
         [ "$D" != "${D%ata-\*}" ] && continue
         [ "$D" != "${D%nvme-\*}" ] && continue
@@ -97,6 +114,11 @@ if which smartctl > /dev/null 2>&1 ; then
         fi
         # Excluded disk models for SAN arrays or certain RAID luns that are also not usable..
         if [ "$MODEL" = "iSCSI_Disk" ] || [ "$MODEL" = "LOGICAL_VOLUME" ]; then
+            continue
+        fi
+
+        # Exclude everything which can read a CD
+        if [ "$INPATH_UDEVADM" == "udevadm_present" ] && (udevadm info /dev/"$N" | grep -Fxq 'E: ID_CDROM_CD=1'); then
             continue
         fi
 
@@ -129,7 +151,7 @@ if which smartctl > /dev/null 2>&1 ; then
                 TEMP=
                 # create temperature output as expected by checks/smart
                 # this is a hack, TODO: change checks/smart to support SCSI-disks
-                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _rest ; do
+                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _ ; do
                     [ "$a" == Serial ] && echo SN="$c"
                     [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
                 done)"

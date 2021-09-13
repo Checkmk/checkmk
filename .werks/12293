@@ -1,0 +1,13 @@
+Title: Service discovery: Fix discovered host label processing
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615479344
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In distributed setups the discovered host labels were not displayed correctly
+for hosts that are monitored from remoted sites.

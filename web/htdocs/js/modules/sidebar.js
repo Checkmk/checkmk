@@ -372,11 +372,11 @@ function unfold_sidebar() {
 //
 
 // The refresh snapins do reload after a defined amount of time
-var refresh_snapins = null;
+var refresh_snapins = [];
 // The restart snapins are notified about the restart of the nagios instance(s)
-var restart_snapins = null;
+var restart_snapins = [];
 // Snapins that only have to be reloaded on demand
-var static_snapins = null;
+var static_snapins = [];
 // Contains a timestamp which holds the time of the last nagios restart handling
 var sidebar_restart_time = null;
 // Configures the number of seconds to reload all snapins which request it
@@ -415,13 +415,18 @@ export function add_snapin(name) {
 
             const sidebar_content = g_scrollbar.getContentElement();
             if (sidebar_content) {
-                var tmp = document.createElement("div");
-                tmp.innerHTML = result.content;
-                utils.execute_javascript_by_object(tmp);
+                const tmp_container = document.createElement("div");
+                tmp_container.innerHTML = result.content;
 
                 const add_button = sidebar_content.lastChild;
-                while (tmp.childNodes.length) {
-                    add_button.insertAdjacentElement("beforebegin", tmp.childNodes[0]);
+                while (tmp_container.childNodes.length) {
+                    const tmp = tmp_container.childNodes[0];
+                    add_button.insertAdjacentElement("beforebegin", tmp);
+
+                    // The object specific JS must be called after the object was inserted.
+                    // Otherwise JS code that works on DOM objects (e.g. the quicksearch snapin
+                    // registry) cannot find these objects.
+                    utils.execute_javascript_by_object(tmp);
                 }
             }
 
@@ -481,10 +486,7 @@ function remove_snapin(id) {
 
 export function toggle_sidebar_snapin(oH2, url) {
     // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
-    let childs =
-        oH2.tagName == "B"
-            ? oH2.parentNode.parentNode.childNodes
-            : oH2.parentNode.parentNode.parentNode.childNodes;
+    let childs = oH2.parentNode.parentNode.childNodes;
 
     let oContent, oHead;
     for (const i in childs) {
@@ -510,21 +512,17 @@ export function toggle_sidebar_snapin(oH2, url) {
     ajax.get_url(url + (closed ? "open" : "closed"));
 }
 
-function reload_main_plus_sidebar() {
-    window.top.location.reload();
-}
-
 // TODO move to managed/web/htdocs/js
 export function switch_customer(customer_id, switch_state) {
     ajax.get_url(
         "switch_customer.py?_customer_switch=" + customer_id + ":" + switch_state,
-        reload_main_plus_sidebar,
+        utils.reload_whole_page,
         null
     );
 }
 
 export function switch_site(url) {
-    ajax.get_url(url, reload_main_plus_sidebar, null);
+    ajax.get_url(url, utils.reload_whole_page, null);
 }
 
 function bulk_update_contents(ids, codes) {
@@ -622,6 +620,9 @@ export function execute_sidebar_scheduler() {
         const timestamp = Date.parse(new Date()) / 1000;
         if (timestamp % g_sidebar_notify_interval == 0) {
             update_messages();
+            if (g_may_ack) {
+                update_unack_incomp_werks();
+            }
         }
     }
 
@@ -961,18 +962,17 @@ function show_speed(percentage) {
     if (!context) return;
 
     if (percentage > 100.0) percentage = 100.0;
-
-    const orig_x = 116;
-    const orig_y = 181;
-    const angle_0 = 232.0;
-    const angle_100 = 307.0;
+    const orig_x = 115;
+    const orig_y = 165;
+    const angle_0 = 225.0;
+    const angle_100 = 314.0;
     const angle = angle_0 + ((angle_100 - angle_0) * percentage) / 100.0;
     const angle_rad = (angle / 360.0) * Math.PI * 2;
-    const length = 120;
+    const length = 115;
     const end_x = orig_x + Math.cos(angle_rad) * length;
     const end_y = orig_y + Math.sin(angle_rad) * length;
 
-    context.clearRect(0, 0, 228, 136);
+    context.clearRect(0, 0, 240, 146);
     context.beginPath();
     context.moveTo(orig_x, orig_y);
     context.lineTo(end_x, end_y);
@@ -980,7 +980,10 @@ function show_speed(percentage) {
     context.shadowOffsetX = 2;
     context.shadowOffsetY = 2;
     context.shadowBlur = 2;
-    context.strokeStyle = "#000000";
+    if (percentage < 80.0) context.strokeStyle = "#FF3232";
+    else if (percentage < 95.0) context.strokeStyle = "#FFFE44";
+    else context.strokeStyle = "#13D389";
+    context.lineWidth = 3;
     context.stroke();
 }
 
@@ -1007,97 +1010,118 @@ function move_needle(from_perc, to_perc) {
 
 // integer representing interval in seconds or <null> when disabled.
 var g_sidebar_notify_interval;
+var g_may_ack = false;
 
-export function init_messages(interval) {
+export function init_messages_and_werks(interval, may_ack) {
     g_sidebar_notify_interval = interval;
-
+    create_initial_ids("user", "messages", "user_notify.py");
     // Are there pending messages? Render the initial state of
     // trigger button
-    update_message_trigger();
+    update_messages();
+
+    g_may_ack = may_ack;
+    if (!may_ack) {
+        return;
+    }
+
+    create_initial_ids("help_links", "werks", "version.py?show_unack=1&wo_compatibility=3");
+    update_unack_incomp_werks();
 }
 
-function handle_update_messages(_unused, code) {
-    // add new messages to container
-    const c = document.getElementById("messages");
-    if (c) {
-        c.innerHTML = code;
-        utils.execute_javascript_by_object(c);
-        update_message_trigger();
+function handle_update_messages(_data, response_text) {
+    const response = JSON.parse(response_text);
+    if (response.result_code !== 0) {
+        return;
     }
+    const result = response.result;
+    const messages_text = result.hint_messages.text;
+    const messages_count = result.hint_messages.count;
+
+    update_message_trigger(messages_text, messages_count);
+    result.popup_messages.forEach(msg => {
+        alert(msg.text);
+        mark_message_read(msg.id, messages_text, messages_count);
+    });
 }
 
 function update_messages() {
-    // Remove all pending messages from container
-    const c = document.getElementById("messages");
-    if (c) {
-        c.innerHTML = "";
-    }
-
     // retrieve new messages
-    ajax.get_url("sidebar_get_messages.py", handle_update_messages);
+    ajax.call_ajax("ajax_sidebar_get_messages.py", {response_handler: handle_update_messages});
 }
 
-function get_hint_messages(c) {
-    let hints;
-    if (c.getElementsByClassName) hints = c.getElementsByClassName("popup_msg");
-    else hints = document.getElementsByClassName("popup_msg", c);
-    return hints;
-}
-
-function update_message_trigger() {
-    const c = document.getElementById("messages");
-    if (c) {
-        const b = document.getElementById("msg_button");
-        const hints = get_hint_messages(c);
-        if (hints.length > 0) {
-            // are there pending messages? make trigger visible
-            b.style.display = "inline";
-
-            // Create/Update a blinking number label
-            let l = document.getElementById("msg_label");
-            if (!l) {
-                l = document.createElement("span");
-                l.setAttribute("id", "msg_label");
-                b.appendChild(l);
-            }
-
-            l.innerHTML = "" + hints.length;
-        } else {
-            // no messages: hide the trigger
-            b.style.display = "none";
-        }
+export function update_message_trigger(msg_text, msg_count) {
+    let l = document.getElementById("messages_label");
+    if (msg_count === 0) {
+        l.style.display = "none";
+        return;
     }
+
+    l.innerText = msg_count.toString();
+    l.style.display = "inline";
+
+    let user_messages = document.getElementById("messages_link_to");
+    let text_content = msg_count + " " + msg_text;
+    user_messages.textContent = text_content;
 }
 
-export function mark_message_read(msg_id) {
+function mark_message_read(msg_id, msg_text, msg_count) {
     ajax.get_url("sidebar_message_read.py?id=" + msg_id);
 
     // Update the button state
-    update_message_trigger();
+    update_message_trigger(msg_text, msg_count);
 }
 
-export function read_message() {
-    const c = document.getElementById("messages");
-    if (!c) return;
-
-    // extract message from the message container
-    const hints = get_hint_messages(c);
-    const msg = hints[0];
-    c.removeChild(msg);
-
-    // open the next message in a window
-    c.parentNode.appendChild(msg);
-
-    // tell server that the message has been read
-    const msg_id = msg.id.replace("message-", "");
-    mark_message_read(msg_id);
-}
-
-export function message_close(msg_id) {
-    const m = document.getElementById("message-" + msg_id);
-    if (m) {
-        m.parentNode.removeChild(m);
+function handle_update_unack_incomp_werks(_data, response_text) {
+    const response = JSON.parse(response_text);
+    if (response.result_code !== 0) {
+        return;
     }
+    const result = response.result;
+    update_werks_trigger(result.count, result.text, result.tooltip);
+}
+
+function update_unack_incomp_werks() {
+    // retrieve number of unacknowledged incompatible werks
+    ajax.call_ajax("ajax_sidebar_get_unack_incomp_werks.py", {
+        response_handler: handle_update_unack_incomp_werks,
+    });
+}
+
+export function update_werks_trigger(werks_count, text, tooltip) {
+    let l = document.getElementById("werks_label");
+    if (werks_count === 0) {
+        l.style.display = "none";
+        return;
+    }
+
+    l.innerText = werks_count.toString();
+    l.style.display = "inline";
+
+    let werks_link = document.getElementById("werks_link_to");
+    werks_link.textContent = text;
+    werks_link.setAttribute("title", tooltip.toString());
+}
+
+function create_initial_ids(menu, what, start_url) {
+    const mega_menu_help_div = document.getElementById(
+        "popup_trigger_mega_menu_" + menu
+    ).firstChild;
+    const help_div = mega_menu_help_div.childNodes[2];
+
+    const l = document.createElement("span");
+    l.setAttribute("id", what + "_label");
+    l.style.display = "none";
+    mega_menu_help_div.insertBefore(l, help_div);
+
+    // Also update popup content
+    const info_line_span = document.getElementById("info_line_" + menu);
+    const span = document.createElement("span");
+    span.setAttribute("id", what + "_link");
+    const a = document.createElement("a");
+    a.href = "index.py?start_url=" + start_url;
+    a.setAttribute("id", what + "_link_to");
+    span.appendChild(a);
+    info_line_span.insertAdjacentElement("beforebegin", span);
 }
 
 /************************************************
@@ -1112,7 +1136,7 @@ export function toggle_user_attribute(mode) {
         response_handler: function (handler_data, ajax_response) {
             const data = JSON.parse(ajax_response);
             if (data.result_code == 0) {
-                window.location.reload();
+                utils.reload_whole_page();
             }
         },
     });

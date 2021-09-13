@@ -12,27 +12,27 @@
 
 
 def inventory_adva_fsp_current(info):
-    for _current_str, _upper_threshold_str, power_str, \
-        _unit_name, index_aid in info:
+    for _current_str, _upper_threshold_str, power_str, _unit_name, index_aid in info:
         # Ignore non-connected sensors
         if index_aid != "" and power_str != "":
             yield index_aid, None
 
 
 def check_adva_fsp_current(item, _no_params, info):
-    for current_str, upper_threshold_str, _power_str, \
-        unit_name, index_aid in info:
+    for current_str, upper_threshold_str, _power_str, unit_name, index_aid in info:
         if index_aid == item:
             current = float(current_str) / 1000.0
             upper_threshold = float(upper_threshold_str) / 1000
 
             infotext = "[%s] %.3f A (crit at %.3f A)" % (unit_name, current, upper_threshold)
-            perfdata = [(
-                "current",
-                current,
-                None,
-                upper_threshold,
-            )]
+            perfdata = [
+                (
+                    "current",
+                    current,
+                    None,
+                    upper_threshold,
+                )
+            ]
 
             if current <= 0:
                 return 3, "Invalid sensor data"
@@ -41,7 +41,7 @@ def check_adva_fsp_current(item, _no_params, info):
             return 0, infotext, perfdata
 
 
-check_info['adva_fsp_current'] = {
+check_info["adva_fsp_current"] = {
     "inventory_function": inventory_adva_fsp_current,
     "check_function": check_adva_fsp_current,
     "service_description": "Power Supply %s",
@@ -54,6 +54,7 @@ check_info['adva_fsp_current'] = {
             "1.11.2.4.2.2.1.3",  # currentDiagnosticsPsuOutputPower
             "2.5.5.1.1.1",  # inventoryUnitName
             "2.5.5.2.1.5",  # entityIndexAid
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "Fiber Service Platform F7",
 }

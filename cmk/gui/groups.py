@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 import cmk.utils.paths
 import cmk.utils.store as store
 
@@ -37,11 +38,11 @@ def load_group_information() -> Dict[str, GroupSpecs]:
     groups: Dict[str, Dict[str, GroupSpec]] = {}
     for what in ["host", "service", "contact"]:
         groups[what] = {}
-        for gid, alias in cmk_base_groups['define_%sgroups' % what].items():
-            groups[what][gid] = {'alias': alias}
+        for gid, alias in cmk_base_groups["define_%sgroups" % what].items():
+            groups[what][gid] = {"alias": alias}
 
-            if gid in gui_groups['multisite_%sgroups' % what]:
-                groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
+            if gid in gui_groups["multisite_%sgroups" % what]:
+                groups[what][gid].update(gui_groups["multisite_%sgroups" % what][gid])
 
     g.group_information = groups
     return groups
@@ -55,8 +56,9 @@ def _load_cmk_base_groups():
         "define_contactgroups": {},
     }
 
-    return store.load_mk_file(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk",
-                              default=group_specs)
+    return store.load_mk_file(
+        cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", default=group_specs
+    )
 
 
 def _load_gui_groups():
@@ -67,5 +69,6 @@ def _load_gui_groups():
         "multisite_contactgroups": {},
     }
 
-    return store.load_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk",
-                              default=group_specs)
+    return store.load_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", default=group_specs
+    )

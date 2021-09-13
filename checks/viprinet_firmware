@@ -11,7 +11,7 @@ def check_viprinet_firmware(_no_item, _no_params, info):
         "1": "Update Available",
         "2": "Checking for Updates",
         "3": "Downloading Update",
-        "4": "Installing Update"
+        "4": "Installing Update",
     }
     fw_status = fw_status_map.get(info[0][1])
     if fw_status:
@@ -20,9 +20,9 @@ def check_viprinet_firmware(_no_item, _no_params, info):
 
 
 check_info["viprinet_firmware"] = {
-    'check_function': check_viprinet_firmware,
-    'inventory_function': lambda info: len(info) > 0 and [(None, None)] or [],
-    'service_description': "Firmware Version",
-    'snmp_info': (".1.3.6.1.4.1.35424.1.1", [4, 7]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
+    "check_function": check_viprinet_firmware,
+    "inventory_function": lambda info: len(info) > 0 and [(None, None)] or [],
+    "service_description": "Firmware Version",
+    "snmp_info": (".1.3.6.1.4.1.35424.1.1", [4, 7]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
 }

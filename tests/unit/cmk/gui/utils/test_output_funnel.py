@@ -4,115 +4,113 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+from typing import List
 
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.gui.htmllib import OutputFunnel
 from cmk.gui.http import Response
+from cmk.gui.utils.output_funnel import OutputFunnel
 
 
-class OutputFunnelTester(OutputFunnel):
-    def __init__(self, response):
-        super(OutputFunnelTester, self).__init__(response)
-        self.written = b""
-
-    def _lowlevel_write(self, text):
-        self.written += text
+def written(funnel) -> bytes:
+    return funnel._response_stack[-1].get_data()
 
 
-@pytest.fixture()
-def html():
-    response = Response()
-    return OutputFunnelTester(response)
+def response_texts(funnel: OutputFunnel) -> List[List[str]]:
+    return [[e.decode("utf-8") for e in r.iter_encoded()] for r in funnel._response_stack[1:]]
 
 
-def test_output_funnel_not_plugged(html):
-    html.write("A")
-    assert html.written == b"A"
+@pytest.fixture(name="funnel")
+def fixture_funnel() -> OutputFunnel:
+    return OutputFunnel(Response())
 
 
-def test_output_funnel_plugged(html):
-    with html.plugged():
-        html.write("B")
-        assert html.plug_text == [["B"]]
+def test_output_funnel_not_plugged(funnel: OutputFunnel) -> None:
+    funnel.write(b"A")
+    assert written(funnel) == b"A"
 
 
-def test_output_funnel_2nd_plug(html):
-    with html.plugged():
-        html.write("B")
-        assert html.plug_text == [["B"]]
-        with html.plugged():
-            html.write("C")
-            assert html.plug_text == [["B"], ["C"]]
-        assert html.plug_text == [["B", "C"]]
-    assert html.written == b"BC"
+def test_output_funnel_plugged(funnel: OutputFunnel) -> None:
+    with funnel.plugged():
+        funnel.write(b"B")
+        assert response_texts(funnel) == [["B"]]
 
 
-def test_output_funnel_drain(html):
-    with html.plugged():
-        html.write("A")
-        text = html.drain()
+def test_output_funnel_2nd_plug(funnel: OutputFunnel) -> None:
+    with funnel.plugged():
+        funnel.write(b"B")
+        assert response_texts(funnel) == [["B"]]
+        with funnel.plugged():
+            funnel.write(b"C")
+            assert response_texts(funnel) == [["B"], ["C"]]
+        assert response_texts(funnel) == [["B", "C"]]
+    assert written(funnel) == b"BC"
+
+
+def test_output_funnel_drain(funnel: OutputFunnel) -> None:
+    with funnel.plugged():
+        funnel.write(b"A")
+        text = funnel.drain()
         assert text == "A"
 
-        html.write("B")
-        assert html.plug_text == [["B"]]
-    assert html.written == b"B"
+        funnel.write(b"B")
+        assert response_texts(funnel) == [["B"]]
+    assert written(funnel) == b"B"
 
 
-def test_output_funnel_context_nesting(html):
-    html.write("A")
-    assert html.written == b"A"
-    with html.plugged():
-        html.write("B")
-        assert html.plug_text == [["B"]]
-        with html.plugged():
-            html.write("C")
-            assert html.plug_text == [["B"], ["C"]]
-        assert html.plug_text == [["B", "C"]]
-    assert html.written == b"ABC"
+def test_output_funnel_context_nesting(funnel: OutputFunnel) -> None:
+    funnel.write(b"A")
+    assert written(funnel) == b"A"
+    with funnel.plugged():
+        funnel.write(b"B")
+        assert response_texts(funnel) == [["B"]]
+        with funnel.plugged():
+            funnel.write(b"C")
+            assert response_texts(funnel) == [["B"], ["C"]]
+        assert response_texts(funnel) == [["B", "C"]]
+    assert written(funnel) == b"ABC"
 
 
-def test_output_funnel_context_drain(html):
-    html.write("A")
-    assert html.written == b"A"
-    with html.plugged():
-        html.write("B")
-        assert html.plug_text == [['B']]
-        code = html.drain()
-        assert html.plug_text == [[]]
-    assert code == 'B'
-    assert html.written == b"A"
+def test_output_funnel_context_drain(funnel: OutputFunnel) -> None:
+    funnel.write(b"A")
+    assert written(funnel) == b"A"
+    with funnel.plugged():
+        funnel.write(b"B")
+        assert response_texts(funnel) == [["B"]]
+        code = funnel.drain()
+        assert response_texts(funnel) == [[]]
+    assert code == "B"
+    assert written(funnel) == b"A"
 
 
-def test_output_funnel_context_raise(html):
+def test_output_funnel_context_raise(funnel: OutputFunnel) -> None:
     try:
-        html.write("A")
-        assert html.written == b"A"
-        with html.plugged():
-            html.write("B")
-            assert html.plug_text == [['B']]
+        funnel.write(b"A")
+        assert written(funnel) == b"A"
+        with funnel.plugged():
+            funnel.write(b"B")
+            assert response_texts(funnel) == [["B"]]
             raise Exception("Test exception")
     except Exception as e:
         assert "%s" % e == "Test exception"
     finally:
-        assert html.plug_text == []
+        assert response_texts(funnel) == []
 
 
-def test_output_funnel_try_finally(html):
+def test_output_funnel_try_finally(funnel: OutputFunnel) -> None:
     try:
-        html.write("try1\n")
+        funnel.write(b"try1\n")
         try:
-            html.write("try2\n")
+            funnel.write(b"try2\n")
             raise Exception("Error")
         except Exception:
-            html.write("except2\n")
+            funnel.write(b"except2\n")
             raise
         finally:
-            html.write("finally2\n")
+            funnel.write(b"finally2\n")
     except Exception as e:
-        html.write("except1\n")
-        html.write("%s\n" % e)
+        funnel.write(b"except1\n")
+        funnel.write(str(e).encode("ascii") + b"\n")
     finally:
-        html.write("finally1\n")
-    assert html.written == b"try1\ntry2\nexcept2\nfinally2\nexcept1\nError\nfinally1\n"
+        funnel.write(b"finally1\n")
+    assert written(funnel) == b"try1\ntry2\nexcept2\nfinally2\nexcept1\nError\nfinally1\n"

@@ -1,0 +1,14 @@
+Title: PySNMP: Increase performance when creating core config
+Class: fix
+Compatible: compat
+Component: inline-snmp
+Date: 1611232145
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The SnmpEngine is now instantiated on demand.
+No longer when builder the core config.
+This caused huge performance issues on bigger sites.

@@ -6,56 +6,57 @@
 
 import contextlib
 import time
-
-from six import ensure_str
+from typing import Optional
 
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.config import clear_user_login, set_user_by_id
-from cmk.gui.exceptions import MKAuthException
-from cmk.gui.login import verify_automation_secret, set_auth_type
+from cmk.gui import userdb
+from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.login import set_auth_type, verify_automation_secret
+from cmk.gui.utils.logged_in import UserContext
+from cmk.gui.wsgi.type_defs import AuthType, RFC7662
 
-from cmk.gui.wsgi.type_defs import RFC7662
+
+def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
+    if verify_automation_secret(user_id, secret):
+        return rfc7662_subject(user_id, "automation")
+
+    return None
 
 
-def bearer_auth(auth_header: str) -> RFC7662:
+def gui_user_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
     try:
-        _, token = auth_header.split("Bearer", 1)
-    except ValueError:
-        raise MKAuthException(None, "Not a valid Bearer token.")
+        if userdb.check_credentials(user_id, secret):
+            return rfc7662_subject(user_id, "cookie")
+    except MKUserError:
+        # This is the case of "Automation user rejected". We don't care about that in the REST API
+        # because every type of user is allowed in.
+        return None
 
-    try:
-        user_id, secret = token.strip().split(' ', 1)
-    except ValueError:
-        raise MKAuthException("No user/password combination in Bearer token.")
-
-    if not secret:
-        raise MKAuthException("Empty password not allowed.")
-
-    if not user_id:
-        raise MKAuthException("Empty user not allowed.")
-
-    if "/" in user_id:
-        raise MKAuthException("No slashes / allowed in username.")
-
-    if not verify_automation_secret(UserId(ensure_str(user_id)), secret):
-        raise MKAuthException("Not authenticated.")
-
-    # Auth with automation secret succeeded - mark transid as unneeded in this case
-    return _subject(user_id)
+    return None
 
 
-def _subject(user_id: str) -> RFC7662:
-    # noinspection PyTypeChecker
-    return {'sub': user_id, 'iat': int(time.time()), 'active': True}
+def rfc7662_subject(user_id: UserId, auth_type: AuthType) -> RFC7662:
+    """Create a RFC7662 compatible user representation
+
+    Args:
+        user_id:
+            The user's user_id
+
+        auth_type:
+            One of automation, cookie, web_server, http_header
+
+    Returns:
+        The filled out dictionary.
+    """
+    return {"sub": user_id, "iat": int(time.time()), "active": True, "scope": auth_type}
 
 
 @contextlib.contextmanager
-def verify_user(user_id, token_info):
-    if user_id and token_info and user_id == token_info.get('sub'):
-        set_user_by_id(user_id)
-        set_auth_type("automation")
-        yield
-        clear_user_login()
+def set_user_context(user_id: UserId, token_info: RFC7662):
+    if user_id and token_info and user_id == token_info.get("sub"):
+        with UserContext(user_id):
+            set_auth_type(token_info["scope"])
+            yield
     else:
         raise MKAuthException("Unauthorized by verify_user")

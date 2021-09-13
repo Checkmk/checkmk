@@ -1,0 +1,13 @@
+Title: agent_vsphere: Fix compatibility for version 5.5
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614244559
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The connection to an ESX with version 5.5 resulted in the error
+"Cannot login to vSphere Server (reason: [200] OK). Please check the
+credentials." even if the credentials were correct.

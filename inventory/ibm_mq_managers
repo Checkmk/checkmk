@@ -16,6 +16,7 @@ def inv_ibm_mq_managers(parsed, inventory_tree, status_data_tree):
         data = dict(key)
         data["instver"] = attrs["INSTVER"]
         data["instname"] = attrs["INSTNAME"]
+        data["ha"] = attrs.get("HA", "n/a")
         inv_node.append(data)
 
         data = dict(key)
@@ -24,7 +25,7 @@ def inv_ibm_mq_managers(parsed, inventory_tree, status_data_tree):
         status_node.append(data)
 
 
-inv_info['ibm_mq_managers'] = {
-    'inv_function': inv_ibm_mq_managers,
-    'has_status_data': True,
+inv_info["ibm_mq_managers"] = {
+    "inv_function": inv_ibm_mq_managers,
+    "has_status_data": True,
 }

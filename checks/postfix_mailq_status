@@ -47,15 +47,15 @@ def check_postfix_mailq_status(item, params, parsed):
             state = 0
         else:
             state = 2
-        yield state, 'Status: %s' % state_readable
+        yield state, "Status: %s" % state_readable
 
         if pid:
-            yield 0, 'PID: %s' % pid
+            yield 0, "PID: %s" % pid
 
 
-check_info['postfix_mailq_status'] = {
-    'parse_function': parse_postfix_mailq_status,
-    'inventory_function': inventory_postfix_mailq_status,
-    'check_function': check_postfix_mailq_status,
-    'service_description': 'Postfix status %s',
+check_info["postfix_mailq_status"] = {
+    "parse_function": parse_postfix_mailq_status,
+    "inventory_function": inventory_postfix_mailq_status,
+    "check_function": check_postfix_mailq_status,
+    "service_description": "Postfix status %s",
 }

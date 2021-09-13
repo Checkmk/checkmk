@@ -3,12 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.1.0i1"
+
 if type lpstat > /dev/null 2>&1 ; then
     export LC_TIME="en_US.UTF-8"
     echo "<<<cups_queues>>>"
     CPRINTCONF=/etc/cups/printers.conf
     if  [ -r "$CPRINTCONF" ] ; then
-        LOCAL_PRINTERS=$(perl -ne '/<(?:Default)?Printer (\w+)>/ && print "$1\n"' $CPRINTCONF)
+        LOCAL_PRINTERS=$(perl -ne '/<(?:Default)?Printer ([\w-]+)>/ && print "$1\n"' $CPRINTCONF)
         lpstat -h localhost -p | while read LINE
         do
             PRINTER=$(echo "$LINE" | awk '{print $2}')

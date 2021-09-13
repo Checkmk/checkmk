@@ -6,24 +6,29 @@
 
 import abc
 from collections.abc import MutableMapping
-from typing import Iterator, Any, Union, Optional, List, Dict
+from typing import Any, Dict, Iterator, List, Optional, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import Labels, CheckPluginNameStr
+from cmk.utils.type_defs import Labels, SectionName
 
-HostLabelValueDict = Dict[str, Union[str, Optional[CheckPluginNameStr]]]
+
+class HostLabelValueDict(TypedDict):
+    value: str
+    plugin_name: Optional[str]
+
+
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 
-class ABCDiscoveredLabels(MutableMapping, metaclass=abc.ABCMeta):
-    def __init__(self, *args: 'ABCLabel') -> None:
-        super(ABCDiscoveredLabels, self).__init__()
+class ABCDiscoveredLabels(MutableMapping, abc.ABC):
+    def __init__(self, *args: "ABCLabel") -> None:
+        super().__init__()
         self._labels: Dict[str, Any] = {}
         for entry in args:
             self.add_label(entry)
 
     @abc.abstractmethod
-    def add_label(self, label: 'ABCLabel') -> None:
+    def add_label(self, label: "ABCLabel") -> None:
         raise NotImplementedError()
 
     def is_empty(self) -> bool:
@@ -56,18 +61,19 @@ class ABCDiscoveredLabels(MutableMapping, metaclass=abc.ABCMeta):
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single host during runtime"""
+
     @classmethod
-    def from_dict(cls, dict_labels: DiscoveredHostLabelsDict) -> 'DiscoveredHostLabels':
+    def from_dict(cls, dict_labels: DiscoveredHostLabelsDict) -> "DiscoveredHostLabels":
         labels = cls()
         for k, v in dict_labels.items():
             labels.add_label(HostLabel.from_dict(k, v))
         return labels
 
-    def __init__(self, *args: 'HostLabel') -> None:
+    def __init__(self, *args: "HostLabel") -> None:
         self._labels: Dict[str, HostLabel] = {}
-        super(DiscoveredHostLabels, self).__init__(*args)
+        super().__init__(*args)
 
-    def add_label(self, label: 'ABCLabel') -> None:
+    def add_label(self, label: "ABCLabel") -> None:
         assert isinstance(label, HostLabel)
         self._labels[label.name] = label
 
@@ -77,27 +83,29 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
             for label in sorted(self._labels.values(), key=lambda x: x.name)
         }
 
-    def to_list(self) -> List['HostLabel']:
+    def to_list(self) -> List["HostLabel"]:
         return sorted(self._labels.values(), key=lambda x: x.name)
 
-    def __add__(self, other: 'DiscoveredHostLabels') -> 'DiscoveredHostLabels':
+    def __add__(self, other: "DiscoveredHostLabels") -> "DiscoveredHostLabels":
+        """Adding [foo:bar2] to [foo:bar1] results in [foo:bar2]. The label value is updated"""
         if not isinstance(other, DiscoveredHostLabels):
-            raise TypeError('%s not type DiscoveredHostLabels' % other)
+            raise TypeError("%s not type DiscoveredHostLabels" % other)
         data = self.to_dict().copy()
         data.update(other.to_dict())
         return DiscoveredHostLabels.from_dict(data)
 
-    def __sub__(self, other: 'DiscoveredHostLabels') -> 'DiscoveredHostLabels':
+    def __sub__(self, other: "DiscoveredHostLabels") -> "DiscoveredHostLabels":
+        """Removing [foo:bar2] from [foo:bar1] results in []. The label key is removed"""
         if not isinstance(other, DiscoveredHostLabels):
-            raise TypeError('%s not type DiscoveredHostLabels' % other)
+            raise TypeError("%s not type DiscoveredHostLabels" % other)
         data = self.to_dict()
         return DiscoveredHostLabels.from_dict(
-            {k: data[k] for k in data.keys() - other.to_dict().keys()})
+            {k: data[k] for k in data.keys() - other.to_dict().keys()}
+        )
 
 
 class ABCLabel:
-    """Representing a label in Checkmk
-    """
+    """Representing a label in Checkmk"""
 
     __slots__ = ["_name", "_value"]
 
@@ -141,47 +149,49 @@ class HostLabel(ABCLabel):
 
     Besides the label itself it keeps the information which plugin discovered the host label
     """
+
     __slots__ = ["_plugin_name"]
 
     @classmethod
-    def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> 'HostLabel':
+    def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> "HostLabel":
         value = dict_label["value"]
         assert isinstance(value, str)
 
-        plugin_name = dict_label["plugin_name"]
-        assert isinstance(plugin_name, str) or plugin_name is None
+        raw_name = dict_label["plugin_name"]
+        plugin_name = None if raw_name is None else SectionName(raw_name)
 
         return cls(name, value, plugin_name)
 
-    def __init__(self,
-                 name: str,
-                 value: str,
-                 plugin_name: Optional[CheckPluginNameStr] = None) -> None:
-        super(HostLabel, self).__init__(name, value)
+    def __init__(
+        self,
+        name: str,
+        value: str,
+        plugin_name: Optional[SectionName] = None,
+    ) -> None:
+        super().__init__(name, value)
         self._plugin_name = plugin_name
 
     @property
-    def plugin_name(self) -> Optional[str]:
+    def plugin_name(self) -> Optional[SectionName]:
         return self._plugin_name
-
-    @plugin_name.setter
-    def plugin_name(self, plugin_name: str) -> None:
-        self._plugin_name = plugin_name
 
     def to_dict(self) -> HostLabelValueDict:
         return {
             "value": self.value,
-            "plugin_name": self.plugin_name,
+            "plugin_name": None if self._plugin_name is None else str(self._plugin_name),
         }
 
     def __repr__(self) -> str:
-        return "HostLabel(%r, %r, plugin_name=%r)" % (self.name, self.value, self.plugin_name)
+        return f"HostLabel({self.name!r}, {self.value!r}, plugin_name={self._plugin_name!r})"
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HostLabel):
-            raise TypeError(f'{other!r} is not of type HostLabel')
-        return (self.name == other.name and self.value == other.value and
-                self.plugin_name == other.plugin_name)
+            raise TypeError(f"{other!r} is not of type HostLabel")
+        return (
+            self.name == other.name
+            and self.value == other.value
+            and self.plugin_name == other.plugin_name
+        )
 
     def __ne__(self, other: Any) -> bool:
         return not self.__eq__(other)
@@ -189,10 +199,11 @@ class HostLabel(ABCLabel):
 
 class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single service during runtime"""
+
     def __init__(self, *args: ServiceLabel) -> None:
         # TODO: Make self._labels also store ServiceLabel objects just like DiscoveredHostLabels
         self._labels: Labels = {}
-        super(DiscoveredServiceLabels, self).__init__(*args)
+        super().__init__(*args)
 
     def add_label(self, label: ABCLabel) -> None:
         assert isinstance(label, ServiceLabel)

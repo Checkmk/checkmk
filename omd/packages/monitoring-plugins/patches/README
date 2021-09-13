@@ -8,11 +8,6 @@
     packats are lost. An RTA is "nan" in this case. But check_icmp would
     insist to make the outcome CRITICAL. The patch fixes this.
 
-
-0002-check-icmp-ipv6.dif
-    Adds IPv6 support to check_icmp
-
-
 0003-cmk-password-store.dif
     Adds support for getting passwords from the Check_MK Password Store
     instead of having them in plaintext on the command line to various

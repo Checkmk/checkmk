@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -74,7 +70,7 @@ metric_info["fs_provisioning"] = {
     "color": "#ff8000",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -87,6 +83,7 @@ metric_info["fs_provisioning"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["fs_used"] = {
+    "title": _("Filesystem size and used space"),
     "metrics": [
         ("fs_used", "area"),
         ("fs_size,fs_used,-#e3fff9", "stack", _("Free space")),
@@ -102,6 +99,7 @@ graph_info["fs_used"] = {
 
 # draw a different graph if space reserved for root was excluded
 graph_info["fs_used_2"] = {
+    "title": _("Filesystem size and usage"),
     "metrics": [
         ("fs_used", "area"),
         ("fs_free", "stack"),
@@ -117,19 +115,26 @@ graph_info["fs_used_2"] = {
 
 graph_info["growing"] = {
     "title": _("Growing"),
-    "metrics": [(
-        "fs_growth.max,0,MAX",
-        "area",
-        _("Growth"),
-    ),],
+    "metrics": [
+        (
+            "fs_growth.max,0,MAX",
+            "area",
+            _("Growth"),
+        ),
+    ],
 }
 
 graph_info["shrinking"] = {
     "title": _("Shrinking"),
     "consolidation_function": "min",
-    "metrics": [("fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),],
+    "metrics": [
+        ("fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),
+    ],
 }
 
 graph_info["fs_trend"] = {
-    "metrics": [("fs_trend", "line"),],
+    "title": _("Trend of filesystem growth"),
+    "metrics": [
+        ("fs_trend", "line"),
+    ],
 }

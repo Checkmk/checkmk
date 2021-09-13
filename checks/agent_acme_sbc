@@ -9,4 +9,4 @@ def agent_acme_sbc(params, hostname, ipaddress):
     return [hostname]
 
 
-special_agent_info['acme_sbc'] = agent_acme_sbc
+special_agent_info["acme_sbc"] = agent_acme_sbc

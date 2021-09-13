@@ -11,7 +11,9 @@
 
 namespace fs = std::filesystem;
 
-[[nodiscard]] std::string mk::unescape_filename(const std::string& filename) {
+namespace mk {
+
+[[nodiscard]] std::string unescape_filename(const std::string& filename) {
     std::string filename_native;
     bool quote_active = false;
     for (auto c : filename) {
@@ -31,7 +33,7 @@ namespace fs = std::filesystem;
     return fs::path{filename_native};
 }
 
-bool mk::path_contains(const fs::path& directory, const fs::path& path) {
+bool path_contains(const fs::path& directory, const fs::path& path) {
     std::error_code ec{};
     const fs::path can_dir{fs::canonical(directory, ec)};
     if (ec) {
@@ -45,3 +47,5 @@ bool mk::path_contains(const fs::path& directory, const fs::path& path) {
                               can_path.end());
     return pair.first == can_dir.end();
 }
+
+}  // namespace mk

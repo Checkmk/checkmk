@@ -8,5 +8,5 @@ description:
  least one port has security violations. If port security is configured but can't be enabled then
  no WARN is issued.
 
-inventory:
+discovery:
  One service is created if port security is enabled for at least one port.

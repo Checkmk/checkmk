@@ -7,32 +7,33 @@
 import logging
 import os
 import subprocess
-from typing import NamedTuple
 from pathlib import Path
+from typing import NamedTuple
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import wait_until  # type: ignore[import]
+from tests.testlib import wait_until
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log
 import cmk.utils.paths
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPHostConfig, SNMPBackend
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
+from cmk.core_helpers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
+
 try:
-    from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend
+    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 
-ProcessDef = NamedTuple("ProcessDef", [
-    ("port", int),
-    ("process", subprocess.Popen),
-])
+
+class ProcessDef(NamedTuple):
+    port: int
+    process: subprocess.Popen
 
 
 @pytest.fixture(name="snmp_data_dir", scope="module")
@@ -73,7 +74,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
         process=subprocess.Popen(
             [
                 "snmpsimd.py",
-                #"--log-level=error",
+                "--log-level=error",
                 "--cache-dir",
                 # Each snmpsim instance needs an own cache directory otherwise
                 # some instances occasionally crash
@@ -81,15 +82,17 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
                 "--data-dir",
                 str(snmp_data_dir),
                 # TODO: Fix port allocation to prevent problems with parallel tests
-                #"--agent-unix-endpoint="
+                # "--agent-unix-endpoint="
                 "--agent-udpv4-endpoint=127.0.0.1:%s" % port,
                 "--agent-udpv6-endpoint=[::1]:%s" % port,
-            ] + auth,
+            ]
+            + auth,
             close_fds=True,
             # Silence the very noisy output. May be useful to enable this for debugging tests
-            stdout=open(os.devnull, "w"),
-            stderr=subprocess.STDOUT,
-        ))
+            # stdout=open(os.devnull, "w"),
+            # stderr=subprocess.STDOUT,
+        ),
+    )
 
 
 def _create_auth_list():
@@ -132,6 +135,8 @@ def _is_listening(process_def):
     exitcode = p.poll()
     if exitcode is not None:
         raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+
+    # Wait for snmpsimd to initialize the UDP sockets
     num_sockets = 0
     try:
         for e in os.listdir("/proc/%d/fd" % p.pid):
@@ -145,20 +150,26 @@ def _is_listening(process_def):
         if exitcode is None:
             raise
         raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+
     if num_sockets < 2:
         return False
-    num_sockets = 0
+
+    # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
+    # whether or not snmpsimd is already answering.
+
     # Correct module is only available in the site
     import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-    var = netsnmp.Varbind("sysDescr.0")
+
+    var = netsnmp.Varbind("SNMPv2-MIB::sysDescr.0")
     result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:%s" % port, Community="public")
     if result is None or result[0] is None:
         return False
     return True
 
 
-@pytest.fixture(name="backend",
-                params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend])
+@pytest.fixture(
+    name="backend", params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend]
+)
 def backend_fixture(request, snmp_data_dir):
     backend = request.param
     if backend is None:
@@ -179,7 +190,9 @@ def backend_fixture(request, snmp_data_dir):
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,
-        snmp_backend=SNMPBackend.inline if backend is InlineSNMPBackend else SNMPBackend.classic,
+        snmp_backend=SNMPBackendEnum.INLINE
+        if backend is InlineSNMPBackend
+        else SNMPBackendEnum.CLASSIC,
     )
 
     snmpwalks_dir = cmk.utils.paths.snmpwalks_dir

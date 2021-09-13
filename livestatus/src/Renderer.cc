@@ -6,6 +6,7 @@
 #include "Renderer.h"
 
 #include <cmath>
+#include <cstdint>
 #include <ctime>
 #include <iomanip>
 #include <ostream>
@@ -17,6 +18,7 @@
 #include "RendererJSON.h"
 #include "RendererPython.h"
 #include "RendererPython3.h"
+#include "data_encoding.h"
 
 Renderer::Renderer(std::ostream &os, Logger *logger, Encoding data_encoding)
     : _os(os), _data_encoding(data_encoding), _logger(logger) {}
@@ -66,17 +68,16 @@ void Renderer::output(const RowFragment &value) { _os << value._str; }
 void Renderer::output(char16_t value) {
     OStreamStateSaver s(_os);
     _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0')
-        << static_cast<unsigned int>(value);
+        << static_cast<uint16_t>(value);
 }
 
 void Renderer::output(char32_t value) {
     if (value < 0x10000) {
         output(char16_t(value));
     } else {
-        // we need a surrogate pair
-        char32_t offs = value - 0x10000;
-        output(char16_t(((offs >> 10) & 0x3FF) + 0xD800));
-        output(char16_t((offs & 0x3FF) + 0xDC00));
+        OStreamStateSaver s(_os);
+        _os << R"(\U)" << std::hex << std::setw(8) << std::setfill('0')
+            << static_cast<uint32_t>(value);
     }
 }
 

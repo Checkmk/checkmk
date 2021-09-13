@@ -5,15 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import (
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    TypedDict,
-    Tuple,
-)
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypedDict
+
 from .agent_based_api.v1 import (
     check_levels,
     Metric,
@@ -21,10 +14,9 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
-    State as state,
+    State,
     type_defs,
 )
-from .agent_based_api.v1.clusterize import aggregate_node_details
 
 # <<<job>>>
 # ==> asd ASD <==
@@ -65,7 +57,7 @@ Section = Dict[str, Job]
 
 
 def _job_parse_real_time(s: str) -> float:
-    parts = s.split(':')
+    parts = s.split(":")
     min_sec, hour_sec = 0, 0
     if len(parts) == 3:
         hour_sec = int(parts[0]) * 60 * 60
@@ -76,45 +68,84 @@ def _job_parse_real_time(s: str) -> float:
 
 def _job_parse_key_values(line: List[str]) -> Tuple[str, float]:
     key, val = line
-    if key == 'real_time':
+    if key == "real_time":
         return key, _job_parse_real_time(val)
-    if key in ('user_time', 'system_time'):
+    if key in ("user_time", "system_time"):
         return key, float(val)
-    if key in ('max_res_kbytes', 'avg_mem_kbytes'):
-        return key.replace('kbytes', 'bytes'), int(val) * 1000
+    if key in ("max_res_kbytes", "avg_mem_kbytes"):
+        return key.replace("kbytes", "bytes"), int(val) * 1000
     return key, int(val)
+
+
+def _get_jobname_and_running_state(
+    string_table: type_defs.StringTable,
+) -> Tuple[str, str]:
+    """determine whether the job is running. some jobs are flagged as
+    running jobs, but are in fact not (i.e. they are pseudo running), for
+    example killed jobs.
+    returns a tuple containing the job name without the 'running' postfix
+    (if applicable) and one of three possible running states:
+        - 'running'
+        - 'not_running'
+        - 'pseudo_running'
+    """
+    jobname = " ".join(string_table[0][1:-1])
+
+    if not jobname.endswith("running"):
+        return jobname, "not_running"
+
+    jobname = jobname.rsplit(".", 1)[0]
+
+    # real running jobs ...
+    # ... have the start time defined ...
+    if len(string_table) < 2 or string_table[1][0] != "start_time":
+        return jobname, "pseudo_running"
+
+    # ... and then the subsection ends
+    if len(string_table) > 2 and string_table[2][0] != "==>":
+        return jobname, "pseudo_running"
+
+    return jobname, "running"
 
 
 def parse_job(string_table: type_defs.StringTable) -> Section:
     parsed: Section = {}
+    pseudo_running_jobs: Section = (
+        {}
+    )  # contains jobs that are flagged as running but are not, e.g. killed jobs
     job: Job = {}
-    for line in string_table:
+    for idx, line in enumerate(string_table):
         if line[0] == "==>" and line[-1] == "<==":
-            jobname = " ".join(line[1:-1])
-            running = jobname.endswith("running")
-            if running:
-                jobname = jobname.rsplit(".", 1)[0]
+            jobname, running_state = _get_jobname_and_running_state(string_table[idx:])
+            running = running_state == "running"
 
             metrics: Metrics = {}
-            job = parsed.setdefault(
-                jobname,
-                {
-                    "running": running,
-                    "metrics": metrics,
-                },
-            )
+            job_stats: Job = {
+                "running": running,
+                "metrics": metrics,
+            }
+            if running_state == "pseudo_running":
+                job = pseudo_running_jobs.setdefault(jobname, job_stats)
+                continue
+
+            job = parsed.setdefault(jobname, job_stats)
 
         elif job and len(line) == 2:
             key, val = _job_parse_key_values(line)
             if running:
-                job.setdefault('running_start_time', []).append(int(val))
-            elif key == 'exit_code':
-                job['exit_code'] = int(val)
-            elif key == 'start_time':
-                job['start_time'] = val
+                job.setdefault("running_start_time", []).append(int(val))
+            elif key == "exit_code":
+                job["exit_code"] = int(val)
+            elif key == "start_time":
+                job["start_time"] = val
             else:
                 assert key in _METRIC_SPECS
                 metrics[key] = val
+
+    for jobname, job_stats in pseudo_running_jobs.items():
+        # I am not sure how that happened, but we have seen files w/o 'start_time'
+        if job_stats.get("start_time", -1) > parsed.get(jobname, {}).get("start_time", 0):
+            parsed[jobname] = job_stats
 
     return parsed
 
@@ -132,67 +163,69 @@ def discover_job(section: Section) -> type_defs.DiscoveryResult:
 
 
 _METRIC_SPECS: Mapping[str, Tuple[str, Callable]] = {
-    'real_time': ('Real time', render.timespan),
-    'user_time': ('User time', render.timespan),
-    'system_time': ('System time', render.timespan),
-    'reads': ('Filesystem reads', str),
-    'writes': ('Filesystem writes', str),
-    'max_res_bytes': ('Max. memory', render.bytes),
-    'avg_mem_bytes': ('Avg. memory', render.bytes),
-    'vol_context_switches': ('Vol. context switches', str),
-    'invol_context_switches': ('Invol. context switches', str),
+    "real_time": ("Real time", render.timespan),
+    "user_time": ("User time", render.timespan),
+    "system_time": ("System time", render.timespan),
+    "reads": ("Filesystem reads", str),
+    "writes": ("Filesystem writes", str),
+    "max_res_bytes": ("Max. memory", render.bytes),
+    "avg_mem_bytes": ("Avg. memory", render.bytes),
+    "vol_context_switches": ("Vol. context switches", str),
+    "invol_context_switches": ("Invol. context switches", str),
 }
 
 
 def _check_job_levels(job: Job, metric: str, notice_only: bool = True):
     label, render_func = _METRIC_SPECS[metric]
     yield from check_levels(
-        job['metrics'][metric],
+        job["metrics"][metric],
         metric_name=metric,
         label=label,
         render_func=render_func,
         notice_only=notice_only,
+        boundaries=(0, None),
     )
 
 
 def _process_job_stats(
     job: Job,
     age_levels: Optional[Tuple[int, int]],
-    exit_code_to_state_map: Dict[int, state],
+    exit_code_to_state_map: Dict[int, State],
 ) -> type_defs.CheckResult:
 
     yield Result(
-        state=exit_code_to_state_map.get(job['exit_code'], state.CRIT),
+        state=exit_code_to_state_map.get(job["exit_code"], State.CRIT),
         summary=f"Latest exit code: {job['exit_code']}",
     )
 
-    metrics_to_output = set(job['metrics'])
+    metrics_to_output = set(job["metrics"])
 
-    if 'real_time' in metrics_to_output:
-        metrics_to_output.remove('real_time')
-        yield from _check_job_levels(job, 'real_time', notice_only=False)
+    if "real_time" in metrics_to_output:
+        metrics_to_output.remove("real_time")
+        yield from _check_job_levels(job, "real_time", notice_only=False)
 
-    currently_running = " (currently running)" if 'running_start_time' in job else ""
+    currently_running = " (currently running)" if "running_start_time" in job else ""
     # use start time of oldest running job, if any.
     if currently_running:
-        start_times = job['running_start_time']
+        start_times = job["running_start_time"]
         count = len(start_times)
         yield Result(
-            state=state.OK,
-            notice="%d job%s currently running, started at %s" % (
+            state=State.OK,
+            notice="%d job%s currently running, started at %s"
+            % (
                 count,
                 " is" if count == 1 else "s are",
-                ', '.join((render.datetime(t) for t in start_times)),
+                ", ".join((render.datetime(t) for t in start_times)),
             ),
         )
     else:
         yield Result(
-            state=state.OK,
-            notice="Latest job started at %s" % render.datetime(job['start_time']),
+            state=State.OK,
+            notice="Latest job started at %s" % render.datetime(job["start_time"]),
         )
-        yield Metric('start_time', job['start_time'])
+        yield Metric("start_time", job["start_time"])
 
-    used_start_time = max(job['running_start_time']) if currently_running else job['start_time']
+    used_start_time = max(job["running_start_time"]) if currently_running else job["start_time"]
     yield from check_levels(
         time.time() - used_start_time,
         label=f"Job age{currently_running}",
@@ -204,6 +237,7 @@ def _process_job_stats(
         # which must not result in actually applying these levels.
         levels_upper=age_levels if age_levels != (0, 0) else None,
         render_func=render.timespan,
+        boundaries=(0, None),
     )
 
     for metric in sorted(metrics_to_output):
@@ -212,7 +246,7 @@ def _process_job_stats(
 
 def check_job(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
 
@@ -222,78 +256,30 @@ def check_job(
 
     if job.get("exit_code") is None:
         yield Result(
-            state=state.UNKNOWN,
-            summary='Got incomplete information for this job',
+            state=State.UNKNOWN,
+            summary="Got incomplete information for this job",
         )
         return
 
     yield from _process_job_stats(
         job,
-        params.get('age'),
-        {
-            0: state.OK,
-            **{k: state(v) for k, v in params.get('exit_code_to_state_map', [])}
-        },
+        params.get("age"),
+        {0: State.OK, **{k: State(v) for k, v in params.get("exit_code_to_state_map", [])}},
     )
 
 
 _STATE_TO_STR = {
-    state.OK: 'OK',
-    state.WARN: 'WARN',
-    state.CRIT: 'CRIT',
-    state.UNKNOWN: 'UNKNOWN',
+    State.OK: "OK",
+    State.WARN: "WARN",
+    State.CRIT: "CRIT",
+    State.UNKNOWN: "UNKNOWN",
 }
 
-
-def cluster_check_job(
-    item: str,
-    params: type_defs.Parameters,
-    section: Dict[str, Section],
-) -> type_defs.CheckResult:
-    """
-    This check used to simply yield all metrics from all nodes, which is useless, since the user
-    cannot interpret these numbers. For now, we do not yield any metrics until a better solution is
-    found.
-    """
-
-    states: List[state] = []
-    best_outcome = params.get("outcome_on_cluster") == "best"
-
-    for node, node_section in section.items():
-        node_state, node_text = aggregate_node_details(
-            node,
-            check_job(item, params, node_section),
-        )
-        if not node_text:
-            continue
-
-        states.append(node_state)
-        yield Result(state=state.OK if best_outcome else node_state, notice=node_text)
-
-    if states:
-        summary = []
-        for stat, stat_str in _STATE_TO_STR.items():
-            n_in_state = states.count(stat)
-            pluralize = '' if n_in_state == 1 else 's'
-            summary.append('%d node%s in state %s' % (n_in_state, pluralize, stat_str))
-
-        if best_outcome:
-            yield Result(state=state.best(*states), summary=', '.join(summary))
-        else:
-            yield Result(state=state.worst(*states), summary=', '.join(summary))
-    else:
-        yield Result(
-            state=state.UNKNOWN,
-            summary='Received no data for this job from any of the nodes',
-        )
-
-
 register.check_plugin(
-    name='job',
-    service_name='Job %s',
+    name="job",
+    service_name="Job %s",
     discovery_function=discover_job,
     check_default_parameters={},
     check_ruleset_name="job",
     check_function=check_job,
-    cluster_check_function=cluster_check_job,
 )

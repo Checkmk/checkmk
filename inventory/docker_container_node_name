@@ -4,26 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.docker as docker
-from cmk.base.check_legacy_includes.legacy_docker import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-
-def parse_docker_container_node_name(info):
-    # pylint: disable=undefined-variable
-    version = docker.get_version(info)
-    if version is None:
-        return {"NodeName": parse_legacy_docker_container_node_name(info)}
-
-    return docker.json_get_obj(info[1]) or {}
 
 
 def inv_docker_container_node_name(info, inventory_tree):
-    parsed = parse_docker_container_node_name(info)
+    parsed = docker.parse(info).data
     container = inventory_tree.get_dict("software.applications.docker.container.")
 
     if parsed.get("NodeName") is not None:
         container["node_name"] = parsed["NodeName"]
 
 
-inv_info['docker_container_node_name'] = {  # pylint: disable=undefined-variable
-    'inv_function': inv_docker_container_node_name,
+inv_info["docker_container_node_name"] = {  # pylint: disable=undefined-variable
+    "inv_function": inv_docker_container_node_name,
 }

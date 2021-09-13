@@ -1,6 +1,6 @@
 title: Checkmk Notification Spooler: Status
 agents: linux
-catalog: app/checkmk
+catalog: app/cmk
 license: GPL
 distribution: checkmk
 description:
@@ -12,5 +12,5 @@ description:
 item:
  The name of the site.
 
-inventory:
+discovery:
  One sevice is created for each site.

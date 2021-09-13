@@ -4,29 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import (
-    Any,
-    Dict,
-    MutableMapping,
-    Optional,
-)
+from typing import Any, Dict, Mapping, MutableMapping, Optional
+
 from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    Metric,
-    State as state,
+    check_levels,
     get_rate,
     get_value_store,
+    GetRateError,
+    IgnoreResults,
+    Metric,
+    register,
     render,
-    check_levels,
+    Result,
+    Service,
 )
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-    Parameters,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.livestatus_status import LivestatusSection
 
 # Example output from agent:
 # <<<livestatus_status:sep(59)>>>
@@ -52,19 +46,17 @@ livestatus_status_default_levels = {
     "average_latency_generic": (30, 60),
     "average_latency_cmk": (30, 60),
     "average_latency_fetcher": (30, 60),
-    "helper_usage_generic": (60.0, 90.0),
-    "helper_usage_cmk": (60.0, 90.0),
-    "helper_usage_fetcher": (40.0, 80.0),
-    "helper_usage_checker": (40.0, 80.0),
-    "livestatus_usage": (80.0, 90.0),
+    "helper_usage_generic": (80.0, 90.0),
+    "helper_usage_cmk": (80.0, 90.0),
+    "helper_usage_fetcher": (80.0, 90.0),
+    "helper_usage_checker": (80.0, 90.0),
+    "livestatus_usage": (60.0, 80.0),
     "livestatus_overflows_rate": (0.01, 0.02),
 }
 
-ParsedSection = Dict[str, Any]
 
-
-def parse_livestatus_status(string_table: StringTable):
-    parsed: ParsedSection = {}
+def parse_livestatus_status(string_table: StringTable) -> LivestatusSection:
+    parsed: LivestatusSection = {}
     site, headers = None, None
     for line in string_table:
         if line and line[0][0] == "[" and line[0][-1] == "]":
@@ -87,7 +79,7 @@ register.agent_section(
 )
 
 
-def parse_livestatus_ssl_certs(string_table: StringTable):
+def parse_livestatus_ssl_certs(string_table: StringTable) -> LivestatusSection:
     parsed: Dict[str, Dict[str, str]] = {}
     site = None
     for line in string_table:
@@ -109,8 +101,8 @@ register.agent_section(
 
 
 def discovery_livestatus_status(
-    section_livestatus_status: Optional[ParsedSection],
-    section_livestatus_ssl_certs: Optional[ParsedSection],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
 ) -> DiscoveryResult:
     if section_livestatus_status is None:
         return
@@ -121,9 +113,9 @@ def discovery_livestatus_status(
 
 def check_livestatus_status(
     item: str,
-    params: Parameters,
-    section_livestatus_status: Optional[ParsedSection],
-    section_livestatus_ssl_certs: Optional[ParsedSection],
+    params: Mapping[str, Any],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
 ) -> CheckResult:
     # Check Performance counters
     this_time = time.time()
@@ -140,9 +132,9 @@ def check_livestatus_status(
 
 def _generate_livestatus_results(
     item: str,
-    params: Parameters,
-    section_livestatus_status: Optional[ParsedSection],
-    section_livestatus_ssl_certs: Optional[ParsedSection],
+    params: Mapping[str, Any],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:
@@ -166,18 +158,23 @@ def _generate_livestatus_results(
         ("requests", "Livestatus requests"),
         ("log_messages", "Log messages"),
     ]:
-        value = get_rate(
-            value_store=value_store,
-            key=key,
-            time=this_time,
-            value=float(status[key]),
-        )
+        try:
+            value = get_rate(
+                value_store=value_store,
+                key=key,
+                time=this_time,
+                value=float(status[key]),
+            )
+        except GetRateError as error:
+            yield IgnoreResults(str(error))
+            continue
+
         if key in ("host_checks", "service_checks"):
             yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
         else:
             yield Result(state=state.OK, notice="%s: %.1f/s" % (title, value))
 
-        yield Metric(name=key, value=value)
+        yield Metric(name=key, value=value, boundaries=(0, None))
 
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
@@ -199,7 +196,9 @@ def _generate_livestatus_results(
             except KeyError:
                 # may happen if we are trying to query old host
                 if key in [
-                        "helper_usage_fetcher", "helper_usage_checker", "average_latency_fetcher"
+                    "helper_usage_fetcher",
+                    "helper_usage_checker",
+                    "average_latency_fetcher",
                 ]:
                     value = 0.0
                 else:
@@ -212,6 +211,7 @@ def _generate_livestatus_results(
                 render_func=render_func,
                 label=label,
                 notice_only=True,
+                boundaries=(0, None),
             )
 
     yield from check_levels(
@@ -220,6 +220,7 @@ def _generate_livestatus_results(
         levels_upper=params.get("levels_hosts"),
         label="Hosts",
         notice_only=True,
+        boundaries=(0, None),
     )
     yield from check_levels(
         value=int(status["num_services"]),
@@ -227,6 +228,7 @@ def _generate_livestatus_results(
         levels_upper=params.get("levels_services"),
         label="Services",
         notice_only=True,
+        boundaries=(0, None),
     )
     # Output some general information
     yield Result(
@@ -240,8 +242,11 @@ def _generate_livestatus_results(
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
     pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
-    valid_until_str = (None if section_livestatus_ssl_certs is None else
-                       section_livestatus_ssl_certs.get(item, {}).get(pem_path))
+    valid_until_str = (
+        None
+        if section_livestatus_ssl_certs is None
+        else section_livestatus_ssl_certs.get(item, {}).get(pem_path)
+    )
     if valid_until_str:
         valid_until = int(valid_until_str)
         yield Result(
@@ -256,6 +261,7 @@ def _generate_livestatus_results(
             levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
             render_func=render.timespan,
             notice_only=True,
+            boundaries=(0, None),
         )
         yield Metric("site_cert_days", secs_left / 86400.0)
 
@@ -274,20 +280,20 @@ def _generate_livestatus_results(
     ]
     # Check settings of enablings. Here we are quiet unless a non-OK state is found
     for settingname, title in settings:
-        if status[settingname] != '1':
+        if status[settingname] != "1":
             yield Result(state=state(params[settingname]), notice=title)
 
     # special considerations for enable_event_handlers
     if status["program_version"].startswith("Check_MK 1.2.6"):
         # In CMC <= 1.2.6 event handlers cannot be enabled. So never warn.
         return
-    if status.get("has_event_handlers", '1') == '0':
+    if status.get("has_event_handlers", "1") == "0":
         # After update from < 1.2.7 the check would warn about disabled alert
         # handlers since they are disabled in this case. But the user has no alert
         # handlers defined, so this is nothing to warn about. Start warn when the
         # user defines his first alert handlers.
         return
-    if status["enable_event_handlers"] != '1':
+    if status["enable_event_handlers"] != "1":
         yield Result(
             state=state(params["enable_event_handlers"]),
             notice="Alert handlers are disabled",

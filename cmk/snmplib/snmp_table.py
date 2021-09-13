@@ -3,9 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-import os
-from typing import Callable, List, Optional, Set, Tuple, Union
+"""Provide methods to get an snmp table with or without caching
+"""
+from pathlib import Path
+from typing import Callable, Iterable, Iterator, List, MutableMapping, Optional, Set, Tuple
 
 from six import ensure_binary
 
@@ -16,23 +17,16 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, SectionName
 
 from .type_defs import (
-    ABCSNMPBackend,
+    BackendSNMPTree,
     OID,
-    OID_BIN,
-    OID_END,
-    OID_END_BIN,
-    OID_END_OCTET_STRING,
-    OID_STRING,
-    OIDBytes,
-    OIDCached,
-    OIDSpec,
+    SNMPBackend,
     SNMPDecodedValues,
     SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
-    SNMPTree,
     SNMPValueEncoding,
+    SpecialColumn,
 )
 
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
@@ -40,39 +34,96 @@ ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
-def get_snmp_table(section_name: Optional[SectionName], oid_info: SNMPTree, *,
-                   backend: ABCSNMPBackend) -> SNMPTable:
-    return _get_snmp_table(section_name, oid_info, False, backend=backend)
+class WalkCache(
+    MutableMapping[str, Tuple[bool, SNMPRowInfo]]
+):  # pylint: disable=too-many-ancestors
+    """A cache on a per-fetchoid basis
+
+    This cache is different from section stores in that is per-fetchoid,
+    which means it deduplicates fetch operations across section definitions.
+
+    The fetched data is always saved to a file *if* the respective OID is marked as being cached
+    by the plugin using `OIDCached` (that is: if the save_to_cache attribute of the OID object
+    is true).
+    """
+
+    __slots__ = ("_store", "_path")
+
+    def __init__(self, host_name: HostName):
+        self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
+        self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._store)
+
+    def __getitem__(self, key: str) -> Tuple[bool, SNMPRowInfo]:
+        return self._store.__getitem__(key)
+
+    def __setitem__(self, key: str, value: Tuple[bool, SNMPRowInfo]) -> None:
+        return self._store.__setitem__(key, value)
+
+    def __delitem__(self, key: str) -> None:
+        return self._store.__delitem__(key)
+
+    def __iter__(self) -> Iterator[str]:
+        return self._store.__iter__()
+
+    def __len__(self) -> int:
+        return self._store.__len__()
+
+    def load(
+        self,
+        *,
+        trees: Iterable[BackendSNMPTree],
+    ) -> None:
+        """Try to read the OIDs data from cache files"""
+        for tree in trees:
+            for oid in (o for o in tree.oids if o.save_to_cache):  # no point in reading otherwise
+
+                fetchoid = f"{tree.base}.{oid.column}"
+                path = self._path / fetchoid
+
+                console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+                try:
+                    read_walk = store.load_object_from_file(path, default=None)
+                except Exception:
+                    console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                    if cmk.utils.debug.enabled():
+                        raise
+                    continue
+
+                if read_walk is not None:
+                    self._store[fetchoid] = (oid.save_to_cache, read_walk)  # (True, ...)
+
+    def save(self) -> None:
+        self._path.mkdir(parents=True, exist_ok=True)
+
+        for fetchoid, (save_flag, rowinfo) in self._store.items():
+            if not save_flag:
+                continue
+
+            path = self._path / fetchoid
+            console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
+            store.save_object_to_file(path, rowinfo, pretty=False)
 
 
-def get_snmp_table_cached(section_name: Optional[SectionName], oid_info: SNMPTree, *,
-                          backend: ABCSNMPBackend) -> SNMPTable:
-    return _get_snmp_table(section_name, oid_info, True, backend=backend)
-
-
-SPECIAL_COLUMNS = [
-    OID_END,
-    OID_STRING,
-    OID_BIN,
-    OID_END_BIN,
-    OID_END_OCTET_STRING,
-]
-
-
-# TODO: OID_END_OCTET_STRING is not used at all. Drop it.
-def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snmpwalk_cache: bool,
-                    *, backend: ABCSNMPBackend) -> SNMPTable:
+def get_snmp_table(
+    *,
+    section_name: Optional[SectionName],
+    tree: BackendSNMPTree,
+    walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
+    backend: SNMPBackend,
+) -> SNMPTable:
 
     index_column = -1
-    index_format = None
+    index_format: Optional[SpecialColumn] = None
     columns: ResultColumnsUnsanitized = []
     # Detect missing (empty columns)
     max_len = 0
     max_len_col = -1
 
-    for column in tree.oids:
-        fetchoid: OID = "%s.%s" % (tree.base, column)
-        value_encoding = _value_encoding(column)
+    for oid in tree.oids:
+        fetchoid: OID = "%s.%s" % (tree.base, oid.column)
         # column may be integer or string like "1.5.4.2.3"
         # if column is 0, we do not fetch any data from snmp, but use
         # a running counter as index. If the index column is the first one,
@@ -80,33 +131,34 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
         # in later. If the column is OID_STRING or OID_BIN we do something
         # similar: we fill in the complete OID of the entry, either as
         # string or as binary UTF-8 encoded number string
-        if column in SPECIAL_COLUMNS:
+        if isinstance(oid.column, SpecialColumn):
             if index_column >= 0 and index_column != len(columns):
                 raise MKGeneralException(
                     "Invalid SNMP OID specification in implementation of check. "
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN "
-                    "and OID_END_OCTET_STRING.")
+                    "and OID_END_OCTET_STRING."
+                )
             rowinfo = []
             index_column = len(columns)
-            index_format = column
+            index_format = oid.column
         else:
             rowinfo = _get_snmpwalk(
                 section_name,
                 tree.base,
                 fetchoid,
-                use_snmpwalk_cache,
-                save_to_cache=isinstance(column, OIDCached),
+                walk_cache=walk_cache,
+                save_walk_cache=oid.save_to_cache,
                 backend=backend,
             )
             if len(rowinfo) > max_len:
                 max_len_col = len(columns)
 
         max_len = max(max_len, len(rowinfo))
-        columns.append((fetchoid, rowinfo, value_encoding))
+        columns.append((fetchoid, rowinfo, oid.encoding))
 
-    if index_column != -1:
+    if index_format is not None:
         # Take end-oids of non-index columns as indices
-        fetchoid, max_column, value_encoding = columns[max_len_col]
+        fetchoid, max_column, _value_encoding = columns[max_len_col]
 
         index_rows = _make_index_rows(max_column, index_format, fetchoid)
         index_encoding = columns[index_column][-1]
@@ -115,26 +167,22 @@ def _get_snmp_table(section_name: Optional[SectionName], tree: SNMPTree, use_snm
     return _make_table(columns, backend.config)
 
 
-def _value_encoding(column: Union[OIDSpec, int]) -> SNMPValueEncoding:
-    return "binary" if isinstance(column, OIDBytes) else "string"
-
-
 def _make_index_rows(
     max_column: SNMPRowInfo,
-    index_format: Optional[Union[OIDSpec, int]],
+    index_format: SpecialColumn,
     fetchoid: OID,
 ) -> SNMPRowInfo:
     index_rows = []
     for o, _unused_value in max_column:
-        if index_format == OID_END:
+        if index_format is SpecialColumn.END:
             val = ensure_binary(_extract_end_oid(fetchoid, o))
-        elif index_format == OID_STRING:
+        elif index_format is SpecialColumn.STRING:
             val = ensure_binary(o)
-        elif index_format == OID_BIN:
+        elif index_format is SpecialColumn.BIN:
             val = _oid_to_bin(o)
-        elif index_format == OID_END_BIN:
+        elif index_format is SpecialColumn.END_BIN:
             val = _oid_to_bin(_extract_end_oid(fetchoid, o))
-        elif index_format == OID_END_OCTET_STRING:
+        elif index_format is SpecialColumn.END_OCTET_STRING:
             val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
         else:
             raise MKGeneralException("Invalid index format %r" % (index_format,))
@@ -158,17 +206,17 @@ def _make_table(columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig) 
 
 
 def _oid_to_bin(oid: OID) -> SNMPRawValue:
-    return ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
+    return bytes(int(p) for p in oid.split(".") if p)
 
 
 def _extract_end_oid(prefix: OID, complete: OID) -> OID:
-    return complete[len(prefix):].lstrip('.')
+    return complete[len(prefix) :].lstrip(".")
 
 
 # sort OID strings numerically
 def _oid_to_intlist(oid: OID) -> List[int]:
     if oid:
-        return list(map(int, oid.split('.')))
+        return list(map(int, oid.split(".")))
     return []
 
 
@@ -181,34 +229,36 @@ def _key_oids(o1: OID) -> List[int]:
 
 
 def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
-    return _oid_to_intlist(pair1[0].lstrip('.'))
+    return _oid_to_intlist(pair1[0].lstrip("."))
 
 
 def _get_snmpwalk(
     section_name: Optional[SectionName],
-    base: OIDSpec,
+    base: str,
     fetchoid: OID,
-    use_snmpwalk_cache: bool,
     *,
-    save_to_cache: bool,
-    backend: ABCSNMPBackend,
+    walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
+    save_walk_cache: bool,
+    backend: SNMPBackend,
 ) -> SNMPRowInfo:
-    get_from_cache = save_to_cache and use_snmpwalk_cache
-    cached = _get_cached_snmpwalk(backend.hostname, fetchoid) if get_from_cache else None
-    if cached is not None:
-        return cached
+    try:
+        rowinfo = walk_cache[fetchoid][1]
+        console.vverbose(f"Already fetched OID: {fetchoid}\n")
+        return rowinfo
+    except KeyError:
+        pass
+
     rowinfo = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    if save_to_cache:
-        _save_snmpwalk_cache(backend.hostname, fetchoid, rowinfo)
+    walk_cache[fetchoid] = (save_walk_cache, rowinfo)
     return rowinfo
 
 
 def _perform_snmpwalk(
     section_name: Optional[SectionName],
-    base_oid: OIDSpec,
+    base_oid: str,
     fetchoid: OID,
     *,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> SNMPRowInfo:
     added_oids: Set[OID] = set([])
     rowinfo: SNMPRowInfo = []
@@ -219,7 +269,7 @@ def _perform_snmpwalk(
             # revert back to legacy "possilbly-empty-string"-Type
             # TODO: pass Optional[SectionName] along!
             check_plugin_name=str(section_name) if section_name else "",
-            table_base_oid=str(base_oid),
+            table_base_oid=base_oid,
             context_name=context_name,
         )
 
@@ -228,8 +278,9 @@ def _perform_snmpwalk(
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            console.vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" %
-                             rows[0][0])
+            console.vverbose(
+                "Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0]
+            )
             rows = rows[:1]
 
         for row_oid, val in rows:
@@ -242,16 +293,17 @@ def _perform_snmpwalk(
     return rowinfo
 
 
-def _sanitize_snmp_encoding(columns: ResultColumnsSanitized,
-                            snmp_config: SNMPHostConfig) -> ResultColumnsDecoded:
+def _sanitize_snmp_encoding(
+    columns: ResultColumnsSanitized, snmp_config: SNMPHostConfig
+) -> ResultColumnsDecoded:
     return [
-        _decode_column(column, value_encoding, snmp_config)  #
-        for column, value_encoding in columns
+        _decode_column(column, value_encoding, snmp_config) for column, value_encoding in columns  #
     ]
 
 
-def _decode_column(column: List[SNMPRawValue], value_encoding: SNMPValueEncoding,
-                   snmp_config: SNMPHostConfig) -> List[SNMPDecodedValues]:
+def _decode_column(
+    column: List[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
+) -> List[SNMPDecodedValues]:
     if value_encoding == "string":
         decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
     else:
@@ -326,29 +378,3 @@ def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
         row = [c[index] for c in columns]
         new_info.append(row)
     return new_info
-
-
-def _get_cached_snmpwalk(hostname: HostName, fetchoid: OID) -> Optional[SNMPRowInfo]:
-    path = _snmpwalk_cache_path(hostname, fetchoid)
-    try:
-        console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
-        return store.load_object_from_file(path)
-    except Exception:
-        if cmk.utils.debug.enabled():
-            raise
-        console.verbose("  Failed loading walk cache from %s. Continue without it.\n" % path)
-        return None
-
-
-def _save_snmpwalk_cache(hostname: HostName, fetchoid: OID, rowinfo: SNMPRowInfo) -> None:
-    path = _snmpwalk_cache_path(hostname, fetchoid)
-
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
-
-    console.vverbose("  Saving walk of %s to walk cache %s\n" % (fetchoid, path))
-    store.save_object_to_file(path, rowinfo, pretty=False)
-
-
-def _snmpwalk_cache_path(hostname: HostName, fetchoid: OID) -> str:
-    return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", hostname, fetchoid)

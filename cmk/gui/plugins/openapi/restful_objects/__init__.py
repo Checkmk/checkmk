@@ -43,4 +43,4 @@ The modules:
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 
-__all__ = ['Endpoint', 'SPEC']
+__all__ = ["Endpoint", "SPEC"]

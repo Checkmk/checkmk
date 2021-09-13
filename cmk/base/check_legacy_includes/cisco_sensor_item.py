@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
 
 def cisco_sensor_item(description, sensor_id):
@@ -14,10 +14,10 @@ def cisco_sensor_item(description, sensor_id):
     # A string seperated by commas with status information
     # -> Depends on the device model
     try:
-        splitted = [x.strip() for x in description.split(',')]
+        splitted = [x.strip() for x in description.split(",")]
         if len(splitted) == 1:
             item = description
-        elif '#' in splitted[-1] or 'Power' in splitted[-1]:
+        elif "#" in splitted[-1] or "Power" in splitted[-1]:
             item = " ".join(splitted)
         elif splitted[-1].startswith("PS"):
             item = " ".join([splitted[0], splitted[-1].split(" ")[0]])
@@ -36,6 +36,6 @@ def cisco_sensor_item(description, sensor_id):
         if not item[-1].isdigit():
             item += " " + sensor_id
 
-        return item.replace('#', ' ')
+        return item.replace("#", " ")
     except Exception:
         return sensor_id

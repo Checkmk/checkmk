@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from werkzeug.exceptions import HTTPException
-from werkzeug.routing import Map, Submount, Rule
+from werkzeug.routing import Map, Rule, Submount
 
 from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
 from cmk.gui.wsgi.applications.helper_apps import dump_environ_app, test_formdata
 
-WSGI_ENV_ARGS_NAME = 'x-checkmk.args'
+WSGI_ENV_ARGS_NAME = "x-checkmk.args"
 
 
 def create_url_map(debug=False):
@@ -19,19 +19,27 @@ def create_url_map(debug=False):
         Rule("/form.py", endpoint=test_formdata),
     ]
 
-    cmk_app = CheckmkApp()
+    cmk_app = CheckmkApp(debug=debug)
     api_app = CheckmkRESTAPI(debug=debug).wsgi_app
 
-    return Map([
-        Submount('/<string:site>', [
-            Submount("/check_mk", [
-                Rule("/", endpoint=cmk_app),
-                *(debug_rules if debug else []),
-                Rule("/api/<string:version>/<path:path>", endpoint=api_app),
-                Rule("/<string:script>", endpoint=cmk_app),
-            ]),
-        ])
-    ])
+    return Map(
+        [
+            Submount(
+                "/<string:site>",
+                [
+                    Submount(
+                        "/check_mk",
+                        [
+                            Rule("/", endpoint=cmk_app),
+                            *(debug_rules if debug else []),
+                            Rule("/api/<string:version>/<path:path>", endpoint=api_app),
+                            Rule("/<string:script>", endpoint=cmk_app),
+                        ],
+                    ),
+                ],
+            )
+        ]
+    )
 
 
 def make_router(debug=False):

@@ -13,6 +13,6 @@ item:
 perfdata:
  One graph for the Temperature.
 
-inventory:
+discovery:
  One service is created for each available aux temperature sensor.
 

@@ -4,18 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Iterable,
-    Mapping,
-    Sequence,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple, Union
+
+from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
 
 # Example output from agent:
@@ -67,7 +58,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     ip_stats: SectionInventory = {}
     iface = None
     for line in lines:
-        if line == ['[end_iplink]']:
+        if line == ["[end_iplink]"]:
             break
 
         if line[0].endswith(":") and line[1].endswith(":"):
@@ -82,7 +73,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
         if not iface:
             continue
 
-        if line[0].startswith('link/'):
+        if line[0].startswith("link/"):
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
             # link/none
             try:
@@ -91,7 +82,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             except IndexError:
                 pass
 
-        elif line[0].startswith('inet'):
+        elif line[0].startswith("inet"):
             if "temporary" in line and "dynamic" in line:
                 continue
             # inet 127.0.0.1/8 scope host lo
@@ -120,7 +111,7 @@ def _parse_lnx_if_sections(string_table: type_defs.StringTable):
             iface.update({"counters": list(map(int, line[1].strip().split()))})
             continue
 
-        elif line[0].startswith('[') and line[0].endswith(']'):
+        elif line[0].startswith("[") and line[0].endswith("]"):
             # Parse 'ethtool' output
             # [IF_NAME]
             #       KEY: VAL
@@ -166,7 +157,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
         if speed_text is None:
             ifSpeed = 0
         else:
-            if speed_text == '65535Mb/s':  # unknown
+            if speed_text == "65535Mb/s":  # unknown
                 ifSpeed = 0
             elif speed_text.endswith("Kb/s"):
                 ifSpeed = int(float(speed_text[:-4])) * 1000
@@ -203,14 +194,18 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
             # No information from ethtool. We consider interfaces up
             # if they have been used at least some time since the
             # system boot.
-            state_infos = attr.get('state_infos')
+            state_infos = attr.get("state_infos")
             if state_infos is None:
                 if ifInOctets > 0:
                     ifOperStatus = 1  # assume up
                 else:
                     ifOperStatus = 4  # unknown (NIC has never been used)
             else:
-                if "UP" in state_infos:
+                # Assumption:
+                # abc: <BROADCAST,MULTICAST,UP,LOWER_UP>    UP + LOWER_UP   => really UP
+                # def: <NO-CARRIER,BROADCAST,MULTICAST,UP>  NO-CARRIER + UP => DOWN, but admin UP
+                # ghi: <BROADCAST,MULTICAST>                unconfigured    => DOWN
+                if "UP" in state_infos and "LOWER_UP" in state_infos:
                     ifOperStatus = 1
                 else:
                     ifOperStatus = 2
@@ -221,7 +216,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
             # is an integer, eg. '1910236'; especially on OpenBSD.
             ifPhysAddress = interfaces.mac_address_from_hexstring(raw_phys_address)
         else:
-            ifPhysAddress = ''
+            ifPhysAddress = ""
 
         if_table.append(
             interfaces.Interface(
@@ -245,7 +240,8 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                 out_qlen=ifOutQLen,
                 alias=ifAlias,
                 phys_address=ifPhysAddress,
-            ))
+            )
+        )
 
     return if_table, ip_stats
 
@@ -253,11 +249,12 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
 register.agent_section(
     name="lnx_if",
     parse_function=parse_lnx_if,
+    supersedes=["if", "if64"],
 )
 
 
 def discover_lnx_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     # Always exclude dockers veth* interfaces on docker nodes
@@ -270,7 +267,7 @@ def discover_lnx_if(
 
 def check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
@@ -282,7 +279,7 @@ def check_lnx_if(
 
 def cluster_check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
@@ -296,7 +293,7 @@ register.check_plugin(
     name="lnx_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_lnx_if,
     check_ruleset_name="if",

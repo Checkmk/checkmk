@@ -1,0 +1,15 @@
+Title: Use Python2 pendant of mailman_lists agent plugin
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614776107
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Porting the {{mailman_lists}} agent plugin does not work out of the box due to
+the way the executable is used as a plugin.
+Prior to a real porting this change just rolls back to Python2 for this plugin.
+

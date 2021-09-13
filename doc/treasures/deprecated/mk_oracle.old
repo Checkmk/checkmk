@@ -61,8 +61,7 @@ fi
 # The cache is used for $CACHE_MAXAGE seconds. The CACHE_MAXAGE
 # option is pre-set to 120 seconds but can be changed in mk_oracle.cfg.
 
-function sqlplus ()
-{
+sqlplus() {
     if OUTPUT=$({ echo 'set pages 0' ; echo 'whenever sqlerror exit 1'; echo 'set lines 8000' ; echo 'set feedback off'; cat ; } | $MK_CONFDIR/sqlplus.sh $1)
     then
         echo "${OUTPUT}" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"

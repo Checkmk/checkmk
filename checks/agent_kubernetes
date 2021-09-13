@@ -5,32 +5,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def agent_kubernetes_arguments(params, _hostname, ipaddress):
-    args = ['--token', passwordstore_get_cmdline("%s", params["token"])]
+def agent_kubernetes_arguments(params, hostname, ipaddress):
+    args = ["--token", passwordstore_get_cmdline("%s", params["token"])]
 
-    args += ['--infos', ','.join(params.get('infos', ['nodes']))]
+    args += ["--infos", ",".join(params.get("infos", ["nodes"]))]
 
-    if "port" in params:
-        args += ["--port", str(params["port"])]
-
-    if params.get('no-cert-check', False):
+    if params.get("no-cert-check"):
         args += ["--no-cert-check"]
 
-    if params.get('namespaces'):
+    if params.get("namespaces"):
         args += ["--prefix-namespace"]
 
-    if "url-prefix" in params:
-        args += ["--url-prefix", params["url-prefix"]]
+    for namespace in params.get("namespace_include_patterns", []):
+        args.append("--namespace-include-patterns")
+        args.append(namespace)
 
-    if "path-prefix" in params:
-        args += ["--path-prefix", params["path-prefix"]]
+    args.append("--api-server-endpoint")
+    configured_endpoint_name, configured_endpoint = params["api-server-endpoint"]
+    if configured_endpoint_name == "url_custom":
+        args.append(configured_endpoint)
+        return args
 
-    if ipaddress:
-        args += [ipaddress]
-    else:
-        args += ['']
+    args.append(
+        "https://%s"
+        % {
+            "hostname": hostname,
+            "ipaddress": ipaddress,
+        }[configured_endpoint_name]
+    )
+
+    for arg_name, arg_value in configured_endpoint.items():
+        args.append(f"--{arg_name}")
+        args.append(str(arg_value))
 
     return args
 
 
-special_agent_info['kubernetes'] = agent_kubernetes_arguments
+special_agent_info["kubernetes"] = agent_kubernetes_arguments

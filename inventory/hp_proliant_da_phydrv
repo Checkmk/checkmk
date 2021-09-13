@@ -14,21 +14,36 @@ def inv_hp_proliant_da_phydrv(info):
     }
 
     node = inv_tree_list("hardware.storage.disks:")
-    for cntlr_index, _index, bay, _status, _ref_hours, size, _condition, \
-        bus_number, _smart_status, model, serial, ty, fw in info:
+    for (
+        cntlr_index,
+        _index,
+        bay,
+        _status,
+        _ref_hours,
+        size,
+        _condition,
+        bus_number,
+        _smart_status,
+        model,
+        serial,
+        ty,
+        fw,
+    ) in info:
 
-        node.append({
-            "controller": cntlr_index,
-            "bay": bay,
-            "bus": bus_number,
-            "size": int(size) * 1024**2,
-            "model": model,
-            "serial": serial,
-            "type": map_types.get(ty, "unknown(%s)" % ty),
-            "firmware": fw,
-        })
+        node.append(
+            {
+                "controller": cntlr_index,
+                "bay": bay,
+                "bus": bus_number,
+                "size": int(size) * 1024 ** 2,
+                "model": model,
+                "serial": serial,
+                "type": map_types.get(ty, "unknown(%s)" % ty),
+                "firmware": fw,
+            }
+        )
 
 
-inv_info['hp_proliant_da_phydrv'] = {
-    'inv_function': inv_hp_proliant_da_phydrv,
+inv_info["hp_proliant_da_phydrv"] = {
+    "inv_function": inv_hp_proliant_da_phydrv,
 }

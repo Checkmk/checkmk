@@ -11,17 +11,20 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
-#include <functional>  // IWYU pragma: keep
+#include <functional>
+#include <map>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "data_encoding.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 class InputBuffer;
 class Logger;
@@ -49,13 +52,15 @@ struct NagiosLimits {
 };
 
 struct NagiosAuthorization {
-    AuthorizationKind _service{AuthorizationKind::loose};
-    AuthorizationKind _group{AuthorizationKind::strict};
+    ServiceAuthorization _service{ServiceAuthorization::loose};
+    GroupAuthorization _group{GroupAuthorization::strict};
 };
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
+    NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+               std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+               NagiosPaths paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;
@@ -76,13 +81,10 @@ public:
     Command find_command(const std::string &name) const override;
     std::vector<Command> commands() const override;
 
-    std::vector<DowntimeData> downtimes_for_host(
-        const Host *host) const override;
-    std::vector<DowntimeData> downtimes_for_service(
-        const Service *service) const override;
-    std::vector<CommentData> comments_for_host(const Host *host) const override;
-    std::vector<CommentData> comments_for_service(
-        const Service *service) const override;
+    std::vector<DowntimeData> downtimes(const Host *host) const override;
+    std::vector<DowntimeData> downtimes(const Service *service) const override;
+    std::vector<CommentData> comments(const Host *host) const override;
+    std::vector<CommentData> comments(const Service *service) const override;
 
     bool mkeventdEnabled() override;
 
@@ -101,8 +103,8 @@ public:
     size_t maxResponseSize() override;
     size_t maxCachedMessages() override;
 
-    AuthorizationKind serviceAuthorization() const override;
-    AuthorizationKind groupAuthorization() const override;
+    ServiceAuthorization serviceAuthorization() const override;
+    GroupAuthorization groupAuthorization() const override;
 
     Logger *loggerLivestatus() override;
     Logger *loggerRRD() override;
@@ -123,8 +125,8 @@ public:
 
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
-    void registerDowntime(nebstruct_downtime_data *data);
-    void registerComment(nebstruct_comment_data *data);
+    std::map<unsigned long, std::unique_ptr<Downtime>> &_downtimes;
+    std::map<unsigned long, std::unique_ptr<Comment>> &_comments;
 
 private:
     Logger *_logger_livestatus;
@@ -136,7 +138,9 @@ private:
     std::unordered_map<std::string, host *> _hosts_by_designation;
     Triggers _triggers;
 
-    void *implInternal() const override { return const_cast<Store *>(&_store); }
+    void *implInternal() const override {
+        return const_cast<NagiosCore *>(this);
+    }
 
     static const Contact *fromImpl(const contact *c) {
         return reinterpret_cast<const Contact *>(c);

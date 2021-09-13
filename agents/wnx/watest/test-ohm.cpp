@@ -117,7 +117,7 @@ int CalcOhmCount() {
 
     wtools::ScanProcessList(
         [ohm_name, &count](const PROCESSENTRY32& entry) -> bool {
-            std::string incoming_name = wtools::ConvertToUTF8(entry.szExeFile);
+            std::string incoming_name = wtools::ToUtf8(entry.szExeFile);
             StringLower(incoming_name);
             if (ohm_name == incoming_name) count++;
             return true;
@@ -125,7 +125,7 @@ int CalcOhmCount() {
     return count;
 }
 
-TEST(SectionProviderOhm, DoubleStart) {
+TEST(SectionProviderOhm, DoubleStartIntegration) {
     using namespace cma::tools;
     if (!win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
@@ -155,7 +155,7 @@ TEST(SectionProviderOhm, DoubleStart) {
     EXPECT_EQ(count, 0) << "OHM is not killed";
 }
 
-TEST(SectionProviderOhm, ErrorReporting) {
+TEST(SectionProviderOhm, ErrorReportingIntegration) {
     using namespace cma::provider;
     namespace fs = std::filesystem;
 
@@ -193,11 +193,11 @@ TEST(SectionProviderOhm, ErrorReporting) {
 
 TEST(SectionProviderOhm, ResetOhm) {
     std::wstring x(cma::provider::ohm::kResetCommand);
-    XLOG::l.i("out = {}", wtools::ConvertToUTF8(x));
+    XLOG::l.i("out = {}", wtools::ToUtf8(x));
     EXPECT_FALSE(x.empty());
 }
 
-TEST(SectionProviderOhm, StartStop) {
+TEST(SectionProviderOhm, StartStopIntegration) {
     namespace fs = std::filesystem;
     TheMiniProcess oprocess;
     EXPECT_EQ(oprocess.process_id_, 0);
@@ -228,7 +228,7 @@ TEST(SectionProviderOhm, StartStop) {
     EXPECT_TRUE(ret);
 }
 
-TEST(SectionProviderOhm, ConditionallyStartOhm) {
+TEST(SectionProviderOhm, ConditionallyStartOhmIntegration) {
     ServiceProcessor sp;
     wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
     auto found = wtools::FindProcess(cma::provider::ohm::kExeModuleWide);

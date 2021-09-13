@@ -83,6 +83,7 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         this._selections_for_layer = {}; // Each layer gets a div and svg selection
         this._node_chunk_list = []; // Node data
         this._margin = {top: 10, right: 10, bottom: 10, left: 10};
+        this._overlay_configs = {};
 
         //////////////////////////////////
         // Infos usable by layers
@@ -121,18 +122,18 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("id", "svg_content")
-            .on("contextmenu", () => {
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
+            .on("contextmenu", event => {
+                event.preventDefault();
+                event.stopPropagation();
                 // TODO: identify nodes layer (svg/canvas)
                 this._layers[
                     node_visualization_viewport_layers.LayeredNodesLayer.prototype.id()
-                ].render_context_menu();
+                ].render_context_menu(event);
             })
-            .on("click.remove_context", () =>
+            .on("click.remove_context", event =>
                 this._layers[
                     node_visualization_viewport_layers.LayeredNodesLayer.prototype.id()
-                ].remove_context_menu()
+                ].remove_context_menu(event)
             );
 
         this.div_content_selection = this.selection
@@ -152,11 +153,11 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .attr("id", "div_layers");
 
         this.main_zoom = d3.zoom();
-        this.main_zoom.scaleExtent([0.2, 10]).on("zoom", () => this.zoomed());
+        this.main_zoom.scaleExtent([0.2, 10]).on("zoom", event => this.zoomed(event));
 
         // Disable left click zoom
-        this.main_zoom.filter(() => {
-            return d3.event.button === 0 || d3.event.button === 1;
+        this.main_zoom.filter(event => {
+            return event.button === 0 || event.button === 1;
         });
         this.svg_content_selection.call(this.main_zoom).on("dblclick.zoom", null);
 
@@ -192,37 +193,30 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         layer.set_enabled(!layer.is_toggleable());
     }
 
+    get_overlay_configs() {
+        return this._overlay_configs;
+    }
+
+    set_overlay_config(overlay_id, new_config) {
+        this._overlay_configs[overlay_id] = new_config;
+        this.update_active_overlays();
+    }
+
     update_active_overlays() {
-        let initial_overlays_config = this.main_instance.get_initial_overlays_config();
-
-        let overlay_config = this.layout_manager.get_overlay_config();
-        let active_overlays = {};
-
-        for (let idx in initial_overlays_config) {
-            let overlay = initial_overlays_config[idx];
-            if (overlay && overlay.active == true) active_overlays[idx] = true;
-        }
-
-        for (let idx in overlay_config) {
-            let overlay = overlay_config[idx];
-            if (overlay && overlay.active == true) active_overlays[idx] = true;
-        }
-
         // Enable/Disable overlays
         for (let idx in this._layers) {
             let layer = this._layers[idx];
             if (!layer.is_toggleable()) continue;
 
             let layer_id = layer.id();
-            if (active_overlays[layer_id]) {
-                if (layer.is_enabled()) continue;
-                this.enable_layer(layer_id);
-            } else {
-                if (!layer.is_enabled()) continue;
-                this.disable_layer(layer_id);
-            }
+            let layer_config = this.get_overlay_configs()[layer_id];
+            if (!layer_config) continue;
+
+            if (layer_config.active && !layer.is_enabled()) this.enable_layer(layer_id);
+            else if (!layer_config.active && layer.is_enabled()) this.disable_layer(layer_id);
         }
         this.update_overlay_toggleboxes();
+        this.main_instance.update_browser_url();
     }
 
     enable_layer(layer_id) {
@@ -248,45 +242,42 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             let layer = this._layers[idx];
             let layer_id = layer.id();
             if (layer.toggleable) {
-                let overlay_config = this.layout_manager.layout_applier.current_layout_group
-                    .overlay_config;
-                if (!overlay_config[layer_id]) continue;
-
-                if (overlay_config[layer_id].configurable != true) continue;
-
-                configurable_overlays.push({layer: layer, config: overlay_config[layer_id]});
+                if (!this._overlay_configs[layer_id]) continue;
+                if (this._overlay_configs[layer_id].configurable != true) continue;
+                configurable_overlays.push({layer: layer, config: this._overlay_configs[layer_id]});
             }
         }
 
         // Update toggleboxes
-        let togglebuttons = d3.select("div#togglebuttons");
-        let toggleboxes = togglebuttons
+        d3.select("div#togglebuttons")
             .selectAll("div.togglebox")
-            .data(configurable_overlays, d => d.layer.id());
-        toggleboxes.exit().remove();
-        toggleboxes = toggleboxes
-            .enter()
-            .append("div")
-            .text(d => d.layer.name())
-            .attr("layer_id", d => d.layer.id())
-            .classed("box", true)
-            .classed("noselect", true)
-            .classed("togglebox", true)
-            .style("pointer-events", "all")
-            .on("click", () => this.toggle_overlay_click())
-            .merge(toggleboxes);
-        toggleboxes.classed("enabled", d => d.config.active);
+            .data(configurable_overlays, d => d.layer.id())
+            .join(enter =>
+                enter
+                    .append("div")
+                    .text(d => d.layer.name())
+                    .attr("layer_id", d => d.layer.id())
+                    .classed("box", true)
+                    .classed("noselect", true)
+                    .classed("togglebox", true)
+                    .style("pointer-events", "all")
+                    .on("click", event => this.toggle_overlay_click(event))
+            )
+            .classed("enabled", d => d.config.active);
     }
 
-    toggle_overlay_click() {
-        d3.event.stopPropagation();
-        let target = d3.select(d3.event.target);
+    toggle_overlay_click(event) {
+        event.stopPropagation();
+        let target = d3.select(event.target);
         let layer_id = target.attr("layer_id");
 
         var new_state = !this._layers[layer_id].is_enabled();
         target.classed("enabled", new_state);
-        if (new_state == true) this.enable_layer(layer_id);
-        else this.disable_layer(layer_id);
+
+        let overlay_config = this.get_overlay_configs()[layer_id] || {};
+        overlay_config.active = !overlay_config.active;
+        this.set_overlay_config(layer_id, overlay_config);
+        this.update_active_overlays();
     }
 
     feed_data(data_to_show) {
@@ -296,21 +287,25 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         // TODO: fix marked obsolete handling
         this._node_chunk_list.forEach(node_chunk => (node_chunk.marked_obsolete = true));
 
-        // This is in indicator whether its necessary to reapply all layouts
+        // This is an indicator whether its necessary to reapply all layouts
+        // Applying layouts needlessly
+        // - cost performance
+        // - may cause the gui to flicker/move with certain layouts
         this._chunks_changed = false;
+
         this.data_to_show.chunks.forEach(chunk_rawdata => {
             this._consume_chunk_rawdata(chunk_rawdata);
         });
 
         this._remove_obsolete_chunks();
         this._arrange_multiple_node_chunks();
-
         this.update_layers();
         this.layout_manager.layout_applier.apply_multiple_layouts(
             this.get_hierarchy_list(),
             this._chunks_changed || this.always_update_layout
         );
         this.layout_manager.compute_node_positions();
+
         this.update_active_overlays();
     }
 
@@ -318,15 +313,19 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         // Generates a chunk object which includes the following data
         // {
         //   id:                 ID to identify this chunk
-        //   hierarchy:          nodes in hierarchical order
+        //   type:               bi / topology
         //   tree:               hierarchy tree
-        //   nodes:              nodes as list
+        //   nodes:              visible nodes as list
+        //   nodes_by_id:        all nodes by id
         //   links:              links between nodes
         //                       These are either provided in the rawdata or
         //                       automatically computed out of the hierarchy layout
-        //   layout:             layout configuration
+        //   layout_settings:    layout configuration
         // }
         let chunk = {};
+
+        // Required to differentiate between bi and topology view
+        chunk.type = chunk_rawdata.type;
 
         let hierarchy = d3.hierarchy(chunk_rawdata.hierarchy);
 
@@ -336,6 +335,8 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             node.data.node_positioning = {};
             node.data.transition_info = {};
             node.data.chunk = chunk;
+            // User interactions, e.g. collapsing node, root cause analysis
+            node.data.user_interactions = {};
         });
 
         // Compute path and id to identify the nodes
@@ -345,10 +346,11 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
 
         chunk.tree = hierarchy;
         chunk.nodes = chunk.tree.descendants();
+        chunk.nodes_by_id = {};
+        chunk.nodes.forEach(node => (chunk.nodes_by_id[node.data.id] = node));
 
         // Use layout info
         chunk.layout_settings = chunk_rawdata.layout;
-
         chunk.id = chunk.nodes[0].data.id;
 
         let chunk_links = [];
@@ -375,6 +377,20 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             else this._chunks_changed = true;
         });
         this._node_chunk_list = new_chunk_list;
+    }
+
+    _filter_root_cause(node) {
+        if (!node._children) return;
+
+        let critical_children = [];
+        node._children.forEach(child_node => {
+            if (child_node.data.state != 0) {
+                critical_children.push(child_node);
+                this._filter_root_cause(child_node);
+            }
+        });
+        node.data.user_interactions.bi = "root_cause";
+        node.children = critical_children;
     }
 
     _add_aggr_path_and_node_id(node, siblings_id_counter) {
@@ -541,24 +557,18 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         for (let idx in this._node_chunk_list) {
             let existing_chunk = this._node_chunk_list[idx];
             if (existing_chunk.tree.data.id == chunk_id) {
-                let old_node_coords = {};
-                existing_chunk.nodes.forEach(node => {
-                    old_node_coords[node.data.id] = {x: node.x, y: node.y};
-                });
-
                 new_chunk.layout_instance = existing_chunk.layout_instance;
-
                 new_chunk.coords = existing_chunk.coords;
-                new_chunk.nodes.forEach((node, idx) => {
-                    // Reuse computed coordinates from previous chunk data
-                    if (old_node_coords[node.data.id]) {
-                        node.x = old_node_coords[node.data.id].x;
-                        node.y = old_node_coords[node.data.id].y;
-                    } else this._chunks_changed = true;
+                new_chunk.nodes.forEach(node => {
+                    let existing_node = existing_chunk.nodes_by_id[node.data.id];
+                    if (existing_node !== undefined)
+                        this._migrate_node_content(existing_node, node);
+                    else this._chunks_changed = true;
                 });
+                this._node_chunk_list[idx] = new_chunk;
+                this._apply_user_interactions_to_chunk(new_chunk);
                 if (existing_chunk.nodes.length != new_chunk.nodes.length)
                     this._chunks_changed = true;
-                this._node_chunk_list[idx] = new_chunk;
                 return;
             }
         }
@@ -567,23 +577,54 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         this._node_chunk_list.push(new_chunk);
     }
 
-    recompute_node_chunk_descendants_and_links(node_chunk) {
-        node_chunk.nodes = node_chunk.tree.descendants();
+    _migrate_node_content(old_node, new_node) {
+        // Reuse computed coordinates from previous chunk data
+        new_node.x = old_node.x;
+        new_node.y = old_node.y;
 
+        // Migrate user interactions
+        new_node.data.user_interactions = old_node.data.user_interactions;
+    }
+
+    _apply_user_interactions_to_chunk(chunk) {
+        chunk.nodes.forEach(node => {
+            let bi_setting = node.data.user_interactions.bi;
+            if (bi_setting === undefined) return;
+
+            switch (bi_setting) {
+                case "collapsed":
+                    node.children = null;
+                    break;
+                case "root_cause":
+                    this._filter_root_cause(node);
+                    break;
+            }
+        });
+        this.update_node_chunk_descendants_and_links(chunk);
+    }
+
+    update_node_chunk_descendants_and_links(node_chunk) {
+        // This feature is only supported/useful for bi visualization
+        if (node_chunk.type != "bi") return;
+
+        node_chunk.nodes = node_chunk.tree.descendants();
         let chunk_links = [];
         node_chunk.nodes.forEach(node => {
             if (!node.parent || node.data.invisible) return;
             chunk_links.push({source: node, target: node.parent});
         });
         node_chunk.links = chunk_links;
+    }
 
+    recompute_node_chunk_descendants_and_links(node_chunk) {
+        this.update_node_chunk_descendants_and_links(node_chunk);
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5);
         let all_nodes = this.get_all_nodes();
         let all_links = this.get_all_links();
         node_visualization_layout_styles.force_simulation.update_nodes_and_links(
             all_nodes,
             all_links
         );
-        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5);
     }
 
     update_layers() {
@@ -607,12 +648,12 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         }
     }
 
-    zoomed() {
+    zoomed(event) {
         if (!this.data_to_show) return;
 
-        this.last_zoom = d3.event.transform;
-        this.scale_x.range([0, this.width * d3.event.transform.k]);
-        this.scale_y.range([0, this.height * d3.event.transform.k]);
+        this.last_zoom = event.transform;
+        this.scale_x.range([0, this.width * event.transform.k]);
+        this.scale_y.range([0, this.height * event.transform.k]);
 
         for (var layer_id in this._layers) {
             if (!this._layers[layer_id].is_enabled()) continue;

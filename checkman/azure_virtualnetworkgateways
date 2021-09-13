@@ -13,6 +13,6 @@ description:
 item:
  The name of the resource.
 
-inventory:
+discovery:
  One service is created for each virtual network gateway.
 

@@ -5,51 +5,56 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import pytest  # type: ignore[import]
+from typing import Any, Dict, List, Optional
 
-from cmk.ec.main import HostConfig
+import pytest
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.type_defs import HostName
+
+from cmk.ec.host_config import HostConfig, HostInfo
 
 
 @pytest.fixture(name="host_config")
-def fixture_host_config():
+def fixture_host_config() -> HostConfig:
     return HostConfig(logging.getLogger("cmk.mkeventd.EventServer"))
 
 
-def _heute_config():
+def _heute_config() -> Dict[str, Any]:
     return {
-        'name': 'heute',
-        'alias': 'heute alias',
-        'address': '127.0.0.1',
-        'custom_variables': {
+        "name": "heute",
+        "alias": "heute alias",
+        "address": "127.0.0.1",
+        "custom_variables": {
             "FILENAME": "/wato/hosts.mk",
             "ADDRESS_FAMILY": "4",
             "ADDRESS_4": "127.0.0.1",
             "ADDRESS_6": "",
             "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
         },
-        'contacts': [],
-        'contact_groups': ['all'],
+        "contacts": [],
+        "contact_groups": ["all"],
     }
 
 
-def _example_com_config():
+def _example_com_config() -> Dict[str, Any]:
     return {
-        'name': 'example.com',
-        'alias': 'example.com alias',
-        'address': 'server.example.com',
-        'custom_variables': {
+        "name": "example.com",
+        "alias": "example.com alias",
+        "address": "server.example.com",
+        "custom_variables": {
             "FILENAME": "/wato/hosts.mk",
             "ADDRESS_FAMILY": "4",
             "ADDRESS_4": "127.0.0.1",
             "ADDRESS_6": "",
             "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
         },
-        'contacts': [],
-        'contact_groups': ['all'],
+        "contacts": [],
+        "contact_groups": ["all"],
     }
 
 
-def _test_table():
+def _test_table() -> List[Dict[str, Any]]:
     return [
         _heute_config(),
         _example_com_config(),
@@ -57,118 +62,121 @@ def _test_table():
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus(mock_livestatus):
-    mock_livestatus.add_table('hosts', _test_table())
+def fixture_livestatus(mock_livestatus: MockLiveStatusConnection) -> MockLiveStatusConnection:
+    mock_livestatus.set_sites(["local"])
+    mock_livestatus.add_table("hosts", _test_table())
     return mock_livestatus
 
 
-# TODO: It is beyond the scope of this test to verify the livestatus queries which are made, but the
-# livestatus mocker requires to define all expected queries at the moment. We'll do so for now.
-def test_host_config_get_config_for_host_by_name(host_config, live):
+@pytest.mark.parametrize(
+    "hostname_str, result",
+    [
+        (
+            "heute",
+            HostInfo(
+                name=HostName("heute"),
+                alias="heute alias",
+                address="127.0.0.1",
+                custom_variables={
+                    "FILENAME": "/wato/hosts.mk",
+                    "ADDRESS_FAMILY": "4",
+                    "ADDRESS_4": "127.0.0.1",
+                    "ADDRESS_6": "",
+                    "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+                },
+                contacts=set(),
+                contact_groups=set(["all"]),
+            ),
+        ),
+        ("HEUTE", None),
+        ("127.0.0.1", None),
+    ],
+)
+def test_host_config(
+    host_config: HostConfig,
+    live: MockLiveStatusConnection,
+    hostname_str: str,
+    result: Optional[HostInfo],
+) -> None:
+    hostname = HostName(hostname_str)
     with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_config_for_host("heute", {}) == _heute_config()
+        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(
+            [
+                "GET hosts",
+                "Columns: name alias address custom_variables contacts contact_groups",
+                "ColumnHeaders: on",
+            ]
+        )
+        assert host_config.get_config_for_host(hostname) == result
+        # Data is cached and not queried twice.
+        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        assert host_config.get_config_for_host(hostname) == result
 
 
-# TODO: It is beyond the scope of this test to verify the livestatus queries which are made, but the
-# livestatus mocker requires to define all expected queries at the moment. We'll do so for now.
-def test_host_config_get_config_for_host_by_fuzzy_name_not_possible(host_config, live):
+@pytest.mark.parametrize(
+    "search_term, result",
+    [
+        ("heute", HostName("heute")),
+        ("HEUTE", HostName("heute")),
+        ("127.0.0.1", HostName("heute")),
+        ("server.example.com", HostName("example.com")),
+        ("SERVER.example.com", HostName("example.com")),
+        ("not-matching", None),
+        ("heute alias", HostName("heute")),
+    ],
+)
+def test_host_config_get_canonical_name(
+    host_config: HostConfig,
+    live: MockLiveStatusConnection,
+    search_term: str,
+    result: Optional[HostName],
+) -> None:
     with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_config_for_host("HEUTE", {}) == {}
+        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(
+            [
+                "GET hosts",
+                "Columns: name alias address custom_variables contacts contact_groups",
+                "ColumnHeaders: on",
+            ]
+        )
+        assert host_config.get_canonical_name(search_term) == result
+
+        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        assert host_config.get_canonical_name(search_term) == result
 
 
-# TODO: It is beyond the scope of this test to verify the livestatus queries which are made, but the
-# livestatus mocker requires to define all expected queries at the moment. We'll do so for now.
-def test_host_config_get_config_for_host_by_address_not_possible(host_config, live):
+def test_host_config_get_canonical_name_is_cached_updated(
+    host_config: HostConfig, live: MockLiveStatusConnection
+) -> None:
     with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_config_for_host("127.0.0.1", {}) == {}
-
-
-def test_host_config_get_config_for_host_is_cached(host_config, live):
-    with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_config_for_host("heute", {}) == _heute_config()
-
-        live.expect_query("GET status\n" "Columns: program_start")
-        assert host_config.get_config_for_host("heute", {}) == _heute_config()
-
-
-# TODO: It is beyond the scope of this test to verify the livestatus queries which are made, but the
-# livestatus mocker requires to define all expected queries at the moment. We'll do so for now.
-def test_host_config_get_canonical_name_by_name(host_config, live):
-    with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_canonical_name("heute") == "heute"
-
-        live.expect_query("GET status\n" "Columns: program_start")
-        assert host_config.get_canonical_name("HEUTE") == "heute"
-
-
-# TODO: It is beyond the scope of this test to verify the livestatus queries which are made, but the
-# livestatus mocker requires to define all expected queries at the moment. We'll do so for now.
-def test_host_config_get_canonical_name_by_address(host_config, live):
-    with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_canonical_name("127.0.0.1") == "heute"
-
-        live.expect_query("GET status\n" "Columns: program_start")
-        assert host_config.get_canonical_name("server.example.com") == "example.com"
-
-        live.expect_query("GET status\n" "Columns: program_start")
-        assert host_config.get_canonical_name("SERVER.example.com") == "example.com"
-
-
-# TODO: It is beyond the scope of this test to verify the livestatus queries which are made, but the
-# livestatus mocker requires to define all expected queries at the moment. We'll do so for now.
-def test_host_config_get_canonical_name_for_not_existing_host(host_config, live):
-    with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_canonical_name("not-matching") == ""
-
-
-def test_host_config_get_canonical_name_is_cached(host_config, live):
-    with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_canonical_name("heute alias") == "heute"
-
-        live.expect_query("GET status\n" "Columns: program_start")
-        assert host_config.get_canonical_name("127.0.0.1") == "heute"
-
-
-def test_host_config_get_canonical_name_is_cached_updated(host_config, live):
-    with live(expect_status_query=False):
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_canonical_name("heute alias") == "heute"
+        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(
+            [
+                "GET hosts",
+                "Columns: name alias address custom_variables contacts contact_groups",
+                "ColumnHeaders: on",
+            ]
+        )
+        assert host_config.get_canonical_name("heute alias") == HostName("heute")
 
         # Update the config to simulate a config change
-        live._tables["hosts"][0]["alias"] = "new alias"
-        live._tables["status"][0]["program_start"] = live._tables["status"][0]["program_start"] + 10
+        live.tables["hosts"]["local"][0]["alias"] = "new alias"
+        live.tables["status"]["local"][0]["program_start"] = (
+            live.tables["status"]["local"][0]["program_start"] + 10
+        )
 
         # Original alias is not matching anymore, cache is updated
-        live.expect_query("GET status\n" "Columns: program_start")
-        live.expect_query("GET hosts\n"
-                          "Columns: name alias address custom_variables contacts contact_groups")
-        assert host_config.get_canonical_name("heute alias") == ""
+        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(
+            [
+                "GET hosts",
+                "Columns: name alias address custom_variables contacts contact_groups",
+                "ColumnHeaders: on",
+            ]
+        )
+        assert host_config.get_canonical_name("heute alias") is None
 
-        live.expect_query("GET status\n" "Columns: program_start")
-        assert host_config.get_canonical_name("new alias") == "heute"
+        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        assert host_config.get_canonical_name("new alias") == HostName("heute")

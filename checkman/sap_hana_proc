@@ -14,8 +14,10 @@ description:
 
  If the active status is not YES the check goes CRIT.
 
+ This check is also cluster-aware.
+
 item:
  The sid instance name and the process name seperated by a {{-}}
 
-inventory:
+discovery:
  One service is created for each instance and process.

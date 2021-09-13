@@ -4,33 +4,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # For Hitachi Unified Storage (HUS) devices which support the USPMIB
 # This devices has two units: Disk Controller (DKC) and Disk Unit (DKC)
 
 # Example output from DKC:
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.1 470849
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.2 1
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.3 1
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.4 1
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.5 1
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.6 5
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.7 1
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.8 1
-#.1.3.6.1.4.1.116.5.11.4.1.1.6.1.9 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.1 470849
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.2 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.3 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.4 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.5 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.6 5
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.7 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.8 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.6.1.9 1
 
 # Example output from DKU:
-#.1.3.6.1.4.1.116.5.11.4.1.1.7.1.1 470849
-#.1.3.6.1.4.1.116.5.11.4.1.1.7.1.2 1
-#.1.3.6.1.4.1.116.5.11.4.1.1.7.1.3 4
-#.1.3.6.1.4.1.116.5.11.4.1.1.7.1.4 3
-#.1.3.6.1.4.1.116.5.11.4.1.1.7.1.5 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.7.1.1 470849
+# .1.3.6.1.4.1.116.5.11.4.1.1.7.1.2 1
+# .1.3.6.1.4.1.116.5.11.4.1.1.7.1.3 4
+# .1.3.6.1.4.1.116.5.11.4.1.1.7.1.4 3
+# .1.3.6.1.4.1.116.5.11.4.1.1.7.1.5 1
 
 
 def scan_hitachi_hus(oid):
-    return ("hm700" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "hm800" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "hm850" in oid(".1.3.6.1.2.1.1.1.0").lower())
+    return (
+        "hm700" in oid(".1.3.6.1.2.1.1.1.0").lower()
+        or "hm800" in oid(".1.3.6.1.2.1.1.1.0").lower()
+        or "hm850" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    )
 
 
 def inventory_hitachi_hus(info):

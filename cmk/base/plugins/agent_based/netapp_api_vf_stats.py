@@ -5,21 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Optional
+from typing import Any, Mapping, Optional
+
 from .agent_based_api.v1 import (
     check_levels,
-    GetRateError,
     get_rate,
     get_value_store,
+    GetRateError,
     IgnoreResultsError,
     register,
     render,
     Result,
     Service,
-    State as state,
-    type_defs,
 )
-from . import netapp_api_cpu
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils import cpu_util, netapp_api
 
 # <<<netapp_api_vf_stats:sep(9)>>>
@@ -27,45 +27,47 @@ from .utils import cpu_util, netapp_api
 
 
 def parse_netapp_api_vf_stats(
-        string_table: type_defs.StringTable) -> netapp_api.SectionSingleInstance:
+    string_table: type_defs.StringTable,
+) -> netapp_api.SectionSingleInstance:
     return netapp_api.parse_netapp_api_single_instance(string_table)
 
 
 register.agent_section(
-    name='netapp_api_vf_stats',
+    name="netapp_api_vf_stats",
     parse_function=parse_netapp_api_vf_stats,
 )
 
 
 def discover_netapp_api_vf_stats(
     section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
-    section_netapp_api_cpu: Optional[netapp_api_cpu.Section],
+    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
 ) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_netapp_api_vf_stats({'vfiler0': {}}, None))
-    [Service(item='vfiler0', parameters={}, labels=[])]
+    [Service(item='vfiler0')]
     >>> list(discover_netapp_api_vf_stats(
     ... {'vfiler0': {}},
     ... {'7mode': {'num_processors': '2', 'cpu_busy': '153993540928'}}))
-    [Service(item='vfiler0', parameters={}, labels=[])]
+    [Service(item='vfiler0')]
     """
     yield from discover_netapp_api_vf_stats_common(section_netapp_api_vf_stats or {})
 
 
 def discover_netapp_api_vf_stats_common(
-        section: netapp_api.SectionSingleInstance) -> type_defs.DiscoveryResult:
+    section: netapp_api.SectionSingleInstance,
+) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_netapp_api_vf_stats_common({'vfiler0': {}}))
-    [Service(item='vfiler0', parameters={}, labels=[])]
+    [Service(item='vfiler0')]
     """
     yield from (Service(item=key) for key in section)
 
 
 def check_netapp_api_vf_stats(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
-    section_netapp_api_cpu: Optional[netapp_api_cpu.Section],
+    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
 ) -> type_defs.CheckResult:
 
     vf = (section_netapp_api_vf_stats or {}).get(item)
@@ -77,7 +79,7 @@ def check_netapp_api_vf_stats(
     raise_ingore_res = False
     rates = {}
 
-    for counter in ['cpu_busy', 'cpu_busy_base']:
+    for counter in ["cpu_busy", "cpu_busy_base"]:
         try:
             rates[counter] = get_rate(
                 value_store,
@@ -90,21 +92,21 @@ def check_netapp_api_vf_stats(
             raise_ingore_res = True
 
     if raise_ingore_res:
-        raise IgnoreResultsError('Initializing counters')
+        raise IgnoreResultsError("Initializing counters")
 
     # vFilers are 7mode only and cannot appear in clustermode
-    num_processors = int((section_netapp_api_cpu or {}).get('7mode', {}).get("num_processors", 1))
+    num_processors = int((section_netapp_api_cpu or {}).get("7mode", {}).get("num_processors", 1))
 
     try:
-        used_perc = (rates['cpu_busy'] / num_processors) / rates['cpu_busy_base'] * 100
+        used_perc = (rates["cpu_busy"] / num_processors) / rates["cpu_busy_base"] * 100
         # Due to timing inaccuracies, the measured level can become > 100%. This makes users
         # unhappy, so cut it off.
         if used_perc < 0:
-            used_perc = 0.
+            used_perc = 0.0
         elif used_perc > 100:
-            used_perc = 100.
+            used_perc = 100.0
     except ZeroDivisionError:
-        used_perc = 0.
+        used_perc = 0.0
 
     yield from cpu_util.check_cpu_util(
         util=used_perc,

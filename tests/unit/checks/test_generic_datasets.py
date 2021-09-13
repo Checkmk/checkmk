@@ -21,10 +21,12 @@ required variables manually (as in ''veritas_vcs_*.py''), or create a
 regression test dataset as described in ''checks/generictests/regression.py''
 """
 from importlib import import_module
-import pytest  # type: ignore[import]
 
-from testlib import on_time  # type: ignore[import]
-import generictests
+import pytest
+
+from tests.testlib import on_time
+
+from . import generictests
 
 pytestmark = pytest.mark.checks
 
@@ -41,8 +43,8 @@ def fixture_mock_time():
         yield
 
 
-@pytest.mark.usefixtures("mock_time", "config_load_all_checks")
+@pytest.mark.usefixtures("mock_time")
 @pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
-def test_dataset(datasetname, config_check_info):
-    dataset = import_module("generictests.datasets.%s" % datasetname)
-    generictests.run(config_check_info, dataset)
+def test_dataset(datasetname, fix_plugin_legacy):
+    dataset = import_module("tests.unit.checks.generictests.datasets.%s" % datasetname)
+    generictests.run(fix_plugin_legacy.check_info, dataset)

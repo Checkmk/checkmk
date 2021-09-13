@@ -19,5 +19,5 @@ description:
 item:
  The system assigned identifier representing the PDU.
 
-inventory:
+discovery:
  One service is created on each device.

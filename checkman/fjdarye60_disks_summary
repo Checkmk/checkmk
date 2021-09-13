@@ -17,6 +17,6 @@ description:
  readying, recovering, partbroken, spare, notexist or copying,
  OK otherise.
 
-inventory:
+discovery:
  One service is created if at least one disk is found.
 

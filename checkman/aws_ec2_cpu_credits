@@ -15,5 +15,5 @@ description:
  You can configure lower levels for {WARN}/{CRIT} (default: 10, 5). The service goes
  {WARN}/{CRIT} if the credit usage drops below these levels.
 
-inventory:
+discovery:
  One service is created if all required metrics (CPUCreditUsage, CPUCreditBalance) are given.

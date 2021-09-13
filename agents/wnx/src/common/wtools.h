@@ -12,7 +12,7 @@
 #ifndef wtools_h__
 #define wtools_h__
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
 #include <comdef.h>
 
 #include "windows.h"
@@ -41,6 +41,36 @@
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
 
+inline void* ProcessHeapAlloc(size_t size) {
+    return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+}
+
+inline void ProcessHeapFree(void* data) {
+    if (data != nullptr) {
+        ::HeapFree(::GetProcessHeap(), 0, data);
+    }
+}
+
+enum class SecurityLevel { standard, admin };
+
+// RAII class to keep MS Windows Security Descriptor temporary
+class SecurityAttributeKeeper {
+public:
+    SecurityAttributeKeeper(SecurityLevel sl);
+    ~SecurityAttributeKeeper();
+
+    const SECURITY_ATTRIBUTES* get() const { return sa_; }
+    SECURITY_ATTRIBUTES* get() { return sa_; }
+
+private:
+    bool allocAll(SecurityLevel sl);
+    void cleanupAll();
+    // below are allocated using ProcessHeapAlloc values
+    SECURITY_DESCRIPTOR* sd_{nullptr};
+    SECURITY_ATTRIBUTES* sa_{nullptr};
+    ACL* acl_{nullptr};
+};
+
 // this is functor to kill any pointer allocated with ::LocalAlloc
 // usually this pointer comes from Windows API
 template <typename T>
@@ -58,6 +88,15 @@ LocalResource<SERVICE_FAILURE_ACTIONS> actions(
 //
 template <typename T>
 using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
+
+struct HandleDeleter {
+    using pointer = HANDLE;  // trick to use HANDLE as STL pointer
+
+    void operator()(HANDLE h) { ::CloseHandle(h); }
+};
+
+/// Unique ptr for Windows HANDLE
+using UniqueHandle = std::unique_ptr<HANDLE, HandleDeleter>;
 
 // returns <exit_code, 0>, <0, error> or <-1, error>
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
@@ -124,6 +163,7 @@ public:
     virtual void shutdownService() = 0;
     virtual const wchar_t* getMainLogName() const = 0;
     virtual void preContextCall() = 0;
+    virtual void cleanupOnStop() {}
 };
 
 // keeps two handles
@@ -245,10 +285,10 @@ private:
 // based on ToolHelp api family
 // normally require elevation
 // if op returns false, scan will be stopped(this is only optimization)
-bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op);
+bool ScanProcessList(const std::function<bool(const PROCESSENTRY32&)>& op);
 
 // standard process terminator
-bool KillProcess(uint32_t process_id, int exit_code = -1) noexcept;
+bool KillProcess(uint32_t pid, int exit_code) noexcept;
 
 // process terminator
 // used to kill OpenHardwareMonitor
@@ -532,17 +572,15 @@ private:
     }
 };
 
-// standard converter, generates no exception in Windows but!
+// Standard converter, generates no exception in Windows
 // we support two converters
 // one is deprecated, second is windows only
-// nice, yes?
-// gtest [+]
-inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
+inline std::string ToUtf8(const std::wstring_view src) noexcept {
 #if defined(WINDOWS_OS)
     // Windows only
-    auto in_len = static_cast<int>(Src.length());
+    auto in_len = static_cast<int>(src.length());
     auto out_len =
-        ::WideCharToMultiByte(CP_UTF8, 0, Src.data(), in_len, NULL, 0, 0, 0);
+        ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len, NULL, 0, 0, 0);
     if (out_len == 0) return {};
 
     std::string str;
@@ -554,31 +592,31 @@ inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
     }
 
     // convert
-    ::WideCharToMultiByte(CP_UTF8, 0, Src.data(), -1, str.data(), out_len, 0,
+    ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len, 0,
                           0);
     return str;
 #else
     // standard but deprecated
     try {
-        return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(Src);
+        return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(src);
     } catch (const exception& e) {
-        xlog::l("Failed to convert %ls", Src.c_str());
+        xlog::l("Failed to convert %ls", src.c_str());
         return "";
     }
 #endif  // endif
 }
 
-inline std::string ConvertToUTF8(const std::string_view src) noexcept {
+inline std::string ToUtf8(const std::string_view src) noexcept {
     return std::string(src);
 }
 
+std::wstring ToCanonical(std::wstring_view raw_app_name);
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
-// gtest [+] in yaml
-inline std::wstring ConvertToUTF16(const std::string_view Src) noexcept {
+inline std::wstring ConvertToUTF16(const std::string_view src) noexcept {
 #if defined(WINDOWS_OS)
-    auto in_len = static_cast<int>(Src.length());
-    auto utf8_str = Src.data();
+    auto in_len = static_cast<int>(src.length());
+    auto utf8_str = src.data();
     auto out_len = MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, NULL, 0);
     std::wstring wstr;
     try {
@@ -668,7 +706,7 @@ uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION& Counter,
 std::string GetName(uint32_t CounterType) noexcept;
 }  // namespace perf
 
-inline int64_t QueryPerformanceFreq() {
+inline int64_t QueryPerformanceFreq() noexcept {
     LARGE_INTEGER frequency;
     ::QueryPerformanceFrequency(&frequency);
     return frequency.QuadPart;
@@ -682,7 +720,7 @@ inline int64_t QueryPerformanceCo() {
 
 // util to get in windows find path to your binary
 // MAY NOT WORK when you are running as a service
-std::wstring GetCurrentExePath() noexcept;
+std::filesystem::path GetCurrentExePath();
 
 // wrapper for win32 specific function
 // return 0 when no data or error
@@ -720,7 +758,7 @@ std::string SmartConvertUtf16toUtf8(const std::vector<T>& original_data) {
         std::wstring wdata(raw_data, raw_data + (original_data.size() - 2) / 2);
         if (wdata.empty()) return {};
 
-        return wtools::ConvertToUTF8(wdata);
+        return wtools::ToUtf8(wdata);
     }
 
     std::string data;
@@ -926,7 +964,7 @@ IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
 enum class WmiStatus { ok, timeout, error, fail_open, fail_connect, bad_param };
 
 std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
-    IEnumWbemClassObject* enumerator);
+    IEnumWbemClassObject* enumerator, uint32_t timeout);
 
 // in exception column we have
 enum class StatusColumn { ok, timeout };
@@ -958,16 +996,16 @@ public:
     bool impersonate() noexcept;
 
     // on error returns empty string and timeout status
-    std::tuple<std::wstring, WmiStatus> produceTable(
+    static std::tuple<std::wstring, WmiStatus> produceTable(
         IEnumWbemClassObject* enumerator,
-        const std::vector<std::wstring>& names,
-        std::wstring_view separator) noexcept;
+        const std::vector<std::wstring>& names, std::wstring_view separator,
+        uint32_t wmi_timeout) noexcept;
 
     // work horse to ask certain names from the target
     // on error returns empty string and timeout status
     std::tuple<std::wstring, WmiStatus> queryTable(
         const std::vector<std::wstring>& names, const std::wstring& target,
-        std::wstring_view separator) noexcept;
+        std::wstring_view separator, uint32_t wmi_timeout) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr
@@ -1004,7 +1042,11 @@ bool DeleteRegistryValue(std::wstring_view path,
 
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
-                      std::wstring_view value);
+                      std::wstring_view value) noexcept;
+
+bool SetRegistryValueExpand(std::wstring_view path,
+                            std::wstring_view value_name,
+                            std::wstring_view value);
 
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
@@ -1034,11 +1076,11 @@ public:
 
     // constructs a new CACLInfo object
     // bstrPath - path for which ACL info should be queried
-    ACLInfo(_bstr_t path);
+    ACLInfo(const _bstr_t& path) noexcept;
     virtual ~ACLInfo();
 
     // Queries NTFS for ACL Info of the file/directory
-    HRESULT query();
+    HRESULT query() noexcept;
 
     // Outputs ACL info in Human-readable format
     // to supplied output stream
@@ -1046,8 +1088,8 @@ public:
 
 private:
     // Private methods
-    void clearAceList();
-    HRESULT addAceToList(ACE_HEADER* pAce);
+    void clearAceList() noexcept;
+    HRESULT addAceToList(ACE_HEADER* pAce) noexcept;
 
 private:
     // Member variables
@@ -1081,24 +1123,53 @@ public:
     BSTR data_;
 };
 
-/// \brief Set correct access rights for the path
-///
-///  Normally called once on the start of the service.
-///  Removes Users write access from the specified path(usually it is
-///  %ProgramData%/checkmk)
-bool ProtectPathFromUserWrite(const std::filesystem::path& path);
+/// \brief Add command to set correct access rights for the path
+void ProtectPathFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
 
-/// \brief Remove user access to the path
-///
-///  Normally called once on the start of the service.
-///  Removes Users Access to the specified path
-bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
+/// \brief Add command to remove user write to the path
+void ProtectFileFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
 
-/// \brief Remove user access to the file
+/// \brief Add command to remove user access to the path
+void ProtectPathFromUserAccess(const std::filesystem::path& entry,
+                               std::vector<std::wstring>& commands);
+
+/// \brief Create cmd file in %Temp% and run it.
 ///
-///  Normally called once on the start of the service.
-///  Removes Users Access Writes to the specified file
-bool ProtectFileFromUserWrite(const std::filesystem::path& path);
+/// Returns script name path to be executed
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands);
+
+/// \brief Create cmd file in %Temp% and run it.
+///
+/// Returns script name path to be executed
+std::filesystem::path ExecuteCommandsSync(
+    std::wstring_view name, const std::vector<std::wstring>& commands);
+
+/// \brief Changes Access Rights in Windows crazy manner
+///
+/// Example of usage is
+/// ChangeAccessRights( L"c:\\txt", SE_FILE_OBJECT,        // what
+///                     L"a1", TRUSTEE_IS_NAME,            // who
+///                     STANDARD_RIGHTS_ALL | GENERIC_ALL, // how
+///                     GRANT_ACCESS, OBJECT_INHERIT_ACE);
+bool ChangeAccessRights(
+    const wchar_t* object_name,   // name of object
+    SE_OBJECT_TYPE object_type,   // type of object
+    const wchar_t* trustee_name,  // trustee for new ACE
+    TRUSTEE_FORM trustee_form,    // format of trustee structure
+    DWORD access_rights,          // access mask for new ACE
+    ACCESS_MODE access_mode,      // type of ACE
+    DWORD inheritance             // inheritance flags for new ACE ???
+);
+
+std::wstring ExpandStringWithEnvironment(std::wstring_view str);
+
+const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end);
+
+std::wstring SidToName(const std::wstring_view sid,
+                       const SID_NAME_USE& sid_type);
 }  // namespace wtools
 
 #endif  // wtools_h__

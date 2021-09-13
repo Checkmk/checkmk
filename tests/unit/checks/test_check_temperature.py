@@ -6,14 +6,15 @@
 
 # coding=utf-8
 # yapf: disable
-import collections
-from testlib import Check  # type: ignore[import]
 import datetime as dt
+from typing import Any, Mapping, NamedTuple
 
-import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
+import freezegun
+import pytest
 
-from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
+from tests.testlib import Check
+
+from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
 
 @pytest.mark.parametrize(
@@ -163,7 +164,6 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
          (2, u'5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_temperature(params, kwargs, expected):
     check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
@@ -175,16 +175,12 @@ def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
     return (datetime_obj - epoch).total_seconds()
 
 
-Entry = collections.namedtuple(
-    'TestEntry',
-    [
-        'reading',
-        'growth',
-        'seconds_elapsed',
-        'wato_dict',
-        'expected',
-    ]
-)
+class Entry(NamedTuple):
+    reading:float
+    growth:float
+    seconds_elapsed:float
+    wato_dict: Mapping[str,Any]
+    expected:Any
 
 _WATO_DICT = {
     'period': 5,
@@ -242,7 +238,6 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_temperature_trend(test_case):
     check = Check('acme_temp')
     check_trend = check.context['check_temperature_trend']
@@ -254,7 +249,7 @@ def test_check_temperature_trend(test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             result = check_trend(test_case.reading + test_case.growth,
                                  test_case.wato_dict, 'c',
@@ -276,7 +271,6 @@ def test_check_temperature_trend(test_case):
         ),
     ]
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_temperature_called(test_case):
     check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
@@ -287,7 +281,7 @@ def test_check_temperature_called(test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             # Assuming atmospheric pressure...
             result = check_temperature(

@@ -10,5 +10,5 @@ description:
 item:
  The device ID.
 
-inventory:
+discovery:
  One service per found device is created.

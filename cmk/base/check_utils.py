@@ -4,37 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Optional, Tuple
 
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, LegacyCheckParameters
-
-from cmk.snmplib.type_defs import SNMPPersistedSections, SNMPSectionContent, SNMPSections
+from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
-RulesetName = str
-
-SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
-
-AgentSectionContent = List[List[str]]
-AgentPersistedSection = Tuple[int, int, AgentSectionContent]
-AgentPersistedSections = Dict[SectionName, AgentPersistedSection]
-AgentSections = Dict[SectionName, AgentSectionContent]
-
-PiggybackRawData = Dict[HostName, List[bytes]]
-ParsedSectionContent = Any
-FinalSectionContent = Union[None, ParsedSectionContent, List[ParsedSectionContent]]
-
-AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
-AbstractSections = Union[AgentSections, SNMPSections]
-AbstractPersistedSections = Union[AgentPersistedSections, SNMPPersistedSections]
-
-TSectionContent = TypeVar("TSectionContent", bound=AbstractSectionContent)
-TSections = TypeVar("TSections", bound=AbstractSections)
-TPersistedSections = TypeVar("TPersistedSections", bound=AbstractPersistedSections)
-
 ServiceID = Tuple[CheckPluginName, Item]
-CheckTable = Dict[ServiceID, 'Service']
+CheckTable = Dict[ServiceID, "Service"]
 
 
 class Service:
@@ -77,6 +54,19 @@ class Service:
     def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
 
+    def __lt__(self, other: Any) -> bool:
+        """Allow to sort services
+
+        Basically sort by id(). Unfortunately we have plugins with *AND* without
+        items.
+        """
+        if not isinstance(other, Service):
+            raise TypeError("Can only be compared with other Service objects")
+        return (self.check_plugin_name, self.item or "") < (
+            other.check_plugin_name,
+            other.item or "",
+        )
+
     def __eq__(self, other: Any) -> bool:
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
@@ -91,8 +81,12 @@ class Service:
 
     def __repr__(self) -> str:
         return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_labels=%r)" % (
-            self._check_plugin_name, self._item, self._description, self._parameters,
-            self._service_labels)
+            self._check_plugin_name,
+            self._item,
+            self._description,
+            self._parameters,
+            self._service_labels,
+        )
 
     def dump_autocheck(self) -> str:
         return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (
@@ -101,26 +95,3 @@ class Service:
             self.parameters,
             self.service_labels.to_dict(),
         )
-
-
-# TODO (mo): *consider* using the type aliases.
-def get_default_parameters(
-    check_legacy_info: Dict[str, Any],
-    factory_settings: Dict[str, Dict[str, Any]],
-    check_context: Dict[str, Any],
-) -> Optional[Dict[str, Any]]:
-    """compute default parameters"""
-    params_variable_name = check_legacy_info.get("default_levels_variable")
-    if not params_variable_name:
-        return None
-
-    # factory_settings
-    fs_parameters = factory_settings.get(params_variable_name, {})
-
-    # global scope of check context
-    gs_parameters = check_context.get(params_variable_name)
-
-    return {
-        **fs_parameters,
-        **gs_parameters,
-    } if isinstance(gs_parameters, dict) else fs_parameters

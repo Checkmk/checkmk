@@ -4,17 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
-from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
+from __future__ import annotations
 
-import cmk.gui.config as config
-from cmk.gui.i18n import _
+import abc
+from typing import Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
+
 import cmk.utils.plugin_registry
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-    declare_permission,
-)
+from cmk.utils.type_defs import TagID
+
+from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
+from cmk.gui.globals import config
+from cmk.gui.i18n import _
+from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.type_defs import Row
 
 if TYPE_CHECKING:
     from cmk.gui.htmllib import HTML
@@ -35,13 +37,18 @@ class PermissionSectionIconsAndActions(PermissionSection):
         return True
 
 
-class Icon(metaclass=abc.ABCMeta):
+class Icon(abc.ABC):
     _custom_toplevel: Optional[bool] = None
     _custom_sort_index: Optional[int] = None
 
     @classmethod
     def type(cls) -> str:
         return "icon"
+
+    @classmethod
+    @abc.abstractmethod
+    def title(cls) -> str:
+        raise NotImplementedError()
 
     @classmethod
     def override_toplevel(cls, toplevel: bool) -> None:
@@ -57,8 +64,13 @@ class Icon(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def render(self, what: str, row: dict, tags: list,
-               custom_vars: dict) -> Union[None, 'HTML', Tuple, str]:
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: List[TagID],
+        custom_vars: Dict[str, str],
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         raise NotImplementedError()
 
     def columns(self) -> List[str]:
@@ -103,9 +115,12 @@ class IconRegistry(cmk.utils.plugin_registry.Registry[Type[Icon]]):
 
     def registration_hook(self, instance):
         ident = self.plugin_name(instance)
-        declare_permission("icons_and_actions.%s" % ident, ident,
-                           _("Allow to see the icon %s in the host and service views") % ident,
-                           config.builtin_role_ids)
+        declare_permission(
+            "icons_and_actions.%s" % ident,
+            ident,
+            _("Allow to see the icon %s in the host and service views") % ident,
+            builtin_role_ids,
+        )
 
 
 icon_and_action_registry = IconRegistry()
@@ -116,7 +131,7 @@ def update_icons_from_configuration():
     _register_custom_user_icons_and_actions(config.user_icons_and_actions)
 
 
-config.register_post_config_load_hook(update_icons_from_configuration)
+register_post_config_load_hook(update_icons_from_configuration)
 
 
 def _update_builtin_icons(builtin_icon_visibility):
@@ -126,25 +141,31 @@ def _update_builtin_icons(builtin_icon_visibility):
         if icon is None:
             continue
 
-        if 'toplevel' in cfg:
-            icon.override_toplevel(cfg['toplevel'])
-        if 'sort_index' in cfg:
-            icon.override_sort_index(cfg['sort_index'])
+        if "toplevel" in cfg:
+            icon.override_toplevel(cfg["toplevel"])
+        if "sort_index" in cfg:
+            icon.override_sort_index(cfg["sort_index"])
 
 
 def _register_custom_user_icons_and_actions(user_icons_and_actions):
     for icon_id, icon_cfg in user_icons_and_actions.items():
         icon_class = type(
-            "CustomIcon%s" % icon_id.title(), (Icon,), {
+            "CustomIcon%s" % icon_id.title(),
+            (Icon,),
+            {
                 "_ident": icon_id,
                 "_icon_spec": icon_cfg,
                 "ident": classmethod(lambda cls: cls._ident),
+                "title": classmethod(lambda cls: cls._icon_spec.get("title", cls._ident)),
                 "type": classmethod(lambda cls: "custom_icon"),
                 "sort_index": lambda self: self._icon_spec.get("sort_index", 15),
                 "toplevel": lambda self: self._icon_spec.get("toplevel", False),
-                "render": lambda self, *args:
-                          (self._icon_spec["icon"], self._icon_spec.get("title"),
-                           self._icon_spec.get("url")),
-            })
+                "render": lambda self, *args: (
+                    self._icon_spec["icon"],
+                    self._icon_spec.get("title"),
+                    self._icon_spec.get("url"),
+                ),
+            },
+        )
 
         icon_and_action_registry.register(icon_class)

@@ -24,7 +24,6 @@ def test_perl_modules(site):
         "Math::Calc::Units",
         "Config::Tiny",
         "Class::Accessor",
-
         # Webinject
         "Carp",
         "LWP",
@@ -37,7 +36,6 @@ def test_perl_modules(site):
         "XML::Parser",
         "Data::Dumper",
         "File::Temp",
-
         # Check_oracle_health
         "File::Basename",
         "IO::File",

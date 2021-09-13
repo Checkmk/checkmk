@@ -3,16 +3,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-# Builds CPython for Windows as zip file
+# Builds CPython for Windows as a cab file
 # Expected some Python installed, used by python build toolchain
 # Expected python.exe is python3 reasonably updated
 #
 # Usage:
 #  make 
 
+include ../../../defines.make
+# commandline
+PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
+PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
+MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
+
 # internal dirs:
-PYTHON_SRC_DIR     := python
-PYTHON_TMP_DIR     := tmp
+PYTHON_SRC_DIR     := python\$(PY_VER)
+PYTHON_TMP_DIR     := tmp\$(PY_VER)
+PYTHON_TMP_DIR_344 := tmp\3.4
 PYTHON_SYSTEM_EXE  := python.exe
 
 PYTHON_INSTALL_DIR := $(PYTHON_TMP_DIR)\to_install
@@ -20,38 +27,51 @@ PYTHON_SAVE_DIR    := $(PYTHON_TMP_DIR)\to_save
 
 # external paths
 ROOT_CMK_PATH      := ..\..\..
-OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\cpython
+OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\Python
 ARTEFACTS_DIR      := $(ROOT_CMK_PATH)\artefacts
-SRC_PIPFILE_DIR    := $(ROOT_CMK_PATH)\virtual-envs\windows\3.8
+SRC_PIPFILE_DIR    := $(ROOT_CMK_PATH)\virtual-envs\windows\$(PY_VER)
 
 # names
-OMD_PYTHON_NAME    := cpython-3.8
-PYTHON_MODULE_NAME := python-3.8.zip
+OMD_PYTHON_NAME    := Python-$(PY_VER).$(PY_SUBVER)
+PYTHON_MODULE_NAME := python-$(PY_VER).cab
+PYTHON_MODULE_NAME_344 := python-3.4.cab
 
 # files
 PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).timestamp
-OMD_PYTHON_PACKAGE := $(OMD_PACKAGES_DIR)\$(OMD_PYTHON_NAME).zip
+OMD_PYTHON_PACKAGE := $(OMD_PACKAGES_DIR)\$(OMD_PYTHON_NAME).tar.xz
 
-PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-3.8.5.exe
+PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-$(PY_VER).$(PY_SUBVER).exe
 SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile
 
 PYTHON_PIPFILE     := $(PYTHON_SAVE_DIR)\Pipfile
 PYTHON_PIPFILE_LOCK:= $(PYTHON_PIPFILE).lock
 
 ARTEFACT_MODULE    := $(ARTEFACTS_DIR)\$(PYTHON_MODULE_NAME)
+ARTEFACT_MODULE_344:= $(ARTEFACTS_DIR)\$(PYTHON_MODULE_NAME_344)
 PYTHON_MODULE      := $(PYTHON_TMP_DIR)\$(PYTHON_MODULE_NAME)
+PYTHON_MODULE_344  := $(PYTHON_TMP_DIR_344)\$(PYTHON_MODULE_NAME_344)
 
 
 
-.PHONY: clean venv 7zip unpack build python_install
+.PHONY: clean venv 7zip unpack build python_install usage python_version integration
 
-.DEFAULT_GOAL = build
+.DEFAULT_GOAL = usage
+
+usage:
+	@powershell Write-Host "Define build parameters, for example:"
+	@powershell Write-Host "make build PY_VER=3.8 PY_SUVBER=11" -foreground Green 
+	@powershell Write-Host "make python_344 PY_VER=3.4 PY_SUVBER=4" -foreground Green 
+
+python_version:
+	@echo $(PY_VER) $(PY_SUBVER)
 
 $(PYTHON_TIMESTAMP): $(OMD_PYTHON_PACKAGE) ## deploying python sources
 	@powershell Write-Host "$@ is to be processed" -foreground White
+	@if not exist "$(MSBUILD)" powershell Write-Host -foreground Red "MS Build 2017 must be installed" && exit 1
 	@if not exist $< powershell Write-Host -foreground Red "$< absent" && exit 1
 	@powershell Write-Host -foreground Green "Unpacking $< ..."
-	@7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $< 
+	7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $< 
+	7z x -y -o$(PYTHON_SRC_DIR) $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar && del /S $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar
 	@type nul >>$@ && powershell (ls $@).LastWriteTime = Get-Date   # windows touch
 	@powershell Write-Host -foreground Green "Done"
 
@@ -68,40 +88,42 @@ unpack: 7zip $(PYTHON_TIMESTAMP) ## unpacking python sources
 
 $(PYTHON_INSTALLER): $(PYTHON_TIMESTAMP)    ## python installer
 	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat build_python.cmd
+	@call exec_cmd.bat build_python.cmd $(PY_VER) $(PY_SUBVER)
 	@powershell Write-Host -foreground Green "Python is built"
 
 python_install: $(PYTHON_INSTALLER)    ## python installation
 	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat uninstall_python.cmd
-	@call exec_cmd.bat install_python.cmd
-	@call exec_cmd.bat upgrade_pip.cmd
-	@call exec_cmd.bat install_pipenv.cmd
-	@call exec_cmd.bat save_python.cmd
-	@call exec_cmd.bat uninstall_python.cmd
+	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat install_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat upgrade_pip.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat install_pipenv.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat save_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
 	@powershell Write-Host -foreground Green "Python is saved"
 
 
 $(PYTHON_PIPFILE): $(SRC_PIPFILE) ## pifile copy and patch
 	@powershell Write-Host "Making pipfile on target $@" -foreground white
-	@if not exist $(PYTHON_SAVE_DIR) powershell "$(PYTHON_SAVE_DIR) absent" && exit 3
+	@if not exist $(PYTHON_SAVE_DIR) powershell Write-Host "$(PYTHON_SAVE_DIR) absent" && exit 3
+	@powershell Write-Host "Patch pipfile: $@" -foreground cyan
 	@copy /Y $< $@
 	@$(PYTHON_SYSTEM_EXE) patch_pipfile.py $@
 
 $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat build_pipfile_lock.cmd
+	@call exec_cmd.bat build_pipfile_lock.cmd $(PY_VER) $(PY_SUBVER)
 
 venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
-	@call exec_cmd.bat build_environment.cmd
-	@call exec_cmd.bat clean_environment.cmd
-	@call exec_cmd.bat patch_environment.cmd
+	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER)
 	
 	
-$(PYTHON_MODULE): venv ## zipping venv
+$(PYTHON_MODULE): venv ## compressing venv
 	@powershell Write-Host "+Target $@" -foreground white
-	@cd $(PYTHON_SAVE_DIR) && 7z a -r -tzip -y -stl -mmt4 ..\$(PYTHON_MODULE_NAME) *.*
+	@powershell Write-Host "*CAB*" -foreground white
+	python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
 
 $(ARTEFACT_MODULE): $(PYTHON_MODULE) ## copy to artefacts
 	@powershell Write-Host "+Target $@" -foreground white
@@ -110,7 +132,7 @@ $(ARTEFACT_MODULE): $(PYTHON_MODULE) ## copy to artefacts
 
 build: unpack $(ARTEFACT_MODULE) ## building all
 	@powershell Write-Host -foreground Green "Build finished, uninstalling python"
-	@echo NOT REQUIRED call exec_cmd.bat uninstall_python.cmd
+	@echo NOT REQUIRED call exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
 	
 
 clean:
@@ -119,3 +141,21 @@ clean:
 	@rmdir /s/q .\$(PYTHON_TMP_DIR)
 	@rmdir /s/q .\$(PYTHON_SRC_DIR) 
 
+python_344:
+	@powershell Write-Host "Building Legacy Python 3.4.4 ..." -foreground white
+	exec_cmd.bat uninstall_legacy.cmd 3.4 4
+	exec_cmd.bat install_legacy.cmd 3.4 4
+	exec_cmd.bat build_environment_legacy.cmd 3.4 4
+	exec_cmd.bat uninstall_legacy.cmd 3.4 4
+	exec_cmd.bat clean_environment.cmd 3.4 4
+	exec_cmd.bat patch_environment.cmd 3.4 4
+	python_to_cab.cmd $(PYTHON_TMP_DIR_344) $(PYTHON_MODULE_NAME_344) to_save
+	@if not exist $(ARTEFACTS_DIR) mkdir $(ARTEFACTS_DIR) 2> nul
+	@copy /Y $(PYTHON_MODULE_344) $(ARTEFACT_MODULE_344)
+	@powershell Write-Host -foreground Green "Python 3.4.4 is saved"
+
+integration:
+	@make -C "tests" test-integration
+
+integration-force:
+	@make -C "tests" test-integration-force

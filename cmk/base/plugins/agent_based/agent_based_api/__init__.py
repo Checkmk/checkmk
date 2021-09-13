@@ -4,9 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Agent based API ("Check API")
-=============================
-
 This API provides tools for the implementation of
 
  * **section definitions** parsing the raw data and discovering host labels
@@ -14,5 +11,4 @@ This API provides tools for the implementation of
  * **check plugins** subscribing to sections and creating services
 
  * **inventory plugins** subscribing to sections and creating entries for the HW/SW inventory
-
 """

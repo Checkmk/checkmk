@@ -5,7 +5,7 @@
 
 #include "Store.h"
 
-#include <ctime>
+#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <sstream>
@@ -20,11 +20,10 @@
 #include "Query.h"
 #include "StringUtils.h"
 #include "mk_logwatch.h"
+#include "nagios.h"
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
-    , _downtimes(mc)
-    , _comments(mc)
     , _log_cache(mc)
     , _table_columns(mc)
     , _table_commands(mc)
@@ -97,14 +96,6 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
     return *it->second;
 }
 
-void Store::registerDowntime(nebstruct_downtime_data *data) {
-    _downtimes.registerDowntime(data);
-}
-
-void Store::registerComment(nebstruct_comment_data *data) {
-    _comments.registerComment(data);
-}
-
 namespace {
 std::list<std::string> getLines(InputBuffer &input) {
     std::list<std::string> lines;
@@ -151,7 +142,7 @@ Store::ExternalCommand::ExternalCommand(const std::string &str) {
 
 Store::ExternalCommand Store::ExternalCommand::withName(
     const std::string &name) const {
-    return ExternalCommand(_prefix, name, _arguments);
+    return {_prefix, name, _arguments};
 }
 
 std::string Store::ExternalCommand::str() const {
@@ -201,7 +192,8 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     if (mk::starts_with(line, "LOGROTATE")) {
         logRequest(line, {});
         Informational(logger()) << "Forcing logfile rotation";
-        rotate_log_file(time(nullptr));
+        rotate_log_file(std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::now()));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
                            0, 0,
                            reinterpret_cast<void *>(get_next_log_rotation_time),
@@ -306,7 +298,5 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
 size_t Store::numCachedLogMessages() {
-    std::lock_guard<std::mutex> lg(_log_cache._lock);
-    _log_cache.update();
     return _log_cache.numCachedLogMessages();
 }

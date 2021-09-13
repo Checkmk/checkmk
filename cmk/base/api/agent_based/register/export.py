@@ -5,28 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Callable, List, Optional, overload, Union
 
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
-from cmk.base.api.agent_based.checking_classes import (
-    CheckFunction,
-    DiscoveryFunction,
-    DiscoveryRuleSetType,
-)
-from cmk.base.api.agent_based.type_defs import (
-    AgentParseFunction,
-    HostLabelFunction,
-    SNMPParseFunction,
-)
-
-from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
-from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
 from cmk.base.api.agent_based.register import (
     add_check_plugin,
     add_discovery_ruleset,
@@ -36,6 +18,29 @@ from cmk.base.api.agent_based.register import (
     is_registered_inventory_plugin,
     is_registered_section_plugin,
 )
+from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
+)
+from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SNMPTree
+from cmk.base.api.agent_based.type_defs import (
+    AgentParseFunction,
+    HostLabelFunction,
+    ParametersTypeAlias,
+    SimpleSNMPParseFunction,
+    SNMPParseFunction,
+)
+
+__all__ = [
+    "agent_section",
+    "snmp_section",
+    "check_plugin",
+    "inventory_plugin",
+    "RuleSetType",
+]
 
 
 def agent_section(
@@ -44,6 +49,9 @@ def agent_section(
     parse_function: Optional[AgentParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an agent section to checkmk
@@ -61,6 +69,8 @@ def agent_section(
                            It may return an arbitrary object. Note that if the return value is
                            `None`, no forther processing will take place (just as if the agent had
                            not sent any data).
+                           This function may raise arbitrary exceptions, which will be dealt with
+                           by the checking engine. You should expect well formatted data.
 
       parsed_section_name: The name under which the parsed section will be available to the plugins.
                            Defaults to the original name.
@@ -70,6 +80,16 @@ def agent_section(
                            When the function is called, it will be passed the parsed data as
                            returned by the parse function.
                            It is expected to yield objects of type :class:`HostLabel`.
+
+      host_label_default_parameters: Default parameters for the host label function. Must match
+                           the ValueSpec of the corresponding WATO ruleset, if it exists.
+
+      host_label_ruleset_name: The name of the host label ruleset.
+
+      host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
+                           :class:`RuleSetType.MERGED`.
+                           It describes whether this plugins needs the merged result of the
+                           effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this sections. If this
                            section will be parsed to something that is not `None` (see above) all
@@ -81,6 +101,9 @@ def agent_section(
         parsed_section_name=parsed_section_name,
         parse_function=parse_function,
         host_label_function=host_label_function,
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=host_label_ruleset_name,
+        host_label_ruleset_type=host_label_ruleset_type,
         supersedes=supersedes,
         module=get_validated_plugin_module_name(),
     )
@@ -91,14 +114,51 @@ def agent_section(
     add_section_plugin(section_plugin)
 
 
+@overload  # no List of trees -> SimpleSNMPParseFunction
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpec,
-    fetch: Union[SNMPTree, List[SNMPTree]],
+    detect: SNMPDetectSpecification,
+    fetch: SNMPTree,
+    parse_function: Optional[SimpleSNMPParseFunction] = None,
+    parsed_section_name: Optional[str] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+    supersedes: Optional[List[str]] = None,
+) -> None:
+    pass
+
+
+@overload
+def snmp_section(
+    *,
+    name: str,
+    detect: SNMPDetectSpecification,
+    fetch: List[SNMPTree],
     parse_function: Optional[SNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+    supersedes: Optional[List[str]] = None,
+) -> None:
+    pass
+
+
+def snmp_section(
+    *,
+    name: str,
+    detect: SNMPDetectSpecification,
+    fetch: Union[SNMPTree, List[SNMPTree]],
+    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
+    parsed_section_name: Optional[str] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an snmp section to checkmk
@@ -129,6 +189,8 @@ def snmp_section(
                            It may return an arbitrary object. Note that if the return value is
                            `None`, no forther processing will take place (just as if the agent had
                            not sent any data).
+                           This function may raise arbitrary exceptions, which will be dealt with
+                           by the checking engine. You should expect well formatted data.
 
       parsed_section_name: The name under which the parsed section will be available to the plugins.
                            Defaults to the original name.
@@ -138,6 +200,16 @@ def snmp_section(
                            When the function is called, it will be passed the parsed data as
                            returned by the parse function.
                            It is expected to yield objects of type :class:`HostLabel`.
+
+      host_label_default_parameters: Default parameters for the host label function. Must match
+                           the ValueSpec of the corresponding WATO ruleset, if it exists.
+
+      host_label_ruleset_name: The name of the host label ruleset.
+
+      host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
+                           :class:`RuleSetType.MERGED`.
+                           It describes whether this plugins needs the merged result of the
+                           effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this sections. If this
                            section will be parsed to something that is not `None` (see above) all
@@ -149,6 +221,9 @@ def snmp_section(
         parsed_section_name=parsed_section_name,
         parse_function=parse_function,
         host_label_function=host_label_function,
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=host_label_ruleset_name,
+        host_label_ruleset_type=host_label_ruleset_type,
         detect_spec=detect,
         fetch=fetch,
         supersedes=supersedes,
@@ -167,11 +242,11 @@ def check_plugin(
     sections: Optional[List[str]] = None,
     service_name: str,
     discovery_function: DiscoveryFunction,
-    discovery_default_parameters: Optional[Dict[str, Any]] = None,
+    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: CheckFunction,
-    check_default_parameters: Optional[Dict[str, Any]] = None,
+    check_default_parameters: Optional[ParametersTypeAlias] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
 ) -> None:
@@ -195,7 +270,8 @@ def check_plugin(
                                 of "service_name".
 
       discovery_function:       The discovery_function. Arguments must be 'params' (if discovery
-                                parameters are defined) and 'section_<name1>, section_<name2>' ect.
+                                parameters are defined) and 'section' (if the plugin subscribes
+                                to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Service` instances.
 
@@ -204,8 +280,14 @@ def check_plugin(
 
       discovery_ruleset_name:   The name of the discovery ruleset.
 
+      discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
+                                :class:`RuleSetType.MERGED`.
+                                It describes whether this plugins needs the merged result of the effective rules,
+                                or every individual rule matching for the current host.
+
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and
+                                'section' (if the plugin subscribes to a single section), or
                                 'section_<name1>, section_<name2>' ect. corresponding to the
                                 `sections`.
 
@@ -249,7 +331,7 @@ def inventory_plugin(
     name: str,
     sections: Optional[List[str]] = None,
     inventory_function: InventoryFunction,
-    inventory_default_parameters: Optional[Dict[str, Any]] = None,
+    inventory_default_parameters: Optional[ParametersTypeAlias] = None,
     inventory_ruleset_name: Optional[str] = None,
 ) -> None:
     """Register an inventory plugin to checkmk.
@@ -267,8 +349,9 @@ def inventory_plugin(
                                 section_<name2>' ect. Defaults to a list containing as only element
                                 a name equal to the name of the inventory plugin.
 
-      inventoy_function:        The inventory_function. Arguments must be 'params' (if inventory
-                                parameters are defined) and 'section_<name1>, section_<name2>' ect.
+      inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
+                                parameters are defined) and 'section' (if the plugin subscribes
+                                to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Attributes` or
                                 :class:`TableRow` instances.
@@ -292,11 +375,3 @@ def inventory_plugin(
         raise ValueError("duplicate inventory plugin definition: %s" % plugin.name)
 
     add_inventory_plugin(plugin)
-
-
-__all__ = [
-    "agent_section",
-    "snmp_section",
-    "check_plugin",
-    "inventory_plugin",
-]

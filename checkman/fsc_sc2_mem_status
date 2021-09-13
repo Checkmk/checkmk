@@ -14,6 +14,6 @@ description:
 item:
  The memory designation
 
-inventory:
+discovery:
  One service is created for each memory module.
 

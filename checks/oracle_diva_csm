@@ -22,7 +22,7 @@
 #   acceses exactly one of the sublists.
 #
 
-#.
+# .
 #   .--Status--------------------------------------------------------------.
 #   |                    ____  _        _                                  |
 #   |                   / ___|| |_ __ _| |_ _   _ ___                      |
@@ -42,17 +42,17 @@ def inventory_oracle_diva_csm_status(name, idx, info):
         if len(line) == 2:
             element_id, _reading = line
         else:
-            element_id = ''
+            element_id = ""
 
         yield item_name_oracle_diva_csm(name, element_id), None
 
 
 def status_result_oracle_diva_csm(reading):
-    if reading == '1':
+    if reading == "1":
         return 0, "online"
-    elif reading == '2':
+    elif reading == "2":
         return 2, "offline"
-    elif reading == '3':
+    elif reading == "3":
         return 1, "unknown"
     return 3, "unexpected state"
 
@@ -62,57 +62,58 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
         if len(line) == 2:
             element_id, reading = line
         else:
-            element_id = ''
+            element_id = ""
             reading = line[0]
 
         if item_name_oracle_diva_csm(name, element_id) == item:
             return status_result_oracle_diva_csm(reading)
 
 
-check_info['oracle_diva_csm'] = {
+check_info["oracle_diva_csm"] = {
     "check_function": lambda item, params, info: check_oracle_diva_csm_status(
-        "Library", 0, item, params, info),
+        "Library", 0, item, params, info
+    ),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
     "service_description": "DIVA Status %s",
     "snmp_info": [
-        (".1.3.6.1.4.1.110901.1.2.1.1.1", ['1', '2']),  # lib status
-        (".1.3.6.1.4.1.110901.1.2.2.1.1", ['3', '8']),  # drive status
-        (".1.3.6.1.4.1.110901.1.3.1.1", ['2', '4']),  # actor status
-        (".1.3.6.1.4.1.110901.1.4", ['1']),  # archive status
+        (".1.3.6.1.4.1.110901.1.2.1.1.1", ["1", "2"]),  # lib status
+        (".1.3.6.1.4.1.110901.1.2.2.1.1", ["3", "8"]),  # drive status
+        (".1.3.6.1.4.1.110901.1.3.1.1", ["2", "4"]),  # actor status
+        (".1.3.6.1.4.1.110901.1.4", ["1"]),  # archive status
         (
             ".1.3.6.1.4.1.110901.1.4",
-            [
-                '2',  # object count
-                '4',  # remaining size
-                '5'
-            ]),  # total size
-        (".1.3.6.1.4.1.110901.1.4", ['3']),  # blank tape count
+            ["2", "4", "5"],  # object count  # remaining size
+        ),  # total size
+        (".1.3.6.1.4.1.110901.1.4", ["3"]),  # blank tape count
     ],
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
 }
 
-check_info['oracle_diva_csm.drive'] = {
+check_info["oracle_diva_csm.drive"] = {
     "check_function": lambda item, params, info: check_oracle_diva_csm_status(
-        "Drive", 1, item, params, info),
+        "Drive", 1, item, params, info
+    ),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
     "service_description": "DIVA Status %s",
 }
 
-check_info['oracle_diva_csm.actor'] = {
+check_info["oracle_diva_csm.actor"] = {
     "check_function": lambda item, params, info: check_oracle_diva_csm_status(
-        "Actor", 2, item, params, info),
+        "Actor", 2, item, params, info
+    ),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
     "service_description": "DIVA Status %s",
 }
 
-check_info['oracle_diva_csm.archive'] = {
+check_info["oracle_diva_csm.archive"] = {
     "check_function": lambda item, params, info: check_oracle_diva_csm_status(
-        "Manager", 3, item, params, info),
+        "Manager", 3, item, params, info
+    ),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
     "service_description": "DIVA Status %s",
 }
 
-#.
+# .
 #   .--Managed Objects-----------------------------------------------------.
 #   |              __  __                                  _               |
 #   |             |  \/  | __ _ _ __   __ _  __ _  ___  __| |              |
@@ -140,21 +141,36 @@ def check_oracle_diva_csm_objects(item, params, info):
         object_count, remaining_size, total_size = map(int, info[4][0])
 
         infotext = "managed objects: %s, remaining size: %s GB of %s GB" % (
-            object_count, remaining_size, total_size)
+            object_count,
+            remaining_size,
+            total_size,
+        )
 
-        return 0, infotext, [("managed_object_count", object_count),
-                             ("storage_used", (total_size - remaining_size) * GB, None, None, 0,
-                              total_size * GB)]
+        return (
+            0,
+            infotext,
+            [
+                ("managed_object_count", object_count),
+                (
+                    "storage_used",
+                    (total_size - remaining_size) * GB,
+                    None,
+                    None,
+                    0,
+                    total_size * GB,
+                ),
+            ],
+        )
 
 
-check_info['oracle_diva_csm.objects'] = {
+check_info["oracle_diva_csm.objects"] = {
     "check_function": check_oracle_diva_csm_objects,
     "inventory_function": inventory_oracle_diva_csm_objects,
     "has_perfdata": True,
     "service_description": "DIVA Managed Objects",
 }
 
-#.
+# .
 #   .--Tapes---------------------------------------------------------------.
 #   |                      _____                                           |
 #   |                     |_   _|_ _ _ __   ___  ___                       |
@@ -169,16 +185,14 @@ oracle_diva_csm_tapes_default_levels = (5, 1)  # number of remaining blank tapes
 
 def inventory_oracle_diva_csm_tapes(info):
     if len(info) > 5 and len(info[5]) > 0 and len(info[5][0]) > 0:
-        yield None, 'oracle_diva_csm_tapes_default_levels'
+        yield None, "oracle_diva_csm_tapes_default_levels"
 
 
 def check_oracle_diva_csm_tapes(item, params, info):
     if len(info) > 5 and len(info[5]) > 0 and len(info[5][0]) > 0:
         blank_tapes = int(info[5][0][0])
         warn, crit = params
-        state = blank_tapes <= crit and 2 \
-            or blank_tapes <= warn and 1 \
-            or 0
+        state = blank_tapes <= crit and 2 or blank_tapes <= warn and 1 or 0
 
         infotext = "blank tapes %d" % blank_tapes
         if state > 0:
@@ -187,7 +201,7 @@ def check_oracle_diva_csm_tapes(item, params, info):
         return state, infotext, [("tapes_free", blank_tapes)]
 
 
-check_info['oracle_diva_csm.tapes'] = {
+check_info["oracle_diva_csm.tapes"] = {
     "check_function": check_oracle_diva_csm_tapes,
     "inventory_function": inventory_oracle_diva_csm_tapes,
     "group": "blank_tapes",

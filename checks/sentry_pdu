@@ -4,43 +4,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+_STATE_TO_MONSTATE = {
+    "unknown": 3,
+}
 
-def inventory_sentry_pdu(info):
-    for line in info:
-        yield line[0], int(line[1])
+
+def inventory_sentry_pdu(section):
+    yield from (
+        (
+            name,
+            {"discovered_state": pdu.state},
+        )
+        for name, pdu in section.items()
+    )
 
 
-def check_sentry_pdu(item, params, info):
-    states = {
-        0: "off",
-        1: "on",
-        2: "off wait",
-        3: "on wait",
-        4: "off error",
-        5: "on error",
-        6: "no comm",
-    }
+def check_sentry_pdu(item, params, section):
+    if not (pdu := section.get(item)):
+        return
 
-    for name, state, power_str in info:
-        if item == name:
-            required_state = params
-            # The Wato rule returns eighter on or off
-            if required_state == 'on':
-                required_state = 1
-            elif required_state == 'off':
-                required_state = 0
-            state = int(state)
-            infotext = "Status: %s" % states[state]
-            if state != required_state:
-                yield 2, infotext
-            else:
-                yield 0, infotext
+    infotext = "Status: %s" % pdu.state
+    if pdu.state != params.get(
+        "required_state",
+        params["discovered_state"],
+    ):
+        yield 2, infotext
+    else:
+        yield _STATE_TO_MONSTATE.get(
+            pdu.state,
+            0,
+        ), infotext
 
-            if power_str:
-                power = int(power_str)
-                infotext = "Power: %s Watt" % power
-                perfdata = [('power', power)]
-                yield 0, infotext, perfdata
+    if pdu.power:
+        infotext = "Power: %s Watt" % pdu.power
+        perfdata = [("power", pdu.power)]
+        yield 0, infotext, perfdata
 
 
 check_info["sentry_pdu"] = {
@@ -48,6 +46,4 @@ check_info["sentry_pdu"] = {
     "inventory_function": inventory_sentry_pdu,
     "service_description": "Plug %s",
     "group": "plugs",
-    "snmp_info": (".1.3.6.1.4.1.1718.3.2.2.1", [3, 5, 12]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.1718.3",
 }

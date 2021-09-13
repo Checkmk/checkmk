@@ -6,124 +6,160 @@
 
 # pylint: disable=protected-access
 
-import re
-
 from typing import Dict, List
 
-import pytest  # type: ignore[import]
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName
+# No stub file
+from tests.testlib.base import Scenario
+
+from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
-
-from cmk.base import config
-from cmk.base import check_table
+from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.check_utils import Service
+from cmk.base.check_table import HostCheckTable
+from cmk.base.check_utils import Service, ServiceID
 
 
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
-    "hostname,expected_result",
+    "hostname_str,expected_result",
     [
         ("empty-host", {}),
         # Skip the autochecks automatically for ping hosts
         ("ping-host", {}),
-        ("no-autochecks", {
-            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"/dev/sda",
-                parameters={'levels': (35, 40)},
-                description=u'Temperature SMART /dev/sda',
-            ),
-        }),
+        (
+            "no-autochecks",
+            {
+                (CheckPluginName("smart_temp"), "/dev/sda"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="/dev/sda",
+                    parameters={"levels": (35, 40)},
+                    description="Temperature SMART /dev/sda",
+                ),
+            },
+        ),
         # Static checks overwrite the autocheck definitions
-        ("autocheck-overwrite", {
-            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"/dev/sda",
-                parameters={'levels': (35, 40)},
-                description=u'Temperature SMART /dev/sda',
-            ),
-            (CheckPluginName('smart_temp'), '/dev/sdb'): Service(
-                check_plugin_name=CheckPluginName('smart_temp'),
-                item=u'/dev/sdb',
-                parameters={'is_autocheck': True},
-                description=u'Temperature SMART /dev/sdb',
-            ),
-        }),
-        ("ignore-not-existing-checks", {}),
-        ("ignore-disabled-rules", {
-            (CheckPluginName('smart_temp'), 'ITEM2'): Service(
-                check_plugin_name=CheckPluginName('smart_temp'),
-                item=u"ITEM2",
-                parameters={'levels': (35, 40)},
-                description=u'Temperature SMART ITEM2',
-            ),
-        }),
-        ("static-check-overwrite", {
-            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"/dev/sda",
-                parameters={
-                    'levels': (35, 40),
-                    'rule': 1
-                },
-                description=u'Temperature SMART /dev/sda',
-            )
-        }),
-        ("node1", {
-            (CheckPluginName('smart_temp'), 'auto-not-clustered'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"auto-not-clustered",
-                parameters={},
-                description=u'Temperature SMART auto-not-clustered',
-            ),
-            (CheckPluginName('smart_temp'), 'static-node1'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"static-node1",
-                parameters={'levels': (35, 40)},
-                description=u'Temperature SMART static-node1'),
-        }),
-        ("cluster1", {
-            (CheckPluginName('smart_temp'), 'static-cluster'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"static-cluster",
-                parameters={'levels': (35, 40)},
-                description=u'Temperature SMART static-cluster',
-            ),
-            (CheckPluginName('smart_temp'), 'auto-clustered'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"auto-clustered",
-                parameters={'levels': (35, 40)},
-                description=u'Temperature SMART auto-clustered',
-            ),
-        }),
-    ])
-def test_get_check_table(monkeypatch, hostname, expected_result):
+        (
+            "autocheck-overwrite",
+            {
+                (CheckPluginName("smart_temp"), "/dev/sda"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="/dev/sda",
+                    parameters={"levels": (35, 40)},
+                    description="Temperature SMART /dev/sda",
+                ),
+                (CheckPluginName("smart_temp"), "/dev/sdb"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="/dev/sdb",
+                    parameters={"is_autocheck": True},
+                    description="Temperature SMART /dev/sdb",
+                ),
+            },
+        ),
+        (
+            "ignore-not-existing-checks",
+            {
+                (CheckPluginName("bla_blub"), "ITEM"): Service(
+                    check_plugin_name=CheckPluginName("bla_blub"),
+                    item="ITEM",
+                    description="Blub ITEM",
+                    parameters={},
+                ),
+                (CheckPluginName("blub_bla"), "ITEM"): Service(
+                    check_plugin_name=CheckPluginName("blub_bla"),
+                    item="ITEM",
+                    description="Unimplemented check blub_bla / ITEM",
+                    parameters=None,
+                ),
+            },
+        ),
+        (
+            "ignore-disabled-rules",
+            {
+                (CheckPluginName("smart_temp"), "ITEM2"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="ITEM2",
+                    parameters={"levels": (35, 40)},
+                    description="Temperature SMART ITEM2",
+                ),
+            },
+        ),
+        (
+            "static-check-overwrite",
+            {
+                (CheckPluginName("smart_temp"), "/dev/sda"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="/dev/sda",
+                    parameters={"levels": (35, 40), "rule": 1},
+                    description="Temperature SMART /dev/sda",
+                )
+            },
+        ),
+        (
+            "node1",
+            {
+                (CheckPluginName("smart_temp"), "auto-not-clustered"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="auto-not-clustered",
+                    parameters={},
+                    description="Temperature SMART auto-not-clustered",
+                ),
+                (CheckPluginName("smart_temp"), "static-node1"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="static-node1",
+                    parameters={"levels": (35, 40)},
+                    description="Temperature SMART static-node1",
+                ),
+            },
+        ),
+        (
+            "cluster1",
+            {
+                (CheckPluginName("smart_temp"), "static-cluster"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="static-cluster",
+                    parameters={"levels": (35, 40)},
+                    description="Temperature SMART static-cluster",
+                ),
+                (CheckPluginName("smart_temp"), "auto-clustered"): Service(
+                    check_plugin_name=CheckPluginName("smart_temp"),
+                    item="auto-clustered",
+                    parameters={"levels": (35, 40)},
+                    description="Temperature SMART auto-clustered",
+                ),
+            },
+        ),
+    ],
+)
+def test_get_check_table(
+    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: HostCheckTable
+) -> None:
+    hostname = HostName(hostname_str)
     autochecks = {
-        "ping-host": [Service(
-            CheckPluginName("smart_temp"),
-            "bla",
-            u'Temperature SMART bla',
-            {},
-        )],
+        "ping-host": [
+            Service(
+                CheckPluginName("smart_temp"),
+                "bla",
+                "Temperature SMART bla",
+                {},
+            )
+        ],
         "autocheck-overwrite": [
             Service(
-                CheckPluginName('smart_temp'),
-                '/dev/sda',
-                u'Temperature SMART /dev/sda',
+                CheckPluginName("smart_temp"),
+                "/dev/sda",
+                "Temperature SMART /dev/sda",
                 {"is_autocheck": True},
             ),
             Service(
-                CheckPluginName('smart_temp'),
-                '/dev/sdb',
-                u'Temperature SMART /dev/sdb',
+                CheckPluginName("smart_temp"),
+                "/dev/sdb",
+                "Temperature SMART /dev/sdb",
                 {"is_autocheck": True},
             ),
         ],
@@ -131,7 +167,7 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
             Service(
                 CheckPluginName("bla_blub"),
                 "ITEM",
-                u'Blub ITEM',
+                "Blub ITEM",
                 {},
             ),
         ],
@@ -139,15 +175,15 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
             Service(
                 CheckPluginName("smart_temp"),
                 "auto-clustered",
-                u"Temperature SMART auto-clustered",
+                "Temperature SMART auto-clustered",
                 {},
             ),
             Service(
                 CheckPluginName("smart_temp"),
                 "auto-not-clustered",
-                u'Temperature SMART auto-not-clustered',
+                "Temperature SMART auto-not-clustered",
                 {},
-            )
+            ),
         ],
     }
 
@@ -159,68 +195,79 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
         "static_checks",
         {
             "temperature": [
-                (('smart.temp', '/dev/sda', {}), [], ["no-autochecks", "autocheck-overwrite"]),
-                (('blub.bla', 'ITEM', {}), [], ["ignore-not-existing-checks"]),
-                (('smart.temp', 'ITEM1', {}), [], ["ignore-disabled-rules"], {
-                    "disabled": True
-                }),
-                (('smart.temp', 'ITEM2', {}), [], ["ignore-disabled-rules"]),
-                (('smart.temp', '/dev/sda', {
-                    "rule": 1
-                }), [], ["static-check-overwrite"]),
-                (('smart.temp', '/dev/sda', {
-                    "rule": 2
-                }), [], ["static-check-overwrite"]),
-                (('smart.temp', 'static-node1', {}), [], ["node1"]),
-                (('smart.temp', 'static-cluster', {}), [], ["cluster1"]),
+                (("smart.temp", "/dev/sda", {}), [], ["no-autochecks", "autocheck-overwrite"]),
+                (("blub.bla", "ITEM", {}), [], ["ignore-not-existing-checks"]),
+                (("smart.temp", "ITEM1", {}), [], ["ignore-disabled-rules"], {"disabled": True}),
+                (("smart.temp", "ITEM2", {}), [], ["ignore-disabled-rules"]),
+                (("smart.temp", "/dev/sda", {"rule": 1}), [], ["static-check-overwrite"]),
+                (("smart.temp", "/dev/sda", {"rule": 2}), [], ["static-check-overwrite"]),
+                (("smart.temp", "static-node1", {}), [], ["node1"]),
+                (("smart.temp", "static-cluster", {}), [], ["cluster1"]),
             ]
         },
     )
-    ts.set_ruleset("clustered_services", [
-        ([], ['node1'], [u'Temperature SMART auto-clustered$']),
-    ])
+    ts.set_ruleset(
+        "clustered_services",
+        [
+            ([], ["node1"], ["Temperature SMART auto-clustered$"]),
+        ],
+    )
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
 
     assert check_table.get_check_table(hostname) == expected_result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-@pytest.mark.parametrize("hostname, expected_result", [
-    ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
-    ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
-])
-def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
+@pytest.mark.usefixtures("fix_register")
+@pytest.mark.parametrize(
+    "hostname_str, expected_result",
+    [
+        ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
+        ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
+    ],
+)
+def test_get_check_table_of_mgmt_boards(
+    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: List[ServiceID]
+) -> None:
+    hostname = HostName(hostname_str)
     autochecks = {
         "mgmt-board-ipmi": [
-            Service(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X",
-                    "Management Interface: IPMI Sensor TEMP X", {}),
+            Service(
+                CheckPluginName("mgmt_ipmi_sensors"),
+                "TEMP X",
+                "Management Interface: IPMI Sensor TEMP X",
+                {},
+            ),
         ],
         "ipmi-host": [
             Service(CheckPluginName("ipmi_sensors"), "TEMP Y", "IPMI Sensor TEMP Y", {}),
-        ]
+        ],
     }
 
-    ts = Scenario().add_host("mgmt-board-ipmi",
-                             tags={
-                                 'piggyback': 'auto-piggyback',
-                                 'networking': 'lan',
-                                 'address_family': 'no-ip',
-                                 'criticality': 'prod',
-                                 'snmp_ds': 'no-snmp',
-                                 'site': 'heute',
-                                 'agent': 'no-agent'
-                             })
-    ts.add_host("ipmi-host",
-                tags={
-                    'piggyback': 'auto-piggyback',
-                    'networking': 'lan',
-                    'agent': 'cmk-agent',
-                    'criticality': 'prod',
-                    'snmp_ds': 'no-snmp',
-                    'site': 'heute',
-                    'address_family': 'ip-v4-only'
-                })
+    ts = Scenario().add_host(
+        "mgmt-board-ipmi",
+        tags={
+            "piggyback": "auto-piggyback",
+            "networking": "lan",
+            "address_family": "no-ip",
+            "criticality": "prod",
+            "snmp_ds": "no-snmp",
+            "site": "heute",
+            "agent": "no-agent",
+        },
+    )
+    ts.add_host(
+        "ipmi-host",
+        tags={
+            "piggyback": "auto-piggyback",
+            "networking": "lan",
+            "agent": "cmk-agent",
+            "criticality": "prod",
+            "snmp_ds": "no-snmp",
+            "site": "heute",
+            "address_family": "ip-v4-only",
+        },
+    )
     ts.set_option("management_protocol", {"mgmt-board-ipmi": "ipmi"})
 
     config_cache = ts.apply(monkeypatch)
@@ -230,57 +277,64 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 
 
 # verify static check outcome, including timespecific params
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
-    "hostname,expected_result",
+    "hostname_str,expected_result",
     [
         ("df_host", [(CheckPluginName("df"), "/snap/core/9066")]),
         # old format, without TimespecificParamList
         ("df_host_1", [(CheckPluginName("df"), "/snap/core/9067")]),
         ("df_host_2", [(CheckPluginName("df"), "/snap/core/9068")]),
-    ])
-def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result):
+    ],
+)
+def test_get_check_table_of_static_check(
+    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: List[ServiceID]
+) -> None:
+    hostname = HostName(hostname_str)
     static_checks = {
         "df_host": [
-            Service(CheckPluginName('df'), '/snap/core/9066', u'Filesystem /snap/core/9066', [{
-                'tp_values': [('24X7', {
-                    'inodes_levels': None
-                })],
-                'tp_default_value': {}
-            }, {
-                'trend_range': 24,
-                'show_levels': 'onmagic',
-                'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
-                'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
-            }]),
+            Service(
+                CheckPluginName("df"),
+                "/snap/core/9066",
+                "Filesystem /snap/core/9066",
+                [
+                    {"tp_values": [("24X7", {"inodes_levels": None})], "tp_default_value": {}},
+                    {
+                        "trend_range": 24,
+                        "show_levels": "onmagic",
+                        "inodes_levels": (10.0, 5.0),
+                        "magic_normsize": 20,
+                        "show_inodes": "onlow",
+                        "levels": (80.0, 90.0),
+                        "show_reserved": False,
+                        "levels_low": (50.0, 60.0),
+                        "trend_perfdata": True,
+                    },
+                ],
+            ),
         ],
         "df_host_1": [
             Service(
-                CheckPluginName('df'), '/snap/core/9067', u'Filesystem /snap/core/9067', {
-                    'trend_range': 24,
-                    'show_levels': 'onmagic',
-                    'inodes_levels': (10.0, 5.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'levels': (80.0, 90.0),
-                    'tp_default_value': {
-                        'levels': (87.0, 90.0)
-                    },
-                    'show_reserved': False,
-                    'tp_values': [('24X7', {
-                        'inodes_levels': None
-                    })],
-                    'levels_low': (50.0, 60.0),
-                    'trend_perfdata': True
-                })
+                CheckPluginName("df"),
+                "/snap/core/9067",
+                "Filesystem /snap/core/9067",
+                {
+                    "trend_range": 24,
+                    "show_levels": "onmagic",
+                    "inodes_levels": (10.0, 5.0),
+                    "magic_normsize": 20,
+                    "show_inodes": "onlow",
+                    "levels": (80.0, 90.0),
+                    "tp_default_value": {"levels": (87.0, 90.0)},
+                    "show_reserved": False,
+                    "tp_values": [("24X7", {"inodes_levels": None})],
+                    "levels_low": (50.0, 60.0),
+                    "trend_perfdata": True,
+                },
+            )
         ],
         "df_host_2": [
-            Service(CheckPluginName('df'), '/snap/core/9068', u'Filesystem /snap/core/9068', None)
+            Service(CheckPluginName("df"), "/snap/core/9068", "Filesystem /snap/core/9068", None)
         ],
     }
 
@@ -292,39 +346,57 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
         "static_checks",
         {
             "filesystem": [
-                (('df', '/snap/core/9066', [{
-                    'tp_values': [('24X7', {
-                        'inodes_levels': None
-                    })],
-                    'tp_default_value': {}
-                }, {
-                    'trend_range': 24,
-                    'show_levels': 'onmagic',
-                    'inodes_levels': (10.0, 5.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'levels': (80.0, 90.0),
-                    'show_reserved': False,
-                    'levels_low': (50.0, 60.0),
-                    'trend_perfdata': True
-                }]), [], ["df_host"]),
-                (('df', '/snap/core/9067', [{
-                    'tp_values': [('24X7', {
-                        'inodes_levels': None
-                    })],
-                    'tp_default_value': {}
-                }, {
-                    'trend_range': 24,
-                    'show_levels': 'onmagic',
-                    'inodes_levels': (10.0, 5.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'levels': (80.0, 90.0),
-                    'show_reserved': False,
-                    'levels_low': (50.0, 60.0),
-                    'trend_perfdata': True
-                }]), [], ["df_host_1"]),
-                (('df', '/snap/core/9068', None), [], ["df_host_2"]),
+                (
+                    (
+                        "df",
+                        "/snap/core/9066",
+                        [
+                            {
+                                "tp_values": [("24X7", {"inodes_levels": None})],
+                                "tp_default_value": {},
+                            },
+                            {
+                                "trend_range": 24,
+                                "show_levels": "onmagic",
+                                "inodes_levels": (10.0, 5.0),
+                                "magic_normsize": 20,
+                                "show_inodes": "onlow",
+                                "levels": (80.0, 90.0),
+                                "show_reserved": False,
+                                "levels_low": (50.0, 60.0),
+                                "trend_perfdata": True,
+                            },
+                        ],
+                    ),
+                    [],
+                    ["df_host"],
+                ),
+                (
+                    (
+                        "df",
+                        "/snap/core/9067",
+                        [
+                            {
+                                "tp_values": [("24X7", {"inodes_levels": None})],
+                                "tp_default_value": {},
+                            },
+                            {
+                                "trend_range": 24,
+                                "show_levels": "onmagic",
+                                "inodes_levels": (10.0, 5.0),
+                                "magic_normsize": 20,
+                                "show_inodes": "onlow",
+                                "levels": (80.0, 90.0),
+                                "show_reserved": False,
+                                "levels_low": (50.0, 60.0),
+                                "trend_perfdata": True,
+                            },
+                        ],
+                    ),
+                    [],
+                    ["df_host_1"],
+                ),
+                (("df", "/snap/core/9068", None), [], ["df_host_2"]),
             ],
         },
     )
@@ -335,103 +407,35 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
 
 
-@pytest.fixture(name="service_list")
-def _service_list():
-    return [
-        Service(
-            check_plugin_name=CheckPluginName("plugin_%s" % d),
-            item="item",
-            description="description %s" % d,
-            parameters={},
-        ) for d in "FDACEB"
-    ]
-
-
-def test_get_sorted_check_table_cmc(monkeypatch, service_list):
-    monkeypatch.setattr(config, "is_cmc", lambda: True)
-    monkeypatch.setattr(check_table, "get_check_table",
-                        lambda *a, **kw: {s.id(): s for s in service_list})
-
-    # all arguments are ignored in test
-    sorted_service_list = check_table.get_sorted_service_list(
-        "",
-        filter_mode=None,
-        skip_ignored=True,
-    )
-    assert sorted_service_list == sorted(service_list, key=lambda s: s.description)
-
-
-def test_get_sorted_check_table_no_cmc(monkeypatch, service_list):
-    monkeypatch.setattr(config, "is_cmc", lambda: False)
-    monkeypatch.setattr(check_table, "get_check_table",
-                        lambda *a, **kw: {s.id(): s for s in service_list})
-    monkeypatch.setattr(
-        config, "service_depends_on", lambda _hn, descr: {
-            "description A": ["description C"],
-            "description B": ["description D"],
-            "description D": ["description A", "description F"],
-        }.get(descr, []))
-
-    # all arguments are ignored in test
-    sorted_service_list = check_table.get_sorted_service_list(
-        "",
-        filter_mode=None,
-        skip_ignored=True,
-    )
-    assert [s.description for s in sorted_service_list] == [
-        "description C",  #
-        "description E",  # no deps, alphabetical order
-        "description F",  #
-        "description A",
-        "description D",
-        "description B",
-    ]
-
-
-def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
-    monkeypatch.setattr(config, "is_cmc", lambda: False)
-    monkeypatch.setattr(check_table, "get_check_table",
-                        lambda *a, **kw: {s.id(): s for s in service_list})
-    monkeypatch.setattr(
-        config, "service_depends_on", lambda _hn, descr: {
-            "description A": ["description B"],
-            "description B": ["description D"],
-            "description D": ["description A"],
-        }.get(descr, []))
-
-    with pytest.raises(MKGeneralException,
-                       match=re.escape(
-                           "Cyclic service dependency of host MyHost. Problematic are:"
-                           " 'description A' (plugin_A / item), 'description B' (plugin_B / item),"
-                           " 'description D' (plugin_D / item)")):
-        _ = check_table.get_sorted_service_list(
-            "MyHost",
-            filter_mode=None,
-            skip_ignored=True,
-        )
-
-
-@pytest.mark.parametrize("check_group_parameters", [
-    {},
-    {
-        'levels': (4, 5, 6, 7),
-    },
-])
-def test_check_table__get_static_check_entries(monkeypatch, check_group_parameters):
-    hostname = "hostname"
+@pytest.mark.parametrize(
+    "check_group_parameters",
+    [
+        {},
+        {
+            "levels": (4, 5, 6, 7),
+        },
+    ],
+)
+def test_check_table__get_static_check_entries(
+    monkeypatch: MonkeyPatch, check_group_parameters: LegacyCheckParameters
+) -> None:
+    hostname = HostName("hostname")
     static_parameters = {
-        'levels': (1, 2, 3, 4),
+        "levels": (1, 2, 3, 4),
     }
     static_checks: Dict[str, List] = {
-        "ps": [(('ps', 'item', static_parameters), [], [hostname], {})],
+        "ps": [(("ps", "item", static_parameters), [], [hostname], {})],
     }
 
     ts = Scenario().add_host(hostname)
     ts.set_option("static_checks", static_checks)
 
-    ts.set_ruleset("checkgroup_parameters", {
-        'ps': [(check_group_parameters, [hostname], [], {})],
-    })
+    ts.set_ruleset(
+        "checkgroup_parameters",
+        {
+            "ps": [(check_group_parameters, [hostname], [], {})],
+        },
+    )
 
     config_cache = ts.apply(monkeypatch)
 
@@ -451,12 +455,12 @@ def test_check_table__get_static_check_entries(monkeypatch, check_group_paramete
             "ps",  # type: ignore
             None,  # type: ignore
             None,  # type: ignore
-        ))
+        ),
+    )
 
     host_config = config_cache.get_host_config(hostname)
     static_check_parameters = [
-        service.parameters
-        for service in check_table.HostCheckTable._get_static_check_entries(host_config)
+        service.parameters for service in check_table._get_static_check_entries(host_config)
     ]
 
     entries = config._get_checkgroup_parameters(

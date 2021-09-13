@@ -560,137 +560,141 @@ def process_logfile(section, filestate, debug):
             raise
         return u"[[[%s:cannotopen]]]\n" % section.name_write, []
 
-    header = u"[[[%s]]]\n" % section.name_write
+    try:
+        header = u"[[[%s]]]\n" % section.name_write
 
-    stat = os.stat(section.name_fs)
-    inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
-    # If we have never seen this file before, we set the inode to -1
-    prev_inode = filestate.get('inode', -1)
-    filestate['inode'] = inode
+        stat = os.stat(section.name_fs)
+        inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
+        # If we have never seen this file before, we set the inode to -1
+        prev_inode = filestate.get('inode', -1)
+        filestate['inode'] = inode
 
-    # Look at which file offset we have finished scanning the logfile last time.
-    offset = filestate.get('offset')
-    # Set the current pointer to the file end
-    filestate['offset'] = stat.st_size
+        # Look at which file offset we have finished scanning the logfile last time.
+        offset = filestate.get('offset')
+        # Set the current pointer to the file end
+        filestate['offset'] = stat.st_size
 
-    # If we have never seen this file before, we do not want
-    # to make a fuss about ancient log messages... (unless configured to)
-    if offset is None and not (section.options.fromstart or debug):
-        return header, []
+        # If we have never seen this file before, we do not want
+        # to make a fuss about ancient log messages... (unless configured to)
+        if offset is None and not (section.options.fromstart or debug):
+            return header, []
 
-    # If the inode of the logfile has changed it has appearently
-    # been started from new (logfile rotation). At least we must
-    # assume that. In some rare cases (restore of a backup, etc)
-    # we are wrong and resend old log messages
-    if prev_inode >= 0 and inode != prev_inode:
-        offset = None
+        # If the inode of the logfile has changed it has appearently
+        # been started from new (logfile rotation). At least we must
+        # assume that. In some rare cases (restore of a backup, etc)
+        # we are wrong and resend old log messages
+        if prev_inode >= 0 and inode != prev_inode:
+            offset = None
 
-    # Our previously stored offset is the current end ->
-    # no new lines in this file
-    if offset == stat.st_size:
-        return header, []
+        # Our previously stored offset is the current end ->
+        # no new lines in this file
+        if offset == stat.st_size:
+            return header, []
 
-    # If our offset is beyond the current end, the logfile has been
-    # truncated or wrapped while keeping the same inode. We assume
-    # that it contains all new data in that case and restart from
-    # beginning.
-    if offset is not None and offset > stat.st_size:
-        offset = None
+        # If our offset is beyond the current end, the logfile has been
+        # truncated or wrapped while keeping the same inode. We assume
+        # that it contains all new data in that case and restart from
+        # beginning.
+        if offset is not None and offset > stat.st_size:
+            offset = None
 
-    # now seek to offset where interesting data begins
-    log_iter.set_position(offset)
+        # now seek to offset where interesting data begins
+        log_iter.set_position(offset)
 
-    worst = -1
-    warnings_and_errors = []
-    lines_parsed = 0
-    start_time = time.time()
+        worst = -1
+        warnings_and_errors = []
+        lines_parsed = 0
+        start_time = time.time()
 
-    while True:
-        line = log_iter.next_line()
-        if line is None:
-            break  # End of file
+        while True:
+            line = log_iter.next_line()
+            if line is None:
+                break  # End of file
 
-        # Handle option maxlinesize
-        if section.options.maxlinesize is not None and len(line) > section.options.maxlinesize:
-            line = line[:section.options.maxlinesize] + u"[TRUNCATED]\n"
+            # Handle option maxlinesize
+            if section.options.maxlinesize is not None and len(line) > section.options.maxlinesize:
+                line = line[:section.options.maxlinesize] + u"[TRUNCATED]\n"
 
-        lines_parsed += 1
-        # Check if maximum number of new log messages is exceeded
-        if section.options.maxlines is not None and lines_parsed > section.options.maxlines:
-            warnings_and_errors.append(u"%s Maximum number (%d) of new log messages exceeded.\n" % (
-                section.options.overflow,
-                section.options.maxlines,
-            ))
-            worst = max(worst, section.options.overflow_level)
-            log_iter.skip_remaining()
-            break
+            lines_parsed += 1
+            # Check if maximum number of new log messages is exceeded
+            if section.options.maxlines is not None and lines_parsed > section.options.maxlines:
+                warnings_and_errors.append(
+                    u"%s Maximum number (%d) of new log messages exceeded.\n" % (
+                        section.options.overflow,
+                        section.options.maxlines,
+                    ))
+                worst = max(worst, section.options.overflow_level)
+                log_iter.skip_remaining()
+                break
 
-        # Check if maximum processing time (per file) is exceeded. Check only
-        # every 100'th line in order to save system calls
-        if section.options.maxtime is not None and lines_parsed % 100 == 10 \
-            and time.time() - start_time > section.options.maxtime:
-            warnings_and_errors.append(
-                u"%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
-                    section.options.overflow,
-                    section.options.maxtime,
-                ))
-            worst = max(worst, section.options.overflow_level)
-            log_iter.skip_remaining()
-            break
+            # Check if maximum processing time (per file) is exceeded. Check only
+            # every 100'th line in order to save system calls
+            if section.options.maxtime is not None and lines_parsed % 100 == 10 \
+                    and time.time() - start_time > section.options.maxtime:
+                warnings_and_errors.append(
+                    u"%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
+                        section.options.overflow,
+                        section.options.maxtime,
+                    ))
+                worst = max(worst, section.options.overflow_level)
+                log_iter.skip_remaining()
+                break
 
-        level = "."
-        for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
-
-            matches = pattern.search(line[:-1])
-            if matches:
-                level = lev
-                levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
-                worst = max(levelint, worst)
-
-                # TODO: the following for block should be a method of the iterator
-                # Check for continuation lines
-                for cont_pattern in cont_patterns:
-                    if isinstance(cont_pattern, int):  # add that many lines
-                        for _unused_x in range(cont_pattern):
-                            cont_line = log_iter.next_line()
-                            if cont_line is None:  # end of file
-                                break
-                            line = line[:-1] + "\1" + cont_line
-
-                    else:  # pattern is regex
-                        while True:
-                            cont_line = log_iter.next_line()
-                            if cont_line is None:  # end of file
-                                break
-
-                            if cont_pattern.search(cont_line[:-1]):
-                                line = line[:-1] + "\1" + cont_line
-                            else:
-                                log_iter.push_back_line(cont_line)  # sorry for stealing this line
-                                break
-
-                # Replacement
-                for replace in replacements:
-                    line = replace.replace('\\0', line.rstrip()) + "\n"
-                    for num, group in enumerate(matches.groups()):
-                        if group is not None:
-                            line = line.replace('\\%d' % (num + 1), group)
-
-                break  # matching rule found and executed
-
-        if level == "I":
             level = "."
-        if section.options.nocontext and level == '.':
-            continue
+            for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
 
-        out_line = "%s %s" % (level, line[:-1])
-        if sys.stdout.isatty():
-            out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace(
-                "\1", "\nCONT:"), TTY_COLORS['normal'])
-        warnings_and_errors.append("%s\n" % out_line)
+                matches = pattern.search(line[:-1])
+                if matches:
+                    level = lev
+                    levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
+                    worst = max(levelint, worst)
 
-    new_offset = log_iter.get_position()
-    log_iter.close()
+                    # TODO: the following for block should be a method of the iterator
+                    # Check for continuation lines
+                    for cont_pattern in cont_patterns:
+                        if isinstance(cont_pattern, int):  # add that many lines
+                            for _unused_x in range(cont_pattern):
+                                cont_line = log_iter.next_line()
+                                if cont_line is None:  # end of file
+                                    break
+                                line = line[:-1] + "\1" + cont_line
+
+                        else:  # pattern is regex
+                            while True:
+                                cont_line = log_iter.next_line()
+                                if cont_line is None:  # end of file
+                                    break
+
+                                if cont_pattern.search(cont_line[:-1]):
+                                    line = line[:-1] + "\1" + cont_line
+                                else:
+                                    log_iter.push_back_line(
+                                        cont_line)  # sorry for stealing this line
+                                    break
+
+                    # Replacement
+                    for replace in replacements:
+                        line = replace.replace('\\0', line.rstrip()) + "\n"
+                        for num, group in enumerate(matches.groups()):
+                            if group is not None:
+                                line = line.replace('\\%d' % (num + 1), group)
+
+                    break  # matching rule found and executed
+
+            if level == "I":
+                level = "."
+            if section.options.nocontext and level == '.':
+                continue
+
+            out_line = "%s %s" % (level, line[:-1])
+            if sys.stdout.isatty():
+                out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace(
+                    "\1", "\nCONT:"), TTY_COLORS['normal'])
+            warnings_and_errors.append("%s\n" % out_line)
+
+        new_offset = log_iter.get_position()
+    finally:
+        log_iter.close()
 
     filestate['offset'] = new_offset
 

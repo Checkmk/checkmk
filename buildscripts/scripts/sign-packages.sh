@@ -30,12 +30,9 @@ if ! type rpm >/dev/null 2>&1; then
     exit 1
 fi
 
-# /bauwelt/etc/.gnupg is mounted in RO mode, but the following gpg commands need RW access
-# to the directory. Copy the contents to the container for exclusive + RW access
-cp -a /bauwelt/etc/.gnupg /gnupg
-export GNUPGHOME=/gnupg
+export GNUPGHOME=$HOME/.gnupg
 
-function is_already_signed() {
+is_already_signed() {
     if [[ "$FILE_PATH" == *rpm ]]; then
         if rpm -qp "$FILE_PATH" --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
             return 0
@@ -52,7 +49,7 @@ function is_already_signed() {
     exit 1
 }
 
-function sign_package() {
+sign_package() {
     if [[ "$FILE_PATH" == *rpm ]]; then
         echo "$GPG_PASSPHRASE" |
             rpm \
@@ -113,12 +110,3 @@ for TRY in $(seq 5); do
 
     sleep 1
 done
-
-# TODO
-## Hashes der kopierten Dateien ablegen (werden später auf der Webseite angezeigt)
-#echo "+ Create HASHES file..."
-#sha256sum -- $TARGET/*.cma >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.tar.gz >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.rpm >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.deb >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.cmk >>$TARGET/HASHES || true

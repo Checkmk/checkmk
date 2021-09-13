@@ -17,9 +17,5 @@ description:
 item:
  The MSSQL instance name and the tablespace name separated by a space.
 
-inventory:
+discovery:
  One service is created for each tablespace.
-
-cluster:
- On a cluster the check just cumulates all results for each cluster node.
- The overall result state then reflects the worst state of all nodes.

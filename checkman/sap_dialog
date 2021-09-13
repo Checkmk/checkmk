@@ -17,7 +17,7 @@ description:
 item:
  The SAP system ID.
 
-inventory:
+discovery:
  One service is created for each SAP system ID which at least provides
  the {SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime}.
 

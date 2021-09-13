@@ -34,20 +34,19 @@ static void CopyFileWithLog(const std::filesystem::path &target,
     std::error_code ec;
     auto success = std::filesystem::copy_file(source, target, ec);
     if (success)
-        XLOG::l.i("Copy file '{}' to '{}' [OK]", source.u8string(),
-                  target.u8string());
+        XLOG::l.i("Copy file '{}' to '{}' [OK]", source, target);
     else
-        XLOG::l("Copy file '{}' to '{}' failed {}", source.u8string(),
-                target.u8string(), ErrorCodeToMessage(ec));
+        XLOG::l("Copy file '{}' to '{}' failed {}", source, target,
+                ErrorCodeToMessage(ec));
 }
 
 static bool RemoveFileWithLog(const std::filesystem::path &f) {
     std::error_code ec;
     auto success = std::filesystem::remove(f, ec);
     if (success || ec.value() == 0)
-        XLOG::l.i("Remove '{}' [OK]", f.u8string());
+        XLOG::l.i("Remove '{}' [OK]", f);
     else
-        XLOG::l("Remove '{}' {}", f.u8string(), ErrorCodeToMessage(ec));
+        XLOG::l("Remove '{}' {}", f, ErrorCodeToMessage(ec));
 
     //
     return success;
@@ -190,8 +189,7 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
                      fpath.u8string(), ::GetLastError());
 
     } catch (const std::exception &e) {
-        XLOG::l("Exception on create/write file '{}',  '{}'", fpath.u8string(),
-                e.what());
+        XLOG::l("Exception on create/write file '{}',  '{}'", fpath, e.what());
     }
     return false;
 }
@@ -214,8 +212,10 @@ static std::string GetTryKillMode() {
                   std::string(cma::cfg::defaults::kTryKillPluginProcess));
 }
 
-static const std::wstring TryToKillAllowedNames[] = {
+namespace {
+const std::array<std::wstring, 3> TryToKillAllowedNames = {
     L"cmk-update-agent.exe", L"mk_logwatch.exe", L"mk_jolokia.exe"};
+}
 
 [[nodiscard]] bool IsAllowedToKill(std::wstring_view proc_name) {
     auto try_kill_mode = GetTryKillMode();
@@ -229,7 +229,7 @@ static const std::wstring TryToKillAllowedNames[] = {
         if (in_list) return true;
 
         XLOG::l.w("Can't kill the process for file '{}' as not safe process",
-                  wtools::ConvertToUTF8(proc_name));
+                  wtools::ToUtf8(proc_name));
         return false;
     }
 
@@ -250,7 +250,7 @@ static const std::wstring TryToKillAllowedNames[] = {
         auto proc_name = GetProcessToKill(name);
         if (proc_name.empty()) {
             XLOG::l.w("Can't kill the process for file '{}'",
-                      wtools::ConvertToUTF8(name));
+                      wtools::ToUtf8(name));
             return false;
         }
 
@@ -259,7 +259,8 @@ static const std::wstring TryToKillAllowedNames[] = {
         if (!allowed_to_kill) return false;
 
         wtools::KillProcessFully(proc_name);
-        cma::tools::sleep(500ms);
+        constexpr auto delay = 500ms;
+        cma::tools::sleep(delay);
     }
 
     return false;
@@ -273,7 +274,7 @@ static const std::wstring TryToKillAllowedNames[] = {
 bool CheckAllFilesWritable(const std::string &Directory) {
     namespace fs = std::filesystem;
     bool all_writable = true;
-    for (auto &p : fs::recursive_directory_iterator(Directory)) {
+    for (const auto &p : fs::recursive_directory_iterator(Directory)) {
         std::error_code ec;
         auto const &path = p.path();
         if (fs::is_directory(path, ec)) continue;
@@ -282,17 +283,18 @@ bool CheckAllFilesWritable(const std::string &Directory) {
         auto path_string = path.wstring();
         if (path_string.empty()) continue;
 
-        auto handle = ::CreateFile(path_string.c_str(),  // file to open
-                                   GENERIC_WRITE,        // open for write
-                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                   nullptr,  // default security
-                                   OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL,  // normal file
-                                   nullptr);
+        auto *handle =
+            ::CreateFile(path_string.c_str(),                 // file to open
+                         GENERIC_WRITE,                       // open for write
+                         FILE_SHARE_READ | FILE_SHARE_WRITE,  // NOLINT
+                         nullptr,  // default security
+                         OPEN_EXISTING,
+                         FILE_ATTRIBUTE_NORMAL,  // normal file
+                         nullptr);
         if (wtools::IsGoodHandle(handle)) {
             ::CloseHandle(handle);
         } else {
-            XLOG::d("file '{}' is not writable, error {}", path.u8string(),
+            XLOG::d("file '{}' is not writable, error {}", path,
                     GetLastError());
             all_writable = false;
             break;
@@ -355,8 +357,7 @@ bool Process(const std::string &cap_name, ProcMode Mode,
                                                     kMaxAttemptsToStoreFile)
                                : StoreFile(full_path, data);
             if (!success)
-                XLOG::l("Can't store file '{}'",
-                        wtools::ConvertToUTF8(full_path));
+                XLOG::l("Can't store file '{}'", wtools::ToUtf8(full_path));
 
             std::error_code ec;
             if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
@@ -367,7 +368,7 @@ bool Process(const std::string &cap_name, ProcMode Mode,
                 FilesLeftOnDisk.push_back(full_path);
             else {
                 XLOG::l("Cannot remove '{}' error {}",
-                        wtools::ConvertToUTF8(full_path), ec.value());
+                        wtools::ToUtf8(full_path), ec.value());
             }
         } else if (Mode == ProcMode::list) {
             FilesLeftOnDisk.push_back(full_path);
@@ -415,10 +416,10 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
     std::vector<std::wstring> files_left;
     if (fs::exists(target_cap, ec)) {
         if (Process(target_cap.u8string(), ProcMode::remove, files_left)) {
-            XLOG::l.t("File '{}' uninstall-ed", target_cap.u8string());
+            XLOG::l.t("File '{}' uninstall-ed", target_cap);
             fs::remove(target_cap, ec);
             for (auto &name : files_left)
-                XLOG::l.i("\tRemoved '{}'", wtools::ConvertToUTF8(name));
+                XLOG::l.i("\tRemoved '{}'", wtools::ToUtf8(name));
             changed = true;
         }
     } else
@@ -428,10 +429,10 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
     files_left.clear();
     if (fs::exists(source_cap, ec)) {
         if (Process(source_cap.u8string(), ProcMode::install, files_left)) {
-            XLOG::l.t("File '{}' installed", source_cap.u8string());
+            XLOG::l.t("File '{}' installed", source_cap);
             fs::copy_file(source_cap, target_cap, ec);
             for (auto &name : files_left)
-                XLOG::l.i("\tAdded '{}'", wtools::ConvertToUTF8(name));
+                XLOG::l.i("\tAdded '{}'", wtools::ToUtf8(name));
             changed = true;
         }
     } else
@@ -439,59 +440,6 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
                   source_cap.u8string());
 
     return changed;
-}
-
-static void ConvertIniToBakery(const std::filesystem::path &bakery_yml,
-                               const std::filesystem::path &source_ini) {
-    auto yaml = upgrade::LoadIni(source_ini);
-
-    if (!yaml.has_value()) return;  // bad ini
-
-    XLOG::l.i("Creating Bakery file '{}'", bakery_yml.u8string());
-    std::ofstream ofs(bakery_yml);
-    if (ofs) {
-        ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
-        ofs << *yaml;
-    }
-    XLOG::l.i("Creating Bakery file SUCCESS");
-}
-
-// Replaces target with source
-// Removes target if source absent
-// For non-packaged agents convert ini to bakery.yml
-bool ReinstallIni(const std::filesystem::path &target_ini,
-                  const std::filesystem::path &source_ini) {
-    namespace fs = std::filesystem;
-    std::error_code ec;
-
-    auto packaged_agent = IsIniFileFromInstaller(source_ini);
-    if (packaged_agent)
-        XLOG::l.i(
-            "This is PACKAGED AGENT,"
-            "upgrading ini file to the bakery.yml will be skipped");
-
-    // remove old files
-    auto bakery_yml = cma::cfg::GetBakeryFile();
-    if (!packaged_agent) {
-        XLOG::l.i("Removing '{}'", bakery_yml.u8string());
-        fs::remove(bakery_yml, ec);
-    }
-
-    XLOG::l.i("Removing '{}'", target_ini.u8string());
-    fs::remove(target_ini, ec);
-
-    // if file doesn't exists we will leave
-    if (!fs::exists(source_ini, ec)) {
-        XLOG::l.i("No source ini, leaving");
-        return true;
-    }
-
-    if (!packaged_agent) ConvertIniToBakery(bakery_yml, source_ini);
-
-    XLOG::l.i("Copy init");
-    fs::copy_file(source_ini, target_ini, ec);
-
-    return true;
 }
 
 namespace details {
@@ -531,26 +479,25 @@ bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
     try {
         auto yaml = YAML::LoadFile(source_yaml.u8string());
         if (!yaml.IsDefined() || !yaml.IsMap()) {
-            XLOG::l("Supplied Yaml '{}' is bad", source_yaml.u8string());
+            XLOG::l("Supplied Yaml '{}' is bad", source_yaml);
             return false;
         }
 
         auto global = yaml["global"];
         if (!global.IsDefined() || !global.IsMap()) {
-            XLOG::l("Supplied Yaml '{}' has bad global section",
-                    source_yaml.u8string());
+            XLOG::l("Supplied Yaml '{}' has bad global section", source_yaml);
             return false;
         }
 
         auto install =
             cma::yml::GetVal(global, cma::cfg::vars::kInstall, false);
-        XLOG::l.i("Supplied yaml '{}' {}", source_yaml.u8string(),
+        XLOG::l.i("Supplied yaml '{}' {}", source_yaml,
                   install ? "to be installed" : "will not be installed");
         if (!install) return false;
 
     } catch (const std::exception &e) {
         XLOG::l.crit("Exception parsing supplied YAML file '{}' : '{}'",
-                     source_yaml.u8string(), e.what());
+                     source_yaml, e.what());
         return false;
     }
 
@@ -576,10 +523,9 @@ PairOfPath GetInstallPair(std::wstring_view name) {
 static void InstallCapFile() {
     auto [target_cap, source_cap] = GetInstallPair(files::kCapFile);
 
-    XLOG::l.t("Installing cap file '{}'", source_cap.u8string());
+    XLOG::l.t("Installing cap file '{}'", source_cap);
     if (NeedReinstall(target_cap, source_cap)) {
-        XLOG::l.i("Reinstalling '{}' with '{}'", target_cap.u8string(),
-                  source_cap.u8string());
+        XLOG::l.i("Reinstalling '{}' with '{}'", target_cap, source_cap);
         ReinstallCaps(target_cap, source_cap);
         return;
     }
@@ -590,10 +536,9 @@ static void InstallCapFile() {
 static void InstallYmlFile() {
     auto [target_yml, source_yml] = GetInstallPair(files::kInstallYmlFileW);
 
-    XLOG::l.t("Installing yml file '{}'", source_yml.u8string());
+    XLOG::l.t("Installing yml file '{}'", source_yml);
     if (NeedReinstall(target_yml, source_yml)) {
-        XLOG::l.i("Reinstalling '{}' with '{}'", target_yml.u8string(),
-                  source_yml.u8string());
+        XLOG::l.i("Reinstalling '{}' with '{}'", target_yml, source_yml);
         std::filesystem::path bakery_yml = cma::cfg::GetBakeryDir();
 
         bakery_yml /= files::kBakeryYmlFile;
@@ -611,9 +556,8 @@ static void PrintInstallCopyLog(std::string_view info_on_error,
     if (ec.value() == 0)
         XLOG::l.i("\tSuccess");
     else
-        XLOG::d("\t{} in '{}' out '{}' error [{}] '{}'", info_on_error,
-                in_file.u8string(), out_file.u8string(), ec.value(),
-                ec.message());
+        XLOG::d("\t{} in '{}' out '{}' error [{}] '{}'", info_on_error, in_file,
+                out_file, ec.value(), ec.message());
 }
 
 static std::string KillTrailingCR(std::string &&message) {
@@ -627,15 +571,14 @@ static std::string KillTrailingCR(std::string &&message) {
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
                        std::wstring_view source_dir,  // @root/install
-                       Mode mode) noexcept {
+                       Mode mode) {
     namespace fs = std::filesystem;
 
     std::error_code ec;
     fs::path target_file = target_dir;
     if (!fs::is_directory(target_dir, ec)) {
-        XLOG::l.i("Target Folder '{}' is suspicious [{}] '{}'",
-                  target_file.u8string(), ec.value(),
-                  KillTrailingCR(ec.message()));
+        XLOG::l.i("Target Folder '{}' is suspicious [{}] '{}'", target_file,
+                  ec.value(), KillTrailingCR(ec.message()));
         return false;
     }
 
@@ -643,8 +586,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
     fs::path source_file = source_dir;
     source_file /= filename;
 
-    XLOG::l.t("Copy file '{}' to '{}'", source_file.u8string(),
-              target_file.u8string());
+    XLOG::l.t("Copy file '{}' to '{}'", source_file, target_file);
 
     if (!fs::exists(source_file, ec)) {
         // special case, no source file => remove target file
@@ -654,13 +596,12 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
     }
 
     if (!cma::tools::IsValidRegularFile(source_file)) {
-        XLOG::l.i("File '{}' is bad", source_file.u8string());
+        XLOG::l.i("File '{}' is bad", source_file);
         return false;
     }
 
     if (mode == Mode::forced || NeedReinstall(target_file, source_file)) {
-        XLOG::l.i("Reinstalling '{}' with '{}'", target_file.u8string(),
-                  source_file.u8string());
+        XLOG::l.i("Reinstalling '{}' with '{}'", target_file, source_file);
 
         fs::copy_file(source_file, target_file,
                       fs::copy_options::overwrite_existing, ec);
@@ -755,13 +696,12 @@ bool ReInstall() {
     };
 
     try {
-        for (const auto [name, func] : data_vector) {
-            auto target = user_dir / name;
-            auto source = root_dir / name;
+        for (const auto &p : data_vector) {
+            auto target = user_dir / p.first;
+            auto source = root_dir / p.first;
 
-            XLOG::l.i("Forced Reinstalling '{}' with '{}'", target.u8string(),
-                      source.u8string());
-            func(target, source);
+            XLOG::l.i("Forced Reinstalling '{}' with '{}'", target, source);
+            p.second(target, source);
         }
 
         ReinstallYaml(bakery_dir / files::kBakeryYmlFile,

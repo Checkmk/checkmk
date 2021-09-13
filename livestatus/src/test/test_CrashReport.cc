@@ -5,6 +5,8 @@
 
 #include <filesystem>
 #include <fstream>
+#include <map>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -16,6 +18,8 @@
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "test/Utilities.h"
+class Comment;
+class Downtime;
 
 namespace fs = std::filesystem;
 
@@ -82,14 +86,20 @@ TEST_F(CrashReportFixture, TestDeleteIdWithNonExistingId) {
 }
 
 class CrashReportTableFixture : public CrashReportFixture {
+    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
+
 public:
-    NagiosCore core{paths_(), NagiosLimits{}, NagiosAuthorization{},
+    NagiosCore core{downtimes_,
+                    comments_,
+                    paths_(),
+                    NagiosLimits{},
+                    NagiosAuthorization{},
                     Encoding::utf8};
     TableCrashReports table{&core};
     const std::string header{"component;id\n"};
 
 private:
-    // cppcheck-suppress unusedPrivateFunction
     [[nodiscard]] NagiosPaths paths_() const {
         NagiosPaths p{};
         p._crash_reports_path = basepath;

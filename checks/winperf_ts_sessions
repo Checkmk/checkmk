@@ -35,25 +35,25 @@ def check_winperf_ts_sessions(_unused, params, info):
 
     state = 0
     state_txt = []
-    for val, key, title in [(active, 'active', 'Active'), (inactive, 'inactive', 'Inactive')]:
-        txt = '%d %s' % (val, title)
+    for val, key, title in [(active, "active", "Active"), (inactive, "inactive", "Inactive")]:
+        txt = "%d %s" % (val, title)
         if key in params:
             if val > params[key][0]:
                 state = 2
-                txt += '(!!)'
+                txt += "(!!)"
             elif val > params[key][1]:
                 state = max(state, 1)
-                txt += '(!)'
+                txt += "(!)"
         state_txt.append(txt)
 
-    perfdata = [('active', active), ('inactive', inactive)]
+    perfdata = [("active", active), ("inactive", inactive)]
     return state, ", ".join(state_txt), perfdata
 
 
 check_info["winperf_ts_sessions"] = {
-    'check_function': check_winperf_ts_sessions,
-    'inventory_function': inventory_winperf_ts_sessions,
-    'service_description': 'Sessions',
-    'has_perfdata': True,
-    'group': 'winperf_ts_sessions',
+    "check_function": check_winperf_ts_sessions,
+    "inventory_function": inventory_winperf_ts_sessions,
+    "service_description": "Sessions",
+    "has_perfdata": True,
+    "group": "winperf_ts_sessions",
 }

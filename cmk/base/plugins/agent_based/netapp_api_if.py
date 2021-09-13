@@ -4,21 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    Result,
-    State as state,
-    type_defs,
-)
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict, Union
+
+from .agent_based_api.v1 import register, Result
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils import interfaces, netapp_api
 
 MACList = List[Tuple[str, Optional[str]]]
@@ -34,7 +24,7 @@ class NICExtraInfo(TypedDict, total=False):
 ExtraInfo = Dict[str, NICExtraInfo]
 Section = Tuple[interfaces.Section, ExtraInfo]
 
-#<<<netapp_api_if:sep(9)>>>
+# <<<netapp_api_if:sep(9)>>>
 # interface clu1-01_clus1 use-failover-group unused       address 222.254.110.11  dns-domain-name none    is-auto-revert true     lif-uuid 3d682f64-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0a        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0a   is-home true    send_data 4265424  send_errors 0   recv_errors 0   instance_name clu1-01_clus1     recv_data 5988948
 # interface clu1-01_clus2 use-failover-group unused       address 222.254.110.12  dns-domain-name none    is-auto-revert true     lif-uuid 3d6817c9-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0b        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0b   is-home true    send_data 4389886  send_errors 0   recv_errors 0   instance_name clu1-01_clus2     recv_data 6113182
 
@@ -117,7 +107,7 @@ def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
                     ]
 
                     max_speed = 0
-                    min_speed = 1024**5
+                    min_speed = 1024 ** 5
                     for tmp_if, _ in mac_list:
                         if tmp_if == nic_name or "speed" not in ifaces[tmp_if]:
                             continue
@@ -157,27 +147,31 @@ def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
                     out_ucast=interfaces.saveint(values.get("send_packet")),
                     out_mcast=interfaces.saveint(values.get("send_mcasts")),
                     out_errors=interfaces.saveint(values.get("send_errors")),
-                    phys_address=interfaces.mac_address_from_hexstring(values.get(
-                        "mac-address", "")),
-                    speed_as_text=speed == 'auto' and 'auto' or '',
-                ))
+                    phys_address=interfaces.mac_address_from_hexstring(
+                        values.get("mac-address", "")
+                    ),
+                    speed_as_text=speed == "auto" and "auto" or "",
+                )
+            )
             if "home-port" in values:
-                extra_info.setdefault(nic_name, {}).update({
-                    "home_port": values["home-port"],
-                    "is_home": values.get("is-home") == "true",
-                })
+                extra_info.setdefault(nic_name, {}).update(
+                    {
+                        "home_port": values["home-port"],
+                        "is_home": values.get("is-home") == "true",
+                    }
+                )
 
     return nics, extra_info
 
 
 register.agent_section(
-    name='netapp_api_if',
+    name="netapp_api_if",
     parse_function=parse_netapp_api_if,
 )
 
 
 def discover_netapp_api_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -196,7 +190,7 @@ INFO_INCLUDED_MAP = {"dont_show_and_check": False}
 
 def check_netapp_api_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
 
@@ -254,7 +248,8 @@ def check_netapp_api_if(
                     if first_member:
                         yield Result(
                             state=state(mon_state),
-                            summary="Physical interfaces: %s(%s)" % (
+                            summary="Physical interfaces: %s(%s)"
+                            % (
                                 member_name,
                                 interfaces.statename(member_state),
                             ),
@@ -277,7 +272,7 @@ register.check_plugin(
     name="netapp_api_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_netapp_api_if,
     check_ruleset_name="if",

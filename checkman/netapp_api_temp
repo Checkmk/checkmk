@@ -13,7 +13,7 @@ description:
 item:
  Either {{Internal Shelf}} or {{Ambient Shelf}} followed by the name of the shelf
 
-inventory:
+discovery:
  Two summary services are created for each shelf. One for {Temperature Internal Shelfes}
  and one for {Temperature Ambient Shelfs}.
 

@@ -8,5 +8,5 @@ description:
  change to {WARN} if only 10 days are left and to {CRIT} if only 5 days are
  left until next maintenance is scheduled.
 
-inventory:
+discovery:
  One service is created.

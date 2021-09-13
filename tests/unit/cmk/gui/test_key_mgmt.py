@@ -6,12 +6,12 @@
 
 import time
 
-import cmk.gui.config as config
 import cmk.gui.key_mgmt as key_mgmt
+from cmk.gui.globals import user
 
 
-def test_key_mgmt_create_key(module_wide_request_context, monkeypatch):
-    monkeypatch.setattr(config.user, "id", "dingdöng")
+def test_key_mgmt_create_key(request_context, monkeypatch):
+    monkeypatch.setattr(user, "id", "dingdöng")
     monkeypatch.setattr(time, "time", lambda: 123)
 
     key_dict = key_mgmt.PageEditKey()._generate_key("älias", "passphra$e")

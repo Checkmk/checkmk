@@ -1,0 +1,15 @@
+Title: "Parameters for this service" was incomplete for clusters
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615543107
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The page <i>"Parameters of &lt;HOST&gt; / &lt;service&gt;"</i> showed
+incomplete information if the host was a cluster.
+The check parameters have been missing.
+

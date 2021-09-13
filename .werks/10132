@@ -1,0 +1,15 @@
+Title: Fixed acknowledgement type of shadow hosts/services
+Class: fix
+Compatible: compat
+Component: core
+Date: 1612346356
+Edition: cee
+Knowledge: doc
+Level: 3
+Version: 2.1.0i1
+
+The acknowledgement type of shadow hosts/services was always "none", even
+when the corresponding host/service is actually acknowledged.  Now we report
+"normal" in these cases, which is more correct.  Note that due to a
+limitation in cmcdump, we do not know if the acknowledgement is "sticky" or
+not.

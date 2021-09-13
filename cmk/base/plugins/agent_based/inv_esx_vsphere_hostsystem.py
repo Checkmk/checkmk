@@ -20,19 +20,18 @@
 # hardware.cpuPkg.vendor.0 intel
 # hardware.cpuPkg.vendor.1 intel
 
-from typing import Callable, Dict, Final, List, Optional, Tuple, TypedDict, Union
 import time
+from typing import Callable, Dict, Final, List, Optional, Tuple, TypedDict, Union
 
 from .agent_based_api.v1 import Attributes, register, type_defs
-from .esx_vsphere_hostsystem_section import Section
+from .utils.esx_vsphere import Section
 
 FIRST_ELEMENT: Final = lambda v: v[0]
 FIRST_ELEMENT_AS_FLOAT: Final = lambda v: float(v[0])
 JOIN_LIST: Final = " ".join
-SUB_SECTION = TypedDict("SUB_SECTION", {
-    "path": List[str],
-    "translation": Dict[str, Tuple[str, Callable]]
-})
+SUB_SECTION = TypedDict(
+    "SUB_SECTION", {"path": List[str], "translation": Dict[str, Tuple[str, Callable]]}
+)
 
 # This giant dict describes how the section translates into the different nodes of the inventory
 SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
@@ -61,15 +60,13 @@ SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
             "hardware.systemInfo.model": ("product", JOIN_LIST),
             "hardware.systemInfo.vendor": ("vendor", FIRST_ELEMENT),
             "hardware.systemInfo.uuid": ("uuid", FIRST_ELEMENT),
-            "hardware.systemInfo.0.ServiceTag": ("serial", FIRST_ELEMENT)
+            "hardware.systemInfo.0.ServiceTag": ("serial", FIRST_ELEMENT),
         },
     },
     "mem": {
         "path": ["hardware", "memory"],
-        "translation": {
-            "hardware.memorySize": ("total_ram_usable", FIRST_ELEMENT_AS_FLOAT)
-        },
-    }
+        "translation": {"hardware.memorySize": ("total_ram_usable", FIRST_ELEMENT_AS_FLOAT)},
+    },
 }
 
 
@@ -87,11 +84,12 @@ def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
         data: Dict[str, Union[None, str, float]] = {}
         for section_key, (inv_key, transform) in sub_section["translation"].items():
             if section_key in section:
-                data[inv_key] = transform(section[section_key])
+                # Found after update to 2.9.0. Seems to be a false positive
+                data[inv_key] = transform(section[section_key])  # pylint: disable=not-callable
 
         # Handle some corner cases for hw and sys
         if name == "hw":
-            if all([k in data for k in ["cpus", "cores", "threads"]]):
+            if all(k in data for k in ["cpus", "cores", "threads"]):
                 for inv_key, metric in (("cores_per_cpu", "cores"), ("threads_per_cpu", "threads")):
                     data[inv_key] = int(data[metric]) / int(data["cpus"])  # type: ignore[arg-type]
         if name == "sys":
@@ -100,7 +98,8 @@ def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
                 # ...but it is missing in some cases
                 try:
                     data["serial"] = section[
-                        "hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0"][0]
+                        "hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0"
+                    ][0]
                 except KeyError:
                     pass
 

@@ -9,6 +9,6 @@ description:
  It goes into {WARN} or {CRIT} status when the number of blank tapes below a
  configurable threshold.
 
-inventory:
+discovery:
  One service is created.
 

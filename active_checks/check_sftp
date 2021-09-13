@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import getopt
 import os
 import sys
 import time
-import getopt
+
 import paramiko  # type: ignore[import]
 
 
 def usage():
-    sys.stderr.write("""
+    sys.stderr.write(
+        """
 USAGE: check_sftp [OPTIONS] HOST
 
 OPTIONS:
@@ -30,7 +32,8 @@ OPTIONS:
   --timeout SECONDS      Set timeout for connection (default is 10 seconds)
   --verbose              Output some more detailed information
   -h, --help             Show this help message and exit
-    """)
+    """
+    )
     sys.exit(1)
 
 
@@ -38,22 +41,25 @@ def connection(opt_key, opt_host, opt_user, opt_pass, opt_port, opt_timeout):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     if opt_key is None:
-        client.connect(opt_host,
-                       username=opt_user,
-                       password=opt_pass,
-                       port=opt_port,
-                       timeout=opt_timeout)
+        client.connect(
+            opt_host, username=opt_user, password=opt_pass, port=opt_port, timeout=opt_timeout
+        )
     else:
-        client.connect(opt_host,
-                       username=opt_user,
-                       pkey=opt_key,
-                       port=opt_port,
-                       timeout=opt_timeout)
+        client.connect(
+            opt_host, username=opt_user, pkey=opt_key, port=opt_port, timeout=opt_timeout
+        )
     return client
 
 
-def get_paths(opt_put_local, opt_get_local, opt_put_remote, opt_get_remote, opt_timestamp, omd_root,
-              working_dir):
+def get_paths(
+    opt_put_local,
+    opt_get_local,
+    opt_put_remote,
+    opt_get_remote,
+    opt_timestamp,
+    omd_root,
+    working_dir,
+):
     paths = {}
     if opt_put_local:
         put_filename = opt_put_local.split("/")[-1]
@@ -93,23 +99,19 @@ def create_testfile(paths):
 
 
 def put_file(sftp, paths):
-    sftp.put(paths["local_put_path"], \
-             paths["remote_put_path"])
+    sftp.put(paths["local_put_path"], paths["remote_put_path"])
 
 
 def get_file(sftp, paths):
-    sftp.get(paths["remote_get_path"], \
-             paths["local_get_path"])
+    sftp.get(paths["remote_get_path"], paths["local_get_path"])
 
 
 def get_timestamp(sftp, paths):
     return sftp.stat(paths["timestamp_path"])
 
 
-def output_check_result(rc, s):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    output = '%s - %s' % (stxt, s)
-    sys.stdout.write('%s\n' % output)
+def output_check_result(s):
+    sys.stdout.write("%s\n" % s)
 
 
 def parse_arguments(sys_args):
@@ -129,21 +131,21 @@ def parse_arguments(sys_args):
     opt_timeout = 10.0
     opt_verbose = False
 
-    short_options = 'hv'
+    short_options = "hv"
     long_options = [
-        'host=',
-        'user=',
-        'secret=',
-        'privat-key',
-        'port=',
-        'get-remote=',
-        'get-local=',
-        'put-local=',
-        'put-remote=',
-        'get-timestamp=',
-        'verbose',
-        'help',
-        'timeout=',
+        "host=",
+        "user=",
+        "secret=",
+        "privat-key",
+        "port=",
+        "get-remote=",
+        "get-local=",
+        "put-local=",
+        "put-remote=",
+        "get-timestamp=",
+        "verbose",
+        "help",
+        "timeout=",
     ]
 
     try:
@@ -153,31 +155,31 @@ def parse_arguments(sys_args):
         sys.exit(1)
 
     for opt, arg in opts:
-        if opt in ['-h', 'help']:
+        if opt in ["-h", "help"]:
             usage()
-        elif opt in ['--host']:
+        elif opt in ["--host"]:
             opt_host = arg
-        elif opt in ['--user']:
+        elif opt in ["--user"]:
             opt_user = arg
-        elif opt in ['--secret']:
+        elif opt in ["--secret"]:
             opt_pass = arg
-        elif opt in ['--private-key']:
+        elif opt in ["--private-key"]:
             opt_pass = arg
-        elif opt in ['--port']:
+        elif opt in ["--port"]:
             opt_port = int(arg)
-        elif opt in ['--timeout']:
+        elif opt in ["--timeout"]:
             opt_timeout = float(arg)
-        elif opt in ['--put-local']:
+        elif opt in ["--put-local"]:
             opt_put_local = arg
-        elif opt in ['--put-remote']:
+        elif opt in ["--put-remote"]:
             opt_put_remote = arg
-        elif opt in ['--get-local']:
+        elif opt in ["--get-local"]:
             opt_get_local = arg
-        elif opt in ['--get-remote']:
+        elif opt in ["--get-remote"]:
             opt_get_remote = arg
-        elif opt in ['--get-timestamp']:
+        elif opt in ["--get-timestamp"]:
             opt_timestamp = arg
-        elif opt in ['-v', '--verbose']:
+        elif opt in ["-v", "--verbose"]:
             opt_verbose = True
 
     return (
@@ -197,9 +199,20 @@ def parse_arguments(sys_args):
 
 
 def main(sys_args=None):
-    opt_host, opt_user, opt_pass, opt_key, opt_port, opt_get_remote,\
-        opt_get_local, opt_put_local, opt_put_remote, opt_timestamp,\
-        opt_timeout, opt_verbose = parse_arguments(sys_args)
+    (
+        opt_host,
+        opt_user,
+        opt_pass,
+        opt_key,
+        opt_port,
+        opt_get_remote,
+        opt_get_local,
+        opt_put_local,
+        opt_put_remote,
+        opt_timestamp,
+        opt_timeout,
+        opt_verbose,
+    ) = parse_arguments(sys_args)
 
     messages = []
     states = []
@@ -217,8 +230,15 @@ def main(sys_args=None):
     omd_root = os.getenv("OMD_ROOT")
     sftp.chdir(".")
     working_dir = sftp.getcwd()
-    paths = get_paths(opt_put_local, opt_get_local, opt_put_remote, opt_get_remote, opt_timestamp,
-                      omd_root, working_dir)
+    paths = get_paths(
+        opt_put_local,
+        opt_get_local,
+        opt_put_remote,
+        opt_get_remote,
+        opt_timestamp,
+        omd_root,
+        working_dir,
+    )
     testfile_remote = True
 
     # .. and eventually execute them!
@@ -250,9 +270,10 @@ def main(sys_args=None):
         if opt_timestamp is not None:
             file_stats = get_timestamp(sftp, paths)
             states.append(0)
-            messages.append("Timestamp of %s is: %s" % \
-                            (paths["timestamp_filename"], \
-                             time.ctime(file_stats.st_mtime)))
+            messages.append(
+                "Timestamp of %s is: %s"
+                % (paths["timestamp_filename"], time.ctime(file_stats.st_mtime))
+            )
     except Exception:
         if opt_verbose:
             raise
@@ -268,5 +289,5 @@ def main(sys_args=None):
 
 if __name__ == "__main__":
     exitcode, info = main()
-    output_check_result(exitcode, info)
+    output_check_result(info)
     sys.exit(exitcode)

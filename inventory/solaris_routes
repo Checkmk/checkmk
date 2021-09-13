@@ -12,8 +12,7 @@ def parse_solaris_route(line):
         return n
 
     route = {}
-    if len(line) >= 5 and not line[0].startswith("---") and \
-       line[0] != "Destination":
+    if len(line) >= 5 and not line[0].startswith("---") and line[0] != "Destination":
 
         route["target"] = parse_network(line[0])
         route["gateway"] = line[1]
@@ -31,6 +30,6 @@ def inv_solaris_routes(info, params):
             routes.append(route)
 
 
-inv_info['solaris_routes'] = {
-    'inv_function': inv_solaris_routes,
+inv_info["solaris_routes"] = {
+    "inv_function": inv_solaris_routes,
 }

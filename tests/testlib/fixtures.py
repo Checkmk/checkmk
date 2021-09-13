@@ -5,17 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.web_session import CMKWebSession
-from testlib.event_console import CMKEventConsole
+from tests.testlib.event_console import CMKEventConsole
+from tests.testlib.web_session import CMKWebSession
 
 
 @pytest.fixture(scope="module")
 def web(site):
     web = CMKWebSession(site)
     web.login()
-    web.set_language("en")
+    web.enforce_non_localized_gui()
     return web
 
 

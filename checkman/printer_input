@@ -20,6 +20,6 @@ description:
 item:
  Name of the printer (if set) otherwise the description, type or index of the printer
 
-inventory:
+discovery:
  One service is created for each unit with a unique name.
 

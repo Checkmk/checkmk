@@ -7,7 +7,7 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de
 
 # Example output of agent:
-#<<<sylo>>>
+# <<<sylo>>>
 #            7859            7859           10240
 #
 # Syntax of the hint file:
@@ -70,8 +70,12 @@ def check_sylo(item, params, info):
         # Rates for input and output
         in_rate = get_rate("sylo.in", mtime, inOffset)
         out_rate = get_rate("sylo.out", mtime, outOffset)
-        msg += "Silo is filled %.1fMB (%.1f%%), in %.1f B/s, out %.1f B/s" % \
-               (bytesUsed / (1024*1024.0), percUsed, in_rate, out_rate)
+        msg += "Silo is filled %.1fMB (%.1f%%), in %.1f B/s, out %.1f B/s" % (
+            bytesUsed / (1024 * 1024.0),
+            percUsed,
+            in_rate,
+            out_rate,
+        )
 
         status = 0
         if percUsed >= crit and status < 2:
@@ -79,15 +83,22 @@ def check_sylo(item, params, info):
         elif percUsed >= warn and status < 1:
             status = 1
 
-        return status, msg, [('in', '%f' % in_rate), ('out', '%f' % out_rate),
-                             ('used', '%f' % used_mb, warn_mb, crit_mb, 0, size_mb)]
+        return (
+            status,
+            msg,
+            [
+                ("in", "%f" % in_rate),
+                ("out", "%f" % out_rate),
+                ("used", "%f" % used_mb, warn_mb, crit_mb, 0, size_mb),
+            ],
+        )
 
-    return (3, "Invalid hint file contents: " % info)
+    return (3, "Invalid hint file contents: %s" % info)
 
 
 check_info["sylo"] = {
-    'check_function': check_sylo,
-    'inventory_function': inventory_sylo,
-    'service_description': 'Sylo',
-    'has_perfdata': True,
+    "check_function": check_sylo,
+    "inventory_function": inventory_sylo,
+    "service_description": "Sylo",
+    "has_perfdata": True,
 }

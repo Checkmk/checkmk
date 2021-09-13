@@ -15,7 +15,7 @@ description:
  It is {CRIT} if the result of the backup is {Failed}. It is
  {UNKNOWN} in all other cases.
 
-inventory:
+discovery:
  One service is created for each backup job created by the Veeam tool.
 
 item:

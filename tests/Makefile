@@ -8,48 +8,44 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run py.test -vv $(PYTEST_ARGS)
 YAPF := $(PIPENV) run yapf
+BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
-MYPY := $(SCRIPTS)/run-mypy
-ADDITIONAL_MYPY_ARGS :=
+ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
+# TODO: Remove version duplication, see buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh
+GCC_TOOLCHAIN := /opt/gcc-11.1.0
 
-# Since the unit tests (that are written for Python 3) are executed with Python 2.6, we need to
-# convert them, just like it is done for the agent plugins (see agents/plugins/Makefile)
+# Since the unit tests (that are written for Python 3) are executed with Python
+# 2.6 and 2.7, we need to convert them, just like it is done for the agent
+# plugins (see agents/plugins/Makefile)
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
-AGENT_PLUGIN_UNIT_TEST_FILES_PY26 := $(subst agent-plugin-unit,agent-plugin-unit/py26,$(AGENT_PLUGIN_UNIT_TEST_FILES))
+AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
 # TODO: Complete this list
 SHELL_FILES := \
 	agents/check_mk_agent.linux \
 	agents/check_mk_caching_agent.linux
 
-PYTHON_VERSIONS := 2.6 2.7 3.3 3.4 3.5 3.6 3.7 3.8
+# Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
+# until we have a feasible solution or we drop the support for 2.6 completly.
+PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 
- # Optionally forward the job result to a result file when executed via CI
-REDIRECT =
-ifdef RESULTS
-REDIRECT = &>
-CPPCHECK = cppcheck-xml
-else
-REDIRECT = \#
-CPPCHECK = cppcheck
-endif
-
-.PHONY: clean format-shell help prepare-node-modules \
+.PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-format-python test-format-python-docker test-format-shell test-format-js \
-        test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
-        test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
-        test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
-        test-unit test-unit-docker test-unit-coverage-html test-unit-sh test-unit-sh-docker \
-        test-cppcheck-livestatus test-cppcheck-core test-cppcheck-docker test-tidy-livestatus \
-        test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
+	test-docker test-format-python test-format-python-docker test-format-shell \
+	test-format-js test-format-js-docker test-format-css test-format-css-docker \
+	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
+	test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
+	test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
+	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
+	test-unit-sh test-unit-sh-docker \
+	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
 
 clean:
-	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
 help:
 	@echo "format-shell                        - Format shell agents"
@@ -64,7 +60,10 @@ help:
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
-	@echo "test-format-prettier                - Run the JavaScript formatting"
+	@echo "test-format-js                      - Run the JavaScript formatting"
+	@echo "test-format-js-docker               - Run the JavaScript formatting in docker"
+	@echo "test-format-css                     - Run the CSS formatting"
+	@echo "test-format-css-docker              - Run the CSS formatting in docker"
 	@echo "test-gui-crawl                      - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
 	@echo "test-integration                    - Run integration tests locally"
@@ -79,12 +78,11 @@ help:
 	@echo "test-shellcheck                     - Run shellcheck tests"
 	@echo "test-unit                           - Run unit tests"
 	@echo "test-unit-docker                    - Run unit tests in docker"
+	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
+	@echo "test-unit-resilience                - Run unit tests multiple times and in random order in docker"
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-sh		           - Run shell unit tests"
 	@echo "test-unit-sh-docker	           - Run shell unit tests in docker"
-	@echo "test-cppcheck-livestatus            - Run cppcheck for livestatus"
-	@echo "test-cppcheck-core                  - Run cppcheck for the core"
-	@echo "test-cppcheck-docker                - Run both cppcheck in docker"
 	@echo "test-tidy-livestatus                - Run clang tidy for livestatus"
 	@echo "test-tidy-core                      - Run clang tidy for core"
 	@echo "test-tidy-docker                    - Run clang tidy for core and livestatus in docker"
@@ -102,14 +100,14 @@ bandit.ini:
 	  echo ) > bandit.ini
 
 format-shell:
-	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
 
-agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
+agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
-	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# yapf: disable\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
+	cat "$<" | gawk -v text="# Do not test generated 2.x files\n# yapf: disable\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
 	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
 
-$(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+$(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
 $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	# Clean up auto-generated files, which do not have a corresponding source file anymore
@@ -118,12 +116,14 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	flock ../agents/plugins $(MAKE) -C ../agents/plugins
 	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \
 	case $$PYTHON_VERSION in \
-	    2.*) SUFFIX="/py26" ;; \
+	    2.*) SUFFIX="/py2" ;; \
 	    *) SUFFIX="" ;; \
 	esac ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
 	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
+	echo "Docker image: $$IMAGE_HASH" && \
 	docker run \
+	    --rm \
 	    $(DOCKER_ADDOPTS) \
 	    -e "PYTEST_ADDOPTS" \
 	    -u $$(id -u):$$(id -g) \
@@ -132,7 +132,7 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
 	    -v "$(realpath ../agents/plugins):/plugins" \
 	    $$IMAGE_HASH \
-	    python$$PYTHON_VERSION -m pytest --ignore=tests/py26/ "/tests"
+	    python$$PYTHON_VERSION -m pytest --ignore=tests/py2/ "/tests"
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
@@ -141,6 +141,13 @@ test-bandit: bandit.ini
 
 prepare-node-modules:
 	$(MAKE) -C .. node_modules/.bin/webpack
+
+prepare-protobuf-files:
+	$(MAKE) -C .. protobuf-files
+
+prepare-playwright:
+	../scripts/run-pipenv run playwright install-deps chromium
+	../scripts/run-pipenv run playwright install chromium
 
 test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
 	$(PIPENV) run scripts/run-dockerized.py debug
@@ -155,18 +162,31 @@ test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
 	$(PYTEST) -T docker docker
 
-test-format-python: ../.style.yapf
+test-format-python: test-format-python-isort test-format-python-black
+
+test-format-python-yapf: ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
 # There are some mixed up lines on stdout caused by the --parallel option.
 # Nevertheless, we keep that option to get a big performance boost. GitHub issue
 # opened for this problem: https://github.com/google/yapf/issues/644.
-	@if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	@if test -z "$${PYTHON_FILES}" && test ! -z "$${PYTHON_FILES+X}"; then exit 0; fi; \
+	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
-	exit $${PIPESTATUS[0]}
+	exit $${PIPESTATUS[1]}
+
+test-format-python-isort: ../pyproject.toml
+	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PIPENV) run isort --settings-path ../pyproject.toml --check-only --diff \
+	exit $${PIPESTATUS[1]}
+
+test-format-python-black: ../pyproject.toml
+	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(BLACK) --check --diff ;\
+	exit $${PIPESTATUS[1]}
 
 test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
@@ -175,13 +195,18 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-format-js:
-	cd ..; scripts/run-prettier --check "web/htdocs/js/**/*.js"
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
 
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
 
+test-format-css:
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/themes/**/*.scss"
 
-test-gui-crawl: prepare-node-modules
+test-format-css-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-css
+
+test-gui-crawl: prepare-node-modules prepare-playwright
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
@@ -193,12 +218,16 @@ test-integration: prepare-node-modules
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
-test-mypy:
-	$(FIND_PYTHON_FILES) | \
+test-mypy: prepare-protobuf-files
+	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
 	grep -v $$(realpath '../inventory') | \
-	xargs -n 1500 $(MYPY) $(ADDITIONAL_MYPY_ARGS)
+	`: files are only needed for pylint to understand the module hierarchy` \
+	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
+	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') \
+	) ; \
+	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
@@ -212,7 +241,7 @@ test-packaging:
 test-pipenv-deps:
 	$(PIPENV) check
 
-test-pylint:
+test-pylint: prepare-protobuf-files
 	$(PYTEST) -T pylint pylint
 
 test-pylint-docker:
@@ -226,7 +255,7 @@ test-shellcheck:
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
-test-unit:
+test-unit: prepare-protobuf-files
 	$(PYTEST) \
 		-T unit \
 		--doctest-modules \
@@ -239,7 +268,26 @@ test-unit:
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-coverage-html:
+test-unit-resilience: prepare-protobuf-files
+	$(PYTEST) \
+		--count=2 \
+		--random-order-bucket=global \
+		-T unit \
+		--doctest-modules \
+		../cmk/base \
+		../cmk/gui \
+		../cmk/special_agents \
+		../cmk/utils \
+	        -m "not non_resilient" \
+		unit
+
+test-unit-resilience-docker:
+	../scripts/run-in-docker.sh make test-unit-resilience
+
+test-agent-plugin-docker:
+	../scripts/run-in-docker.sh make $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+
+test-unit-coverage-html: prepare-protobuf-files
 	$(PYTEST) \
 		-T unit \
 		--cov=cmk \
@@ -260,40 +308,43 @@ test-unit-sh-docker:
 	../scripts/run-in-docker.sh make test-unit-sh
 
 %-livestatus-docker:
-	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) $*-livestatus
+	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-livestatus
 
 %-core-docker:
-	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) $*-core
-
-test-cppcheck-livestatus:
-	cd ../livestatus/src && make CPPCHECK_NEB_RESULT=$(RESULTS)/cppcheck-neb.xml $(CPPCHECK)
-
-test-cppcheck-core:
-	cd ../enterprise/core/src && make CPPCHECK_CMC_RESULT=$(RESULTS)/cppcheck-cmc.xml $(CPPCHECK)
-
-test-cppcheck-docker:
-	../scripts/run-in-docker.sh make -C .. cppcheck-xml
+	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
 
 test-tidy-livestatus:
-	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-tidy.txt
+	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
 
 test-tidy-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-tidy.txt
+	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
 
 test-tidy-docker:
-	../scripts/run-in-docker.sh make -C .. tidy
+	../scripts/run-in-docker.sh make -C .. tidy CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-iwyu-livestatus:
-	cd ../livestatus/src && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-iwyu.txt
+	cd ../livestatus/src && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
 
 test-iwyu-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-iwyu.txt
+	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
 
 test-iwyu-docker:
-	../scripts/run-in-docker.sh make -C .. iwyu
+	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-unit-livestatus:
-	cd ../livestatus/src && ./.f12 $(REDIRECT) $(RESULTS)/livestatus-neb-cmc.txt
+	cd ../livestatus/src && ./.f12
 
 test-unit-core:
-	cd ../enterprise/core/src && ./.f12 $(REDIRECT) $(RESULTS)/core-neb-cmc.txt
+	cd ../enterprise/core/src && ./.f12
+
+# Run `validate_changes` in live-mode i.e. not creating a JSON file
+# containing build steps to be executed by Jenkins but directly running
+# them.
+what-gerrit-makes:
+	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
+	cd "$$WORKSPACE" ; \
+	mkdir -p "$$WORKSPACE/results" ; \
+	scripts/run-pipenv run buildscripts/scripts/validate_changes.py \
+	    -e BASE_COMMIT_ID=origin/master \
+	    -e WORKSPACE="$$WORKSPACE" \
+	    -e RESULTS="$$WORKSPACE/results"

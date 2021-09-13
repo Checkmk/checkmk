@@ -52,7 +52,7 @@ def check_emerson_stat(item, params, info):
             7: "unmanaged",
             8: "restricted",
             9: "testing",
-            10: "disabled"
+            10: "disabled",
         }
         status = saveint(info[0][0])
         infotext = "Status: " + status_text.get(status)
@@ -68,11 +68,12 @@ def check_emerson_stat(item, params, info):
     return (3, "Status not found in SNMP output")
 
 
-check_info['emerson_stat'] = {
+check_info["emerson_stat"] = {
     "inventory_function": inventory_emerson_stat,
     "check_function": check_emerson_stat,
     "service_description": "Status",
     "snmp_info": (".1.3.6.1.4.1.6302.2.1.2.1", ["0"]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0', "").startswith(
-        'Emerson Network Power'),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.4.1.6302.2.1.1.1.0", "").startswith(
+        "Emerson Network Power"
+    ),
 }

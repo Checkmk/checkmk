@@ -118,8 +118,8 @@ export class AbstractGUINode {
         this._text_selection = null;
 
         this._quickinfo_selection = null;
+
         // Data fetched from external sources, e.g livestatus
-        //
         this._has_quickinfo = true;
         this._provides_external_quickinfo_data = false;
         this._quickinfo_fetch_in_progress = false;
@@ -157,10 +157,7 @@ export class AbstractGUINode {
             .enter()
             .append("svg:image")
             .classed("acknowledged", true)
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/icon_ack.png"
-            )
+            .attr("xlink:href", "themes/facelift/images/icon_ack.png")
             .attr("x", -24)
             .attr("y", this.radius - 8)
             .attr("width", 24)
@@ -174,10 +171,7 @@ export class AbstractGUINode {
             .enter()
             .append("svg:image")
             .classed("in_downtime", true)
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/icon_downtime.png"
-            )
+            .attr("xlink:href", "themes/facelift/images/icon_downtime.png")
             .attr("x", 0)
             .attr("y", this.radius - 8)
             .attr("width", 24)
@@ -234,8 +228,12 @@ export class AbstractGUINode {
     }
 
     _render_into_transform(selection) {
-        let spawn_point_x = this.node.x;
-        let spawn_point_y = this.node.y;
+        let spawn_reference = this.node;
+        if (this.node.parent && this.node.parent.x) {
+            spawn_reference = this.node.parent;
+        }
+        let spawn_point_x = spawn_reference.x;
+        let spawn_point_y = spawn_reference.y;
 
         let coords = this.nodes_layer.viewport.scale_to_zoom({
             x: spawn_point_x,
@@ -250,7 +248,7 @@ export class AbstractGUINode {
             .style("pointer-events", "all")
             .on("mouseover", () => this._show_quickinfo())
             .on("mouseout", () => this._hide_quickinfo())
-            .on("contextmenu", () => this.nodes_layer.render_context_menu(this));
+            .on("contextmenu", event => this.nodes_layer.render_context_menu(event, this));
     }
 
     _get_details_url() {
@@ -262,7 +260,7 @@ export class AbstractGUINode {
         elements.push({
             text: "Details of Host",
             href: "view.py?host=" + encodeURIComponent(this.node.data.hostname) + "&view_name=host",
-            img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png",
+            img: "themes/facelift/images/icon_status.svg",
         });
         if (this.node.data.service && this.node.data.service != "") {
             elements.push({
@@ -273,7 +271,7 @@ export class AbstractGUINode {
                     "&service=" +
                     encodeURIComponent(this.node.data.service) +
                     "&view_name=service",
-                img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png",
+                img: "themes/facelift/images/icon_status.svg",
             });
         }
 
@@ -296,6 +294,7 @@ export class AbstractGUINode {
             }
         });
         node.children = critical_children;
+        node.data.user_interactions.bi = "root_cause";
         this.update_collapsed_indicator(node);
     }
 
@@ -308,18 +307,9 @@ export class AbstractGUINode {
         });
     }
 
-    toggle_collapse() {
-        d3.event.stopPropagation();
-        if (!this.node._children) return;
-
-        this.node.children = this.node.children ? null : this.node._children;
-        this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
-        this.update_collapsed_indicator(this.node);
-        this.viewport.update_layers();
-    }
-
     collapse_node() {
         this.node.children = null;
+        this.node.data.user_interactions.bi = "collapsed";
         this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
         this.update_collapsed_indicator(this.node);
         this.viewport.update_layers();
@@ -327,6 +317,7 @@ export class AbstractGUINode {
 
     expand_node() {
         this.node.children = this.node._children;
+        delete this.node.data.user_interactions.bi;
         this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
         this.update_collapsed_indicator(this.node);
         this.viewport.update_layers();
@@ -337,6 +328,7 @@ export class AbstractGUINode {
             node.children = node._children;
             node.children.forEach(child_node => this.expand_node_including_children(child_node));
         }
+        delete node.data.user_interactions.bi;
         this.update_collapsed_indicator(node);
     }
 
@@ -344,7 +336,7 @@ export class AbstractGUINode {
         if (!node._children) return;
 
         let collapsed = node.children != node._children;
-        let outer_circle = node.selection.select("#outer_circle");
+        let outer_circle = node.selection.select("circle");
         outer_circle.classed("collapsed", collapsed);
 
         let nodes = this.viewport.get_all_nodes();
@@ -416,10 +408,7 @@ export class AbstractGUINode {
                 .append("img")
                 .classed("icon", true)
                 .classed("reloading", true)
-                .attr(
-                    "src",
-                    this.viewport.main_instance.get_theme_prefix() + "/images/load_graph.png"
-                );
+                .attr("src", "themes/facelift/images/load_graph.png");
         else this._quickinfo_selection.selectAll(".icon.reloading").remove();
 
         this.update_quickinfo_position();
@@ -592,10 +581,7 @@ export class TopologyNode extends AbstractGUINode {
                 .enter()
                 .append("svg:image")
                 .classed("growth_possible", true)
-                .attr(
-                    "xlink:href",
-                    this.viewport.main_instance.get_theme_prefix() + "/images/icon_hierarchy.svg"
-                )
+                .attr("xlink:href", "themes/facelift/images/icon_hierarchy.svg")
                 .attr("width", 16)
                 .attr("height", 16)
                 .attr("x", -8)
@@ -611,10 +597,7 @@ export class TopologyNode extends AbstractGUINode {
                 .enter()
                 .append("svg:image")
                 .classed("growth_forbidden", true)
-                .attr(
-                    "xlink:href",
-                    this.viewport.main_instance.get_theme_prefix() + "/images/icon_no_entry.svg"
-                )
+                .attr("xlink:href", "themes/facelift/images/icon_no_entry.svg")
                 .attr("width", 16)
                 .attr("height", 16)
                 .attr("x", -28)

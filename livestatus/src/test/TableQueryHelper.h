@@ -10,12 +10,10 @@
 #include <string>
 class Table;
 
-namespace mk {
-namespace test {
+namespace mk::test {
 
 std::string query(Table& table, const std::list<std::string>& q);
 
-}  // namespace test
-}  // namespace mk
+}  // namespace mk::test
 
 #endif

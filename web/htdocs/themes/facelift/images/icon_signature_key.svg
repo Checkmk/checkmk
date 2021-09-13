@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 383 364" style="enable-background:new 0 0 383 364;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFA000;}
+	.st1{fill:#D67C05;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-514.000000, -549.000000)">
+		<g id="password" transform="translate(514.000000, 549.000000)">
+			<polygon id="Path" class="st0" points="368,295 184.5,111.5 111.1,184.9 165.3,239.1 207.6,239.1 207.6,280.6 249.1,280.6 
+				249.1,322.1 290.6,322.1 290.6,363.6 357.6,363.6 382.7,339 			"/>
+			<path id="Shape" class="st0" d="M30.4,30.8c-40.5,40.5-40.5,106.2,0,146.8c40.5,40.5,106.2,40.5,146.8,0
+				c40.5-40.5,40.5-106.2,0-146.8C136.6-9.8,70.9-9.8,30.4,30.8z M94.7,95c-12.2,12.2-31.9,12.2-44,0c-12.2-12.2-12.2-31.9,0-44
+				c12.2-12.2,31.9-12.2,44,0C106.8,63.2,106.8,82.9,94.7,95z"/>
+			<g id="Group" transform="translate(130.540541, 130.918919)">
+				<polygon id="Path_1_" class="st1" points="54,39.3 68.6,24.6 252.1,208.1 237.4,222.8 				"/>
+				<path id="Path_2_" class="st1" d="M89.9,16.5L73.4,0C68.9,17.1,60,33.2,46.6,46.6C33.2,60,17.1,68.9,0,73.4l16.5,16.5
+					c16.6-6.1,31.9-15.7,44.8-28.6C74.4,48.2,83.8,32.8,89.9,16.5z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

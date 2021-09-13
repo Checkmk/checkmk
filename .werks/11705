@@ -1,0 +1,14 @@
+Title: mk_postgres: compatibility for python2.6
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612353097
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The mk_postgres agent plugin crashed and did not produce any agent sections if run with python2.6.
+The following error message occured:
+"ImportError: No module named argparse"
+In order to run this plugin with python2.6 you need to redeploy the agent plugin.

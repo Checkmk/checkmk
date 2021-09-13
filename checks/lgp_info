@@ -14,8 +14,8 @@
 # [[['Rack PDU Card', '4.840.0', '535055G103T2010JUN240295']], [['1', '1', '.1.3.6.1.4.1.476.1.42.4.8.2.2', 'Emerson Network Power', '1']]]
 
 lgp_info_devices = {
-    '.1.3.6.1.4.1.476.1.42.4.8.2.1': 'lgpMPX',
-    '.1.3.6.1.4.1.476.1.42.4.8.2.2': 'lgpMPH',
+    ".1.3.6.1.4.1.476.1.42.4.8.2.1": "lgpMPX",
+    ".1.3.6.1.4.1.476.1.42.4.8.2.2": "lgpMPH",
 }
 
 
@@ -28,31 +28,40 @@ def check_lgp_info(item, params, info):
     if info and info[0] and info[0][0]:
         agent_info = info[0][0]
 
-        device_output = ''
+        device_output = ""
         if len(info) > 1:
             devices = []
             for id_, manufacturer, unit_number in info[1]:
                 id_ = lgp_info_devices.get(id_, id_)
-                devices.append('ID: %s, Manufacturer: %s, Unit-Number: %s' %
-                               (id_, manufacturer, unit_number))
-            device_output = '\n'.join(devices)
+                devices.append(
+                    "ID: %s, Manufacturer: %s, Unit-Number: %s" % (id_, manufacturer, unit_number)
+                )
+            device_output = "\n".join(devices)
 
-        return (0, 'Model: %s, Firmware: %s, S/N: %s\n%s' % tuple(agent_info + [device_output]))
+        return (0, "Model: %s, Firmware: %s, S/N: %s\n%s" % tuple(agent_info + [device_output]))
+
 
 check_info["lgp_info"] = {
-    'check_function':          check_lgp_info,
-    'inventory_function':      inventory_lgp_info,
-    'service_description':     'Liebert Info',
-    'snmp_info':               [('.1.3.6.1.4.1.476.1.42.2.1', [
-                                    '2.0', # LIEBERT-GP-AGENT-MIB::lgpAgentIdentModel.0
-                                    '3.0', # LIEBERT-GP-AGENT-MIB::lgpAgentIdentFirmwareVersion.0
-                                    '4.0', # LIEBERT-GP-AGENT-MIB::lgpAgentIdentSerialNumber.0
-                                ]),
-                                ('.1.3.6.1.4.1.476.1.42.2.4.2.1', [
-                                    '2', # LIEBERT-GP-AGENT-MIB::lgpAgentDeviceId.1
-                                    '3', # LIEBERT-GP-AGENT-MIB::lgpAgentDeviceManufacturer.1
-                                    '6', # LIEBERT-GP-AGENT-MIB::lgpAgentDeviceUnitNumber.1
-                               ])],
-    'snmp_scan_function':      lambda oid: oid('.1.3.6.1.2.1.1.2.0') == \
-                                                          '.1.3.6.1.4.1.476.1.42',
+    "check_function": check_lgp_info,
+    "inventory_function": inventory_lgp_info,
+    "service_description": "Liebert Info",
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.476.1.42.2.1",
+            [
+                "2.0",  # LIEBERT-GP-AGENT-MIB::lgpAgentIdentModel.0
+                "3.0",  # LIEBERT-GP-AGENT-MIB::lgpAgentIdentFirmwareVersion.0
+                "4.0",  # LIEBERT-GP-AGENT-MIB::lgpAgentIdentSerialNumber.0
+            ],
+        ),
+        (
+            ".1.3.6.1.4.1.476.1.42.2.4.2.1",
+            [
+                "2",  # LIEBERT-GP-AGENT-MIB::lgpAgentDeviceId.1
+                "3",  # LIEBERT-GP-AGENT-MIB::lgpAgentDeviceManufacturer.1
+                "6",  # LIEBERT-GP-AGENT-MIB::lgpAgentDeviceUnitNumber.1
+            ],
+        ),
+    ],
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.476.1.42",
 }

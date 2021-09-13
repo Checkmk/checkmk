@@ -21,7 +21,7 @@ def agent_graylog_arguments(params, hostname, ipaddress):
         "-P",
         params["protocol"],
         "-m",
-        ','.join(params["sections"]),
+        ",".join(params["sections"]),
         "-t",
         params["since"],
         "-u",
@@ -44,4 +44,4 @@ def agent_graylog_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['graylog'] = agent_graylog_arguments
+special_agent_info["graylog"] = agent_graylog_arguments

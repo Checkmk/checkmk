@@ -8,14 +8,16 @@ import re
 from typing import Callable, List, Optional, Tuple
 
 from cmk.utils.regex import regex
-from .type_defs import OID, SNMPDetectAtom, SNMPDetectSpec
+from cmk.utils.type_defs import SNMPDetectBaseType
+
+from .type_defs import OID, SNMPDetectAtom
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 
 
 def evaluate_snmp_detection(
     *,
-    detect_spec: SNMPDetectSpec,
+    detect_spec: SNMPDetectBaseType,
     oid_value_getter: Callable[[str], Optional[str]],
 ) -> bool:
     """Evaluate a SNMP detection specification
@@ -23,9 +25,9 @@ def evaluate_snmp_detection(
     Return True if and and only if at least all conditions in one "line" are True
     """
     return any(
-        all(_evaluate_snmp_detection_atom(atom, oid_value_getter)
-            for atom in alternative)
-        for alternative in detect_spec)
+        all(_evaluate_snmp_detection_atom(atom, oid_value_getter) for atom in alternative)
+        for alternative in detect_spec
+    )
 
 
 def _evaluate_snmp_detection_atom(

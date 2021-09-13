@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_parsed_item_data
 
 from .df import df_check_filesystem_single
@@ -22,10 +22,13 @@ def parse_network_fs_mounts(info):
             parsed.setdefault(" ".join(line[:-2]), {"state": "Permission denied"})
 
         else:
-            parsed.setdefault(" ".join(line[:-5]), {
-                "state": line[-5],
-                "data": line[-4:],
-            })
+            parsed.setdefault(
+                " ".join(line[:-5]),
+                {
+                    "state": line[-5],
+                    "data": line[-4:],
+                },
+            )
 
     return parsed
 
@@ -54,11 +57,11 @@ def check_network_fs_mounts(item, params, attrs):
         return 2, "Permission denied"
     if state == "hanging":
         return 2, "Server not responding"
-    if state != 'ok':
+    if state != "ok":
         return 2, "Unknown state: %s" % state
 
     data = attrs["data"]
-    if data == ['-', '-', '-', '-']:
+    if data == ["-", "-", "-", "-"]:
         return 0, "Mount seems OK"
     size_blocks, _, free_blocks, blocksize = map(int, data)
 

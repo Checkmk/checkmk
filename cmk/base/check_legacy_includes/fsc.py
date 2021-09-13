@@ -4,27 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
 
 def _is_fsc_or_windows(oid):
     # sysObjId is from FSC or Windows or Net-SNMP
-    return oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.231') or \
-           oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.311') or \
-           oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.8072')
+    return (
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.231")
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.311")
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072")
+    )
 
 
 def is_fsc(oid):
-    return _is_fsc_or_windows(oid) and bool(oid('.1.3.6.1.4.1.231.2.10.2.1.1.0'))
+    return _is_fsc_or_windows(oid) and bool(oid(".1.3.6.1.4.1.231.2.10.2.1.1.0"))
 
 
 def is_fsc_sc2(oid):
-    return _is_fsc_or_windows(oid) and bool(oid('.1.3.6.1.4.1.231.2.10.2.2.10.1.1.0'))
+    return _is_fsc_or_windows(oid) and bool(oid(".1.3.6.1.4.1.231.2.10.2.2.10.1.1.0"))
 
 
 def is_fsc_fans_prefer_sc2(oid):
-    return is_fsc(oid) and not bool(oid('.1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.*'))
+    return is_fsc(oid) and not bool(oid(".1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.*"))
 
 
 def is_fsc_temp_prefer_sc2(oid):
-    return is_fsc(oid) and not bool(oid('.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.*'))
+    return is_fsc(oid) and not bool(oid(".1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.*"))

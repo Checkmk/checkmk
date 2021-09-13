@@ -11,5 +11,5 @@ description:
 item:
  The unit index.
 
-inventory:
+discovery:
  One service is created for each peer.

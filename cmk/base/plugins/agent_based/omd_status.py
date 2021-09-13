@@ -21,14 +21,11 @@ crontab 1
 OVERALL 2
 """
 
-from typing import Mapping, Dict, Optional, Any
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    State as state,
-)
-from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
+from typing import Any, Dict, Mapping, Optional
+
+from .agent_based_api.v1 import register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Dict[str, Any]]
 
@@ -54,15 +51,15 @@ def parse_omd_status(string_table: StringTable) -> Optional[Section]:
             continue
         if current_item is None:
             continue
-        if name == 'OVERALL':
-            if states[0] == '0':
+        if name == "OVERALL":
+            if states[0] == "0":
                 current_item["overall"] = "running"
-            elif states[0] == '1':
+            elif states[0] == "1":
                 current_item["overall"] = "stopped"
             current_item = None
             continue
         current_item["existing"].append(name)
-        if states[0] != '0':
+        if states[0] != "0":
             current_item["stopped"].append(name)
             current_item["overall"] = "partially"
     return result
@@ -98,12 +95,12 @@ def discovery_omd_status(
     ...          'autostart': '0'},},
     ... }):
     ...     print(service)
-    Service(item='heute', parameters={}, labels=[])
+    Service(item='heute')
     """
     for site in (section_omd_status or {}).keys():
         # if we have omd_info we want to ensure that checks are only executed for sites
         # that do have autostart enabled
-        if (section_omd_info or {}).get("sites", {}).get(site, {}).get("autostart") != '0':
+        if (section_omd_info or {}).get("sites", {}).get(site, {}).get("autostart") != "0":
             yield Service(item=site)
 
 
@@ -120,7 +117,7 @@ def _check_omd_status(
     ...       False,
     ...       ""):
     ...     print(result)
-    Result(state=<State.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running')
     """
     if "overall" not in site_services:
         yield Result(state=state.CRIT, summary="defective installation")
@@ -128,13 +125,16 @@ def _check_omd_status(
         yield Result(state=state.OK, summary="running")
     elif site_services["overall"] == "stopped":
         # stopped sites are only CRIT when all are stopped
-        yield Result(state=(state.OK if others_running else state.CRIT),
-                     summary="stopped%s" % extra_text)
+        yield Result(
+            state=(state.OK if others_running else state.CRIT), summary="stopped%s" % extra_text
+        )
     else:
         # partially running sites are always CRIT
-        yield Result(state=state.CRIT,
-                     summary="partially running, stopped services: %s" %
-                     (", ".join(site_services["stopped"])))
+        yield Result(
+            state=state.CRIT,
+            summary="partially running, stopped services: %s"
+            % (", ".join(site_services["stopped"])),
+        )
 
 
 def check_omd_status(
@@ -151,7 +151,7 @@ def check_omd_status(
     ...          "overall": 'running'}},
     ...       {}):
     ...     print(result)
-    Result(state=<State.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running')
     """
     if not section_omd_status or item not in section_omd_status:
         return
@@ -173,11 +173,14 @@ def cluster_check_omd_status(
     ...            "overall": 'running'}}},
     ...       {"monitoring": {}}):
     ...     print(result)
-    Result(state=<State.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running')
     """
     # TODO(frans)(question): shouldn't it be better to look for =="running" ?
     any_running = any(
-        section[item]["overall"] != "stopped" for section in section_omd_status.values())
+        section[item]["overall"] != "stopped"
+        for section in section_omd_status.values()
+        if item in section
+    )
 
     for node, section in section_omd_status.items():
         if item not in section:

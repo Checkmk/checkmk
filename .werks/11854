@@ -1,0 +1,17 @@
+Title: Windows agent service terminates all processes started from programdata/checkmk directory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614790835
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Previously, in some rare cases such running processes could create quite 
+serious problems for the agent. They may  prevent or damage agent installation 
+due to the locking of file.
+
+Since this release the problem is resolved. All processes, which have binaries 
+located in <tt>%programdata%/checkmk/agent</tt>, will be unconditionally 
+terminated on service exit.

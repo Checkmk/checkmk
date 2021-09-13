@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Generator, List, Mapping, Union
+from typing import Any, Generator, List, Mapping, Optional, Union
+
 from .agent_based_api.v1 import (
     check_levels,
     clusterize,
@@ -21,10 +22,11 @@ Section = Mapping[str, int]
 CheckOutput = Generator[Union[Result, Metric], None, None]
 
 
-def parse_pulse_secure_users(string_table: List[type_defs.StringTable]) -> Section:
-    raw_data = string_table[0][0][0]
+def parse_pulse_secure_users(string_table: List[type_defs.StringTable]) -> Optional[Section]:
     try:
-        return {'n_users': int(raw_data)}
+        return {"n_users": int(string_table[0][0][0])}
+    except IndexError:
+        return None
     except ValueError:
         return {}
 
@@ -49,7 +51,7 @@ def discover_pulse_secure_users(section: Section) -> Generator[Service, None, No
         yield Service()
 
 
-def check_pulse_secure_users(params: type_defs.Parameters, section: Section) -> CheckOutput:
+def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> CheckOutput:
     yield from check_levels(
         section["n_users"],
         metric_name="current_users",
@@ -60,23 +62,21 @@ def check_pulse_secure_users(params: type_defs.Parameters, section: Section) -> 
 
 
 def cluster_check_pulse_secure_users(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckOutput:
 
     n_users_total = 0
 
     for node_name, section_node in section.items():
-        n_users_total += section_node['n_users']
-        node_state, node_text = clusterize.aggregate_node_details(
+        n_users_total += section_node["n_users"]
+        yield from clusterize.make_node_notice_results(
             node_name,
             check_pulse_secure_users(
-                type_defs.Parameters({}),
+                {},
                 section_node,
             ),
         )
-        if node_text:
-            yield Result(state=node_state, notice=node_text)
 
     yield from check_levels(
         n_users_total,

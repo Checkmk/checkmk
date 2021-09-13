@@ -1,0 +1,15 @@
+Title: Fix too many page and graph reloads when reopening inactive tabs
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1610137633
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+When having a view open in an inactive browser tab for a longer time (several
+minutes or more) and then reopen the tab, the view produced too many AJAX calls
+for re-rendering the page and as a result a larger number of AJAX calls for
+reloading graphs.

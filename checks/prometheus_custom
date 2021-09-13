@@ -94,21 +94,25 @@ def _metric_levels(
     missing_levels = (None, None)
     if service_levels:
         for metric_entry in service_levels:
-            if metric_entry['metric_label'] == metric_label:
+            if metric_entry["metric_label"] == metric_label:
                 metric_levels = metric_entry.get("levels", {})
-                return (*metric_levels.get("upper_levels", missing_levels),
-                        *metric_levels.get("lower_levels", missing_levels))
+                return (
+                    *metric_levels.get("upper_levels", missing_levels),
+                    *metric_levels.get("lower_levels", missing_levels),
+                )
 
     if datasource_levels:
-        return (*datasource_levels.get('upper_levels', missing_levels),
-                *datasource_levels.get("lower_levels", missing_levels))
+        return (
+            *datasource_levels.get("upper_levels", missing_levels),
+            *datasource_levels.get("lower_levels", missing_levels),
+        )
 
 
 @get_parsed_item_data
 def check_prometheus_custom(item, params, data):
     for metric_details in data["service_metrics"]:
         promql_expression = metric_details["promql_query"]
-        metric_label = metric_details['label']
+        metric_label = metric_details["label"]
 
         metric_name = metric_details.get("name")
         if metric_name == "null":
@@ -122,7 +126,7 @@ def check_prometheus_custom(item, params, data):
         levels = _metric_levels(
             metric_label,
             metric_details.get("levels"),
-            params.get('metric_list'),
+            params.get("metric_list"),
         )
         yield check_levels(
             float(metric_details["value"]),
@@ -133,10 +137,10 @@ def check_prometheus_custom(item, params, data):
 
 
 check_info["prometheus_custom"] = {
-    'parse_function': parse_prometheus_custom,
-    'check_function': check_prometheus_custom,
-    'inventory_function': discover(),
-    'service_description': '%s',
-    'has_perfdata': True,
-    'group': 'prometheus_custom',
+    "parse_function": parse_prometheus_custom,
+    "check_function": check_prometheus_custom,
+    "inventory_function": discover(),
+    "service_description": "%s",
+    "has_perfdata": True,
+    "group": "prometheus_custom",
 }

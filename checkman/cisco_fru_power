@@ -15,6 +15,6 @@ item:
  The index of the power supply from the list of OIDs for the device, usually
  starting with {1}.
 
-inventory:
+discovery:
  One service is created for each FRU power supply unit. Units are only included
  if they are not in the operational state {offEnvOther} and {offEnvPower}.

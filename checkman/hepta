@@ -15,5 +15,5 @@ description:
  Firmware Date ;
  Device Version ;
 
-inventory:
+discovery:
  One service is created.

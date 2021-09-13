@@ -181,6 +181,42 @@ export function page_width() {
     return null;
 }
 
+export function content_wrapper_size() {
+    const container = get_content_wrapper_object();
+
+    if (!container) {
+        // Default to the inner window size
+        return {height: page_height(), width: page_width()};
+    }
+
+    const vert_paddings =
+        parseInt(get_computed_style(container, "padding-top").replace("px", "")) +
+        parseInt(get_computed_style(container, "padding-bottom").replace("px", ""));
+    const hor_paddings =
+        parseInt(get_computed_style(container, "padding-right").replace("px", "")) +
+        parseInt(get_computed_style(container, "padding-left").replace("px", ""));
+
+    return {
+        height: container.clientHeight - vert_paddings,
+        width: container.clientWidth - hor_paddings,
+    };
+}
+
+export function get_content_wrapper_object() {
+    const content_wrapper_ids = [
+        "main_page_content", // General content wrapper div
+        "dashlet_content_wrapper", // Container div in view dashlets
+    ];
+
+    for (const id of content_wrapper_ids) {
+        let container = document.getElementById(id);
+        if (container) {
+            return container;
+        }
+    }
+    return null;
+}
+
 // Whether or not an element is partially in the the visible viewport
 export function is_in_viewport(element) {
     var rect = element.getBoundingClientRect(),
@@ -219,19 +255,18 @@ export function update_header_timer() {
     date.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
 }
 
-export function has_header_info() {
-    return document.getElementById("headinfo") !== null;
+export function has_row_info() {
+    return document.getElementById("row_info") !== null;
 }
 
-export function get_header_info() {
-    // Return the current text (minus the separator prepended by update_header_info())
-    return document.getElementById("headinfo").innerHTML.substr(2);
+export function get_row_info() {
+    return document.getElementById("row_info").innerHTML;
 }
 
-export function update_header_info(text) {
-    var container = document.getElementById("headinfo");
+export function update_row_info(text) {
+    const container = document.getElementById("row_info");
     if (container) {
-        container.innerHTML = ", " + text;
+        container.innerHTML = text;
     }
 }
 
@@ -254,6 +289,10 @@ export function get_url_param(name, url) {
 export function makeuri(addvars, url, filename) {
     url = typeof url === "undefined" ? window.location.href : url;
 
+    // First cleanup some trailing characters that would confuse the
+    // following logic
+    url = url.replace(/[#?]+$/g, "");
+
     var tmp = url.split("?");
     var base = typeof filename === "undefined" ? tmp[0] : filename;
     if (tmp.length > 1) {
@@ -269,10 +308,15 @@ export function makeuri(addvars, url, filename) {
     var params = [];
     var pair = null;
 
-    // Skip unwanted parmas
+    // Skip unwanted params
     for (var i = 0; i < tmp.length; i++) {
         pair = tmp[i].split("=");
-        if (pair[0][0] == "_" && pair[0] != "_username" && pair[0] != "_secret")
+        if (
+            pair[0][0] == "_" &&
+            pair[0] != "_username" &&
+            pair[0] != "_secret" &&
+            pair[0] != "_active"
+        )
             // Skip _<vars>
             continue;
         if (addvars.hasOwnProperty(pair[0]))
@@ -297,6 +341,10 @@ export function makeuri_contextless(vars, filename) {
     }
 
     return filename + "?" + params.join("&");
+}
+
+export function get_theme() {
+    return document.body.dataset.theme;
 }
 
 // Changes a parameter in the current pages URL without reloading the page
@@ -329,9 +377,18 @@ export function time() {
     return new Date().getTime() / 1000;
 }
 
-// reload sidebar, but preserve quicksearch field value and focus
-export function reload_sidebar() {
-    window.top.cmk.sidebar.reset_sidebar_scheduler();
+export function reload_whole_page(url) {
+    if (url) {
+        window.top.location = "index.py?start_url=" + encodeURIComponent(url);
+    } else {
+        window.top.location.reload();
+    }
+}
+
+export function delete_user_notification(msg_id, btn) {
+    ajax.post_url("ajax_delete_user_notification.py", "id=" + msg_id);
+    var row = btn.parentNode.parentNode;
+    row.parentNode.removeChild(row);
 }
 
 //#.
@@ -379,11 +436,11 @@ export function schedule_reload(url, remaining_ms) {
     update_page_state_reload_indicator(remaining_ms);
 
     if (remaining_ms <= 0) {
-        // The time is over. Now trigger the desired actions
+        // The time is over. Now trigger the desired actions and do not reschedule anymore.
+        // The action to be triggered will care about either performing a full page reload
+        // or partial update and fire the reload scheduler again.
         do_reload(url);
-
-        // Prepare for the next update interval
-        remaining_ms = parseFloat(g_reload_interval) * 1000;
+        return;
     }
 
     stop_reload_timer();
@@ -393,13 +450,69 @@ export function schedule_reload(url, remaining_ms) {
 }
 
 function update_page_state_reload_indicator(remaining_ms) {
-    let icon = document.getElementById("page_state_icon");
+    const icon = document.getElementById("page_state_icon");
     if (!icon) return; // Not present, no update needed
 
     let perc = (remaining_ms / (g_reload_interval * 1000)) * 100;
 
-    icon.style.clipPath = "circle(" + Math.floor(perc) + "% at 100%)";
-    icon.title = "Remaining: " + Math.floor(remaining_ms / 1000) + " sec.";
+    icon.style.clipPath = get_clip_path_polygon(perc);
+    const div = icon.closest(".page_state.default");
+    if (div) {
+        div.title = div.title.replace(/\d+/, remaining_ms / 1000);
+    }
+}
+
+function get_clip_path_polygon(perc) {
+    /* Returns a polygon with n = 3 to 6 nodes in the form of
+     * "polygon(p0x p0y, p1x p1y, ..., p(n-1)x p(n-1)y)",
+     * where pix and piy are percentages, i.e. in the range of {0, 100%} and the origin
+     * 0 0 is located in the upper left corner.
+     *
+     * e.g. node#1 has coordinates 50% 0 and
+     *      node#3 has coordinates 100% 100%
+     *
+     *    5---1---2      5---1---2      5---1---2
+     *    |   |   |      |   |  /|      |   |   |
+     *    |   |   |      |   | / |      |   |   |
+     *    |   |   |      |   |/  |      |   |   |
+     *    |   0   |      |   0   |      |   0   |
+     *    |       |      |       |      |    \  |
+     *    |       |      |       |      |     \ |
+     *    |       |      |       |      |      \|
+     *    4-------3      4-------3      4-------3
+     *
+     * The returned polygon grows in a way that its closing border (back to node#0)
+     * wanders clockwise with respect to the function argument perc.
+     * polygon(#0 #1) -> polygon(#0 #1 #2) -> polygon(#0 #1 #2 #3) -> ...
+     * perc = 100     -> 62.5              -> 37.5                 -> ...
+     */
+
+    if (perc > 87.5) {
+        return "polygon(50% 50%, 50% 0, " + Math.floor(100 - ((perc - 87.5) / 12.5) * 50) + "% 0)";
+    } else if (perc > 62.5) {
+        return (
+            "polygon(50% 50%, 50% 0, 100% 0, 100% " +
+            Math.floor(100 - ((perc - 62.5) / 25) * 100) +
+            "%)"
+        );
+    } else if (perc > 37.5) {
+        return (
+            "polygon(50% 50%, 50% 0, 100% 0, 100% 100%, " +
+            Math.floor(((perc - 37.5) / 25) * 100) +
+            "% 100%)"
+        );
+    } else if (perc > 12.5) {
+        return (
+            "polygon(50% 50%, 50% 0, 100% 0, 100% 100%, 0 100%, 0 " +
+            Math.floor(((perc - 12.5) / 25) * 100) +
+            "%)"
+        );
+    }
+    return (
+        "polygon(50% 50%, 50% 0, 100% 0, 100% 100%, 0 100%, 0 0, " +
+        Math.floor(50 - (perc / 12.5) * 50) +
+        "% 0)"
+    );
 }
 
 export function stop_reload_timer() {
@@ -585,10 +698,59 @@ export function add_simplebar_scrollbar(scrollable_id) {
 }
 
 export function add_simplebar_scrollbar_to_object(obj) {
-    return new SimpleBar(obj);
+    if (obj) {
+        return new SimpleBar(obj);
+    }
+    console.log("Missing object for SimpleBar initiation.");
 }
 
 export function content_scrollbar(scrollable_id) {
     if (g_content_scrollbar === null) g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
     return g_content_scrollbar;
+}
+
+export function set_focus_by_name(form_name, field_name) {
+    set_focus(document.getElementById("form_" + form_name).elements[field_name]);
+}
+
+export function set_focus_by_id(dom_id) {
+    set_focus(document.getElementById(dom_id));
+}
+
+function set_focus(focus_obj) {
+    if (focus_obj) {
+        focus_obj.focus();
+        if (focus_obj.select) {
+            focus_obj.select();
+        }
+    }
+}
+
+export function update_pending_changes(changes_info) {
+    if (!changes_info) {
+        return;
+    }
+
+    const text_container = document.getElementById("pending_changes");
+    if (text_container) {
+        text_container.innerHTML = changes_info;
+    }
+
+    const img_container = document.getElementById("page_state_icon");
+    if (img_container) {
+        return;
+    }
+
+    const img = document.createElement("img");
+    img.src = "themes/facelift/images/icon_pending_changes.svg";
+    img.setAttribute("id", "page_state_icon");
+    img.setAttribute("class", "icon");
+    const elem = document.createElement("div");
+    elem.setAttribute("class", "icon_container");
+    elem.appendChild(img);
+    text_container.parentElement.parentElement.appendChild(elem);
+}
+
+export function get_computed_style(object, property) {
+    return object ? window.getComputedStyle(object).getPropertyValue(property) : null;
 }

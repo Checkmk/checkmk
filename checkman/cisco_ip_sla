@@ -11,6 +11,6 @@ description:
  This check detects the configured IP SLA operations on Cisco IOS devices
  and checks their current status.
 
-inventory:
+discovery:
  One service is created for every IP SLA operation.
 

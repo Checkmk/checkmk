@@ -11,6 +11,6 @@ description:
 item:
  The sensor number: "1" or "2".
 
-inventory:
+discovery:
  Two services are created one for each of the two temperature sensor.
 

@@ -15,70 +15,57 @@ factory_settings["oracle_undostat_defaults"] = {
 }
 
 
-def inventory_oracle_undostat(info):
-    return [(line[0], {}) for line in info if len(line) == 6]
+def parse_oracle_undostat(info):
+    return {line[0]: [int(v) for v in line[1:]] for line in info if len(line) == 6}
 
 
-def check_oracle_undostat(item, params, info):
-    for line in info:
-        if line[0] == item:
-            infotext = ''
-
-            activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = \
-                list(map(int, line[1:]))
-            warn, crit = params["levels"]
-
-            if tuned_undoretention == -1:
-                state = 0
-            elif tuned_undoretention <= crit:
-                state = 2
-            elif tuned_undoretention <= warn:
-                state = 1
-            else:
-                state = 0
-
-            nospaceerrcntpic = ""
-            if nospaceerrcnt:
-                state_errcnt = params['nospaceerrcnt_state']
-                state = max(state, state_errcnt)
-                if state_errcnt == 1:
-                    nospaceerrcntpic = "(!)"
-                elif state_errcnt == 2:
-                    nospaceerrcntpic = "(!!)"
-                elif state_errcnt == 3:
-                    nospaceerrcntpic = "(?)"
-
-            if tuned_undoretention >= 0:
-                infotext = "%s Undoretention (warn/crit at %s/%s), %d active undoblocks, " \
-                    % (get_age_human_readable(tuned_undoretention),
-                   get_age_human_readable(warn),
-                   get_age_human_readable(crit),
-                   activeblks)
-
-            infotext += "%d max concurrent transactions, %s max querylen, %d space errors%s" \
-                % (maxconcurrency,
-                   get_age_human_readable(maxquerylen),
-                   nospaceerrcnt, nospaceerrcntpic)
-
-            perfdata = [
-                ('activeblk', activeblks),
-                ('transconcurrent', maxconcurrency),
-                ('tunedretention', tuned_undoretention, warn, crit),
-                ('querylen', maxquerylen),
-                ('nonspaceerrcount', nospaceerrcnt),
-            ]
-
-            return state, infotext, perfdata
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+def discover_oracle_undostat(parsed):
+    for item in parsed:
+        yield item, {}
 
 
-check_info['oracle_undostat'] = {
+def check_oracle_undostat(item, params, parsed):
+
+    data = parsed.get(item)
+    if data is None:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
+
+    activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = data
+    warn, crit = params["levels"]
+
+    yield check_levels(
+        tuned_undoretention,
+        None,
+        params=None if tuned_undoretention == -1 else (None, None, warn, crit),
+        human_readable_func=get_age_human_readable,
+        infoname="Undo retention",
+    )
+
+    if tuned_undoretention >= 0:
+        yield 0, "Active undo blocks: %d" % activeblks
+
+    yield 0, "Max concurrent transactions: %d" % maxconcurrency
+    yield 0, "Max querylen: %s" % get_age_human_readable(maxquerylen)
+    state_errcnt = params["nospaceerrcnt_state"] if nospaceerrcnt else 0
+    yield state_errcnt, "Space errors: %d" % nospaceerrcnt
+
+    yield 0, "", [
+        ("activeblk", activeblks),
+        ("transconcurrent", maxconcurrency),
+        # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
+        ("tunedretention", tuned_undoretention, warn, crit),
+        ("querylen", maxquerylen),
+        ("nonspaceerrcount", nospaceerrcnt),
+    ]
+
+
+check_info["oracle_undostat"] = {
+    "parse_function": parse_oracle_undostat,
     "check_function": check_oracle_undostat,
-    "inventory_function": inventory_oracle_undostat,
+    "inventory_function": discover_oracle_undostat,
     "service_description": "ORA %s Undo Retention",
     "has_perfdata": True,
     "default_levels_variable": "oracle_undostat_defaults",

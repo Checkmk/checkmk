@@ -29,6 +29,6 @@ item:
  One item is created per configured section using the
  'file_stats' output, with the sections name as item.
 
-inventory:
+discovery:
  One service is created for each section that the agent sends.
 

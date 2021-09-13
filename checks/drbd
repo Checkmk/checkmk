@@ -127,39 +127,39 @@ drbd_net_default_levels = (None, None)
 drbd_disk_default_levels = (None, None)
 drbd_stats_default_levels = (None, None, None, None, None, None, None, None, None)
 
-_drbd_block_start_match = re.compile('^[0-9]+:')
+_drbd_block_start_match = re.compile("^[0-9]+:")
 
-drbd_general_map = ['cs', 'ro', 'ds']
-drbd_net_map = ['cs', 'ns', 'nr']
-drbd_disk_map = ['cs', 'dw', 'dr']
-drbd_stats_map = ['cs', 'al', 'bm', 'lo', 'pe', 'ua', 'ap', 'ep', 'wo', 'oos']
+drbd_general_map = ["cs", "ro", "ds"]
+drbd_net_map = ["cs", "ns", "nr"]
+drbd_disk_map = ["cs", "dw", "dr"]
+drbd_stats_map = ["cs", "al", "bm", "lo", "pe", "ua", "ap", "ep", "wo", "oos"]
 
 drbd_cs_map = {
-    'StandAlone': 1,
-    'Disconnecting': 1,
-    'Unconnected': 2,
-    'Timeout': 2,
-    'BrokenPipe': 2,
-    'NetworkFailure': 2,
-    'ProtocolError': 2,
-    'TearDown': 2,
-    'WFConnection': 2,
-    'WFReportParams': 1,
-    'Connected': 0,
-    'Established': 0,
-    'StartingSyncS': 1,
-    'StartingSyncT': 1,
-    'WFBitMapS': 1,
-    'WFBitMapT': 1,
-    'WFSyncUUID': 1,
-    'SyncSource': 1,
-    'SyncTarget': 1,
-    'PausedSyncS': 1,
-    'PausedSyncT': 1,
-    'VerifyS': 0,
-    'VerifyT': 0,
-    'Ahead': 1,
-    'Behind': 1,
+    "StandAlone": 1,
+    "Disconnecting": 1,
+    "Unconnected": 2,
+    "Timeout": 2,
+    "BrokenPipe": 2,
+    "NetworkFailure": 2,
+    "ProtocolError": 2,
+    "TearDown": 2,
+    "WFConnection": 2,
+    "WFReportParams": 1,
+    "Connected": 0,
+    "Established": 0,
+    "StartingSyncS": 1,
+    "StartingSyncT": 1,
+    "WFBitMapS": 1,
+    "WFBitMapT": 1,
+    "WFSyncUUID": 1,
+    "SyncSource": 1,
+    "SyncTarget": 1,
+    "PausedSyncS": 1,
+    "PausedSyncT": 1,
+    "VerifyS": 0,
+    "VerifyT": 0,
+    "Ahead": 1,
+    "Behind": 1,
 }
 
 drbd_ds_map = {
@@ -188,25 +188,25 @@ def inventory_drbd(info, checktype):
     inventory = []
     for line in info[2:]:
         if _drbd_block_start_match.search(line[0]):
-            parsed = drbd_parse_block(drbd_extract_block('drbd%s' % line[0][:-1], info), checktype)
+            parsed = drbd_parse_block(drbd_extract_block("drbd%s" % line[0][:-1], info), checktype)
             # Skip unconfigured drbd devices
-            if parsed['cs'] == 'Unconfigured':
+            if parsed["cs"] == "Unconfigured":
                 continue
 
-            if checktype == 'drbd':
-                if 'ro' not in parsed or 'ds' not in parsed:
+            if checktype == "drbd":
+                if "ro" not in parsed or "ds" not in parsed:
                     continue
                 levels = {
-                    "roles_inventory": parsed['ro'],
-                    "diskstates_inventory": parsed['ds'],
+                    "roles_inventory": parsed["ro"],
+                    "diskstates_inventory": parsed["ds"],
                 }
-            elif checktype == 'drbd.net':
+            elif checktype == "drbd.net":
                 levels = "drbd_net_default_levels"
-            elif checktype == 'drbd.disk':
+            elif checktype == "drbd.disk":
                 levels = "drbd_disk_default_levels"
-            elif checktype == 'drbd.stats':
+            elif checktype == "drbd.stats":
                 levels = "drbd_stats_default_levels"
-            inventory.append(('drbd%s' % line[0][:-1], levels))
+            inventory.append(("drbd%s" % line[0][:-1], levels))
     return inventory
 
 
@@ -214,20 +214,20 @@ def drbd_parse_block(block, to_parse):
     parsed = {}
     for line in block:
         for field in line:
-            parts = field.split(':')
+            parts = field.split(":")
             if len(parts) > 1:
                 # Only parse the requested information depending on the check
                 # to be executed now
-                if to_parse == 'drbd' and parts[0] in drbd_general_map:
-                    if parts[0] in ['ro', 'ds']:
-                        parsed[parts[0]] = parts[1].split('/')
+                if to_parse == "drbd" and parts[0] in drbd_general_map:
+                    if parts[0] in ["ro", "ds"]:
+                        parsed[parts[0]] = parts[1].split("/")
                     else:
                         parsed[parts[0]] = parts[1]
-                elif to_parse == 'drbd.net' and parts[0] in drbd_net_map:
+                elif to_parse == "drbd.net" and parts[0] in drbd_net_map:
                     parsed[parts[0]] = parts[1]
-                elif to_parse == 'drbd.disk' and parts[0] in drbd_disk_map:
+                elif to_parse == "drbd.disk" and parts[0] in drbd_disk_map:
                     parsed[parts[0]] = parts[1]
-                elif to_parse == 'drbd.stats' and parts[0] in drbd_stats_map:
+                elif to_parse == "drbd.stats" and parts[0] in drbd_stats_map:
                     parsed[parts[0]] = parts[1]
 
     return parsed
@@ -262,28 +262,29 @@ def drbd_get_block(item, info, checktype):
 
 
 def check_drbd_general(item, params, info):
-    parsed = drbd_get_block(item, info, 'drbd')
+    parsed = drbd_get_block(item, info, "drbd")
 
     if isinstance(params, tuple):
         params_conv = {}
         params_conv.update({"roles_inventory": params[0] and params[0] or None})
         params_conv.update(
-            {"diskstates_inventory": (params[0] and params[1]) and params[1] or None})
+            {"diskstates_inventory": (params[0] and params[1]) and params[1] or None}
+        )
         params = params_conv
 
     if not parsed is None:
-        if parsed['cs'] == 'Unconfigured':
+        if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
-        elif not parsed['cs'] in drbd_cs_map:
+        elif not parsed["cs"] in drbd_cs_map:
             return (3, 'Undefined "connection state" in drbd output')
 
         # Weight of connection state is calculated by the drbd_cs_map.
         # The roles and disk states are calculated using the expected values
-        state = drbd_cs_map[parsed['cs']]
-        output = 'Connection State: %s' % parsed['cs']
+        state = drbd_cs_map[parsed["cs"]]
+        output = "Connection State: %s" % parsed["cs"]
 
         # Roles
-        output += ', Roles: %s/%s' % tuple(parsed['ro'])
+        output += ", Roles: %s/%s" % tuple(parsed["ro"])
         current_roles = "_".join(str(a).lower() for a in parsed["ro"])
 
         found_role_match = False
@@ -294,7 +295,7 @@ def check_drbd_general(item, params, info):
                     if roles_entry == current_roles:
                         found_role_match = True
                         state = max(state, roles_state)
-                        output += ' %s' % state_markers[roles_state]
+                        output += " %s" % state_markers[roles_state]
                         break
             else:  # Ignore roles if set to None
                 found_role_match = True
@@ -304,16 +305,20 @@ def check_drbd_general(item, params, info):
                 roles_inventory = params.get("roles_inventory")
                 if roles_inventory and parsed["ro"] != roles_inventory:
                     state = max(2, state)
-                    output += ' (Expected: %s/%s)' % tuple(params.get("roles_inventory"))
+                    output += " (Expected: %s/%s)" % tuple(params.get("roles_inventory"))
             else:
                 state = max(3, state)
-                output += ' (Check requires a new service discovery)'
+                output += " (Check requires a new service discovery)"
 
-        output += ', Diskstates: %s/%s' % tuple(parsed['ds'])
+        output += ", Diskstates: %s/%s" % tuple(parsed["ds"])
         # Do not evaluate diskstates. Either set by rule or through the
         # legacy configuration option None in the check parameters tuple
-        if "diskstates"           in params and params["diskstates"] is None or \
-           "diskstates_inventory" in params and params["diskstates_inventory"] is None:
+        if (
+            "diskstates" in params
+            and params["diskstates"] is None
+            or "diskstates_inventory" in params
+            and params["diskstates_inventory"] is None
+        ):
             return (state, output)
 
         params_diskstates_dict = dict(params.get("diskstates", []))
@@ -324,11 +329,11 @@ def check_drbd_general(item, params, info):
 
             if params_diskstate is not None:
                 state = max(state, params_diskstate)
-                diskstates_info.add('%s/%s is %s' % (ro, ds, state_markers[params_diskstate]))
+                diskstates_info.add("%s/%s is %s" % (ro, ds, state_markers[params_diskstate]))
             else:
                 default_state = drbd_ds_map.get(diskstate, 3)
                 if default_state > 0:
-                    diskstates_info.add('%s/%s is %s' % (ro, ds, state_markers[default_state]))
+                    diskstates_info.add("%s/%s is %s" % (ro, ds, state_markers[default_state]))
                 state = max(state, drbd_ds_map.get(diskstate, 3))
         if diskstates_info:
             output += " (%s)" % ", ".join(diskstates_info)
@@ -339,32 +344,36 @@ def check_drbd_general(item, params, info):
 
 
 check_info["drbd"] = {
-    'inventory_function': lambda info: inventory_drbd(info, "drbd"),
-    'check_function': check_drbd_general,
-    'group': 'drbd',
-    'has_perfdata': True,
-    'service_description': 'DRBD %s status',
+    "inventory_function": lambda info: inventory_drbd(info, "drbd"),
+    "check_function": check_drbd_general,
+    "group": "drbd",
+    "has_perfdata": True,
+    "service_description": "DRBD %s status",
 }
 
 
 def drbd_get_rates(list_):
     now = time.time()
-    output = ''
+    output = ""
     perfdata = []
     for type_, name, item, value, uom in list_:
         rate = get_rate("%s.%s.%s" % (type_, name, item), now, value)
         perfdata.append((name, rate))
-        output += ' %s/sec: %s%s' % (name, rate, uom)
+        output += " %s/sec: %s%s" % (name, rate, uom)
     return (output, perfdata)
 
 
 def check_drbd_net(item, params, info):
-    parsed = drbd_get_block(item, info, 'drbd.net')
+    parsed = drbd_get_block(item, info, "drbd.net")
     if not parsed is None:
-        if parsed['cs'] == 'Unconfigured':
+        if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
-        output, perfdata = drbd_get_rates([('drbd.net', 'in', item, int(parsed['nr']), 'kb'),
-                                           ('drbd.net', 'out', item, int(parsed['ns']), 'kb')])
+        output, perfdata = drbd_get_rates(
+            [
+                ("drbd.net", "in", item, int(parsed["nr"]), "kb"),
+                ("drbd.net", "out", item, int(parsed["ns"]), "kb"),
+            ]
+        )
         # FIXME: Maybe handle thresholds in the future
         return (0, output, perfdata)
 
@@ -372,21 +381,25 @@ def check_drbd_net(item, params, info):
 
 
 check_info["drbd.net"] = {
-    'inventory_function': lambda info: inventory_drbd(info, "drbd.net"),
-    'check_function': check_drbd_net,
-    'group': 'drbd.net',
-    'has_perfdata': True,
-    'service_description': 'DRBD %s net',
+    "inventory_function": lambda info: inventory_drbd(info, "drbd.net"),
+    "check_function": check_drbd_net,
+    "group": "drbd.net",
+    "has_perfdata": True,
+    "service_description": "DRBD %s net",
 }
 
 
 def check_drbd_disk(item, params, info):
-    parsed = drbd_get_block(item, info, 'drbd.disk')
+    parsed = drbd_get_block(item, info, "drbd.disk")
     if not parsed is None:
-        if parsed['cs'] == 'Unconfigured':
+        if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
-        output, perfdata = drbd_get_rates([('drbd.disk', 'write', item, int(parsed['dw']), 'kb'),
-                                           ('drbd.disk', 'read', item, int(parsed['dr']), 'kb')])
+        output, perfdata = drbd_get_rates(
+            [
+                ("drbd.disk", "write", item, int(parsed["dw"]), "kb"),
+                ("drbd.disk", "read", item, int(parsed["dr"]), "kb"),
+            ]
+        )
         # FIXME: Maybe handle thresholds in the future
         return (0, output, perfdata)
 
@@ -394,47 +407,47 @@ def check_drbd_disk(item, params, info):
 
 
 check_info["drbd.disk"] = {
-    'inventory_function': lambda info: inventory_drbd(info, "drbd.disk"),
-    'check_function': check_drbd_disk,
-    'group': 'drbd.disk',
-    'has_perfdata': True,
-    'service_description': 'DRBD %s disk',
+    "inventory_function": lambda info: inventory_drbd(info, "drbd.disk"),
+    "check_function": check_drbd_disk,
+    "group": "drbd.disk",
+    "has_perfdata": True,
+    "service_description": "DRBD %s disk",
 }
 
 
 def check_drbd_stats(item, params, info):
-    parsed = drbd_get_block(item, info, 'drbd.stats')
+    parsed = drbd_get_block(item, info, "drbd.stats")
     if not parsed is None:
-        if parsed['cs'] == 'Unconfigured':
+        if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
-        output = ''
+        output = ""
         perfdata = []
         for key, label in [
-            ('al', 'activity log updates'),
-            ('bm', 'bit map updates'),
-            ('lo', 'local count requests'),
-            ('pe', 'pending requests'),
-            ('ua', 'unacknowledged requests'),
-            ('ap', 'application pending requests'),
-            ('ep', 'epoch objects'),
-            ('wo', 'write order'),
-            ('oos', 'kb out of sync'),
+            ("al", "activity log updates"),
+            ("bm", "bit map updates"),
+            ("lo", "local count requests"),
+            ("pe", "pending requests"),
+            ("ua", "unacknowledged requests"),
+            ("ap", "application pending requests"),
+            ("ep", "epoch objects"),
+            ("wo", "write order"),
+            ("oos", "kb out of sync"),
         ]:
             if key in parsed:
-                output += '%s: %s, ' % (label, parsed[key])
+                output += "%s: %s, " % (label, parsed[key])
             else:
-                parsed[key] = '0'  # perfdata must always have same number of entries
+                parsed[key] = "0"  # perfdata must always have same number of entries
             if parsed[key].isdigit():
-                perfdata.append(('%s' % label.replace(" ", "_"), int(parsed[key])))
-        return (0, output.rstrip(', '), perfdata)
+                perfdata.append(("%s" % label.replace(" ", "_"), int(parsed[key])))
+        return (0, output.rstrip(", "), perfdata)
 
     return (3, "Undefined state")
 
 
 check_info["drbd.stats"] = {
-    'inventory_function': lambda info: inventory_drbd(info, "drbd.stats"),
-    'check_function': check_drbd_stats,
-    'group': 'drbd.stats',
-    'has_perfdata': True,
-    'service_description': 'DRBD %s stats',
+    "inventory_function": lambda info: inventory_drbd(info, "drbd.stats"),
+    "check_function": check_drbd_stats,
+    "group": "drbd.stats",
+    "has_perfdata": True,
+    "service_description": "DRBD %s stats",
 }

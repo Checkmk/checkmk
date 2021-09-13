@@ -71,6 +71,7 @@ void ConcreteLogger::setLevel(LogLevel level) { _level = level; }
 Handler *ConcreteLogger::getHandler() const { return _handler; }
 
 void ConcreteLogger::setHandler(std::unique_ptr<Handler> handler) {
+    std::scoped_lock l(_lock);
     delete _handler;
     _handler = handler.release();
 }
@@ -84,15 +85,20 @@ void ConcreteLogger::setUseParentHandlers(bool useParentHandlers) {
 
 void ConcreteLogger::emitContext(std::ostream & /*unused*/) const {}
 
+void ConcreteLogger::callHandler(const LogRecord &record) {
+    std::scoped_lock l(_lock);
+    if (Handler *handler = getHandler()) {
+        handler->publish(record);
+    }
+}
+
 void ConcreteLogger::log(const LogRecord &record) {
     if (!isLoggable(record.getLevel())) {
         return;
     }
     for (Logger *logger = this; logger != nullptr;
          logger = logger->getParent()) {
-        if (Handler *handler = logger->getHandler()) {
-            handler->publish(record);
-        }
+        logger->callHandler(record);
         if (!logger->getUseParentHandlers()) {
             break;
         }
@@ -113,6 +119,10 @@ Handler *LoggerDecorator::getHandler() const { return _logger->getHandler(); }
 
 void LoggerDecorator::setHandler(std::unique_ptr<Handler> handler) {
     _logger->setHandler(std::move(handler));
+}
+
+void LoggerDecorator::callHandler(const LogRecord &record) {
+    _logger->callHandler(record);
 }
 
 bool LoggerDecorator::getUseParentHandlers() const {
@@ -172,9 +182,4 @@ LogManager LogManager::global_log_manager;
 
 std::ostream &operator<<(std::ostream &os, const generic_error &ge) {
     return os << ge.what();
-}
-
-std::ostream &operator<<(std::ostream &os,
-                         const std::chrono::system_clock::time_point &tp) {
-    return os << FormattedTimePoint(tp);
 }

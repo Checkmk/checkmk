@@ -10,40 +10,34 @@
 
 #include <fcntl.h>
 #include <semaphore.h>
+#include <sys/types.h>
 
+#include <array>
 #include <cerrno>
 #include <chrono>
+#include <functional>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 class Logger;
 
-class FileDescriptorPair {
+class SocketPair {
 public:
-    // ATTENTION: blocking is Alert, Notify, RRD, nonblocking - Check && Icmp
-    enum class Mode { blocking, nonblocking };
+    enum class Mode { blocking, local_non_blocking };
+    enum class Direction { bidirectional, remote_to_local };
 
-    static FileDescriptorPair invalid() { return FileDescriptorPair{-1, -1}; }
-    [[nodiscard]] bool isInvalid() const {
-        return local_ == -1 && remote_ == -1;
-    }
+    static std::optional<SocketPair> make(Mode mode, Direction direction,
+                                          Logger *logger);
+    void close();
 
-    // TODO(sp) One of these pairs must die...
-
-    static FileDescriptorPair createSocketPair(Mode mode, Logger *logger);
-    static FileDescriptorPair createPipePair(Mode mode, Logger *logger);
-
-    static FileDescriptorPair makeSocketPair(Mode mode, Logger *logger);
-    static FileDescriptorPair makePipePair(Mode mode, Logger *logger);
-
-    [[nodiscard]] int local() const { return local_; }
-    [[nodiscard]] int remote() const { return remote_; }
+    [[nodiscard]] int local() const { return fd_[0]; }
+    [[nodiscard]] int remote() const { return fd_[1]; }
 
 private:
-    FileDescriptorPair(int local, int remote)
-        : local_{local}, remote_{remote} {}
+    std::array<int, 2> fd_;  // We do not own these FDs.
 
-    int local_;
-    int remote_;
+    SocketPair(int local, int remote) : fd_{local, remote} {}
 };
 
 void setThreadName(std::string name);
@@ -54,8 +48,9 @@ class Semaphore {
 public:
     enum class Shared { between_threads, between_processes };
 
-    explicit Semaphore(Shared shared = Shared::between_threads,
-                       unsigned int value = 0) {
+    Semaphore() : Semaphore{Shared::between_threads, 0U} {}
+    explicit Semaphore(Shared shared) : Semaphore{shared, 0U} {}
+    Semaphore(Shared shared, unsigned int value) {
         sem_init(&_semaphore, shared == Shared::between_threads ? 0 : 1, value);
     }
     ~Semaphore() { sem_destroy(&_semaphore); }
@@ -130,10 +125,22 @@ public:
 private:
     int fd_;
 
+    bool fcntl_impl(short l_type, int cmd, const char *msg) const {
+        return fcntl_impl(l_type, cmd, msg, false);
+    }
+
     bool fcntl_impl(short l_type, int cmd, const char *msg,
-                    bool accecpt_timeout = false) const;
+                    bool accecpt_timeout) const;
 
     bool try_lock_until_impl(const std::chrono::steady_clock::time_point &time,
                              short l_type, const char *msg);
 };
+
+ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
+                              std::chrono::nanoseconds timeout,
+                              const std::function<bool()> &pred);
+
+ssize_t writeWithTimeout(int fd, std::string_view buffer,
+                         std::chrono::nanoseconds timeout);
+
 #endif  // POSIXUtils_h

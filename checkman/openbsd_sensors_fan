@@ -13,5 +13,5 @@ description:
 item:
  The description of the sensor.
 
-inventory:
+discovery:
  One service is created for each sensor with the correct sensor type ("fan").

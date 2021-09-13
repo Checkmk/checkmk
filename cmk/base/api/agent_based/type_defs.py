@@ -7,31 +7,59 @@
 
 Some of these are exposed in the API, some are not.
 """
-from collections.abc import Mapping
+import pprint
 from typing import (
     Any,
     Callable,
     Generator,
     List,
-    MutableMapping,
+    Literal,
+    Mapping,
     NamedTuple,
     Optional,
+    Sequence,
     Set,
     Union,
 )
-import pprint
 
-from cmk.utils.type_defs import (
-    ParsedSectionName,
-    SectionName,
-)
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPTree  # pylint: disable=cmk-module-layer-violation
-
-from cmk.base.discovered_labels import HostLabel  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
 
 
-class Parameters(Mapping):
+class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):
+    """A user friendly variant of our internally used labels
+
+    This is a tiny bit redundant, but it helps decoupling API
+    code from internal representations.
+    """
+
+    def __init__(self, name, value):
+        super().__init__()
+        if not isinstance(name, str):
+            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
+        if not isinstance(value, str):
+            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+
+    def __repr__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
+
+
+class HostLabel(PluginSuppliedLabel):
+    """Representing a host label in Checkmk
+
+    This class creates a host label that can be yielded by a host_label_function as regisitered
+    with the section.
+
+        >>> my_label = HostLabel("my_key", "my_value")
+
+    """
+
+
+ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
+
+
+class Parameters(ParametersTypeAlias):
     """Parameter objects are used to pass parameters to plugin functions"""
+
     def __init__(self, data):
         if not isinstance(data, dict):
             self._data = data  # error handling will try to repr(self).
@@ -52,6 +80,23 @@ class Parameters(Mapping):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._data))
 
 
+class OIDSpecTuple(NamedTuple):
+    column: Union[int, str]
+    encoding: Union[Literal["string"], Literal["binary"]]
+    save_to_cache: bool
+
+    # we create a deepcopy in our unit tests, so support it.
+    def __deepcopy__(self, _memo) -> "OIDSpecTuple":
+        return self
+
+
+class SNMPTreeTuple(NamedTuple):
+    base: str
+    oids: Sequence[OIDSpecTuple]
+
+
+RuleSetTypeName = Literal["merged", "all"]
+
 StringTable = List[List[str]]
 StringByteTable = List[List[Union[str, List[int]]]]
 
@@ -65,32 +110,36 @@ SNMPParseFunction = Union[  #
     Callable[[List[StringByteTable]], Any],  #
 ]
 
-AgentSectionPlugin = NamedTuple(
-    "AgentSectionPlugin",
-    [
-        ("name", SectionName),
-        ("parsed_section_name", ParsedSectionName),
-        ("parse_function", AgentParseFunction),
-        ("host_label_function", HostLabelFunction),
-        ("supersedes", Set[SectionName]),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
+SimpleSNMPParseFunction = Union[  #
+    Callable[[StringTable], Any],  #
+    Callable[[StringByteTable], Any],  #
+]
 
-SNMPSectionPlugin = NamedTuple(
-    "SNMPSectionPlugin",
-    [
-        ("name", SectionName),
-        ("parsed_section_name", ParsedSectionName),
-        ("parse_function", SNMPParseFunction),
-        ("host_label_function", HostLabelFunction),
-        ("supersedes", Set[SectionName]),
-        ("detect_spec", SNMPDetectSpec),
-        ("trees", List[SNMPTree]),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
+
+class AgentSectionPlugin(NamedTuple):
+    name: SectionName
+    parsed_section_name: ParsedSectionName
+    parse_function: AgentParseFunction
+    host_label_function: HostLabelFunction
+    host_label_default_parameters: Optional[ParametersTypeAlias]
+    host_label_ruleset_name: Optional[RuleSetName]
+    host_label_ruleset_type: RuleSetTypeName
+    supersedes: Set[SectionName]
+    module: Optional[str]  # not available for auto migrated plugins.
+
+
+class SNMPSectionPlugin(NamedTuple):
+    name: SectionName
+    parsed_section_name: ParsedSectionName
+    parse_function: SNMPParseFunction
+    host_label_function: HostLabelFunction
+    host_label_default_parameters: Optional[ParametersTypeAlias]
+    host_label_ruleset_name: Optional[RuleSetName]
+    host_label_ruleset_type: RuleSetTypeName
+    detect_spec: SNMPDetectBaseType
+    trees: Sequence[SNMPTreeTuple]
+    supersedes: Set[SectionName]
+    module: Optional[str]  # not available for auto migrated plugins.
+
 
 SectionPlugin = Union[AgentSectionPlugin, SNMPSectionPlugin]
-
-ValueStore = MutableMapping[str, Any]

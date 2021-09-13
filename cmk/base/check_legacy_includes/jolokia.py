@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import json
 
 #   .--Parse---------------------------------------------------------------.
@@ -28,7 +28,7 @@ def parse_jolokia_json_output(info):
 
 def jolokia_mbean_attribute(attribute, mbean):
     tmp = mbean.split("%s=" % attribute, 1)[1]
-    for delimiter in (',', '/'):
+    for delimiter in (",", "/"):
         tmp = tmp.split(delimiter, 1)[0]
     return tmp
 
@@ -40,8 +40,7 @@ def jolokia_basic_split(line, expected_length):
     if len(line) == expected_length:
         return line
     if len(line) < expected_length:
-        raise ValueError("Too few values: %r (expected >= %d)" \
-                         % (line, expected_length))
+        raise ValueError("Too few values: %r (expected >= %d)" % (line, expected_length))
     if expected_length < 2:
         raise NotImplementedError("use 'join' to create single token")
     tokens = line[:]
@@ -52,14 +51,14 @@ def jolokia_basic_split(line, expected_length):
 
 
 def jolokoia_extract_opt(instance_raw):
-    if ',' not in instance_raw:
+    if "," not in instance_raw:
         return instance_raw, {}, []
 
-    instance, raw = instance_raw.split(',', 1)
+    instance, raw = instance_raw.split(",", 1)
 
     attr = {}
     pos = []
-    for part in raw.split(','):
+    for part in raw.split(","):
         if ":" in part:
             part = part.split(":", 1)[1]
         if "=" in part:
@@ -96,14 +95,14 @@ def jolokia_metrics_parse(info):
 
         parsed.setdefault(inst, {})
 
-        if 'type' in attributes:
-            bean_name = attributes.pop('name')
-            bean_type = attributes.pop('type')
+        if "type" in attributes:
+            bean_name = attributes.pop("name")
+            bean_type = attributes.pop("type")
             # backwards compatibility
             bean_type = {"GarbageCollector": "gc", "ThreadPool": "tp"}.get(bean_type, bean_type)
             # maybe do this for all types?
             if bean_type == "tp":
-                bean_name = bean_name.replace('"', '')
+                bean_name = bean_name.replace('"', "")
 
             bean = parsed[inst].setdefault(bean_type, {}).setdefault(bean_name, {})
             bean[var] = value
@@ -111,11 +110,11 @@ def jolokia_metrics_parse(info):
         else:
             if positional:
                 app = positional[0]
-                app_dict = parsed[inst].setdefault('apps', {}).setdefault(app, {})
+                app_dict = parsed[inst].setdefault("apps", {}).setdefault(app, {})
                 if len(positional) > 1:
                     servlet = positional[1]
-                    app_dict.setdefault('servlets', {}).setdefault(servlet, {})
-                    app_dict['servlets'][servlet][var] = value
+                    app_dict.setdefault("servlets", {}).setdefault(servlet, {})
+                    app_dict["servlets"][servlet][var] = value
                 else:
                     app_dict[var] = value
             else:
@@ -123,7 +122,7 @@ def jolokia_metrics_parse(info):
     return parsed
 
 
-#.
+# .
 #   .--Generic inventory functions-----------------------------------------.
 #   |                   ____                      _                        |
 #   |                  / ___| ___ _ __   ___ _ __(_) ___                   |
@@ -150,23 +149,23 @@ def inventory_jolokia_metrics_apps(info, what):
     inv = []
     parsed = jolokia_metrics_parse(info)
 
-    if what == 'app_sess':
-        levels = 'jolokia_metrics_app_sess_default_levels'
+    if what == "app_sess":
+        levels = "jolokia_metrics_app_sess_default_levels"
         needed_key = ["Sessions", "activeSessions"]
-    elif what == 'bea_app_sess':
-        levels = 'jolokia_metrics_app_sess_default_levels'
+    elif what == "bea_app_sess":
+        levels = "jolokia_metrics_app_sess_default_levels"
         needed_key = ["OpenSessionsCurrentCount"]
-    elif what == 'queue':
+    elif what == "queue":
         needed_key = ["QueueLength"]
         levels = "jolokia_metrics_queue_default_levels"
     # Only works on BEA
-    elif what == 'bea_requests':
+    elif what == "bea_requests":
         needed_key = ["CompletedRequestCount"]
         levels = None
-    elif what == 'requests':
+    elif what == "requests":
         needed_key = ["requestCount"]
         levels = None
-    elif what == 'threads':
+    elif what == "threads":
         needed_key = ["StandbyThreadCount"]
         levels = None
     else:
@@ -175,26 +174,26 @@ def inventory_jolokia_metrics_apps(info, what):
 
     # this handles information from BEA, they stack one level
     # higher than the rest.
-    if what == 'bea_app_sess':
+    if what == "bea_app_sess":
         for inst, vals in parsed.items():
             if vals is None:
                 continue  # no data from agent
 
-            for app, appstate in vals.get('apps', {}).items():
-                if 'servlets' in appstate:
+            for app, appstate in vals.get("apps", {}).items():
+                if "servlets" in appstate:
                     for nk in needed_key:
-                        for servlet in appstate['servlets']:
-                            if nk in appstate['servlets'][servlet]:
-                                inv.append(('%s %s %s' % (inst, app, servlet), levels))
+                        for servlet in appstate["servlets"]:
+                            if nk in appstate["servlets"][servlet]:
+                                inv.append(("%s %s %s" % (inst, app, servlet), levels))
                                 continue
     # This does the same for tomcat
     for inst, vals in parsed.items():
         if vals is None:
             continue  # no data from agent
 
-        for app, appstate in vals.get('apps', {}).items():
+        for app, appstate in vals.get("apps", {}).items():
             for nk in needed_key:
                 if nk in appstate:
-                    inv.append(('%s %s' % (inst, app), levels))
+                    inv.append(("%s %s" % (inst, app), levels))
                     continue
     return inv

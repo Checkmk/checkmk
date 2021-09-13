@@ -4,52 +4,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base import check_utils
+# pylint: disable=protected-access
+
+from typing import Optional
+
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.base.check_utils import Service
 
 
-def test_get_default_params_clean_case():
-    # with params
-    assert check_utils.get_default_parameters(
-        check_legacy_info={"default_levels_variable": "foo"},
-        factory_settings={"foo": {
-            "levels": (23, 42)
-        }},
-        check_context={},
-    ) == {
-        "levels": (23, 42)
-    }
-
-    # without params
-    assert check_utils.get_default_parameters(
-        check_legacy_info={},
-        factory_settings={},
-        check_context={},
-    ) is None
+def _service(plugin: str, item: Optional[str]) -> Service:
+    return Service(
+        check_plugin_name=CheckPluginName(plugin),
+        item=item,
+        description=f"test description {plugin}/{item}",
+        parameters={},
+    )
 
 
-def test_get_default_params_with_user_update():
-    # with params
-    assert check_utils.get_default_parameters(
-        check_legacy_info={"default_levels_variable": "foo"},
-        factory_settings={"foo": {
-            "levels": (23, 42),
-            "overwrite_this": None
-        }},
-        check_context={"foo": {
-            "overwrite_this": 3.14,
-            "more": "is better!"
-        }},
-    ) == {
-        "levels": (23, 42),
-        "overwrite_this": 3.14,
-        "more": "is better!",
-    }
+def test_service_sortable():
 
-
-def test_get_default_params_ignore_user_defined_tuple():
-    # with params
-    assert check_utils.get_default_parameters(
-        check_legacy_info={"default_levels_variable": "foo"},
-        factory_settings={},
-        check_context={"foo": (23, 42)},
-    ) == {}
+    assert sorted(
+        [
+            _service("B", "b"),
+            _service("A", "b"),
+            _service("B", "a"),
+            _service("A", None),
+        ]
+    ) == [
+        _service("A", None),
+        _service("A", "b"),
+        _service("B", "a"),
+        _service("B", "b"),
+    ]

@@ -88,6 +88,7 @@ set_variable_defaults() {
 preamble_1() { # TODO: split these up more meaningful
     # Make sure that locally installed binaries are found
     PATH=$PATH:/usr/local/bin
+    [ -d /var/qmail/bin ] && PATH=$PATH:/var/qmail/bin
 
     export MK_LIBDIR
     export MK_CONFDIR

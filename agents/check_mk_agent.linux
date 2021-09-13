@@ -29,6 +29,10 @@ elif [ "$SSH_CLIENT" ]; then
     export REMOTE=${SSH_CLIENT%% *}
 fi
 
+# let RTCs know about this remote
+[ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
+[ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
+
 # The package name gets patched for baked agents to either
 # "check-mk-agent" or the name set by the "name of agent packages" rule
 # TODO: rename (used for systemd as well), deal with when fixing CMK-8339
@@ -1065,14 +1069,16 @@ run_fileinfo() {
 
 run_liveupdate() {
     if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
-        if [ -z "$REMOTE" ]; then
-            echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
-        elif [ -z "$RTC_SECRET" ] && [ -z "$PASSPHRASE" ] && [ "$ENCRYPTED_RT" != "no" ]; then
+
+        if [ -z "$RTC_SECRET" ] && [ -z "$PASSPHRASE" ] && [ "$ENCRYPTED_RT" != "no" ]; then
             echo "ERROR: Missing secret for encryping Real-Time Check data,  while encryption is requested. Not starting Real-Time Checks." >&2
         elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
         else
-            run_real_time_checks >/dev/null &
+            for trigger in "${MK_VARDIR}/rtc_remotes/"?*; do
+                # no such file => no expansion of ?* => nothing to do
+                [ -e "${trigger}" ] && run_real_time_checks_for_remote "${trigger}" >/dev/null &
+            done
         fi
     fi
 }
@@ -1395,17 +1401,30 @@ run_cached() {
 # Make run_cached available for subshells (plugins, local checks, etc.)
 export -f run_cached
 
+_rt_pidfile_is_mine() {
+    [ "$(cat "${1}" 2>/dev/null)" = "$$" ]
+}
+
+_rt_pidfile_is_alive() {
+    [ "$(("$(date +%s)" - "$(stat -c %X "${1}")"))" -le "${RTC_TIMEOUT}" ]
+}
+
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
-run_real_time_checks() {
-    PIDFILE=$MK_VARDIR/real_time_checks.pid
-    echo $$ >"$PIDFILE"
+run_real_time_checks_for_remote() {
+    pidfile="${1}"
+    remote="${pidfile##*/rtc_remotes/}"
 
     if [ "$PASSPHRASE" != "" ]; then
         # new mechanism to set the passphrase has priority
         RTC_SECRET=$PASSPHRASE
     fi
+
+    # have I already started for this remote?
+    _rt_pidfile_is_mine "${pidfile}" && return
+
+    echo $$ >"${pidfile}"
 
     if [ "$ENCRYPTED_RT" != "no" ]; then
         PROTOCOL=00
@@ -1414,10 +1433,11 @@ run_real_time_checks() {
     fi
 
     while true; do
-        # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if [ ! -e "$PIDFILE" ] || [ "$(<"$PIDFILE")" -ne $$ ] || [ "$RTC_TIMEOUT" -eq 0 ]; then
-            exit 1
-        fi
+        _rt_pidfile_is_mine "${pidfile}" || return
+        _rt_pidfile_is_alive "${pidfile}" || {
+            rm "${pidfile}"
+            return
+        }
 
         for SECTION in $RTC_SECTIONS; do
             # Be aware of maximum packet size. Maybe we need to check the size of the section
@@ -1433,7 +1453,7 @@ run_real_time_checks() {
                 else
                     section_"$SECTION"
                 fi
-            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
+            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${remote}/${RTC_PORT}"
         done
 
         # Plugins
@@ -1456,12 +1476,11 @@ run_real_time_checks() {
                     else
                         run_agent_plugin "$PLUGIN"
                     fi
-                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
+                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${remote}/${RTC_PORT}"
             done
         fi
 
         sleep 1
-        RTC_TIMEOUT=$((RTC_TIMEOUT - 1))
     done
 }
 

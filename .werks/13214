@@ -1,0 +1,14 @@
+Title: real-time-checks: systemd compatibility
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631470435
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p12
+
+The previous approach of the RTC feature did not work with
+systemd. This werk changes the way real time data
+transmission is triggered, such that they work with systemd.

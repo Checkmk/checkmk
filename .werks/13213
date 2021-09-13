@@ -12,5 +12,5 @@ Since version 1.2.9 the real time check encryption did not work if
 the agent encryption was activated, as the agent also uses
 the corresponding secret to encrypt the payload of the real-time
 UDP packets in this case.
-The Checkmk server now follows this logic when encrypting the
+The Checkmk server now follows this logic when decrypting the
 packets.

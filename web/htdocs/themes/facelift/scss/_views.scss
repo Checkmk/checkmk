@@ -778,12 +778,12 @@ table.data tr.data td.unmonitored span,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored span {
   color: $font-color-black;
-  background-color: $unmonitored-bg-color;
+  background-color: $color-state-4-background;
 }
 
 table.data.availability tr td {
   &.unmonitored {
-    background-color: $unmonitored-bg-color;
+    background-color: $color-state-4-background;
   }
 
   &.hostdown {
@@ -986,7 +986,7 @@ td.invtree {
   table th {
     height: 14px;
     padding: 1px 5px;
-    border: 1px solid rgb(136, 136, 136);
+    border: 1px solid $color-table-border;
   }
 
   table th {
@@ -1000,7 +1000,6 @@ td.invtree {
   table.data.single tr.data & table,
   table.data.table tr.data & table {
     margin: 8px 0 12px;
-    border: 1px solid $color-table-border;
     box-shadow: none;
 
     th,
@@ -1008,7 +1007,6 @@ td.invtree {
       height: 14px;
       padding: 2px 6px;
       background-color: $invtree-td-bg-color;
-      border: 1px solid $color-table-border;
     }
 
     th {

@@ -48,7 +48,7 @@ $button-background-hover: rgb(247, 247, 247);
 $color-state-1-background: $yellow;
 $color-state-2-background: rgb(232, 85, 85);
 $color-state-3-background: rgb(252, 185, 123);
-$color-state-4-background: rgb(136, 136, 136);
+$color-state-4-background: $middarkgrey;
 $color-state-5-background: rgb(72, 203, 240);
 $color-state-6-background: rgb(185, 236, 250);
 $color-state-7-background: rgb(233, 128, 110);
@@ -135,7 +135,6 @@ $dragging-bg-color: $grey-1;
 $invtree-th-bg-color: rgb(245, 245, 245);
 $invtree-td-bg-color: $grey-1;
 
-$unmonitored-bg-color: rgb(202, 202, 202);
 $hostdown-bg-color: rgb(0, 102, 170);
 
 $nform-vlof-border-color: $ux-theme-6;

@@ -6,9 +6,7 @@
 table.prediction {
   margin-top: 10px;
   background-color: rgb(238, 238, 238);
-  border: 1px solid $black;
   border-spacing: 0;
-  box-shadow: 0.5px 0.5px 2px rgb(136, 136, 136);
 
   canvas {
     margin: 0;
@@ -27,18 +25,8 @@ table.prediction {
         display: inline-block;
         float: none;
 
-        &.color {
-          display: inline-block;
-          width: 12px;
-          height: 12px;
-          vertical-align: bottom;
-          border: 1px solid $black;
-          box-shadow: 0.5px 0.5px 1px rgb(136, 136, 136);
-        }
-
         &.entry {
           margin-right: 20px;
-          margin-left: 5px;
         }
       }
     }

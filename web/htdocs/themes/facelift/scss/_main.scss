@@ -246,21 +246,6 @@ input.button.hot {
   }
 }
 
-a.button {
-  height: 24px;
-  padding: 0.1ex 1ex;
-  margin: 2px;
-  font-weight: normal;
-  color: $font-color-black;
-  text-decoration: none;
-  background-color: rgb(204, 204, 170);
-  border-color: rgb(221, 221, 221) rgb(136, 136, 136) $grey-4 rgb(221, 221, 221);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 4px;
-  -webkit-border-radius: 4px;
-}
-
 /*for IE8 */
 input[type="submit"]:focus {
   outline: none;
@@ -1148,17 +1133,6 @@ td.nowiki {
     font-weight: bold;
     color: $font-color-light-bg;
     background-color: rgb(230, 216, 163);
-  }
-
-  table {
-    margin: 10px 0;
-    border: 1px solid $black;
-    border-collapse: collapse;
-
-    table td,
-    table th {
-      border: 1px solid rgb(136, 136, 136);
-    }
   }
 }
 

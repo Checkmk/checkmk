@@ -35,7 +35,7 @@ $inpage-highlight-color: $ux-theme-5;
 $font-color: $white;
 $font-color-dimmed: rgba($white, 0.5);
 $font-color-light-bg: $grey-6;
-$font-color-light-grey: rgb(220, 220, 220);
+$font-color-light-grey: $midgrey;
 
 // -----------------------------------------------------------------------------
 // Buttons
@@ -48,7 +48,7 @@ $button-background-hover: lighten($grey-6, 10%);
 $color-state-1-background: $yellow;
 $color-state-2-background: $danger;
 $color-state-3-background: rgb(255, 132, 0);
-$color-state-4-background: rgb(136, 136, 136);
+$color-state-4-background: $darkgrey;
 $color-state-5-background: rgb(72, 203, 240);
 $color-state-6-background: rgb(185, 236, 250);
 $color-state-7-background: rgb(233, 128, 110);
@@ -135,7 +135,6 @@ $dragging-bg-color: $ux-theme-1;
 $invtree-th-bg-color: $table-highlight-color;
 $invtree-td-bg-color: $inpage-highlight-color;
 
-$unmonitored-bg-color: rgb(134, 134, 134);
 $hostdown-bg-color: rgb(0, 102, 170);
 
 $nform-vlof-border-color: rgb(60, 60, 60);
@@ -184,7 +183,7 @@ $help-bg-color: rgba(255, 235, 131, 0.85);
 
 $button-spacer-color: rgb(90, 90, 90);
 
-$timeline-hilite-border: 2px solid rgb(220, 220, 220);
+$timeline-hilite-border: 2px solid $midgrey;
 $timetable-hilite-bg-color: lighten($ux-theme-1, 15%);
 
 $pnp-graph-img-border-color: rgb(240, 240, 240);

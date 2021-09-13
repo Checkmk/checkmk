@@ -459,13 +459,10 @@ table.data tr.data td table.customvars td {
 }
 
 td.matchgroups span {
-  padding: 0 3px;
+  padding: 2px;
   margin-right: 3px;
-  font-family: $font-family-monospace;
-  background-color: $white;
-  border: 1px solid rgb(238, 238, 238);
-  border-radius: 3px;
-  box-shadow: 0 0 1px rgb(136, 136, 136);
+  border: 1px solid $font-color-dimmed;
+  border-radius: $theme-border-radius;
 }
 
 table.allhosts,

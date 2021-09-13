@@ -128,6 +128,7 @@ def test_registered_configvars():
         "notification_backlog",
         "notification_bulk_interval",
         "notification_fallback_email",
+        "notification_fallback_format",
         "notification_logging",
         "notification_plugin_timeout",
         "page_heading",

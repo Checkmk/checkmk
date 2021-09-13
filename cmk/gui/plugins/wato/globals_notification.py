@@ -18,10 +18,12 @@ from cmk.gui.plugins.wato import (
     ConfigDomainGUI,
     ConfigVariable,
     ConfigVariableGroup,
+    notification_parameter_registry,
     site_neutral_path,
 )
 from cmk.gui.valuespec import (
     Age,
+    CascadingDropdown,
     Checkbox,
     DropdownChoice,
     EmailAddress,
@@ -92,8 +94,37 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
                 "from the Event Console.<br><br>Notification fallback can also configured in single "
                 "user profiles."
             ),
-            empty_text=_("<i>(No fallback email address configured!)</i>"),
+            empty_text=_("(No fallback email address configured!)"),
             make_clickable=False,
+        )
+
+
+@config_variable_registry.register
+class ConfigVariableNotificationFallbackFormat(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupNotifications
+
+    def domain(self):
+        return ConfigDomainCore
+
+    def ident(self):
+        return "notification_fallback_format"
+
+    def valuespec(self):
+        return CascadingDropdown(
+            title=_("Fallback notification email format"),
+            choices=[
+                (
+                    "asciimail",
+                    _("ASCII Email"),
+                    notification_parameter_registry["asciimail"]().spec,
+                ),
+                (
+                    "mail",
+                    _("HTML Email"),
+                    notification_parameter_registry["mail"]().spec,
+                ),
+            ],
         )
 
 

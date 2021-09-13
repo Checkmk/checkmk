@@ -26,7 +26,7 @@ import sys
 import time
 import traceback
 import uuid
-from typing import Any, cast, Dict, FrozenSet, List, Mapping, Optional, Set, Tuple, Union
+from typing import Any, cast, Dict, FrozenSet, List, Mapping, Optional, overload, Set, Tuple, Union
 
 import livestatus
 
@@ -69,7 +69,9 @@ notify_mode = "notify"
 
 ContactName = str
 
-NotifyPluginParams = Union[List[str], Dict[str, Any]]  # TODO: Improve this
+NotifyPluginParamsList = List[str]
+NotifyPluginParamsDict = Dict[str, Any]  # TODO: Improve this
+NotifyPluginParams = Union[NotifyPluginParamsList, NotifyPluginParamsDict]
 NotifyBulkParameters = Dict[str, Any]  # TODO: Improve this
 NotifyRuleInfo = Tuple[str, EventRule, str]
 NotifyPluginName = str
@@ -602,7 +604,7 @@ def _transform_parameters(plugin: str, params: Union[List, NotifyPluginParams]) 
 def _process_notifications(
     raw_context: EventContext, notifications: Notifications, num_rule_matches: int, analyse: bool
 ) -> List[NotifyPluginInfo]:
-    plugin_info = []
+    plugin_info: List[NotifyPluginInfo] = []
 
     if not notifications:
         if num_rule_matches:
@@ -612,11 +614,21 @@ def _process_notifications(
             if fallback_contacts:
                 logger.info("No rule matched, notifying fallback contacts")
                 fallback_emails = [fc["email"] for fc in fallback_contacts]
-                logger.info("  Sending plain email to %s", fallback_emails)
+                logger.info("  Sending email to %s", fallback_emails)
 
-                plugin_context = create_plugin_context(raw_context, [])
+                plugin_name, fallback_params = config.notification_fallback_format
+                fallback_params = rbn_finalize_plugin_parameters(
+                    raw_context["HOSTNAME"], plugin_name, fallback_params
+                )
+                plugin_context = create_plugin_context(raw_context, fallback_params)
                 rbn_add_contact_information(plugin_context, fallback_contacts)
-                notify_via_email(plugin_context)
+                plugin_contexts = (
+                    [plugin_context]
+                    if fallback_params.get("disable_multiplexing")
+                    else rbn_split_plugin_context(plugin_context)
+                )
+                for context in plugin_contexts:
+                    call_notification_script(plugin_name, context)
             else:
                 logger.info("No rule matched, would notify fallback contacts, but none configured")
     else:
@@ -689,6 +701,24 @@ def rbn_fallback_contacts() -> Contacts:
             fallback_contacts.append(fallback_contact)
 
     return fallback_contacts
+
+
+@overload
+def rbn_finalize_plugin_parameters(
+    hostname: HostName,
+    plugin_name: NotificationPluginNameStr,
+    rule_parameters: NotifyPluginParamsList,
+) -> NotifyPluginParamsList:
+    ...
+
+
+@overload
+def rbn_finalize_plugin_parameters(
+    hostname: HostName,
+    plugin_name: NotificationPluginNameStr,
+    rule_parameters: NotifyPluginParamsDict,
+) -> NotifyPluginParamsDict:
+    ...
 
 
 def rbn_finalize_plugin_parameters(

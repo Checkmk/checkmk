@@ -322,6 +322,28 @@ register.agent_section(
     parsed_section_name="winperf_if_extended",
 )
 
+
+def parse_winperf_if_get_netadapter(string_table: StringTable) -> SectionExtended:
+    return [
+        AdditionalIfData(
+            name=_canonize_name(line[0]),
+            alias=line[1],
+            speed=int(speed_str) if (speed_str := line[2]) else 0,
+            oper_status=line[3],
+            oper_status_name=line[4],
+            mac_address=line[5].replace("-", ":"),
+            guid=line[6],
+        )
+        for line in string_table
+    ]
+
+
+register.agent_section(
+    name="winperf_if_get_netadapter",
+    parse_function=parse_winperf_if_get_netadapter,
+    parsed_section_name="winperf_if_extended",
+)
+
 SectionDHPC = Collection[Mapping[str, str]]
 
 

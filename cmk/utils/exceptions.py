@@ -91,11 +91,16 @@ class MKBailOut(MKException):
     pass
 
 
-# This exception is raised when a previously configured timeout is reached.
-# It is used during keepalive mode. It is also used by the automations
-# which have a timeout set.
 class MKTimeout(MKException):
-    pass
+    """Raise when a timeout is reached.
+
+    Note:
+        It is used during keepalive mode. It is also used by the
+        automations which have a timeout set.
+
+    See also:
+        `cmk.utils.timeout` has a context manager using it.
+    """
 
 
 class MKIPAddressLookupError(MKGeneralException):

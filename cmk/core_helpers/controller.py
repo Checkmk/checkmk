@@ -8,18 +8,16 @@ import contextlib
 import json
 import logging
 import os
-import signal
 import sys
 import traceback
 from functools import lru_cache
 from pathlib import Path
-from types import FrameType
-from typing import Any, Final, Iterable, Iterator, List, Mapping, NamedTuple, Optional
+from typing import Any, Iterable, Iterator, List, Mapping, NamedTuple, Optional
 
 import cmk.utils.cleanup
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.exceptions import MKTimeout
 from cmk.utils.observer import ABCResourceObserver
+from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import HostName, result
 
 from . import Fetcher, FetcherType, protocol
@@ -86,31 +84,6 @@ class GlobalConfig(NamedTuple):
                 "snmp_plugin_store": self.snmp_plugin_store.serialize(),
             },
         }
-
-
-class Timeout:
-    def __init__(self, timeout: int, *, message: str) -> None:
-        self.timeout: Final = timeout
-        self.message: Final = message
-        self._signaled = False
-
-    @property
-    def signaled(self) -> bool:
-        return self._signaled
-
-    def _handler(self, signum: int, frame: Optional[FrameType]) -> None:
-        self._signaled = True
-        raise MKTimeout(self.message)
-
-    def __enter__(self) -> "Timeout":
-        self._signaled = False
-        signal.signal(signal.SIGALRM, self._handler)
-        signal.alarm(self.timeout)
-        return self
-
-    def __exit__(self, *_args) -> None:
-        signal.signal(signal.SIGALRM, signal.SIG_IGN)
-        signal.alarm(0)
 
 
 class Command(NamedTuple):

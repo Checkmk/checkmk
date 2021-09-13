@@ -6,77 +6,50 @@
 """Mange custom attributes of users and hosts"""
 
 import abc
-import os
-import pprint
 import re
-from typing import Dict, Any, Optional, Type, Iterable
+from typing import Any, Dict, Iterable, Optional, Type
 
-from cmk.gui.htmllib import Choices
 import cmk.gui.config as config
 import cmk.gui.forms as forms
-from cmk.gui.table import table_element
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-import cmk.utils.store as store
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request
+from cmk.gui.htmllib import Choices
 from cmk.gui.i18n import _
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
 )
-from cmk.gui.watolib.host_attributes import (
-    host_attribute_topic_registry,
-    transform_pre_16_host_topics,
+from cmk.gui.plugins.wato import (
+    ActionResult,
+    add_change,
+    make_confirm_link,
+    mode_registry,
+    mode_url,
+    redirect,
+    WatoMode,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.plugins.wato import (WatoMode, ActionResult, add_change, mode_registry,
-                                  make_confirm_link, redirect, mode_url)
+from cmk.gui.table import table_element
 from cmk.gui.utils.urls import makeuri_contextless
-
-
-def update_user_custom_attrs():
-    userdb.update_config_based_user_attributes()
-    userdb.rewrite_users()
+from cmk.gui.watolib.custom_attributes import (
+    load_custom_attrs_from_mk_file,
+    save_custom_attrs_to_mk_file,
+    update_user_custom_attrs,
+)
+from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 def _update_host_custom_attrs():
     config.load_config()
     Folder.invalidate_caches()
     Folder.root_folder().rewrite_hosts_files()
-
-
-def load_custom_attrs_from_mk_file(lock):
-    filename = os.path.join(watolib.multisite_dir(), "custom_attrs.mk")
-    vars_ = store.load_mk_file(filename, {
-        'wato_user_attrs': [],
-        'wato_host_attrs': [],
-    }, lock=lock)
-
-    attrs = {}
-    for what in ["user", "host"]:
-        attributes = vars_.get("wato_%s_attrs" % what, [])
-        if what == "host":
-            attributes = transform_pre_16_host_topics(attributes)
-        attrs[what] = attributes
-    return attrs
-
-
-def save_custom_attrs_to_mk_file(attrs):
-    output = watolib.wato_fileheader()
-    for what in ["user", "host"]:
-        if what in attrs and len(attrs[what]) > 0:
-            output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
-            output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
-
-    store.mkdir(watolib.multisite_dir())
-    store.save_file(watolib.multisite_dir() + "custom_attrs.mk", output)
 
 
 def custom_attr_types() -> Choices:

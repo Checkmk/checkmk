@@ -127,21 +127,26 @@ def check_windows_services_single(
     # allow to match agains the internal name or agains the display name of the service
     additional_names = params.get("additional_servicenames", [])
     for service in section:
-        if item not in (service.name, service.description) and service.name not in additional_names:
-            continue
+        if item in (service.name, service.description) or service.name in additional_names:
+            yield Result(
+                state=_match_service_against_params(params, service),
+                summary=f"{service.description}: {service.state} (start type is {service.start_type})",
+            )
 
-        for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
-            if (t_state is None or t_state == service.state) and (
-                t_start_type is None or t_start_type == service.start_type
-            ):
-                this_state = mon_state
-                break
-            this_state = params.get("else", 2)
 
-        yield Result(
-            state=State(this_state),
-            summary=f"{service.description}: {service.state} (start type is {service.start_type})",
-        )
+def _match_service_against_params(params: Mapping[str, Any], service: WinService) -> State:
+    """
+    This function searches params for the first rule that matches the state and the start_type.
+    None is treated as a wildcard. If no match is found, the function defaults.
+    """
+    for t_state, t_start_type, mon_state in params.get("states", [("running", None, 0)]):
+        if _wildcard(t_state, service.state) and _wildcard(t_start_type, service.start_type):
+            return State(mon_state)
+    return State(params.get("else", 2))
+
+
+def _wildcard(value, reference):
+    return value is None or value == reference
 
 
 def check_windows_services(

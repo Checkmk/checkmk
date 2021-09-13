@@ -9,23 +9,30 @@ import json
 import re
 import typing
 from datetime import datetime
-from typing import Any, Optional, Tuple, Callable
+from typing import Any, Callable, Optional, Tuple
 
 import pytz
-from marshmallow import fields as _fields, ValidationError, utils
+from marshmallow import fields as _fields, post_load
+from marshmallow import utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, sites, config
-from cmk.gui.groups import load_group_information
-from cmk.utils.livestatus_helpers.expressions import tree_to_expr, QueryExpression, NothingExpression
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
-from cmk.utils.livestatus_helpers.types import Table, Column
-from cmk.gui.fields.base import BaseSchema
-from cmk.gui.fields.utils import ObjectType, ObjectContext, collect_attributes, attr_openapi_schema
-from cmk.gui.watolib.passwords import password_exists, contact_group_choices
-from cmk.utils.exceptions import MKException
 import cmk.utils.version as version
+from cmk.gui import config, sites, watolib
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
+from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
+from cmk.gui.groups import load_group_information
+from cmk.gui.plugins.webapi.utils import validate_host_attributes
+from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+from cmk.utils.exceptions import MKException
+from cmk.utils.livestatus_helpers.expressions import (
+    NothingExpression,
+    QueryExpression,
+    tree_to_expr,
+)
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
+from cmk.utils.livestatus_helpers.types import Column, Table
 
 if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -928,6 +935,28 @@ def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
 
 
+class CustomHostAttributes(ValueTypedDictSchema):
+    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+
+    @post_load
+    def _valid(self, data, **kwargs):
+        try:
+            validate_host_attributes(data, new=self.context['object_context'])
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
+class CustomFolderAttributes(ValueTypedDictSchema):
+    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+
+    @post_load
+    def _valid(self, data, **kwargs):
+        try:
+            validate_host_attributes(data, new=self.context['object_context'])
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
 def attributes_field(object_type: ObjectType,
                      object_context: ObjectContext,
                      description: Optional[str] = None,
@@ -936,12 +965,50 @@ def attributes_field(object_type: ObjectType,
                      missing: Any = utils.missing,
                      many: bool = False,
                      names_only: bool = False) -> _fields.Field:
+    """Build an Attribute Field
+
+    Args:
+        object_type:
+            May be one of 'folder', 'host' or 'cluster'.
+
+        object_context:
+            May be 'create' or 'update'. Deletion is considered as 'update'.
+
+        description:
+            A descriptive text of this field. Required.
+
+        example:
+            An example for the OpenAPI documentation. Required.
+
+        required:
+            Whether the field must be sent by the client or is option.
+
+        missing:
+        many:
+
+        names_only:
+            When set to True, the field will be a List of Strings which validate the tag names only.
+
+    Returns:
+
+    """
     if description is None:
-        # SPEC won't validate without description, though the error message is very obscure.
+        # SPEC won't validate without description, though the error message is very obscure, so we
+        # clarify this here by force.
         raise ValueError("description is necessary.")
+
+    custom_schema = {
+        'host': CustomHostAttributes,
+        'cluster': CustomHostAttributes,
+        'folder': CustomFolderAttributes,
+    }
     if not names_only:
-        return Nested(
-            attr_openapi_schema(object_type, object_context),
+        return MultiNested(
+            [
+                attr_openapi_schema(object_type, object_context),
+                custom_schema[object_type],
+            ],
+            context={'object_context': object_context},
             description=description,
             example=example,
             many=many,
@@ -1263,4 +1330,5 @@ __all__ = [
     'SiteField',
     'String',
     'Timestamp',
+    'MultiNested',
 ]

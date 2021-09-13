@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.config as config
+from cmk.gui import config
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u

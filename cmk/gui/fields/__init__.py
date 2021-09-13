@@ -89,8 +89,8 @@ __all__ = [
     'String',
     'Time',
     'Timestamp',
+    'ValidateAnyOfValidators',
     'ValidateIPv4',
     'ValidateIPv4Network',
     'ValidateIPv6',
-    'ValidateAnyOfValidators',
 ]

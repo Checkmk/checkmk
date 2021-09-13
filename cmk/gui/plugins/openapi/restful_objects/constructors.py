@@ -196,11 +196,18 @@ def expand_rel(
     return rel
 
 
-def require_etag(etag: ETags) -> None:
+def require_etag(
+    etag: ETags,
+    error_details: Optional[Dict[str, str]] = None,
+) -> None:
     """Ensure the current request matches the given ETag.
 
     Args:
         etag: An Werkzeug ETag instance to compare the global request instance to.
+
+        error_details:
+            An optional dict, which will be communicated to the client whenever there is an
+            etag mismatch.
 
     Raises:
         ProblemException: When If-Match missing or ETag doesn't match.
@@ -213,13 +220,15 @@ def require_etag(etag: ETags) -> None:
             HTTPStatus.PRECONDITION_REQUIRED,
             "Precondition required",
             "If-Match header required for this operation. See documentation.",
+            ext=error_details,
         )
 
     if request.if_match.as_set() != etag.as_set():
         raise ProblemException(
             HTTPStatus.PRECONDITION_FAILED,
             "Precondition failed",
-            "ETag didn't match. Probable cause: Object changed by another user.",
+            f"ETag didn't match. Expected {etag}. Probable cause: Object changed by another user.",
+            ext=error_details,
         )
 
 

@@ -120,9 +120,8 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
-std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
-    const std::pair<std::string, std::string> &host_name_service_description,
-    std::chrono::seconds timezone_offset) const {
+detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
+                                    &host_name_service_description) const {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.
     // Note: The actual step might be different!
     std::vector<std::string> argv_s{
@@ -285,7 +284,7 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     }
 
     // Since we have exactly one XPORT command, we expect exactly one column
-    std::vector<value_type> data;
+    detail::Data data;
     if (col_cnt != 1) {
         Error(logger) << "rrd_xport returned " << col_cnt
                       << " columns, but exactly one was expected.";
@@ -310,26 +309,20 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
         //         |---------------|
         //       x---v---v---v---v---y
 
-        // We output meta data as first elements in the list. Note: In Python or
-        // JSON we could output nested lists. In CSV mode this is not possible
-        // and we rather stay compatible with CSV mode.
         // Exact start time of the represented interval(x). This is <= our
-
         // _start_time(|), but no value is associated to this time.
-        data.emplace_back(std::chrono::system_clock::from_time_t(start) +
-                          timezone_offset);
+        data.start = std::chrono::system_clock::from_time_t(start);
         // Time closing time of the interval(y). This is >= our _end_time, and
         // holds the last data value.
-        data.emplace_back(std::chrono::system_clock::from_time_t(end) +
-                          timezone_offset);
+        data.end = std::chrono::system_clock::from_time_t(end);
         // Actual resolution in seconds. This is >= our _resolution
-        data.emplace_back(step);
+        data.step = step;
         // Now the actual data - double for double
         // Data rows represent past values, thus loop starts with step shift.
         // Interval is right closed, thus iterate until end inclusive.
         rrd_value_t *ptr = rrd_data;
         for (time_t ti = start + step; ti <= end; ti += step) {
-            data.emplace_back(*ptr++);
+            data.values.push_back(*ptr++);
         }
     }
 

@@ -1486,7 +1486,7 @@ msgstr ""
 "communicatie. Kijk eens naar <a href=\"werk.py?werk=7017\">werk #7017</a> "
 "voor meer informatie.</p>"
 
-#, no-python-format
+#, fuzzy, python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -26377,11 +26377,11 @@ msgstr ""
 "Houdt hosts terwijl piggyback bron stuurt piggyback gegevens alleen voor "
 "andere hosts voor"
 
-#, no-python-format
+#, fuzzy, python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
-"or 1200MB to get an alert if there is only 20% free RAM available. The free "
-"memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
+"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
+"free memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "Houd in gedachten dat als je 1GB RAM en 1GB Swap hebt, je 120% of 1200MB "
@@ -51559,7 +51559,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, no-python-format
+#, fuzzy, python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "

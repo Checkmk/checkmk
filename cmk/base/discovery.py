@@ -38,7 +38,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.object_diff import make_object_diff
-from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
+from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
@@ -76,7 +76,6 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
@@ -1880,8 +1879,6 @@ def get_check_preview(
             else:
                 ruleset_name = (str(plugin.check_ruleset_name) if
                                 (plugin and plugin.check_ruleset_name) else None)
-                wrapped_params = (Parameters(wrap_parameters(params)) if plugin and
-                                  plugin.check_default_parameters is not None else None)
 
                 _submit, _data_rx, (exitcode, output, _perfdata) = checking.get_aggregated_result(
                     multi_host_sections,
@@ -1889,7 +1886,7 @@ def get_check_preview(
                     ip_address,
                     service,
                     plugin,
-                    lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
+                    params,
                 )
 
             # Service discovery never uses the perfdata in the check table. That entry
@@ -1902,8 +1899,8 @@ def get_check_preview(
                 str(service.check_plugin_name),
                 ruleset_name,
                 service.item,
-                service.parameters,
-                params,
+                _wrap_timespecific_for_preview(service.parameters),
+                _wrap_timespecific_for_preview(params),
                 service.description,
                 exitcode,
                 output,
@@ -1952,12 +1949,13 @@ def _preview_params(
     if check_source == "active":
         params = service.parameters
 
-    if isinstance(params, config.TimespecificParamList):
-        params = {
-            "tp_computed_params": {
-                "params": checking.legacy_determine_check_params(params),
-                "computed_at": time.time(),
-            }
-        }
-
     return params
+
+
+def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheckParameters:
+    return {
+        "tp_computed_params": {
+            "params": checking.legacy_determine_check_params(params),
+            "computed_at": time.time(),
+        }
+    } if isinstance(params, config.TimespecificParamList) else params

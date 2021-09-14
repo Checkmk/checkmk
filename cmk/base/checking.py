@@ -17,7 +17,6 @@ from types import FrameType
 from typing import (
     Any,
     AnyStr,
-    Callable,
     cast,
     DefaultDict,
     Dict,
@@ -490,7 +489,7 @@ def execute_check(
         ipaddress,
         service,
         plugin,
-        lambda: determine_check_params(service.parameters),
+        service.parameters,
     )
 
     if submit:
@@ -514,7 +513,7 @@ def get_aggregated_result(
     ipaddress: Optional[HostAddress],
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
-    params_function: Callable[[], Parameters],
+    timespecific_parameters: LegacyCheckParameters,
 ) -> Tuple[bool, bool, ServiceCheckResult]:
     """Run the check function and aggregate the subresults
 
@@ -576,7 +575,7 @@ def get_aggregated_result(
             kwargs["item"] = service.item
 
         if plugin.check_default_parameters is not None:
-            kwargs["params"] = params_function()
+            kwargs["params"] = determine_check_params(timespecific_parameters)
 
         with _service_context(service):
             result = _aggregate_results(check_function(**kwargs))

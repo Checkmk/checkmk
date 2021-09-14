@@ -26,7 +26,8 @@ set cur_dir=%cd%
 
 :: Points to the doc to build, which may not be build and must be just set to empty file
 set chm_368=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python368.chm
-set chm_empty=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python38%PY_SUBVER%.chm
+set chm_dir=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp
+set chm_file=%chm_dir%\python38%PY_SUBVER%.chm
 
 :: msiexec doesn't understand relative paths, we have to normalize
 call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python\windows\python-3.4.4.msi"

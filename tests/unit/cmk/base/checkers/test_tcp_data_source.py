@@ -26,6 +26,20 @@ def mode_fixture(request):
     return request.param
 
 
+def test_tcpdatasource_restricted_address_parsing():
+    # expected, like the bakery writes it
+    assert AgentSummarizerDefault._get_agent_info([
+        "OnlyFrom: 1.2.3.4 127.0.0.1".split(),
+    ])["onlyfrom"] == "1.2.3.4 127.0.0.1"
+    # unexpected for bakery code, but equally valid systemd config:
+    assert AgentSummarizerDefault._get_agent_info([
+        "OnlyFrom: 0.0.0.0".split(),
+        "OnlyFrom:".split(),
+        "OnlyFrom: 1.2.3.4".split(),
+        "OnlyFrom: 127.0.0.1".split(),
+    ])["onlyfrom"] == "1.2.3.4 127.0.0.1"
+
+
 @pytest.mark.parametrize("res,reported,rule", [
     (None, "127.0.0.1", None),
     (None, None, "127.0.0.1"),

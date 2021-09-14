@@ -189,8 +189,14 @@ section_checkmk() {
         sed -n "/^service[[:space:]]*${XINETD_SERVICE_NAME}/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
     # If we are called via systemd, try to find only_from configuration aswell
     elif inpath systemctl; then
-        systemctl show --property IPAddressAllow "${XINETD_SERVICE_NAME}.socket" |
-            sed 's/IPAddressAllow=/OnlyFrom: /'
+        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' /etc/systemd/system/${XINETD_SERVICE_NAME}.socket
+        # NOTE: The above line just reads back the socket file we deployed ourselves. Systemd units can be altered by
+        # other user defined unit files, so this *may* not be correct. A better way of doing this seemed to be querying
+        # systemctl itself about the 'effective' property:
+        #
+        #    systemctl show --property IPAddressAllow "${XINETD_SERVICE_NAME}.socket" | sed 's/IPAddressAllow=/OnlyFrom: /'
+        #
+        # However this ("successfully") reports an empty list or '[unprintable]' on older systemd versions :-(
     fi
 }
 

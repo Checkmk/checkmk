@@ -185,8 +185,18 @@ class AgentSummarizerDefault(AgentSummarizer):
             return agent_info
 
         for line in cmk_section:
+            key = str(line[0][:-1].lower())
             value = " ".join(line[1:]) if len(line) > 1 else None
-            agent_info[str(line[0][:-1].lower())] = value
+
+            if key == "onlyfrom":
+                # parse the same way systemd does:
+                #  * multiple lines are concatenated
+                #  * an empty line clears the list
+                agent_info[key] = (None if value is None else
+                                   f"{agent_info.get(key) or ''} {value}".strip())
+            else:
+                agent_info[key] = value
+
         return agent_info
 
     def _sub_result_version(

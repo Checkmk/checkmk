@@ -30,7 +30,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.check_utils import ActiveCheckResult, worst_service_state, wrap_parameters
+from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
@@ -65,7 +65,6 @@ import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based import checking_classes
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
@@ -1279,11 +1278,6 @@ def _check_preview_table_row(
         ruleset_name = (
             str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
         )
-        wrapped_params = (
-            Parameters(wrap_parameters(params))
-            if plugin and plugin.check_default_parameters is not None
-            else None
-        )
 
         exitcode, output, _perfdata = checking.get_aggregated_result(
             parsed_sections_broker,
@@ -1291,7 +1285,7 @@ def _check_preview_table_row(
             ip_address,
             service,
             plugin,
-            lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
+            params,
             value_store_manager=value_store_manager,
             persist_value_store_changes=False,  # never during discovery
         ).result
@@ -1307,8 +1301,8 @@ def _check_preview_table_row(
         str(service.check_plugin_name),
         ruleset_name,
         service.item,
-        service.parameters,
-        params,
+        _wrap_timespecific_for_preview(service.parameters),
+        _wrap_timespecific_for_preview(params),
         service.description,
         exitcode,
         output,
@@ -1353,12 +1347,17 @@ def _preview_params(
     if check_source == "active":
         params = service.parameters
 
-    if isinstance(params, config.TimespecificParamList):
-        params = {
+    return params
+
+
+def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheckParameters:
+    return (
+        {
             "tp_computed_params": {
                 "params": checking.time_resolved_check_parameters(params),
                 "computed_at": time.time(),
             }
         }
-
-    return params
+        if isinstance(params, config.TimespecificParamList)
+        else params
+    )

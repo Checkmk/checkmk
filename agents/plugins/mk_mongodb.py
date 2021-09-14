@@ -39,7 +39,7 @@ from collections import defaultdict
 PY2 = sys.version_info[0] == 2
 
 try:
-    from typing import Any, Callable, Dict, Tuple, Union
+    from typing import Any, Callable, Dict, Iterable, Union
 except ImportError:
     pass
 
@@ -62,6 +62,7 @@ except ImportError:
 from bson.json_util import dumps  # type: ignore[import]
 
 MK_VARDIR = os.environ.get("MK_VARDIR")
+PYMONGO_VERSION = tuple(int(i) for i in pymongo.version.split("."))
 
 
 def get_database_info(client):
@@ -75,12 +76,25 @@ def get_database_info(client):
     databases = defaultdict(dict)  # type: Dict[str, Dict[str, Any]]
     for name in db_names:
         database = client[name]
-        databases[name]["collections"] = database.collection_names()
+        databases[name]["collections"] = list(get_collection_names(database))
         databases[name]["stats"] = database.command("dbstats")
         databases[name]["collstats"] = {}
         for collection in databases[name]["collections"]:
             databases[name]["collstats"][collection] = database.command("collstats", collection)
     return databases
+
+
+def get_collection_names(database):  # type:(pymongo.database.Database) -> Iterable[str]
+    if PYMONGO_VERSION <= (3, 6, 0):
+        collection_names = database.collection_names()
+    else:
+        collection_names = database.list_collection_names()
+
+    for collection_name in collection_names:
+        if "viewOn" in database[collection_name].options():
+            # we don't want to return views, as the command collstats can not be executed
+            continue
+        yield collection_name
 
 
 def section_instance(server_status):
@@ -816,13 +830,7 @@ class PyMongoConfigTransformer:
         # type:(Config) -> None
         self._config = config
 
-    @staticmethod
-    def _get_pymongo_version():
-        # type:() -> Tuple[int, ...]
-        return tuple(int(i) for i in pymongo.version.split("."))
-
     def transform(self, pymongo_config):
-        pymongo_version = self._get_pymongo_version()
         version_transforms = [
             # apply the transform if the version of pymongo is lower than the
             # tuple defined here. For the oldest pymongo version, multiple
@@ -832,12 +840,12 @@ class PyMongoConfigTransformer:
         ]
 
         for version, transform_function in version_transforms:
-            if pymongo_version < version:
-                pymongo_config = transform_function(pymongo_config, pymongo_version)
+            if PYMONGO_VERSION < version:
+                pymongo_config = transform_function(pymongo_config)
         return pymongo_config
 
-    def _transform_tls_to_ssl(self, pymongo_config, pymongo_version):
-        # type:(Dict[str, Union[str, bool]], Tuple[int, ...]) -> Dict[str, Union[str, bool]]
+    def _transform_tls_to_ssl(self, pymongo_config):
+        # type:(Dict[str, Union[str, bool]]) -> Dict[str, Union[str, bool]]
         if pymongo_config.get("tlsInsecure") is True:
             sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
             sys.stdout.write(
@@ -845,7 +853,7 @@ class PyMongoConfigTransformer:
                     "error\tCan not use option 'tls_verify = False' with this pymongo version %s."
                     "This option is only available with pymongo > 3.9.0\n"
                 )
-                % str(pymongo_version)
+                % str(PYMONGO_VERSION)
             )
             sys.exit(3)
         pymongo_config.pop("tlsInsecure", None)
@@ -859,8 +867,8 @@ class PyMongoConfigTransformer:
                 pymongo_config[old_arg] = pymongo_config.pop(new_arg)
         return pymongo_config
 
-    def _transform_credentials_to_uri(self, pymongo_config, _pymongo_version):
-        # type:(Dict[str, Union[str, bool]], Tuple[int, ...]) -> Dict[str, Union[str, bool]]
+    def _transform_credentials_to_uri(self, pymongo_config):
+        # type:(Dict[str, Union[str, bool]]) -> Dict[str, Union[str, bool]]
         username = pymongo_config.pop("username", None)
         password = pymongo_config.pop("password", None)
         host = pymongo_config.pop("host", "localhost")

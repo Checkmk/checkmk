@@ -309,11 +309,13 @@ def test_transform_config(pymongo_version, pymongo_config, mk_mongodb):
             self.password = "/?!/"
             self.username = "username"
 
-    class TransformerMocked(mk_mongodb.PyMongoConfigTransformer):  # type: ignore[name-defined]
-        @staticmethod
-        def _get_pymongo_version():
-            return pymongo_version
-
     config = DummyConfig()
-    result = TransformerMocked(config).transform(config.get_pymongo_config())
+
+    original_pymongo_version = mk_mongodb.PYMONGO_VERSION
+    try:
+        mk_mongodb.PYMONGO_VERSION = pymongo_version
+        result = mk_mongodb.PyMongoConfigTransformer(config).transform(config.get_pymongo_config())
+    finally:
+        mk_mongodb.PYMONGO_VERSION = original_pymongo_version
+
     assert result == pymongo_config

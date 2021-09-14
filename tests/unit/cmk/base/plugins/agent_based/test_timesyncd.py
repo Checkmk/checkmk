@@ -69,7 +69,7 @@ def test_discover_timesyncd(
                 Metric("time_offset", 0.053991, levels=(0.2, 0.5)),
                 Result(
                     state=state.CRIT,
-                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 0 minutes/3 hours 0 minutes)",
+                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
                 Result(state=state.OK, summary="Stratum: 2.00"),
                 Result(state=state.OK, summary="Jitter: Jan 01 1970 00:00:00"),
@@ -83,7 +83,7 @@ def test_discover_timesyncd(
             [
                 Result(
                     state=state.CRIT,
-                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 0 minutes/3 hours 0 minutes)",
+                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
                 Result(state=state.OK, summary="Found no time server"),
             ],

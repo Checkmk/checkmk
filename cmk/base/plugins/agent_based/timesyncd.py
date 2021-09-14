@@ -32,7 +32,7 @@ default_check_parameters = CheckParams(
     stratum_level=10,
     quality_levels=(200.0, 500.0),
     alert_delay=(300, 3600),
-    last_synchronized=(7200, 10800),
+    last_synchronized=(7500, 10800),
 )
 
 

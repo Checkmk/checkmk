@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import signal
 from types import FrameType
-from typing import Final, Optional
+from typing import Final, NoReturn, Optional
 
 from cmk.utils.exceptions import MKTimeout
 
@@ -25,7 +25,7 @@ class Timeout:
     def signaled(self) -> bool:
         return self._signaled
 
-    def _handler(self, signum: int, frame: Optional[FrameType]) -> None:
+    def _handler(self, signum: int, frame: Optional[FrameType]) -> NoReturn:
         self._signaled = True
         raise MKTimeout(self.message)
 

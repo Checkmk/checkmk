@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from typing import (
     Any,
     Dict,
@@ -290,13 +292,13 @@ class ParsedSectionsBroker:
 
 def _collect_host_sections(
     *,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence["Source"]]],
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     file_cache_max_age: cache.MaxAge,
-    fetcher_messages: Sequence["FetcherMessage"],
-    selected_sections: "SectionNameCollection",
+    fetcher_messages: Sequence[FetcherMessage],
+    selected_sections: SectionNameCollection,
 ) -> Tuple[  #
     Mapping[HostKey, HostSections],  #
-    Sequence[Tuple["Source", result.Result[HostSections, Exception]]],  #
+    Sequence[Tuple[Source, result.Result[HostSections, Exception]]],  #
 ]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 
@@ -317,7 +319,7 @@ def _collect_host_sections(
         raise LookupError("Checker and fetcher missmatch")
 
     collected_host_sections: Dict[HostKey, HostSections] = {}
-    results: List[Tuple["Source", result.Result[HostSections, Exception]]] = []
+    results: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     for fetcher_message, (hostname, ipaddress, source) in zip(fetcher_messages, flat_node_sources):
@@ -358,13 +360,13 @@ def _collect_host_sections(
 
 def make_broker(
     *,
-    config_cache: "ConfigCache",
-    host_config: "HostConfig",
+    config_cache: ConfigCache,
+    host_config: HostConfig,
     ip_address: Optional[HostAddress],
-    mode: "Mode",
-    selected_sections: "SectionNameCollection",
+    mode: Mode,
+    selected_sections: SectionNameCollection,
     file_cache_max_age: cache.MaxAge,
-    fetcher_messages: Sequence["FetcherMessage"],
+    fetcher_messages: Sequence[FetcherMessage],
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:

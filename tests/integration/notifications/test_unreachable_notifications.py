@@ -13,6 +13,8 @@ import pytest
 
 from tests.testlib import wait_until, WatchLog, web  # noqa: F401 # pylint: disable=unused-import
 
+from cmk.utils import version as cmk_version
+
 STATE_UP = 0
 STATE_DOWN = 1
 STATE_UNREACHABLE = 2
@@ -44,8 +46,18 @@ class Scenario:
     name="scenario",
     scope="module",
     params=[
-        Scenario(core="cmc", unreachable_enabled=True),
-        Scenario(core="cmc", unreachable_enabled=False),
+        pytest.param(
+            Scenario(core="cmc", unreachable_enabled=True),
+            marks=pytest.mark.skipif(
+                cmk_version.is_raw_edition(), reason="CMC not available on CRE"
+            ),
+        ),
+        pytest.param(
+            Scenario(core="cmc", unreachable_enabled=False),
+            marks=pytest.mark.skipif(
+                cmk_version.is_raw_edition(), reason="CMC not available on CRE"
+            ),
+        ),
         Scenario(core="nagios", unreachable_enabled=True),
         Scenario(core="nagios", unreachable_enabled=False),
     ],

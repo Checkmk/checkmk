@@ -11,6 +11,8 @@ import pytest
 
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
+from cmk.utils import version as cmk_version
+
 
 class DefaultConfig(NamedTuple):
     core: str
@@ -19,7 +21,19 @@ class DefaultConfig(NamedTuple):
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="test_cfg", scope="module", params=["nagios", "cmc"])
+@pytest.fixture(
+    name="test_cfg",
+    scope="module",
+    params=[
+        "nagios",
+        pytest.param(
+            "cmc",
+            marks=pytest.mark.skipif(
+                cmk_version.is_raw_edition(), reason="raw edition only supports nagios core."
+            ),
+        ),
+    ],
+)
 def test_cfg_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)

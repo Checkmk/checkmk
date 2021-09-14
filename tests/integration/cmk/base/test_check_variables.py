@@ -6,9 +6,12 @@
 
 import subprocess
 
+import pytest
+
 from tests.testlib import create_linux_test_host
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
+from cmk.utils import version as cmk_version
 from cmk.utils.type_defs import HostName
 
 import cmk.base.autochecks as autochecks
@@ -17,6 +20,7 @@ import cmk.base.config as config
 
 
 # Test whether or not registration of check configuration variables works
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
 def test_test_check_1(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "check-variables-test-host"
@@ -102,6 +106,7 @@ check_info["test_check_1"] = {
 
 
 # Test whether or not registration of discovery variables work
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
 def test_test_check_2(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "check-variables-test-host"
@@ -171,6 +176,7 @@ check_info["test_check_2"] = {
 
 
 # Test whether or not factory settings and checkgroup parameters work
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
 def test_check_factory_settings(
     request, site, web
 ):  # noqa: F811 # pylint: disable=redefined-outer-name

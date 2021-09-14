@@ -12,6 +12,7 @@ from datetime import datetime
 import pytest
 
 import cmk.utils.prediction
+from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
@@ -69,6 +70,7 @@ custom_checks = [
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "utcdate, timezone, period, result",
     [
@@ -136,6 +138,7 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "max_entries, result",
     [(400, (180, 401)), (20, (3600, 21)), (50, (1800, 41)), (1000, (120, 600)), (1200, (60, 1200))],
@@ -150,6 +153,7 @@ def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
     assert (timeseries.step, len(timeseries.values)) == result
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "utcdate, timezone, params, reference",
     [
@@ -436,6 +440,7 @@ def _load_expected_result(path: str) -> object:
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "utcdate, timezone, params",
     [
@@ -492,6 +497,7 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
             assert getattr(data_for_pred, key) == expected_reference[key]
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "timerange, result",
     [

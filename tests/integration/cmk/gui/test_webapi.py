@@ -835,7 +835,11 @@ def graph_test_config(web, site):  # noqa: F811 # pylint: disable=redefined-oute
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
         # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
-        rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
+        rrd_path = (
+            site.path("var/pnp4nagios/perfdata/test-host-get-graph/Check_MK_system_time.rrd")
+            if cmk_version.is_raw_edition()
+            else site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
+        )
         for attempt in range(50):
             time.sleep(0.1)
             proc = subprocess.Popen(
@@ -867,18 +871,32 @@ def graph_test_config(web, site):  # noqa: F811 # pylint: disable=redefined-oute
     web.activate_changes()
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_graph_api(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     # Now we get a graph
     data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
 
-    assert len(data["curves"]) == 5
-    assert data["curves"][0]["title"] == "CPU time in user space"
-    assert data["curves"][1]["title"] == "CPU time in operating system"
-    assert data["curves"][2]["title"] == "Time spent waiting for Checkmk agent"
-    assert data["curves"][3]["title"] == "Time spent waiting for special agent"
-    assert data["curves"][4]["title"] == "Total execution time"
+    if cmk_version.is_raw_edition():
+        expected_curves = [
+            "CPU time in user space",
+            "CPU time in system space",
+            "Total",
+        ]
+    else:
+        expected_curves = [
+            "CPU time in user space",
+            "CPU time in operating system",
+            "Time spent waiting for Checkmk agent",
+            "Time spent waiting for special agent",
+            "Total execution time",
+        ]
+
+    assert len(data["curves"]) == len(expected_curves)
+    for idx, title in enumerate(expected_curves):
+        assert data["curves"][idx]["title"] == title
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_graph_image(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -911,6 +929,7 @@ def test_get_graph_image(
         raise Exception("Failed to open image: %r" % content)
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_graph_notification_image(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -932,6 +951,7 @@ def test_get_graph_notification_image(
             raise Exception("Failed to open image: %r" % graph_image)
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_graph_hover(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -1155,12 +1175,14 @@ def test_get_inventory(web):  # noqa: F811 # pylint: disable=redefined-outer-nam
         web.delete_host(host_name)
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_user_sites(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert web.get_user_sites()[0][0] == web.site.id
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_host_names(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -1187,150 +1209,302 @@ def test_get_metrics_of_host(
     }
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_graph_recipes(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
-    assert web.get_graph_recipes(
-        request={
-            "specification": [
-                "template",
-                {
-                    "service_description": "Check_MK",
-                    "site": web.site.id,
-                    "graph_index": 0,
-                    "host_name": "test-host-get-graph",
-                },
-            ],
-        }
-    ) == [
-        {
-            "consolidation_function": "max",
-            "explicit_vertical_range": [None, None],
-            "horizontal_rules": [],
-            "metrics": [
-                {
-                    "color": "#87f058",
-                    "expression": [
-                        "operator",
-                        "+",
-                        [
+    if cmk_version.is_raw_edition():
+        expected_recipe = [
+            {
+                "title": "Used CPU Time",
+                "metrics": [
+                    {
+                        "unit": "s",
+                        "color": "#60f020",
+                        "title": "CPU time in user space",
+                        "line_type": "area",
+                        "expression": [
+                            "rrd",
+                            web.site.id,
+                            "test-host-get-graph",
+                            "Check_MK",
+                            "user_time",
+                            "max",
+                            1.0,
+                        ],
+                    },
+                    {
+                        "unit": "s",
+                        "color": "#aef090",
+                        "title": "Child time in user space",
+                        "line_type": "stack",
+                        "expression": [
+                            "rrd",
+                            web.site.id,
+                            "test-host-get-graph",
+                            "Check_MK",
+                            "children_user_time",
+                            "max",
+                            1.0,
+                        ],
+                    },
+                    {
+                        "unit": "s",
+                        "color": "#ff6000",
+                        "title": "CPU time in system space",
+                        "line_type": "stack",
+                        "expression": [
+                            "rrd",
+                            web.site.id,
+                            "test-host-get-graph",
+                            "Check_MK",
+                            "system_time",
+                            "max",
+                            1.0,
+                        ],
+                    },
+                    {
+                        "unit": "s",
+                        "color": "#ffb080",
+                        "title": "Child time in system space",
+                        "line_type": "stack",
+                        "expression": [
+                            "rrd",
+                            web.site.id,
+                            "test-host-get-graph",
+                            "Check_MK",
+                            "children_system_time",
+                            "max",
+                            1.0,
+                        ],
+                    },
+                    {
+                        "unit": "s",
+                        "color": "#888888",
+                        "title": "Total",
+                        "line_type": "line",
+                        "expression": [
+                            "operator",
+                            "+",
                             [
-                                "rrd",
-                                web.site.id,
-                                "test-host-get-graph",
-                                "Check_MK",
-                                "user_time",
-                                "max",
-                                1.0,
-                            ],
-                            [
-                                "rrd",
-                                web.site.id,
-                                "test-host-get-graph",
-                                "Check_MK",
-                                "children_user_time",
-                                "max",
-                                1.0,
+                                [
+                                    "rrd",
+                                    web.site.id,
+                                    "test-host-get-graph",
+                                    "Check_MK",
+                                    "user_time",
+                                    "max",
+                                    1.0,
+                                ],
+                                [
+                                    "operator",
+                                    "+",
+                                    [
+                                        [
+                                            "rrd",
+                                            web.site.id,
+                                            "test-host-get-graph",
+                                            "Check_MK",
+                                            "children_user_time",
+                                            "max",
+                                            1.0,
+                                        ],
+                                        [
+                                            "operator",
+                                            "+",
+                                            [
+                                                [
+                                                    "rrd",
+                                                    web.site.id,
+                                                    "test-host-get-graph",
+                                                    "Check_MK",
+                                                    "system_time",
+                                                    "max",
+                                                    1.0,
+                                                ],
+                                                [
+                                                    "rrd",
+                                                    web.site.id,
+                                                    "test-host-get-graph",
+                                                    "Check_MK",
+                                                    "children_system_time",
+                                                    "max",
+                                                    1.0,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
-                    ],
-                    "line_type": "stack",
-                    "title": "CPU time in user space",
-                    "unit": "s",
-                },
-                {
-                    "color": "#ff8840",
-                    "expression": [
-                        "operator",
-                        "+",
-                        [
+                    },
+                ],
+                "unit": "s",
+                "explicit_vertical_range": [None, None],
+                "horizontal_rules": [],
+                "omit_zero_metrics": True,
+                "consolidation_function": "max",
+                "specification": [
+                    "template",
+                    {
+                        "service_description": "Check_MK",
+                        "site": web.site.id,
+                        "graph_index": 0,
+                        "host_name": "test-host-get-graph",
+                        "graph_id": "used_cpu_time",
+                    },
+                ],
+            }
+        ]
+
+    else:
+        expected_recipe = [
+            {
+                "consolidation_function": "max",
+                "explicit_vertical_range": [None, None],
+                "horizontal_rules": [],
+                "metrics": [
+                    {
+                        "color": "#87f058",
+                        "expression": [
+                            "operator",
+                            "+",
                             [
-                                "rrd",
-                                web.site.id,
-                                "test-host-get-graph",
-                                "Check_MK",
-                                "system_time",
-                                "max",
-                                1.0,
-                            ],
-                            [
-                                "rrd",
-                                web.site.id,
-                                "test-host-get-graph",
-                                "Check_MK",
-                                "children_system_time",
-                                "max",
-                                1.0,
+                                [
+                                    "rrd",
+                                    web.site.id,
+                                    "test-host-get-graph",
+                                    "Check_MK",
+                                    "user_time",
+                                    "max",
+                                    1.0,
+                                ],
+                                [
+                                    "rrd",
+                                    web.site.id,
+                                    "test-host-get-graph",
+                                    "Check_MK",
+                                    "children_user_time",
+                                    "max",
+                                    1.0,
+                                ],
                             ],
                         ],
-                    ],
-                    "line_type": "stack",
-                    "title": "CPU time in operating system",
-                    "unit": "s",
-                },
-                {
-                    "color": "#0093ff",
-                    "expression": [
-                        "rrd",
-                        web.site.id,
-                        "test-host-get-graph",
-                        "Check_MK",
-                        "cmk_time_agent",
-                        "max",
-                        1.0,
-                    ],
-                    "line_type": "stack",
-                    "title": "Time spent waiting for Checkmk agent",
-                    "unit": "s",
-                },
-                {
-                    "color": "#00d1ff",
-                    "expression": [
-                        "rrd",
-                        web.site.id,
-                        "test-host-get-graph",
-                        "Check_MK",
-                        "cmk_time_ds",
-                        "max",
-                        1.0,
-                    ],
-                    "line_type": "stack",
-                    "title": "Time spent waiting for special agent",
-                    "unit": "s",
-                },
-                {
-                    "color": "#d080af",
-                    "expression": [
-                        "rrd",
-                        web.site.id,
-                        "test-host-get-graph",
-                        "Check_MK",
-                        "execution_time",
-                        "max",
-                        1.0,
-                    ],
-                    "line_type": "line",
-                    "title": "Total execution time",
-                    "unit": "s",
-                },
-            ],
-            "omit_zero_metrics": False,
-            "specification": [
-                "template",
-                {
-                    "graph_index": 0,
-                    "graph_id": "cmk_cpu_time_by_phase",
-                    "host_name": "test-host-get-graph",
-                    "service_description": "Check_MK",
-                    "site": web.site.id,
-                },
-            ],
-            "title": "Time usage by phase",
-            "unit": "s",
-        },
-    ]  # noqa: E123
+                        "line_type": "stack",
+                        "title": "CPU time in user space",
+                        "unit": "s",
+                    },
+                    {
+                        "color": "#ff8840",
+                        "expression": [
+                            "operator",
+                            "+",
+                            [
+                                [
+                                    "rrd",
+                                    web.site.id,
+                                    "test-host-get-graph",
+                                    "Check_MK",
+                                    "system_time",
+                                    "max",
+                                    1.0,
+                                ],
+                                [
+                                    "rrd",
+                                    web.site.id,
+                                    "test-host-get-graph",
+                                    "Check_MK",
+                                    "children_system_time",
+                                    "max",
+                                    1.0,
+                                ],
+                            ],
+                        ],
+                        "line_type": "stack",
+                        "title": "CPU time in operating system",
+                        "unit": "s",
+                    },
+                    {
+                        "color": "#0093ff",
+                        "expression": [
+                            "rrd",
+                            web.site.id,
+                            "test-host-get-graph",
+                            "Check_MK",
+                            "cmk_time_agent",
+                            "max",
+                            1.0,
+                        ],
+                        "line_type": "stack",
+                        "title": "Time spent waiting for Checkmk agent",
+                        "unit": "s",
+                    },
+                    {
+                        "color": "#00d1ff",
+                        "expression": [
+                            "rrd",
+                            web.site.id,
+                            "test-host-get-graph",
+                            "Check_MK",
+                            "cmk_time_ds",
+                            "max",
+                            1.0,
+                        ],
+                        "line_type": "stack",
+                        "title": "Time spent waiting for special agent",
+                        "unit": "s",
+                    },
+                    {
+                        "color": "#d080af",
+                        "expression": [
+                            "rrd",
+                            web.site.id,
+                            "test-host-get-graph",
+                            "Check_MK",
+                            "execution_time",
+                            "max",
+                            1.0,
+                        ],
+                        "line_type": "line",
+                        "title": "Total execution time",
+                        "unit": "s",
+                    },
+                ],
+                "omit_zero_metrics": False,
+                "specification": [
+                    "template",
+                    {
+                        "graph_index": 0,
+                        "graph_id": "cmk_cpu_time_by_phase",
+                        "host_name": "test-host-get-graph",
+                        "service_description": "Check_MK",
+                        "site": web.site.id,
+                    },
+                ],
+                "title": "Time usage by phase",
+                "unit": "s",
+            },
+        ]
+
+    assert (
+        web.get_graph_recipes(
+            request={
+                "specification": [
+                    "template",
+                    {
+                        "service_description": "Check_MK",
+                        "site": web.site.id,
+                        "graph_index": 0,
+                        "host_name": "test-host-get-graph",
+                    },
+                ],
+            }
+        )
+        == expected_recipe
+    )
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported with raw edition")
 def test_get_combined_graph_identifications(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -1369,6 +1543,7 @@ def test_get_combined_graph_identifications(
     ]
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
 def test_get_graph_annotations(
     web, graph_test_config
 ):  # noqa: F811 # pylint: disable=redefined-outer-name

@@ -63,7 +63,7 @@ def resolve_image_alias(alias):
     return subprocess.check_output(
         [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"), alias],
         universal_newlines=True,
-    ).split("\n")[0]
+    ).split("\n", maxsplit=1)[0]
 
 
 def _build(request, client, version, add_args=None):

@@ -965,7 +965,7 @@ table.nform {
 
   hr {
     margin: 8px 0;
-    background-color: $nform-table-hr-color;
+    background-color: $nform-hr-color;
   }
 
   .ruleset {
@@ -1212,7 +1212,7 @@ body.main .popup_menu {
     padding: 0;
     margin: 0;
     list-style: none;
-    border-bottom: 1px solid $nform-table-hr-color;
+    border-bottom: 1px solid $nform-hr-color;
   }
 
   li {

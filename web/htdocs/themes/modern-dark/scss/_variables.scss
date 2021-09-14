@@ -124,7 +124,7 @@ $ac-test-details-td-padding: 4px 5px;
 
 $repprogress-progress-bg-color: rgb(105, 156, 170); // darkened state6 bg color
 
-$nform-table-hr-color: rgba($white, 0.1);
+$nform-hr-color: rgba($white, 0.1);
 
 $iconbutton-filter: invert(40%);
 
@@ -136,8 +136,6 @@ $invtree-th-bg-color: $table-highlight-color;
 $invtree-td-bg-color: $inpage-highlight-color;
 
 $hostdown-bg-color: rgb(0, 102, 170);
-
-$nform-vlof-border-color: rgb(60, 60, 60);
 
 $duallist-control-a-hover-bg-color: mix($white, $grey-5, 10%);
 

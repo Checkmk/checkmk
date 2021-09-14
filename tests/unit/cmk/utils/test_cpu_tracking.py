@@ -38,6 +38,10 @@ class TestCpuTracking:
         assert null == Snapshot.null()
         assert null != now
         assert now != null
+        assert bool(null) is False
+        assert bool(null) is not True
+        assert bool(now) is True
+        assert bool(now) is not False
 
     def test_add_null_null(self, null):
         assert null + null == null

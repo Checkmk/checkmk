@@ -57,6 +57,9 @@ class Snapshot:
             return NotImplemented
         return Snapshot(times_result(t0 - t1 for t0, t1 in zip(self.process, other.process)))
 
+    def __bool__(self) -> bool:
+        return self != Snapshot.null()
+
 
 class CPUTracker:
     def __init__(self) -> None:

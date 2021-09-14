@@ -133,11 +133,11 @@ def _confirm_command_processed() -> Iterator[None]:
         write_bytes(bytes(protocol.CMCMessage.end_of_reply()))
 
 
-def run_fetchers(config_path: ConfigPath, host_name: HostName, mode: Mode, timeout: int) -> None:
+def run_fetchers(config_path: ConfigPath, host_name: HostName, timeout: int, mode: Mode) -> None:
     """Entry point from bin/fetcher"""
     try:
         # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-        _run_fetchers_from_file(config_path, host_name, mode=mode, timeout=timeout)
+        _run_fetchers_from_file(config_path, host_name, timeout, mode=mode)
     except FileNotFoundError:
         # Not an error.
         logger.warning("fetcher file for host %r and %s is absent", host_name, config_path)
@@ -212,8 +212,8 @@ def _parse_cluster_config(data: Mapping[str, Any], config_path: ConfigPath) -> I
 def _run_fetchers_from_file(
     config_path: ConfigPath,
     host_name: HostName,
-    mode: Mode,
     timeout: int,
+    mode: Mode,
 ) -> None:
     """Writes to the stdio next data:
     Count Answer        Content               Action

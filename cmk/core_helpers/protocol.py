@@ -425,8 +425,8 @@ class FetcherMessage(Protocol):
         )
 
     @classmethod
-    def error(cls, fetcher_type: FetcherType, exc: Exception) -> FetcherMessage:
-        stats = ResultStats(Snapshot.null())
+    def error(cls, fetcher_type: FetcherType, exc: Exception, duration: Snapshot) -> FetcherMessage:
+        stats = ResultStats(duration)
         payload = ErrorResultMessage(exc)
         return cls(
             FetcherHeader(

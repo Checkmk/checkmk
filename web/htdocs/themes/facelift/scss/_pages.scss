@@ -1416,24 +1416,6 @@ div.pnp_graph a {
   }
 }
 
-/* TODO: Can we remove PNP4Nagios styling? */
-table.data tr.data td.pnpgraph {
-  padding: 0;
-
-  div.pnp_graph > a {
-    > img {
-      margin: 4px;
-      border: 1px solid $pnp-graph-img-border-color;
-    }
-
-    &.popup_trigger > img.icon {
-      margin: 0;
-      border: none;
-      box-shadow: none;
-    }
-  }
-}
-
 table.data.job_details {
   th {
     width: 150px;

@@ -21,6 +21,9 @@ if "%PY_VER%" == "3.6" (
   type nul >>%chm_368%
   call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip -D
 )else (
+  powershell Write-Host "Creating empty %chm_empty%" -foreground white
+  del %chm_empty%
+  type nul >>%chm_empty%
   call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip -D
 )
 

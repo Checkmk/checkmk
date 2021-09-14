@@ -974,30 +974,6 @@ div.filter_buttons {
   max-width: 300px;
 }
 
-table.data tr.notification_context table {
-  margin: 5px;
-  border: 1px solid $color-table-border;
-  box-shadow: none;
-
-  th,
-  td {
-    font-family: $font-family-monospace;
-  }
-
-  th {
-    padding: 2px 4px;
-    color: $font-color;
-    background-color: $primary-th-bg-color;
-    border: 1px solid $color-table-border;
-  }
-
-  td {
-    padding: 2px 4px;
-    background-color: $primary-td-bg-color;
-    border: 1px solid $color-table-border;
-  }
-}
-
 /* TODO: Reproduce this dcd_log_entries html class */
 table.data tr.data.dcd_log_entries {
   > td {

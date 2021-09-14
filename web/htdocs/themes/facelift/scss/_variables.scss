@@ -69,11 +69,6 @@ $color-table-border-dark: rgb(13, 15, 15); // dark grey
 // -----------------------------------------------------------------------------
 $primary-border: null;
 
-$primary-th-bg-color: rgb(245, 245, 245);
-$primary-td-bg-color: $grey-1;
-
-$primary-box-shadow: 0.5px 0.5px 1px rgb(204, 204, 204);
-
 $dashboard-stats-bg-color: $white;
 
 $toggle-button-search-img-filter: null;
@@ -120,8 +115,6 @@ $h3-margin-bottom: 1px;
 $wato-info-margin: null;
 $wato-info-padding: null;
 
-$ac-test-details-td-padding: 1px 5px;
-
 $repprogress-progress-bg-color: rgb(185, 236, 250);
 
 $nform-hr-color: $ux-theme-6;
@@ -132,8 +125,8 @@ $popup-menu-select-bg-color: $white;
 
 $dragging-bg-color: $grey-1;
 
-$invtree-th-bg-color: rgb(245, 245, 245);
-$invtree-td-bg-color: $grey-1;
+$nested-table-th-bg-color: $ux-theme-1;
+$nested-table-td-bg-color: $ux-theme-0;
 
 $hostdown-bg-color: rgb(0, 102, 170);
 

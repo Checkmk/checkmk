@@ -22,14 +22,14 @@ def _valuespec_discovery_cmciii():
                 DropdownChoice(
                     title=_("Service description"),
                     help=_(
-                        "The sensor description is a user defined text. If you use "
-                        "this option, you must ensure that all sensors have a "
-                        "unique description. Otherwise two or more sensors can be "
-                        "aliased to the same service."
+                        "Since the sensor description is a user defined text, multiple sensors "
+                        "may have the same description. To ensure that items are unique, they "
+                        "are prefixed with X-Y where X is the device number and Y the index "
+                        "of the sensor."
                     ),
                     choices=[
                         (False, _("Use device and sensor name")),
-                        (True, _("Use sensor description (see help text)")),
+                        (True, _("Use sensor description")),
                     ],
                 ),
             ),

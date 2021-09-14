@@ -193,9 +193,20 @@ def parse_cmciii(string_table: List[type_defs.StringTable]) -> Sensors:
         "status": {},
     }
 
+    if not var_table:
+        return parsed
+
+    sensor_index, prev_location = 0, var_table[0][0].split(".")[0]
     for oidend, variable, var_type, var_unit, scale, value_str, value_int in var_table:
         location, _index = oidend.split(".")
         sanitized_variable = sanitize_variable(variable)
+
+        if sanitized_variable[-1] == "DescName":
+            if prev_location != location:
+                sensor_index, prev_location = 0, location
+            # sensor_index corresponds to the index used in the cmcIIIMsgTable.
+            # DescName is used since new sensor entries start with the description.
+            sensor_index += 1
 
         type_ = sensor_type(sanitized_variable)
         if type_ is None:
@@ -205,7 +216,11 @@ def parse_cmciii(string_table: List[type_defs.StringTable]) -> Sensors:
         id_ = sensor_id(type_, sanitized_variable[:-1], device)
         if id_ in parsed[type_] and parsed[type_][id_]["_location_"] != location:
             id_ += " %s" % location
-        parsed[type_].setdefault(id_, {"_device_": device, "_location_": location})
+
+        parsed[type_].setdefault(
+            id_,
+            {"_device_": device, "_location_": location, "_index_": str(sensor_index)},
+        )
 
         key = sensor_key(type_, var_type, sanitized_variable)
         value = sensor_value(value_str, value_int, scale, var_type, var_unit)

@@ -310,7 +310,7 @@ def _collect_host_sections(
 
     flat_node_sources = [(hn, ip, src) for hn, ip, sources in nodes for src in sources]
 
-    # TODO (ml): Can we somehow verify that this is correct?
+    # TODO(lm): Can we somehow verify that this is correct?
     # if fetcher_message["fetcher_type"] != source.id:
     #     raise LookupError("Checker and fetcher missmatch")
     # (mo): this is not enough, but better than nothing:

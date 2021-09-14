@@ -1,0 +1,13 @@
+Title: timesyncd increase warn default level for last synchronisation period
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631607574
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p10
+
+The previous default warn level for the last synchronisation period was
+deemed slightly too short. This werk increases this default value.

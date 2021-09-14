@@ -24,7 +24,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
 from OpenSSL import crypto  # type: ignore[import]
 from OpenSSL import SSL  # type: ignore[attr-defined]
-from six import ensure_binary, ensure_str
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -1411,7 +1410,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         for result in verify_chain_results:
             # use cryptography module over OpenSSL because it is easier to do the x509 parsing
             crypto_cert = x509.load_pem_x509_certificate(
-                ensure_binary(result.cert_pem), default_backend()
+                result.cert_pem.encode(), default_backend()
             )
 
             cert_details.append(
@@ -1421,9 +1420,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
                     valid_from=str(crypto_cert.not_valid_before),
                     valid_till=str(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                    digest_sha256=ensure_str(
-                        binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256()))
-                    ),
+                    digest_sha256=binascii.hexlify(
+                        crypto_cert.fingerprint(hashes.SHA256())
+                    ).decode(),
                     serial_number=crypto_cert.serial_number,
                     is_ca=self._is_ca_certificate(crypto_cert),
                     verify_result=result,

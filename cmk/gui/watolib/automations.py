@@ -18,7 +18,6 @@ from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, U
 
 import requests
 import urllib3  # type: ignore[import]
-from six import ensure_str
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -73,7 +72,7 @@ def check_mk_local_automation_serialized(
 ) -> Tuple[Sequence[str], SerializedResult]:
     if args is None:
         args = []
-    new_args = [ensure_str(a) for a in args]
+    new_args = list(args)
 
     if stdin_data is None:
         stdin_data = repr(indata)
@@ -93,7 +92,6 @@ def check_mk_local_automation_serialized(
     if command in ["restart", "reload"]:
         call_hook_pre_activate_changes()
 
-    cmd = [ensure_str(a) for a in cmd]
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output

@@ -10,8 +10,6 @@ import time
 import traceback
 from typing import Iterator, List, Optional, overload, Tuple, Type, Union
 
-from six import ensure_str
-
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import timeperiod_spec_alias, UserId
@@ -341,7 +339,7 @@ class ModeUsers(WatoMode):
                 )
 
                 if uid != user.id:
-                    html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
+                    html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")).decode())
 
                 user_connection_id = cleanup_connection_id(user_spec.get("connector"))
                 connection = get_connection(user_connection_id)

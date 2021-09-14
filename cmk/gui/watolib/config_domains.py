@@ -14,7 +14,7 @@ import traceback
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
 
-from six import ensure_binary, ensure_str
+from six import ensure_binary
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -410,7 +410,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         try:
             with file_path.open(encoding="utf-8") as f:
                 for line in f:
-                    line = ensure_str(line.strip())
+                    line = line.strip()
 
                     if line == "" or line.startswith("#"):
                         continue

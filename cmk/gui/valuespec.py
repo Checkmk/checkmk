@@ -159,7 +159,7 @@ class ValueSpec:
             return None
 
         assert isinstance(self._help, str)
-        return ensure_str(self._help)
+        return self._help
 
     def allow_empty(self) -> bool:
         """Whether the valuespec is allowed to be left empty."""
@@ -1013,7 +1013,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     def _validate_value_for_one_class(value: str, varprefix: str) -> None:
         assert ip_class is not None
         try:
-            ip_class(ensure_str(value))
+            ip_class(value)
         except ValueError as exc:
             ip_class_text = {
                 ipaddress.IPv4Network: "IPv4",
@@ -1026,7 +1026,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
         errors = {}
         for ipc in (ipaddress.IPv4Network, ipaddress.IPv6Network):
             try:
-                ipc(ensure_str(value))
+                ipc(value)
                 return
             except ValueError as exc:
                 errors[ipc] = exc
@@ -1069,7 +1069,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
 ) -> TextInput:
     def _validate_value(value: str, varprefix: str):
         try:
-            ipaddress.IPv4Address(ensure_str(value))
+            ipaddress.IPv4Address(value)
         except ValueError as exc:
             raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % exc)
 
@@ -2604,7 +2604,7 @@ class DropdownChoice(ValueSpec):
 
     @staticmethod
     def option_id(val) -> str:
-        return "%s" % hashlib.sha256(ensure_binary(repr(val))).hexdigest()
+        return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         if self._no_preselect and value == self._no_preselect_value:
@@ -2668,7 +2668,7 @@ class AjaxDropdownChoice(DropdownChoice):
             )
 
     def _validate_value(self, value: str, varprefix: str) -> None:
-        if value and self._regex and not self._regex.match(ensure_str(value)):
+        if value and self._regex and not self._regex.match(value):
             raise MKUserError(varprefix, self._regex_error)
 
     def value_to_text(self, value) -> ValueSpecText:
@@ -3132,7 +3132,7 @@ class CascadingDropdown(ValueSpec):
         if self._render == CascadingDropdown.Render.foldable:
             with output_funnel.plugged(), foldable_container(
                 treename="foldable_cascading_dropdown",
-                id_=hashlib.sha256(ensure_binary(repr(value))).hexdigest(),
+                id_=hashlib.sha256(repr(value).encode()).hexdigest(),
                 isopen=False,
                 title=title,
                 indent=False,
@@ -5122,7 +5122,7 @@ class Dictionary(ValueSpec):
         html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):
-        headers = self._headers or [(ensure_str(self.title() or _("Properties")), [])]
+        headers = self._headers or [(self.title() or _("Properties"), [])]
         for header, css, section_elements in map(self._normalize_header, headers):
             if not as_part:
                 forms.header(
@@ -5811,11 +5811,7 @@ class ImageUpload(FileUpload):
             html.open_table()
             html.open_tr()
             html.td(_("Current image:"))
-            html.td(
-                html.render_img(
-                    "data:image/png;base64,%s" % ensure_str(base64.b64encode(ensure_binary(value)))
-                )
-            )
+            html.td(html.render_img("data:image/png;base64,%s" % base64.b64encode(value).decode()))
             html.close_tr()
             html.open_tr()
             html.td(_("Upload new:"))

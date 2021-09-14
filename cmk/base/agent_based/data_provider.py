@@ -253,10 +253,9 @@ class ParsedSectionsBroker:
         except KeyError:
             return None
 
-        # pylint: disable=superfluous-parens
         return (
             None
-            if ((resolved := resolver.resolve(parser, parsed_section_name)) is None)
+            if (resolved := resolver.resolve(parser, parsed_section_name)) is None
             else resolved.parsed.data
         )
 
@@ -296,9 +295,9 @@ def _collect_host_sections(
     file_cache_max_age: cache.MaxAge,
     fetcher_messages: Sequence[FetcherMessage],
     selected_sections: SectionNameCollection,
-) -> Tuple[  #
-    Mapping[HostKey, HostSections],  #
-    Sequence[Tuple[Source, result.Result[HostSections, Exception]]],  #
+) -> Tuple[
+    Mapping[HostKey, HostSections],
+    Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
 ]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 

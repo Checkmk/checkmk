@@ -66,7 +66,7 @@ ETAG_HEADER_PARAM = {
                      'the "If-Match" request-header for subsequent modifications. '
                      'Please note that the actual ETag returned by some endpoints '
                      'may look different than the one shown in this example.'),
-        example='a20ceacf346041dc',
+        example='"a20ceacf346041dc"',
     )
 }
 

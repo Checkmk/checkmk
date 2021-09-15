@@ -84,6 +84,7 @@ b.state0,
 td.count.state0,
 td.number.state0,
 td.fillbackground.state0,
+.statemini.state0,
 .statebullet.state0,
 .state0 span,
 .hstate0 span {
@@ -105,6 +106,7 @@ b.state1,
 td.count.state1,
 td.number.state1,
 td.fillbackground.state1,
+.statemini.state1,
 .statebullet.state1,
 .state1 span {
   &,
@@ -121,6 +123,7 @@ b.state2,
 td.count.state2,
 td.number.state2,
 td.fillbackground.state2,
+.statemini.state2,
 .statebullet.state2,
 .state2 span,
 .hstate1 span {
@@ -169,6 +172,27 @@ b.stmark {
   margin-left: 2px;
   font-size: $font-size-small;
   border-radius: 4px;
+}
+
+.statemini {
+  float: left;
+  width: 12px;
+  height: 12px;
+  margin: 1px;
+  font-size: $font-size-small;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.statebullet {
+  position: relative;
+  top: 3px;
+  left: 1px;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
 /* inline icon in plugin output for URLs */
@@ -469,7 +493,7 @@ td.matchgroups span {
   border-radius: $theme-border-radius;
 }
 
-table.allhosts,
+// TODO: get rid of the styles below
 table.hostmatrix,
 table.timeline {
   .state0 {

@@ -446,14 +446,6 @@ div.snapin {
       margin: 0 -1px;
     }
   }
-
-  /* state bullets at problem host or all hosts snapin */
-  div.statebullet {
-    float: left;
-    width: 5px;
-    height: 5px;
-    border-radius: 5px;
-  }
 }
 
 #add_snapin {
@@ -474,11 +466,6 @@ div.snapin {
 
 div.snapin div.content div.foldable ul.treeangle a.iconlink {
   padding: 0;
-}
-
-div.snapin table.allhosts td a.link {
-  padding: 2px;
-  padding-left: 4px;
 }
 
 div.snapin div.footnotelink a.link {

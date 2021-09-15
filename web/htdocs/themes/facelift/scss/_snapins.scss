@@ -57,10 +57,10 @@ table.hostmatrix {
   td {
     width: 50%;
     padding: 0;
-  }
 
-  .statebullet {
-    margin: 5px 2px 2px;
+    a.link {
+      padding: 2px 2px 2px $spacing-half;
+    }
   }
 }
 
@@ -383,19 +383,6 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-  }
-
-  div.statebullet {
-    position: relative;
-    top: 3px;
-    left: 1px;
-    display: inline-block;
-    float: none;
-    width: 8px;
-    height: 8px;
-    margin-right: 0;
-    border-radius: 50%;
-    box-shadow: 0 0 0.7px rgb(40, 72, 80);
   }
 
   ul > div.statebullet.leaf {

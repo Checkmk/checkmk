@@ -15,6 +15,16 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#ifndef CMC
+#include "nagios.h"
+#include "pnp4nagios.h"
+#else
+#include <optional>
+
+#include "Host.h"
+#include "Object.h"
+class Row;
+#endif
 
 #include "ListLambdaColumn.h"
 #include "overload.h"  // IWYU pragma: keep
@@ -77,9 +87,22 @@ private:
     MonitoringCore *_mc;
     const RRDColumnArgs _args;
 
-    template <class T>
-    [[nodiscard]] static std::pair<std::string, std::string>
-    getHostNameServiceDesc(const T &row);
+#ifndef CMC
+    static std::pair<std::string, std::string> getHostNameServiceDesc(
+        const host &row) {
+        return {row.name, dummy_service_description()};
+    }
+
+    static std::pair<std::string, std::string> getHostNameServiceDesc(
+        const service &row) {
+        return {row.host_name, row.description};
+    }
+#else
+    static std::pair<std::string, std::string> getHostNameServiceDesc(
+        const Object &row) {
+        return {row.host()->name(), row.serviceDescription()};
+    }
+#endif
 
     [[nodiscard]] detail::Data make(
         const std::pair<std::string, std::string>
@@ -103,7 +126,5 @@ inline std::string serialize(const RRDDataMaker::value_type &v) {
                       v);
 }
 }  // namespace column::detail
-
-#include "RRDColumn-impl.h"  // IWYU pragma: keep
 
 #endif  // RRDColumn_h

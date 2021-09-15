@@ -37,6 +37,7 @@ aclocal.m4
 ar-lib
 artefacts/
 autom4te.cache/
+build/
 ChangeLog
 check_mk-*.tar.gz
 check-mk-*.build
@@ -54,6 +55,7 @@ config.status
 config.sub
 configure
 depcomp
+marcv/dist/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 GPATH
@@ -61,6 +63,8 @@ GRTAGS
 GTAGS
 htmlcov/
 install-sh
+marcv/marcv.egg-info
+marcv/pyproject.toml
 missing
 mk-livestatus-*.tar.gz
 node_modules/

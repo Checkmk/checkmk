@@ -5,5 +5,5 @@ import sys
 
 from cmk.special_agents.agent_fuse_management_central import main
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

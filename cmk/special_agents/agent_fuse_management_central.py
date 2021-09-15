@@ -12,22 +12,26 @@ import cmk.utils.password_store
 
 
 class SummaryStructure:
-    def __init__(self, system_alerts: Dict[Tuple[str, str], dict],
-                    env_alerts: Dict[Tuple[str, str], dict],
-                    fuse_alerts: Dict[str, dict]
-                ) -> None:
+    def __init__(
+        self,
+        system_alerts: Dict[Tuple[str, str], dict],
+        env_alerts: Dict[Tuple[str, str], dict],
+        fuse_alerts: Dict[str, dict],
+    ) -> None:
         self.system_alerts: Dict[Tuple[str, str], dict] = system_alerts
         self.env_alerts: Dict[Tuple[str, str], dict] = env_alerts
         self.fuse_alerts: Dict[str, dict] = fuse_alerts
+
     def __eq__(self, other):
         try:
             return (
-                self.system_alerts == other.system_alerts and
-                self.env_alerts == other.env_alerts and
-                self.fuse_alerts == other.fuse_alerts
+                self.system_alerts == other.system_alerts
+                and self.env_alerts == other.env_alerts
+                and self.fuse_alerts == other.fuse_alerts
             )
         except AttributeError:
             return NotImplemented
+
 
 class LayoutResponse:
     def __init__(self, code: int, data: dict) -> None:
@@ -42,10 +46,16 @@ class SummaryResponse:
 
 
 class Alert:
-    def __init__(self, fuse_id: str, name: str,
-                    own_type: str, component_type: str,
-                    errors: int, warnings: int, link: str
-                ) -> None:
+    def __init__(
+        self,
+        fuse_id: str,
+        name: str,
+        own_type: str,
+        component_type: str,
+        errors: int,
+        warnings: int,
+        link: str,
+    ) -> None:
         self.fuse_id: str = fuse_id
         self.name: str = name
         self.type: str = own_type
@@ -53,16 +63,17 @@ class Alert:
         self.errors: int = errors
         self.warnings: int = warnings
         self.link: str = link
+
     def __eq__(self, other):
         try:
             return (
-                self.fuse_id == other.fuse_id and
-                self.name == other.name and
-                self.type == other.type and
-                self.component_type == other.component_type and
-                self.errors == other.errors and
-                self.warnings == other.warnings and
-                self.link == other.link
+                self.fuse_id == other.fuse_id
+                and self.name == other.name
+                and self.type == other.type
+                and self.component_type == other.component_type
+                and self.errors == other.errors
+                and self.warnings == other.warnings
+                and self.link == other.link
             )
         except AttributeError:
             return NotImplemented
@@ -83,6 +94,7 @@ class FuseRequest:
         self.endpoint: str = "%s" % connection_url
         self.username: str = username
         self.password: str = password
+
     def get_layout(self) -> LayoutResponse:
         data: dict = {}
         try:
@@ -93,6 +105,7 @@ class FuseRequest:
         except requests.exceptions.RequestException:
             code = 404
         return LayoutResponse(code, data)
+
     def get_summary(self) -> SummaryResponse:
         data: list = []
         try:
@@ -126,10 +139,9 @@ def get_systems_alerts(layout: dict, system_alerts_map: Dict[Tuple[str, str], di
 
     for system in layout["systems"]:
         for component in system["componentTypes"]:
-            system_alert: Alert = Alert(system["id"], system["name"],
-                                            system["type"], component["displayName"],
-                                            0, 0, ""
-                                        )
+            system_alert: Alert = Alert(
+                system["id"], system["name"], system["type"], component["displayName"], 0, 0, ""
+            )
             if (system["id"], component["id"]) in system_alerts_map:
                 alert = system_alerts_map[(system["id"], component["id"])]
                 if "errors" in alert:
@@ -149,9 +161,9 @@ def get_environment_alerts(layout: dict, env_alert_map: Dict[Tuple[str, str], di
 
     for environment in layout["environments"]:
         for component in environment["componentTypes"]:
-            env_alert: Alert = Alert(environment["id"], environment["name"],
-                                        "", component["displayName"], 0, 0, ""
-                                    )
+            env_alert: Alert = Alert(
+                environment["id"], environment["name"], "", component["displayName"], 0, 0, ""
+            )
             if (environment["id"], component["id"]) in env_alert_map:
                 alert = env_alert_map[(environment["id"], component["id"])]
                 if "errors" in alert:
@@ -186,21 +198,13 @@ def get_admin_alerts(layout: dict, env_admin_map: Dict[str, dict]) -> List[Alert
 
 def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("user",
-                        metavar="USER",
-                        help="")
-    parser.add_argument("password",
-                        metavar="PASSWORD",
-                        help="")
-    parser.add_argument("url",
-                        metavar="URL",
-                        help="")
-    parser.add_argument("host",
-                        metavar="HOST",
-                        help="")
-    parser.add_argument('--debug',
-                        action='store_true',
-                        help='Debug mode: let Python exceptions raise through')
+    parser.add_argument("user", metavar="USER", help="")
+    parser.add_argument("password", metavar="PASSWORD", help="")
+    parser.add_argument("url", metavar="URL", help="")
+    parser.add_argument("host", metavar="HOST", help="")
+    parser.add_argument(
+        "--debug", action="store_true", help="Debug mode: let Python exceptions raise through"
+    )
     return parser.parse_args(argv)
 
 
@@ -222,7 +226,7 @@ def main(args: Optional[List[str]] = None) -> int:
     opt: argparse.Namespace = parse_arguments(args)
 
     layout_connection: LayoutConnection = LayoutConnection(opt.url)
-    layout_request: FuseRequest  = FuseRequest(layout_connection.base_url, opt.user, opt.password)
+    layout_request: FuseRequest = FuseRequest(layout_connection.base_url, opt.user, opt.password)
     layout_response: LayoutResponse = layout_request.get_layout()
 
     summary_connection: SummaryConnection = SummaryConnection(opt.url)

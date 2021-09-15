@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 def agent_fuse_management_central(params: dict, hostname: str, ipaddress):
     args: list = [
         params["user"],
@@ -12,4 +13,4 @@ def agent_fuse_management_central(params: dict, hostname: str, ipaddress):
     return args
 
 
-special_agent_info['fuse_management_central'] = agent_fuse_management_central
+special_agent_info["fuse_management_central"] = agent_fuse_management_central

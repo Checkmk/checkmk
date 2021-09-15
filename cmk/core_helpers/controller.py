@@ -248,7 +248,7 @@ def _run_fetchers_from_file(
         messages = _replace_netsnmp_obfuscated_timeout(messages, timeout_manager.message)
 
     logger.debug("Produced %d messages", len(messages))
-    write_bytes(bytes(protocol.CMCMessage.result_answer(*messages)))
+    write_bytes(bytes(protocol.CMCMessage.result_answer(messages)))
     for msg in filter(
         lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,
         messages,

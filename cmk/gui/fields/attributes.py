@@ -735,3 +735,36 @@ class HostAttributeManagementBoardField(_fields.String):
         if serialized is None:
             return 'none'
         return serialized
+
+
+class HostContactGroup(BaseSchema):
+    groups = fields.List(
+        fields.GroupField(
+            group_type='contact',
+            example='all',
+            required=True,
+        ),
+        required=True,
+        description="A list of contact groups.",
+    )
+    use = fields.Boolean(
+        description="Add these contact groups to the host.",
+        missing=False,
+    )
+    use_for_services = fields.Boolean(
+        description=(
+            "<p>Always add host contact groups also to its services.</p>"
+            "With this option contact groups that are added to hosts are always being added to "
+            "services, as well. This only makes a difference if you have assigned other contact "
+            "groups to services via rules in <i>Host & Service Parameters</i>. As long as you do "
+            "not have any such rule a service always inherits all contact groups from its host."),
+        missing=False,
+    )
+    recurse_use = fields.Boolean(
+        description="Add these groups as contacts to all hosts in all sub-folders of this folder.",
+        missing=False,
+    )
+    recurse_perms = fields.Boolean(
+        description="Give these groups also permission on all sub-folders.",
+        missing=False,
+    )

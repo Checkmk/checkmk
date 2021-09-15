@@ -97,6 +97,9 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def show_in_folder(self):
         return False
 
+    def openapi_field(self) -> fields.Field:
+        return fields.String(description=self.help())
+
 
 @host_attribute_registry.register
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):

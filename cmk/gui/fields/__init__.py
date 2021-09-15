@@ -48,6 +48,7 @@ from cmk.gui.fields.attributes import (
     NetworkScanResult,
     MetaData,
     HostAttributeManagementBoardField,
+    HostContactGroup,
 )
 from cmk.gui.fields.validators import (
     ValidateAnyOfValidators,

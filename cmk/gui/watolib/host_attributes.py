@@ -375,6 +375,10 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
         show more button in the GUI"""
         return False
 
+    @abc.abstractmethod
+    def openapi_field(self) -> fields.Field:
+        raise NotImplementedError()
+
 
 class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttribute]]):
     _index = 0
@@ -796,10 +800,6 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     """An attribute using the generic ValueSpec mechanism"""
     @abc.abstractmethod
     def valuespec(self):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def openapi_field(self) -> fields.Field:
         raise NotImplementedError()
 
     def title(self):

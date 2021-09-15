@@ -11,7 +11,10 @@
 
 : "${MK_RUN_SYNC_PARTS=true}"
 
-$MK_RUN_SYNC_PARTS || echo "Exclusive cache update and live-update (MK_RUN_SYNC_PARTS=false) is not suported on this system" >&2 && exit 1
+$MK_RUN_SYNC_PARTS || {
+    echo "Exclusive cache update and live-update (MK_RUN_SYNC_PARTS=false) is not suported on this system" >&2
+    exit 1
+}
 
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C

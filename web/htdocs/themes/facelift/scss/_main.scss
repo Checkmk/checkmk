@@ -337,10 +337,6 @@ b.treeangle.title {
   font-weight: bold;
   color: $font-color;
   cursor: pointer;
-
-  table.data & {
-    color: $font-color-black;
-  }
 }
 
 div.foldable_wrapper {

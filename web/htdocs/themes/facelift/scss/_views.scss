@@ -1148,16 +1148,12 @@ div.sla_details {
   background-color: rgb(115, 161, 180);
 }
 
-td.sla > div.foldable > b {
-  color: $font-color-black;
-}
-
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {
   height: 1px;
 
   &.black {
     height: 1px;
-    border-bottom: 1px solid $black;
+    border-bottom: 1px solid $font-color;
   }
 }
 

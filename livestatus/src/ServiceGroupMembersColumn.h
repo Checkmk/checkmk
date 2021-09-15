@@ -29,8 +29,7 @@ enum class ServiceState;
 #include "nagios.h"
 #endif
 
-namespace detail {
-namespace service_group_members {
+namespace detail::service_group_members {
 struct Entry {
     Entry(std::string hn, std::string d, ServiceState cs, bool hbc)
         : host_name(std::move(hn))
@@ -43,13 +42,12 @@ struct Entry {
     ServiceState current_state;
     bool has_been_checked;
 };
-}  // namespace service_group_members
-}  // namespace detail
+}  // namespace detail::service_group_members
 
 class ServiceGroupMembersRenderer {
 public:
     enum class verbosity { none, full };
-    ServiceGroupMembersRenderer(verbosity v) : verbosity_{v} {}
+    explicit ServiceGroupMembersRenderer(verbosity v) : verbosity_{v} {}
     void output(ListRenderer &l,
                 const detail::service_group_members::Entry &entry) const;
 

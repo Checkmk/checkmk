@@ -17,7 +17,7 @@ class ListRenderer;
 class CommentRenderer : public ListColumnRenderer<CommentData> {
 public:
     enum class verbosity { none, medium, full };
-    CommentRenderer(verbosity v) : verbosity_{v} {}
+    explicit CommentRenderer(verbosity v) : verbosity_{v} {}
     void output(ListRenderer &l, const CommentData &comment) const override;
 
 private:

@@ -17,8 +17,8 @@ class ListRenderer;
 class DowntimeRenderer : public ListColumnRenderer<DowntimeData> {
 public:
     enum class verbosity { none, medium, full };
-    DowntimeRenderer(verbosity v) : verbosity_{v} {}
-    void output(ListRenderer &l, const DowntimeData &downtime) const;
+    explicit DowntimeRenderer(verbosity v) : verbosity_{v} {}
+    void output(ListRenderer &l, const DowntimeData &downtime) const override;
 
 private:
     verbosity verbosity_;

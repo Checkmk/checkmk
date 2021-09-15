@@ -34,7 +34,7 @@ struct Entry {
 class HostListRenderer {
 public:
     enum class verbosity { none, full };
-    HostListRenderer(verbosity v) : verbosity_{v} {}
+    explicit HostListRenderer(verbosity v) : verbosity_{v} {}
     void output(ListRenderer &l, const column::hostlist::Entry &entry) const;
 
 private:

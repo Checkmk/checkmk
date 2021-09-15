@@ -27,8 +27,7 @@ enum class ServiceState;
 #include "nagios.h"
 #endif
 
-namespace detail {
-namespace service_list {
+namespace detail::service_list {
 struct Entry {
     Entry(std::string d, ServiceState cs, bool hbc, std::string po,
           ServiceState lhs, uint32_t ca, uint32_t mca, uint32_t sdt, bool a,
@@ -56,13 +55,12 @@ struct Entry {
     bool service_period_active;
 };
 
-}  // namespace service_list
-}  // namespace detail
+}  // namespace detail::service_list
 
 class ServiceListRenderer {
 public:
     enum class verbosity { none, low, medium, full };
-    ServiceListRenderer(verbosity v) : verbosity_{v} {}
+    explicit ServiceListRenderer(verbosity v) : verbosity_{v} {}
     void output(ListRenderer &l,
                 const detail::service_list::Entry &entry) const;
 

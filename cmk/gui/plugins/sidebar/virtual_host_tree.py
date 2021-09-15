@@ -183,10 +183,10 @@ class VirtualHostTree(SidebarSnapin):
     def _tag_tree_bullet(self, state, path, leaf) -> HTML:
         code = html.render_div(
             "&nbsp;",
-            class_=["tagtree", "leafstatebullet" if leaf else "statebullet", "state%d" % state],
+            class_=["tagtree", "leaf" if leaf else None, "statebullet", "state%d" % state],
         )
         if not leaf:
-            code += html.render_a(
+            code = html.render_a(
                 code,
                 href="javascript:virtual_host_tree_enter('%s');" % "|".join(path),
                 title=_("Display the tree only below this node"),

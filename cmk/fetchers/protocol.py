@@ -76,10 +76,6 @@ class CMCLogLevel(str, enum.Enum):
         }[level]
 
 
-class Header(Protocol):
-    pass
-
-
 class ResultMessage(Protocol):
     fmt = "!HQ"
     length = struct.calcsize(fmt)
@@ -260,7 +256,7 @@ class ErrorResultMessage(ResultMessage):
             raise ValueError(data) from exc
 
 
-class FetcherHeader(Header):
+class FetcherHeader(Protocol):
     """Header is fixed size bytes in format:
 
     <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE><STATS_SIZE>
@@ -461,7 +457,7 @@ class FetcherMessage(Protocol):
         return self.payload.result()
 
 
-class CMCHeader(Header):
+class CMCHeader(Protocol):
     """Header is fixed size(6+8+9+9 = 32 bytes) bytes in format
 
       header: <ID>:<'RESULT '|'LOG    '|'ENDREPL'>:<LOGLEVEL>:<SIZE>:

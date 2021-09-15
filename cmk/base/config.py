@@ -63,6 +63,7 @@ from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_paramete
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
+from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.site import omd_site
@@ -2323,17 +2324,8 @@ def _update_with_configured_check_parameters(
             # these will be executed just before the check execution
             return set_timespecific_param_list(entries, params)
 
-        # loop from last to first (first must have precedence)
-        for entry in entries[::-1]:
-            if isinstance(params, dict) and isinstance(entry, dict):
-                params.update(entry)
-            else:
-                if isinstance(entry, dict):
-                    # The entry still has the reference from the rule..
-                    # If we don't make a deepcopy the rule might be modified by
-                    # a followup params.update(...)
-                    entry = copy.deepcopy(entry)
-                params = entry
+        return boil_down_parameters(entries, params)
+
     return params
 
 

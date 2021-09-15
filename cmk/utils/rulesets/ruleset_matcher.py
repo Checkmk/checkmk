@@ -8,6 +8,7 @@
 from typing import Any, cast, Dict, Generator, List, Optional, Pattern, Set, Tuple, TYPE_CHECKING
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
@@ -127,17 +128,17 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_host_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
-    ) -> Dict:
+        self, match_object: RulesetMatchObject, ruleset: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
-        merged_dict: Dict = {}
-        for rule_dict in self.get_host_ruleset_values(match_object, ruleset, is_binary=False):
-            for key, value in rule_dict.items():
-                merged_dict.setdefault(key, value)
-        return merged_dict
+        merged = boil_down_parameters(
+            self.get_host_ruleset_values(match_object, ruleset, is_binary=False), {}
+        )
+        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
+        return merged
 
     def get_host_ruleset_values(
         self, match_object: RulesetMatchObject, ruleset: List, is_binary: bool
@@ -174,17 +175,17 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_service_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
-    ) -> Dict:
+        self, match_object: RulesetMatchObject, ruleset: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
-        merged_dict: Dict = {}
-        for rule_dict in self.get_service_ruleset_values(match_object, ruleset, is_binary=False):
-            for key, value in rule_dict.items():
-                merged_dict.setdefault(key, value)
-        return merged_dict
+        merged = boil_down_parameters(
+            self.get_service_ruleset_values(match_object, ruleset, is_binary=False), {}
+        )
+        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
+        return merged
 
     def get_service_ruleset_values(
         self, match_object: RulesetMatchObject, ruleset: List, is_binary: bool

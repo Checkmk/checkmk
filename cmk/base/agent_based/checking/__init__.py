@@ -28,6 +28,7 @@ from cmk.utils.type_defs import (
     ServiceName,
     SourceType,
     state_markers,
+    TimeperiodName,
 )
 
 from cmk.core_helpers.protocol import FetcherMessage, FetcherType
@@ -593,25 +594,30 @@ def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     # Note: This combined_entry may be a dict or tuple, so the update mechanism must handle this correctly
     # A shallow copy is sufficient
     combined_entry = copy.copy(entry["tp_default_value"])
-    for timeperiod_name, tp_entry in entry["tp_values"][::-1]:
+    for tp_entry in _filter_active_parameter_subsets(entry["tp_values"][::-1]):
+        # If multiple timeperiods are active, their settings are also merged
+        # This follows the same logic than merging different rules
+        if isinstance(combined_entry, dict) and isinstance(tp_entry, dict):
+            combined_entry.update(tp_entry)
+        else:
+            combined_entry = tp_entry
+
+    return combined_entry
+
+
+def _filter_active_parameter_subsets(
+    subsets: Iterable[Tuple[TimeperiodName, LegacyCheckParameters]],
+) -> Iterable[LegacyCheckParameters]:
+    for timeperiod_name, tp_entry in subsets:
         try:
             tp_active = cmk.base.core.timeperiod_active(timeperiod_name)
         except Exception:
             # Connection error
             if cmk.utils.debug.enabled():
                 raise
-            break
-        if not tp_active:
-            continue
-
-        # If multiple timeperiods are active, their settings are also merged
-        # This follows the same logic than merging different rules
-        if isinstance(combined_entry, dict):
-            combined_entry.update(tp_entry)
-        else:
-            combined_entry = tp_entry
-
-    return combined_entry
+            return
+        if tp_active:
+            yield tp_entry
 
 
 def _add_state_marker(

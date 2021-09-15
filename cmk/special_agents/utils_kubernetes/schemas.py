@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime
 import enum
+import time
 from typing import Dict, NewType, Optional
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
@@ -59,13 +60,16 @@ def parse_memory(value: str) -> float:
 
 
 def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> MetaData:
+    def convert_to_timestamp(date_time) -> float:
+        return time.mktime(datetime.datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%SZ").timetuple())
+
     if not labels:
         labels = metadata.labels if metadata.labels else {}
 
     return MetaData(
         name=metadata.name,
         namespace=metadata.namespace,
-        creation_timestamp=metadata.creation_timestamp,
+        creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
         labels=labels,
     )
 
@@ -73,7 +77,7 @@ def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> MetaData:
 class MetaData(BaseModel):
     name: str
     namespace: Optional[str] = None
-    creation_timestamp: Optional[datetime.datetime] = None
+    creation_timestamp: Optional[float] = None
     labels: Optional[Labels] = None
     prefix = ""
     use_namespace = False

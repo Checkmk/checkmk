@@ -6,6 +6,7 @@
 """Caring about persistance of the discovered services (aka autochecks)"""
 
 import logging
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
@@ -92,14 +93,17 @@ class AutochecksManager:
         service_desc: ServiceName,
         service_description: GetServiceDescription,
     ) -> DiscoveredServiceLabels:
-        if hostname not in self._discovered_labels_of:
-            # Only read the raw autochecks here, do not compute the effective
-            # check parameters. The latter would involve ruleset matching which
-            # in turn would require already computed labels.
-            self._read_raw_autochecks(hostname, service_description)
-        if service_desc not in self._discovered_labels_of[hostname]:
-            self._discovered_labels_of[hostname][service_desc] = DiscoveredServiceLabels()
-        return self._discovered_labels_of[hostname][service_desc]
+        with suppress(KeyError):
+            return self._discovered_labels_of[hostname][service_desc]
+
+        hosts_labels = self._discovered_labels_of.setdefault(hostname, {})
+        # Only read the raw autochecks here, do not compute the effective
+        # check parameters. The latter would involve ruleset matching which
+        # in turn would require already computed labels.
+        for service in self._read_raw_autochecks(hostname, service_description):
+            hosts_labels[service.description] = service.service_labels
+
+        return hosts_labels.setdefault(service_desc, DiscoveredServiceLabels())
 
     def _read_raw_autochecks(
         self,
@@ -111,10 +115,6 @@ class AutochecksManager:
                 hostname,
                 service_description,
             )
-            # create cache from autocheck labels
-            self._discovered_labels_of.setdefault(hostname, {})
-            for service in self._raw_autochecks_cache[hostname]:
-                self._discovered_labels_of[hostname][service.description] = service.service_labels
         return self._raw_autochecks_cache[hostname]
 
     # TODO: use store.load_object_from_file()

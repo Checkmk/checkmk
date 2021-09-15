@@ -53,6 +53,7 @@ import abc
 import enum
 import json
 import logging
+import math
 import pickle
 import struct
 from typing import Final, Iterator, Sequence, Type, Union
@@ -579,25 +580,64 @@ class CMCPayload(Protocol):
     pass
 
 
-class CMCResults(CMCPayload):
-    def __init__(self, messages: Sequence[FetcherMessage]) -> None:
-        self.messages = messages
+class CMCResultsStats(Protocol):
+    fmt = "!I"
+    length = struct.calcsize(fmt)
+
+    def __init__(self, timeout: int, duration: Snapshot) -> None:
+        self.timeout: Final = timeout
+        self.duration: Final = duration
+
+    @property
+    def remaining_time(self) -> int:
+        return max(0, self.timeout - math.ceil(self.duration.process.elapsed))
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.messages!r})"
+        return f"{type(self).__name__}({self.timeout!r}, {self.duration!r})"
 
     def __iter__(self) -> Iterator[bytes]:
+        conf = json.dumps({"duration": self.duration.serialize(), "timeout": self.timeout}).encode(
+            "ascii"
+        )
+        yield struct.pack(type(self).fmt, len(conf))
+        yield conf
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCResultsStats:
+        conf_len = struct.unpack(cls.fmt, data[: cls.length])[0]
+        conf = json.loads(data[cls.length : cls.length + conf_len].decode("ascii"))
+        return cls(conf["timeout"], Snapshot.deserialize(conf["duration"]))
+
+
+class CMCResults(CMCPayload):
+    fmt = "!I"
+    length = struct.calcsize(fmt)
+
+    def __init__(self, messages: Sequence[FetcherMessage], stats: CMCResultsStats) -> None:
+        self.messages: Final = messages
+        self.stats: Final = stats
+
+    @property
+    def message_count(self) -> int:
+        return len(self.messages)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.messages!r}, {self.stats!r})"
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield struct.pack(type(self).fmt, self.message_count)
         yield from (bytes(msg) for msg in self.messages)
+        yield from self.stats
 
     @classmethod
     def from_bytes(cls, data: bytes) -> CMCResults:
         messages = []
-        index = 0
-        while index < len(data):
+        index = cls.length
+        for _n in range(struct.unpack(cls.fmt, data[: cls.length])[0]):
             message = FetcherMessage.from_bytes(data[index:])
             messages.append(message)
             index += len(message)
-        return cls(messages)
+        return cls(messages, CMCResultsStats.from_bytes(data[index:]))
 
 
 class CMCLogging(CMCPayload):
@@ -669,8 +709,10 @@ class CMCMessage(Protocol):
         return cls.end_of_reply()
 
     @classmethod
-    def result_answer(cls, messages: Sequence[FetcherMessage]) -> CMCMessage:
-        payload = CMCResults(messages)
+    def result_answer(
+        cls, messages: Sequence[FetcherMessage], timeout: int, duration: Snapshot
+    ) -> CMCMessage:
+        payload = CMCResults(messages, CMCResultsStats(timeout, duration))
         return cls(
             CMCHeader(
                 name=CMCHeader.default_protocol_name(),

@@ -19,11 +19,8 @@
 #include "nagios.h"
 #include "pnp4nagios.h"
 #else
-#include <optional>
-
 #include "Host.h"
 #include "Object.h"
-class Row;
 #endif
 
 #include "ListLambdaColumn.h"

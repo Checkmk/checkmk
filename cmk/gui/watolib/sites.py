@@ -726,10 +726,14 @@ class AutomationPushSnapshot(AutomationCommand):
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool
         with store.lock_checkmk_configuration():
-            multitar.extract_from_buffer(request.tar_content,
-                                         cmk.gui.watolib.activate_changes.get_replication_paths())
+            # Disable the request timeout for this block because the entire cleanup/unzipping phase
+            # does not support interrupts of any kind. Any interrupt most likely causes data corruption.
 
             try:
+                html.disable_request_timeout()
+                multitar.extract_from_buffer(
+                    request.tar_content, cmk.gui.watolib.activate_changes.get_replication_paths())
+
                 self._save_site_globals_on_slave_site(request.tar_content)
 
                 # pending changes are lost
@@ -744,6 +748,8 @@ class AutomationPushSnapshot(AutomationCommand):
                     _("Failed to deploy configuration: \"%s\". "
                       "Please note that the site configuration has been synchronized "
                       "partially.") % traceback.format_exc())
+            finally:
+                html.enable_request_timeout()
 
             cmk.gui.watolib.changes.log_audit(
                 None, "replication",

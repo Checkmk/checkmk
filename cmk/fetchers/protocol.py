@@ -3,7 +3,51 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes defining the check helper protocol."""
+"""Classes defining the check helper protocol.
+
+We call "message" a header followed by the corresponding payload.
+
++---------------+----------------+---------------+----------------+
+| Layer         | Message type   | Header type   | Payload type   |
++===============+================+===============+================+
+| CMC Layer     | CMCMessage     | CMCHeader     | CMCPayload     |
++---------------+----------------+---------------+----------------+
+| Fetcher Layer | FetcherMessage | FetcherHeader | ResultMessage  |
+|               |                |               | + ResultStats  |
++---------------+----------------+---------------+----------------+
+|               |                |      AgentResultMessage        |
+| Result Layer  | ResultMessage  |      SNMPResultMessage         |
+|               |                |      ErrorResultMessage        |
++---------------+----------------+--------------------------------+
+
+.. uml::
+
+    abstract CMCPayload
+    CMCPayload <|-- CMCResults
+    CMCPayload <|-- CMCLogging
+    CMCPayload <|-- CMCEndOfReply
+    CMCMessage o--  CMCHeader
+    CMCMessage o-- CMCPayload
+
+    CMCResults o-- "*" FetcherMessage
+
+    abstract ResultMessage
+    ResultMessage <|-- AgentResultMessage
+    ResultMessage <|-- SNMPResultMessage
+    ResultMessage <|-- ErrorResultMessage
+    FetcherMessage o-- FetcherHeader
+    FetcherMessage o-- ResultMessage
+    FetcherMessage o-- ResultStats
+
+    note as N1
+    Every class implements
+    the <i>Prototype</i> interface,
+    not shown for clarity
+    end note
+
+"""
+
+from __future__ import annotations
 
 import abc
 import enum
@@ -25,12 +69,13 @@ from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 from . import FetcherType
 
 __all__ = [
-    "ResultMessage",
-    "PayloadType",
-    "FetcherHeader",
-    "FetcherMessage",
     "CMCHeader",
     "CMCMessage",
+    "CMCPayload",
+    "FetcherHeader",
+    "FetcherMessage",
+    "PayloadType",
+    "ResultMessage",
 ]
 """Defines a layered protocol.
 
@@ -539,11 +584,69 @@ class CMCHeader(Protocol):
         return "fetch"
 
 
+class CMCPayload(Protocol):
+    pass
+
+
+class CMCResults(CMCPayload):
+    def __init__(self, messages: Sequence[FetcherMessage]) -> None:
+        self.messages = messages
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.messages!r})"
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield from (bytes(msg) for msg in self.messages)
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCResults:
+        messages = []
+        index = 0
+        while index < len(data):
+            message = FetcherMessage.from_bytes(data[index:])
+            messages.append(message)
+            index += len(message)
+        return cls(messages)
+
+
+class CMCLogging(CMCPayload):
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.message!r})"
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield self.message.encode("utf-8")
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCLogging:
+        return cls(data.decode("utf-8"))
+
+
+class CMCEndOfReply(CMCPayload):
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}()"
+
+    def __len__(self) -> int:
+        return 0
+
+    def __bytes__(self) -> bytes:
+        return b""
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield from ()
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCEndOfReply:
+        return _END_OF_REPLY_PAYLOAD
+
+
 class CMCMessage(Protocol):
     def __init__(
         self,
         header: CMCHeader,
-        *payload: Union[FetcherMessage, str],
+        payload: CMCPayload,
     ) -> None:
         self.header: Final = header
         self.payload: Final = payload
@@ -556,48 +659,39 @@ class CMCMessage(Protocol):
 
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header
-        for msg in self.payload:
-            if isinstance(msg, FetcherMessage):
-                yield from msg
-            else:
-                assert isinstance(msg, str)
-                yield msg.encode("utf-8")
+        yield from self.payload
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "CMCMessage":
+    def from_bytes(cls, data: bytes) -> CMCMessage:
         header = CMCHeader.from_bytes(data)
         if header.state is CMCHeader.State.RESULT:
-            return CMCMessage(header, *cls._parse_result(header, data))
+            return CMCMessage(
+                header,
+                CMCResults.from_bytes(data[len(header):len(header) + header.payload_length]),
+            )
         if header.state is CMCHeader.State.LOG:
             return CMCMessage(
                 header,
-                *(data[len(header):len(header) + header.payload_length].decode("utf-8")),
+                CMCLogging.from_bytes(data[len(header):len(header) + header.payload_length]),
             )
         assert header.state is CMCHeader.State.END_OF_REPLY
-        return CMCMessage(header, *())
-
-    @staticmethod
-    def _parse_result(header, data) -> Sequence[FetcherMessage]:
-        index = len(header)
-        messages = []
-        while index < len(header) + header.payload_length:
-            message = FetcherMessage.from_bytes(data[index:])
-            index += len(message)
-            messages.append(message)
-        return messages
+        return cls.end_of_reply()
 
     @classmethod
-    def result_answer(cls, *messages: FetcherMessage) -> "CMCMessage":
+    def result_answer(cls, messages: Sequence[FetcherMessage]) -> CMCMessage:
+        payload = CMCResults(messages)
         return cls(
             CMCHeader(
                 name=CMCHeader.default_protocol_name(),
                 state=CMCHeader.State.RESULT,
                 log_level=" ",
-                payload_length=sum(len(msg) for msg in messages),
-            ), *messages)
+                payload_length=len(payload),
+            ),
+            payload,
+        )
 
     @classmethod
-    def log_answer(cls, message: str, level: int) -> "CMCMessage":
+    def log_answer(cls, message: str, level: int) -> CMCMessage:
         """Logs data using logging facility of the microcore.
 
         Args:
@@ -611,17 +705,22 @@ class CMCMessage(Protocol):
                 state=CMCHeader.State.LOG,
                 log_level=CMCLogLevel.from_level(level),
                 payload_length=len(message),
-            ), message)
+            ),
+            CMCLogging(message),
+        )
 
     @classmethod
-    def end_of_reply(cls) -> "CMCMessage":
+    def end_of_reply(cls) -> CMCMessage:
         return _END_OF_REPLY
 
 
+_END_OF_REPLY_PAYLOAD = CMCEndOfReply()
 _END_OF_REPLY = CMCMessage(  # Singleton
     CMCHeader(
         name=CMCHeader.default_protocol_name(),
         state=CMCHeader.State.END_OF_REPLY,
         log_level=" ",
         payload_length=0,
-    ), *())
+    ),
+    _END_OF_REPLY_PAYLOAD,
+)

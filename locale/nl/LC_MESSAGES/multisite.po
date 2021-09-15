@@ -42201,6 +42201,10 @@ msgstr "Toon gebruikersregels"
 msgid "Show vertical axis"
 msgstr "Verticale as tonen"
 
+#, fuzzy
+msgid "Show volume name in service output"
+msgstr "Verschijning van groepsleden in dienst output"
+
 msgid "Show/Hide password"
 msgstr "Wachtwoord tonen/verbergen"
 
@@ -47737,12 +47741,6 @@ msgstr ""
 msgid "The given password is too short. It must have at least %d characters."
 msgstr ""
 "Het opgegeven wachtwoord is te kort. Het moet ten minste %d tekens bevatten."
-
-msgid ""
-"The given text is wrong encoded. You need to provide a UTF-8 encoded text."
-msgstr ""
-"De opgegeven tekst is verkeerd gecodeerd. U moet een UTF-8 gecodeerde tekst "
-"opgeven."
 
 msgid "The given text must only contain ASCII characters."
 msgstr "De opgegeven tekst mag alleen ASCII-tekens bevatten."
@@ -64453,6 +64451,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."
+#~ msgstr ""
+#~ "De opgegeven tekst is verkeerd gecodeerd. U moet een UTF-8 gecodeerde "
+#~ "tekst opgeven."
 
 #~ msgid "Send metrics to Graphite / InfluxDB"
 #~ msgstr "Metriek verzenden naar Graphite / InfluxDB"

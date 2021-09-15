@@ -41099,6 +41099,10 @@ msgid "Show vertical axis"
 msgstr ""
 
 #, fuzzy
+msgid "Show volume name in service output"
+msgstr "servicii"
+
+#, fuzzy
 msgid "Show/Hide password"
 msgstr "Parola"
 
@@ -45953,10 +45957,6 @@ msgstr ""
 
 #, python-format
 msgid "The given password is too short. It must have at least %d characters."
-msgstr ""
-
-msgid ""
-"The given text is wrong encoded. You need to provide a UTF-8 encoded text."
 msgstr ""
 
 msgid "The given text must only contain ASCII characters."

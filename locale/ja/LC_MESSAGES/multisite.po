@@ -40822,6 +40822,10 @@ msgstr "ユーザールールを表示する"
 msgid "Show vertical axis"
 msgstr "縦軸を表示"
 
+#, fuzzy
+msgid "Show volume name in service output"
+msgstr "サービス出力でのグループメンバーの出現"
+
 msgid "Show/Hide password"
 msgstr "パスワードの表示/非表示"
 
@@ -46011,12 +46015,6 @@ msgstr ""
 #, python-format
 msgid "The given password is too short. It must have at least %d characters."
 msgstr "指定されたパスワードが短すぎます。少なくとも %d 文字が必要です。"
-
-msgid ""
-"The given text is wrong encoded. You need to provide a UTF-8 encoded text."
-msgstr ""
-"指定されたテキストは正しくエンコードされていません。UTF-8でエンコードされたテ"
-"キストを提供する必要があります。"
 
 msgid "The given text must only contain ASCII characters."
 msgstr "指定されたテキストにはASCII文字のみが含まれている必要があります。"
@@ -61518,6 +61516,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."
+#~ msgstr ""
+#~ "指定されたテキストは正しくエンコードされていません。UTF-8でエンコードされ"
+#~ "たテキストを提供する必要があります。"
 
 #~ msgid "Send metrics to Graphite / InfluxDB"
 #~ msgstr "メトリックをGraphite/InfluxDBに送信します"

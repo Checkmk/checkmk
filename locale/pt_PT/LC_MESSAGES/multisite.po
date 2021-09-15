@@ -42234,6 +42234,10 @@ msgstr "Mostrar regras do usuário"
 msgid "Show vertical axis"
 msgstr "Mostrar eixo vertical"
 
+#, fuzzy
+msgid "Show volume name in service output"
+msgstr "Aparência de membros do grupo na saída de serviço"
+
 msgid "Show/Hide password"
 msgstr "Mostrar/ocultar senha"
 
@@ -47756,12 +47760,6 @@ msgstr ""
 #, python-format
 msgid "The given password is too short. It must have at least %d characters."
 msgstr "A senha dada é muito curta. Ela deve ter pelo menos %d caracteres."
-
-msgid ""
-"The given text is wrong encoded. You need to provide a UTF-8 encoded text."
-msgstr ""
-"O texto dado está mal codificado. Você precisa fornecer um texto codificado "
-"em UTF-8."
 
 msgid "The given text must only contain ASCII characters."
 msgstr "O texto dado deve conter apenas caracteres ASCII."
@@ -64401,6 +64399,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid ""
+#~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."
+#~ msgstr ""
+#~ "O texto dado está mal codificado. Você precisa fornecer um texto "
+#~ "codificado em UTF-8."
 
 #~ msgid "Send metrics to Graphite / InfluxDB"
 #~ msgstr "Enviar métricas para Graphite / InfluxDB"

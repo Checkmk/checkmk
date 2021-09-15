@@ -8,7 +8,19 @@
 import logging
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 from six import ensure_str
 
@@ -35,6 +47,13 @@ class ServiceWithNodes(NamedTuple):
     nodes: List[HostName]
 
 
+class _AutocheckService(NamedTuple):
+    check_plugin_name: CheckPluginName
+    item: Item
+    discovered_parameters: LegacyCheckParameters
+    service_labels: DiscoveredServiceLabels
+
+
 logger = logging.getLogger("cmk.base.autochecks")
 
 
@@ -49,18 +68,20 @@ class AutochecksManager:
         self._autochecks: Dict[HostName, List[Service]] = {}
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of: Dict[HostName, Dict[str, DiscoveredServiceLabels]] = {}
-        self._raw_autochecks_cache: Dict[HostName, List[Service]] = {}
+        self._discovered_labels_of: Dict[HostName, Dict[ServiceName, DiscoveredServiceLabels]] = {}
+        self._raw_autochecks_cache: Dict[HostName, Sequence[_AutocheckService]] = {}
 
     def get_autochecks_of(
         self,
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
-        service_description: GetServiceDescription,
+        get_service_description: GetServiceDescription,
     ) -> List[Service]:
         if hostname not in self._autochecks:
-            self._autochecks[hostname] = self._get_autochecks_of_uncached(
-                hostname, compute_check_parameters, service_description
+            self._autochecks[hostname] = list(
+                self._get_autochecks_of_uncached(
+                    hostname, compute_check_parameters, get_service_description
+                )
             )
         return self._autochecks[hostname]
 
@@ -68,31 +89,37 @@ class AutochecksManager:
         self,
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
-        service_description: GetServiceDescription,
-    ) -> List[Service]:
+        get_service_description: GetServiceDescription,
+    ) -> Iterable[Service]:
         """Read automatically discovered checks of one host"""
-        return [
-            Service(
-                check_plugin_name=service.check_plugin_name,
-                item=service.item,
-                description=service.description,
+        for autocheck_service in self._read_raw_autochecks(hostname):
+            try:
+                service_name = get_service_description(
+                    hostname, autocheck_service.check_plugin_name, autocheck_service.item
+                )
+            except Exception:  # I dont't really know why this is ignored. Feels utterly wrong.
+                continue
+
+            yield Service(
+                check_plugin_name=autocheck_service.check_plugin_name,
+                item=autocheck_service.item,
+                description=service_name,
                 parameters=compute_check_parameters(
                     hostname,
-                    service.check_plugin_name,
-                    service.item,
-                    service.parameters,
+                    autocheck_service.check_plugin_name,
+                    autocheck_service.item,
+                    autocheck_service.discovered_parameters,
                 ),
-                service_labels=service.service_labels,
+                service_labels=autocheck_service.service_labels,
             )
-            for service in self._read_raw_autochecks(hostname, service_description)
-        ]
 
     def discovered_labels_of(
         self,
         hostname: HostName,
         service_desc: ServiceName,
-        service_description: GetServiceDescription,
+        get_service_description: GetServiceDescription,
     ) -> DiscoveredServiceLabels:
+        # NOTE: this returns an empty labels object for non-existing services
         with suppress(KeyError):
             return self._discovered_labels_of[hostname][service_desc]
 
@@ -100,30 +127,34 @@ class AutochecksManager:
         # Only read the raw autochecks here, do not compute the effective
         # check parameters. The latter would involve ruleset matching which
         # in turn would require already computed labels.
-        for service in self._read_raw_autochecks(hostname, service_description):
-            hosts_labels[service.description] = service.service_labels
+        for autocheck_service in self._read_raw_autochecks(hostname):
+            try:
+                hosts_labels[
+                    get_service_description(
+                        hostname, autocheck_service.check_plugin_name, autocheck_service.item
+                    )
+                ] = autocheck_service.service_labels
+            except Exception:
+                continue  # ignore
 
-        return hosts_labels.setdefault(service_desc, DiscoveredServiceLabels())
+        if (labels := hosts_labels.get(service_desc)) is not None:
+            return labels
+        return DiscoveredServiceLabels()
 
     def _read_raw_autochecks(
         self,
         hostname: HostName,
-        service_description: GetServiceDescription,
-    ) -> List[Service]:
+    ) -> Sequence[_AutocheckService]:
         if hostname not in self._raw_autochecks_cache:
-            self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(
-                hostname,
-                service_description,
-            )
+            self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(hostname)
         return self._raw_autochecks_cache[hostname]
 
-    # TODO: use store.load_object_from_file()
+    # TODO: use store.ObjectStore
     # TODO: Common code with parse_autochecks_file? Cleanup.
     def _read_raw_autochecks_uncached(
         self,
         hostname: HostName,
-        service_description: GetServiceDescription,
-    ) -> List[Service]:
+    ) -> Sequence[_AutocheckService]:
         """Read automatically discovered checks of one host"""
         path = _autochecks_path_for(hostname)
         try:
@@ -142,7 +173,7 @@ class AutochecksManager:
                 raise
             return []
 
-        services: List[Service] = []
+        services = []
         for entry in autochecks_raw:
             try:
                 item = entry["item"]
@@ -171,17 +202,11 @@ class AutochecksManager:
             for label_id, label_value in entry["service_labels"].items():
                 labels.add_label(ServiceLabel(label_id, label_value))
 
-            try:
-                description = service_description(hostname, plugin_name, item)
-            except Exception:
-                continue  # ignore
-
             services.append(
-                Service(
+                _AutocheckService(
                     check_plugin_name=plugin_name,
                     item=item,
-                    description=description,
-                    parameters=entry["parameters"],
+                    discovered_parameters=entry["parameters"],
                     service_labels=labels,
                 )
             )

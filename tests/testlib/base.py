@@ -15,6 +15,32 @@ import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 
 
+class _AutochecksMocker:
+    def __init__(self):
+        self.autochecks = {}
+
+    def get_autochecks_of(self, hostname, compute_check_parameters, service_description):
+        return [
+            autochecks.Service(
+                s.check_plugin_name,
+                s.item,
+                s.description,
+                compute_check_parameters(hostname, s.check_plugin_name, s.item, s.parameters),
+                s.service_labels,
+            )
+            for s in self.autochecks.get(hostname, ())
+        ]
+
+    def discovered_labels_of(self, hostname, service_descr, get_service_description):
+        try:
+            return {
+                service.description: service.service_labels
+                for service in self.autochecks.get(hostname, ())
+            }[service_descr]
+        except KeyError:
+            return autochecks.DiscoveredServiceLabels()
+
+
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
@@ -24,7 +50,7 @@ class Scenario:
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         self.site_id = site_id
-        self._autochecks = {}
+        self._autochecks_mocker = _AutochecksMocker()
 
         self.config = {
             "tag_config": tag_config,
@@ -135,7 +161,12 @@ class Scenario:
         return self
 
     def set_autochecks(self, hostname, services):
-        self._autochecks[hostname] = services
+        # these services have no real counterpart in the code:
+        #  * the description is used as given
+        #    (bypassing the get_service_description callback)
+        #  * the parameters are processed according to the config
+        #    (calling config.compute_check_parameters)
+        self._autochecks_mocker.autochecks[hostname] = services
 
     def apply(self, monkeypatch):
         check_vars: Dict = {}
@@ -149,19 +180,12 @@ class Scenario:
         self.config_cache.initialize()
         config.set_check_variables(check_vars)
 
-        if self._autochecks:
-            # TODO: This monkeypatching is horrible, it totally breaks any abstraction!
+        if self._autochecks_mocker.autochecks:
             monkeypatch.setattr(
-                self.config_cache._autochecks_manager,
-                "_raw_autochecks",
-                dict(self._autochecks.items()),
+                self.config_cache,
+                "_autochecks_manager",
+                self._autochecks_mocker,
                 raising=False,
-            )
-
-            monkeypatch.setattr(
-                autochecks.AutochecksManager,
-                "_read_raw_autochecks_uncached",
-                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []),
             )
 
         return self.config_cache

@@ -327,6 +327,25 @@ test_mk_sap_hana_skip_sql_queries() {
     done
 }
 
+test_mk_sap_hana_get_ssl_option_with_ssl(){
+    read_global_ini () {
+        echo "sslenforce = true"
+    }
+
+    actual=$(get_ssl_option "sid" "hostname")
+    assertEquals "-e -sslhostnameincert $(hostname -f)" "$actual"
+}
+
+test_mk_sap_hana_get_ssl_option_without_ssl(){
+
+    read_global_ini () {
+        echo "sslenforce = false"
+    }
+
+    actual=$(get_ssl_option "sid" "hostname")
+    assertEquals "" "$actual"
+}
+
 test_mk_sap_hana_get_alerts_last_check_file_no_remote_host(){
 
     actual=$(get_alerts_last_check_file "sid" "instance" "_DB")

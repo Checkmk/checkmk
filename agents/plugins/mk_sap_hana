@@ -99,6 +99,7 @@ mk_hdbsql() {
     local db="$4"
     local query_string="$5"
     local credentials=$6
+    local ssloption=$7
     local database
     local query
     # Queries contain newlines for better readability but we have to remove them,
@@ -113,9 +114,9 @@ mk_hdbsql() {
     fi
 
     if [ "$RUNAS" = "agent" ]; then
-        result="$(${hdbsql_path} -C -F\; -x -a -n localhost -i "${instance}" "${database}" "${credentials}" "$query" 2>/dev/null)"
+        result="$(${hdbsql_path} -C -F\; -x -a -n localhost -i "${instance}" "${database}" "${credentials}" "${ssloption}" "$query" 2>/dev/null)"
     else
-        result="$(su - "${instance_user}" -c "${hdbsql_path} -C -F\; -x -a -n localhost -i ${instance} ${database} ${credentials} \"$query\"" 2>/dev/null)"
+        result="$(su - "${instance_user}" -c "${hdbsql_path} -C -F\; -x -a -n localhost -i ${instance} ${database} ${credentials} "${ssloption}" \"$query\"" 2>/dev/null)"
     fi
     rc=$?
     echo "$result" | sed -e "s/^;//" -e "s/;$//"
@@ -424,7 +425,7 @@ sap_hana_check_alerts() {
         query_output=$(query_logwatch_no_alerts)
     fi
 
-    query_hdbsql_output=$(mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$query_output" "$credentials")
+    query_hdbsql_output=$(mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$query_output" "$credentials" "$ssloption")
     # shellcheck disable=SC2181
     if [ $? = 0 ]; then
         date +"%Y-%m-%d %H:%M:%S" > "$alerts_last_check_file" #2016-11-09 16:14:16.410000000
@@ -601,6 +602,26 @@ get_instance_user() {
 
 }
 
+read_global_ini() {
+    local sid=$1
+    content=`cat /usr/sap/${sid}/SYS/global/hdb/custom/config/global.ini`
+    echo "$content"
+}
+
+get_ssl_option(){
+    local sid=$1
+    local hostname=$2
+    local ssloption
+
+    global_ini_content=$(read_global_ini "$sid")
+    if grep -i '^sslenforce' <<< "$global_ini_content" | grep '=' | grep -qi 'true$' ; then
+        ssloption="-e -sslhostnameincert $(hostname -f)"
+    else
+        ssloption=""
+    fi
+    echo "$ssloption"
+}
+
 #.
 #   .--do query------------------------------------------------------------.
 #   |                  _                                                   |
@@ -618,65 +639,67 @@ get_sections(){
     local db="$4"
     local hostname="$5"
     local credentials=$6
+    local ssloption=$7
     local tenant_name="[[${sid} ${instance} ${db}]]"
 
     echo "<<<sap_hana_db_status:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_db_status)" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_db_status)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_backup:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_snapshots)" "$credentials"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_complete)" "$credentials"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_log)" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_snapshots)" "$credentials" "$ssloption"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_complete)" "$credentials" "$ssloption"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_log)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_diskusage:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_diskusage)" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_diskusage)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_data_volume:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_data_volume "$hostname")" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_data_volume "$hostname")" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_license:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_license)" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_license)" "$credentials" "$ssloption"
+
 
     echo "<<<sap_hana_ess:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_ess_started "$hostname")" "$credentials"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_ess_active)" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_ess_started "$hostname")" "$credentials" "$ssloption"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_ess_active)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_ess_migration:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_ess_migration)" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_ess_migration)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_memrate:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_memrate "$hostname")" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_memrate "$hostname")" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_events:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_events_open)" "$credentials"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_events_disabled_alerts)" "$credentials"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_events_high_alerts)" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_events_open)" "$credentials" "$ssloption"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_events_disabled_alerts)" "$credentials" "$ssloption"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_events_high_alerts)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_proc:sep(59)>>>"
     echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_proc "$hostname")" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_proc "$hostname")" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_fileinfo:sep(59)>>>"
     date +%s
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_fileinfo "$sid" "$instance" "$db" "$hostname")" "$credentials"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_fileinfo "$sid" "$instance" "$db" "$hostname")" "$credentials" "$ssloption"
 
     # echo "<<<sap_hana_threads:sep(59)>>>"
     # echo $tenant_name
-    # mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_threads_max "$hostname")" "$credentials"
-    # mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_threads_service_name "$hostname")" "$credentials"
+    # mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_threads_max "$hostname")" "$credentials" "$ssloption"
+    # mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_threads_service_name "$hostname")" "$credentials" "$ssloption"
 
     echo "<<<logwatch>>>"
     echo "[[[SAP HANA Alerts for ${tenant_name}]]]"
-    sap_hana_check_alerts "$sid" "$instance" "$instance_user" "$db" "$credentials"
+    sap_hana_check_alerts "$sid" "$instance" "$instance_user" "$db" "$credentials" "$ssloption"
 }
 
 query_databases() {
@@ -685,11 +708,12 @@ query_databases() {
     local instance_user="$3"
     local hostname="$4"
     local credentials="$5"
+    local ssloption="$6"
 
     if [ "$SAP_HANA_VERSION" == "1" ];then
             get_sections "$sid" "$instance" "$instance_user" "" "$hostname" "$credentials"
     else
-        for db in $(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_instance_databases)" "$credentials"); do
+        for db in $(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_instance_databases)" "$credentials" "$ssloption"); do
             get_sections "$sid" "$instance" "$instance_user" "$db" "$hostname" "$credentials"
         done
     fi
@@ -762,17 +786,18 @@ if [ -n "$DBS" ];then
         fi
 
         CREDENTIALS=$(get_credentials ${USER:-""} ${PASSWORD:-""} ${USERSTOREKEY:-""})
-        INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$(query_sap_hana_status)" "$CREDENTIALS")
+        SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
+        INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$(query_sap_hana_status)" "$CREDENTIALS" "$SSLOPTION")
 
-        set_sap_hana_version "$INSTANCE_STATUS"
+        set_sap_hana_version "$INSTANCE_USER"
 
-        query_instance  "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$INSTANCE_STATUS"
+        query_instance  "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$INSTANCE_STATUS" "$SSLOPTION"
 
         for DB_DATA in ${DBS[*]}; do
             IFS=',' read DB_SID DB_INSTANCE DB USER PASSWORD USERSTOREKEY <<< "${DB_DATA}"
             if [ "$SID" == "$DB_SID" ] && [ "$INSTANCE" == "$DB_INSTANCE" ];then
                 CREDENTIALS=$(get_credentials ${USER:-""} ${PASSWORD:-""} ${USERSTOREKEY:-""})
-                get_sections "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$HOSTNAME" "$CREDENTIALS"
+                get_sections "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$HOSTNAME" "$CREDENTIALS" "$SSLOPTION"
             fi
         done
     done
@@ -805,16 +830,17 @@ else
         fi
 
         CREDENTIALS=$(get_credentials ${USER:-""} ${PASSWORD:-""} ${USERSTOREKEY:-""})
-        INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_sap_hana_status)" "$CREDENTIALS")
+        SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
+        INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_sap_hana_status)" "$CREDENTIALS" "$SSLOPTION")
 
-        set_sap_hana_version "$INSTANCE_STATUS"
+        set_sap_hana_version "$INSTANCE_USER"
 
-        query_instance  "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$INSTANCE_STATUS"
+        query_instance  "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$INSTANCE_STATUS" "$SSLOPTION"
         # We only execute all SQL queries in case the SQL DB is open & responding.
         # Otherwise only execute sections which are using other interfaces (e.g. python or odbcreg).
         # This accelerates the plugin execution tremendously as we do not have to wait for all the sql timeouts.
         if [ -n "$INSTANCE_STATUS" ];then
-            query_databases "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$CREDENTIALS"
+            query_databases "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$CREDENTIALS" "$SSLOPTION"
         fi
    done
 fi

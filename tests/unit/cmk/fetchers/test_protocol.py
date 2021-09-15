@@ -33,6 +33,7 @@ from cmk.fetchers.protocol import (
     CMCLogLevel,
     CMCMessage,
     CMCResults,
+    CMCResultsStats,
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
@@ -130,17 +131,16 @@ class TestCMCMessage:
             fetcher_stats,
         )
         fetcher_messages = list(repeat(fetcher_message, count))
+        timeout = 7
 
-        message = CMCMessage.result_answer(fetcher_messages)
+        message = CMCMessage.result_answer(fetcher_messages, timeout, Snapshot.null())
         assert isinstance(repr(message), str)
         assert CMCMessage.from_bytes(bytes(message)) == message
-        assert len(fetcher_messages) == count
         assert message.header.name == "fetch"
         assert message.header.state == CMCHeader.State.RESULT
         assert message.header.log_level.strip() == ""
         assert message.header.payload_length == len(message) - len(message.header)
-        assert message.header.payload_length == count * len(fetcher_message)
-        assert not set(message.payload) ^ set(fetcher_messages)
+        assert message.header.payload_length == len(message.payload)
 
     def test_log_answer(self):
         log_message = "the log message"
@@ -159,6 +159,16 @@ class TestCMCMessage:
         message = CMCMessage.end_of_reply()
         assert isinstance(repr(message), str)
         assert CMCMessage.from_bytes(bytes(message)) is message
+
+
+class TestCMCResultsStats:
+    @pytest.fixture
+    def stats(self):
+        return CMCResultsStats(7, Snapshot.null())
+
+    def test_from_bytes(self, stats):
+        assert isinstance(repr(stats), str)
+        assert CMCResultsStats.from_bytes(bytes(stats))
 
 
 class TestCMCResults:
@@ -185,7 +195,7 @@ class TestCMCResults:
 
     @pytest.fixture
     def payload(self, messages):
-        return CMCResults(messages)
+        return CMCResults(messages, CMCResultsStats(7, Snapshot.null()))
 
     def test_from_bytes(self, payload):
         assert CMCResults.from_bytes(bytes(payload)) == payload

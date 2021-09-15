@@ -807,3 +807,46 @@ def test_openapi_host_update_invalid(
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
+
+
+def test_openapi_create_host_with_contact_group(
+    wsgi_app,
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    group = {"name": "code_monkeys", "alias": "banana team", "customer": "global"}
+    _resp = wsgi_app.call_method(
+        "post",
+        base + "/domain-types/contact_group_config/collections/all",
+        params=json.dumps(group),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "ipaddress": "192.168.0.123",
+            "contactgroups": {
+                "groups": ["code_monkeys"],
+                "use": False,
+                "use_for_services": False,
+                "recurse_use": False,
+                "recurse_perms": False,
+            },
+        },
+    }
+    wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )

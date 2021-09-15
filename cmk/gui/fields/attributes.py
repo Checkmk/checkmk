@@ -15,7 +15,7 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.fields.definitions import Integer, List, Nested, String, Timestamp
+from cmk.gui.fields.definitions import GroupField, Integer, List, Nested, String, Timestamp
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
 from cmk.gui.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
@@ -778,3 +778,37 @@ class HostAttributeManagementBoardField(_fields.String):
         if serialized is None:
             return "none"
         return serialized
+
+
+class HostContactGroup(BaseSchema):
+    groups = List(
+        GroupField(
+            group_type="contact",
+            example="all",
+            required=True,
+        ),
+        required=True,
+        description="A list of contact groups.",
+    )
+    use = _fields.Boolean(
+        description="Add these contact groups to the host.",
+        missing=False,
+    )
+    use_for_services = _fields.Boolean(
+        description=(
+            "<p>Always add host contact groups also to its services.</p>"
+            "With this option contact groups that are added to hosts are always being added to "
+            "services, as well. This only makes a difference if you have assigned other contact "
+            "groups to services via rules in <i>Host & Service Parameters</i>. As long as you do "
+            "not have any such rule a service always inherits all contact groups from its host."
+        ),
+        missing=False,
+    )
+    recurse_use = _fields.Boolean(
+        description="Add these groups as contacts to all hosts in all sub-folders of this folder.",
+        missing=False,
+    )
+    recurse_perms = _fields.Boolean(
+        description="Give these groups also permission on all sub-folders.",
+        missing=False,
+    )

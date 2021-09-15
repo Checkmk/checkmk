@@ -24,6 +24,7 @@ from marshmallow.fields import (
 
 from cmk.gui.fields.attributes import (
     HostAttributeManagementBoardField,
+    HostContactGroup,
     IPMIParameters,
     MetaData,
     NetworkScan,
@@ -75,6 +76,7 @@ __all__ = [
     "Function",
     "GroupField",
     "HostAttributeManagementBoardField",
+    "HostContactGroup",
     "HostField",
     "Int",
     "Integer",

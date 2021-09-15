@@ -624,5 +624,16 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return DualListChoice(choices=cg_choices, rows=20, size=100)
 
     def validate_input(self, value, varprefix):
+        if not isinstance(value, dict):
+            raise MKUserError(self.name(), "Unknown format.")
         self.load_data()
         self._vs_contactgroups().validate_value(value.get("groups", []), varprefix)
+
+    def openapi_field(self):
+        # FIXME: due to cyclical imports which, when fixed, expose even more cyclical imports.
+        from cmk.gui import fields
+
+        return fields.Nested(
+            fields.HostContactGroup,
+            description=self.help(),
+        )

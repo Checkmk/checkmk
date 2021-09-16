@@ -199,7 +199,7 @@ def parse_bluenet2_powerrail(info):
         for oidend, identifier, name, friendly_name in info[index]:
             inlet_id = ".".join(oidend.split(".")[:2])
             if inlet_id in pre_parsed:
-                pre_parsed[inlet_id][what][u".".join([str(ord(x)) for x in identifier][:-1])] = {
+                pre_parsed[inlet_id][what][".".join([str(ord(x)) for x in identifier][:-1])] = {
                         'id': name,
                         'name': friendly_name
                     }
@@ -209,7 +209,7 @@ def parse_bluenet2_powerrail(info):
         status_info = map_status[status]
         reading = float(reading_str) * 10 ** int(exponent_str)
         oid_info = oidend.split(".")
-        identifier = u".".join(oid_info[:-1])
+        identifier = ".".join(oid_info[:-1])
 
         if ty in map_phase_types:
             phase_ty, phase_txt, what = map_phase_types[ty]

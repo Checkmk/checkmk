@@ -1,0 +1,13 @@
+Title: ucs_bladecenter: Fixed "KeyError: <PC_NAME>"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631784349
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+This werk fixes the crash in ucs_bladecenter_if.py line 257: "KeyError: '<PCNAME>'.
+The extraction of the pcname did not work correctly in all cases.
+

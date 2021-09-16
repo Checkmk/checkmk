@@ -253,7 +253,11 @@ def _parse_eth_interfaces(data):
 
     # Ethernet-Portchannel Members
     for key, values in data.get("fabricEthLanPcEp", {}).items():
-        pc_name = "/".join(values["Dn"].split("/")[:-1])
+        pc_name = ""
+        for eth_pc_info_key in eth_pc_info:
+            if values["Dn"].startswith(eth_pc_info_key):
+                pc_name = eth_pc_info_key
+
         values["portchannel"] = eth_pc_info[pc_name]
         eth_pc_info[pc_name].setdefault("members", 0)
         eth_pc_info[pc_name]["members"] += 1

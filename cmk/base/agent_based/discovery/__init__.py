@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
 import socket
 import time
 from contextlib import suppress
@@ -590,21 +589,29 @@ def _check_service_lists(
     long_infotexts = []
     need_rediscovery = False
 
-    for transition, title, params_key, default_state, service_filter in [
+    for transition, t_services, title, params_key, default_state, service_filter in [
         (
             "new",
+            services_by_transition.get("new", []),
             "unmonitored",
             "severity_unmonitored",
             config.inventory_check_severity,
             service_filters.new,
         ),
-        ("vanished", "vanished", "severity_vanished", 0, service_filters.vanished),
+        (
+            "vanished",
+            services_by_transition.get("vanished", []),
+            "vanished",
+            "severity_vanished",
+            0,
+            service_filters.vanished,
+        ),
     ]:
 
         affected_check_plugin_names: Counter[CheckPluginName] = Counter()
         unfiltered = False
 
-        for (discovered_service, _found_on_nodes) in services_by_transition.get(transition, []):
+        for (discovered_service, _found_on_nodes) in t_services:
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
             if not unfiltered and service_filter(host_name, discovered_service):
@@ -1007,11 +1014,7 @@ def _get_node_services(
             service,
             [host_name],
         )
-        for check_source, service in itertools.chain(
-            (("vanished", s) for s in service_result.vanished),
-            (("old", s) for s in service_result.old),
-            (("new", s) for s in service_result.new),
-        )
+        for check_source, service in chain_with_check_source(service_result)
     }
 
 
@@ -1028,22 +1031,35 @@ def _node_service_source(
     if config.service_ignored(cluster_name, service.check_plugin_name, service.description):
         return "ignored"
 
-    return "clustered_" + check_source
+    if check_source == "vanished":
+        return "clustered_vanished"
+    if check_source == "old":
+        return "clustered_old"
+    return "clustered_new"
+
+
+def chain_with_check_source(
+    service_result: QualifiedDiscovery[Service],
+) -> Iterable[Tuple[str, Service]]:
+    for s in service_result.vanished:
+        yield "vanished", s
+    for s in service_result.old:
+        yield "old", s
+    for s in service_result.new:
+        yield "new", s
 
 
 def _manual_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     # Find manual checks. These can override discovered checks -> "manual"
     host_name = host_config.hostname
-    yield from (
-        (service.id(), ("manual", service, [host_name]))
-        for service in check_table.get_check_table(host_name, skip_autochecks=True).values()
-    )
+    for service in check_table.get_check_table(host_name, skip_autochecks=True).values():
+        yield service.id(), ("manual", service, [host_name])
 
 
 def _custom_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     # Add custom checks -> "custom"
-    yield from (
-        (
+    for entry in host_config.custom_checks:
+        yield (
             (CheckPluginName("custom"), entry["service_description"]),
             (
                 "custom",
@@ -1056,8 +1072,6 @@ def _custom_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, S
                 [host_config.hostname],
             ),
         )
-        for entry in host_config.custom_checks
-    )
 
 
 def _active_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
@@ -1135,11 +1149,7 @@ def _get_cluster_services(
             on_error=on_error,
         )
 
-        for check_source, service in itertools.chain(
-            (("vanished", s) for s in services.vanished),
-            (("old", s) for s in services.old),
-            (("new", s) for s in services.new),
-        ):
+        for check_source, service in chain_with_check_source(services):
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,

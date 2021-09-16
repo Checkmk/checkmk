@@ -1330,9 +1330,13 @@ def _preview_params(
     plugin: Optional[checking_classes.CheckPlugin],
     check_source: str,
 ) -> Optional[LegacyCheckParameters]:
+
+    if check_source == "active":
+        return service.parameters
+
     params: Optional[LegacyCheckParameters] = None
 
-    if check_source not in ["legacy", "active", "custom"]:
+    if check_source not in ["legacy", "custom"]:
         if plugin is None:
             return params
         params = service.parameters
@@ -1343,9 +1347,6 @@ def _preview_params(
                 service.item,
                 params,
             )
-
-    if check_source == "active":
-        params = service.parameters
 
     return params
 

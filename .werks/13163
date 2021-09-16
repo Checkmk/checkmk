@@ -1,0 +1,13 @@
+Title: UCS Bladecenter: Fixed "ValueError (not enough values to unpack (expected 2, got 1))"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631778222
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+The attribute "affectedDN" is called "dn" in some versions.
+This fix will work with all versions.
+

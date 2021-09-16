@@ -270,7 +270,10 @@ class Server:
                     xml_data = []
                     for attribute in attributes:
                         attribute_data = self._get_attribute_data(xml_object, attribute)
-                        if attribute_data is None:
+                        # for some versions the attribute "affectedDN" was renamed to "dn"
+                        if attribute_data is None and attribute == "affectedDN":
+                            attribute_data = self._get_attribute_data(xml_object, "dn")
+                        elif attribute_data is None:
                             logging.debug("No such attribute '%s'", attribute)
                             # ensure order of entries in related check plugins is consistent
                             attribute_data = ''

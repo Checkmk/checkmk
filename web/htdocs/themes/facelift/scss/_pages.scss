@@ -665,14 +665,14 @@ div.snapin textarea,  // TODO: reproduce this element
   height: ($input-field-height - 2 * $padding);
   padding: $padding 6px;
   color: $font-color;
-  background-color: $inpage-highlight-color;
+  background-color: $input-background-color;
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
 
 span.select2 .select2-selection {
-  background-color: $inpage-highlight-color;
+  background-color: $input-background-color;
 
   &:focus {
     outline: none;
@@ -965,7 +965,7 @@ table.nform {
 
   hr {
     margin: 8px 0;
-    background-color: $nform-hr-color;
+    background-color: $line-color;
   }
 
   .ruleset {
@@ -1212,7 +1212,7 @@ body.main .popup_menu {
     padding: 0;
     margin: 0;
     list-style: none;
-    border-bottom: 1px solid $nform-hr-color;
+    border-bottom: 1px solid $line-color;
   }
 
   li {
@@ -1528,7 +1528,7 @@ table.data.job_table td {
   &:not([readonly]) tag {
     > div,
     &:hover > div {
-      background: $tag-input-bg-color;
+      background: $input-background-color;
       opacity: 1;
     }
 
@@ -1576,16 +1576,14 @@ table.data.job_table td {
   }
 
   &__dropdown {
-    /* filter forms have z-index: 1000 and this needs to be above */
-    z-index: 1001;
-
-    background: $tag-input-bg-color;
+    z-index: 1001; /* filter forms have z-index: 1000 and this needs to be above */
+    background: $input-background-color;
     border: none;
     box-shadow: none;
 
     &__wrapper {
-      background: $tag-input-bg-color;
-      border: 1px solid $tag-dropdown-hover-border-color;
+      background: $input-background-color;
+      border: 1px solid $input-dropdown-border-color;
       border-radius: 4px;
     }
 
@@ -1594,8 +1592,7 @@ table.data.job_table td {
 
       &--active {
         color: $font-color-green;
-        background-color: $tag-dropdown-hover-bg-color;
-        border: $tag-dropdown-hover-border-color;
+        background-color: $input-background-color;
       }
     }
   }

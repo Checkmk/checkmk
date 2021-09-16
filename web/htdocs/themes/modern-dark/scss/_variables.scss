@@ -27,7 +27,7 @@ $bg-color-secondary: $ux-theme-2;
 $base-color: $ux-theme-2;
 $headline-color: $ux-theme-3;
 $table-highlight-color: $ux-theme-4;
-$inpage-highlight-color: $ux-theme-5;
+$line-color: $ux-theme-5;
 
 // -----------------------------------------------------------------------------
 // Fonts
@@ -38,9 +38,13 @@ $font-color-light-bg: $grey-6;
 $font-color-light-grey: $midgrey;
 
 // -----------------------------------------------------------------------------
-// Buttons
+// Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
 $button-background-hover: lighten($grey-6, 10%);
+
+$input-background-color: $ux-theme-5;
+$input-nested-background-color: rgb(63, 75, 93);
+$input-dropdown-border-color: $ux-theme-6;
 
 // -----------------------------------------------------------------------------
 // States
@@ -81,9 +85,6 @@ $even-tr-bg-color: $ux-theme-4;
 
 $floatfilter-bg-color: null;
 
-$select2-search-field-color: rgb(63, 75, 93);
-$select2-border-color: $ux-theme-6;
-
 $dashlet-body-bg-color: $ux-theme-2;
 
 $td-gap-bg-color: $ux-theme-2;
@@ -114,8 +115,6 @@ $wato-info-padding: 10px 0 10px 10px;
 
 $repprogress-progress-bg-color: rgb(105, 156, 170); // darkened state6 bg color
 
-$nform-hr-color: rgba($white, 0.1);
-
 $iconbutton-filter: invert(40%);
 
 $popup-menu-select-bg-color: $ux-theme-1;
@@ -137,10 +136,6 @@ $performance-table-shared-padding: 8px 0;
 $tag-opacity: 0.6;
 $tag-discovered-opacity: 0.7;
 $tag-hover-opacity: 0.8;
-
-$tag-input-bg-color: $ux-theme-5;
-$tag-dropdown-hover-bg-color: $ux-theme-5;
-$tag-dropdown-hover-border-color: $ux-theme-6;
 
 // -----------------------------------------------------------------------------
 // Node visualization

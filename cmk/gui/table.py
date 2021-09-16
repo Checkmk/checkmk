@@ -53,7 +53,7 @@ class CellSpec(NamedTuple):
 
 class TableRow(NamedTuple):
     cells: List[CellSpec]
-    css: Optional[str]
+    css: "CSSSpec"
     state: int
     fixed: bool
     row_attributes: "HTMLTagAttributes"
@@ -184,9 +184,16 @@ class Table:
         self.css = css
         self.mode = "row"
 
-    def row(self, *posargs, **kwargs):
+    def row(
+        self,
+        css: "CSSSpec" = None,
+        state: int = 0,
+        collect_headers: bool = True,
+        fixed: bool = False,
+        **attrs: Any,
+    ) -> None:
         self._finish_previous()
-        self.next_func = lambda: self._add_row(*posargs, **kwargs)
+        self.next_func = lambda: self._add_row(css, state, collect_headers, fixed, **attrs)
 
     def cell(
         self,
@@ -213,7 +220,7 @@ class Table:
 
     def _add_row(
         self,
-        css: Optional[str] = None,
+        css: "CSSSpec" = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
@@ -468,8 +475,12 @@ class Table:
 
             oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
+
             if row.css:
-                class_.append(row.css)
+                if isinstance(row.css, list):
+                    class_.extend([c for c in row.css if c is not None])
+                else:
+                    class_.append(row.css)
             else:
                 for k in ["class_", "class"]:
                     if k in row.row_attributes:

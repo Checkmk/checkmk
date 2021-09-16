@@ -9,6 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <condition_variable>
+#include <deque>
 #include <mutex>
 #include <optional>
 #include <utility>
@@ -16,15 +17,13 @@
 enum class queue_status { ok, overflow, joinable };
 enum class queue_overflow_strategy { wait, pop_oldest, dont_push };
 
-template <typename Storage>
+template <typename T, typename Q = std::deque<T>>
 class Queue {
-    using storage_t = Storage;
-
 public:
-    using value_type = typename storage_t::value_type;
-    using size_type = typename storage_t::size_type;
-    using reference = typename storage_t::reference;
-    using const_reference = typename storage_t::const_reference;
+    using value_type = T;
+    using size_type = typename Q::size_type;
+    using reference = T&;
+    using const_reference = const T&;
 
     Queue() = default;
     explicit Queue(size_type limit);
@@ -45,7 +44,7 @@ public:
     [[nodiscard]] bool joinable() const;
 
 private:
-    Storage q_;
+    Q q_;
     std::optional<size_type> limit_;
     mutable std::mutex mutex_;
     std::condition_variable not_full_;
@@ -53,28 +52,28 @@ private:
     bool joinable_{false};
 };
 
-template <typename S>
-Queue<S>::Queue(size_type limit) : limit_{limit} {}
+template <typename T, typename Q>
+Queue<T, Q>::Queue(size_type limit) : limit_{limit} {}
 
-template <typename S>
-Queue<S>::~Queue() {
+template <typename T, typename Q>
+Queue<T, Q>::~Queue() {
     join();
 }
 
-template <typename S>
-typename Queue<S>::size_type Queue<S>::approx_size() const {
+template <typename T, typename Q>
+typename Queue<T, Q>::size_type Queue<T, Q>::approx_size() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return q_.size();
 }
 
-template <typename S>
-std::optional<typename Queue<S>::size_type> Queue<S>::limit() const {
+template <typename T, typename Q>
+std::optional<typename Queue<T, Q>::size_type> Queue<T, Q>::limit() const {
     return limit_;
 }
 
-template <typename S>
-queue_status Queue<S>::push(const_reference elem,
-                            queue_overflow_strategy strategy) {
+template <typename T, typename Q>
+queue_status Queue<T, Q>::push(const_reference elem,
+                               queue_overflow_strategy strategy) {
     auto status{queue_status::ok};
     std::unique_lock<std::mutex> lock(mutex_);
     switch (strategy) {
@@ -108,9 +107,9 @@ queue_status Queue<S>::push(const_reference elem,
     return status;
 }
 
-template <typename S>
-queue_status Queue<S>::push(value_type&& elem,
-                            queue_overflow_strategy strategy) {
+template <typename T, typename Q>
+queue_status Queue<T, Q>::push(value_type&& elem,
+                               queue_overflow_strategy strategy) {
     auto status{queue_status::ok};
     std::unique_lock<std::mutex> lock(mutex_);
     switch (strategy) {
@@ -144,8 +143,8 @@ queue_status Queue<S>::push(value_type&& elem,
     return status;
 }
 
-template <typename S>
-std::optional<typename Queue<S>::value_type> Queue<S>::try_pop() {
+template <typename T, typename Q>
+std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::try_pop() {
     std::lock_guard<std::mutex> lock(mutex_);
     if (q_.empty()) {
         return std::nullopt;
@@ -156,8 +155,8 @@ std::optional<typename Queue<S>::value_type> Queue<S>::try_pop() {
     return elem;
 };
 
-template <typename S>
-std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
+template <typename T, typename Q>
+std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     not_empty_.wait(lock, [&] { return !q_.empty() || joinable_; });
     if (joinable_) {
@@ -169,8 +168,8 @@ std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
     return elem;
 };
 
-template <typename S>
-void Queue<S>::join() {
+template <typename T, typename Q>
+void Queue<T, Q>::join() {
     {
         std::lock_guard<std::mutex> lock(mutex_);
         joinable_ = true;
@@ -179,8 +178,8 @@ void Queue<S>::join() {
     not_empty_.notify_all();
 }
 
-template <typename S>
-bool Queue<S>::joinable() const {
+template <typename T, typename Q>
+bool Queue<T, Q>::joinable() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return joinable_;
 }

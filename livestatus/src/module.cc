@@ -25,7 +25,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
-#include <deque>
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -118,7 +117,7 @@ Encoding fl_data_encoding{Encoding::utf8};
 static Logger *fl_logger_nagios = nullptr;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
-using ClientQueue_t = Queue<std::deque<int>>;
+using ClientQueue_t = Queue<int>;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static ClientQueue_t *fl_client_queue = nullptr;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

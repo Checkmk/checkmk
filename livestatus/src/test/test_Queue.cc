@@ -4,7 +4,6 @@
 // source code package.
 
 #include <cstddef>
-#include <deque>
 #include <optional>
 #include <string>
 #include <utility>
@@ -15,7 +14,7 @@
 class UnboundedQueueTest
     : public ::testing::TestWithParam<queue_overflow_strategy> {
 public:
-    Queue<std::deque<int>> queue{};
+    Queue<int> queue{};
 };
 
 TEST_P(UnboundedQueueTest, LimitIsNotSet) {
@@ -53,7 +52,7 @@ INSTANTIATE_TEST_SUITE_P(UnboundedQueueTests, UnboundedQueueTest,
 
 class BoundedQueueTest : public ::testing::Test {
 public:
-    Queue<std::deque<int>> queue{5};
+    Queue<int> queue{5};
 };
 
 TEST_F(BoundedQueueTest, LimitIsSet) {
@@ -136,7 +135,7 @@ public:
         std::string id_;
     };
 
-    Queue<std::deque<MoveOnly>> queue{};
+    Queue<MoveOnly> queue{};
 };
 
 TEST_F(MoveOnlyQueueTest, MoveOnlyTest) {

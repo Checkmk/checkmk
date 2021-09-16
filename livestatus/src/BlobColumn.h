@@ -21,7 +21,6 @@
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
-#include "POSIXUtils.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
@@ -120,17 +119,14 @@ public:
              std::function<std::filesystem::path(const T &)> filepath)
         : _basepath{std::move(basepath)}
         , _filepath{std::move(filepath)}
-        , _logger{
-              Logger::getLogger("cmk.livestatus"),
-              // Logger-lambda from Column::Column.
-              [](std::ostream &os) { os << "[" << getThreadName() << "] "; }} {}
+        , _logger{"cmk.livestatus"} {}
     std::vector<char> operator()(const T & /*data*/) const;
     Logger *logger() const { return &_logger; }
 
 private:
     const std::function<std::filesystem::path()> _basepath;
     const std::function<std::filesystem::path(const T &)> _filepath;
-    mutable ContextLogger _logger;
+    mutable ThreadNameLogger _logger;
 };
 }  // namespace detail
 

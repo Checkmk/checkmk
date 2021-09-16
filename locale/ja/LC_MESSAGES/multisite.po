@@ -730,6 +730,10 @@ msgstr "(0は現在の期間です)"
 msgid "(Max suggestions reached, be more specific)"
 msgstr ""
 
+#, fuzzy
+msgid "(No fallback email address configured!)"
+msgstr "<i>(フォールバックメールアドレスは設定されていません!)</i>"
+
 #, python-format
 msgid "(SLA alert levels at %d%%/%d%% left)"
 msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
@@ -1310,9 +1314,6 @@ msgstr ""
 #, python-format
 msgid "<i>%d more contact groups</i><br>"
 msgstr "<i>%d以上の連絡先グループ</i><br>"
-
-msgid "<i>(No fallback email address configured!)</i>"
-msgstr "<i>(フォールバックメールアドレスは設定されていません!)</i>"
 
 msgid ""
 "<i>Gather all service instances and restrict by overall tags</i> means that "
@@ -2309,6 +2310,10 @@ msgstr "APTアップデート"
 
 msgid "APT normal and security updates (Linux)"
 msgstr "APTの通常のアップデートとセキュリティアップデート(Linux)"
+
+#, fuzzy
+msgid "ASCII Email"
+msgstr "ASCIIメール(レガシー)"
 
 msgid "ASCII Email (legacy)"
 msgstr "ASCIIメール(レガシー)"
@@ -17953,6 +17958,10 @@ msgstr "通知用のフォールバックメールアドレス"
 msgid "Fallback if master comes back within"
 msgstr "マスターが戻ってきた場合のフォールバック"
 
+#, fuzzy
+msgid "Fallback notification email format"
+msgstr "フォールバック通知"
+
 msgid "Fallback notifications"
 msgstr "フォールバック通知"
 
@@ -19773,6 +19782,10 @@ msgstr "REST API 4.xを介したHPE StoreOnce"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR: SNMP経由で使用されたメモリ"
+
+#, fuzzy
+msgid "HTML Email"
+msgstr "Eメール"
 
 msgid "HTML output"
 msgstr "HTML出力"

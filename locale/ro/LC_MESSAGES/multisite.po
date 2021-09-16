@@ -732,6 +732,10 @@ msgstr ""
 msgid "(Max suggestions reached, be more specific)"
 msgstr ""
 
+#, fuzzy
+msgid "(No fallback email address configured!)"
+msgstr "<i>(Nici o adresă de rezervă configurată!)</i>"
+
 #, python-format
 msgid "(SLA alert levels at %d%%/%d%% left)"
 msgstr ""
@@ -1313,9 +1317,6 @@ msgstr ""
 #, python-format
 msgid "<i>%d more contact groups</i><br>"
 msgstr "<i>%d mai multe grupuri de contact</i><br>"
-
-msgid "<i>(No fallback email address configured!)</i>"
-msgstr "<i>(Nici o adresă de rezervă configurată!)</i>"
 
 msgid ""
 "<i>Gather all service instances and restrict by overall tags</i> means that "
@@ -2069,6 +2070,9 @@ msgid "APT Updates"
 msgstr ""
 
 msgid "APT normal and security updates (Linux)"
+msgstr ""
+
+msgid "ASCII Email"
 msgstr ""
 
 msgid "ASCII Email (legacy)"
@@ -18025,6 +18029,10 @@ msgid "Fallback if master comes back within"
 msgstr ""
 
 #, fuzzy
+msgid "Fallback notification email format"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Fallback notifications"
 msgstr "Dezactiveaza Notificarile"
 
@@ -19852,6 +19860,9 @@ msgid "HPE StoreOnce via REST API 4.x"
 msgstr ""
 
 msgid "HR: Used memory via SNMP"
+msgstr ""
+
+msgid "HTML Email"
 msgstr ""
 
 msgid "HTML output"

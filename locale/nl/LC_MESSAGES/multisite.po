@@ -739,6 +739,10 @@ msgstr "(0 is huidige periode)"
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Max suggesties bereikt, wees specifieker)"
 
+#, fuzzy
+msgid "(No fallback email address configured!)"
+msgstr "<i>(Geen fallback email adres geconfigureerd!)</i>"
+
 #, python-format
 msgid "(SLA alert levels at %d%%/%d%% left)"
 msgstr "(SLA waarschuwing waarden op %d%%/%d%% over)"
@@ -1352,9 +1356,6 @@ msgstr ""
 #, python-format
 msgid "<i>%d more contact groups</i><br>"
 msgstr "<i>%d meer contactgroepen</i><br>"
-
-msgid "<i>(No fallback email address configured!)</i>"
-msgstr "<i>(Geen fallback email adres geconfigureerd!)</i>"
 
 msgid ""
 "<i>Gather all service instances and restrict by overall tags</i> means that "
@@ -2430,6 +2431,10 @@ msgstr "APT-updates"
 
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normaal en beveiligingsupdates (Linux)"
+
+#, fuzzy
+msgid "ASCII Email"
+msgstr "ASCII e-mail (verouderd)"
 
 msgid "ASCII Email (legacy)"
 msgstr "ASCII e-mail (verouderd)"
@@ -18524,6 +18529,10 @@ msgstr "Terugval-e-mailadres voor kennisgevingen"
 msgid "Fallback if master comes back within"
 msgstr "Terugval als de master terugkomt binnen"
 
+#, fuzzy
+msgid "Fallback notification email format"
+msgstr "Terugvalmeldingen"
+
 msgid "Fallback notifications"
 msgstr "Terugvalmeldingen"
 
@@ -20402,6 +20411,10 @@ msgstr "HPE StoreOnce via REST API 4.x"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Gebruikt geheugen via SNMP"
+
+#, fuzzy
+msgid "HTML Email"
+msgstr "E-mail"
 
 msgid "HTML output"
 msgstr "HTML-uitvoer"

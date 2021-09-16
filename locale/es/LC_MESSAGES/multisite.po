@@ -736,6 +736,12 @@ msgstr "(0 es el período actual)"
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Máximo de sugerencias alcanzadas, sea más específico)"
 
+#, fuzzy
+msgid "(No fallback email address configured!)"
+msgstr ""
+"<i>(No hay ninguna dirección de correo electrónico de retorno configurada!)</"
+"i>"
+
 #, python-format
 msgid "(SLA alert levels at %d%%/%d%% left)"
 msgstr "(Niveles de alerta de SLA en %d%%/%d%% restante)"
@@ -1351,11 +1357,6 @@ msgstr ""
 #, python-format
 msgid "<i>%d more contact groups</i><br>"
 msgstr "<i>%d más grupos de contactos</i><br>"
-
-msgid "<i>(No fallback email address configured!)</i>"
-msgstr ""
-"<i>(No hay ninguna dirección de correo electrónico de retorno configurada!)</"
-"i>"
 
 msgid ""
 "<i>Gather all service instances and restrict by overall tags</i> means that "
@@ -2453,6 +2454,10 @@ msgstr "Actualizaciones de APT"
 
 msgid "APT normal and security updates (Linux)"
 msgstr "APT normal y actualizaciones de seguridad (Linux)"
+
+#, fuzzy
+msgid "ASCII Email"
+msgstr "Correo electrónico ASCII (legado)"
 
 msgid "ASCII Email (legacy)"
 msgstr "Correo electrónico ASCII (legado)"
@@ -18684,6 +18689,10 @@ msgstr "Dirección de correo electrónico de reserva para las notificaciones"
 msgid "Fallback if master comes back within"
 msgstr "Retirada si el maestro vuelve dentro de"
 
+#, fuzzy
+msgid "Fallback notification email format"
+msgstr "Notificaciones de retroceso"
+
 msgid "Fallback notifications"
 msgstr "Notificaciones de retroceso"
 
@@ -20572,6 +20581,10 @@ msgstr "HPE StoreOnce vía REST API 4.x"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Memoria utilizada vía SNMP"
+
+#, fuzzy
+msgid "HTML Email"
+msgstr "Envíe un correo electrónico a"
 
 msgid "HTML output"
 msgstr "Salida HTML"

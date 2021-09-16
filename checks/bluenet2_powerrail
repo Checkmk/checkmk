@@ -361,7 +361,7 @@ check_info["bluenet2_powerrail.sockets"] = {
                                                                 ),
     "service_description": "Socket %s",
     "has_perfdata": True,
-    'group': 'ups_outphase',
+    "group": "ups_outphase",
 }
 
 #.
@@ -382,7 +382,7 @@ check_info["bluenet2_powerrail.fuses"] = {
                                                                 ),
     "service_description": "Fuse %s",
     "has_perfdata": True,
-    'group': 'ups_outphase',
+    "group": "ups_outphase",
 }
 
 #.

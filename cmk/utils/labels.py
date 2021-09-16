@@ -13,6 +13,7 @@ from typing import Callable, Dict, List, Tuple
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
+from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, Labels, LabelSources, ServiceName
 
 UpdatedHostLabelsEntry = Tuple[str, float, str]
@@ -40,6 +41,7 @@ class LabelManager:
         1. Discovered labels
         2. Ruleset "Host labels"
         3. Explicit labels (via host/folder config)
+        4. Builtin labels
 
         Last one wins.
         """
@@ -47,6 +49,7 @@ class LabelManager:
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(ruleset_matcher, hostname))
         labels.update(self._explicit_host_labels.get(hostname, {}))
+        labels.update(self._builtin_labels_of_host(hostname))
         return labels
 
     def label_sources_of_host(
@@ -57,6 +60,7 @@ class LabelManager:
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
+        labels.update({k: "discovered" for k in self._builtin_labels_of_host(hostname)})
         labels.update(
             {k: "ruleset" for k in self._ruleset_labels_of_host(ruleset_matcher, hostname)}
         )
@@ -73,6 +77,11 @@ class LabelManager:
         return {
             label_id: label["value"]
             for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()
+        }
+
+    def _builtin_labels_of_host(self, hostname: HostName) -> Labels:
+        return {
+            label_id: label["value"] for label_id, label in BuiltinHostLabelsStore().load().items()
         }
 
     def labels_of_service(
@@ -153,6 +162,13 @@ class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
     @property
     def file_path(self) -> Path:
         return cmk.utils.paths.discovered_host_labels_dir / (self._hostname + ".mk")
+
+
+class BuiltinHostLabelsStore:
+    def load(self):
+        return {
+            "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
+        }
 
 
 def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:

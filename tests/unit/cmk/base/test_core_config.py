@@ -161,6 +161,8 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
         "__TAG_site": "unit",
         "__TAG_snmp_ds": "no-snmp",
         "__LABEL_ding": "dong",
+        "__LABEL_cmk/site": "NO_SITE",
+        "__LABELSOURCE_cmk/site": "discovered",
         "__LABELSOURCE_ding": "explicit",
         "address": "0.0.0.0",
         "alias": "test-host",

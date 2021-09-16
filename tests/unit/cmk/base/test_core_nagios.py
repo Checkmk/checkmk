@@ -79,6 +79,8 @@ def test_format_nagios_object() -> None:
                 "host_name": "localhost",
                 "hostgroups": "check_mk",
                 "use": "check_mk_host",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABEL_cmk/site": "NO_SITE",
             },
         ),
         (
@@ -105,6 +107,8 @@ def test_format_nagios_object() -> None:
                 "host_name": "host2",
                 "hostgroups": "check_mk",
                 "use": "check_mk_host",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABEL_cmk/site": "NO_SITE",
             },
         ),
         (
@@ -136,6 +140,8 @@ def test_format_nagios_object() -> None:
                 "hostgroups": "check_mk",
                 "parents": "",
                 "use": "check_mk_cluster",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABEL_cmk/site": "NO_SITE",
             },
         ),
         (
@@ -167,6 +173,8 @@ def test_format_nagios_object() -> None:
                 "hostgroups": "check_mk",
                 "parents": "node1,node2",
                 "use": "check_mk_cluster",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABEL_cmk/site": "NO_SITE",
             },
         ),
         (
@@ -194,6 +202,8 @@ def test_format_nagios_object() -> None:
                 "hostgroups": "check_mk",
                 "parents": "switch",
                 "use": "check_mk_host",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABEL_cmk/site": "NO_SITE",
             },
         ),
     ],

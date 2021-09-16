@@ -72,7 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %define cleanup_rpmnew if [ -f /etc/xinetd.d/check_mk.rpmnew ] ; then rm /etc/xinetd.d/check_mk.rpmnew ; fi
 
-%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl enable check_mk.socket check_mk-async.service ; systemctl restart sockets.target multi-user.target; fi
+%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl enable check_mk.socket check_mk-async.service ; systemctl restart check_mk.socket check_mk-async.service; fi
 
 %pre
 if ! which xinetd >/dev/null 2>&1 && ! which systemctl >/dev/null 2>&1 ; then

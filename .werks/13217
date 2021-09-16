@@ -1,0 +1,14 @@
+Title: Agent updater and systemd: Do not restart 'multi-user.target'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631783909
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p11
+
+In Checkmk version 2.0.0p10 an agent update with an Checkmk agent run
+by systemd restarted the <i>multi-user.target</i>, which can lead to
+undesired sideeffects on the monitored system.
+Now the update only restarts the desired units.

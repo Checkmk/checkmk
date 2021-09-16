@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["ddn_s2a_statsdelay_default_levels"] = {
     "read_avg": (0.1, 0.2),
     "write_avg": (0.1, 0.2),
@@ -18,14 +19,14 @@ factory_settings["ddn_s2a_statsdelay_default_levels"] = {
 def parse_ddn_s2a_statsdelay(info):
     parsed = parse_ddn_s2a_api_response(info)
 
-    for key in [u"host_reads", u"host_writes", u"disk_reads", u"disk_writes"]:
+    for key in ["host_reads", "host_writes", "disk_reads", "disk_writes"]:
         parsed[key] = list(map(int, parsed[key]))
 
     # Regarding the special treatment of the >10.0 value here: This API does not provide
     # more detailed information than this. We assume a value of 30, but we really have no way
     # of knowing. These events are usually very rare (~two in a million).
-    parsed[u"time_interval_in_seconds"] = [
-        float(x) if x != ">10.0" else 30 for x in parsed[u"time_interval_in_seconds"]
+    parsed["time_interval_in_seconds"] = [
+        float(x) if x != ">10.0" else 30 for x in parsed["time_interval_in_seconds"]
     ]
     return parsed
 
@@ -88,13 +89,13 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
             status = 0
         return status, infotext, perfdata
 
-    time_intervals = parsed[u"time_interval_in_seconds"]
+    time_intervals = parsed["time_interval_in_seconds"]
     if item == "Disk":
-        reads = parsed[u"disk_reads"]
-        writes = parsed[u"disk_writes"]
+        reads = parsed["disk_reads"]
+        writes = parsed["disk_writes"]
     elif item == "Host":
-        reads = parsed[u"host_reads"]
-        writes = parsed[u"host_writes"]
+        reads = parsed["host_reads"]
+        writes = parsed["host_writes"]
 
     old_intervals = get_item_state("time_intervals")
     old_reads = get_item_state("reads")
@@ -108,7 +109,8 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         raise MKCounterWrapped("Initializing")
     if old_intervals != time_intervals:
         raise MKCounterWrapped(
-            "Histograms not comparable - Time intervals have changed. Reinitializing.")
+            "Histograms not comparable - Time intervals have changed. Reinitializing."
+        )
 
     reads_since_last_check = subtract_histograms(reads, old_reads)
     writes_since_last_check = subtract_histograms(writes, old_writes)
@@ -122,12 +124,15 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     else:
         read_min, read_max, read_avg = 0, 0, 0
 
-    yield _check_levels("Average read wait: %.2f s", read_avg, params.get("read_avg"),
-                        "disk_average_read_wait")
-    yield _check_levels("Min. read wait: %.2f s", read_min, params.get("read_min"),
-                        "disk_min_read_wait")
-    yield _check_levels("Max. read wait: %.2f s", read_max, params.get("read_max"),
-                        "disk_max_read_wait")
+    yield _check_levels(
+        "Average read wait: %.2f s", read_avg, params.get("read_avg"), "disk_average_read_wait"
+    )
+    yield _check_levels(
+        "Min. read wait: %.2f s", read_min, params.get("read_min"), "disk_min_read_wait"
+    )
+    yield _check_levels(
+        "Max. read wait: %.2f s", read_max, params.get("read_max"), "disk_max_read_wait"
+    )
 
     if not is_zero(writes_since_last_check):
         write_min = histogram_min(time_intervals, writes_since_last_check)
@@ -136,20 +141,23 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     else:
         write_min, write_max, write_avg = 0, 0, 0
 
-    yield _check_levels("Average write wait: %.2f s", write_avg, params.get("write_avg"),
-                        "disk_average_write_wait")
-    yield _check_levels("Min. write wait: %.2f s", write_min, params.get("write_min"),
-                        "disk_min_write_wait")
-    yield _check_levels("Max. write wait: %.2f s", write_max, params.get("write_max"),
-                        "disk_max_write_wait")
+    yield _check_levels(
+        "Average write wait: %.2f s", write_avg, params.get("write_avg"), "disk_average_write_wait"
+    )
+    yield _check_levels(
+        "Min. write wait: %.2f s", write_min, params.get("write_min"), "disk_min_write_wait"
+    )
+    yield _check_levels(
+        "Max. write wait: %.2f s", write_max, params.get("write_max"), "disk_max_write_wait"
+    )
 
 
-check_info['ddn_s2a_statsdelay'] = {
-    'default_levels_variable': 'ddn_s2a_statsdelay_default_levels',
-    'parse_function': parse_ddn_s2a_statsdelay,
-    'inventory_function': inventory_ddn_s2a_statsdelay,
-    'check_function': check_ddn_s2a_statsdelay,
-    'service_description': 'DDN S2A Delay %s',
-    'group': 'ddn_s2a_wait',
-    'has_perfdata': True,
+check_info["ddn_s2a_statsdelay"] = {
+    "default_levels_variable": "ddn_s2a_statsdelay_default_levels",
+    "parse_function": parse_ddn_s2a_statsdelay,
+    "inventory_function": inventory_ddn_s2a_statsdelay,
+    "check_function": check_ddn_s2a_statsdelay,
+    "service_description": "DDN S2A Delay %s",
+    "group": "ddn_s2a_wait",
+    "has_perfdata": True,
 }

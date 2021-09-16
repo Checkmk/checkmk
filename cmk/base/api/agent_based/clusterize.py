@@ -68,7 +68,7 @@ def make_node_notice_results(
 
     def _nodify(text: str, state: State) -> str:
         """Prepend node name and, if state is forced to OK, append state marker"""
-        node_text = '\n'.join("[%s]: %s" % (node_name, line) for line in text.split('\n'))
+        node_text = "\n".join("[%s]: %s" % (node_name, line) for line in text.split("\n"))
         if not force_ok:
             return node_text
         return "%s%s" % (node_text.rstrip(), state_markers[int(state)])

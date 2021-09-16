@@ -18,7 +18,7 @@ def inv_win_exefiles(info):
         if len(line) != 6:
             continue  # ignore broken lines containing parse errors
         full_name, write_time, size, description, product_version, product_name = line
-        parts = full_name.split('\\')
+        parts = full_name.split("\\")
         # Since 1.2.6p1 the agent always provides a date format of "04/18/2003 18:06:32".
         # Old agent versions provided localized date formats which lead to problems here
         # when none of the implemented parsers matches. We keep the existing parsers for
@@ -47,9 +47,9 @@ def inv_win_exefiles(info):
         parsed_packages.append(entry)
 
     paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name")))
 
 
-inv_info['win_exefiles'] = {
+inv_info["win_exefiles"] = {
     "inv_function": inv_win_exefiles,
 }

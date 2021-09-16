@@ -12,22 +12,32 @@ def inv_k8s_pod_container(parsed, inventory_tree, status_data_tree):
     status_node = status_data_tree.get_list(path)
 
     for container_name, container_data in sorted(parsed.items()):
-        inv_node.append({
-            'name': container_name,
-            'image': container_data['image'],
-            'image_pull_policy': container_data['image_pull_policy'],
-            'image_id': (docker.get_short_id(container_data['image_id'])
-                         if container_data['image_id'] else 'No ID'),
-        })
-        status_node.append({
-            'name': container_name,
-            'ready': 'yes' if container_data['ready'] else 'no',
-            'restart_count': container_data['restart_count'],
-            'container_id': (docker.get_short_id(container_data['container_id'])
-                             if container_data['container_id'] else 'No ID'),
-        })
+        inv_node.append(
+            {
+                "name": container_name,
+                "image": container_data["image"],
+                "image_pull_policy": container_data["image_pull_policy"],
+                "image_id": (
+                    docker.get_short_id(container_data["image_id"])
+                    if container_data["image_id"]
+                    else "No ID"
+                ),
+            }
+        )
+        status_node.append(
+            {
+                "name": container_name,
+                "ready": "yes" if container_data["ready"] else "no",
+                "restart_count": container_data["restart_count"],
+                "container_id": (
+                    docker.get_short_id(container_data["container_id"])
+                    if container_data["container_id"]
+                    else "No ID"
+                ),
+            }
+        )
 
 
-inv_info['k8s_pod_container'] = {
-    'inv_function': inv_k8s_pod_container,
+inv_info["k8s_pod_container"] = {
+    "inv_function": inv_k8s_pod_container,
 }

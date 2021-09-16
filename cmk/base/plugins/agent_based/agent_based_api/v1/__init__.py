@@ -31,6 +31,7 @@ from cmk.base.api.agent_based.utils import (
     exists,
     get_average,
     get_rate,
+    GetRateError,
     matches,
     not_contains,
     not_endswith,
@@ -39,11 +40,10 @@ from cmk.base.api.agent_based.utils import (
     not_matches,
     not_startswith,
     startswith,
-    GetRateError,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
 
-from . import register, render, clusterize, type_defs
+from . import clusterize, register, render, type_defs
 
 __all__ = [
     # the order is relevant for the shinx doc!

@@ -4,18 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import Check  # type: ignore[import]
+import pytest
+
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 
 CHECK_NAME = "alcatel_fans"
 
 
-@pytest.mark.parametrize("info, result_expected", [
-    ([[u'doesnt matter']], [('1', None)]),
-    ([[u'doesnt matter', u'doesent matter'], [u'doesnt matter']], [('1', None), ('2', None)]),
-])
+@pytest.mark.parametrize(
+    "info, result_expected",
+    [
+        ([["doesnt matter"]], [("1", None)]),
+        ([["doesnt matter", "doesent matter"], ["doesnt matter"]], [("1", None), ("2", None)]),
+    ],
+)
 def test_inventory_function(info, result_expected):
     check = Check(CHECK_NAME)
     result = list(check.run_discovery(info))
@@ -23,13 +27,16 @@ def test_inventory_function(info, result_expected):
 
 
 @pytest.mark.parametrize(
-    "parameters, item, info, state_expected, infotext_expected, perfdata_expected", [
-        ((0, 0), '1', [[u'0']], 2, 'Fan has no status', None),
-        ((0, 0), '1', [[u'1']], 2, 'Fan not running', None),
-        ((0, 0), '1', [[u'2']], 0, 'Fan running', None),
-    ])
-def test_check_function(parameters, item, info, state_expected, infotext_expected,
-                        perfdata_expected):
+    "parameters, item, info, state_expected, infotext_expected, perfdata_expected",
+    [
+        ((0, 0), "1", [["0"]], 2, "Fan has no status", None),
+        ((0, 0), "1", [["1"]], 2, "Fan not running", None),
+        ((0, 0), "1", [["2"]], 0, "Fan running", None),
+    ],
+)
+def test_check_function(
+    parameters, item, info, state_expected, infotext_expected, perfdata_expected
+):
     """
     Verifies if check function asserts warn and crit Board and CPU temperature levels.
     """

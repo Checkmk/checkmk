@@ -17,6 +17,6 @@ description:
 item:
  The name of the NFS export, which is the name of the exported filesystem.
 
-inventory:
+discovery:
  One service is created for each NFS export.
  This is done using showmount -e (not /proc).

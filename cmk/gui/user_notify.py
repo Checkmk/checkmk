@@ -5,27 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-import cmk.gui.config as config
-import cmk.gui.notify as notify
-import cmk.gui.pages
+from typing import Iterator
+
 import cmk.utils.paths
 import cmk.utils.werks
 
+import cmk.gui.notify as notify
+import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, user
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.table import table_element
 from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuEntry,
-    PageMenuDropdown,
-    PageMenuTopic,
     make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
 )
+from cmk.gui.table import table_element
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from cmk.utils.version import __version__
-from typing import Iterator
 
 
 @cmk.gui.pages.page_registry.register_page("user_notify")
@@ -69,7 +68,7 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
         item=make_simple_link("user_profile.py"),
     )
 
-    if rulebased_notifications_enabled() and config.user.may('general.edit_notifications'):
+    if rulebased_notifications_enabled() and user.may("general.edit_notifications"):
         yield PageMenuEntry(
             title=_("Notification rules"),
             icon_name="topic_events",
@@ -79,8 +78,9 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
 
 def render_user_notification_table(what: str) -> None:
     html.open_div(class_="notify_users")
-    with table_element("notify_users", sortable=False, searchable=False,
-                       omit_if_empty=True) as table:
+    with table_element(
+        "notify_users", sortable=False, searchable=False, omit_if_empty=True
+    ) as table:
 
         for entry in sorted(notify.get_gui_messages(), key=lambda e: e["time"], reverse=True):
             if what not in entry["methods"]:
@@ -89,12 +89,16 @@ def render_user_notification_table(what: str) -> None:
             table.row()
 
             msg_id = entry["id"]
-            datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(entry['time']))
+            datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
             message = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css="buttons", sortable=False)
-            onclick = "cmk.utils.delete_user_notification('%s', this);cmk.utils.reload_whole_page();" % msg_id \
-                    if what == "gui_hint" else "cmk.utils.delete_user_notification('%s', this);" % msg_id
+            onclick = (
+                "cmk.utils.delete_user_notification('%s', this);cmk.utils.reload_whole_page();"
+                % msg_id
+                if what == "gui_hint"
+                else "cmk.utils.delete_user_notification('%s', this);" % msg_id
+            )
             html.icon_button(
                 "",
                 _("Delete"),
@@ -102,8 +106,8 @@ def render_user_notification_table(what: str) -> None:
                 onclick=onclick,
             )
 
-            table.text_cell(_("Message"), message)
-            table.text_cell(_("Date"), datetime)
+            table.cell(_("Message"), message)
+            table.cell(_("Date"), datetime)
 
     html.close_div()
 

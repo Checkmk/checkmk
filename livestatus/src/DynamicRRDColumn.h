@@ -13,20 +13,12 @@
 #include <string>
 
 #include "DynamicColumn.h"
+#include "RRDColumn.h"
 #include "opids.h"
 class Column;
 class ColumnOffsets;
 class Filter;
 class MonitoringCore;
-
-struct RRDColumnArgs {
-    RRDColumnArgs(const std::string &arguments, const std::string &column_name);
-    std::string rpn;
-    long int start_time;
-    long int end_time;
-    int resolution;
-    int max_entries;
-};
 
 template <class T>
 class DynamicRRDColumn : public DynamicColumn {
@@ -43,8 +35,9 @@ public:
 
     std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) override {
-        return std::make_unique<T>(name, "dynamic column", _offsets, _mc,
-                                   RRDColumnArgs{arguments, _name});
+        return std::make_unique<T>(
+            name, "dynamic column", _offsets, std::make_unique<RRDRenderer>(),
+            RRDDataMaker{_mc, RRDColumnArgs{arguments, _name}});
     }
 
 private:

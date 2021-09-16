@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Mapping, Any, Dict, List, NamedTuple
+from typing import Any, Dict, List, Mapping, NamedTuple
 
+from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
-from .agent_based_api.v1 import register, type_defs, Result, Service, State
 
 
 class ZypperUpdates(NamedTuple):
@@ -26,7 +26,7 @@ def parse_zypper(string_table: type_defs.StringTable) -> Section:
     updates: int = 0
     locks: List[str] = []
 
-    firstline = " ".join(string_table[0])
+    firstline = " ".join(string_table[0]) if string_table else ""
     if re.match("ERROR:", firstline):
         return Section(error=firstline)
 

@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from testlib import cmk_path
+
+from tests.testlib import cmk_path
 
 
 def test_find_debug_code():
@@ -16,7 +17,7 @@ def test_find_debug_code():
         with path.open(encoding="utf-8") as f:
             for line in f:
                 l = line.lstrip()
-                assert not l.startswith("html.debug("), "Found \"html.debug(...)\" call"
+                assert not l.startswith("html.debug("), 'Found "html.debug(...)" call'
 
 
 def _files_to_scan():

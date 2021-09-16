@@ -18,7 +18,7 @@ PACKAGE_RE2_DESTDIR := $(PACKAGE_BASE)/re2/destdir
 $(RE2_BUILD): $(RE2_UNPACK)
 # basically what part of AC_PROC_CXX does
 	@CXX="" ; \
-	for PROG in g++-10 clang++-11 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++; do \
+	for PROG in clang++-13 g++-11 clang++-12 g++-10 clang++-11 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++; do \
 	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
 	    for DIR in $$PATH; do \
 	        IFS=$$SAVED_IFS ; \

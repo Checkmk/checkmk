@@ -30,10 +30,7 @@ if ! type rpm >/dev/null 2>&1; then
     exit 1
 fi
 
-# /bauwelt/etc/.gnupg is mounted in RO mode, but the following gpg commands need RW access
-# to the directory. Copy the contents to the container for exclusive + RW access
-cp -a /bauwelt/etc/.gnupg /gnupg
-export GNUPGHOME=/gnupg
+export GNUPGHOME=$HOME/.gnupg
 
 is_already_signed() {
     if [[ "$FILE_PATH" == *rpm ]]; then

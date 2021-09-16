@@ -9,6 +9,6 @@ description:
  as well as the status of connected units and sensors are
  handled in the corresponding subchecks.
 
-inventory:
+discovery:
  One service is created for each host.
 

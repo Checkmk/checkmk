@@ -23,18 +23,18 @@ def parse_nginx_status(info):
         address, port = line[:2]
         if len(line) < 3:
             continue  # Skip unexpected lines
-        item = '%s:%s' % (address, port)
+        item = "%s:%s" % (address, port)
 
         if item not in data:
             # new server block start
             data[item] = {
-                'active': int(info[i + 0][4]),
-                'accepted': int(info[i + 2][2]),
-                'handled': int(info[i + 2][3]),
-                'requests': int(info[i + 2][4]),
-                'reading': int(info[i + 3][3]),
-                'writing': int(info[i + 3][5]),
-                'waiting': int(info[i + 3][7]),
+                "active": int(info[i + 0][4]),
+                "accepted": int(info[i + 2][2]),
+                "handled": int(info[i + 2][3]),
+                "requests": int(info[i + 2][4]),
+                "reading": int(info[i + 3][3]),
+                "writing": int(info[i + 3][5]),
+                "waiting": int(info[i + 3][7]),
             }
 
     return data
@@ -47,38 +47,44 @@ def check_nginx_status(item, params, data):
 
     # Add some more values, derived from the raw ones...
     computed_values = {}
-    computed_values['requests_per_conn'] = 1.0 * data['requests'] / data['handled']
+    computed_values["requests_per_conn"] = 1.0 * data["requests"] / data["handled"]
 
     this_time = int(time.time())
-    for key in ['accepted', 'handled', 'requests']:
+    for key in ["accepted", "handled", "requests"]:
         per_sec = get_rate("nginx_status.%s" % key, this_time, data[key])
-        computed_values['%s_per_sec' % key] = per_sec
+        computed_values["%s_per_sec" % key] = per_sec
 
-    state, txt, perf = check_levels(data['active'],
-                                    'active',
-                                    params.get('active_connections'),
-                                    infoname="Active",
-                                    human_readable_func=lambda i: "%d" % i)
-    txt += ' (%d reading, %d writing, %d waiting)' % (data['reading'], data['writing'],
-                                                      data['waiting'])
-    perf += [(key, data[key]) for key in ('reading', 'writing', 'waiting')]
+    state, txt, perf = check_levels(
+        data["active"],
+        "active",
+        params.get("active_connections"),
+        infoname="Active",
+        human_readable_func=lambda i: "%d" % i,
+    )
+    txt += " (%d reading, %d writing, %d waiting)" % (
+        data["reading"],
+        data["writing"],
+        data["waiting"],
+    )
+    perf += [(key, data[key]) for key in ("reading", "writing", "waiting")]
     yield state, txt, perf
 
-    requests_rate = computed_values['requests_per_sec']
-    state, txt, perf = check_levels(requests_rate, 'requests', None, infoname="Requests", unit="/s")
-    txt += ' (%0.2f/Connection)' % computed_values['requests_per_conn']
+    requests_rate = computed_values["requests_per_sec"]
+    state, txt, perf = check_levels(requests_rate, "requests", None, infoname="Requests", unit="/s")
+    txt += " (%0.2f/Connection)" % computed_values["requests_per_conn"]
     yield state, txt, perf
 
-    yield 0, 'Accepted: %0.2f/s' % computed_values['accepted_per_sec'], [('accepted',
-                                                                          data['accepted'])]
-    yield 0, 'Handled: %0.2f/s' % computed_values['handled_per_sec'], [('handled', data['handled'])]
+    yield 0, "Accepted: %0.2f/s" % computed_values["accepted_per_sec"], [
+        ("accepted", data["accepted"])
+    ]
+    yield 0, "Handled: %0.2f/s" % computed_values["handled_per_sec"], [("handled", data["handled"])]
 
 
-check_info['nginx_status'] = {
+check_info["nginx_status"] = {
     "parse_function": parse_nginx_status,
     "check_function": check_nginx_status,
     "inventory_function": discover(),
     "service_description": "Nginx %s Status",
     "has_perfdata": True,
-    "group": "nginx_status"
+    "group": "nginx_status",
 }

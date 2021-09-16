@@ -28,8 +28,9 @@ check_info["synology_info"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.6574.1.5",
         [
-            1,  #Model
-            2,  #SerialNumber
-            3,  #OS Version
-        ]),
+            1,  # Model
+            2,  # SerialNumber
+            3,  # OS Version
+        ],
+    ),
 }

@@ -7,31 +7,40 @@
 # Some (or all?) Eaton USVs yield MIBs that are labeled "Merlin Gerin".
 # This module provides sections that read out the corresponding OIDs.
 
-from typing import List
+from typing import List, Optional
 
 from .agent_based_api.v1 import register, SNMPTree, startswith
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.ups import (
-    Battery,
-    optional_int,
-    optional_yes_or_no,
-)
+from .utils.ups import Battery, optional_int, optional_yes_or_no
 
 DETECT_UPS_EATON_MG = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705")
 
 
-def parse_battery_capacity_eaton_mg(string_table: List[StringTable]) -> Battery:
-    return Battery(
-        seconds_left=optional_int(string_table[0][0][0]),
-        percent_charged=optional_int(string_table[0][0][1]),
+def parse_battery_capacity_eaton_mg(string_table: StringTable) -> Optional[Battery]:
+    return (
+        Battery(
+            seconds_left=optional_int(string_table[0][0]),
+            percent_charged=optional_int(string_table[0][1]),
+        )
+        if string_table
+        else None
     )
 
 
-def parse_on_battery_eaton_mg(string_table: List[StringTable]) -> Battery:
-    return Battery(on_battery=optional_yes_or_no(string_table[0][0][0]))
+def parse_on_battery_eaton_mg(string_table: StringTable) -> Optional[Battery]:
+    return (
+        Battery(
+            on_battery=optional_yes_or_no(string_table[0][0]),
+        )
+        if string_table
+        else None
+    )
 
 
-def parse_battery_warnings_eaton_mg(string_table: List[StringTable]) -> Battery:
+def parse_battery_warnings_eaton_mg(string_table: List[StringTable]) -> Optional[Battery]:
+    if not any(string_table):
+        return None
+
     return Battery(
         fault=optional_yes_or_no(string_table[0][0][0]),
         replace=optional_yes_or_no(string_table[0][0][1]),
@@ -48,15 +57,13 @@ register.snmp_section(
     name="ups_battery_capacity_eaton_mg",
     parsed_section_name="ups_battery_capacity",
     parse_function=parse_battery_capacity_eaton_mg,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.705.1.5",
-            oids=[
-                "1.0",  # Remaining battery backup time  [sec], int
-                "2.0",  # Battery charge level           [%], int
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.705.1.5",
+        oids=[
+            "1.0",  # Remaining battery backup time  [sec], int
+            "2.0",  # Battery charge level           [%], int
+        ],
+    ),
     detect=DETECT_UPS_EATON_MG,
     supersedes=["ups_battery_capacity"],
 )
@@ -67,14 +74,12 @@ register.snmp_section(
     name="ups_on_battery_eaton_mg",
     parsed_section_name="ups_on_battery",
     parse_function=parse_on_battery_eaton_mg,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.705.1.7",
-            oids=[
-                "3.0",  # UPS is on battery              yes: 1, no: 2
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.705.1.7",
+        oids=[
+            "3.0",  # UPS is on battery              yes: 1, no: 2
+        ],
+    ),
     detect=DETECT_UPS_EATON_MG,
 )
 

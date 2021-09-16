@@ -11,35 +11,36 @@ def inventory_orion_batterytest(info):
 
 def check_orion_batterytest(item, params, info):
     map_states = {
-        '1': (0, 'none'),
-        '2': (2, 'failed'),
-        '3': (1, 'aborted'),
-        '4': (2, 'load failure'),
-        '5': (0, 'OK'),
-        '6': (1, 'aborted manual'),
-        '7': (1, 'aborted ev ctrl charge'),
-        '8': (1, 'aborted inhibit ev'),
+        "1": (0, "none"),
+        "2": (2, "failed"),
+        "3": (1, "aborted"),
+        "4": (2, "load failure"),
+        "5": (0, "OK"),
+        "6": (1, "aborted manual"),
+        "7": (1, "aborted ev ctrl charge"),
+        "8": (1, "aborted inhibit ev"),
     }
 
     last_test_date, test_result = info[0]
     if test_result != "1":
         # dcBatteryTestResult:
         # This parameter is valid only if there is a test result available.
-        state, state_readable = map_states.get(test_result, (3, 'unknown[%s]' % test_result))
+        state, state_readable = map_states.get(test_result, (3, "unknown[%s]" % test_result))
         infotext = "Last performed: %s, Result: %s" % (last_test_date, state_readable)
         return state, infotext
     return 0, "No test result available"
 
 
-check_info['orion_batterytest'] = {
-    'inventory_function': inventory_orion_batterytest,
-    'check_function': check_orion_batterytest,
-    'service_description': 'Battery Test',
-    'snmp_info': (
-        '.1.3.6.1.4.1.20246.2.3.1.1.1.2.5.2.2',
+check_info["orion_batterytest"] = {
+    "inventory_function": inventory_orion_batterytest,
+    "check_function": check_orion_batterytest,
+    "service_description": "Battery Test",
+    "snmp_info": (
+        ".1.3.6.1.4.1.20246.2.3.1.1.1.2.5.2.2",
         [
-            '1',  # ORION-BASE-MIB::dcBatteryTestDateTime
-            '2',  # ORION-BASE-MIB::dcBatteryTestResult
-        ]),
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.20246'),
+            "1",  # ORION-BASE-MIB::dcBatteryTestDateTime
+            "2",  # ORION-BASE-MIB::dcBatteryTestResult
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20246"),
 }

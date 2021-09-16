@@ -21,5 +21,5 @@ description:
 item:
  The name of the queue, prefixed by the queue manager name.
 
-inventory:
+discovery:
  One service is created for each queue manager.

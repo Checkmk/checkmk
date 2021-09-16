@@ -12,5 +12,5 @@ description:
 item:
  The relay identifier.
 
-inventory:
+discovery:
  One service is created for each relay.

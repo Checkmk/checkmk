@@ -9,12 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["rms200_temp_default_levels"] = {"levels": (25, 28)}
 
 
 def inventory_rms200_temp(info):
     for line in info:
-        if line[2] != '-27300':
+        if line[2] != "-27300":
             yield (line[0], {})
         # otherwise no sensor is connected
 
@@ -23,7 +24,8 @@ def check_rms200_temp(item, params, info):
     for line in info:
         if line[0] == item:
             status, infotext, perfdata = check_temperature(
-                float(line[2]) / 100, params, "rms200_temp_%s" % item)
+                float(line[2]) / 100, params, "rms200_temp_%s" % item
+            )
             infotext += " (%s)" % line[1]  # Name from SNMP data
             return status, infotext, perfdata
 
@@ -41,6 +43,7 @@ check_info["rms200_temp"] = {
             1,  # ID,
             2,  # Name,
             5,  # Temp
-        ]),
-    "default_levels_variable": "rms200_temp_default_levels"
+        ],
+    ),
+    "default_levels_variable": "rms200_temp_default_levels",
 }

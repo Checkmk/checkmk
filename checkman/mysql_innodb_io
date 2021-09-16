@@ -19,7 +19,7 @@ description:
 item:
  The name of the instance
 
-inventory:
+discovery:
  One service is created for each instance
  representing the InnoDB writers for a MySQL Daemon.
 

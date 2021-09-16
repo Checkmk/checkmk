@@ -10,6 +10,8 @@ from .agent_based_api.v1 import (
     check_levels,
     get_rate,
     get_value_store,
+    GetRateError,
+    IgnoreResults,
     Metric,
     register,
     render,
@@ -156,12 +158,17 @@ def _generate_livestatus_results(
         ("requests", "Livestatus requests"),
         ("log_messages", "Log messages"),
     ]:
-        value = get_rate(
-            value_store=value_store,
-            key=key,
-            time=this_time,
-            value=float(status[key]),
-        )
+        try:
+            value = get_rate(
+                value_store=value_store,
+                key=key,
+                time=this_time,
+                value=float(status[key]),
+            )
+        except GetRateError as error:
+            yield IgnoreResults(str(error))
+            continue
+
         if key in ("host_checks", "service_checks"):
             yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
         else:
@@ -189,7 +196,9 @@ def _generate_livestatus_results(
             except KeyError:
                 # may happen if we are trying to query old host
                 if key in [
-                        "helper_usage_fetcher", "helper_usage_checker", "average_latency_fetcher"
+                    "helper_usage_fetcher",
+                    "helper_usage_checker",
+                    "average_latency_fetcher",
                 ]:
                     value = 0.0
                 else:
@@ -233,8 +242,11 @@ def _generate_livestatus_results(
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
     pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
-    valid_until_str = (None if section_livestatus_ssl_certs is None else
-                       section_livestatus_ssl_certs.get(item, {}).get(pem_path))
+    valid_until_str = (
+        None
+        if section_livestatus_ssl_certs is None
+        else section_livestatus_ssl_certs.get(item, {}).get(pem_path)
+    )
     if valid_until_str:
         valid_until = int(valid_until_str)
         yield Result(
@@ -268,20 +280,20 @@ def _generate_livestatus_results(
     ]
     # Check settings of enablings. Here we are quiet unless a non-OK state is found
     for settingname, title in settings:
-        if status[settingname] != '1':
+        if status[settingname] != "1":
             yield Result(state=state(params[settingname]), notice=title)
 
     # special considerations for enable_event_handlers
     if status["program_version"].startswith("Check_MK 1.2.6"):
         # In CMC <= 1.2.6 event handlers cannot be enabled. So never warn.
         return
-    if status.get("has_event_handlers", '1') == '0':
+    if status.get("has_event_handlers", "1") == "0":
         # After update from < 1.2.7 the check would warn about disabled alert
         # handlers since they are disabled in this case. But the user has no alert
         # handlers defined, so this is nothing to warn about. Start warn when the
         # user defines his first alert handlers.
         return
-    if status["enable_event_handlers"] != '1':
+    if status["enable_event_handlers"] != "1":
         yield Result(
             state=state(params["enable_event_handlers"]),
             notice="Alert handlers are disabled",

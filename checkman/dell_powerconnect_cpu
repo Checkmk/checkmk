@@ -25,6 +25,6 @@ description:
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
  however the service check may work with other models.
 
-inventory:
+discovery:
  One service is created for the CPU if the MIB defined above is supported on the switch.
 

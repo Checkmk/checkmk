@@ -9,22 +9,25 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc_sc2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['fsc_sc2_info'] = {
-    'inventory_function': inventory_fsc_sc2_info,
-    'check_function': check_fsc_sc2_info,
-    'service_description': 'Server Info',
-    'snmp_info': (
-        '.1.3.6.1.4.1.231.2.10.2.2.10',
+
+check_info["fsc_sc2_info"] = {
+    "inventory_function": inventory_fsc_sc2_info,
+    "check_function": check_fsc_sc2_info,
+    "service_description": "Server Info",
+    "snmp_info": (
+        ".1.3.6.1.4.1.231.2.10.2.2.10",
         [
-            '2.3.1.5.1',  #sc2UnitModelName
-            '2.3.1.7.1',  #sc2UnitSerialNumber
-            '4.1.1.11.1',  #sc2srvBiosVersion
-        ]),
-    'snmp_scan_function': is_fsc_sc2,
+            "2.3.1.5.1",  # sc2UnitModelName
+            "2.3.1.7.1",  # sc2UnitSerialNumber
+            "4.1.1.11.1",  # sc2srvBiosVersion
+        ],
+    ),
+    "snmp_scan_function": is_fsc_sc2,
     "management_board": HOST_ONLY,
 }

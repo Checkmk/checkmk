@@ -9,22 +9,18 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # checks for is store and is clienttype
 # as I understand it, these are logically related but the performance
 # counters are completely separate
 
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
-factory_settings['msexch_isclienttype_defaultlevels'] = {
-    'store_latency': {
-        'upper': (40.0, 50.0)
-    },
-    'clienttype_latency': {
-        'upper': (40.0, 50.0)
-    },
-    'clienttype_requests': {
-        'upper': (60, 70)
-    }
+factory_settings["msexch_isclienttype_defaultlevels"] = {
+    # attention! those three dictionaries are tuples when returned by wato!
+    "store_latency": {"upper": (40.0, 50.0)},
+    "clienttype_latency": {"upper": (40.0, 50.0)},
+    "clienttype_requests": {"upper": (60, 70)},
 }
 
 
@@ -41,25 +37,27 @@ def check_msexch_isclienttype(item, params, parsed):
         yield check_levels(
             average,
             "average_latency",
-            params['clienttype_latency'].get('upper'),
+            get_levels_quadruple(params["clienttype_latency"]),
             infoname="Average latency",
             unit="ms",
         )
 
-    yield wmi_yield_raw_persec(parsed[""],
-                               item,
-                               "RPCRequests",
-                               infoname="RPC Requests/sec",
-                               perfvar="requests_per_sec",
-                               levels=params['clienttype_requests'])
+    yield wmi_yield_raw_persec(
+        parsed[""],
+        item,
+        "RPCRequests",
+        infoname="RPC Requests/sec",
+        perfvar="requests_per_sec",
+        levels=get_levels_quadruple(params["clienttype_requests"]),
+    )
 
 
-check_info['msexch_isclienttype'] = {
-    'inventory_function': discover_msexch_isclienttype,
-    'check_function': check_msexch_isclienttype,
-    'parse_function': parse_wmi_table,
-    'has_perfdata': True,
-    'service_description': "Exchange IS Client Type %s",
-    'group': 'msx_info_store',
-    'default_levels_variable': 'msexch_isclienttype_defaultlevels'
+check_info["msexch_isclienttype"] = {
+    "inventory_function": discover_msexch_isclienttype,
+    "check_function": check_msexch_isclienttype,
+    "parse_function": parse_wmi_table,
+    "has_perfdata": True,
+    "service_description": "Exchange IS Client Type %s",
+    "group": "msx_info_store",
+    "default_levels_variable": "msexch_isclienttype_defaultlevels",
 }

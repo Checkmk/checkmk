@@ -12,8 +12,8 @@
 
 #include <bitset>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
-#include <ctime>
 #include <functional>
 #include <list>
 #include <map>
@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "Aggregator.h"  // IWYU pragma: keep
@@ -91,8 +92,9 @@ private:
     bool _show_column_headers;
     OutputFormat _output_format;
     int _limit;
-    int _time_limit;
-    time_t _time_limit_timeout;
+    std::optional<
+        std::pair<std::chrono::seconds, std::chrono::steady_clock::time_point>>
+        _time_limit;
     unsigned _current_line;
     std::chrono::seconds _timezone_offset;
     Logger *const _logger;
@@ -113,18 +115,18 @@ private:
     void parseNegateLine(char *line, FilterStack &filters);
     void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
     void parseStatsNegateLine(char *line);
-    void parseColumnsLine(char *line);
+    void parseColumnsLine(const char *line);
     void parseColumnHeadersLine(char *line);
     void parseLimitLine(char *line);
     void parseTimelimitLine(char *line);
     void parseSeparatorsLine(char *line);
-    void parseOutputFormatLine(char *line);
+    void parseOutputFormatLine(const char *line);
     void parseKeepAliveLine(char *line);
     void parseResponseHeaderLine(char *line);
-    void parseAuthUserHeader(char *line);
+    void parseAuthUserHeader(const char *line);
     void parseWaitTimeoutLine(char *line);
     void parseWaitTriggerLine(char *line);
-    void parseWaitObjectLine(char *line);
+    void parseWaitObjectLine(const char *line);
     void parseLocaltimeLine(char *line);
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);

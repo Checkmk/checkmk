@@ -32,10 +32,11 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
     try:
         # Find the entry with all connection count values summed up ("key" = "All SSIDs")
         # and return only the it's value (a dict) with keys lowered for comparison
-        sum_entry = next({ctype.lower(): cname
-                          for ctype, cname in v.items()}
-                         for k, v in parsed.items()
-                         if v.get("key") == "All SSIDs")
+        sum_entry = next(
+            {ctype.lower(): cname for ctype, cname in v.items()}
+            for k, v in parsed.items()
+            if v.get("key") == "All SSIDs"
+        )
     except StopIteration:
         # Re-word the exception
         raise RuntimeError("No item with key='All SSIDs' found")

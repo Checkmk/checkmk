@@ -7,5 +7,5 @@ description:
  The check monitors the battery capacity (in percent), and the
  remaining runtime.
 
-inventory:
+discovery:
  One service is created for each device.

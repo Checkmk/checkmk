@@ -9,5 +9,5 @@ description:
  If e.g. Media Synchronized changes from true to disabled/false
  the service goes {CRIT}.
 
-inventory:
+discovery:
  One service is created.

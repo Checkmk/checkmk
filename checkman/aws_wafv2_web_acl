@@ -20,5 +20,5 @@ description:
  there is the option to include Web ACLs in front of CloudFront resources
  in the monitoring.
 
-inventory:
+discovery:
  One service is created.

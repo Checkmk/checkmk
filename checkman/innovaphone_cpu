@@ -7,6 +7,6 @@ description:
  This check shows the peak utilization for the latest 1 min.
 
 
-inventory:
+discovery:
  One service is created.
 

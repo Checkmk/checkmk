@@ -10,48 +10,30 @@ does not offer stable APIs. The code may change at any time."""
 
 __version__ = "2.1.0i1"
 
-import errno
 import enum
+import errno
 import os
-from pathlib import Path
 import subprocess
 import sys
 import time
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict
 
-from six import ensure_str
+import livestatus
 
 import cmk.utils.paths
-import livestatus
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.i18n import _
-from functools import lru_cache
 
 
 @lru_cache
 def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return ensure_str(version_link.resolve().name)
-
-
-@lru_cache
-def omd_site() -> str:
-    try:
-        return os.environ["OMD_SITE"]
-    except KeyError:
-        raise MKGeneralException(
-            _("OMD_SITE environment variable not set. You can "
-              "only execute this in an OMD site."))
+    return version_link.resolve().name
 
 
 @lru_cache
 def edition_short() -> str:
-    """Can currently either return \"cre\" or \"cee\"."""
-    parts = omd_version().split(".")
-    if parts[-1] == "demo":
-        return str(parts[-2])
-
-    return str(parts[-1])
+    return str(omd_version().split(".")[-1])
 
 
 def is_enterprise_edition() -> bool:
@@ -66,9 +48,8 @@ def is_managed_edition() -> bool:
     return edition_short() == "cme"
 
 
-def is_demo() -> bool:
-    parts = omd_version().split(".")
-    return parts[-1] == "demo"
+def is_free_edition() -> bool:
+    return edition_short() == "cfe"
 
 
 def is_cma() -> bool:
@@ -77,16 +58,17 @@ def is_cma() -> bool:
 
 def edition_title():
     if is_enterprise_edition():
-        if is_demo():
-            return "CFE"
         return "CEE"
     if is_managed_edition():
         return "CME"
+    if is_free_edition():
+        return "CFE"
     return "CRE"
 
 
 class TrialState(enum.Enum):
-    """All possible states of the demo version"""
+    """All possible states of the free version"""
+
     VALID = enum.auto()
     EXPIRED = enum.auto()
     NO_LIVESTATUS = enum.auto()  # special case, no cmc impossible to determine status
@@ -99,13 +81,29 @@ def _get_expired_status() -> TrialState:
         return TrialState.EXPIRED if response[0][0] == 1 else TrialState.VALID
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         # NOTE: If livestatus is absent we assume that trial is expired.
-        # Livestatus may be absent only when the cmc missing and this case for demo version means
+        # Livestatus may be absent only when the cmc missing and this case for free version means
         # just expiration(impossibility to check)
         return TrialState.NO_LIVESTATUS
 
 
+def _get_timestamp_trial() -> int:
+    try:
+        query = "GET status\nColumns: state_file_created\n"
+        response = livestatus.LocalConnection().query(query)
+        return int(response[0][0])
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        # NOTE: If livestatus is absent we assume that trial is expired.
+        # Livestatus may be absent only when the cmc missing and this case for free version means
+        # just expiration(impossibility to check)
+        return 0
+
+
+def get_age_trial() -> int:
+    return int(time.time()) - _get_timestamp_trial()
+
+
 def is_expired_trial() -> bool:
-    return is_demo() and _get_expired_status() == TrialState.EXPIRED
+    return is_free_edition() and _get_expired_status() == TrialState.EXPIRED
 
 
 #   .--general infos-------------------------------------------------------.
@@ -146,7 +144,7 @@ def _get_os_info() -> str:
             for line in open(f).readlines():
                 if "=" in line:
                     k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip("\"")
+                    info[k.strip()] = v.strip().strip('"')
             break
 
     if "PRETTY_NAME" in info:
@@ -156,7 +154,7 @@ def _get_os_info() -> str:
         return "%s" % info
 
     if os.environ.get("OMD_ROOT"):
-        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
+        disto_info = os.environ["OMD_ROOT"] + "/share/omd/distro.info"
         if os.path.exists(disto_info):
             return open(disto_info).readline().split("=", 1)[1].strip()
 

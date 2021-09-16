@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, List, Generator, Mapping, Optional, Tuple, Union
-from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-
 import time
+from typing import Callable, Dict, Generator, List, Mapping, Optional, Tuple, Union
 
 from .agent_based_api.v1 import Attributes, register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 Section = List[Tuple[str, StringTable]]
 
@@ -111,7 +110,7 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
     # by multiple "Memory Device" sections. Keep track of which belongs where:
     memory_array_number = 0
     for title, lines in section:
-        memory_array_number += (title == "Physical Memory Array")
+        memory_array_number += title == "Physical Memory Array"
         yield from _dispatch_subsection(title, lines, memory_array_number)
 
 
@@ -149,13 +148,15 @@ def _make_inventory_bios(lines: List[List[str]]) -> Attributes:
     return Attributes(
         path=["software", "bios"],
         inventory_attributes=_make_dict(
-            lines, {
+            lines,
+            {
                 "Vendor": "vendor",
                 "Version": "version",
                 "Release Date": ("date", _parse_date),
                 "BIOS Revision": "revision",
                 "Firmware Revision": "firmware",
-            }),
+            },
+        ),
     )
 
 
@@ -163,24 +164,29 @@ def _make_inventory_system(lines: List[List[str]]) -> Attributes:
     return Attributes(
         path=["hardware", "system"],
         inventory_attributes=_make_dict(
-            lines, {
+            lines,
+            {
                 "Manufacturer": "manufacturer",
                 "Product Name": "product",
                 "Version": "version",
                 "Serial Number": "serial",
                 "UUID": "uuid",
                 "Family": "family",
-            }),
+            },
+        ),
     )
 
 
 def _make_inventory_chassis(lines: List[List[str]]) -> Attributes:
     return Attributes(
         path=["hardware", "chassis"],
-        inventory_attributes=_make_dict(lines, {
-            "Manufacturer": "manufacturer",
-            "Type": "type",
-        }),
+        inventory_attributes=_make_dict(
+            lines,
+            {
+                "Manufacturer": "manufacturer",
+                "Type": "type",
+            },
+        ),
     )
 
 
@@ -192,12 +198,14 @@ def _make_inventory_processor(lines: List[List[str]]) -> Generator[Attributes, N
         "AuthenticAMD": "amd",
     }
     cpu_info = _make_dict(
-        lines, {
+        lines,
+        {
             "Manufacturer": ("vendor", lambda v: vendor_map.get(v, v)),
             "Max Speed": ("max_speed", _parse_speed),
             "Voltage": ("voltage", _parse_voltage),
             "Status": "status",
-        })
+        },
+    )
 
     if cpu_info.pop("Status", "") == "Unpopulated":
         # Only update our CPU information if the socket is populated
@@ -214,12 +222,14 @@ def _make_inventory_physical_mem_array(lines: List[List[str]], array_number: int
     return Attributes(
         path=["hardware", "memory", f"array_{array_number}"],
         inventory_attributes=_make_dict(
-            lines, {
+            lines,
+            {
                 "Location": "location",
                 "Use": "use",
                 "Error Correction Type": "error_correction",
                 "Maximum Capacity": ("maximum_capacity", _parse_size),
-            }),
+            },
+        ),
     )
 
 
@@ -252,7 +262,7 @@ def _make_inventory_mem_device(
     device["speed"] = _parse_speed(device.get("speed", "Unknown"))  # type: ignore[arg-type]
     device["size"] = _parse_size(device.get("size", "Unknown"))  # type: ignore[arg-type]
 
-    key_keys = ['set']  # match hp_proliant_mem!
+    key_keys = ["set"]  # match hp_proliant_mem!
     yield TableRow(
         path=["hardware", "memory", f"array_{array_number}", "devices"],
         key_columns={k: device.pop(k) for k in key_keys},

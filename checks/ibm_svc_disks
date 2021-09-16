@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.filerdisks import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>
 # 0:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:4:1:24::
@@ -41,24 +43,24 @@ from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard
 # 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
 
-factory_settings['filer_disks_default_levels'] = FILER_DISKS_CHECK_DEFAULT_PARAMETERS
+factory_settings["filer_disks_default_levels"] = FILER_DISKS_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_ibm_svc_disks(info):
     dflt_header = [
-        'id',
-        'status',
-        'error_sequence_number',
-        'use',
-        'tech_type',
-        'capacity',
-        'mdisk_id',
-        'mdisk_name',
-        'member_id',
-        'enclosure_id',
-        'slot_id',
-        'auto_manage',
-        'drive_class_id',
+        "id",
+        "status",
+        "error_sequence_number",
+        "use",
+        "tech_type",
+        "capacity",
+        "mdisk_id",
+        "mdisk_name",
+        "member_id",
+        "enclosure_id",
+        "slot_id",
+        "auto_manage",
+        "drive_class_id",
     ]
     parsed = []
     for rows in parse_ibm_svc_with_header(info, dflt_header).values():
@@ -69,30 +71,30 @@ def parse_ibm_svc_disks(info):
 def check_ibm_svc_disks(_no_item, params, parsed):
     disks = []
     for data in parsed:
-        status = data['status']
-        use = data['use']
-        capacity = data['capacity']
+        status = data["status"]
+        use = data["use"]
+        capacity = data["capacity"]
 
         disk = {}
-        disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % (
-            data['enclosure_id'],
-            data['slot_id'],
-            data['tech_type'],
+        disk["identifier"] = "Enclosure: %s, Slot: %s, Type: %s" % (
+            data["enclosure_id"],
+            data["slot_id"],
+            data["tech_type"],
         )
 
-        if capacity.endswith('GB'):
-            disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024
-        elif capacity.endswith('TB'):
-            disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024 * 1024
-        elif capacity.endswith('PB'):
-            disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024 * 1024 * 1024
+        if capacity.endswith("GB"):
+            disk["capacity"] = float(capacity[:-2]) * 1024 * 1024 * 1024
+        elif capacity.endswith("TB"):
+            disk["capacity"] = float(capacity[:-2]) * 1024 * 1024 * 1024 * 1024
+        elif capacity.endswith("PB"):
+            disk["capacity"] = float(capacity[:-2]) * 1024 * 1024 * 1024 * 1024 * 1024
 
         # Failure State can be found here, also spare is a state here
-        disk['state'] = use
+        disk["state"] = use
         if status == "offline" and use != "failed":
-            disk['state'] = "offline"
+            disk["state"] = "offline"
 
-        disk['type'] = ""  # We dont have a type
+        disk["type"] = ""  # We dont have a type
 
         disks.append(disk)
 
@@ -100,11 +102,11 @@ def check_ibm_svc_disks(_no_item, params, parsed):
 
 
 check_info["ibm_svc_disks"] = {
-    'parse_function': parse_ibm_svc_disks,
-    'check_function': check_ibm_svc_disks,
-    'inventory_function': discover_single,
-    'service_description': 'Disk Summary',
-    'group': 'netapp_disks',
-    'default_levels_variable': 'filer_disks_default_levels',
-    'has_perfdata': True,
+    "parse_function": parse_ibm_svc_disks,
+    "check_function": check_ibm_svc_disks,
+    "inventory_function": discover_single,
+    "service_description": "Disk Summary",
+    "group": "netapp_disks",
+    "default_levels_variable": "filer_disks_default_levels",
+    "has_perfdata": True,
 }

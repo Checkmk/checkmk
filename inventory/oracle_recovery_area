@@ -9,12 +9,14 @@ def inv_oracle_recovery_area(info):
     node = inv_tree_list("software.applications.oracle.recovery_area:")
     for line in sorted(info):
         if len(line) > 5:
-            node.append({
-                "sid": line[0],
-                "flashback": line[-1],
-            })
+            node.append(
+                {
+                    "sid": line[0],
+                    "flashback": line[-1],
+                }
+            )
 
 
-inv_info['oracle_recovery_area'] = {
-    'inv_function': inv_oracle_recovery_area,
+inv_info["oracle_recovery_area"] = {
+    "inv_function": inv_oracle_recovery_area,
 }

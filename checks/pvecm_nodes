@@ -109,9 +109,9 @@ def check_pvecm_nodes(item, _no_params, parsed):
     return state, ", ".join(infotexts)
 
 
-check_info['pvecm_nodes'] = {
-    'parse_function': parse_pvecm_nodes,
-    'inventory_function': inventory_pvecm_nodes,
-    'check_function': check_pvecm_nodes,
-    'service_description': 'PVE Node %s',
+check_info["pvecm_nodes"] = {
+    "parse_function": parse_pvecm_nodes,
+    "inventory_function": inventory_pvecm_nodes,
+    "check_function": check_pvecm_nodes,
+    "service_description": "PVE Node %s",
 }

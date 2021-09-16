@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 # .1.3.6.1.4.1.674.10892.1.600.10.1.2.1.1 1
 # .1.3.6.1.4.1.674.10892.1.600.10.1.5.1.1 3
@@ -45,28 +46,30 @@ def check_dell_om_power(item, params, info):
             yield state, "Redundancy status: %s" % state_readable
 
 
-check_info['dell_om_power'] = {
-    'inventory_function': inventory_dell_om_power,
-    'check_function': check_dell_om_power,
-    'service_description': 'Power Supply Redundancy %s',
-    'snmp_info': [
+check_info["dell_om_power"] = {
+    "inventory_function": inventory_dell_om_power,
+    "check_function": check_dell_om_power,
+    "service_description": "Power Supply Redundancy %s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.674.10892.1.600.10.1',
+            ".1.3.6.1.4.1.674.10892.1.600.10.1",
             [
                 "2",  # MIB-Dell-10892::powerUnitIndex
                 "5",  # MIB-Dell-10892::powerUnitRedundancyStatus
                 "6",  # MIB-Dell-10892::powerSupplyCountForRedundancy
-            ]),
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.674.10892.1.600.12.1',
+            ".1.3.6.1.4.1.674.10892.1.600.12.1",
             [
                 "2",  # MIB-Dell-10892::powerSupplyIndex
                 "5",  # MIB-Dell-10892::powerSupplyStatus
                 "7",  # MIB-Dell-10892::powerSupplyType
                 "8",  # MIB-Dell-10892::powerSupplyLocationName
-            ]),
+            ],
+        ),
     ],
-    'snmp_scan_function': scan_dell_om,
+    "snmp_scan_function": scan_dell_om,
 }
 
 
@@ -103,12 +106,15 @@ def check_dell_om_power_unit(item, _no_params, info):
         if index == item:
             state, state_readable = translate_status[status]
             psu_type_readable = translate_type[psu_type]
-            yield state, "Status: %s, Type: %s, Name: %s" % \
-                            ( state_readable, psu_type_readable, location )
+            yield state, "Status: %s, Type: %s, Name: %s" % (
+                state_readable,
+                psu_type_readable,
+                location,
+            )
 
 
-check_info['dell_om_power.unit'] = {
-    'inventory_function': inventory_dell_om_power_unit,
-    'check_function': check_dell_om_power_unit,
-    'service_description': 'Power Supply %s',
+check_info["dell_om_power.unit"] = {
+    "inventory_function": inventory_dell_om_power_unit,
+    "check_function": check_dell_om_power_unit,
+    "service_description": "Power Supply %s",
 }

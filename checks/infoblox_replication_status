@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.14"
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.17"
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.2.X.X.X.X.X Online --> IB-PLATFORMONE-MIB::ibNodeReplicationStatus."11.112.133.14"
@@ -28,8 +29,14 @@ def inventory_infoblox_replication_status(info):
 
 
 def check_infoblox_replication_status(item, _no_params, info):
-    for ip_addr, status, queue_from_master, time_from_master, \
-        queue_to_master, time_to_master in info:
+    for (
+        ip_addr,
+        status,
+        queue_from_master,
+        time_from_master,
+        queue_to_master,
+        time_to_master,
+    ) in info:
         if ip_addr == item:
             status_readable = status.lower()
             if status_readable == "online":
@@ -37,16 +44,20 @@ def check_infoblox_replication_status(item, _no_params, info):
             else:
                 state = 2
 
-            return state, "Status: %s, Queue from master: %s (%s), Queue to master: %s (%s)" % \
-                          (status_readable, queue_from_master, time_from_master,
-                           queue_to_master, time_to_master)
+            return state, "Status: %s, Queue from master: %s (%s), Queue to master: %s (%s)" % (
+                status_readable,
+                queue_from_master,
+                time_from_master,
+                queue_to_master,
+                time_to_master,
+            )
 
 
-check_info['infoblox_replication_status'] = {
-    'inventory_function': inventory_infoblox_replication_status,
-    'check_function': check_infoblox_replication_status,
-    'service_description': 'Replication %s',
-    'snmp_info': (
+check_info["infoblox_replication_status"] = {
+    "inventory_function": inventory_infoblox_replication_status,
+    "check_function": check_infoblox_replication_status,
+    "service_description": "Replication %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.7779.3.1.1.2.1.2.1",
         [
             "1",  # IB-PLATFORMONE-MIB::ibNodeIPAddress
@@ -55,6 +66,7 @@ check_info['infoblox_replication_status'] = {
             "4",  # IB-PLATFORMONE-MIB::ibNodeLastRepTimeFromMaster
             "5",  # IB-PLATFORMONE-MIB::ibNodeQueueToMaster
             "6",  # IB-PLATFORMONE-MIB::ibNodeLastRepTimeToMaster
-        ]),
-    'snmp_scan_function': scan_infoblox,
+        ],
+    ),
+    "snmp_scan_function": scan_infoblox,
 }

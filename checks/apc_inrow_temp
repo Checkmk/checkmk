@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.7.0 197 --> PowerNet-MIB::airIRRCUnitStatusRackInletTempMetric.0
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.9.0 202 --> PowerNet-MIB::airIRRCUnitStatusSupplyAirTempMetric.0
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.11.0 219 --> PowerNet-MIB::airIRRCUnitStatusReturnAirTempMetric.0
@@ -22,8 +23,8 @@ def parse_apc_inrow_temp(info):
     parsed = {}
     if info:
         for what, what_item in zip(
-                info[0],
-            ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"]):
+            info[0], ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"]
+        ):
             if what not in ["", "-1"]:
                 parsed.setdefault(what_item, float(what) / 10)
 
@@ -54,8 +55,9 @@ check_info["apc_inrow_temp"] = {
             "11",  # airIRRCUnitStatusReturnAirTempMetric
             "24",  # airIRRCUnitStatusEnteringFluidTemperatureMetric
             "26",  # airIRRCUnitStatusLeavingFluidTemperatureMetric
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
     "group": "temperature",
-    "default_levels_variable": "apc_inrow_temp_default_levels"
+    "default_levels_variable": "apc_inrow_temp_default_levels",
 }

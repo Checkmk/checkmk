@@ -11,6 +11,6 @@ description:
  This check is compatible with the check {cpu.loads} of the linux
  agent.
 
-inventory:
+discovery:
  One service is created if the agent outputs valid data.
 

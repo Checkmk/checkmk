@@ -13,6 +13,6 @@ description:
  "Up" is the only known state for this, which indicates a healthy PS ({OK}),
  any other state will be treated as {CRIT}.
 
-inventory:
+discovery:
  One service is created for each power supply.
 

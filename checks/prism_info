@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.prism import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<prism_containers:sep(9)>>>
 # name    usage   capacity
 # DS01_NFS_Nutanix_B2B_Intern_SAS_Contrainer      2518694292480   38575532134515
@@ -26,12 +27,12 @@ def inventory_prism_cluster(parsed):
 
 
 def check_prism_cluster(_no_item, _no_params, parsed):
-    return 0, "%s, version %s" % (parsed[0]['name'], parsed[0]['version'])
+    return 0, "%s, version %s" % (parsed[0]["name"], parsed[0]["version"])
 
 
-check_info['prism_info'] = {
-    'check_function': check_prism_cluster,
-    'inventory_function': inventory_prism_cluster,
-    'parse_function': parse_prism,
-    'service_description': "Prism Cluster",
+check_info["prism_info"] = {
+    "check_function": check_prism_cluster,
+    "inventory_function": inventory_prism_cluster,
+    "parse_function": parse_prism,
+    "service_description": "Prism Cluster",
 }

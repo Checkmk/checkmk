@@ -27,5 +27,5 @@ description:
 item:
  Memory pool name
 
-inventory:
+discovery:
  One service is created.

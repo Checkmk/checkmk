@@ -11,12 +11,13 @@ from dataclasses import asdict, dataclass
 from typing import (
     Any,
     Dict,
-    Final,
     List,
     Literal,
+    Mapping,
     NamedTuple,
     NewType,
     Optional,
+    Sequence,
     Set,
     Tuple,
     TypedDict,
@@ -34,17 +35,6 @@ TimeperiodName = str
 AgentTargetVersion = Union[None, str, Tuple[str, str], Tuple[str, Dict[str, str]]]
 
 AgentRawData = NewType("AgentRawData", bytes)
-# Note that the inner List[str] to AgentRawDataSection
-# is only **artificially** different from AgentRawData and
-# obtained approximatively with `raw_data.decode("utf-8").split()`!
-#
-# Moreover, the type is not useful.
-#
-# What would be useful is a Mapping[SectionName, AgentRawData],
-# analogous to SNMPRawData = Mapping[SectionName, SNMPRawDataSection],
-# that would generalize to `Mapping[SectionName, TRawDataContent]` or
-# `Mapping[SectionName, TRawData]` depending on which name we keep.
-AgentRawDataSection = List[List[str]]
 
 RulesetName = str
 RuleValue = Any  # TODO: Improve this type
@@ -53,18 +43,44 @@ Ruleset = List[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
-TagValue = str
 Labels = Dict[str, str]
 LabelSources = Dict[str, str]
+
 TagID = str
 TaggroupID = str
-Tags = Dict[TagID, TagValue]
-TagList = Set[TagValue]
-TagGroups = Dict[TagID, TaggroupID]
-HostNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
-                           List[Union[Dict[str, str], str]]]
-ServiceNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
-                              List[Union[Dict[str, str], str]]]
+TaggroupIDToTagID = Mapping[TaggroupID, TagID]
+TagIDToTaggroupID = Mapping[TagID, TaggroupID]
+TagIDs = Set[TagID]
+TagConditionNE = TypedDict(
+    "TagConditionNE",
+    {
+        "$ne": Optional[TagID],
+    },
+)
+TagConditionOR = TypedDict(
+    "TagConditionOR",
+    {
+        "$or": Sequence[Optional[TagID]],
+    },
+)
+TagConditionNOR = TypedDict(
+    "TagConditionNOR",
+    {
+        "$nor": Sequence[Optional[TagID]],
+    },
+)
+TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditionNOR]
+# Here, we have data structures such as
+# {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
+TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
+TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
+
+HostNameConditions = Union[
+    None, Dict[str, List[Union[Dict[str, str], str]]], List[Union[Dict[str, str], str]]
+]
+ServiceNameConditions = Union[
+    None, Dict[str, List[Union[Dict[str, str], str]]], List[Union[Dict[str, str], str]]
+]
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int
@@ -76,15 +92,26 @@ ServiceDetails = str
 ServiceAdditionalDetails = str
 
 MetricName = str
-MetricTuple = Tuple[MetricName, float, Optional[float], Optional[float], Optional[float],
-                    Optional[float],]
+MetricTuple = Tuple[
+    MetricName,
+    float,
+    Optional[float],
+    Optional[float],
+    Optional[float],
+    Optional[float],
+]
+
+ClusterMode = Literal["native", "failover", "worst", "best"]
 
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 
 LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 
-SetAutochecksTable = Dict[Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels,
-                                                  List[HostName]]]
+SetAutochecksTable = Dict[
+    Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels, List[HostName]]
+]
+
+SetAutochecksTablePre20 = Dict[Tuple[str, Item], Tuple[Dict[str, Any], Labels]]
 
 
 @dataclass
@@ -118,16 +145,12 @@ class AutomationDiscoveryResponse:
         }
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "AutomationDiscoveryResponse":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "AutomationDiscoveryResponse":
         return cls(results={k: DiscoveryResult(**v) for k, v in serialized["results"].items()})
 
 
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
-
-LATEST_SERIAL: Final[Literal["latest"]] = "latest"
-ConfigSerial = NewType("ConfigSerial", str)
-OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
 
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
@@ -140,20 +163,20 @@ TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
 
 class SourceType(enum.Enum):
     """Classification of management sources vs regular hosts"""
+
     HOST = "HOST"
     MANAGEMENT = "MANAGEMENT"
 
 
-HostKey = NamedTuple("HostKey", [
-    ("hostname", HostName),
-    ("ipaddress", Optional[HostAddress]),
-    ("source_type", SourceType),
-])
+class HostKey(NamedTuple):
+    hostname: HostName
+    ipaddress: Optional[HostAddress]
+    source_type: SourceType
 
 
 # TODO: We should really parse our configuration file and use a
 # class/NamedTuple, see above.
-def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = u"") -> str:
+def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = "") -> str:
     alias = timeperiod_spec.get("alias", default)
     if isinstance(alias, str):
         return alias
@@ -163,14 +186,15 @@ def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = u"") -
 class EvalableFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
+
     def __str__(self):
         return super().__repr__()
 
     def __repr__(self) -> str:
         if self > sys.float_info.max:
-            return '1e%d' % (sys.float_info.max_10_exp + 1)
+            return "1e%d" % (sys.float_info.max_10_exp + 1)
         if self < -1 * sys.float_info.max:
-            return '-1e%d' % (sys.float_info.max_10_exp + 1)
+            return "-1e%d" % (sys.float_info.max_10_exp + 1)
         return super().__repr__()
 
 

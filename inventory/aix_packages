@@ -47,9 +47,9 @@ def inv_aix_packages(info):
         parsed_packages.append(entry)
 
     paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name")))
 
 
-inv_info['aix_packages'] = {
+inv_info["aix_packages"] = {
     "inv_function": inv_aix_packages,
 }

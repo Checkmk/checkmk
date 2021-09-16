@@ -4,15 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import ActiveCheck  # type: ignore[import]
+import pytest
+
+from tests.testlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [
-    ({}, ["$HOSTADDRESS$"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        ({}, ["$HOSTADDRESS$"]),
+    ],
+)
 def test_check_ssh_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_ssh")

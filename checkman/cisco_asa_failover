@@ -1,28 +1,21 @@
-title: Cisco ASA: Cluster Failover
+title: Cisco ASA: Failover state
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv3
 distribution: check_mk
 description:
- The Cisco "Adaptive Security Appliances" (ASA) support to run as a failover
- cluster.
- This check allows to monitor whether such a cluster is running normal, or
- if it has failed over to the partner device for any reason.
+ Cisco Adaptive Security Appliances (ASA) can be operated as failover
+ pairs. This check monitors whether such a pair is running normally,
+ or if it has failed over to the partner device.
 
- The check will report {OK} as long as the correct unit has the role "active" or "standby".
- If a failover has occured, the check will report a {WARNING} status.
+ The check will report {OK} as long as the correct unit has the role
+ "active" or "standby". If a failover has occured, the check will report
+ {WARN}. Furthermore, the check also monitors the state of the local and
+ the remote device and goes {WARN} if they are not active or standby.
+ Finally, the check will go {CRIT} if the failover link is not up.
 
- Additionally roles and expected status can be configured now.
+ Roles and all monitoring states can can be configured using the ruleset
+ "Failover states".
 
- If an unknown status is encountered (other than 9 or 10 in the status OIDs)
- it will go to {UNKNOWN}.
-
- The check is not tested against un-clustered ASA devices.
-
-inventory:
-  One service is created for each ASA device and saves the current cluster role.
-
-
-parameters:
-  A singe integer indicating the status, either active(9) or standby(10).
-
+discovery:
+  One service is created.

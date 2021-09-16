@@ -1,0 +1,2 @@
+#!/bin/bash
+post-rename-site -v "$OLD_OMD_SITE"

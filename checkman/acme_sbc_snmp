@@ -22,5 +22,5 @@ description:
 
  This check uses the APSYSMGMT-MIB.
 
-inventory:
+discovery:
  One service is created.

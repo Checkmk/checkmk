@@ -9,7 +9,7 @@ description:
  Levels can be defined using the WATO rule "Main memory usage
  of devices with modules".
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

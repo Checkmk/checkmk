@@ -4,23 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
-import json
 
-factory_settings['azure_agent_info_levels'] = {
-    'warning_levels': (1, 10),
-    'exception_levels': (1, 1),
-    'remaining_reads_levels_lower': (6000, 3000),
-    'remaining_reads_unknown_state': 1,
+factory_settings["azure_agent_info_levels"] = {
+    "warning_levels": (1, 10),
+    "exception_levels": (1, 1),
+    "remaining_reads_levels_lower": (6000, 3000),
+    "remaining_reads_unknown_state": 1,
 }
 
 
 def _update_remaining_reads(parsed, value):
-    '''parse remaining API reads
+    """parse remaining API reads
 
     The key 'remaining-reads' can be present multiple times,
     or not at all.
@@ -28,12 +29,12 @@ def _update_remaining_reads(parsed, value):
      * 'remaining-reads' not present -> not in parsed
      * present, but never an integer -> 'unknown'
      * at least one integer value -> minimum of all values
-    '''
+    """
     try:
-        if isinstance(parsed.setdefault('remaining-reads', 'unknown'), int):
-            parsed['remaining-reads'] = min(int(value), parsed['remaining-reads'])
+        if isinstance(parsed.setdefault("remaining-reads", "unknown"), int):
+            parsed["remaining-reads"] = min(int(value), parsed["remaining-reads"])
         else:
-            parsed['remaining-reads'] = int(value)
+            parsed["remaining-reads"] = int(value)
     except ValueError:
         pass
 
@@ -45,7 +46,7 @@ def parse_azure_agent_info(info):
         key = row[0]
         value = AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
 
-        if key == 'remaining-reads':
+        if key == "remaining-reads":
             _update_remaining_reads(parsed, value)
             continue
 
@@ -54,12 +55,12 @@ def parse_azure_agent_info(info):
         except ValueError:
             pass
 
-        if key == 'issue':
-            issues = parsed.setdefault('issues', {})
-            issues.setdefault(value['type'], []).append(value)
+        if key == "issue":
+            issues = parsed.setdefault("issues", {})
+            issues.setdefault(value["type"], []).append(value)
             continue
 
-        if key in ('monitored-groups', 'monitored-resources'):
+        if key in ("monitored-groups", "monitored-resources"):
             parsed.setdefault(key, []).extend(value)
             continue
 
@@ -69,7 +70,7 @@ def parse_azure_agent_info(info):
 
 
 def discovery_azure_agent_info(parsed):
-    yield None, {'discovered_resources': parsed.get('monitored-resources', [])}
+    yield None, {"discovered_resources": parsed.get("monitored-resources", [])}
 
 
 def agent_bailouts(bailouts):
@@ -86,12 +87,12 @@ def agent_bailouts(bailouts):
 
 def remaining_api_reads(reads, params):
     if not isinstance(reads, int):
-        return params['remaining_reads_unknown_state'], "Remaining API reads: %s" % reads
+        return params["remaining_reads_unknown_state"], "Remaining API reads: %s" % reads
 
-    levels = (None, None) + params.get('remaining_reads_levels_lower', (None, None))
+    levels = (None, None) + params.get("remaining_reads_levels_lower", (None, None))
     return check_levels(
         reads,
-        'remaining_reads',
+        "remaining_reads",
         levels,
         infoname="Remaining API reads",
         human_readable_func=lambda i: "%d" % i,
@@ -100,10 +101,10 @@ def remaining_api_reads(reads, params):
 
 
 def resource_pinning(present_resources, params):
-    if not params.get('resource_pinning'):
+    if not params.get("resource_pinning"):
         return "", ""
 
-    discovered = params.get('discovered_resources')
+    discovered = params.get("discovered_resources")
     if discovered is None:
         return "", ""
 
@@ -119,59 +120,59 @@ def resource_pinning(present_resources, params):
         short_output.append("New resources: %d" % len(new))
         long_output.extend("New resource: %r(!)" % r for r in new)
 
-    return ', '.join(short_output), '\n'.join(long_output)
+    return ", ".join(short_output), "\n".join(long_output)
 
 
 def agent_issues(issues, params):
-    for type_ in ('warning', 'exception'):
+    for type_ in ("warning", "exception"):
         count = len(issues.get(type_, ()))
         yield check_levels(
             count,
             None,
-            params.get('%s_levels' % type_),
+            params.get("%s_levels" % type_),
             human_readable_func=lambda i: "%d" % i,
             infoname="%ss" % type_.title(),
         )
 
-    for i in sorted(issues.get('exception', []), key=lambda x: x["msg"]):
+    for i in sorted(issues.get("exception", []), key=lambda x: x["msg"]):
         yield 0, "\nIssue in %s: Exception: %s (!!)" % (i["issued_by"], i["msg"])
-    for i in sorted(issues.get('warning', []), key=lambda x: x["msg"]):
+    for i in sorted(issues.get("warning", []), key=lambda x: x["msg"]):
         yield 0, "\nIssue in %s: Warning: %s (!)" % (i["issued_by"], i["msg"])
-    for i in sorted(issues.get('info', []), key=lambda x: x["msg"]):
+    for i in sorted(issues.get("info", []), key=lambda x: x["msg"]):
         yield 0, "\nIssue in %s: Info: %s" % (i["issued_by"], i["msg"])
 
 
 def check_azure_agent_info(_no_item, params, parsed):
 
-    for subresult in agent_bailouts(parsed.get('agent-bailout', [])):
+    for subresult in agent_bailouts(parsed.get("agent-bailout", [])):
         yield subresult
 
-    reads = parsed.get('remaining-reads')
+    reads = parsed.get("remaining-reads")
     if reads is not None:
         yield remaining_api_reads(reads, params)
 
-    groups = parsed.get('monitored-groups')
+    groups = parsed.get("monitored-groups")
     if groups:
-        yield 0, "Monitored groups: %s" % ', '.join(groups)
+        yield 0, "Monitored groups: %s" % ", ".join(groups)
 
-    resources = parsed.get('monitored-resources', [])
+    resources = parsed.get("monitored-resources", [])
     resource_infos = resource_pinning(resources, params)
     if resource_infos[0]:
         yield 1, resource_infos[0]
 
-    for subresult in agent_issues(parsed.get('issues', {}), params):
+    for subresult in agent_issues(parsed.get("issues", {}), params):
         yield subresult
 
     if resource_infos[1]:
         yield 0, "\n%s" % resource_infos[1]
 
 
-check_info['azure_agent_info'] = {
-    'parse_function': parse_azure_agent_info,
-    'inventory_function': discovery_azure_agent_info,
-    'check_function': check_azure_agent_info,
-    'service_description': "Azure Agent Info",
-    'default_levels_variable': "azure_agent_info_levels",
-    'has_perfdata': True,
-    'group': "azure_agent_info",
+check_info["azure_agent_info"] = {
+    "parse_function": parse_azure_agent_info,
+    "inventory_function": discovery_azure_agent_info,
+    "check_function": check_azure_agent_info,
+    "service_description": "Azure Agent Info",
+    "default_levels_variable": "azure_agent_info_levels",
+    "has_perfdata": True,
+    "group": "azure_agent_info",
 }

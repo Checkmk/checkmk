@@ -4,28 +4,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['msexch_database_defaultlevels'] = {
-    "read_attached_latency": (200., 250.),
-    "read_recovery_latency": (150., 200.),
-    "write_latency": (40., 50.),
-    "log_latency": (5., 10.),
+factory_settings["msexch_database_defaultlevels"] = {
+    "read_attached_latency": (200.0, 250.0),
+    "read_recovery_latency": (150.0, 200.0),
+    "write_latency": (40.0, 50.0),
+    "log_latency": (5.0, 10.0),
 }
 
 _CHECKED_COUNTERS = [  # counter, setting, name, perfvar
-    ("i/o database reads (attached) average latency", "read_attached_latency",
-     "db read (attached) latency", "db_read_latency"),
-    ("i/o database reads (recovery) average latency", "read_recovery_latency",
-     "db read (recovery) latency", "db_read_recovery_latency"),
-    ("i/o database writes (attached) average latency", "write_latency",
-     "db write (attached) latency", "db_write_latency"),
+    (
+        "i/o database reads (attached) average latency",
+        "read_attached_latency",
+        "db read (attached) latency",
+        "db_read_latency",
+    ),
+    (
+        "i/o database reads (recovery) average latency",
+        "read_recovery_latency",
+        "db read (recovery) latency",
+        "db_read_recovery_latency",
+    ),
+    (
+        "i/o database writes (attached) average latency",
+        "write_latency",
+        "db write (attached) latency",
+        "db_write_latency",
+    ),
     ("i/o log writes average latency", "log_latency", "Log latency", "db_log_latency"),
 ]
 
 _de_DE = {
-    u'e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (angef\x81gt)': "i/o database reads (attached) average latency",
-    u'e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (wiederherstellung)': "i/o database reads (recovery) average latency",
-    u'e/a: durchschnittliche wartezeit f\x81r datenbankschreiboperationen (angef\x81gt)': "i/o database writes (attached) average latency",
-    u'e/a: durchschnittliche wartezeit f\x81r protokollschreiboperationen': "i/o log writes average latency",
+    "e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (angef\x81gt)": "i/o database reads (attached) average latency",
+    "e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (wiederherstellung)": "i/o database reads (recovery) average latency",
+    "e/a: durchschnittliche wartezeit f\x81r datenbankschreiboperationen (angef\x81gt)": "i/o database writes (attached) average latency",
+    "e/a: durchschnittliche wartezeit f\x81r protokollschreiboperationen": "i/o log writes average latency",
 }
 
 
@@ -43,17 +55,17 @@ def parse_msexch_database(info):
 
     delocalize_func = None
     offset = 0
-    if len(info[0]) > 1 and info[0][0] == 'locale':
+    if len(info[0]) > 1 and info[0][0] == "locale":
         locale = info[0][1].strip()
         offset = 1
         delocalize_func = {
-            'de-DE': _delocalize_de_DE,
+            "de-DE": _delocalize_de_DE,
         }.get(locale)
 
     parsed = {}
     for row in info[offset:]:
         row = [r.strip('"') for r in row]
-        if len(row) != 2 or not row[0].startswith('\\\\'):
+        if len(row) != 2 or not row[0].startswith("\\\\"):
             continue
 
         __, obj, counter = row[0].rsplit("\\", 2)
@@ -66,8 +78,8 @@ def parse_msexch_database(info):
         # The entries for log verifier contain an ID as the last part
         # which changes upon reboot of the exchange server. Therefore,
         # we just remove them here as a workaround.
-        if '/log verifier' in instance:
-            instance = instance.rsplit(' ', 1)[0]
+        if "/log verifier" in instance:
+            instance = instance.rsplit(" ", 1)[0]
 
         try:
             parsed.setdefault(instance, {})[counter] = float(value)
@@ -100,12 +112,12 @@ def check_msexch_database(item, params, parsed):
         yield status, "%.1fms %s" % (value, name), [(perfvar, value, warn, crit, None, None)]
 
 
-check_info['msexch_database'] = {
-    'inventory_function': inventory_msexch_database,
-    'check_function': check_msexch_database,
-    'parse_function': parse_msexch_database,
-    'has_perfdata': True,
-    'service_description': "Exchange Database %s",
-    'group': 'msx_database',
-    'default_levels_variable': 'msexch_database_defaultlevels'
+check_info["msexch_database"] = {
+    "inventory_function": inventory_msexch_database,
+    "check_function": check_msexch_database,
+    "parse_function": parse_msexch_database,
+    "has_perfdata": True,
+    "service_description": "Exchange Database %s",
+    "group": "msx_database",
+    "default_levels_variable": "msexch_database_defaultlevels",
 }

@@ -8,5 +8,5 @@ description:
  is up, it displays information such as the mode, the address and the version.
  In case the instance is down, the check will go {CRIT}.
 
-inventory:
+discovery:
  One service is created.

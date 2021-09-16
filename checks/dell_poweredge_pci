@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_poweredge import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["dell_poweredge_pci"] = {
     "check_function": check_dell_poweredge_pci,
     "inventory_function": inventory_dell_poweredge_pci,
@@ -16,16 +17,17 @@ check_info["dell_poweredge_pci"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.674.10892.5.4.1100.80.1",
         [
-            #"1", # pCIDevicechassisIndex       0
-            #"2", # pCIDeviceIndex              1
-            #"3", # pCIDeviceStateCapabilities
-            #"4", # pCIDeviceStateSettings      0
+            # "1", # pCIDevicechassisIndex       0
+            # "2", # pCIDeviceIndex              1
+            # "3", # pCIDeviceStateCapabilities
+            # "4", # pCIDeviceStateSettings      0
             "5",  # pCIDeviceStatus             0
             "7",  # pCIDeviceDataBusWidth       1
             "8",  # pCIDeviceManufacturerName   2
             "9",  # pCIDeviceDescriptionName    3
             "12",  # pCIDeviceFQDD              4
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.5",
     "management_board": HOST_ONLY,
 }

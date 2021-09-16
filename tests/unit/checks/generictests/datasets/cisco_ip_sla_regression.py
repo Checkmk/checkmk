@@ -11,23 +11,23 @@ checkname = 'cisco_ip_sla'
 
 info = [
     [
-        [[10, 96, 66, 4], [10, 96, 27, 69], u'1'],
+        [u'6', [10, 96, 66, 4], [10, 96, 27, 69], u'1'],
     ],
     [
-        [u'', u'', u'9', u'5000'],
+        [u'6', u'', u'', u'9', u'5000'],
     ],
     [
-        [u'6', u'', u'2', u'2', u'2'],
+        [u'6', u'6', u'', u'2', u'2', u'2'],
     ],
     [
-        [u'25', u'1'],
+        [u'6', u'25', u'1'],
     ],
 ]
 
-discovery = {'': [('0', {})]}
+discovery = {'': [('6', {})]}
 
 checks = {
-    '': [('0', {
+    '': [('6', {
              'completion_time_over_treshold_occured': 'no',
              'connection_lost_occured': 'no',
              'latest_rtt_completion_time': (250, 500),

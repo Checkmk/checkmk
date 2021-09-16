@@ -13,7 +13,8 @@ from typing import Dict, List, Tuple
 
 
 def agent_ipmi_sensors_usage():
-    sys.stderr.write("""Check_MK IPMI Sensors
+    sys.stderr.write(
+        """Check_MK IPMI Sensors
 
 USAGE: agent_ipmi_sensors [OPTIONS] HOST
        agent_ipmi_sensors --help
@@ -42,7 +43,8 @@ FreeIPMI OPTIONS:
   --output-sensor-thresholds        Output sensor thresholds in output.
   -k KEY                            Specify the K_g BMC key to use when authenticating
                                     with the remote host for IPMI 2.0.
-""")
+"""
+    )
 
 
 def parse_data(data, excludes):
@@ -65,11 +67,18 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    short_options = 'u:p:l:D:k:'
+    short_options = "u:p:l:D:k:"
     long_options = [
-        'help', 'debug', 'ipmi-command=', 'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
-        'output-sensor-state', 'ignore-not-available-sensors', 'driver-type=',
-        'output-sensor-thresholds'
+        "help",
+        "debug",
+        "ipmi-command=",
+        "quiet-cache",
+        "sdr-cache-recreate",
+        "interpret-oem-data",
+        "output-sensor-state",
+        "ignore-not-available-sensors",
+        "driver-type=",
+        "output-sensor-thresholds",
     ]
 
     opt_debug = False
@@ -87,40 +96,40 @@ def main(sys_argv=None):
 
     additional_opts = []
     for o, a in opts:
-        if o in ['--help']:
+        if o in ["--help"]:
             agent_ipmi_sensors_usage()
             return 1
-        if o in ['--debug']:
+        if o in ["--debug"]:
             opt_debug = True
 
         # Common options
-        elif o in ['--ipmi-command']:
+        elif o in ["--ipmi-command"]:
             ipmi_cmd_type = a
-        elif o in ['-u']:
+        elif o in ["-u"]:
             username = a
-        elif o in ['-p']:
+        elif o in ["-p"]:
             password = a
-        elif o in ['-l']:
+        elif o in ["-l"]:
             privilege_lvl = a
 
         # FreeIPMI options
-        elif o in ['-D']:
+        elif o in ["-D"]:
             additional_opts += ["%s" % o, "%s" % a]
-        elif o in ['--driver-type']:
+        elif o in ["--driver-type"]:
             additional_opts += ["%s=%s" % (o, a)]
-        elif o in ['-k']:
+        elif o in ["-k"]:
             additional_opts += ["%s" % o, "%s" % a]
-        elif o in ['--quiet-cache']:
+        elif o in ["--quiet-cache"]:
             additional_opts.append(o)
-        elif o in ['--sdr-cache-recreate']:
+        elif o in ["--sdr-cache-recreate"]:
             additional_opts.append(o)
-        elif o in ['--interpret-oem-data']:
+        elif o in ["--interpret-oem-data"]:
             additional_opts.append(o)
-        elif o in ['--output-sensor-state']:
+        elif o in ["--output-sensor-state"]:
             additional_opts.append(o)
-        elif o in ['--ignore-not-available-sensors']:
+        elif o in ["--ignore-not-available-sensors"]:
             additional_opts.append(o)
-        elif o in ['--output-sensor-thresholds']:
+        elif o in ["--output-sensor-thresholds"]:
             additional_opts.append(o)
 
     if len(args) == 1:
@@ -135,18 +144,25 @@ def main(sys_argv=None):
 
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
-    if ipmi_cmd_type in [None, 'freeipmi']:
-        ipmi_cmd = [ "ipmi-sensors",
-                     "-h", hostname, "-u", username,
-                     "-p", password, "-l", privilege_lvl ] + \
-                     additional_opts
+    if ipmi_cmd_type in [None, "freeipmi"]:
+        ipmi_cmd = [
+            "ipmi-sensors",
+            "-h",
+            hostname,
+            "-u",
+            username,
+            "-p",
+            password,
+            "-l",
+            privilege_lvl,
+        ] + additional_opts
         queries: Dict[str, Tuple[List[str], List[str]]] = {"_sensors": ([], [])}
-    elif ipmi_cmd_type == 'ipmitool':
+    elif ipmi_cmd_type == "ipmitool":
         ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl]
         # As in check_mk_agent
         queries = {
-            "": (["sensor", "list"], ['command failed', 'discrete']),
-            "_discrete": (["sdr", "elist", "compact"], [])
+            "": (["sensor", "list"], ["command failed", "discrete"]),
+            "_discrete": (["sdr", "elist", "compact"], []),
         }
 
     else:
@@ -173,8 +189,10 @@ def main(sys_argv=None):
                 )
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
-                    raise Exception("Could not find '%s' command (PATH: %s)" %
-                                    (ipmi_cmd_type, os.environ.get("PATH")))
+                    raise Exception(
+                        "Could not find '%s' command (PATH: %s)"
+                        % (ipmi_cmd_type, os.environ.get("PATH"))
+                    )
                 raise
 
             stdout, stderr = p.communicate()

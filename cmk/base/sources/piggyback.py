@@ -13,7 +13,6 @@ from cmk.utils.type_defs import HostAddress, HostName, SourceType
 from cmk.core_helpers import FetcherType, PiggybackFetcher
 from cmk.core_helpers.agent import NoCache, NoCacheFactory
 from cmk.core_helpers.piggyback import PiggybackSummarizer
-from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 
@@ -21,29 +20,24 @@ from .agent import AgentSource
 
 
 class PiggybackSource(AgentSource):
-    def __init__(
-        self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        mode: Mode,
-    ) -> None:
+    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress]) -> None:
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
             description=PiggybackSource._make_description(hostname),
             id_="piggyback",
             main_data_source=False,
         )
-        self.time_settings: Final = (config.get_config_cache().get_piggybacked_hosts_time_settings(
-            piggybacked_hostname=hostname))
+        self.time_settings: Final = config.get_config_cache().get_piggybacked_hosts_time_settings(
+            piggybacked_hostname=hostname
+        )
 
     def _make_file_cache(self) -> NoCache:
         return NoCacheFactory(
-            path=self.file_cache_path,
+            self.hostname,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make()

@@ -12,27 +12,27 @@ def discover_docker_node_info(info):
 
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
-        yield 0, 'Daemon running on host %s' % parsed["Name"]
+        yield 0, "Daemon running on host %s" % parsed["Name"]
     for state, key in enumerate(("Warning", "Critical", "Unknown"), 1):
         if key in parsed:
             yield state, parsed[key]
 
 
-check_info['docker_node_info'] = {
+check_info["docker_node_info"] = {
     # section is already migrated!
-    'inventory_function': discover_docker_node_info,
-    'check_function': check_docker_node_info,
-    'service_description': 'Docker node info',
+    "inventory_function": discover_docker_node_info,
+    "check_function": check_docker_node_info,
+    "service_description": "Docker node info",
 }
 
 
 def check_docker_node_containers(_no_item, params, parsed):
 
     for title, key, levels_prefix in (
-        ("containers", "Containers", ''),
-        ("running", "ContainersRunning", 'running_'),
-        ("paused", "ContainersPaused", 'paused_'),
-        ("stopped", "ContainersStopped", 'stopped_'),
+        ("containers", "Containers", ""),
+        ("running", "ContainersRunning", "running_"),
+        ("paused", "ContainersPaused", "paused_"),
+        ("stopped", "ContainersStopped", "stopped_"),
     ):
 
         count = parsed.get(key)
@@ -40,13 +40,15 @@ def check_docker_node_containers(_no_item, params, parsed):
             yield 3, "%s: count not present in agent output" % title.title()
             continue
 
-        levels = params.get('%supper_levels' % levels_prefix, (None, None))
-        levels_lower = params.get('%slower_levels' % levels_prefix, (None, None))
-        yield check_levels(count,
-                           title,
-                           levels + levels_lower,
-                           human_readable_func=lambda x: "%d" % x,
-                           infoname=title.title())
+        levels = params.get("%supper_levels" % levels_prefix, (None, None))
+        levels_lower = params.get("%slower_levels" % levels_prefix, (None, None))
+        yield check_levels(
+            count,
+            title,
+            levels + levels_lower,
+            human_readable_func=lambda x: "%d" % x,
+            infoname=title.title(),
+        )
 
 
 check_info["docker_node_info.containers"] = {

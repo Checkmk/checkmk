@@ -6,11 +6,18 @@ CheckMK software architecture
 Top-level Architecture
 ======================
 
+.. _topo & interfaces:
+
+Topology and interfaces
+-----------------------
+
+.. uml:: topology.puml
 
 .. toctree::
    :maxdepth: 1
 
    arch-comp-omd.rst
+   arch-comp-hosts.rst
 
 Components
 ==========

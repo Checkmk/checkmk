@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.enviromux import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['enviromux_default_levels'] = ENVIROMUX_CHECK_DEFAULT_PARAMETERS
+
+factory_settings["enviromux_default_levels"] = ENVIROMUX_CHECK_DEFAULT_PARAMETERS
 
 
 def inventory_enviromux_digital(parsed):
@@ -18,23 +19,25 @@ def inventory_enviromux_digital(parsed):
 
 
 def check_enviromux_digital(item, params, parsed):
-    sensor_value = parsed[item]['sensor_value']
-    sensor_normal_value = parsed[item]['sensor_normal_value']
+    sensor_value = parsed[item]["sensor_value"]
+    sensor_normal_value = parsed[item]["sensor_normal_value"]
     if sensor_value == "Unknown":
         return 3, "Sensor value is unknown"
     elif sensor_value == sensor_normal_value:
         return 0, "Sensor Value is normal: %s" % sensor_value
-    return 2, "Sensor Value is not normal: %s . It should be: %s" % (sensor_value,
-                                                                     sensor_normal_value)
+    return 2, "Sensor Value is not normal: %s . It should be: %s" % (
+        sensor_value,
+        sensor_normal_value,
+    )
 
 
-check_info['enviromux_digital'] = {
-    'parse_function': parse_enviromux_digital,
-    'inventory_function': inventory_enviromux_digital,
-    'check_function': check_enviromux_digital,
-    'service_description': 'Digital Sensor: %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.3699.1.1.11.1.6.1.1',
+check_info["enviromux_digital"] = {
+    "parse_function": parse_enviromux_digital,
+    "inventory_function": inventory_enviromux_digital,
+    "check_function": check_enviromux_digital,
+    "service_description": "Digital Sensor: %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.3699.1.1.11.1.6.1.1",
         [
             "1",  # digInputIndex
             "2",  # digInputType
@@ -45,8 +48,9 @@ check_info['enviromux_digital'] = {
             "7",  # digInputValue
             "8",  # digInputStatus
             "9",  # digInputNormalValue
-        ]),
-    'has_perfdata': True,
-    'snmp_scan_function': enviromux_scan_function,
-    'group': "temperature",
+        ],
+    ),
+    "has_perfdata": True,
+    "snmp_scan_function": enviromux_scan_function,
+    "group": "temperature",
 }

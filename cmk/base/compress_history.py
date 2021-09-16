@@ -12,9 +12,9 @@ import io
 import logging
 from typing import Dict, IO, List, Optional, Set, Tuple
 
+import cmk.utils.debug
 from cmk.utils.exceptions import MKBailOut
 from cmk.utils.log import VERBOSE
-import cmk.utils.debug
 
 logger = logging.getLogger("cmk.base.compress_history")
 
@@ -54,8 +54,9 @@ def compress_history_file(input_path: str, output_path: str) -> None:
 
         elif line_type == "CURRENT":
             if host is None:
-                raise Exception("Unexpected line %s (while in state %s); Host is None" %
-                                (line, machine_state))
+                raise Exception(
+                    "Unexpected line %s (while in state %s); Host is None" % (line, machine_state)
+                )
             if machine_state not in ("START", "CURRENT", "AFTER_RESTART"):
                 raise Exception("Unexpected line %s (while in state %s)" % (line, machine_state))
             machine_state = "CURRENT"
@@ -63,8 +64,9 @@ def compress_history_file(input_path: str, output_path: str) -> None:
 
         elif line_type == "INITIAL":
             if host is None:
-                raise Exception("Unexpected line %s (while in state %s); Host is None" %
-                                (line, machine_state))
+                raise Exception(
+                    "Unexpected line %s (while in state %s); Host is None" % (line, machine_state)
+                )
 
             if machine_state == "OPERATION":
                 pass  # happens at CMC. That does not create a log entry on reload

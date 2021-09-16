@@ -31,15 +31,16 @@ def check_huawei_osn_fan(item, params, info):
             return state, "Speed: %s" % state_readable
 
 
-check_info['huawei_osn_fan'] = {
-    'inventory_function': inventory_huawei_osn_fan,
-    'check_function': check_huawei_osn_fan,
-    'service_description': 'Unit %s (Fan)',
-    'snmp_info': (
-        '.1.3.6.1.4.1.2011.2.25.4.70.20.10.10.1',
+check_info["huawei_osn_fan"] = {
+    "inventory_function": inventory_huawei_osn_fan,
+    "check_function": check_huawei_osn_fan,
+    "service_description": "Unit %s (Fan)",
+    "snmp_info": (
+        ".1.3.6.1.4.1.2011.2.25.4.70.20.10.10.1",
         [
-            '1',  # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetFanBID
-            '2',  # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetFanSpeed
-        ]),
-    'snmp_scan_function': huawei_osn_scan_function,
+            "1",  # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetFanBID
+            "2",  # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetFanSpeed
+        ],
+    ),
+    "snmp_scan_function": huawei_osn_scan_function,
 }

@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "ChronoUtils.h"
+#include "POSIXUtils.h"
 
 // -----------------------------------------------------------------------------
 
@@ -143,6 +144,14 @@ void ContextLogger::emitContext(std::ostream &os) const {
     _logger->emitContext(os);
     _context(os);
 }
+
+ThreadNameLogger::ThreadNameLogger(Logger *logger)
+    : ContextLogger{logger, [](std::ostream &os) {
+                        os << "[" << getThreadName() << "] ";
+                    }} {}
+
+ThreadNameLogger::ThreadNameLogger(const std::string &name)
+    : ThreadNameLogger(Logger::getLogger(name)) {}
 
 // -----------------------------------------------------------------------------
 

@@ -16,6 +16,6 @@ description:
 item:
  The unique device identification.
 
-inventory:
+discovery:
  One service is created for each management object which is usually one.
 

@@ -18,6 +18,6 @@ description:
 item:
  The name of the temperature sensor.
 
-inventory:
+discovery:
  One service is created for each sensor.
 

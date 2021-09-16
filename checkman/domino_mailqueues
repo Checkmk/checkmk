@@ -12,6 +12,6 @@ description:
 item:
  The names of the mail queues as given in the Lotus Notes SNMP MIB.
 
-inventory:
+discovery:
  One service is created for each mailqueue if the corresponding OID is found.
 

@@ -9,23 +9,27 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#<<<scaleio_storage_pool>>>
-#STORAGE_POOL 59c7748300000000:
+
+# <<<scaleio_storage_pool>>>
+# STORAGE_POOL 59c7748300000000:
 #        ID                                                 59c7748300000000
 #        NAME                                               pool01
 #        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
@@ -62,13 +66,13 @@ def check_scaleio_storage_pool(item, params, parsed):
         yield 2, "Failed Capacity: %d %s" % (failed_value, failed_unit)
 
 
-check_info['scaleio_storage_pool'] = {
-    'parse_function': lambda info: parse_scaleio(info, "STORAGE_POOL"),
-    'inventory_function': inventory_scaleio_storage_pool,
-    'check_function': check_scaleio_storage_pool,
-    'service_description': 'ScaleIO SP capacity %s',
-    'has_perfdata': True,
-    'group': 'filesystem',
+check_info["scaleio_storage_pool"] = {
+    "parse_function": lambda info: parse_scaleio(info, "STORAGE_POOL"),
+    "inventory_function": inventory_scaleio_storage_pool,
+    "check_function": check_scaleio_storage_pool,
+    "service_description": "ScaleIO SP capacity %s",
+    "has_perfdata": True,
+    "group": "filesystem",
 }
 
 
@@ -90,12 +94,12 @@ def check_scaleio_storage_pool_totalrw(item, params, parsed):
         yield io_type
 
 
-check_info['scaleio_storage_pool.totalrw'] = {
-    'inventory_function': inventory_scaleio_storage_pool_totalrw,
-    'check_function': check_scaleio_storage_pool_totalrw,
-    'service_description': 'ScaleIO SP total IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
+check_info["scaleio_storage_pool.totalrw"] = {
+    "inventory_function": inventory_scaleio_storage_pool_totalrw,
+    "check_function": check_scaleio_storage_pool_totalrw,
+    "service_description": "ScaleIO SP total IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }
 
 
@@ -117,10 +121,10 @@ def check_scaleio_storage_pool_rebalancerw(item, params, parsed):
         yield io_type
 
 
-check_info['scaleio_storage_pool.rebalancerw'] = {
-    'inventory_function': inventory_scaleio_storage_pool_rebalancerw,
-    'check_function': check_scaleio_storage_pool_rebalancerw,
-    'service_description': 'ScaleIO SP rebalance IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
+check_info["scaleio_storage_pool.rebalancerw"] = {
+    "inventory_function": inventory_scaleio_storage_pool_rebalancerw,
+    "check_function": check_scaleio_storage_pool_rebalancerw,
+    "service_description": "ScaleIO SP rebalance IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }

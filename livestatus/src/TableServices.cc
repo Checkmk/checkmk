@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
-#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <iterator>
@@ -23,12 +22,12 @@
 #include "AttributeListColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
-#include "CommentColumn.h"
+#include "CommentRenderer.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
 #include "DoubleColumn.h"
-#include "DowntimeColumn.h"
+#include "DowntimeRenderer.h"
 #include "DynamicColumn.h"
 #include "DynamicRRDColumn.h"
 #include "IntLambdaColumn.h"
@@ -40,7 +39,6 @@
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "RRDColumn.h"
-#include "ServiceGroupsColumn.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
@@ -58,7 +56,9 @@ extern TimeperiodsCache *g_timeperiods_cache;
 // TODO(ml): Here we use `static` instead of an anonymous namespace because
 // of the `extern` declaration.  We should find something better.
 static double staleness(const service &svc) {
-    auto check_result_age = static_cast<double>(time(nullptr) - svc.last_check);
+    auto now =
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    auto check_result_age = static_cast<double>(now - svc.last_check);
     if (svc.check_interval != 0) {
         return check_result_age / (svc.check_interval * interval_length);
     }
@@ -522,28 +522,66 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<DowntimeColumn>(
-        prefix + "downtimes", "A list of all downtime ids of the service",
-        offsets, table->core(), true, DowntimeColumn::info::none));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+    table->addColumn(
+        std::make_unique<ListColumn::Callback<service, DowntimeData>>(
+            prefix + "downtimes", "A list of all downtime ids of the service",
+            offsets,
+            std::make_unique<DowntimeRenderer>(
+                DowntimeRenderer::verbosity::none),
+            [mc](const service &svc) {
+                return mc->downtimes(
+                    reinterpret_cast<const MonitoringCore::Service *>(&svc));
+            }));
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<service, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        offsets, table->core(), true, DowntimeColumn::info::medium));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
+        [mc](const service &svc) {
+            return mc->downtimes(
+                reinterpret_cast<const MonitoringCore::Service *>(&svc));
+        }));
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<service, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of all downtimes of the service with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, table->core(), true, DowntimeColumn::info::full));
-    table->addColumn(std::make_unique<CommentColumn>(
-        prefix + "comments", "A list of all comment ids of the service",
-        offsets, table->core(), true, false, false));
-    table->addColumn(std::make_unique<CommentColumn>(
-        prefix + "comments_with_info",
-        "A list of all comments of the service with id, author and comment",
-        offsets, table->core(), true, true, false));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
+        [mc](const service &svc) {
+            return mc->downtimes(
+                reinterpret_cast<const MonitoringCore::Service *>(&svc));
+        }));
+    table->addColumn(
+        std::make_unique<ListColumn::Callback<service, CommentData>>(
+            prefix + "comments", "A list of all comment ids of the service",
+            offsets,
+            std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
+            [mc](const service &svc) {
+                return mc->comments(
+                    reinterpret_cast<const MonitoringCore::Service *>(&svc));
+            }));
+    table->addColumn(
+        std::make_unique<ListColumn::Callback<service, CommentData>>(
+            prefix + "comments_with_info",
+            "A list of all comments of the service with id, author and comment",
+            offsets,
+            std::make_unique<CommentRenderer>(
+                CommentRenderer::verbosity::medium),
+            [mc](const service &svc) {
+                return mc->comments(
+                    reinterpret_cast<const MonitoringCore::Service *>(&svc));
+            }));
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<service, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        offsets, table->core(), true, true, true));
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
+        [mc](const service &svc) {
+            return mc->comments(
+                reinterpret_cast<const MonitoringCore::Service *>(&svc));
+        }));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
@@ -601,11 +639,21 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "label_sources", "A dictionary of the label sources",
         offsets_custom_variables, table->core(), AttributeKind::label_sources));
 
-    table->addColumn(std::make_unique<ServiceGroupsColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "groups", "A list of all service groups the service is in",
-        offsets.add(
-            [](Row r) { return &r.rawData<service>()->servicegroups_ptr; }),
-        table->core()));
+        offsets, [mc](const service &svc, const contact *auth_user) {
+            std::vector<std::string> group_names;
+            for (objectlist *list = svc.servicegroups_ptr; list != nullptr;
+                 list = list->next) {
+                auto *sg = static_cast<servicegroup *>(list->object_ptr);
+                if (is_authorized_for_service_group(mc->groupAuthorization(),
+                                                    mc->serviceAuthorization(),
+                                                    sg, auth_user)) {
+                    group_names.emplace_back(sg->group_name);
+                }
+            }
+            return group_names;
+        }));
     table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in", offsets,
@@ -634,7 +682,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return metrics;
         }));
     table->addDynamicColumn(std::make_unique<
-                            DynamicRRDColumn<RRDColumn<service>>>(
+                            DynamicRRDColumn<ListColumn::Callback<
+                                service, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         table->core(), offsets));
@@ -708,9 +757,8 @@ void TableServices::answerQuery(Query *query) {
 }
 
 bool TableServices::isAuthorized(Row row, const contact *ctc) const {
-    const auto *svc = rowData<service>(row);
-    return is_authorized_for(core()->serviceAuthorization(), ctc, svc->host_ptr,
-                             svc);
+    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                 rowData<service>(row));
 }
 
 Row TableServices::get(const std::string &primary_key) const {

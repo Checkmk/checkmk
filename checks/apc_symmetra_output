@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.318.1.1.1.4.2.1.0 231
 # .1.3.6.1.4.1.318.1.1.1.4.2.4.0
 # .1.3.6.1.4.1.318.1.1.1.4.2.3.0 37
@@ -34,20 +35,21 @@ def parse_apc_symmetra_output(info):
     return data
 
 
-check_info['apc_symmetra_output'] = {
-    'parse_function': parse_apc_symmetra_output,
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': "Phase %s",
+check_info["apc_symmetra_output"] = {
+    "parse_function": parse_apc_symmetra_output,
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "Phase %s",
     "snmp_info": (
         ".1.3.6.1.4.1.318.1.1.1.4.2",
         [
             "1",  # PowerNet-MIB::upsAdvOutputVoltage,
             "4",  # PowerNet-MIB::upsAdvOutputCurrent,
             "3",  # PowerNet-MIB::upsAdvOutputLoad
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
-    'has_perfdata': True,
-    'default_levels_variable': 'apc_symmetra_output_default_levels',
-    'group': 'ups_outphase',
+    "has_perfdata": True,
+    "default_levels_variable": "apc_symmetra_output_default_levels",
+    "group": "ups_outphase",
 }

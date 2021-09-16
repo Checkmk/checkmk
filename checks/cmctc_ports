@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cmctc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.2606.4.2.3.1.0 2
 # .1.3.6.1.4.1.2606.4.2.3.2.0 CMC-TC-IOU
 # .1.3.6.1.4.1.2606.4.2.3.3.0 60263
@@ -18,48 +19,48 @@ from cmk.base.check_legacy_includes.cmctc import *  # pylint: disable=wildcard-i
 def parse_cmctc_ports(info):
     def parse_single_port(port_info):
         type_map = {
-            '1': 'not available',
-            '2': 'IO',
-            '3': 'Access',
-            '4': 'Climate',
-            '5': 'FCS',
-            '6': 'RTT',
-            '7': 'RTC',
-            '8': 'PSM',
-            '9': 'PSM8',
-            '10': 'PSM metered',
-            '11': 'IO wireless',
-            '12': 'PSM6 Schuko',
-            '13': 'PSM6C19',
-            '14': 'Fuel Cell',
-            '15': 'DRC',
-            '16': 'TE cooler',
-            '17': 'PSM32 metered',
-            '18': 'PSM8x8',
-            '19': 'PSM6x6 Schuko',
-            '20': 'PSM6x6C19',
+            "1": "not available",
+            "2": "IO",
+            "3": "Access",
+            "4": "Climate",
+            "5": "FCS",
+            "6": "RTT",
+            "7": "RTC",
+            "8": "PSM",
+            "9": "PSM8",
+            "10": "PSM metered",
+            "11": "IO wireless",
+            "12": "PSM6 Schuko",
+            "13": "PSM6C19",
+            "14": "Fuel Cell",
+            "15": "DRC",
+            "16": "TE cooler",
+            "17": "PSM32 metered",
+            "18": "PSM8x8",
+            "19": "PSM6x6 Schuko",
+            "20": "PSM6x6C19",
         }
 
         status_map = {
-            '1': 'ok',
-            '2': 'error',
-            '3': 'configuration changed',
-            '4': 'quit from sensor unit',
-            '5': 'timeout',
-            '6': 'unit detected',
-            '7': 'not available',
-            '8': 'supply voltage low',
+            "1": "ok",
+            "2": "error",
+            "3": "configuration changed",
+            "4": "quit from sensor unit",
+            "5": "timeout",
+            "6": "unit detected",
+            "7": "not available",
+            "8": "supply voltage low",
         }
 
         _, device_type, description, serial_number, device_status = port_info
 
         parsed = {
-            'type': type_map.get(device_type),
-            'status': status_map.get(device_status),
-            'serial': serial_number,
+            "type": type_map.get(device_type),
+            "status": status_map.get(device_status),
+            "serial": serial_number,
         }
 
-        if parsed['status'] == 'not available':
+        if parsed["status"] == "not available":
             return None
 
         return description, parsed
@@ -72,7 +73,7 @@ def parse_cmctc_ports(info):
         parsed_port = parse_single_port(port_info)
         if parsed_port:
             description, entry = parsed_port
-            name = '%d %s' % (number, description)
+            name = "%d %s" % (number, description)
             parsed[name] = entry
 
     return parsed
@@ -89,23 +90,23 @@ def check_cmctc_ports(item, _no_params, parsed):
         return None
 
     status_map = {
-        'ok': 0,
-        'configuration changed': 1,
-        'unit detected': 1,
-        'error': 2,
-        'quit from sensor unit': 2,
-        'timeout': 2,
-        'not available': 2,
-        'supply voltage low': 2,
+        "ok": 0,
+        "configuration changed": 1,
+        "unit detected": 1,
+        "error": 2,
+        "quit from sensor unit": 2,
+        "timeout": 2,
+        "not available": 2,
+        "supply voltage low": 2,
     }
 
-    state = status_map.get(port['status'], 3)
-    infotext = ('Status: %(status)s, ' 'Device type: %(type)s, ' 'Serial number: %(serial)s') % port
+    state = status_map.get(port["status"], 3)
+    infotext = ("Status: %(status)s, " "Device type: %(type)s, " "Serial number: %(serial)s") % port
 
     return state, infotext
 
 
-check_info['cmctc_ports'] = {
+check_info["cmctc_ports"] = {
     "parse_function": parse_cmctc_ports,
     "inventory_function": inventory_cmctc_ports,
     "check_function": check_cmctc_ports,

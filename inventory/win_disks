@@ -88,6 +88,6 @@ def inv_win_disks(info):
     node.append(array)
 
 
-inv_info['win_disks'] = {
+inv_info["win_disks"] = {
     "inv_function": inv_win_disks,
 }

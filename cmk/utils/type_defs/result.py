@@ -19,6 +19,8 @@ See Also:
 
 """
 
+from __future__ import annotations
+
 import abc
 from typing import Any, Callable, Final, Generic, Iterable, NoReturn, Optional, TypeVar
 
@@ -37,6 +39,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
         https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
 
     """
+
     __slots__ = ()
 
     @abc.abstractmethod
@@ -97,23 +100,23 @@ class Result(Generic[T_co, E_co], abc.ABC):
     def as_optional(self) -> Optional[T_co]:
         raise NotImplementedError
 
-    def flatten(self) -> "Result[T_co, E_co]":
+    def flatten(self) -> Result[T_co, E_co]:
         return self.join()
 
     @abc.abstractmethod
-    def bind(self, func: Callable[[T_co], "Result[U_co, E_co]"]) -> "Result[U_co, E_co]":
+    def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def join(self) -> "Result[T_co, E_co]":
+    def join(self) -> Result[T_co, E_co]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def map(self, func: Callable[[T_co], U_co]) -> "Result[U_co, E_co]":
+    def map(self, func: Callable[[T_co], U_co]) -> Result[U_co, E_co]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def map_error(self, func: Callable[[E_co], F_co]) -> "Result[T_co, F_co]":
+    def map_error(self, func: Callable[[E_co], F_co]) -> Result[T_co, F_co]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -128,6 +131,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
 
 class OK(Result[T_co, E_co]):
     """A successful computation."""
+
     __slots__ = ["_ok"]
 
     def __init__(self, ok: T_co):
@@ -135,7 +139,7 @@ class OK(Result[T_co, E_co]):
             raise TypeError(ok)
         self._ok: Final[T_co] = ok
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self.ok)
 
     def __hash__(self) -> int:
@@ -190,15 +194,15 @@ class OK(Result[T_co, E_co]):
     def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
         return func(self.join().ok)
 
-    def join(self) -> "OK[T_co, E_co]":
+    def join(self) -> OK[T_co, E_co]:
         if isinstance(self.ok, OK):
             return self.ok.join()
         return self
 
-    def map(self, func: Callable[[T_co], U_co]) -> "OK[U_co, E_co]":
+    def map(self, func: Callable[[T_co], U_co]) -> OK[U_co, E_co]:
         return OK(func(self.join().ok))
 
-    def map_error(self, _func: Callable[[E_co], F_co]) -> "OK[T_co, F_co]":
+    def map_error(self, _func: Callable[[E_co], F_co]) -> OK[T_co, F_co]:
         return OK(self.join().ok)
 
     def fold(
@@ -212,6 +216,7 @@ class OK(Result[T_co, E_co]):
 
 class Error(Result[T_co, E_co]):
     """A failed computation."""
+
     __slots__ = ["_error"]
 
     def __init__(self, error: E_co):
@@ -219,7 +224,7 @@ class Error(Result[T_co, E_co]):
             raise TypeError(error)
         self._error: Final[E_co] = error
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self.error)
 
     def __hash__(self) -> int:
@@ -274,15 +279,15 @@ class Error(Result[T_co, E_co]):
     def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
         return Error(self.join().error)
 
-    def join(self) -> "Error[T_co, E_co]":
+    def join(self) -> Error[T_co, E_co]:
         if isinstance(self.error, Error):
             return self.error.join()
         return self
 
-    def map(self, _func: Callable[[T_co], U_co]) -> "Error[U_co, E_co]":
+    def map(self, _func: Callable[[T_co], U_co]) -> Error[U_co, E_co]:
         return Error(self.join().error)
 
-    def map_error(self, func: Callable[[E_co], F_co]) -> "Error[T_co, F_co]":
+    def map_error(self, func: Callable[[E_co], F_co]) -> Error[T_co, F_co]:
         return Error(func(self.join().error))
 
     def fold(

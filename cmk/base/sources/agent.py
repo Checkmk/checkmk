@@ -8,18 +8,12 @@ from pathlib import Path
 from typing import Final, Optional
 
 import cmk.utils.misc
-from cmk.utils.type_defs import (
-    AgentRawData,
-    AgentRawDataSection,
-    HostAddress,
-    HostName,
-    SourceType,
-)
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
 from cmk.core_helpers.agent import AgentHostSections, AgentParser
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
-from cmk.core_helpers.type_defs import Mode
+from cmk.core_helpers.type_defs import AgentRawDataSection
 
 import cmk.base.config as config
 
@@ -38,12 +32,12 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             where each data source has it's own set of directories.
 
     """
+
     def __init__(
         self,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         source_type: SourceType,
         fetcher_type: FetcherType,
         description: str,
@@ -53,7 +47,6 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=source_type,
             fetcher_type=fetcher_type,
             description=description,
@@ -61,8 +54,9 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             default_host_sections=AgentHostSections(),
             id_=id_,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
-            persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
-                                   "persisted") if main_data_source else None,
+            persisted_section_dir=(Path(cmk.utils.paths.var_dir) / "persisted")
+            if main_data_source
+            else None,
         )
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case

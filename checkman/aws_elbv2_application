@@ -12,5 +12,5 @@ description:
 
  No default levels are set. Upper levels can be configured.
 
-inventory:
+discovery:
  One service is created if all required metrics (ConsumedLCUs) are given.

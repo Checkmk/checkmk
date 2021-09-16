@@ -11,7 +11,7 @@
 # upsBatteryVoltage             1.3.6.1.4.1.4555.1.1.1.1.2.5
 # upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
 
-factory_settings["ups_capacity_default_levels"] = {'battime': (0, 0), 'capacity': (95, 90)}
+factory_settings["ups_capacity_default_levels"] = {"battime": (0, 0), "capacity": (95, 90)}
 
 
 def inventory_ups_socomec_capacity(info):
@@ -26,8 +26,8 @@ def check_ups_socomec_capacity(item, params, info):
         warn, crit = params
         cap_warn, cap_crit = (95, 90)
     elif isinstance(params, dict):  # new dict format
-        warn, crit = params.get('battime', (0, 0))
-        cap_warn, cap_crit = params.get('capacity', (95, 90))
+        warn, crit = params.get("battime", (0, 0))
+        cap_warn, cap_crit = params.get("capacity", (95, 90))
     else:
         warn, crit = (0, 0)
         cap_warn, cap_crit = (95, 90)
@@ -46,7 +46,7 @@ def check_ups_socomec_capacity(item, params, info):
         else:
             state = 0
         yield state, "%d min left on battery" % minutes_left + levelsinfo, [
-            ('capacity', minutes_left, warn, crit)
+            ("capacity", minutes_left, warn, crit)
         ]
 
     # Check percentual capacity
@@ -59,8 +59,9 @@ def check_ups_socomec_capacity(item, params, info):
         levelsinfo = " (warn at %d%%)" % cap_warn
     else:
         state = 0
-    yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [('percent', percent_fuel, cap_warn,
-                                                                 cap_crit)]
+    yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [
+        ("percent", percent_fuel, cap_warn, cap_crit)
+    ]
 
     # Output time on battery
     if time_on_bat > 0:
@@ -70,7 +71,7 @@ def check_ups_socomec_capacity(item, params, info):
 check_info["ups_socomec_capacity"] = {
     "check_function": check_ups_socomec_capacity,
     "inventory_function": inventory_ups_socomec_capacity,
-    "default_levels_variable": 'ups_capacity_default_levels',
+    "default_levels_variable": "ups_capacity_default_levels",
     "service_description": "Battery capacity",
     "has_perfdata": True,
     "group": "ups_capacity",

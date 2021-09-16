@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example Agent Output:
 # GENUA-MIB:
 
@@ -40,9 +41,9 @@ def inventory_genua_state(info):
 
 def genua_state_str(st):
     names = {
-        '0': 'init',
-        '1': 'backup',
-        '2': 'master',
+        "0": "init",
+        "1": "backup",
+        "2": "master",
     }
     return names.get(st, st)
 
@@ -69,14 +70,14 @@ def check_genua_state(item, _no_params, info):
             state = 2
 
     output = "Number of carp IFs in states "
-    for i in ('0', '1', '2'):
+    for i in ("0", "1", "2"):
         output += genua_state_str(i)
         output += ":%d " % carp_states[int(i)]
 
     return (state, output)
 
 
-check_info['genua_state_correlation'] = {
+check_info["genua_state_correlation"] = {
     "inventory_function": inventory_genua_state,
     "check_function": check_genua_state,
     "service_description": "Carp Correlation",
@@ -89,7 +90,8 @@ check_info['genua_state_correlation'] = {
                 "1.3",  # "ifType"
                 "1.4",  # "ifLinkState"
                 "1.7",  # "ifCarpState"
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.3137.2.1.2",
             [
@@ -98,7 +100,8 @@ check_info['genua_state_correlation'] = {
                 "1.3",  # "ifType"
                 "1.4",  # "ifLinkState"
                 "1.7",  # "ifCarpState"
-            ])
+            ],
+        ),
     ],
     "snmp_scan_function": scan_genua,
 }

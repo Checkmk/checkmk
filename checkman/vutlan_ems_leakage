@@ -12,7 +12,7 @@ description:
 item:
  The name of the leakage detector.
 
-inventory:
+discovery:
  One service is created for each detector.
 
 

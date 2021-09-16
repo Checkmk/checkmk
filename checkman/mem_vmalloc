@@ -18,7 +18,7 @@ description:
  address space and also the size of the largest available
  chunk (indicating the degree of fragmentation).
 
-inventory:
+discovery:
  One service is created if {VmallocTotal} is available in {/proc/meminfo}
  and only if the total size of the vmalloc area is less then 4 GB.
  This is generally only possible for 32 bit architectures.

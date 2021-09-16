@@ -9,10 +9,11 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['fjdarye500_cmods'] = {
-    'inventory_function': inventory_fjdarye_item,
-    'check_function': check_fjdarye_item,
-    'service_description': 'Controller Module %s',
-    'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.150.2.1.2.1', [1, 3]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+
+check_info["fjdarye500_cmods"] = {
+    "inventory_function": inventory_fjdarye_item,
+    "check_function": check_fjdarye_item,
+    "service_description": "Controller Module %s",
+    "snmp_info": (".1.3.6.1.4.1.211.1.21.1.150.2.1.2.1", [1, 3]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
 }

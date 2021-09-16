@@ -19,7 +19,7 @@ def check_couchbase_buckets_items(_item, params, data):
         yield check_levels(
             int(total_items),
             "items_count",
-            params.get('curr_items_tot'),
+            params.get("curr_items_tot"),
             infoname="Total items in vBuckets",
             human_readable_func=str,
         )
@@ -65,11 +65,11 @@ def check_couchbase_buckets_items(_item, params, data):
         )
 
 
-check_info['couchbase_buckets_items'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(lambda _k, v: 'curr_items_tot' in v),
-    'check_function': check_couchbase_buckets_items,
-    'service_description': 'Couchbase Bucket %s Items',
-    'group': 'couchbase_items',
-    'has_perfdata': True
+check_info["couchbase_buckets_items"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(lambda _k, v: "curr_items_tot" in v),
+    "check_function": check_couchbase_buckets_items,
+    "service_description": "Couchbase Bucket %s Items",
+    "group": "couchbase_items",
+    "has_perfdata": True,
 }

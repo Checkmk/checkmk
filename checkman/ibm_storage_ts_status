@@ -15,5 +15,5 @@ description:
   of managed libraries so this check status and the status in
   ibm_storage_ts.library are probably not independent.
 
-inventory:
+discovery:
  One service is created.

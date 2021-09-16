@@ -141,13 +141,13 @@ def check_msexch_dag_dbcopy(item, params, info):
                 return state, infotxt
 
 
-check_info['msexch_dag.dbcopy'] = {
+check_info["msexch_dag.dbcopy"] = {
     "inventory_function": inventory_msexch_dag_dbcopy,
     "check_function": check_msexch_dag_dbcopy,
     "service_description": "Exchange DAG DBCopy for %s",
 }
 
-#.
+# .
 #   .--contentindex--------------------------------------------------------.
 #   |                      _             _   _           _                 |
 #   |       ___ ___  _ __ | |_ ___ _ __ | |_(_)_ __   __| | _____  __      |
@@ -179,13 +179,13 @@ def check_msexch_dag_contentindex(item, _no_params, info):
                 return state, "Status: %s" % val
 
 
-check_info['msexch_dag.contentindex'] = {
+check_info["msexch_dag.contentindex"] = {
     "inventory_function": inventory_msexch_dag_contentindex,
     "check_function": check_msexch_dag_contentindex,
     "service_description": "Exchange DAG ContentIndex of %s",
 }
 
-#.
+# .
 #   .--copyqueue-----------------------------------------------------------.
 #   |                                                                      |
 #   |           ___ ___  _ __  _   _  __ _ _   _  ___ _   _  ___           |
@@ -201,7 +201,7 @@ msexch_dag_copyqueue_default_levels = (100, 200)
 def inventory_msexch_dag_copyqueue(info):
     for line in info:
         if line[0].strip() == "DatabaseName":
-            yield line[1].strip(), 'msexch_dag_copyqueue_default_levels'
+            yield line[1].strip(), "msexch_dag_copyqueue_default_levels"
 
 
 def check_msexch_dag_copyqueue(item, params, info):
@@ -226,7 +226,7 @@ def check_msexch_dag_copyqueue(item, params, info):
                 return state, infotxt, perfdata
 
 
-check_info['msexch_dag.copyqueue'] = {
+check_info["msexch_dag.copyqueue"] = {
     "inventory_function": inventory_msexch_dag_copyqueue,
     "check_function": check_msexch_dag_copyqueue,
     "service_description": "Exchange DAG CopyQueue of %s",

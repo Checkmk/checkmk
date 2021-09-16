@@ -7,5 +7,5 @@ description:
  This Check monitors the number of currently running threads on a Blucat Adonis
  device. Per default the levels for warning and critical are 2000 and 4000 threads.
 
-inventory:
+discovery:
  One service is created.

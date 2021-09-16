@@ -55,25 +55,38 @@ def check_cisco_asa_conn(item, _no_params, parsed):
             yield state, "Status: %s" % state_readable
 
 
-check_info['cisco_asa_conn'] = {
-    'parse_function'        : parse_cisco_asa_conn,
-    'inventory_function'    : inventory_cisco_asa_conn,
-    'check_function'        : check_cisco_asa_conn,
-    'service_description'   : 'Connection %s',
-    'snmp_info'             : [('.1.3.6.1.2.1.31.1.1.1', [
-                                    OID_END, # Index
-                                    "1",     # IF-MIB::ifName
-                               ]),
-                               ('.1.3.6.1.2.1.4.20.1', [
-                                    "2",     # IP-MIB::ipAdEntIfIndex
-                                    "1",     # IP-MIB::ipAdEntAddr
-                               ]),
-                               ('.1.3.6.1.2.1.2.2.1', [
-                                    OID_END, # Index
-                                    "7",     # IF-MIB::ifAdminStatus
-                                    "8",     # IF-MIB::ifOperStatus
-                               ])],
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security") \
-                                          or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firewall services") \
-                                          or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+check_info["cisco_asa_conn"] = {
+    "parse_function": parse_cisco_asa_conn,
+    "inventory_function": inventory_cisco_asa_conn,
+    "check_function": check_cisco_asa_conn,
+    "service_description": "Connection %s",
+    "snmp_info": [
+        (
+            ".1.3.6.1.2.1.31.1.1.1",
+            [
+                OID_END,  # Index
+                "1",  # IF-MIB::ifName
+            ],
+        ),
+        (
+            ".1.3.6.1.2.1.4.20.1",
+            [
+                "2",  # IP-MIB::ipAdEntIfIndex
+                "1",  # IP-MIB::ipAdEntAddr
+            ],
+        ),
+        (
+            ".1.3.6.1.2.1.2.2.1",
+            [
+                OID_END,  # Index
+                "7",  # IF-MIB::ifAdminStatus
+                "8",  # IF-MIB::ifOperStatus
+            ],
+        ),
+    ],
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0")
+    .lower()
+    .startswith("cisco adaptive security")
+    or oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco firewall services")
+    or "cisco pix security" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

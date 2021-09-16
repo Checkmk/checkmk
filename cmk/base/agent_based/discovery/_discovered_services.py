@@ -4,29 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Container,
-    Generator,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Sequence,
-)
+from typing import Container, Generator, Iterator, List, Optional, Sequence, Set
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.check_utils import unwrap_parameters
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
     EVERYTHING,
     HostAddress,
-    HostName,
     HostKey,
+    HostName,
     ParsedSectionName,
     SourceType,
 )
@@ -39,35 +31,23 @@ import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.check_utils import CheckTable, Service
-from cmk.base.discovered_labels import (
-    DiscoveredServiceLabels,
-    ServiceLabel,
-)
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
-from .type_defs import DiscoveryParameters
 from .utils import QualifiedDiscovery
 
 
 def analyse_discovered_services(
-        *,
-        host_name: HostName,
-        ipaddress: Optional[HostAddress],
-        parsed_sections_broker: ParsedSectionsBroker,
-        discovery_parameters: DiscoveryParameters,
-        run_plugin_names: Container[CheckPluginName],
-        only_new: bool,  # TODO: find a better name downwards in the callstack
+    *,
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    parsed_sections_broker: ParsedSectionsBroker,
+    run_plugin_names: Container[CheckPluginName],
+    only_new: bool,  # TODO: find a better name downwards in the callstack
+    on_error: OnError,
 ) -> QualifiedDiscovery[Service]:
-
-    if discovery_parameters.only_host_labels:
-        # TODO: don't even come here, if there's nothing to do!
-        existing = _load_existing_services(host_name=host_name)
-        return QualifiedDiscovery(
-            preexisting=existing,
-            current=existing,
-            key=lambda s: s.id(),
-        )
 
     return _analyse_discovered_services(
         existing_services=_load_existing_services(host_name=host_name),
@@ -75,8 +55,8 @@ def analyse_discovered_services(
             host_name=host_name,
             ipaddress=ipaddress,
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
             run_plugin_names=run_plugin_names,
+            on_error=on_error,
         ),
         run_plugin_names=run_plugin_names,
         only_new=only_new,
@@ -93,7 +73,8 @@ def _analyse_discovered_services(
 
     return QualifiedDiscovery(
         preexisting=existing_services,
-        current=discovered_services + _services_to_keep(
+        current=discovered_services
+        + _services_to_keep(
             choose_from=existing_services,
             run_plugin_names=run_plugin_names,
             only_new=only_new,
@@ -115,9 +96,9 @@ def _services_to_keep(
     if not only_new:
         if run_plugin_names is EVERYTHING:
             return []
-    # 2. -II with --plugins=
-    #        check_plugin_names is not empty, only_new is False
-    #    --> keep all services of other plugins
+        # 2. -II with --plugins=
+        #        check_plugin_names is not empty, only_new is False
+        #    --> keep all services of other plugins
         return [s for s in choose_from if s.check_plugin_name not in run_plugin_names]
     # 3. -I
     #    --> just add new services
@@ -155,8 +136,8 @@ def _discover_services(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
     run_plugin_names: Container[CheckPluginName],
+    on_error: OnError,
 ) -> List[Service]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(parsed_sections_broker, run_plugin_names)
@@ -167,24 +148,27 @@ def _discover_services(
 
     service_table: CheckTable = {}
     try:
-        with plugin_contexts.current_host(host_name, write_state=False):
+        with plugin_contexts.current_host(host_name):
             for check_plugin_name in plugin_candidates:
                 try:
-                    service_table.update({
-                        service.id(): service for service in _discover_plugins_services(
-                            check_plugin_name=check_plugin_name,
-                            host_name=host_name,
-                            ipaddress=ipaddress,
-                            parsed_sections_broker=parsed_sections_broker,
-                            discovery_parameters=discovery_parameters,
-                        )
-                    })
+                    service_table.update(
+                        {
+                            service.id(): service
+                            for service in _discover_plugins_services(
+                                check_plugin_name=check_plugin_name,
+                                host_name=host_name,
+                                ipaddress=ipaddress,
+                                parsed_sections_broker=parsed_sections_broker,
+                                on_error=on_error,
+                            )
+                        }
+                    )
                 except (KeyboardInterrupt, MKTimeout):
                     raise
                 except Exception as e:
-                    if discovery_parameters.on_error == "raise":
+                    if on_error is OnError.RAISE:
                         raise
-                    if discovery_parameters.on_error == "warn":
+                    if on_error is OnError.WARN:
                         console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
 
             return list(service_table.values())
@@ -220,12 +204,14 @@ def _find_candidates(
         ]
 
     parsed_sections_of_interest = {
-        parsed_section_name for plugin in preliminary_candidates
+        parsed_section_name
+        for plugin in preliminary_candidates
         for parsed_section_name in plugin.sections
     }
 
-    return (_find_host_candidates(broker, preliminary_candidates, parsed_sections_of_interest) |
-            _find_mgmt_candidates(broker, preliminary_candidates, parsed_sections_of_interest))
+    return _find_host_candidates(
+        broker, preliminary_candidates, parsed_sections_of_interest
+    ) | _find_mgmt_candidates(broker, preliminary_candidates, parsed_sections_of_interest)
 
 
 def _find_host_candidates(
@@ -234,19 +220,17 @@ def _find_host_candidates(
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
-    available_parsed_sections = {
-        s.parsed_section_name for s in broker.determine_applicable_sections(
-            parsed_sections_of_interest,
-            SourceType.HOST,
-        )
-    }
+    available_parsed_sections = broker.filter_available(
+        parsed_sections_of_interest,
+        SourceType.HOST,
+    )
 
     return {
         plugin.name
         for plugin in preliminary_candidates
         # *filter out* all names of management only check plugins
-        if not plugin.name.is_management_name() and any(
-            section in available_parsed_sections for section in plugin.sections)
+        if not plugin.name.is_management_name()
+        and any(section in available_parsed_sections for section in plugin.sections)
     }
 
 
@@ -256,12 +240,10 @@ def _find_mgmt_candidates(
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
-    available_parsed_sections = {
-        s.parsed_section_name for s in broker.determine_applicable_sections(
-            parsed_sections_of_interest,
-            SourceType.MANAGEMENT,
-        )
-    }
+    available_parsed_sections = broker.filter_available(
+        parsed_sections_of_interest,
+        SourceType.MANAGEMENT,
+    )
 
     return {
         # *create* all management only names of the plugins
@@ -277,7 +259,7 @@ def _discover_plugins_services(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> Iterator[Service]:
     # Skip this check type if is ignored for that host
     if config.service_ignored(host_name, check_plugin_name, None):
@@ -296,29 +278,32 @@ def _discover_plugins_services(
     )
 
     try:
-        kwargs = parsed_sections_broker.get_section_kwargs(host_key, check_plugin.sections)
+        kwargs = get_section_kwargs(parsed_sections_broker, host_key, check_plugin.sections)
     except Exception as exc:
-        if cmk.utils.debug.enabled() or discovery_parameters.on_error == "raise":
+        if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise
-        if discovery_parameters.on_error == "warn":
+        if on_error is OnError.WARN:
             console.warning("  Exception while parsing agent section: %s\n" % exc)
         return
+
     if not kwargs:
         return
 
     disco_params = config.get_discovery_parameters(host_name, check_plugin)
     if disco_params is not None:
-        kwargs["params"] = disco_params
+        kwargs = {**kwargs, "params": disco_params}
 
     try:
         plugins_services = check_plugin.discovery_function(**kwargs)
         yield from _enriched_discovered_services(host_name, check_plugin.name, plugins_services)
     except Exception as e:
-        if discovery_parameters.on_error == "warn":
-            console.warning("  Exception in discovery function of check plugin '%s': %s" %
-                            (check_plugin.name, e))
-        elif discovery_parameters.on_error == "raise":
+        if on_error is OnError.RAISE:
             raise
+        if on_error is OnError.WARN:
+            console.warning(
+                "  Exception in discovery function of check plugin '%s': %s"
+                % (check_plugin.name, e)
+            )
 
 
 def _enriched_discovered_services(

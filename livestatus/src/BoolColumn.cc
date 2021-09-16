@@ -5,7 +5,6 @@
 
 #include "BoolColumn.h"
 
-#include "Aggregator.h"
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"

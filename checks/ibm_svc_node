@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # Put here the example output from your TCP-Based agent. If the
 # check is SNMP-Based, then remove this section
@@ -22,29 +23,29 @@ from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard
 
 def parse_ibm_svc_node(info):
     dflt_header = [
-        'id',
-        'name',
-        'UPS_serial_number',
-        'WWNN',
-        'status',
-        'IO_group_id',
-        'IO_group_name',
-        'config_node',
-        'UPS_unique_id',
-        'hardware',
-        'iscsi_name',
-        'iscsi_alias',
-        'panel_name',
-        'enclosure_id',
-        'canister_id',
-        'enclosure_serial_number',
-        'site_id',
-        'site_name',
+        "id",
+        "name",
+        "UPS_serial_number",
+        "WWNN",
+        "status",
+        "IO_group_id",
+        "IO_group_name",
+        "config_node",
+        "UPS_unique_id",
+        "hardware",
+        "iscsi_name",
+        "iscsi_alias",
+        "panel_name",
+        "enclosure_id",
+        "canister_id",
+        "enclosure_serial_number",
+        "site_id",
+        "site_name",
     ]
     parsed = {}
     for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         for data in rows:
-            parsed.setdefault(data['IO_group_name'], []).append(data)
+            parsed.setdefault(data["IO_group_name"], []).append(data)
     return parsed
 
 
@@ -56,8 +57,8 @@ def check_ibm_svc_node(item, _no_params, data):
     nodes_of_iogroup = 0
 
     for row in data:
-        node_status = row['status']
-        messages.append("Node %s is %s" % (row['name'], node_status))
+        node_status = row["status"]
+        messages.append("Node %s is %s" % (row["name"], node_status))
         nodes_of_iogroup += 1
         if node_status == "online":
             online_nodes += 1

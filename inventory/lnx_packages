@@ -65,9 +65,9 @@ def inv_lnx_packages(info):
         parsed_packages.append(entry)
 
     paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name")))
 
 
-inv_info['lnx_packages'] = {
+inv_info["lnx_packages"] = {
     "inv_function": inv_lnx_packages,
 }

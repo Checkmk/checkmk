@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<ibm_svc_enclosure:sep(58)>>>
 # 1:online:control:yes:0:io_grp0:2072-24C:7804037:2:2:2:2:24
@@ -64,18 +65,18 @@ def check_ibm_svc_enclosure(item, params, data):
     if params is None:
         params = {}
 
-    enclosure_status = data['status']
+    enclosure_status = data["status"]
     if enclosure_status == "online":
         status = 0
     else:
         status = 2
-    yield status, 'Status: %s' % enclosure_status
+    yield status, "Status: %s" % enclosure_status
 
     for key, label in [
-        ('canisters', 'canisters'),
-        ('PSUs', 'PSUs'),
-        ('fan_modules', 'fan modules'),
-        ('sems', 'secondary expander modules'),
+        ("canisters", "canisters"),
+        ("PSUs", "PSUs"),
+        ("fan_modules", "fan modules"),
+        ("sems", "secondary expander modules"),
     ]:
         online = _try_int(data.get("online_%s" % key))
         total = _try_int(data.get("total_%s" % key))
@@ -85,11 +86,9 @@ def check_ibm_svc_enclosure(item, params, data):
         # False, which shall be mapped to (total, total) or (warn, crit).
         levels_lower = params.get("levels_lower_online_%s" % key) or (total, total)
         levels = (None, None) + levels_lower
-        state, infotext, _perfdata = check_levels(online,
-                                                  None,
-                                                  levels,
-                                                  human_readable_func=int,
-                                                  infoname="Online %s" % label)
+        state, infotext, _perfdata = check_levels(
+            online, None, levels, human_readable_func=int, infoname="Online %s" % label
+        )
         if total is not None:
             infotext += " of %s" % total
         yield state, infotext
@@ -121,68 +120,68 @@ def _get_ibm_svc_enclosure_dflt_header(info):
 
     if len(first_line) == 9:
         return [
-            'id',
-            'status',
-            'type',
-            'product_MTM',
-            'serial_number',
-            'total_canisters',
-            'online_canisters',
-            'online_PSUs',
-            'drive_slots',
+            "id",
+            "status",
+            "type",
+            "product_MTM",
+            "serial_number",
+            "total_canisters",
+            "online_canisters",
+            "online_PSUs",
+            "drive_slots",
         ]
     elif len(first_line) == 13:
         return [
-            'id',
-            'status',
-            'type',
-            'managed',
-            'IO_group_id',
-            'IO_group_name',
-            'product_MTM',
-            'serial_number',
-            'total_canisters',
-            'online_canisters',
-            'total_PSUs',
-            'online_PSUs',
-            'drive_slots',
+            "id",
+            "status",
+            "type",
+            "managed",
+            "IO_group_id",
+            "IO_group_name",
+            "product_MTM",
+            "serial_number",
+            "total_canisters",
+            "online_canisters",
+            "total_PSUs",
+            "online_PSUs",
+            "drive_slots",
         ]
     elif len(first_line) == 15:
         return [
-            'id',
-            'status',
-            'type',
-            'managed',
-            'IO_group_id',
-            'IO_group_name',
-            'product_MTM',
-            'serial_number',
-            'total_canisters',
-            'online_canisters',
-            'total_PSUs',
-            'online_PSUs',
-            'drive_slots',
-            'total_fan_modules',
-            'online_fan_modules',
+            "id",
+            "status",
+            "type",
+            "managed",
+            "IO_group_id",
+            "IO_group_name",
+            "product_MTM",
+            "serial_number",
+            "total_canisters",
+            "online_canisters",
+            "total_PSUs",
+            "online_PSUs",
+            "drive_slots",
+            "total_fan_modules",
+            "online_fan_modules",
         ]
     elif len(first_line) == 17:
         return [
-            'id',
-            'status',
-            'type',
-            'managed',
-            'IO_group_id',
-            'IO_group_name',
-            'product_MTM',
-            'serial_number',
-            'total_canisters',
-            'online_canisters',
-            'total_PSUs',
-            'online_PSUs',
-            'drive_slots',
-            'total_fan_modules',
-            'online_fan_modules',
-            'total_sems',
-            'online_sems',
+            "id",
+            "status",
+            "type",
+            "managed",
+            "IO_group_id",
+            "IO_group_name",
+            "product_MTM",
+            "serial_number",
+            "total_canisters",
+            "online_canisters",
+            "total_PSUs",
+            "online_PSUs",
+            "drive_slots",
+            "total_fan_modules",
+            "online_fan_modules",
+            "total_sems",
+            "online_sems",
         ]
     return

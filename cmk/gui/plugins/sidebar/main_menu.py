@@ -7,38 +7,30 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
-from typing import NamedTuple, List, Optional, Union
+from typing import List, NamedTuple, Optional, Union
 
-import cmk.gui.config as config
 import cmk.gui.notify as notify
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import html
+from cmk.gui.globals import config, html, output_funnel, request, response, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.main_menu import (
-    mega_menu_registry,
-    any_show_more_items,
-)
-from cmk.gui.pages import page_registry, AjaxPage, register
-from cmk.gui.type_defs import (
-    Icon,
-    MegaMenu,
-    TopicMenuTopic,
-    TopicMenuItem,
-)
+from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
+from cmk.gui.pages import AjaxPage, page_registry, register
+from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.popups import MethodInline
-from cmk.gui.werks import num_unacknowledged_incompatible_werks, may_acknowledge
+from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 
-MainMenuItem = NamedTuple("MainMenuItem", [
-    ("name", str),
-    ("title", str),
-    ("icon", Icon),
-    ("onopen", Optional[str]),
-])
+
+class MainMenuItem(NamedTuple):
+    name: str
+    title: str
+    icon: Icon
+    onopen: Optional[str]
 
 
 class MainMenuRenderer:
     """Renders the main navigation sidebar"""
+
     def show(self) -> None:
         html.open_ul(id_="main_menu")
         self._show_main_menu_content()
@@ -49,7 +41,7 @@ class MainMenuRenderer:
             if isinstance(menu_item.icon, dict):
                 active_icon: Icon = {
                     "icon": menu_item.icon["icon"] + "_active",
-                    "emblem": menu_item.icon["emblem"]
+                    "emblem": menu_item.icon["emblem"],
                 }
             else:
                 active_icon = menu_item.icon + "_active"
@@ -64,17 +56,18 @@ class MainMenuRenderer:
                 hover_switch_delay=150,  # ms
                 onopen=menu_item.onopen,
             )
-            html.div("",
-                     id_="popup_shadow",
-                     onclick="cmk.popup_menu.close_popup()",
-                     class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
+            html.div(
+                "",
+                id_="popup_shadow",
+                onclick="cmk.popup_menu.close_popup()",
+                class_="min" if user.get_attribute("nav_hide_icons_title") else None,
+            )
             html.close_li()
 
     def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:
-        content = html.render_icon(menu_item.icon) + \
-                    html.render_icon(active_icon, class_="active")
+        content = html.render_icon(menu_item.icon) + html.render_icon(active_icon, class_="active")
 
-        if not config.user.get_attribute("nav_hide_icons_title"):
+        if not user.get_attribute("nav_hide_icons_title"):
             content += html.render_div(menu_item.title)
 
         return content
@@ -91,33 +84,36 @@ class MainMenuRenderer:
                     title=menu.title,
                     icon=menu.icon,
                     onopen=menu.search.onopen if menu.search else None,
-                ))
+                )
+            )
         return items
 
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             menu = mega_menu_registry[menu_item.name]
-            html.open_div(id_="popup_menu_%s" % menu_item.name,
-                          class_=[
-                              "popup_menu",
-                              "main_menu_popup",
-                              "min" if config.user.get_attribute("nav_hide_icons_title") else None,
-                          ])
+            html.open_div(
+                id_="popup_menu_%s" % menu_item.name,
+                class_=[
+                    "popup_menu",
+                    "main_menu_popup",
+                    "min" if user.get_attribute("nav_hide_icons_title") else None,
+                ],
+            )
             MegaMenuRenderer().show(menu)
             html.close_div()
-            return html.drain()
+            return output_funnel.drain()
 
 
 @register("sidebar_message_read")
 def ajax_message_read():
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     try:
-        notify.delete_gui_message(html.request.var('id'))
-        html.write("OK")
+        notify.delete_gui_message(request.var("id"))
+        html.write_text("OK")
     except Exception:
         if config.debug:
             raise
-        html.write("ERROR")
+        html.write_text("ERROR")
 
 
 @page_registry.register_page("ajax_sidebar_get_messages")
@@ -127,10 +123,10 @@ class ModeAjaxSidebarGetMessages(AjaxPage):
         hint_msg: int = 0
 
         for msg in notify.get_gui_messages():
-            if 'gui_hint' in msg['methods']:
+            if "gui_hint" in msg["methods"]:
                 hint_msg += 1
-            if 'gui_popup' in msg['methods']:
-                popup_msg.append({"id": msg["id"], "text": msg['text']})
+            if "gui_popup" in msg["methods"]:
+                popup_msg.append({"id": msg["id"], "text": msg["text"]})
 
         return {
             "popup_messages": popup_msg,
@@ -148,9 +144,14 @@ class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))
 
         num_unack_werks = num_unacknowledged_incompatible_werks()
-        tooltip_text = ungettext("%d unacknowledged incompatible werk" % num_unack_werks,
-                                 "%d unacknowledged incompatible werks" % num_unack_werks,
-                                 num_unack_werks)
+        tooltip_text = (
+            ungettext(
+                "%d unacknowledged incompatible werk",
+                "%d unacknowledged incompatible werks",
+                num_unack_werks,
+            )
+            % num_unack_werks
+        )
 
         return {
             "count": num_unack_werks,
@@ -161,10 +162,11 @@ class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
 
 class MegaMenuRenderer:
     """Renders the content of the mega menu popups"""
+
     def show(self, menu: MegaMenu) -> None:
         more_id = "main_menu_" + menu.name
 
-        show_more = config.user.get_show_more_setting(more_id)
+        show_more = user.get_show_more_setting(more_id)
         html.open_div(id_=more_id, class_=["main_menu", "more" if show_more else "less"])
         hide_entries_js = "cmk.popup_menu.mega_menu_hide_entries('%s')" % more_id
 
@@ -178,10 +180,9 @@ class MegaMenuRenderer:
         topics = menu.topics()
         if any_show_more_items(topics):
             html.open_div()
-            html.more_button(id_=more_id,
-                             dom_levels_up=3,
-                             additional_js=hide_entries_js,
-                             with_text=True)
+            html.more_button(
+                id_=more_id, dom_levels_up=3, additional_js=hide_entries_js, with_text=True
+            )
             html.close_div()
         html.close_div()
         html.open_div(class_="content inner", id="content_inner_%s" % menu.name)
@@ -189,7 +190,6 @@ class MegaMenuRenderer:
             if not topic.items:
                 continue
             self._show_topic(topic, menu.name)
-        html.div(None, class_=["topic", "sentinel"])
         html.close_div()
         html.close_div()
         html.javascript(hide_entries_js)
@@ -200,11 +200,14 @@ class MegaMenuRenderer:
     def _show_topic(self, topic: TopicMenuTopic, menu_id: str) -> None:
         show_more = all(i.is_show_more for i in topic.items)
         topic_id = "_".join(
-            [menu_id, "topic", "".join(c.lower() for c in topic.title if not c.isspace())])
+            [menu_id, "topic", "".join(c.lower() for c in topic.title if not c.isspace())]
+        )
 
-        html.open_div(id_=topic_id,
-                      class_=["topic"] + (["show_more_mode"] if show_more else []),
-                      **{"data-max-entries": "%d" % topic.max_entries})
+        html.open_div(
+            id_=topic_id,
+            class_=["topic"] + (["show_more_mode"] if show_more else []),
+            **{"data-max-entries": "%d" % topic.max_entries},
+        )
 
         self._show_topic_title(menu_id, topic_id, topic)
         self._show_items(topic_id, topic)
@@ -212,12 +215,14 @@ class MegaMenuRenderer:
 
     def _show_topic_title(self, menu_id: str, topic_id: str, topic: TopicMenuTopic) -> None:
         html.open_h2()
-        html.open_a(class_="show_all_topics",
-                    href="",
-                    onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id)
+        html.open_a(
+            class_="show_all_topics",
+            href="",
+            onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id,
+        )
         html.icon(icon="collapse_arrow", title=_("Show all %s topics") % menu_id)
         html.close_a()
-        if not config.user.get_attribute("icons_per_item") and topic.icon:
+        if not user.get_attribute("icons_per_item") and topic.icon:
             html.icon(topic.icon)
         html.span(topic.title)
         html.close_h2()
@@ -228,7 +233,7 @@ class MegaMenuRenderer:
             self._show_item(item)
         html.open_li(class_="show_all_items")
         html.open_a(href="", onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
-        if config.user.get_attribute("icons_per_item"):
+        if user.get_attribute("icons_per_item"):
             html.icon("trans")
         html.write_text(_("Show all"))
         html.close_a()
@@ -242,8 +247,8 @@ class MegaMenuRenderer:
             target=item.target,
             onclick="cmk.popup_menu.close_popup()",
         )
-        if config.user.get_attribute("icons_per_item"):
-            html.icon(item.icon or "trans")
+        if user.get_attribute("icons_per_item"):
+            html.icon(item.icon or "dash")
         self._show_item_title(item)
         html.close_a()
         html.close_li()

@@ -4,18 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Union, Dict, Type, Any
+from typing import Any, Dict, List, Type, Union
+
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import (
-    BIStates,
-    bi_aggregation_function_registry,
     ABCBIAggregationFunction,
+    bi_aggregation_function_registry,
+    BIStates,
     ReqConstant,
-    ReqString,
     ReqInteger,
     ReqNested,
+    ReqString,
 )
 from cmk.utils.bi.bi_schema import Schema
 
@@ -80,11 +81,16 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 class BIAggregationFunctionBestSchema(Schema):
     type = ReqConstant(BIAggregationFunctionBest.type())
     count = ReqInteger(default=1)
-    restrict_state = ReqInteger(default=2, validate=validate.OneOf([
-        0,
-        1,
-        2,
-    ]))
+    restrict_state = ReqInteger(
+        default=2,
+        validate=validate.OneOf(
+            [
+                0,
+                1,
+                2,
+            ]
+        ),
+    )
 
 
 #   .--Worst---------------------------------------------------------------.
@@ -128,11 +134,16 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 class BIAggregationFunctionWorstSchema(Schema):
     type = ReqConstant(BIAggregationFunctionWorst.type())
     count = ReqInteger(default=1, example=2)
-    restrict_state = ReqInteger(default=2, validate=validate.OneOf([
-        0,
-        1,
-        2,
-    ]))
+    restrict_state = ReqInteger(
+        default=2,
+        validate=validate.OneOf(
+            [
+                0,
+                1,
+                2,
+            ]
+        ),
+    )
 
 
 #   .--CountOK-------------------------------------------------------------.
@@ -211,7 +222,7 @@ class BIAggregationFunctionSchema(OneOfSchema):
     #    "worst": BIAggregationFunctionWorstSchema,
     #    "best": BIAggregationFunctionBestSchema,
     #    "count_ok": BIAggregationFunctionCountOKSchema,
-    #}
+    # }
 
     def get_obj_type(self, obj: Union[ABCBIAggregationFunction, dict]) -> str:
         if isinstance(obj, dict):

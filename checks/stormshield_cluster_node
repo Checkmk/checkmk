@@ -9,71 +9,104 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['stormshield_cluster_node'] = {
-    'quality': (80, 50),
+
+factory_settings["stormshield_cluster_node"] = {
+    "quality": (80, 50),
 }
 
-online_mapping = {'1': 'online', '0': 'offline'}
+online_mapping = {"1": "online", "0": "offline"}
 
-active_mapping = {'1': 'passive', '2': 'active'}
+active_mapping = {"1": "passive", "2": "active"}
 
-forced_mapping = {'0': 'not forced', '1': 'forced'}
+forced_mapping = {"0": "not forced", "1": "forced"}
 
 
 def inventory_stormshield_cluster_node(info):
-    for index, _serial, _online, _model, _version, _license, _quality, _priority, \
-        _statusforced, _active, _uptime in info:
+    for (
+        index,
+        _serial,
+        _online,
+        _model,
+        _version,
+        _license,
+        _quality,
+        _priority,
+        _statusforced,
+        _active,
+        _uptime,
+    ) in info:
         yield index, {}
 
 
 def check_stormshield_cluster_node(item, params, info):
-    for index, serial, online, model, version, license_, quality, priority, \
-        statusforced, active, _uptime in info:
+    for (
+        index,
+        serial,
+        online,
+        model,
+        version,
+        license_,
+        quality,
+        priority,
+        statusforced,
+        active,
+        _uptime,
+    ) in info:
         if item == index:
-            warn, crit = params['quality']
-            if online == '0':
-                yield 2, 'Member is %s' % online_mapping[online]
+            warn, crit = params["quality"]
+            if online == "0":
+                yield 2, "Member is %s" % online_mapping[online]
             else:
-                yield 0, 'Member is %s' % online_mapping[online]
-            if statusforced == '1':
-                yield 1, 'HA-State: %s (%s)' % (active_mapping[active],
-                                                forced_mapping[statusforced])
+                yield 0, "Member is %s" % online_mapping[online]
+            if statusforced == "1":
+                yield 1, "HA-State: %s (%s)" % (
+                    active_mapping[active],
+                    forced_mapping[statusforced],
+                )
             else:
-                yield 0, 'HA-State: %s (%s)' % (active_mapping[active],
-                                                forced_mapping[statusforced])
+                yield 0, "HA-State: %s (%s)" % (
+                    active_mapping[active],
+                    forced_mapping[statusforced],
+                )
             if int(quality) < crit:
-                yield 2, 'Quality: %s' % quality
+                yield 2, "Quality: %s" % quality
             elif int(quality) < warn:
-                yield 1, 'Quality: %s' % quality
+                yield 1, "Quality: %s" % quality
             else:
-                yield 0, 'Quality: %s' % quality
+                yield 0, "Quality: %s" % quality
 
-            infotext = 'Model: %s, Version: %s, Role: %s, Priority: %s, Serial: %s' \
-                    % ( model, version, license_, priority, serial )
+            infotext = "Model: %s, Version: %s, Role: %s, Priority: %s, Serial: %s" % (
+                model,
+                version,
+                license_,
+                priority,
+                serial,
+            )
             yield 0, infotext
 
 
-check_info['stormshield_cluster_node'] = {
-    'inventory_function': inventory_stormshield_cluster_node,
-    'check_function': check_stormshield_cluster_node,
-    'default_levels_variable': 'stormshield_cluster_node',
-    'service_description': 'HA Member %s',
-    'has_perfdata': False,
-    'snmp_info': (
-        '.1.3.6.1.4.1.11256.1.11.7.1',
+check_info["stormshield_cluster_node"] = {
+    "inventory_function": inventory_stormshield_cluster_node,
+    "check_function": check_stormshield_cluster_node,
+    "default_levels_variable": "stormshield_cluster_node",
+    "service_description": "HA Member %s",
+    "has_perfdata": False,
+    "snmp_info": (
+        ".1.3.6.1.4.1.11256.1.11.7.1",
         [
-            '1',  # Index
-            '2',  # Serial
-            '3',  # Online
-            '4',  # Model
-            '5',  # Version
-            '6',  # License
-            '7',  # Quality
-            '8',  # Priority
-            '9',  # StatusForced
-            '10',  # Active
-            '11'  # Uptime
-        ]),
-    'group': 'stormshield_quality',
-    'snmp_scan_function': stormshield_cluster_scan_function,
+            "1",  # Index
+            "2",  # Serial
+            "3",  # Online
+            "4",  # Model
+            "5",  # Version
+            "6",  # License
+            "7",  # Quality
+            "8",  # Priority
+            "9",  # StatusForced
+            "10",  # Active
+            "11",  # Uptime
+        ],
+    ),
+    "group": "stormshield_quality",
+    "snmp_scan_function": stormshield_cluster_scan_function,
 }

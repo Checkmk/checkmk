@@ -6,7 +6,6 @@ import * as d3 from "d3";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
-import * as node_visualization_datasources from "node_visualization_datasources";
 
 export class LayeredDebugLayer extends node_visualization_viewport_utils.LayeredLayerBase {
     id() {
@@ -185,16 +184,17 @@ export class LayeredIconOverlay extends node_visualization_viewport_utils.Layere
     update_gui() {
         let nodes = [];
         this.viewport.get_all_nodes().forEach(node => {
-            if (!node.data.icon) return;
+            if (!node.data.icon_image) return;
             nodes.push(node);
         });
 
         let icons = this.div_selection.selectAll("img").data(nodes, d => d.data.id);
+
         icons.exit().remove();
         icons = icons
             .enter()
             .append("img")
-            .attr("src", d => d.data.icon)
+            .attr("src", d => "themes/facelift/images/icon_" + d.data.icon_image + ".svg")
             .classed("node_icon", true)
             .style("position", "absolute")
             .style("pointer-events", "none")
@@ -207,321 +207,6 @@ export class LayeredIconOverlay extends node_visualization_viewport_utils.Layere
             .style("top", d => {
                 return this.viewport.translate_to_zoom({x: 0, y: d.y}).y - 24 + "px";
             });
-    }
-}
-
-export class LayeredCustomOverlay extends node_visualization_viewport_utils.LayeredOverlayBase {
-    id() {
-        return "custom_overlay";
-    }
-
-    name() {
-        return "Default Aggr Overlay (demo)";
-    }
-
-    constructor(viewport) {
-        super(viewport);
-        this.node_matcher = null;
-        this.previous_vertices = {};
-    }
-
-    zoomed() {
-        this.overlays_container.attr("transform", this.viewport.last_zoom);
-    }
-
-    setup() {
-        this.overlays_container = this.selection.append("g");
-    }
-
-    update_data() {
-        this.node_matcher = new node_visualization_utils.NodeMatcher(
-            this.viewport.get_hierarchy_list()
-        );
-        this.previous_vertices = {};
-    }
-
-    update_gui() {
-        let demo_elements = [
-            {rule_id: "networking", text: "Network", color: "steelblue"},
-            {rule_id: "other", text: "Other", color: "green"},
-            {rule_id: "performance", text: "Performance", color: "red"},
-            {rule_id: "filesystems", text: "Disks & Filesystems", color: "yellow"},
-            {rule_id: "general", text: "General", color: "gray"},
-        ];
-
-        let demo_with_coords = [];
-        demo_elements.forEach(element => {
-            let node = this.node_matcher.find_node({rule_id: {value: element.rule_id}});
-            if (!node) return;
-            let vertices = [];
-            let x_min = 10000;
-            let x_max = -10000;
-            let y_min = 10000;
-            let y_max = -10000;
-
-            node.descendants().forEach(descendant => {
-                vertices.push([descendant.x, descendant.y]);
-                x_min = Math.min(descendant.x, x_min);
-                y_min = Math.min(descendant.y, y_min);
-                x_max = Math.max(descendant.x, x_max);
-                y_max = Math.max(descendant.y, y_max);
-            });
-            vertices.push([x_min, y_min - 20]);
-            vertices.push([x_min + 100, y_min - 20]);
-
-            let current_vertices = JSON.stringify(vertices);
-            let previous_vertices = this.previous_vertices[element.rule_id];
-            let requires_update = current_vertices != previous_vertices;
-            this.previous_vertices[element.rule_id] = current_vertices;
-            demo_with_coords.push({
-                node: node,
-                coords: {x: x_min, y: y_min, width: x_max - x_min, height: y_max - y_min},
-                element: element,
-                polygonHull: d3.polygonHull(vertices),
-                requires_update: requires_update,
-            });
-        });
-
-        //        this.update_rect(demo_with_coords)
-        this.update_hull(demo_with_coords);
-    }
-
-    update_hull(demo_with_coords) {
-        let hull = this.overlays_container
-            .selectAll("path.custom_overlay")
-            .data(demo_with_coords, d => d.node.data.id);
-        hull.exit()
-            .each(d => delete this.previous_vertices[d.element.rule_id])
-            .remove();
-        hull = hull
-            .enter()
-            .append("path")
-            .classed("custom_overlay", true)
-            .attr("pointer-events", "none")
-            .attr("fill", d => d.element.color)
-            .attr("stroke", d => d.element.color)
-            .attr("stroke-width", 40)
-            .attr("stroke-linejoin", "round")
-            .attr("opacity", 0.3)
-            .merge(hull);
-
-        hull.each((element, idx, paths) => {
-            if (element.requires_update) {
-                let path = d3.select(paths[idx]);
-                this.add_optional_transition(path, element)
-                    .attr("d", d => {
-                        return "M" + d.polygonHull.join("L") + "Z";
-                    })
-                    .on("interrupt", () => {})
-                    .on("end", () => {});
-            }
-        });
-
-        let text = this.overlays_container
-            .selectAll("text")
-            .data(demo_with_coords, d => d.node.data.id);
-        text = text
-            .enter()
-            .append("text")
-            .text(d => d.element.text)
-            .merge(text)
-            .attr("x", d => d.coords.x)
-            .attr("y", d => d.coords.y - 20);
-    }
-
-    add_optional_transition(selection, element) {
-        if (
-            this.viewport.layout_manager.dragging ||
-            Object.keys(element.node.data.node_positioning).length == 0
-        )
-            return selection;
-        return node_visualization_utils.DefaultTransition.add_transition(selection);
-    }
-
-    update_rect(demo_with_coords) {
-        let areas = this.overlays_container
-            .selectAll("g.area")
-            .data(demo_with_coords, d => d.node.data.id);
-        areas.exit().remove();
-
-        let areas_enter = areas.enter().append("g").classed("area", true);
-        areas_enter
-            .append("rect")
-            .attr("pointer-events", "none")
-            .attr("rx", 12)
-            .attr("ry", 12)
-            .attr("fill", d => d.element.color)
-            .attr("opacity", 0.3);
-
-        areas_enter
-            .append("text")
-            .text(d => d.element.text)
-            .attr("x", 20)
-            .attr("y", 20);
-
-        areas = areas_enter.merge(areas);
-        let boundary = 50;
-        areas
-            .select("rect")
-            .attr("width", d => d.coords.width + 2 * boundary)
-            .attr("height", d => d.coords.height + 2 * boundary);
-        areas.attr("transform", d => {
-            return "translate(" + (d.coords.x - boundary) + "," + (d.coords.y - boundary) + ")";
-        });
-    }
-}
-
-export class LayeredExternalDataOverlay extends node_visualization_viewport_utils.LayeredOverlayBase {
-    id() {
-        return "external_data_overlay";
-    }
-
-    name() {
-        return "Demo: External data";
-    }
-
-    constructor(viewport) {
-        super(viewport);
-        this.node_matcher = null;
-        setInterval(() => this.change_data(), 3500);
-    }
-
-    update_data() {
-        this.node_matcher = new node_visualization_utils.NodeMatcher(
-            this.viewport.get_hierarchy_list()
-        );
-    }
-
-    change_data() {
-        this.current_value = parseInt(Math.random() * 20) + 2;
-        this.update_gui();
-        this.update_moving_dots();
-    }
-
-    update_gui() {
-        if (!this.enabled) return;
-
-        let crossinfo = [
-            {
-                source: {matcher: {service: {value: "TCP Connections"}}},
-                target: {matcher: {service: {value: "Check_MK Agent"}}},
-            },
-        ];
-
-        let matches = [];
-        crossinfo.forEach(info => {
-            let source_node = this.node_matcher.find_node(info.source.matcher);
-            let target_node = this.node_matcher.find_node(info.target.matcher);
-            if (source_node && target_node)
-                matches.push({source_node: source_node, target_node: target_node});
-        });
-        this.process_matches(matches);
-    }
-
-    process_matches(matches) {
-        let matches_selection = this.selection.selectAll("path.crossinfo").data(matches);
-        matches_selection.exit().remove();
-        matches_selection
-            .enter()
-            .append("path")
-            .classed("crossinfo", true)
-            .attr("stroke-width", 2)
-            .attr("fill", "none")
-            .style("stroke", "red")
-            .merge(matches_selection)
-            .attr("d", d => this.diagonal(d));
-
-        let scale_x = this.viewport.scale_x;
-        let scale_y = this.viewport.scale_y;
-        let text_selection = this.selection.selectAll("text.crossinfo").data(matches);
-        text_selection.exit().remove();
-        text_selection
-            .enter()
-            .append("text")
-            .classed("crossinfo", true)
-            .merge(text_selection)
-            .text(this.current_value + " Packets")
-            .attr("font-size", 20)
-            .attr(
-                "x",
-                d =>
-                    this.viewport.translate_to_zoom({
-                        x: (d.source_node.x + d.target_node.x + 10) / 2,
-                        y: 0,
-                    }).x
-            )
-            .attr(
-                "y",
-                d =>
-                    this.viewport.translate_to_zoom({
-                        y: (d.source_node.y + d.target_node.y) / 2,
-                        x: 0,
-                    }).y
-            )
-            .attr("width", 200)
-            .attr("height", 50);
-    }
-
-    update_moving_dots() {
-        if (!this.selection) return;
-        this.selection.selectAll("path.crossinfo").each((instance, idx, paths) => {
-            this.selection.selectAll("circle.moving_dot").remove();
-            let circle = this.selection
-                .selectAll("circle.moving_dot")
-                .data([...Array(this.current_value).keys()]);
-            circle = circle
-                .enter()
-                .append("circle")
-                .attr("x", instance.source_node.x)
-                .attr("y", instance.source_node.y)
-                .classed("moving_dot", true)
-                .attr("r", 6)
-                .merge(circle);
-            this.transition(circle, paths[idx]);
-        });
-    }
-
-    transition(circle, path) {
-        circle
-            .transition()
-            .delay(d => d * 60)
-            .duration(3000)
-            .attrTween("transform", this.translateAlong(path));
-    }
-
-    translateAlong(path) {
-        let l = path.getTotalLength();
-        return function (d, i, a) {
-            return function (t) {
-                let p = path.getPointAtLength(t * l);
-                return "translate(" + p.x + "," + p.y + ")";
-            };
-        };
-    }
-
-    // Creates a curved (diagonal) path from parent to the child nodes
-    diagonal(info) {
-        let source = this.viewport.translate_to_zoom({
-            x: info.source_node.x,
-            y: info.source_node.y,
-        });
-        let target = this.viewport.translate_to_zoom({
-            x: info.target_node.x,
-            y: info.target_node.y,
-        });
-
-        let s = {};
-        let d = {};
-        s.y = source.x;
-        s.x = source.y;
-        d.y = target.x;
-        d.x = target.y;
-        let path = `M ${s.y} ${s.x}
-                C ${(s.y + d.y) / 2} ${s.x},
-                  ${(s.y + d.y) / 2} ${d.x},
-                  ${d.y} ${d.x}`;
-
-        return path;
     }
 }
 
@@ -1047,9 +732,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             d3.select(this).datum(node_data);
         });
         // TODO: provide a function within the link instance to update its data
-        this.link_instances[
-            [link_data.source.data.id, link_data.target.data.id]
-        ].link_data = link_data;
+        this.link_instances[[link_data.source.data.id, link_data.target.data.id]].link_data =
+            link_data;
     }
 
     _remove_link(link_data) {
@@ -1206,6 +890,4 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 }
 
 node_visualization_utils.layer_registry.register(LayeredIconOverlay, 10);
-node_visualization_utils.layer_registry.register(LayeredDebugLayer, 20);
-//node_visualization_utils.layer_registry.register(LayeredCustomOverlay, 30)
 node_visualization_utils.layer_registry.register(LayeredNodesLayer, 50);

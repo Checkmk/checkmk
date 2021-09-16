@@ -10,11 +10,15 @@ import Swal from "sweetalert2";
 
 import * as utils from "utils";
 import * as ajax from "ajax";
+import {initialize_autocompleters} from "valuespecs";
 
 export function enable_dynamic_form_elements(container = null) {
     enable_select2_dropdowns(container);
     enable_label_input_fields(container);
 }
+
+var g_previous_timeout_id = null;
+var g_ajax_obj = null;
 
 export function enable_select2_dropdowns(container) {
     let elements;
@@ -25,43 +29,7 @@ export function enable_select2_dropdowns(container) {
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,
     });
-
-    elements = $(container);
-    ajax_call_select2_dropdown_autocomplete(elements, "metric-selector", "monitored_metrics");
-    ajax_call_select2_dropdown_autocomplete(elements, "graph-selector", "available_graphs");
-}
-
-function ajax_call_select2_dropdown_autocomplete(elements, selector_name, autocomplete_name) {
-    // handle selection dropdowns dynamic narrowing
-    elements.find("." + selector_name).each((i, elem) =>
-        $(elem).select2({
-            language: {
-                searching: () =>
-                    "Type to trigger search. In case of performance issues, please narrow down the \
-                    filters.",
-            },
-            width: "style",
-            ajax: {
-                url: "ajax_vs_autocomplete.py",
-                type: "POST",
-                data: term =>
-                    "request=" +
-                    JSON.stringify({
-                        ident: autocomplete_name,
-                        params: {
-                            host: $(`input[name='${elem.id}_hostname_hint']`).val(),
-                            service: $(`input[name='${elem.id}_service_hint']`).val(),
-                        },
-                        value: term.term || "",
-                    }),
-
-                processResults: resp => ({
-                    results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
-                }),
-                cache: true,
-            },
-        })
-    );
+    initialize_autocompleters(container);
 }
 
 function enable_label_input_fields(container) {
@@ -77,7 +45,6 @@ function enable_label_input_fields(container) {
         let max_labels = element.getAttribute("data-max-labels");
         let world = element.getAttribute("data-world");
 
-        let ajax_obj;
         let tagify_args = {
             pattern: /^[^:]+:[^:]+$/,
             dropdown: {
@@ -101,15 +68,28 @@ function enable_label_input_fields(container) {
         tagify.settings.validate = (t => {
             return add_label => {
                 let label_key = add_label.value.split(":", 1)[0];
-                for (const existing_label of t.value) {
-                    let existing_key = existing_label.value.split(":", 1)[0];
+                let key_error_msg = "Only one value per KEY can be used at a time.";
+                if (tagify.settings.maxTags == 1) {
+                    let existing_tags = document.querySelectorAll(".tagify__tag-text");
+                    let existing_keys_array = Array.prototype.map.call(existing_tags, function (x) {
+                        return x.textContent.split(":")[0];
+                    });
 
-                    if (label_key == existing_key) {
-                        return (
-                            "Only one value per KEY can be used at a time. " +
-                            existing_label.value +
-                            " is already used."
-                        );
+                    if (existing_keys_array.includes(label_key)) {
+                        return key_error_msg;
+                    }
+                } else {
+                    for (const existing_label of t.value) {
+                        // Do not check the current edited value. KEY would be
+                        // always present leading to invalid value
+                        if (t.state.editing) {
+                            continue;
+                        }
+                        let existing_key = existing_label.value.split(":", 1)[0];
+
+                        if (label_key == existing_key) {
+                            return key_error_msg;
+                        }
                     }
                 }
                 return true;
@@ -121,10 +101,13 @@ function enable_label_input_fields(container) {
             if (e.type == "invalid" && e.detail.message == "number of tags exceeded") {
                 message = "Only one tag allowed";
             } else if (
-                e.type == "invalid" &&
-                e.detail.message.indexOf("Only one value per KEY") === 0
+                (e.type == "invalid" && e.detail.message.includes("Only one value per KEY")) ||
+                e.detail.message == "already exists"
             ) {
-                message = e.detail.message;
+                message =
+                    "Only one value per KEY can be used at a time." +
+                    e.detail.data.value +
+                    " is already used.";
             } else {
                 message =
                     "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
@@ -151,6 +134,9 @@ function enable_label_input_fields(container) {
             var value = e.detail.value;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 
+            // show loading animation and hide the suggestions dropdown
+            tagify.loading(true).dropdown.hide.call(tagify);
+
             var post_data =
                 "request=" +
                 encodeURIComponent(
@@ -160,27 +146,63 @@ function enable_label_input_fields(container) {
                     })
                 );
 
-            if (ajax_obj) ajax_obj.abort();
-
-            ajax_obj = ajax.call_ajax("ajax_autocomplete_labels.py", {
-                method: "POST",
-                post_data: post_data,
-                response_handler: function (handler_data, ajax_response) {
-                    var response = JSON.parse(ajax_response);
-                    if (response.result_code != 0) {
-                        console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
-                        return;
-                    }
-
-                    handler_data.tagify.settings.whitelist = response.result;
-                    handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
-                },
-                handler_data: {
-                    value: value,
-                    tagify: tagify,
-                },
-            });
+            if (g_previous_timeout_id !== null) {
+                clearTimeout(g_previous_timeout_id);
+            }
+            g_previous_timeout_id = setTimeout(function () {
+                kill_previous_autocomplete_call();
+                ajax_call_autocomplete_labels(post_data, tagify, value, element);
+            }, 300);
         });
+    });
+}
+
+function kill_previous_autocomplete_call() {
+    if (g_ajax_obj) {
+        g_ajax_obj.abort();
+        g_ajax_obj = null;
+    }
+}
+
+function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
+    g_ajax_obj = ajax.call_ajax("ajax_autocomplete_labels.py", {
+        method: "POST",
+        post_data: post_data,
+        response_handler: function (handler_data, ajax_response) {
+            var response = JSON.parse(ajax_response);
+            if (response.result_code != 0) {
+                console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
+                return;
+            }
+
+            handler_data.tagify.settings.whitelist.splice(
+                10,
+                response.result.length,
+                ...response.result
+            );
+            // render the suggestions dropdown
+            handler_data.tagify.loading(false);
+            handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
+
+            let tagify__input = element?.parentElement?.querySelector(".tagify__input");
+            if (tagify__input) {
+                let max = value.length;
+                handler_data.tagify.suggestedListItems.forEach(entry => {
+                    max = Math.max(entry.value.length, max);
+                });
+                let fontSize = parseInt(
+                    window.getComputedStyle(tagify__input, null).getPropertyValue("font-size")
+                );
+                // Minimum width set by tagify
+                let size = Math.max(110, max * (fontSize / 2 + 1));
+                tagify__input.style.width = size.toString() + "px";
+                tagify__input.parentElement.style.width = (size + 10).toString() + "px";
+            }
+        },
+        handler_data: {
+            value: value,
+            tagify: tagify,
+        },
     });
 }
 

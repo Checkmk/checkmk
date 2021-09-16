@@ -11,5 +11,5 @@ description:
 item:
  The bricks position inside the stack.
 
-inventory:
+discovery:
  One service is created for each ambient light bricklet.

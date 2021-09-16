@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<lnx_thermal>>>
 # thermal_zone0 enabled acpitz 57000 127000 critical
 # thermal_zone1 enabled acpitz 65000 100000 critical 95500 passive
@@ -45,12 +46,12 @@ def parse_lnx_thermal(info):
 
         zone_identifier = 0
         zone_raw = line[zone_identifier]
-        zone_formatted = zone_raw.replace('thermal_zone', 'Zone ')
+        zone_formatted = zone_raw.replace("thermal_zone", "Zone ")
         parsed[zone_formatted] = {}
-        temperature_and_trip_points = ('temperature', 'passive', 'critical', 'hot')
+        temperature_and_trip_points = ("temperature", "passive", "critical", "hot")
         for key in temperature_and_trip_points:
             parsed[zone_formatted].setdefault(key, None)
-        parsed[zone_formatted]['temperature'] = temperature
+        parsed[zone_formatted]["temperature"] = temperature
         for tp_name, tp_value in trip_points.items():
             if tp_name in trip_points and tp_value > 0:
                 parsed[zone_formatted][tp_name] = tp_value
@@ -93,10 +94,10 @@ def check_lnx_thermal(item, params, data):
       is considered for the device crit level.
     - Trip point temperatures are provided via performance data.
     """
-    temperature = data.get('temperature')
-    warn_level = data.get('passive')
-    hot_value = data.get('hot')
-    critical_value = data.get('critical')
+    temperature = data.get("temperature")
+    warn_level = data.get("passive")
+    hot_value = data.get("hot")
+    critical_value = data.get("critical")
 
     if temperature is None:
         return
@@ -118,7 +119,7 @@ def check_lnx_thermal(item, params, data):
     return check_temperature(temperature, params, "lnx_thermal_%s" % item, dev_levels=levels)
 
 
-check_info['lnx_thermal'] = {
+check_info["lnx_thermal"] = {
     "parse_function": parse_lnx_thermal,
     "inventory_function": inventory_lnx_thermal,
     "check_function": check_lnx_thermal,

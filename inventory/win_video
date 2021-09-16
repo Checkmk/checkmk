@@ -42,7 +42,8 @@ def inv_win_video(info):
         elif varname == "DriverDate":
             try:
                 array["driver_date"] = int(
-                    time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+                    time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S"))
+                )
             except ValueError:
                 pass
         elif varname == "AdapterRAM":
@@ -51,6 +52,6 @@ def inv_win_video(info):
     node.append(array)
 
 
-inv_info['win_video'] = {
+inv_info["win_video"] = {
     "inv_function": inv_win_video,
 }

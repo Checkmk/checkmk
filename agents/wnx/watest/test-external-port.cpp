@@ -110,7 +110,8 @@ public:
     bool delay_{false};
 };
 
-TEST_F(ExternalPortTestFixture, Read) {
+TEST_F(ExternalPortTestFixture, ReadIntegration) {
+    tst::FirewallOpener fwo;
     ASSERT_TRUE(tst::WaitForSuccessSilent(1000ms, [this]() {
         std::error_code ec;
         this->sock_.connect(this->endpoint_, ec);
@@ -218,6 +219,7 @@ void runThread(int port) {
 }  // namespace
 
 TEST_F(ExternalPortTestFixture, MultiConnectIntegration) {
+    tst::FirewallOpener fwo;
     constexpr int thread_count{8};
     delay_ = true;
 

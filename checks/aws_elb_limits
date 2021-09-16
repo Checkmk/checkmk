@@ -9,10 +9,11 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['aws_elb_limits_default_levels'] = {
-    'load_balancers': (None, 80.0, 90.0),
-    'load_balancer_listeners': (None, 80.0, 90.0),
-    'load_balancer_registered_instances': (None, 80.0, 90.0),
+
+factory_settings["aws_elb_limits_default_levels"] = {
+    "load_balancers": (None, 80.0, 90.0),
+    "load_balancer_listeners": (None, 80.0, 90.0),
+    "load_balancer_registered_instances": (None, 80.0, 90.0),
 }
 
 
@@ -21,12 +22,12 @@ def check_aws_elb_limits(item, params, region_data):
     return check_aws_limits("elb", params, region_data)
 
 
-check_info['aws_elb_limits'] = {
-    'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover(),
-    'check_function': check_aws_elb_limits,
-    'service_description': 'AWS/ELB Limits %s',
-    'group': 'aws_elb_limits',
-    'default_levels_variable': 'aws_elb_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_elb_limits"] = {
+    "parse_function": parse_aws_limits_generic,
+    "inventory_function": discover(),
+    "check_function": check_aws_elb_limits,
+    "service_description": "AWS/ELB Limits %s",
+    "group": "aws_elb_limits",
+    "default_levels_variable": "aws_elb_limits_default_levels",
+    "has_perfdata": True,
 }

@@ -1,5 +1,20 @@
+.. _check-engine:
+
 ============
 Check engine
+============
+
+Introduction and goals
+======================
+
+WIP
+
+Architecture
+============
+
+WIP
+
+Runtime view
 ============
 
 The raw data is fetched regularly from the sources and forwarded

@@ -44,8 +44,8 @@ from cmk.base.plugins.agent_based.utils import postgres
 # ...
 
 factory_settings["postgres_connections_default_levels"] = {
-    'levels_perc_active': (80.0, 90.0),  # Levels at 80%/90% of maximum
-    'levels_perc_idle': (80.0, 90.0),  # Levels at 80%/90% of maximum
+    "levels_perc_active": (80.0, 90.0),  # Levels at 80%/90% of maximum
+    "levels_perc_idle": (80.0, 90.0),  # Levels at 80%/90% of maximum
 }
 
 
@@ -90,8 +90,9 @@ def check_postgres_connections(item, params, parsed):
 
     connections = {
         "active": database_connections["active"]
-                  if has_active_and_idle else database_connections["current"],
-        "idle": database_connections["idle"] if has_active_and_idle else None
+        if has_active_and_idle
+        else database_connections["current"],
+        "idle": database_connections["idle"] if has_active_and_idle else None,
     }
 
     for connection_type in ("active", "idle"):
@@ -104,20 +105,26 @@ def check_postgres_connections(item, params, parsed):
         used_perc = current / maximum * 100
 
         warn, crit = transformed_params.get("levels_abs_%s" % connection_type, (None, None))
-        yield check_levels(current,
-                           "%s_connections" % connection_type, (warn, crit),
-                           human_readable_func=int,
-                           infoname="Used %s connections" % connection_type,
-                           boundaries=(0, maximum))
+        yield check_levels(
+            current,
+            "%s_connections" % connection_type,
+            (warn, crit),
+            human_readable_func=int,
+            infoname="Used %s connections" % connection_type,
+            boundaries=(0, maximum),
+        )
 
         warn, crit = transformed_params["levels_perc_%s" % connection_type]
-        yield check_levels(used_perc,
-                           None, (warn, crit),
-                           human_readable_func=get_percent_human_readable,
-                           infoname="Used %s percentage" % connection_type)
+        yield check_levels(
+            used_perc,
+            None,
+            (warn, crit),
+            human_readable_func=get_percent_human_readable,
+            infoname="Used %s percentage" % connection_type,
+        )
 
 
-check_info['postgres_connections'] = {
+check_info["postgres_connections"] = {
     "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_connections,
     "inventory_function": inventory_postgres_connections,

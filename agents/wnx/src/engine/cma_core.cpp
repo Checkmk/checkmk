@@ -370,14 +370,6 @@ static void ApplyEverythingLogResult(const std::string& format,
     XLOG::t(format, file, local ? "[local]" : "[plugins]");
 }
 
-static void PrintNode(const YAML::Node& node, std::string_view S) {  // NOLINT
-    if (tgt::IsDebug()) {
-        YAML::Emitter emit;
-        emit << node;
-        XLOG::l("{}:\n{}", S, emit.c_str());
-    }
-}
-
 std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
     const std::vector<std::filesystem::path>& found_files, bool local) {
     std::set<std::string> cache;
@@ -1458,14 +1450,19 @@ std::mutex g_users_lock;
 std::unordered_map<std::wstring, wtools::InternalUser> g_users;
 
 wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
+    std::wstring group_name(group);
     std::lock_guard lk(g_users_lock);
-    for (auto& iu : g_users)
-        if (iu.first == group) return iu.second;
+    auto it = g_users.find(group_name);
+    if (it != g_users.end()) {
+        return it->second;
+    }
 
-    auto iu = wtools::CreateCmaUserInGroup(std::wstring(group));
-    if (iu.first.empty()) return {};
+    auto iu = wtools::CreateCmaUserInGroup(group_name);
+    if (iu.first.empty()) {
+        return {};
+    }
 
-    g_users[std::wstring(group)] = iu;
+    g_users[group_name] = iu;
 
     return iu;
 }

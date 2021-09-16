@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.brocade import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -50,15 +51,19 @@ def inventory_brocade_sfp(parsed):
     settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
     number_of_ports = len(parsed)
     for port_index, port_info in parsed.items():
-        if brocade_fcport_inventory_this_port(admstate=port_info["admstate"],
-                                              phystate=port_info["phystate"],
-                                              opstate=port_info["opstate"],
-                                              settings=settings):
-            yield brocade_fcport_getitem(number_of_ports=number_of_ports,
-                                         index=port_index,
-                                         portname=port_info["port_name"],
-                                         is_isl=port_info["is_isl"],
-                                         settings=settings), {}
+        if brocade_fcport_inventory_this_port(
+            admstate=port_info["admstate"],
+            phystate=port_info["phystate"],
+            opstate=port_info["opstate"],
+            settings=settings,
+        ):
+            yield brocade_fcport_getitem(
+                number_of_ports=number_of_ports,
+                index=port_index,
+                portname=port_info["port_name"],
+                is_isl=port_info["is_isl"],
+                settings=settings,
+            ), {}
 
 
 #   .--Temperature---------------------------------------------------------.
@@ -82,15 +87,15 @@ def check_brocade_sfp_temp(item, params, parsed):
     return check_temperature(port_info["temp"], params, item)
 
 
-check_info['brocade_sfp.temp'] = {
-    'inventory_function': inventory_brocade_sfp,
-    'check_function': check_brocade_sfp_temp,
-    'service_description': "SFP Temperature %s",
-    'has_perfdata': True,
-    'group': "temperature",
+check_info["brocade_sfp.temp"] = {
+    "inventory_function": inventory_brocade_sfp,
+    "check_function": check_brocade_sfp_temp,
+    "service_description": "SFP Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
 }
 
-#.
+# .
 #   .--Power level - Main check--------------------------------------------.
 #   |          ____                          _                _            |
 #   |         |  _ \ _____      _____ _ __  | | _____   _____| |           |
@@ -111,65 +116,84 @@ def check_brocade_sfp(item, params, parsed):
     port_index = int(item.split()[0]) + 1
     port_info = parsed[port_index]
 
-    yield check_levels(port_info["rx_power"],
-                       "input_signal_power_dbm",
-                       params.get("rx_power"),
-                       infoname="Rx",
-                       unit="dBm")
-    yield check_levels(port_info["tx_power"],
-                       "output_signal_power_dbm",
-                       params.get("tx_power"),
-                       infoname="Tx",
-                       unit="dBm")
-    yield check_levels(port_info["current"],
-                       "current",
-                       params.get("current"),
-                       infoname="Current",
-                       unit="A")
-    yield check_levels(port_info["voltage"],
-                       "voltage",
-                       params.get("voltage"),
-                       infoname="Voltage",
-                       unit="V")
+    def sort_params(key):
+        # levels are given in an uncommon order at the rulespec
+        # We have crit_lower, warn_lower, warn_upper, crit_upper,
+        # but we need warn_upper, warn_upper, warn_lower, crit_lower
+        if key not in params:
+            return None
+
+        return params[key][2], params[key][3], params[key][1], params[key][0]
+
+    yield check_levels(
+        port_info["rx_power"],
+        "input_signal_power_dbm",
+        sort_params("rx_power"),
+        infoname="Rx",
+        unit="dBm",
+    )
+    yield check_levels(
+        port_info["tx_power"],
+        "output_signal_power_dbm",
+        sort_params("tx_power"),
+        infoname="Tx",
+        unit="dBm",
+    )
+    yield check_levels(
+        port_info["current"], "current", sort_params("current"), infoname="Current", unit="A"
+    )
+    yield check_levels(
+        port_info["voltage"], "voltage", sort_params("voltage"), infoname="Voltage", unit="V"
+    )
 
 
-check_info['brocade_sfp'] = {
-    'parse_function'     : parse_brocade_sfp,
-    'inventory_function' : inventory_brocade_sfp,
-    'check_function'     : check_brocade_sfp,
-    'service_description': 'SFP %s',
-    'snmp_scan_function' : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \
-                                     and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None,
-    'snmp_info'          : [ ( ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1", [
-                                 CACHED_OID("1"),  # swFCPortIndex
-                                 CACHED_OID("3"),  # swFCPortPhyState
-                                 CACHED_OID("4"),  # swFCPortOpStatus
-                                 CACHED_OID("5"),  # swFCPortAdmStatus
-                                 CACHED_OID("36"), # swFCPortName  (not supported by all devices)
-                             ]),
-
-                             # Information about Inter-Switch-Links (contains baud rate of port)
-                             ( ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1", [
-                                 CACHED_OID("2"), # swNbMyPort
-                             ]),
-
-                             # NOTE: It appears that the port name and index in connUnitPortEntry
-                             #       are identical to the ones in the table used by
-                             #       brocade_fcport. We work on this assumption for the time being,
-                             #       meaning we use the same table as in brocade_fcport (see above)
-                             #       which we need anyway for PhyState, OpStatus and AdmStatus.
-                             #       Please check the connUnitPortEntry table (.1.3.6.1.3.94.1.10.1)
-                             #       should you come across a device for which this assumption
-                             #       does not hold.
-                             ('.1.3.6.1.4.1.1588.2.1.1.1.28.1.1', [ # FA-EXT-MIB::swSfpStatEntry
-                                                                    # AUGMENTS {connUnitPortEntry}
-                                         "1",   # swSfpTemperature
-                                         "2",   # swSfpVoltage
-                                         "3",   # swSfpCurrent
-                                         "4",   # swSfpRxPower
-                                         "5",   # swSfpTxPower
-                                     ]),
-                           ],
-    'has_perfdata'       : True,
-    'group'              : "brocade_sfp",
+check_info["brocade_sfp"] = {
+    "parse_function": parse_brocade_sfp,
+    "inventory_function": inventory_brocade_sfp,
+    "check_function": check_brocade_sfp,
+    "service_description": "SFP %s",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.1588.2.1.1"
+    )
+    and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None,
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",
+            [
+                CACHED_OID("1"),  # swFCPortIndex
+                CACHED_OID("3"),  # swFCPortPhyState
+                CACHED_OID("4"),  # swFCPortOpStatus
+                CACHED_OID("5"),  # swFCPortAdmStatus
+                CACHED_OID("36"),  # swFCPortName  (not supported by all devices)
+            ],
+        ),
+        # Information about Inter-Switch-Links (contains baud rate of port)
+        (
+            ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1",
+            [
+                CACHED_OID("2"),  # swNbMyPort
+            ],
+        ),
+        # NOTE: It appears that the port name and index in connUnitPortEntry
+        #       are identical to the ones in the table used by
+        #       brocade_fcport. We work on this assumption for the time being,
+        #       meaning we use the same table as in brocade_fcport (see above)
+        #       which we need anyway for PhyState, OpStatus and AdmStatus.
+        #       Please check the connUnitPortEntry table (.1.3.6.1.3.94.1.10.1)
+        #       should you come across a device for which this assumption
+        #       does not hold.
+        (
+            ".1.3.6.1.4.1.1588.2.1.1.1.28.1.1",
+            [  # FA-EXT-MIB::swSfpStatEntry
+                # AUGMENTS {connUnitPortEntry}
+                "1",  # swSfpTemperature
+                "2",  # swSfpVoltage
+                "3",  # swSfpCurrent
+                "4",  # swSfpRxPower
+                "5",  # swSfpTxPower
+            ],
+        ),
+    ],
+    "has_perfdata": True,
+    "group": "brocade_sfp",
 }

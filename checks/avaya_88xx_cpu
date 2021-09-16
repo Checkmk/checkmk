@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["avaya_88xx_cpu_default_levels"] = {
     "levels": (90, 95),
 }
@@ -25,12 +26,12 @@ def check_avaya_88xx_cpu(_no_item, params, info):
 
 
 check_info["avaya_88xx_cpu"] = {
-    'check_function': check_avaya_88xx_cpu,
-    'inventory_function': inventory_avaya_88xx_cpu,
-    'service_description': 'CPU utilization',
-    'default_levels_variable': "avaya_88xx_cpu_default_levels",
-    'group': 'cpu_utilization',
-    'has_perfdata': True,
-    'snmp_info': (".1.3.6.1.4.1.2272.1.1", [20]),  # RAPID-CITY MIB::rcSysCpuUtil
-    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
+    "check_function": check_avaya_88xx_cpu,
+    "inventory_function": inventory_avaya_88xx_cpu,
+    "service_description": "CPU utilization",
+    "default_levels_variable": "avaya_88xx_cpu_default_levels",
+    "group": "cpu_utilization",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.2272.1.1", [20]),  # RAPID-CITY MIB::rcSysCpuUtil
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
 }

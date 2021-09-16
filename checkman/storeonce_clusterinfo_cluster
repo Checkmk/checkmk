@@ -8,5 +8,5 @@ description:
  from the appliance are similar to Checkmk. The state "Information" will
  be treated as {OK}.
 
-inventory:
+discovery:
  One service is created.

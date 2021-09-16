@@ -26,7 +26,7 @@ def check_tsm_sessions(item, params, info):
         else:
             _sid, proc_state, wait = entry
 
-        if proc_state in ['RecvW', 'MediaW']:
+        if proc_state in ["RecvW", "MediaW"]:
             wait = saveint(wait)
             if wait >= crit:
                 state = 2

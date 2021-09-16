@@ -9,5 +9,5 @@ description:
  thresholds are 80% and 90% usage. They can be changed via the ruleset
  "Main memory usage (UNIX / Other Devices)".
 
-inventory:
+discovery:
  One service is created per host.

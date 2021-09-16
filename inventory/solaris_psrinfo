@@ -4,18 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#<<<solaris_psrinfo:persist(1405715354)>>>
-#The physical processor has 8 virtual processors (0-7)
+# <<<solaris_psrinfo:persist(1405715354)>>>
+# The physical processor has 8 virtual processors (0-7)
 #  SPARC64-VII+ (portid 1024 impl 0x7 ver 0xc1 clock 2660 MHz)
-#The physical processor has 8 virtual processors (8-15)
+# The physical processor has 8 virtual processors (8-15)
 #  SPARC64-VII+ (portid 1032 impl 0x7 ver 0xc1 clock 2660 MHz)
-#The physical processor has 8 virtual processors (16-23)
+# The physical processor has 8 virtual processors (16-23)
 #  SPARC64-VII+ (portid 1040 impl 0x7 ver 0xc1 clock 2660 MHz)
-#The physical processor has 8 virtual processors (24-31)
+# The physical processor has 8 virtual processors (24-31)
 #  SPARC64-VII+ (portid 1048 impl 0x7 ver 0xc1 clock 2660 MHz)
 
-#<<<solaris_psrinfo:persist(1405715354)>>>
-#The physical processor has 10 cores and 80 virtual processors (0-79)
+# <<<solaris_psrinfo:persist(1405715354)>>>
+# The physical processor has 10 cores and 80 virtual processors (0-79)
 #  The core has 8 virtual processors (0-7)
 #  The core has 8 virtual processors (8-15)
 #  The core has 8 virtual processors (16-23)
@@ -28,17 +28,17 @@
 #  The core has 8 virtual processors (72-79)
 #    SPARC-T5 (chipid 0, clock 3600 MHz)
 
-#<<<solaris_psrinfo:persist(1405715354)>>>
-#The physical processor has 8 virtual processors (0-7)
+# <<<solaris_psrinfo:persist(1405715354)>>>
+# The physical processor has 8 virtual processors (0-7)
 #  SPARC-T5 (chipid 0, clock 3600 MHz)
 
 
 def inv_solaris_psrinfo(info):
     node = inv_tree("hardware.cpu.")
     node["Model"] = info[-1][0]
-    node["Maximum Speed"] = "%s %s" % (info[-1][-2], info[-1][-1].strip(')'))
+    node["Maximum Speed"] = "%s %s" % (info[-1][-2], info[-1][-1].strip(")"))
 
 
-inv_info['solaris_psrinfo'] = {
+inv_info["solaris_psrinfo"] = {
     "inv_function": inv_solaris_psrinfo,
 }

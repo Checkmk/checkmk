@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
+
+import pytest
+
 import cmk.base.rrd as rrd
 
 NAGIOS_SERVICE_XML_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -101,7 +103,7 @@ NAGIOS_SERVICE_XML_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone
   </XML>
 </NAGIOS>\n"""
 
-NAGIOS_SERVICE_XML_MULTIPLE_METRIC_RENAME = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+NAGIOS_SERVICE_XML_MULTIPLE_METRIC_RENAME = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <NAGIOS>
   <DATASOURCE>
     <TEMPLATE>check_mk-cpu.loads</TEMPLATE>
@@ -192,12 +194,20 @@ NAGIOS_SERVICE_XML_MULTIPLE_METRIC_RENAME = '''<?xml version="1.0" encoding="UTF
   <XML>
    <VERSION>4</VERSION>
   </XML>
-</NAGIOS>\n'''
+</NAGIOS>\n"""
 
 
-@pytest.mark.parametrize("perfvar, newvar, xml_file, result", [
-    ("load1", "shortterm", NAGIOS_SERVICE_XML_MULTIPLE, NAGIOS_SERVICE_XML_MULTIPLE_METRIC_RENAME)
-])
+@pytest.mark.parametrize(
+    "perfvar, newvar, xml_file, result",
+    [
+        (
+            "load1",
+            "shortterm",
+            NAGIOS_SERVICE_XML_MULTIPLE,
+            NAGIOS_SERVICE_XML_MULTIPLE_METRIC_RENAME,
+        )
+    ],
+)
 def test_update_metric_pnp_xml_info_file(tmp_path, perfvar, newvar, xml_file, result):
     filepath = tmp_path / "pnp.xml"
     with filepath.open("w") as fid:
@@ -210,5 +220,5 @@ def test_update_metric_pnp_xml_info_file(tmp_path, perfvar, newvar, xml_file, re
     assert new == result
 
     prefix_len = len(os.path.commonprefix(rrdfiles))
-    assert rrdfiles[0][prefix_len:] == perfvar + '.rrd'
-    assert rrdfiles[1][prefix_len:] == newvar + '.rrd'
+    assert rrdfiles[0][prefix_len:] == perfvar + ".rrd"
+    assert rrdfiles[1][prefix_len:] == newvar + ".rrd"

@@ -5,16 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import pytest  # type: ignore[import]
+from typing import List, Optional, Tuple, Type
+
+import pytest
+
+from cmk.utils.type_defs import HostName
+
 from cmk.snmplib.type_defs import (
-    SNMPBackend,
     OID,
+    SNMPBackend,
+    SNMPBackendEnum,
     SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
-    SNMPBackendEnum,
 )
-from typing import List, Tuple, Optional, Type
 
 try:
     from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
@@ -22,7 +26,9 @@ except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 try:
-    from cmk.core_helpers.cee.snmp_backend.pysnmp_backend import PySNMPBackend  # type: ignore[import]
+    from cmk.core_helpers.cee.snmp_backend.pysnmp_backend import (  # type: ignore[import] # isort: skip
+        PySNMPBackend,
+    )
 except ImportError:
     PySNMPBackend = None  # type: ignore[assignment, misc]
 
@@ -30,7 +36,7 @@ from cmk.core_helpers.snmp_backend.classic import ClassicSNMPBackend
 
 logger = logging.getLogger(__name__)
 
-#.
+# .
 #   .--Tests---------------------------------------------------------------.
 #   |                         _____         _                              |
 #   |                        |_   _|__  ___| |_ ___                        |
@@ -43,13 +49,16 @@ logger = logging.getLogger(__name__)
 #   '----------------------------------------------------------------------'
 
 
-@pytest.mark.parametrize("oid", [
-    (".1.3.6.1.2.1.4.12.0"),
-    (".1.3.6.1"),
-    (".1.3.6.1.2.1.2.2.1.6.1"),
-    (".1.3.6.1.2.1.2.2.1.6.*"),
-    (".1.3.6.1.4.1.318.1.1.10.4.2.3.1.3"),
-])
+@pytest.mark.parametrize(
+    "oid",
+    [
+        (".1.3.6.1.2.1.4.12.0"),
+        (".1.3.6.1"),
+        (".1.3.6.1.2.1.2.2.1.6.1"),
+        (".1.3.6.1.2.1.2.2.1.6.*"),
+        (".1.3.6.1.4.1.318.1.1.10.4.2.3.1.3"),
+    ],
+)
 def test_get_ipv4(oid: OID):
     configs = _create_configs_ipv4()
     result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
@@ -57,10 +66,13 @@ def test_get_ipv4(oid: OID):
     assert result_pysnmp == result_inline == result_classic
 
 
-@pytest.mark.parametrize("oid", [
-    (".1.3.6.1.2.1.4.12.0"),
-    (".1.3.6.1.2.1.2.2.1.6.1"),
-])
+@pytest.mark.parametrize(
+    "oid",
+    [
+        (".1.3.6.1.2.1.4.12.0"),
+        (".1.3.6.1.2.1.2.2.1.6.1"),
+    ],
+)
 def test_get_ipv6(oid: OID):
     configs = _create_configs_ipv6()
     result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
@@ -68,10 +80,13 @@ def test_get_ipv6(oid: OID):
     assert result_pysnmp == result_inline == result_classic
 
 
-@pytest.mark.parametrize("oid", [
-    (".1.3.6.1.2.1.4.12.0"),
-    (".1.3.6.1.2.1.2.2.1.6.1"),
-])
+@pytest.mark.parametrize(
+    "oid",
+    [
+        (".1.3.6.1.2.1.4.12.0"),
+        (".1.3.6.1.2.1.2.2.1.6.1"),
+    ],
+)
 def test_get_auth(oid: OID):
     configs = _create_configs_special_auth()
     result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
@@ -85,10 +100,11 @@ def test_get_auth(oid: OID):
         (".1.3.6.1.2.1.4.12.0"),
         (".1.3.6.1.2.1.2.2.1.6.1"),
         (".1.3.6"),
-        #(".1.3.6.1.2.1.4.31.1.1.4"), # TODO: Fix for this OID(Inline and Classic not matching)
+        # (".1.3.6.1.2.1.4.31.1.1.4"), # TODO: Fix for this OID(Inline and Classic not matching)
         (".1.3.6.1.2.1.1"),
         (".1.3.6.1.4.1"),
-    ])
+    ],
+)
 def test_walk_ipv4(oid):
     configs = _create_configs_ipv4()
     result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
@@ -96,12 +112,15 @@ def test_walk_ipv4(oid):
     assert result_pysnmp == result_inline == result_classic
 
 
-@pytest.mark.parametrize("oid", [
-    (".1.3.6.1.2.1.4.12.0"),
-    (".1.3.6.1.2.1.2.2.1.6.1"),
-    (".1.3.6"),
-    (".1.3.6.1.4.1"),
-])
+@pytest.mark.parametrize(
+    "oid",
+    [
+        (".1.3.6.1.2.1.4.12.0"),
+        (".1.3.6.1.2.1.2.2.1.6.1"),
+        (".1.3.6"),
+        (".1.3.6.1.4.1"),
+    ],
+)
 def test_walk_ipv6(oid):
     configs = _create_configs_ipv6()
     result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
@@ -109,11 +128,14 @@ def test_walk_ipv6(oid):
     assert result_pysnmp == result_inline == result_classic
 
 
-@pytest.mark.parametrize("oid", [
-    (".1.3.6.1.2.1.4.12.0"),
-    (".1.3.6.1.2.1.2.2.1.6.1"),
-    (".1.3.6"),
-])
+@pytest.mark.parametrize(
+    "oid",
+    [
+        (".1.3.6.1.2.1.4.12.0"),
+        (".1.3.6.1.2.1.2.2.1.6.1"),
+        (".1.3.6"),
+    ],
+)
 def test_walk_auth(oid):
     configs = _create_configs_special_auth()
     result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
@@ -122,18 +144,22 @@ def test_walk_auth(oid):
 
 
 # CEE Feature only (not implemented in Classic SNMP)
-@pytest.mark.parametrize(("oid", "check_plugin_name", "table_base_oid"), [
-    (".1.3.6.1.2.1.1.9.1.2", "if64", ".1.3.6.1.2.1.1.9.1.2"),
-])
+@pytest.mark.parametrize(
+    ("oid", "check_plugin_name", "table_base_oid"),
+    [
+        (".1.3.6.1.2.1.1.9.1.2", "if64", ".1.3.6.1.2.1.1.9.1.2"),
+    ],
+)
 def test_bulkwalk_with_ranges(oid, check_plugin_name, table_base_oid):
     configs = _create_configs_oidranges()
     result_pysnmp, result_inline, _result_classic = _create_results_snmpbackend_walk(
-        oid, configs, check_plugin_name, table_base_oid)
+        oid, configs, check_plugin_name, table_base_oid
+    )
 
     assert result_pysnmp == result_inline
 
 
-#.
+# .
 #   .--Helpers-------------------------------------------------------------.
 #   |                    _   _      _                                      |
 #   |                   | | | | ___| |_ __   ___ _ __ ___                  |
@@ -149,8 +175,9 @@ def test_bulkwalk_with_ranges(oid, check_plugin_name, table_base_oid):
 
 def _create_results_snmpbackend_get(
     oid: str, configs: List[SNMPHostConfig]
-) -> Tuple[List[Optional[SNMPRawValue]], List[Optional[SNMPRawValue]],
-           List[Optional[SNMPRawValue]]]:
+) -> Tuple[
+    List[Optional[SNMPRawValue]], List[Optional[SNMPRawValue]], List[Optional[SNMPRawValue]]
+]:
 
     return (
         [_create_result_for_backend_get(PySNMPBackend, oid, c) for c in configs],
@@ -159,40 +186,54 @@ def _create_results_snmpbackend_get(
     )
 
 
-def _create_result_for_backend_get(backend: Type[SNMPBackend], oid: OID,
-                                   config: SNMPHostConfig) -> Optional[SNMPRawValue]:
-    return backend(config, logger).get(oid,
-                                       context_name="public" if config.is_ipv6_primary and
-                                       not isinstance(config.credentials, str) else "")
+def _create_result_for_backend_get(
+    backend: Type[SNMPBackend], oid: OID, config: SNMPHostConfig
+) -> Optional[SNMPRawValue]:
+    return backend(config, logger).get(
+        oid,
+        context_name="public"
+        if config.is_ipv6_primary and not isinstance(config.credentials, str)
+        else "",
+    )
 
 
 def _create_results_snmpbackend_walk(oid, configs, check_plugin_name=None, table_base_oid=None):
     return (
         [
-            _create_result_for_backend_walk(PySNMPBackend, oid, c, check_plugin_name,
-                                            table_base_oid) for c in configs
+            _create_result_for_backend_walk(
+                PySNMPBackend, oid, c, check_plugin_name, table_base_oid
+            )
+            for c in configs
         ],
         [
-            _create_result_for_backend_walk(InlineSNMPBackend, oid, c, check_plugin_name,
-                                            table_base_oid) for c in configs
+            _create_result_for_backend_walk(
+                InlineSNMPBackend, oid, c, check_plugin_name, table_base_oid
+            )
+            for c in configs
         ],
         [
-            _create_result_for_backend_walk(ClassicSNMPBackend, oid, c, check_plugin_name,
-                                            table_base_oid) for c in configs
+            _create_result_for_backend_walk(
+                ClassicSNMPBackend, oid, c, check_plugin_name, table_base_oid
+            )
+            for c in configs
         ],
     )
 
 
-def _create_result_for_backend_walk(backend: Type[SNMPBackend], oid: OID, config: SNMPHostConfig,
-                                    check_plugin_name, table_base_oid) -> SNMPRowInfo:
-    return backend(config, logger).walk(oid,
-                                        check_plugin_name,
-                                        table_base_oid,
-                                        context_name="public" if config.is_ipv6_primary and
-                                        not isinstance(config.credentials, str) else "")
+def _create_result_for_backend_walk(
+    backend: Type[SNMPBackend], oid: OID, config: SNMPHostConfig, check_plugin_name, table_base_oid
+) -> SNMPRowInfo:
+    return backend(config, logger).walk(
+        oid,
+        check_plugin_name,
+        table_base_oid,
+        context_name="public"
+        if config.is_ipv6_primary and not isinstance(config.credentials, str)
+        else "",
+    )
 
 
-#.
+# .
 #   .--Configs-------------------------------------------------------------.
 #   |                   ____             __ _                              |
 #   |                  / ___|___  _ __  / _(_) __ _ ___                    |
@@ -210,7 +251,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="ipv4/snmpv1",
+            hostname=HostName("ipv4/snmpv1"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -226,7 +267,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="ipv4/snmpv2",
+            hostname=HostName("ipv4/snmpv2"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -242,7 +283,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="ipv4/snmpv3",
+            hostname=HostName("ipv4/snmpv3"),
             ipaddress="127.0.0.1",
             credentials=(
                 "authPriv",
@@ -270,7 +311,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=True,
-            hostname="ipv6/snmpv1",
+            hostname=HostName("ipv6/snmpv1"),
             ipaddress="::1",
             credentials="public",
             port=1337,
@@ -286,7 +327,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
-            hostname="ipv6/snmpv2",
+            hostname=HostName("ipv6/snmpv2"),
             ipaddress="::1",
             credentials="public",
             port=1337,
@@ -302,7 +343,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
-            hostname="ipv6/snmpv3",
+            hostname=HostName("ipv6/snmpv3"),
             ipaddress="::1",
             credentials=(
                 "authPriv",
@@ -330,7 +371,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="noauthnopriv",
+            hostname=HostName("noauthnopriv"),
             ipaddress="127.0.0.1",
             credentials=(
                 "noAuthNoPriv",
@@ -349,7 +390,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="authonly",
+            hostname=HostName("authonly"),
             ipaddress="127.0.0.1",
             credentials=(
                 "authNoPriv",
@@ -375,7 +416,7 @@ def _create_configs_oidranges():
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges/first",
+            hostname=HostName("oidranges/first"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -383,7 +424,7 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[('if64', [('first', 3)])],
+            oid_range_limits=[("if64", [("first", 3)])],
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -391,7 +432,7 @@ def _create_configs_oidranges():
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges/mid",
+            hostname=HostName("oidranges/mid"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -399,7 +440,7 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[('if64', [('mid', (4, 2))])],
+            oid_range_limits=[("if64", [("mid", (4, 2))])],
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -407,7 +448,7 @@ def _create_configs_oidranges():
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges/last",
+            hostname=HostName("oidranges/last"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -415,7 +456,7 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[('if64', [('last', 3)])],
+            oid_range_limits=[("if64", [("last", 3)])],
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -423,7 +464,7 @@ def _create_configs_oidranges():
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges",
+            hostname=HostName("oidranges"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -431,7 +472,7 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[('if64', [('first', 1), ('mid', (3, 1)), ('last', 2)])],
+            oid_range_limits=[("if64", [("first", 1), ("mid", (3, 1)), ("last", 2)])],
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,

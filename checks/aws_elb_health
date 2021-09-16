@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 AWSELBHealthMap = {
     "InService": "in service",
     "OutOfService": "out of service",
@@ -24,28 +25,28 @@ def parse_aws_elb_health(info):
 
 
 def check_aws_elb_health(item, params, parsed):
-    state_readable = AWSELBHealthMap[parsed['State']]
+    state_readable = AWSELBHealthMap[parsed["State"]]
     if state_readable == "in service":
         state = 0
     elif state_readable == "out of service":
         state = 1
     else:
         state = 3
-    yield state, 'Status: %s' % state_readable
-    yield 0, 'Instance: %s' % parsed['InstanceId']
+    yield state, "Status: %s" % state_readable
+    yield 0, "Instance: %s" % parsed["InstanceId"]
 
-    reason_code = parsed['ReasonCode']
+    reason_code = parsed["ReasonCode"]
     if reason_code not in [None, "", "N/A"]:
-        yield 0, 'Reason: %s' % reason_code
+        yield 0, "Reason: %s" % reason_code
 
-    description = parsed['Description']
+    description = parsed["Description"]
     if description not in [None, "", "N/A"]:
-        yield 0, 'Description: %s' % description
+        yield 0, "Description: %s" % description
 
 
-check_info['aws_elb_health'] = {
-    'parse_function': parse_aws_elb_health,
-    'inventory_function': discover_single,
-    'check_function': check_aws_elb_health,
-    'service_description': 'AWS/ELB Health ',
+check_info["aws_elb_health"] = {
+    "parse_function": parse_aws_elb_health,
+    "inventory_function": discover_single,
+    "check_function": check_aws_elb_health,
+    "service_description": "AWS/ELB Health ",
 }

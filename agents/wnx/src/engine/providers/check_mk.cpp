@@ -18,7 +18,10 @@
 #include "cfg.h"
 #include "check_mk.h"
 #include "common/version.h"
+#include "install_api.h"
 #include "onlyfrom.h"
+
+using namespace std::string_literals;
 
 namespace cma::provider {
 
@@ -101,11 +104,18 @@ std::string MakeDirs() {
 }  // namespace
 
 std::string CheckMk::makeBody() {
-    using namespace std::string_literals;
-
     auto out = MakeInfo();
     out += MakeDirs();
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
+
+    if (install::GetLastInstallFailReason()) {
+        // We deliver fixed strings because it is a prototype solution.
+        out += "<<<check_mk>>>\n";
+        out +=
+            "UpdateFailed: The last agent update failed. Supplied Python environment is not compatible with OS. \n";
+        out +=
+            "UpdateRecoverAction: Please change the rule 'Setup Python environment' to 'legacy' in setup.\n";
+    }
 
     return out;
 }

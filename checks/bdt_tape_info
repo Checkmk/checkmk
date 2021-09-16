@@ -10,22 +10,24 @@ def inventory_bdt_tape_info(info):
 
 
 def check_bdt_tape_info(_no_item, _no_params, info):
-    for name, value in zip(['Name', 'Description', 'Vendor', 'Agent Version'], info[0]):
+    for name, value in zip(["Name", "Description", "Vendor", "Agent Version"], info[0]):
         yield 0, "%s: %s" % (name, value)
 
 
-check_info['bdt_tape_info'] = {
-    'inventory_function': inventory_bdt_tape_info,
-    'check_function': check_bdt_tape_info,
-    'service_description': "Tape Library Info",
-    'snmp_scan_function': lambda oid:
-                          ('.1.3.6.1.4.1.20884.10893.2.101' in oid('.1.3.6.1.2.1.1.2.0')),
-    'snmp_info': (
-        '.1.3.6.1.4.1.20884.10893.2.101.1',
+check_info["bdt_tape_info"] = {
+    "inventory_function": inventory_bdt_tape_info,
+    "check_function": check_bdt_tape_info,
+    "service_description": "Tape Library Info",
+    "snmp_scan_function": lambda oid: (
+        ".1.3.6.1.4.1.20884.10893.2.101" in oid(".1.3.6.1.2.1.1.2.0")
+    ),
+    "snmp_info": (
+        ".1.3.6.1.4.1.20884.10893.2.101.1",
         [
-            '1',  # bDTDisplayName
-            '2',  # bDTDescription
-            '3',  # bDTAgentVendor
-            '4',  # bDTAgentVersion
-        ]),
+            "1",  # bDTDisplayName
+            "2",  # bDTDescription
+            "3",  # bDTAgentVendor
+            "4",  # bDTAgentVersion
+        ],
+    ),
 }

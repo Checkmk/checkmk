@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dell_poweredge import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 check_info["dell_poweredge_temp"] = {
     "check_function": check_dell_poweredge_temp,
     "inventory_function": inventory_dell_poweredge_temp,
@@ -27,18 +29,19 @@ check_info["dell_poweredge_temp"] = {
             "4",  # temperatureProbeStateSettings
             "5",  # temperatureProbeStatus
             "6",  # temperatureProbeReading
-            #"7", # temperatureProbeType
+            # "7", # temperatureProbeType
             "8",  # temperatureProbeLocationName
-            #"9", # temperatureProbeUpperNonRecoverableThreshold
+            # "9", # temperatureProbeUpperNonRecoverableThreshold
             "10",  # temperatureProbeUpperCriticalThreshold
             "11",  # temperatureProbeUpperNonCriticalThreshold
             "12",  # temperatureProbeLowerNonCriticalThreshold
             "13",  # temperatureProbeLowerCriticalThreshold
-            #"14", # temperatureProbeLowerNonRecoverableThreshold
-            #"15", # temperatureProbeCapabilities
-            #"16", # temperatureProbeDiscreteReading
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
+            # "14", # temperatureProbeLowerNonRecoverableThreshold
+            # "15", # temperatureProbeCapabilities
+            # "16", # temperatureProbeDiscreteReading
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.5",
     "group": "temperature",
     "management_board": HOST_ONLY,
 }

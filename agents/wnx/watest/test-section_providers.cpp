@@ -21,6 +21,7 @@
 #include "providers/skype.h"
 #include "providers/wmi.h"
 #include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
@@ -116,18 +117,11 @@ TEST(SectionProviders, SystemTime) {
     EXPECT_GE(value, seconds_since_epoch);
 }
 
-TEST(SectionProviders, BasicCheckMk) {
-    using namespace cma::section;
-    using namespace cma::cfg;
-    using namespace cma::provider;
-    ASSERT_EQ(cma::section::kCheckMk, "check_mk");
-    OnStartTest();
-    auto cfg = cma::cfg::GetLoadedConfig();
-    ON_OUT_OF_SCOPE(OnStartTest());
-
-    cfg[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("127.0.0.1");
-
-    const char* array_of_names[] = {
+class SectionProviderCheckMkFixture : public ::testing::Test {
+public:
+    static constexpr size_t core_lines_ = 18;
+    static constexpr size_t full_lines_ = core_lines_ + 3;
+    static constexpr std::string_view names_[] = {
         "Version",          "BuildDate",       "AgentOS",
         "Hostname",         "Architecture",    "WorkingDirectory",
         "ConfigFile",       "LocalConfigFile", "AgentDirectory",
@@ -135,77 +129,106 @@ TEST(SectionProviders, BasicCheckMk) {
         "TempDirectory",    "LogDirectory",    "SpoolDirectory",
         "LocalDirectory",   "OnlyFrom"};
 
-    cma::srv::SectionProvider<CheckMk> check_mk_provider;
-    EXPECT_EQ(check_mk_provider.getEngine().getUniqName(), kCheckMk);
-    auto& e1 = check_mk_provider.getEngine();
-    auto cmk = e1.generateContent(section_name);
-    ASSERT_TRUE(!cmk.empty());
-    auto result = cma::tools::SplitString(cmk, "\n");
-    EXPECT_EQ(result.size(), 18);
-    EXPECT_EQ(result[0] + "\n",
-              cma::section::MakeHeader(cma::section::kCheckMk));
+    static constexpr std::pair<std::string_view, std::string_view>
+        only_from_cases_[] = {
+            //
+            {"~", ""},
+            {"127.0.0.1", "127.0.0.1"},
+            {"127.0.0.1 192.168.0.1", "127.0.0.1 192.168.0.1"},
+            {"[127.0.0.1, 192.168.0.1]", "127.0.0.1 192.168.0.1"},
+            {"[127.0.0.1, ::1]", "127.0.0.1 ::1"},
+            {"[127.0.0.1/16, ::1/64]", "127.0.0.1/16 ::1/64"}
+            //
+        };
 
-    auto count = result.size();
-    for (size_t i = 1; i < count; ++i) {
-        auto values = cma::tools::SplitString(result[i], ": ");
+    std::string getContent() { return getEngine().generateContent(); }
+    std::vector<std::string> getFullResultAsTable() {
+        return tools::SplitString(getContent(), "\n");
+    }
+    std::vector<std::string> getCoreResultAsTable() {
+        auto result = getFullResultAsTable();
+        if (result.size() == full_lines_ &&
+            result[core_lines_] + "\n" ==
+                section::MakeHeader(section::kCheckMk)) {
+            result.resize(core_lines_);
+        }
+        result.erase(result.begin());
+        return result;
+    }
+    CheckMk& getEngine() { return check_mk_provider_.getEngine(); }
+
+    YAML::Node getWorkingCfg() {
+        if (!temp_fs_) {
+            temp_fs_ = std::move(tst::TempCfgFs::CreateNoIo());
+        }
+        return cfg::GetLoadedConfig();
+    }
+
+    std::filesystem::path createDataDir() {
+        if (!temp_fs_) {
+            temp_fs_ = std::move(tst::TempCfgFs::Create());
+        }
+        return temp_fs_->data();
+    }
+
+    auto get_val(const std::string& raw) -> std::string {
+        auto tbl = tools::SplitString(raw, ": ");
+        if (tbl.size() == 2) {
+            return tbl[1];
+        }
+
+        return {};
+    };
+
+private:
+    srv::SectionProvider<CheckMk> check_mk_provider_;
+    tst::TempCfgFs::ptr temp_fs_;
+};
+
+TEST_F(SectionProviderCheckMkFixture, Name) {
+    EXPECT_EQ(getEngine().getUniqName(), section::kCheckMk);
+}
+
+TEST_F(SectionProviderCheckMkFixture, ConstFields) {
+    auto cfg = getWorkingCfg();
+    cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] = YAML::Load("127.0.0.1");
+
+    auto result = getCoreResultAsTable();
+
+    const auto* expected_name = names_;
+    for (const auto& r : result) {
+        auto values = tools::SplitString(r, ": ");
         EXPECT_EQ(values.size(), 2);
-        EXPECT_EQ(values[0], array_of_names[i - 1]);
+        EXPECT_EQ(values[0], std::string{*expected_name++});
         EXPECT_FALSE(values[1].empty());
     }
 }
 
-TEST(SectionProviders, BasicCheckMkAdvanced) {
-    using namespace cma::section;
-    using namespace cma::provider;
-
-    cma::srv::SectionProvider<CheckMk> check_mk_provider;
-    auto& e1 = check_mk_provider.getEngine();
-    auto cmk = e1.generateContent(section_name);
-    ASSERT_TRUE(!cmk.empty());
-    auto result = cma::tools::SplitString(cmk, "\n");
-
-    auto count = result.size();
-    auto get_val = [result](int pos) -> std::string {
-        auto tbl = cma::tools::SplitString(result[pos], ": ");
-        return tbl[1];
-    };
-
-    EXPECT_EQ(get_val(1), CHECK_MK_VERSION);
-    EXPECT_EQ(get_val(3), "windows");
-    EXPECT_EQ(get_val(4), cfg::GetHostName());
-    if (tgt::Is64bit())
-        EXPECT_EQ(get_val(5), "64bit");
-    else
-        EXPECT_EQ(get_val(5), "32bit");
+TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
+    auto result = getCoreResultAsTable();
+    EXPECT_EQ(get_val(result[0]), CHECK_MK_VERSION);
+    EXPECT_EQ(get_val(result[2]), "windows");
+    EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
+    EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
 }
 
-TEST(SectionProviders, BasicCheckMkOnlyFrom) {
-    using namespace cma::cfg;
+TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
+    auto cfg = getWorkingCfg();
 
-    cma::srv::SectionProvider<CheckMk> check_mk_provider;
-    auto& engine = check_mk_provider.getEngine();
-    OnStartTest();
-    auto cfg = cma::cfg::GetLoadedConfig();
-    ON_OUT_OF_SCOPE(OnStartTest());
-
-    std::pair<std::string, std::string> matrix[] = {
-        //
-        {"~", ""},
-        {"127.0.0.1", "127.0.0.1"},
-        {"127.0.0.1 192.168.0.1", "127.0.0.1 192.168.0.1"},
-        {"[127.0.0.1, 192.168.0.1]", "127.0.0.1 192.168.0.1"},
-        {"[127.0.0.1, ::1]", "127.0.0.1 ::1"},
-        {"[127.0.0.1/16, ::1/64]", "127.0.0.1/16 ::1/64"}
-        //
-    };
-
-    size_t n = 0;
-    for (auto p : matrix) {
-        cfg[groups::kGlobal][vars::kOnlyFrom] = YAML::Load(p.first);
-        auto of = engine.makeOnlyFrom();
-        EXPECT_EQ(of, p.second) << "failed on string num " << n << "\n";
-        ++n;
+    for (auto p : only_from_cases_) {
+        cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] =
+            YAML::Load(std::string{p.first});
+        auto result = getCoreResultAsTable();
+        EXPECT_EQ(get_val(*std::prev(result.end())), std::string{p.second});
     }
+}
+
+TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
+    tst::misc::CopyFailedPythonLogFileToLog(createDataDir());
+
+    auto result = getFullResultAsTable();
+    EXPECT_TRUE(result[full_lines_ - 2].starts_with("UpdateFailed:"));
+    EXPECT_TRUE(result[full_lines_ - 1].starts_with("UpdateRecoverAction:"));
 }
 
 class SectionProvidersFixture : public ::testing::Test {

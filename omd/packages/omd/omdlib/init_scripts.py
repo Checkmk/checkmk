@@ -24,27 +24,29 @@
 # Boston, MA 02110-1301 USA.
 """Handling of site-internal init scripts"""
 
-import sys
+import logging
 import os
 import subprocess
-import logging
-from typing import TYPE_CHECKING, Optional, Tuple, List
-
-from cmk.utils.log import VERBOSE
-import cmk.utils.tty as tty
-
-from omdlib.utils import chdir
+import sys
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
 
+from omdlib.utils import chdir
+
+import cmk.utils.tty as tty
+from cmk.utils.log import VERBOSE
+
 logger = logging.getLogger("cmk.omd")
 
 
-def call_init_scripts(site: 'SiteContext',
-                      command: str,
-                      daemon: Optional[str] = None,
-                      exclude_daemons: Optional[List[str]] = None) -> int:
+def call_init_scripts(
+    site: "SiteContext",
+    command: str,
+    daemon: Optional[str] = None,
+    exclude_daemons: Optional[List[str]] = None,
+) -> int:
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
@@ -79,22 +81,21 @@ def call_init_scripts(site: 'SiteContext',
     return 2
 
 
-def check_status(site: 'SiteContext',
-                 display: bool = True,
-                 daemon: Optional[str] = None,
-                 bare: bool = False) -> int:
+def check_status(
+    site: "SiteContext", display: bool = True, daemon: Optional[str] = None, bare: bool = False
+) -> int:
     num_running = 0
     num_unused = 0
     num_stopped = 0
     rc_dir, scripts = _init_scripts(site.name)
-    components = [s.split('-', 1)[-1] for s in scripts]
+    components = [s.split("-", 1)[-1] for s in scripts]
     if daemon and daemon not in components:
         if not bare:
-            sys.stderr.write('ERROR: This daemon does not exist.\n')
+            sys.stderr.write("ERROR: This daemon does not exist.\n")
         return 3
     is_verbose = logger.isEnabledFor(VERBOSE)
     for script in scripts:
-        komponent = script.split("/")[-1].split('-', 1)[-1]
+        komponent = script.split("/")[-1].split("-", 1)[-1]
         if daemon and komponent != daemon:
             continue
 
@@ -159,7 +160,7 @@ def _init_scripts(sitename: str) -> Tuple[str, List[str]]:
 
 def _call_init_script(scriptpath: str, command: str) -> bool:
     if not os.path.exists(scriptpath):
-        sys.stderr.write('ERROR: This daemon does not exist.\n')
+        sys.stderr.write("ERROR: This daemon does not exist.\n")
         return False
 
     try:

@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['ups_modulys_outphase_default_levels'] = {}
+
+factory_settings["ups_modulys_outphase_default_levels"] = {}
 
 
 def parse_ups_modulys_outphase(info):
@@ -22,7 +23,7 @@ def parse_ups_modulys_outphase(info):
         "output_load": int(info[0][6]),
     }
 
-    if info[0][2] == '3':
+    if info[0][2] == "3":
         parsed["Phase 2"] = {
             "frequency": int(info[0][1]) / 10.0,
             "voltage": int(info[0][7]) / 10.0,
@@ -42,15 +43,15 @@ def parse_ups_modulys_outphase(info):
     return parsed
 
 
-check_info['ups_modulys_outphase'] = {
-    'parse_function': parse_ups_modulys_outphase,
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': 'Output %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'ups_modulys_outphase_default_levels',
-    'group': 'ups_outphase',
-    'snmp_info': (
+check_info["ups_modulys_outphase"] = {
+    "parse_function": parse_ups_modulys_outphase,
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "Output %s",
+    "has_perfdata": True,
+    "default_levels_variable": "ups_modulys_outphase_default_levels",
+    "group": "ups_outphase",
+    "snmp_info": (
         ".1.3.6.1.4.1.2254.2.4.5",
         [
             "1",  # dupsOutputSource
@@ -68,6 +69,7 @@ check_info['ups_modulys_outphase'] = {
             "13",  # dupsOutputCurrent3
             "14",  # dupsOutputPower3
             "15",  # dupsOutputLoad3
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2254.2.4",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2254.2.4",
 }

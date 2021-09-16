@@ -18,5 +18,5 @@ item:
  The description of the sensor as provided by
  the device.
 
-inventory:
+discovery:
  One service is created for each sensor if the sensor is not in state {5} (not present).

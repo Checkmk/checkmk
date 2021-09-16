@@ -10,5 +10,5 @@ description:
 
  No default levels are set. Levels for overall hosts health are configurable.
 
-inventory:
+discovery:
  One service is created if all required metrics (HealthyHostCount, UnHealthyHostCount) are given.

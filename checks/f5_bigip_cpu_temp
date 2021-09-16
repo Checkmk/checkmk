@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 f5_bigip_cpu_temp_default_params = (60, 80)
 
 
@@ -29,11 +31,11 @@ def check_f5_bigip_cpu_temp(item, params, info):
 
 
 check_info["f5_bigip_cpu_temp"] = {
-    'check_function': check_f5_bigip_cpu_temp,
-    'inventory_function': inventory_f5_bigip_cpu_temp,
-    'service_description': 'Temperature CPU %s',
-    'group': 'temperature',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.4.1.3375.2.1.3.6.2.1', [4, 2]),
-    'snmp_scan_function': scan_f5_bigip,
+    "check_function": check_f5_bigip_cpu_temp,
+    "inventory_function": inventory_f5_bigip_cpu_temp,
+    "service_description": "Temperature CPU %s",
+    "group": "temperature",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.3375.2.1.3.6.2.1", [4, 2]),
+    "snmp_scan_function": scan_f5_bigip,
 }

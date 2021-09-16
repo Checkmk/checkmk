@@ -45,7 +45,8 @@ check_info["atto_fibrebridge_fcport"] = {
         ".1.3.6.1.4.1.4547.2.3.3.2.1",
         [
             OID_END,
-            "2",  #fcStatsTxWords
-            "3",  #fcStatsRxWords
-        ]),
+            "2",  # fcStatsTxWords
+            "3",  # fcStatsRxWords
+        ],
+    ),
 }

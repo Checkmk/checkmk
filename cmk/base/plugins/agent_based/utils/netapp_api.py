@@ -4,22 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    TypedDict,
-)
+from typing import Callable, Dict, List, Mapping, Optional, Sequence, TypedDict
+
 from ..agent_based_api.v1 import type_defs
 
 CPUSection = TypedDict(
-    'CPUSection',
+    "CPUSection",
     {
-        'clustermode': Dict[str, Dict[str, str]],
-        '7mode': Dict[str, str],
+        "clustermode": Dict[str, Dict[str, str]],
+        "7mode": Dict[str, str],
     },
     total=False,
 )
@@ -91,6 +84,8 @@ def parse_netapp_api_multiple_instances(
     instances: SectionMultipleInstances = {}
     for line in string_table:
         instance = {}
+        if len(line) < 2:
+            continue
         name = line[0].split(" ", 1)[1]
         for element in line:
             tokens = element.split(" ", 1)
@@ -143,7 +138,8 @@ def parse_netapp_api_single_instance(
              'mtusize': '9000'}}
     """
     return {
-        key: instances[0] for key, instances in parse_netapp_api_multiple_instances(
+        key: instances[0]
+        for key, instances in parse_netapp_api_multiple_instances(
             string_table,
             custom_keys=custom_keys,
             item_func=item_func,

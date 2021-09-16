@@ -20,12 +20,7 @@ False
 True
 """
 
-from ..agent_based_api.v1 import (
-    all_of,
-    contains,
-    matches,
-    not_matches,
-)
+from ..agent_based_api.v1 import all_of, contains, matches, not_matches
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 OID_F5_BIG_IP_bigipTrafficMgmt = ".1.3.6.1.4.1.3375.2"

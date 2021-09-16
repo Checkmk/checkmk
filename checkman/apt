@@ -29,6 +29,6 @@ description:
  apt hook under {~/share/doc/check_mk/treasures/mk_apt_hook} to
  {/etc/apt/apt.conf.d/98mk-apt}.
 
-inventory:
+discovery:
  One service is created for each system where the {mk_apt}
  plugin is being installed and the command {apt-get} is present.

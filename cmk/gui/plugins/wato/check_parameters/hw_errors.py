@@ -6,9 +6,9 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesHardware,
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesHardware,
 )
 
 rulespec_registry.register(
@@ -16,4 +16,5 @@ rulespec_registry.register(
         check_group_name="hw_errors",
         group=RulespecGroupEnforcedServicesHardware,
         title=lambda: _("Simple checks for BIOS/Hardware errors"),
-    ))
+    )
+)

@@ -8,6 +8,6 @@ description:
  It returns for each VM a list of Checkpoints (Snapshots) and the age using pickyback.
  Leves for {WARN} and {CRIT} can be set using Wato.
 
-inventory:
+discovery:
  One service is created for each system.
 

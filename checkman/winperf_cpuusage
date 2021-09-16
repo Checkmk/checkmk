@@ -16,6 +16,6 @@ description:
  Note: this check is deprecated and not used by modern Checkmk agents.
  It is replaced by {winperf_processor.util}.
 
-inventory:
+discovery:
  One service is created for each Windows host.
 

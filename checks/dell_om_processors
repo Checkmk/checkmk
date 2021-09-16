@@ -12,29 +12,29 @@ from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard
 
 
 def inventory_dell_om_processors(info):
-    return [(x[0], None) for x in info if x[1] != '4' and x[0] != '']
+    return [(x[0], None) for x in info if x[1] != "4" and x[0] != ""]
 
 
 def check_dell_om_processors(item, _no_params, info):
-    #Probetypes found in check_openmanage3.pl
+    # Probetypes found in check_openmanage3.pl
     cpu_states = {
-        '1': 'Other',  # other than following values
-        '2': 'Unknown',  # unknown
-        '3': 'Enabled',  # enabled
-        '4': 'User Disabled',  # disabled by user via BIOS setup
-        '5': 'BIOS Disabled',  # disabled by BIOS (POST error)
-        '6': 'Idle',  # idle
+        "1": "Other",  # other than following values
+        "2": "Unknown",  # unknown
+        "3": "Enabled",  # enabled
+        "4": "User Disabled",  # disabled by user via BIOS setup
+        "5": "BIOS Disabled",  # disabled by BIOS (POST error)
+        "6": "Idle",  # idle
     }
 
     cpu_readings = {
-        '0': 'Unknown',
-        '1': 'Internal Error',  # Internal Error
-        '2': 'Thermal Trip',  # Thermal Trip
-        '32': 'Configuration Error',  # Configuration Error
-        '128': 'Present',  # Processor Present
-        '256': 'Disabled',  # Processor Disabled
-        '512': 'Terminator Present',  # Terminator Present
-        '1024': 'Throttled',  # Processor Throttled
+        "0": "Unknown",
+        "1": "Internal Error",  # Internal Error
+        "2": "Thermal Trip",  # Thermal Trip
+        "32": "Configuration Error",  # Configuration Error
+        "128": "Present",  # Processor Present
+        "256": "Disabled",  # Processor Disabled
+        "512": "Terminator Present",  # Terminator Present
+        "1024": "Throttled",  # Processor Throttled
     }
 
     for index, status, manuf, status2, reading in info:
@@ -43,24 +43,27 @@ def check_dell_om_processors(item, _no_params, info):
             if not status:
                 status = status2
 
-            if status != '3':
+            if status != "3":
                 state = 2
-            if reading in ['1', '32']:
+            if reading in ["1", "32"]:
                 state = 2
 
             if status in cpu_states:
                 cpu_state_readable = cpu_states[status]
             else:
-                cpu_state_readable = 'unknown[%s]' % status
+                cpu_state_readable = "unknown[%s]" % status
                 state = 3
 
             if reading in cpu_readings:
                 cpu_reading_readable = cpu_readings[reading]
             else:
-                cpu_reading_readable = 'unknown[%s]' % reading
+                cpu_reading_readable = "unknown[%s]" % reading
                 state = 3
-            return state, "[%s] CPU status: %s, CPU reading: %s" % (manuf, cpu_state_readable,
-                                                                    cpu_reading_readable)
+            return state, "[%s] CPU status: %s, CPU reading: %s" % (
+                manuf,
+                cpu_state_readable,
+                cpu_reading_readable,
+            )
 
     return 2, "Processor not found"
 
@@ -79,5 +82,6 @@ check_info["dell_om_processors"] = {
             "30.1.8",  # Manufacturerer Name
             "30.1.9",  # DeviceStatus State
             "32.1.6",  # Deive Status reading
-        ]),
+        ],
+    ),
 }

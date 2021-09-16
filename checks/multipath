@@ -7,143 +7,6 @@
 # Configuration for using alias instead of UUID
 inventory_multipath_rules = []
 
-# Output from multipath -l has the following possible formats:
-
-# orabase.lun50 (360a9800043346937686f456f59386741) dm-15 NETAPP,LUN
-# [size=25G][features=1 queue_if_no_path][hwhandler=0]
-# \_ round-robin 0 [prio=0][active]
-#  \_ 1:0:3:50 sdy 65:128 [active][undef]
-#  \_ 3:0:3:50 sdz 65:144 [active][undef]
-
-# An alias might not be defined. The out is then:
-# 360a980004334644d654a364469555a76
-# [size=300 GB][features="0"][hwhandler="0"]
-# \_ round-robin 0 [active]
-#  \_ 1:0:2:13 sdc 8:32  [active][ready]
-#  \_ 3:0:2:13 sdl 8:176 [active][ready]
-
-# Might also be local disks:
-# SFUJITSU_MAW3073NC_DBL2P62003VT
-# [size=68 GB][features="0"][hwhandler="0"]
-# \_ round-robin 0 [active]
-#  \_ 0:0:3:0  sdb 8:16  [active][ready]
-
-# Some very special header line
-# (No space between uuid and dm-* - strange...)
-# 360a980004334644d654a316e65306e51dm-4 NETAPP,LUN
-# [size=30G][features=1 queue_if_no_path][hwhandler=0]
-# \_ round-robin 0 [prio=0][active]
-#  \_ 1:0:2:50 sdg 8:96  [active][undef]
-# \_ round-robin 0 [prio=0][enabled]
-#  \_ 4:0:1:50 sdl 8:176 [active][undef]
-
-# And another one:
-# 1494554000000000052303250303700000000000000000000 dm-0 IET,VIRTUAL-DISK
-# [size=70G][features=0][hwhandler=0][rw]
-# \_ round-robin 0 [prio=-1][active]
-#  \_ 3:0:0:0 sdb 8:16  [active][undef]
-# \_ round-robin 0 [prio=-1][enabled]
-#  \_ 4:0:0:0 sdc 8:32  [active][undef]
-
-# Other output from other host:
-# anzvol2 (36005076306ffc648000000000000510a) dm-15 IBM,2107900
-# [size=100G][features=0][hwhandler=0]
-# \_ round-robin 0 [prio=-6][active]
-#  \_ 4:0:5:1  sdbf 67:144 [active][undef]
-#  \_ 4:0:4:1  sdau 66:224 [active][undef]
-#  \_ 4:0:3:1  sdaj 66:48  [active][undef]
-#  \_ 3:0:5:1  sdy  65:128 [active][undef]
-#  \_ 3:0:4:1  sdn  8:208  [active][undef]
-#  \_ 3:0:3:1  sdc  8:32   [active][undef]
-# anzvol1 (36005076306ffc6480000000000005005) dm-16 IBM,2107900
-# [size=165G][features=0][hwhandler=0]
-# \_ round-robin 0 [prio=-6][active]
-#  \_ 4:0:5:0  sdbe 67:128 [active][undef]
-#  \_ 4:0:4:0  sdat 66:208 [active][undef]
-#  \_ 4:0:3:0  sdai 66:32  [active][undef]
-#  \_ 3:0:5:0  sdx  65:112 [active][undef]
-#  \_ 3:0:4:0  sdm  8:192  [active][undef]
-#  \_ 3:0:3:0  sdb  8:16   [active][undef]
-
-# And one other output (ID has not 33 times A-Z0-9):
-# mpath1 (SIBM_____SwapA__________DA02BF71)
-# [size=41 GB][features="0"][hwhandler="0"]
-# \_ round-robin 0 [active]
-#  \_ 1:0:1:0 sdd 8:48  [active]
-
-# Recently I've seen this output >:-P
-# 360080e500017bd72000002eb4c1b1ae8 dm-1 IBM,1814      FAStT
-# size=350G features='1 queue_if_no_path' hwhandler='1 rdac' wp=rw
-# `-+- policy='round-robin 0' prio=-1 status=active
-#   |- 7:0:2:81 sdd 8:48   active undef running
-#   `- 8:0:2:81 sdp 8:240  active undef running
-
-# And this has been seen on SLES 11 SP1 64 Bit:
-# 3600508b40006d7da0001a00004740000 dm-0 HP,HSV210
-# size=10G features='1 queue_if_no_path' hwhandler='0' wp=rw
-# |-+- policy='round-robin 0' prio=-1 status=active
-# | |- 2:0:0:1 sda        8:0    active undef running
-# | `- 3:0:0:1 sdo        8:224  active undef running
-# `-+- policy='round-robin 0' prio=-1 status=enabled
-#   |- 3:0:1:1 sdv        65:80  active undef running
-#   `- 2:0:1:1 sdh        8:112  active undef running
-
-# This is another output, which made problems up to
-# 1.1.12:
-#
-# SDDN_S2A_9900_1308xxxxxxxx dm-13 DDN,S2A 9900
-# [size=7.3T][features=0][hwhandler=0][rw]
-# \_ round-robin 0 [prio=0][active]
-#  \_ 3:0:1:11 sdaj 66:48   [failed][undef]
-#  \_ 4:0:0:11 sdbh 67:176  [failed][undef]
-#  \_ 4:0:2:11 sddd 70:176  [active][undef]
-#  \_ 3:0:2:11 sdeb 128:48  [active][undef]
-# \_ round-robin 0 [prio=0][enabled]
-#  \_ 4:0:1:11 sdcf 69:48   [active][undef]
-#  \_ 3:0:0:11 sdl  8:176   [active][undef]
-
-# Just an underscore and a dash in the LUN name
-# SDataCoreSANsymphony_DAT05-fscl dm-6 DataCore,SANsymphony
-# [size=600G][features=0][hwhandler=0]
-# \_ round-robin 0 [prio=-1][enabled]
-#  \_ 3:0:0:11 sdae 65:224 [active][undef]
-# \_ round-robin 0 [prio=-1][enabled]
-#  \_ 4:0:0:11 sdt  65:48  [active][undef]
-
-# This one here is from RedHat 6. Very creative...
-# 1IET     00010001 dm-4 IET,VIRTUAL-DISK
-# size=200G features='0' hwhandler='0' wp=rw
-# |-+- policy='round-robin 0' prio=0 status=active
-# | `- 23:0:0:1   sdk  8:160   active undef running
-# |-+- policy='round-robin 0' prio=0 status=enabled
-# | `- 21:0:0:1   sdj  8:144   active undef running
-# |-+- policy='round-robin 0' prio=0 status=enabled
-# | `- 22:0:0:1   sdg  8:96    active undef running
-# `-+- policy='round-robin 0' prio=0 status=enabled
-#   `- 20:0:0:1   sdi  8:128   active undef running
-
-# And a completely new situation:
-# <<<multipath>>>
-# Nov 05 17:17:03 | DM multipath kernel driver not loaded
-# Nov 05 17:17:03 | /etc/multipath.conf does not exist, blacklisting all devices.
-# Nov 05 17:17:03 | A sample multipath.conf file is located at
-# Nov 05 17:17:03 | /usr/share/doc/device-mapper-multipath-0.4.9/multipath.conf
-# Nov 05 17:17:03 | You can run /sbin/mpathconf to create or modify /etc/multipath.conf
-# Nov 05 17:17:03 | DM multipath kernel driver not loaded
-
-# UUID which includes dots (seen on Oracle Exadata VM)
-# <<<multipath>>>
-# iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101 dm-7 IET,VIRTUAL-DISK
-# size=128M features='0' hwhandler='0' wp=rw
-# |-+- policy='round-robin 0' prio=0 status=active
-# | `- 8:0:0:1  sdg  8:96   active undef unknown
-# |-+- policy='round-robin 0' prio=0 status=enabled
-# | `- 9:0:0:1  sdh  8:112  active undef unknown
-# |-+- policy='round-robin 0' prio=0 status=enabled
-# | `- 10:0:0:1 sdi  8:128  active undef unknown
-# `-+- policy='round-robin 0' prio=0 status=enabled
-#   `- 11:0:0:1 sdj  8:144  active undef unknown
-
 
 def parse_multipath(info):
     # New reported header lines need to be placed here
@@ -186,15 +49,17 @@ def parse_multipath(info):
         l = " ".join(line)
 
         # Skip output when multipath is not present
-        if l.endswith('kernel driver not loaded') \
-           or l.endswith('does not exist, blacklisting all devices.') \
-           or l.endswith('A sample multipath.conf file is located at') \
-           or l.endswith('multipath.conf'):
+        if (
+            l.endswith("kernel driver not loaded")
+            or l.endswith("does not exist, blacklisting all devices.")
+            or l.endswith("A sample multipath.conf file is located at")
+            or l.endswith("multipath.conf")
+        ):
             uuid = None
             continue
 
         # First simply separate between data row and header row
-        if line[0][0] not in ['[', '`', '|', '\\'] and not line[0].startswith("size="):
+        if line[0][0] not in ["[", "`", "|", "\\"] and not line[0].startswith("size="):
             # Try to match header lines
             matchobject = None
             for header_regex, uuid_pos, alias_pos, dm_pos in reg_headers:
@@ -223,27 +88,27 @@ def parse_multipath(info):
             paths_info = []
             broken_paths = []
             group = {}
-            group['paths'] = paths_info
-            group['broken_paths'] = broken_paths
-            group['luns'] = lun_info
-            group['uuid'] = uuid
-            group['state'] = None
-            group['numpaths'] = 0
-            group['device'] = dm_device
+            group["paths"] = paths_info
+            group["broken_paths"] = broken_paths
+            group["luns"] = lun_info
+            group["uuid"] = uuid
+            group["state"] = None
+            group["numpaths"] = 0
+            group["device"] = dm_device
             groups[uuid] = group
 
             # If the device has an alias, then extract it
             if alias:
-                group['alias'] = alias
+                group["alias"] = alias
 
             # Proceed with next line after init
             continue
         elif uuid is not None:
             # Handle special syntax | |- 2:0:0:1 sda  ...
-            if line[0] == '|':
+            if line[0] == "|":
                 line = line[1:]
             if reg_prio.search(l):
-                group['state'] = "".join(line[3:])
+                group["state"] = "".join(line[3:])
             elif len(line) >= 4 and reg_lun.match(line[1]):
                 luninfo = "%s(%s)" % (line[1], line[2])
                 lun_info.append(luninfo)
@@ -251,7 +116,7 @@ def parse_multipath(info):
                 if not "active" in state:
                     broken_paths.append(luninfo)
                 numpaths += 1
-                group['numpaths'] = numpaths
+                group["numpaths"] = numpaths
                 paths_info.append(line[2])
     return groups
 
@@ -268,12 +133,12 @@ def inventory_multipath(parsed):
             item = info["alias"]
         else:
             item = uuid
-        inventory.append((item, info['numpaths']))
+        inventory.append((item, info["numpaths"]))
     return inventory
 
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
-#def check_multipath(item, target_numpaths, parsed):
+# def check_multipath(item, target_numpaths, parsed):
 def check_multipath(item, params, parsed):
     # Keys in parsed are the UUIDs. First assume that we are
     # looking for a UUID. Then fall back to aliases
@@ -292,8 +157,8 @@ def check_multipath(item, params, parsed):
 
     # If the item is the alias, then show the UUID in the plugin output.
     # If the item is the UUID, then vice versa.
-    alias = mmap.get('alias')
-    uuid = mmap.get('uuid')
+    alias = mmap.get("alias")
+    uuid = mmap.get("uuid")
 
     if item == uuid and alias:
         aliasinfo = "(%s): " % alias
@@ -302,14 +167,13 @@ def check_multipath(item, params, parsed):
     else:
         aliasinfo = ""
 
-    all_paths = mmap['paths']
-    broken_paths = mmap['broken_paths']
+    all_paths = mmap["paths"]
+    broken_paths = mmap["broken_paths"]
     num_paths = len(all_paths)
     num_broken = len(broken_paths)
     num_active = num_paths - num_broken
 
-    infotext = "%sPaths active: %s/%s" % \
-               (aliasinfo, num_active, num_paths)
+    infotext = "%sPaths active: %s/%s" % (aliasinfo, num_active, num_paths)
 
     if isinstance(params, tuple):
         warn, crit = params
@@ -348,9 +212,9 @@ def check_multipath(item, params, parsed):
 
 
 check_info["multipath"] = {
-    'check_function': check_multipath,
-    'inventory_function': inventory_multipath,
-    'parse_function': parse_multipath,
-    'service_description': "Multipath %s",
-    'group': "multipath",
+    "check_function": check_multipath,
+    "inventory_function": inventory_multipath,
+    "parse_function": parse_multipath,
+    "service_description": "Multipath %s",
+    "group": "multipath",
 }

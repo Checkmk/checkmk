@@ -18,13 +18,13 @@ def inv_snmp_os(info):
         if "Version" in descr_short:
             node["version"] = (descr_short[descr_short.index("Version") + 1]).replace(",", "")
 
-
-# Fireeye Devices
+    # Fireeye Devices
     if "linux" in sys_descr.lower() and ".1.3.6.1.4.1.25597.1" in sys_obj:
         node["type"] = descr_short[0]
         node["kernel_version"] = descr_short[2]
         node["arch"] = descr_short[-1]
 
-inv_info['snmp_os'] = {
+
+inv_info["snmp_os"] = {
     "inv_function": inv_snmp_os,
 }

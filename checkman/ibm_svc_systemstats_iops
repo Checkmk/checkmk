@@ -17,6 +17,6 @@ description:
 item:
  {{Drives}}, {{MDisks}} or {{VDisks}}.
 
-inventory:
+discovery:
  One service is created for the drives, one for MDisks and one for VDisks.
 

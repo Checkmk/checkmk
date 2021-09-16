@@ -18,6 +18,7 @@
 #include "exception"            // for terminate
 #include "firewall.h"
 #include "fmt/format.h"
+#include "install_api.h"  // for terminate
 #include "on_start.h"
 #include "tools/_misc.h"
 #include "tools/_tgt.h"          // for IsDebug
@@ -28,6 +29,19 @@
 namespace fs = std::filesystem;
 
 namespace tst {
+
+void AllowReadWriteAccess(const std::filesystem::path& path,
+                          std::vector<std::wstring>& commands) {
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",  // disable inheritance
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), path.wstring());
+        commands.emplace_back(cmd);
+    }
+    XLOG::l.i("Protect file from User write '{}'", path);
+}
 
 std::string GetFabricYmlContent() {
     static std::string fabric_yaml_content;
@@ -57,8 +71,10 @@ public:
     }
 
     void TearDown() override {
-        if (temp_dir_.u8string().find(temp_test_prefix_))
+        if (temp_dir_.u8string().find(temp_test_prefix_)) {
             fs::remove_all(temp_dir_);
+            fs::remove(temp_dir_);
+        }
     }
 
     [[nodiscard]] fs::path getTempDir() const noexcept { return temp_dir_; }
@@ -91,10 +107,11 @@ TempDirPair::~TempDirPair() {
     }
 }
 
-const std::filesystem::path G_ProjectPath = PROJECT_DIR;
-const std::filesystem::path G_SolutionPath = SOLUTION_DIR;
-const std::filesystem::path G_TestPath =
-    MakePathToUnitTestFiles(G_SolutionPath);
+fs::path GetProjectRoot() { return fs::path{PROJECT_DIR}; }
+fs::path GetSolutionRoot() { return fs::path{SOLUTION_DIR}; }
+fs::path GetUnitTestFilesRoot() {
+    return MakePathToUnitTestFiles(GetSolutionRoot());
+}
 
 // below described the structure of the solution folder:
 // solution root <--- Use SOLUTION_DIR define
@@ -122,14 +139,6 @@ std::filesystem::path MakePathToCapTestFiles(const std::wstring& root) {
     std::filesystem::path r{root};
     r = r / kSolutionTestFilesFolderName / kSolutionCapTestFilesFolderName;
     return r.lexically_normal();
-}
-
-void PrintNode(YAML::Node node, std::string_view S) {
-    if (tgt::IsDebug()) {
-        YAML::Emitter emit;
-        emit << node;
-        XLOG::l("{}:\n{}", S, emit.c_str());
-    }
 }
 
 void SafeCleanTempDir() {
@@ -321,8 +330,7 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
         cfg_files.emplace_back(yml);
     }
 
-    auto ret =
-        cma::cfg::InitializeMainConfig(cfg_files, cma::YamlCacheOp::nothing);
+    auto ret = cma::LoadConfigBase(cfg_files, cma::YamlCacheOp::nothing);
     if (ret) {
         cma::cfg::ProcessKnownConfigGroups();
         cma::cfg::SetupEnvironmentFromGroups();
@@ -330,6 +338,26 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
 
     return ret;
 }
+
+bool TempCfgFs::reloadConfig() {
+    std::vector<std::wstring> cfg_files;
+    if (mode_ == Mode::standard) {
+        cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
+    } else {
+        XLOG::l("No io mode doesnt allow reloading");
+        return false;
+    }
+
+    auto ret = cma::LoadConfigBase(cfg_files, cma::YamlCacheOp::update);
+    if (ret) {
+        cma::cfg::ProcessKnownConfigGroups();
+        cma::cfg::SetupEnvironmentFromGroups();
+    }
+
+    return ret;
+}
+
+bool TempCfgFs::loadFactoryConfig() { return loadConfig(tst::GetFabricYml()); }
 
 bool TempCfgFs::loadContent(std::string_view content) {
     auto ret = cma::cfg::GetCfg().loadDirect(content);
@@ -339,6 +367,12 @@ bool TempCfgFs::loadContent(std::string_view content) {
     }
 
     return ret;
+}
+
+void TempCfgFs::allowUserAccess() {
+    std::vector<std::wstring> commands;
+    tst::AllowReadWriteAccess(base_, commands);
+    wtools::ExecuteCommandsSync(L"all", commands);
 }
 
 [[nodiscard]] bool TempCfgFs::createFile(
@@ -384,7 +418,7 @@ bool TempCfgFs::loadContent(std::string_view content) {
 }
 
 std::filesystem::path GetFabricYml() {
-    return G_SolutionPath / "install" / "resources" /
+    return tst::GetSolutionRoot() / "install" / "resources" /
            cma::cfg::files::kDefaultMainConfig;
 }
 
@@ -452,5 +486,15 @@ FirewallOpener::~FirewallOpener() {
         cma::fw::RemoveRule(firewall_test_rule_name, argv0_);
     }
 }
+
+namespace misc {
+void CopyFailedPythonLogFileToLog(const std::filesystem::path& data) {
+    const auto& the_file =
+        tst::MakePathToUnitTestFiles() / "agent_msi.failed.python.log";
+    fs::create_directories(data / cma::cfg::dirs::kLog);
+    fs::copy_file(the_file, fs::path{cma::cfg::GetLogDir()} /
+                                cma::install::kMsiLogFileName);
+}
+}  // namespace misc
 
 }  // namespace tst

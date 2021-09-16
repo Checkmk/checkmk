@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_psu:sep(9)>>>
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
@@ -17,7 +18,7 @@ discovery_netapp_api_psu_rules = []
 
 
 def _format_item(key):
-    return key.replace('.', '/')
+    return key.replace(".", "/")
 
 
 def discovery_netapp_api_psu(parsed):
@@ -39,11 +40,12 @@ def check_netapp_api_psu(item, _no_params, parsed):
 
 
 check_info["netapp_api_psu"] = {
-    'check_function': check_netapp_api_psu,
-    'inventory_function': discovery_netapp_api_psu,
-    'parse_function': lambda info: netapp_api_parse_lines(
-        info, custom_keys=["power-supply-list", "power-supply-element-number"]),
-    'service_description': 'Power Supply Shelf %s',
+    "check_function": check_netapp_api_psu,
+    "inventory_function": discovery_netapp_api_psu,
+    "parse_function": lambda info: netapp_api_parse_lines(
+        info, custom_keys=["power-supply-list", "power-supply-element-number"]
+    ),
+    "service_description": "Power Supply Shelf %s",
 }
 
 
@@ -51,7 +53,7 @@ def discovery_netapp_api_psu_summary(parsed):
     if discover_single_items(discovery_netapp_api_psu_rules):
         return
     if _get_psus_with_power_supply(parsed):
-        yield 'Summary', {}
+        yield "Summary", {}
 
 
 def _get_psus_with_power_supply(psus):
@@ -76,12 +78,15 @@ def check_netapp_api_psu_summary(item, _no_params, parsed):
     if erred_psus:
         erred_psus_names = ", ".join(erred_psus)
         count = len(erred_psus)
-        yield 2, "%d power supply unit%s in error state (%s)" % (count, "" if count == 1 else "s",
-                                                                 erred_psus_names)
+        yield 2, "%d power supply unit%s in error state (%s)" % (
+            count,
+            "" if count == 1 else "s",
+            erred_psus_names,
+        )
 
 
-check_info['netapp_api_psu.summary'] = {
-    'check_function': check_netapp_api_psu_summary,
-    'inventory_function': discovery_netapp_api_psu_summary,
-    'service_description': 'Power Supply Shelf %s',
+check_info["netapp_api_psu.summary"] = {
+    "check_function": check_netapp_api_psu_summary,
+    "inventory_function": discovery_netapp_api_psu_summary,
+    "service_description": "Power Supply Shelf %s",
 }

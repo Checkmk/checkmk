@@ -21,18 +21,19 @@ def check_didactum_sensors_outlet_relay(item, params, parsed):
         return data["state"], "Status: %s" % data["state_readable"]
 
 
-check_info['didactum_sensors_outlet'] = {
-    'parse_function': parse_didactum_sensors,
-    'inventory_function': inventory_didactum_sensors_outlet_relay,
-    'check_function': check_didactum_sensors_outlet_relay,
-    'service_description': 'Relay %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.46501.5.3.1',
+check_info["didactum_sensors_outlet"] = {
+    "parse_function": parse_didactum_sensors,
+    "inventory_function": inventory_didactum_sensors_outlet_relay,
+    "check_function": check_didactum_sensors_outlet_relay,
+    "service_description": "Relay %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.46501.5.3.1",
         [
             "4",  # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsOutletType
             "5",  # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsOutletName
             "6",  # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsOutletState
             "7",  # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsOutletValue
-        ]),
-    'snmp_scan_function': scan_didactum,
+        ],
+    ),
+    "snmp_scan_function": scan_didactum,
 }

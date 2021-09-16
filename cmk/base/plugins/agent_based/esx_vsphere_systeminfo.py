@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .agent_based_api.v1 import register, HostLabel
+from .agent_based_api.v1 import HostLabel, register
 
 
 def parse_esx_vsphere_systeminfo(string_table):
@@ -32,11 +32,20 @@ def parse_esx_vsphere_systeminfo(string_table):
 
 
 def host_label_esx_vshpere_systeminfo(section):
+    """Host label function
+
+    Labels:
+
+        cmk/vsphere_object:
+            This label is set to "vcenter" if the corresponding host is a
+            VMWare vCenter, and to "server" if the host is an ESXi hostsystem.
+
+    """
     name = section.get("name", "")
     if "vCenter" in name:
-        yield HostLabel(u"cmk/vsphere_object", u"vcenter")
+        yield HostLabel("cmk/vsphere_object", "vcenter")
     elif "ESXi" in name:
-        yield HostLabel(u"cmk/vsphere_object", u"server")
+        yield HostLabel("cmk/vsphere_object", "server")
 
 
 register.agent_section(

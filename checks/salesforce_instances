@@ -53,9 +53,9 @@ def check_salesforce_instances(item, params, parsed):
                 yield 0, "%s: %s" % (title, data[key])
 
 
-check_info['salesforce_instances'] = {
-    'parse_function': parse_salesforce,
-    'inventory_function': inventory_salesforce_instances,
-    'check_function': check_salesforce_instances,
-    'service_description': 'Salesforce Instance %s',
+check_info["salesforce_instances"] = {
+    "parse_function": parse_salesforce,
+    "inventory_function": inventory_salesforce_instances,
+    "check_function": check_salesforce_instances,
+    "service_description": "Salesforce Instance %s",
 }

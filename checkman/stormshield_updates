@@ -13,6 +13,6 @@ description:
 item:
  The name of the subsystem
 
-inventory:
+discovery:
  One service is created for each subsystem
  if it is not in state (not available).

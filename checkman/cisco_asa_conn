@@ -14,5 +14,5 @@ description:
 item:
   One item for each connection is generated.
 
-inventory:
+discovery:
   One service is created for each connection.

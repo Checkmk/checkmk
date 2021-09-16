@@ -9,30 +9,32 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#.1.3.6.1.4.1.25597.11.5.1.10.0 1
-#.1.3.6.1.4.1.25597.11.5.1.11.0 1
-#.1.3.6.1.4.1.25597.11.5.1.12.0 1
+
+# .1.3.6.1.4.1.25597.11.5.1.10.0 1
+# .1.3.6.1.4.1.25597.11.5.1.11.0 1
+# .1.3.6.1.4.1.25597.11.5.1.12.0 1
 
 
 def check_fireeye_lic_active(_no_item, _no_params, info):
     product, content, support = info[0]
-    for feature, value in [('Product', product), ('Content', content), ('Support', support)]:
-        if value == '1':
-            yield 0, '%s license active' % feature
+    for feature, value in [("Product", product), ("Content", content), ("Support", support)]:
+        if value == "1":
+            yield 0, "%s license active" % feature
         else:
-            yield 2, '%s license not active' % feature
+            yield 2, "%s license not active" % feature
 
 
-check_info['fireeye_lic_active'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False),
-    'check_function': check_fireeye_lic_active,
-    'service_description': 'Active Licenses',
-    'snmp_info': (
-        '.1.3.6.1.4.1.25597.11.5.1',
+check_info["fireeye_lic_active"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False),
+    "check_function": check_fireeye_lic_active,
+    "service_description": "Active Licenses",
+    "snmp_info": (
+        ".1.3.6.1.4.1.25597.11.5.1",
         [
-            '10',  # FE-FIREEYE-MIB::feProductLicenseActive
-            '11',  # FE-FIREEYE-MIB::feContentLicenseActive
-            '12',  # FE-FIREEYE-MIB::feSupportLicenseActive
-        ]),
-    'snmp_scan_function': scan_fireeye,
+            "10",  # FE-FIREEYE-MIB::feProductLicenseActive
+            "11",  # FE-FIREEYE-MIB::feContentLicenseActive
+            "12",  # FE-FIREEYE-MIB::feSupportLicenseActive
+        ],
+    ),
+    "snmp_scan_function": scan_fireeye,
 }

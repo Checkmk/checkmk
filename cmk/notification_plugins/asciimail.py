@@ -12,14 +12,14 @@ from email.mime.text import MIMEText
 
 from cmk.notification_plugins import utils
 
-opt_debug = '-d' in sys.argv
-bulk_mode = '--bulk' in sys.argv
+opt_debug = "-d" in sys.argv
+bulk_mode = "--bulk" in sys.argv
 
 # Note: When you change something here, please also change this
 # in web/plugins/wato/notifications.py in the default values of the configuration
 # ValueSpec.
-tmpl_host_subject = 'Check_MK: $HOSTNAME$ - $EVENT_TXT$'
-tmpl_service_subject = 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$'
+tmpl_host_subject = "Check_MK: $HOSTNAME$ - $EVENT_TXT$"
+tmpl_service_subject = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
 tmpl_common_body = """Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
@@ -92,7 +92,7 @@ def construct_content(context):
 
     # Prepare the mail contents
     if "PARAMETER_COMMON_BODY" in context:
-        tmpl_body = context['PARAMETER_COMMON_BODY']
+        tmpl_body = context["PARAMETER_COMMON_BODY"]
     else:
         tmpl_body = tmpl_common_body
 
@@ -104,20 +104,20 @@ def construct_content(context):
         my_tmpl_service_body = tmpl_service_body
 
     # Compute the subject and body of the mail
-    if context['WHAT'] == 'HOST':
-        tmpl = context.get('PARAMETER_HOST_SUBJECT') or tmpl_host_subject
+    if context["WHAT"] == "HOST":
+        tmpl = context.get("PARAMETER_HOST_SUBJECT") or tmpl_host_subject
         if "PARAMETER_HOST_BODY" in context:
             tmpl_body += context["PARAMETER_HOST_BODY"]
         else:
             tmpl_body += my_tmpl_host_body
     else:
-        tmpl = context.get('PARAMETER_SERVICE_SUBJECT') or tmpl_service_subject
+        tmpl = context.get("PARAMETER_SERVICE_SUBJECT") or tmpl_service_subject
         if "PARAMETER_SERVICE_BODY" in context:
             tmpl_body += context["PARAMETER_SERVICE_BODY"]
         else:
             tmpl_body += my_tmpl_service_body
 
-    context['SUBJECT'] = utils.substitute_context(tmpl, context)
+    context["SUBJECT"] = utils.substitute_context(tmpl, context)
     body = utils.substitute_context(tmpl_body, context)
 
     return body
@@ -131,8 +131,8 @@ def main():
         for context in contexts:
             context.update(parameters)
             content_txt += construct_content(context)
-            mailto = context['CONTACTEMAIL']  # Assume the same in each context
-            subject = context['SUBJECT']
+            mailto = context["CONTACTEMAIL"]  # Assume the same in each context
+            subject = context["SUBJECT"]
             hosts.add(context["HOSTNAME"])
 
         # Use the single context subject in case there is only one context in the bulk
@@ -143,8 +143,8 @@ def main():
         # gather all options from env
         context = utils.collect_context()
         content_txt = construct_content(context)
-        mailto = context['CONTACTEMAIL']
-        subject = context['SUBJECT']
+        mailto = context["CONTACTEMAIL"]
+        subject = context["SUBJECT"]
 
     if not mailto:  # e.g. empty field in user database
         sys.stdout.write("Cannot send ASCII email: empty destination email address\n")
@@ -152,12 +152,16 @@ def main():
 
     # Create the mail and send it
     from_address = utils.format_address(
-        context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-        context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()))
-    reply_to = utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
-                                    context.get("PARAMETER_REPLY_TO_ADDRESS", u""))
-    m = utils.set_mail_headers(mailto, subject, from_address, reply_to,
-                               MIMEText(content_txt, 'plain', _charset='utf-8'))
+        context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
+        context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+    )
+    reply_to = utils.format_address(
+        context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),
+        context.get("PARAMETER_REPLY_TO_ADDRESS", ""),
+    )
+    m = utils.set_mail_headers(
+        mailto, subject, from_address, reply_to, MIMEText(content_txt, "plain", _charset="utf-8")
+    )
     try:
         sys.exit(utils.send_mail_sendmail(m, mailto, from_address))
     except Exception as e:

@@ -8,5 +8,5 @@ description:
  A Critical state will be triggered if the quarantine queue is not empty.
  You need to install the plugin {kaspersky_av} into the {plugins} directory of your agent.
 
-inventory:
+discovery:
  One service is created for each system.

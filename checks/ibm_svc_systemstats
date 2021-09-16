@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Note: This file is almost identical with ibm_svc_systemstats. We should
 # create an include file for sharing common code!
 
@@ -61,20 +62,38 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 def ibm_svc_systemstats_parse(info):
     parsed = {}
     for stat_name, stat_current, _stat_peak, _stat_peak_time in info:
-        if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms",
-                         "vdisk_w_ms"):
+        if stat_name in (
+            "vdisk_r_mb",
+            "vdisk_w_mb",
+            "vdisk_r_io",
+            "vdisk_w_io",
+            "vdisk_r_ms",
+            "vdisk_w_ms",
+        ):
             if "VDisks" not in parsed:
                 parsed["VDisks"] = {}
             stat_name = stat_name.replace("vdisk_", "")
             parsed["VDisks"][stat_name] = int(stat_current)
-        if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
-                         "mdisk_w_ms"):
+        if stat_name in (
+            "mdisk_r_mb",
+            "mdisk_w_mb",
+            "mdisk_r_io",
+            "mdisk_w_io",
+            "mdisk_r_ms",
+            "mdisk_w_ms",
+        ):
             if "MDisks" not in parsed:
                 parsed["MDisks"] = {}
             stat_name = stat_name.replace("mdisk_", "")
             parsed["MDisks"][stat_name] = int(stat_current)
-        if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
-                         "drive_w_ms"):
+        if stat_name in (
+            "drive_r_mb",
+            "drive_w_mb",
+            "drive_r_io",
+            "drive_w_io",
+            "drive_r_ms",
+            "drive_w_ms",
+        ):
             if "Drives" not in parsed:
                 parsed["Drives"] = {}
             stat_name = stat_name.replace("drive_", "")
@@ -102,13 +121,16 @@ def check_ibm_svc_systemstats_diskio(item, _no_params, info):
     if item not in parsed:
         return 3, "%s not found in agent output" % item
 
-    read_bytes = parsed[item]['r_mb'] * 1024 * 1024
-    write_bytes = parsed[item]['w_mb'] * 1024 * 1024
+    read_bytes = parsed[item]["r_mb"] * 1024 * 1024
+    write_bytes = parsed[item]["w_mb"] * 1024 * 1024
     perfdata = [("read", read_bytes), ("write", write_bytes)]
 
-    return 0, "%s/s read, %s/s write" % \
-        (get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes)), \
-        perfdata
+    return (
+        0,
+        "%s/s read, %s/s write"
+        % (get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes)),
+        perfdata,
+    )
 
 
 check_info["ibm_svc_systemstats.diskio"] = {
@@ -118,7 +140,7 @@ check_info["ibm_svc_systemstats.diskio"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--iops----------------------------------------------------------------.
 #   |                          _                                           |
 #   |                         (_) ___  _ __  ___                           |
@@ -139,8 +161,8 @@ def check_ibm_svc_systemstats_iops(item, _no_params, info):
     if item not in parsed:
         return 3, "%s not found in agent output" % item
 
-    read_iops = parsed[item]['r_io']
-    write_iops = parsed[item]['w_io']
+    read_iops = parsed[item]["r_io"]
+    write_iops = parsed[item]["w_io"]
     perfdata = [("read", read_iops), ("write", write_iops)]
 
     return 0, "%s IO/s read, %s IO/s write" % (read_iops, write_iops), perfdata
@@ -153,7 +175,7 @@ check_info["ibm_svc_systemstats.iops"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--disk latency--------------------------------------------------------.
 #   |             _ _     _      _       _                                 |
 #   |          __| (_)___| | __ | | __ _| |_ ___ _ __   ___ _   _          |
@@ -178,13 +200,11 @@ def check_ibm_svc_systemstats_disk_latency(item, params, info):
     if not params:
         params = {}  # Convert from previous None
 
-    for what, latency in [('read', parsed[item]['r_ms']), ('write', parsed[item]['w_ms'])]:
+    for what, latency in [("read", parsed[item]["r_ms"]), ("write", parsed[item]["w_ms"])]:
 
-        yield check_levels(latency,
-                           what + "_latency",
-                           params.get(what),
-                           unit="ms",
-                           infoname="%s latency" % what)
+        yield check_levels(
+            latency, what + "_latency", params.get(what), unit="ms", infoname="%s latency" % what
+        )
 
 
 check_info["ibm_svc_systemstats.disk_latency"] = {
@@ -195,7 +215,7 @@ check_info["ibm_svc_systemstats.disk_latency"] = {
     "group": "ibm_svc_total_latency",
 }
 
-#.
+# .
 #   .--cpu-----------------------------------------------------------------.
 #   |                                                                      |
 #   |                           ___ _ __  _   _                            |
@@ -233,7 +253,7 @@ check_info["ibm_svc_systemstats.cpu_util"] = {
     "group": "cpu_utilization",
 }
 
-#.
+# .
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
 #   |                       ___ __ _  ___| |__   ___                       |
@@ -267,11 +287,16 @@ def check_ibm_svc_systemstats_cache(item, _no_params, info):
     if write_cache_pc is None:
         return 3, "value write_cache_pc not found in agent output"
 
-    perfdata = [("write_cache_pc", write_cache_pc, None, None, 0, 100),
-                ("total_cache_pc", total_cache_pc, None, None, 0, 100)]
+    perfdata = [
+        ("write_cache_pc", write_cache_pc, None, None, 0, 100),
+        ("total_cache_pc", total_cache_pc, None, None, 0, 100),
+    ]
 
-    return 0, "Write cache usage is %d %%, total cache usage is %d %%" % \
-           (write_cache_pc, total_cache_pc), perfdata
+    return (
+        0,
+        "Write cache usage is %d %%, total cache usage is %d %%" % (write_cache_pc, total_cache_pc),
+        perfdata,
+    )
 
 
 check_info["ibm_svc_systemstats.cache"] = {

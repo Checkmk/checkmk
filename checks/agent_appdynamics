@@ -7,22 +7,22 @@
 
 def agent_appdynamics_arguments(params, hostname, ipaddress):
     args = []
-    args += ['-u', params['username']]
-    args += ['-p', params['password']]
+    args += ["-u", params["username"]]
+    args += ["-p", params["password"]]
 
-    if 'port' in params:
-        args += ['-P', '%d' % params['port']]
+    if "port" in params:
+        args += ["-P", "%d" % params["port"]]
 
-    if 'timeout' in params:
-        args += ['-t', '%d' % params['timeout']]
+    if "timeout" in params:
+        args += ["-t", "%d" % params["timeout"]]
 
     if ipaddress:
         args.append(ipaddress)
     else:
         args.append(hostname)
 
-    args.append(params['application'])
+    args.append(params["application"])
     return args
 
 
-special_agent_info['appdynamics'] = agent_appdynamics_arguments
+special_agent_info["appdynamics"] = agent_appdynamics_arguments

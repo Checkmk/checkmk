@@ -4,18 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.user_notify import render_user_notification_table
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
+from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
+from cmk.gui.user_notify import render_user_notification_table
 
 
 @dashlet_registry.register
 class NotifyUsersDashlet(Dashlet):
     """Dashlet that displays GUI notifications for users"""
+
     @classmethod
     def type_name(cls):
         return "notify_users"

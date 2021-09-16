@@ -30,7 +30,7 @@ item:
  Please note that the current implementation of the agent plugin
  supports only one instance per host.
 
-inventory:
+discovery:
  One service is created for each JMX instance sent by the agent.
  The agent currently supports only one instance, but that might
  be changed in future.

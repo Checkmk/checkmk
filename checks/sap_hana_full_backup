@@ -13,8 +13,8 @@ def check_sap_hana_full_backup(item, params, parsed):
     return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
-check_info['sap_hana_full_backup'] = {
-    'inventory_function': inventory_sap_hana_full_backup,
-    'check_function': check_sap_hana_full_backup,
-    'service_description': 'SAP HANA Full Backup %s',
+check_info["sap_hana_full_backup"] = {
+    "inventory_function": inventory_sap_hana_full_backup,
+    "check_function": check_sap_hana_full_backup,
+    "service_description": "SAP HANA Full Backup %s",
 }

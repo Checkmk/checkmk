@@ -8,35 +8,42 @@
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_3par_system(parsed):
     if "name" in parsed:
-        return [(parsed['name'], None)]
+        return [(parsed["name"], None)]
 
 
 def check_3par_system(item, _no_params, parsed):
     state = 0
 
-    serial = parsed.get('serialNumber', "N/A")
-    model = parsed.get('model', "N/A")
-    sys_version = parsed.get('systemVersion', "N/A")
-    cluster_nodes = parsed.get('clusterNodes', 0)
-    online_nodes = parsed.get('onlineNodes', 0)
+    serial = parsed.get("serialNumber", "N/A")
+    model = parsed.get("model", "N/A")
+    sys_version = parsed.get("systemVersion", "N/A")
+    cluster_nodes = parsed.get("clusterNodes", 0)
+    online_nodes = parsed.get("onlineNodes", 0)
 
-    yield state, 'Model: %s, Version: %s, Serial number: %s, Online nodes: %s/%s' % \
-        (model, sys_version, serial, len(online_nodes), len(cluster_nodes))
+    yield state, "Model: %s, Version: %s, Serial number: %s, Online nodes: %s/%s" % (
+        model,
+        sys_version,
+        serial,
+        len(online_nodes),
+        len(cluster_nodes),
+    )
 
     if len(online_nodes) < len(cluster_nodes):
         state = 2
@@ -45,9 +52,9 @@ def check_3par_system(item, _no_params, parsed):
                 yield state, "(Node %s not available)" % node
 
 
-check_info['3par_system'] = {
-    'parse_function': parse_3par,
-    'inventory_function': inventory_3par_system,
-    'check_function': check_3par_system,
-    'service_description': "3PAR %s",
+check_info["3par_system"] = {
+    "parse_function": parse_3par,
+    "inventory_function": inventory_3par_system,
+    "check_function": check_3par_system,
+    "service_description": "3PAR %s",
 }

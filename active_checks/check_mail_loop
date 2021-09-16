@@ -5,26 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Email server roundtrip active check
 """
-from typing import Tuple, Dict
-import os
-import re
 import argparse
-import logging
-from contextlib import suppress
-import time
-import random
-import smtplib
-import email.utils
 import email.mime.text
+import email.utils
+import logging
+import os
+import random
+import re
+import smtplib
+import time
+from contextlib import suppress
+from typing import Dict, Tuple
 
 from cmk.utils.mailbox import (
-    SendMailError,
-    FetchMailsError,
-    CheckResult,
     active_check_main,
-    MailMessages,
     Args,
+    CheckResult,
+    FetchMailsError,
     Mailbox,
+    MailMessages,
+    SendMailError,
 )
 
 MailID = Tuple[int, int]
@@ -33,75 +33,87 @@ MailDict = Dict[str, MailID]
 
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--smtp-server",
-                        type=str,
-                        required=True,
-                        metavar="ADDRESS",
-                        help="Host address of the SMTP server to send the mail to")
-    parser.add_argument("--smtp-port",
-                        type=int,
-                        metavar="PORT",
-                        help='Port to use for SMTP (defaults to 25)')
-    parser.add_argument("--smtp-username",
-                        type=str,
-                        metavar="USER",
-                        help="Username to use for SMTP communictation "
-                        "(leave empty for anonymous SMTP)")
-    parser.add_argument("--smtp-password",
-                        type=str,
-                        metavar="PASSWORD",
-                        help="Password to authenticate SMTP")
+    parser.add_argument(
+        "--smtp-server",
+        type=str,
+        required=True,
+        metavar="ADDRESS",
+        help="Host address of the SMTP server to send the mail to",
+    )
+    parser.add_argument(
+        "--smtp-port", type=int, metavar="PORT", help="Port to use for SMTP (defaults to 25)"
+    )
+    parser.add_argument(
+        "--smtp-username",
+        type=str,
+        metavar="USER",
+        help="Username to use for SMTP communictation " "(leave empty for anonymous SMTP)",
+    )
+    parser.add_argument(
+        "--smtp-password", type=str, metavar="PASSWORD", help="Password to authenticate SMTP"
+    )
     parser.add_argument("--smtp-tls", action="store_true", help="Use TLS over SMTP")
 
-    parser.add_argument("--mail-from",
-                        type=str,
-                        required=True,
-                        help="Use this mail address as sender address")
-    parser.add_argument("--mail-to",
-                        type=str,
-                        required=True,
-                        help="Use this mail address as recipient address")
+    parser.add_argument(
+        "--mail-from", type=str, required=True, help="Use this mail address as sender address"
+    )
+    parser.add_argument(
+        "--mail-to", type=str, required=True, help="Use this mail address as recipient address"
+    )
 
-    parser.add_argument("--warning",
-                        type=int,
-                        metavar="AGE",
-                        help="Loop duration of the most recent mail in seconds or the average of "
-                        "all received mails within a single check to raise a WARNING state")
-    parser.add_argument("--critical",
-                        type=int,
-                        metavar="AGE",
-                        default=3600,
-                        help="Loop duration in seconds of the most recent mail in seconds or the "
-                        "average of all received mails within a single check to raise a "
-                        "CRITICAL state")
+    parser.add_argument(
+        "--warning",
+        type=int,
+        metavar="AGE",
+        help="Loop duration of the most recent mail in seconds or the average of "
+        "all received mails within a single check to raise a WARNING state",
+    )
+    parser.add_argument(
+        "--critical",
+        type=int,
+        metavar="AGE",
+        default=3600,
+        help="Loop duration in seconds of the most recent mail in seconds or the "
+        "average of all received mails within a single check to raise a "
+        "CRITICAL state",
+    )
 
-    default_status_dir = ((os.environ["OMD_ROOT"] + "/var/check_mk")  #
-                          if "OMD_ROOT" in os.environ else "/tmp")
-    parser.add_argument("--status-dir",
-                        type=str,
-                        metavar="PATH",
-                        default=default_status_dir,
-                        help="This plugin needs a file to store information about sent, received "
-                        "and expected mails. Defaults to either '/tmp/' or "
-                        "'/omd/sites/<sitename>/var/check_mk' when executed from within an "
-                        "OMD site")
-    parser.add_argument("--status-suffix",
-                        type=str,
-                        metavar="SUFFIX",
-                        help="Concantenated with 'check_mail_loop.SUFFIX.status' to generate "
-                        "the name of the status file.")
+    default_status_dir = (
+        (os.environ["OMD_ROOT"] + "/var/check_mk") if "OMD_ROOT" in os.environ else "/tmp"  #
+    )
+    parser.add_argument(
+        "--status-dir",
+        type=str,
+        metavar="PATH",
+        default=default_status_dir,
+        help="This plugin needs a file to store information about sent, received "
+        "and expected mails. Defaults to either '/tmp/' or "
+        "'/omd/sites/<sitename>/var/check_mk' when executed from within an "
+        "OMD site",
+    )
+    parser.add_argument(
+        "--status-suffix",
+        type=str,
+        metavar="SUFFIX",
+        help="Concantenated with 'check_mail_loop.SUFFIX.status' to generate "
+        "the name of the status file.",
+    )
 
-    parser.add_argument("--delete-messages",
-                        action="store_true",
-                        help="Delete all messages identified as being related to this check "
-                        "plugin. This is disabled by default, which might make your mailbox "
-                        "grow when you not clean it up manually.")
+    parser.add_argument(
+        "--delete-messages",
+        action="store_true",
+        help="Delete all messages identified as being related to this check "
+        "plugin. This is disabled by default, which might make your mailbox "
+        "grow when you not clean it up manually.",
+    )
 
-    parser.add_argument("--subject",
-                        type=str,
-                        metavar="SUBJECT",
-                        default="Check_MK-Mail-Loop",
-                        help="You can specify the subject text.")
+    parser.add_argument(
+        "--subject",
+        type=str,
+        metavar="SUBJECT",
+        default="Check_MK-Mail-Loop",
+        help="You can specify the subject text.",
+    )
 
     return parser
 
@@ -110,17 +122,17 @@ def load_expected_mails(status_path: str) -> MailDict:
     with suppress(IOError):
         with open(status_path) as file:
             return {
-                ts + '-' + key: (int(ts), int(key))  #
+                ts + "-" + key: (int(ts), int(key))  #
                 for line in file  #
-                for ts, key in (line.rstrip().split(' ', 1),)
+                for ts, key in (line.rstrip().split(" ", 1),)
             }
     return {}
 
 
 def save_expected_mails(expected_mails: MailDict, status_path: str) -> None:
-    with open(status_path, 'w') as file:
-        file.write('\n'.join('%d %s' % (ts, key) for ts, key in expected_mails.values()))
-        file.write('\n')
+    with open(status_path, "w") as file:
+        file.write("\n".join("%d %s" % (ts, key) for ts, key in expected_mails.values()))
+        file.write("\n")
 
 
 def _send_mail(args: Args) -> Tuple[str, MailID]:
@@ -129,10 +141,10 @@ def _send_mail(args: Args) -> Tuple[str, MailID]:
     key = random.randint(1, 1000)
 
     mail = email.mime.text.MIMEText("")
-    mail['From'] = args.mail_from
-    mail['To'] = args.mail_to
-    mail['Subject'] = '%s %d %d' % (args.subject, now, key)
-    mail['Date'] = email.utils.formatdate(localtime=True)
+    mail["From"] = args.mail_from
+    mail["To"] = args.mail_to
+    mail["Subject"] = "%s %d %d" % (args.subject, now, key)
+    mail["Date"] = email.utils.formatdate(localtime=True)
 
     with smtplib.SMTP(args.smtp_server, args.smtp_port, timeout=args.connect_timeout) as connection:
         if args.smtp_tls:
@@ -151,28 +163,31 @@ def send_mail(args: Args) -> Tuple[str, MailID]:
         return _send_mail(args)
     except smtplib.SMTPAuthenticationError as exc:
         if exc.smtp_code == 530:
-            raise SendMailError("Could not login to SMTP server. "
-                                "Looks like you have to use the --smtp-tls flag.") from exc
+            raise SendMailError(
+                "Could not login to SMTP server. " "Looks like you have to use the --smtp-tls flag."
+            ) from exc
         if exc.smtp_code == 535:
-            raise SendMailError("Could not login to SMTP server. "
-                                "Looks like you provided the wrong credentials.") from exc
+            raise SendMailError(
+                "Could not login to SMTP server. " "Looks like you provided the wrong credentials."
+            ) from exc
         raise SendMailError("Could not login to SMTP server. (%r)" % exc) from exc
     except smtplib.SMTPRecipientsRefused as exc:
-        raise SendMailError("Could not send email. "
-                            "Maybe you've sent too much mails? (%r)." % exc) from exc
+        raise SendMailError(
+            "Could not send email. " "Maybe you've sent too much mails? (%r)." % exc
+        ) from exc
     except Exception as exc:
-        raise SendMailError('Failed to send mail: %r' % exc) from exc
+        raise SendMailError("Failed to send mail: %r" % exc) from exc
 
 
 def _regex_pattern(subject: str) -> re.Pattern:
-    return re.compile(r'(?i)(?:re: |wg: )?%s ([^\s]+) ([^\s]+)' % subject)
+    return re.compile(r"(?i)(?:re: |wg: )?%s ([^\s]+) ([^\s]+)" % subject)
 
 
 def fetch_mail_timestamps(
-        args: Args,
-        mails: MailMessages,
-        expected_mails: MailDict,
-        now: int = int(time.time()),
+    args: Args,
+    mails: MailMessages,
+    expected_mails: MailDict,
+    now: int = int(time.time()),
 ) -> Tuple[MailDict, MailDict]:
     """Fetch mails and return tuples of dicts containing timestamps of mails which have been
     not expected (anymore) and expected"""
@@ -185,16 +200,16 @@ def fetch_mail_timestamps(
         pattern = _regex_pattern(args.subject)
 
         for index, msg in mails.items():
-            matches = pattern.match(msg.get('Subject', ''))
+            matches = pattern.match(msg.get("Subject", ""))
             if not matches:
-                logging.debug("Skip mail with subject %r", msg.get('Subject', ''))
+                logging.debug("Skip mail with subject %r", msg.get("Subject", ""))
                 continue
 
             ts = matches.group(1).strip()
             key = matches.group(2).strip()
 
-            if 'Received' in msg:
-                parsed = email.utils.parsedate_tz(msg['Received'].split(';')[-1])
+            if "Received" in msg:
+                parsed = email.utils.parsedate_tz(msg["Received"].split(";")[-1])
                 rx_ts = email.utils.mktime_tz(parsed) if parsed else now
             else:
                 # use current time as fallback where no Received header could be found
@@ -243,7 +258,7 @@ def check_mails(
                 state = max(state, 1)
 
             if state:
-                output.append(' (warn/crit at %s/%s)' % (warning, critical))
+                output.append(" (warn/crit at %s/%s)" % (warning, critical))
 
             del expected_mails[ident]  # remove message from expect list
             # FIXME: Also remove older mails which have not yet been seen?
@@ -266,27 +281,28 @@ def check_mails(
     if durations:
         average = sum(durations) / len(durations)
         if len(durations) == 1:
-            output.insert(0, 'Mail received within %d seconds' % durations[0])
+            output.insert(0, "Mail received within %d seconds" % durations[0])
         else:
             output.insert(
-                0, 'Received %d mails within average of %d seconds' % (len(durations), average))
+                0, "Received %d mails within average of %d seconds" % (len(durations), average)
+            )
         # TODO: wouldn't max(durations) be useful here?
-        perfdata.append(('duration', average, warning or '', critical or ''))
+        perfdata.append(("duration", average, warning or "", critical or ""))
     else:
-        output.insert(0, 'Did not receive any new mail')
+        output.insert(0, "Did not receive any new mail")
 
     if num_lost:
-        output.append('Lost: %d (Did not arrive within %d seconds)' % (num_lost, critical))
+        output.append("Lost: %d (Did not arrive within %d seconds)" % (num_lost, critical))
 
     if num_pending:
-        output.append('Currently waiting for %d mails' % num_pending)
+        output.append("Currently waiting for %d mails" % num_pending)
 
     return state, ", ".join(output), perfdata
 
 
 def check_mail_roundtrip(args: Args) -> CheckResult:
     # TODO: maybe we should use cmk.utils.paths.tmp_dir?
-    status_path = '%s/check_mail_loop%s.status' % (
+    status_path = "%s/check_mail_loop%s.status" % (
         args.status_dir,
         (".%s" % args.status_suffix) if args.status_suffix else "",
     )
@@ -317,9 +333,12 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             # Do not delete all messages in the inbox. Only the ones which were
             # processed before! In the meantime new ones might have come in.
             mailbox.delete_mails(
-                set(elem[0]
+                set(
+                    elem[0]
                     for maillist in (obsolete_mails, fetched_mails)
-                    for elem in maillist.values()))
+                    for elem in maillist.values()
+                )
+            )
 
     return state, output, perfdata
 

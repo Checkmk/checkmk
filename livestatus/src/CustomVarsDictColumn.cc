@@ -6,15 +6,12 @@
 #include "CustomVarsDictColumn.h"
 
 #include <stdexcept>
+#include <unordered_map>
 
 #include "CustomVarsDictFilter.h"
 #include "Renderer.h"
 #include "Row.h"
 class Aggregator;
-
-#ifdef CMC
-#include "cmc.h"
-#endif
 
 void CustomVarsDictColumn::output(
     Row row, RowRenderer &r, const contact * /*auth_user*/,

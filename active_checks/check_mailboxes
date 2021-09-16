@@ -8,40 +8,34 @@
 
 import argparse
 import logging
-import time
 import socket
+import time
 from getpass import getpass
 
 import cmk.utils.render
-
-from cmk.utils.mailbox import (
-    CheckResult,
-    active_check_main,
-    Args,
-    Mailbox,
-)
+from cmk.utils.mailbox import active_check_main, Args, CheckResult, Mailbox
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--warn-age",
+        "--warn-age-oldest",
         type=int,
-        help="age (in seconds) of mails above which the check will warn",
+        help="warn if the oldest message is older than this value (in seconds)",
     )
     parser.add_argument(
-        "--crit-age",
+        "--crit-age-oldest",
         type=int,
-        help="age (in seconds) of mails above which the check will become critical",
+        help="crit if the oldest message is older than this value (in seconds)",
     )
 
     parser.add_argument(
-        "--warn-new",
+        "--warn-age-newest",
         type=int,
         help="warn if the newest message is older than this value (in seconds)",
     )
     parser.add_argument(
-        "--crit-new",
+        "--crit-age-newest",
         type=int,
         help="crit if the newest message is older than this value (in seconds)",
     )
@@ -94,8 +88,8 @@ def check_mailboxes(args: Args) -> CheckResult:
         if args.mailbox and any(folder not in available_mailboxes for folder in args.mailbox):
             return (
                 3,
-                "Some mailbox names are not available: %r" %
-                (set(args.mailbox) - set(available_mailboxes)),
+                "Some mailbox names are not available: %r"
+                % (set(args.mailbox) - set(available_mailboxes)),
                 [],
             )
 
@@ -105,44 +99,67 @@ def check_mailboxes(args: Args) -> CheckResult:
             logging.debug("%d mails", mail_count)
 
             if args.crit_count and args.warn_count and mail_count >= args.warn_count:
-                messages.append((
-                    2 if mail_count >= args.crit_count else 1,
-                    "%r has %d messages (warn/crit at %d/%d)" %
-                    (folder, mail_count, args.warn_count, args.crit_count),
-                ))
+                messages.append(
+                    (
+                        2 if mail_count >= args.crit_count else 1,
+                        "%r has %d messages (warn/crit at %d/%d)"
+                        % (folder, mail_count, args.warn_count, args.crit_count),
+                    )
+                )
 
-            if args.crit_age and args.warn_age:
-                old_mails = sorted(mailbox.mails_by_date(before=now - args.warn_age))
+            if args.crit_age_oldest and args.warn_age_oldest:
+                old_mails = sorted(mailbox.mails_by_date(before=now - args.warn_age_oldest))
                 if old_mails:
                     oldest = now - old_mails[0]
-                    status = 2 if oldest >= args.crit_age else 1 if oldest >= args.warn_age else 0
+                    status = (
+                        2
+                        if oldest >= args.crit_age_oldest
+                        else 1
+                        if oldest >= args.warn_age_oldest
+                        else 0
+                    )
                     if status > 0:
                         messages.append(
-                            (status,
-                             "oldest mail in %r is at least %s old %s(warn/crit at %s/%s)" % (
-                                 folder,
-                                 cmk.utils.render.Age(oldest),
-                                 status_icon[status],
-                                 cmk.utils.render.Age(args.warn_age),
-                                 cmk.utils.render.Age(args.crit_age),
-                             )))
+                            (
+                                status,
+                                "oldest mail in %r is at least %s old %s(warn/crit at %s/%s)"
+                                % (
+                                    folder,
+                                    cmk.utils.render.Age(oldest),
+                                    status_icon[status],
+                                    cmk.utils.render.Age(args.warn_age_oldest),
+                                    cmk.utils.render.Age(args.crit_age_oldest),
+                                ),
+                            )
+                        )
 
-            if args.crit_new and args.warn_new:
-                new_mails = sorted(mailbox.mails_by_date(after=(now - args.crit_new)))
+            if args.crit_age_newest and args.warn_age_newest:
+                new_mails = sorted(mailbox.mails_by_date(after=(now - args.crit_age_newest)))
                 # crit per default in case there are no new mails
-                status, newest = 2, args.crit_new
+                status, newest = 2, args.crit_age_newest
                 if new_mails:
                     newest = now - new_mails[-1]
-                    status = 2 if newest >= args.crit_new else 1 if newest >= args.warn_new else 0
+                    status = (
+                        2
+                        if newest >= args.crit_age_newest
+                        else 1
+                        if newest >= args.warn_age_newest
+                        else 0
+                    )
                 if status > 0:
                     messages.append(
-                        (status, "newest mail in %r is at least %s old %s(warn/crit at %s/%s)" % (
-                            folder,
-                            cmk.utils.render.Age(newest),
-                            status_icon[status],
-                            cmk.utils.render.Age(args.warn_new),
-                            cmk.utils.render.Age(args.crit_new),
-                        )))
+                        (
+                            status,
+                            "newest mail in %r is at least %s old %s(warn/crit at %s/%s)"
+                            % (
+                                folder,
+                                cmk.utils.render.Age(newest),
+                                status_icon[status],
+                                cmk.utils.render.Age(args.warn_age_newest),
+                                cmk.utils.render.Age(args.crit_age_newest),
+                            ),
+                        )
+                    )
 
         if messages:
             return max(m[0] for m in messages), ", ".join([m[1] for m in messages]), None

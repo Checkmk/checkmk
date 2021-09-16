@@ -4,20 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,)
 from itertools import zip_longest
+from typing import Dict
+
+from .agent_based_api.v1 import HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .utils import docker
-
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    HostLabelGenerator,
-)
-
-from .agent_based_api.v1 import (
-    register,
-    HostLabel,
-)
 
 Section = Dict
 
@@ -40,8 +32,16 @@ def parse_docker_node_info(string_table: StringTable) -> Section:
 
 
 def host_labels_docker_node_info(section: Section) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+
+        cmk/docker_object:node :
+            This Label is set, if the corresponding host is a docker node.
+
+    """
     if section:
-        yield HostLabel(u"cmk/docker_object", u"node")
+        yield HostLabel("cmk/docker_object", "node")
 
 
 register.agent_section(

@@ -16,6 +16,6 @@ description:
 item:
  The index of the sensor, e.g. {"1"}.
 
-inventory:
+discovery:
  One service is created for each available temperature sensor (status = 2).
 

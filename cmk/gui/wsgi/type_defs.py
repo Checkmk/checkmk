@@ -12,25 +12,28 @@ Scope = List[str]
 UnixTimeStamp = int  # restrict to positive numbers
 Audience = Union[str, List[str]]
 TokenType = Literal["access_token", "refresh_token"]
-AuthType = Literal['automation', 'cookie', 'webserver', 'http_header']
+AuthType = Literal["automation", "cookie", "webserver", "http_header"]
 RFC7662 = TypedDict(
-    'RFC7662',
+    "RFC7662",
     {
-        'active': bool,
-        'scope': AuthType,
-        'client_id': str,
-        'username': str,
-        'token_type': TokenType,
-        'exp': UnixTimeStamp,  # expires
-        'iat': UnixTimeStamp,  # issued
-        'nbf': UnixTimeStamp,  # not before
-        'sub': UserId,  # subject
-        'aud': Audience,
-        'iss': str,  # issuer
-        'jti': str,  # json web token-identifier
+        "active": bool,
+        "scope": AuthType,
+        "client_id": str,
+        "username": str,
+        "token_type": TokenType,
+        "exp": UnixTimeStamp,  # expires
+        "iat": UnixTimeStamp,  # issued
+        "nbf": UnixTimeStamp,  # not before
+        "sub": UserId,  # subject
+        "aud": Audience,
+        "iss": str,  # issuer
+        "jti": str,  # json web token-identifier
     },
     total=False,
 )
-HostGroup = TypedDict('HostGroup', {
-    'alias': str,
-})
+HostGroup = TypedDict(
+    "HostGroup",
+    {
+        "alias": str,
+    },
+)

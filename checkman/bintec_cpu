@@ -8,5 +8,5 @@ description:
  be set on the total utilization. Additionally levels can be set for a high
  utilization over an extended period of time.
 
-inventory:
+discovery:
  One service is created for each host.

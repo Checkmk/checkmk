@@ -10,7 +10,7 @@ description:
  tunnels can be configured.
  The check has been tested with a cisco model ASA 5510.
 
-inventory:
+discovery:
  One service is created for each IPSEC and remote access tunnel.
 
 item:

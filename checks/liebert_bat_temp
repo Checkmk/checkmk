@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 liebert_bat_temp_default = (40, 50)  # warning / critical
 
 
@@ -28,15 +29,14 @@ def discover_liebert_bat_temp(key, _value):
 def check_liebert_bat_temp(item, params, data):
     return check_temperature(data, params, "liebert_bat_temp_%s" % item)
 
-check_info['liebert_bat_temp'] = {
-    "parse_function"      : parse_liebert_bat_temp,
-    "inventory_function"  : discover_liebert_bat_temp,
-    "check_function"      : check_liebert_bat_temp,
-    "service_description" : "Temperature %s",
-    "has_perfdata"        : True,
-    "group"               : "temperature",
-    "snmp_info"           : (".1.3.6.1.4.1.476.1.42.3.4.1.3.3.1.3", "1"),
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-                         [".1.3.6.1.4.1.476.1.42"]
 
+check_info["liebert_bat_temp"] = {
+    "parse_function": parse_liebert_bat_temp,
+    "inventory_function": discover_liebert_bat_temp,
+    "check_function": check_liebert_bat_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "snmp_info": (".1.3.6.1.4.1.476.1.42.3.4.1.3.3.1.3", "1"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.476.1.42"],
 }

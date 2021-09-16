@@ -9,5 +9,5 @@ description:
  The default upper levels are 80% (warn) and 90% (critical). These
  values can be changed using the rule "Pulse Secure disk utilization".
 
-inventory:
+discovery:
  One service is created.

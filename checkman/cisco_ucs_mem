@@ -16,5 +16,5 @@ description:
  "missing", "equippedNotPrimary", "equippedSlave" or "equippedDiscInProgress".
  When the presence state is "missing", all other data will be ignored.
 
-inventory:
+discovery:
  One service is created for each memory device.

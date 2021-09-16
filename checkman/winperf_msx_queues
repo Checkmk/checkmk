@@ -22,7 +22,7 @@ description:
 item:
  The name of the queue
 
-inventory:
+discovery:
  One service is created for each queue that is defined in {winperf_msx_queues}
  if the agent outputs the matching performance counters.
 

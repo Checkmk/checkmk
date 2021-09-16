@@ -26,14 +26,15 @@ def check_avaya_chassis_card(item, _no_params, info):
 
 
 check_info["avaya_chassis_card"] = {
-    'check_function': check_avaya_chassis_card,
-    'inventory_function': inventory_avaya_chassis_card,
-    'service_description': 'Card %s',
-    'snmp_info': (
+    "check_function": check_avaya_chassis_card,
+    "inventory_function": inventory_avaya_chassis_card,
+    "service_description": "Card %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.2272.1.4.9.1.1",
         [
             1,  # rcCardIndex
             6,  # rcCardOperStatus
-        ]),
-    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
+        ],
+    ),
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
 }

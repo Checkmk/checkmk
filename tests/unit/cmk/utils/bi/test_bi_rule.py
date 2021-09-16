@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-import bi_test_data.sample_config as sample_config
+from .bi_test_data import sample_config
 
 
 def test_load_sample_config_rule(bi_packs_sample_config):
@@ -26,9 +26,11 @@ def test_sample_config_networking_rule(
     results = applications_rule.compile(["heute"], bi_searcher_with_sample_config)
     assert len(results) == 1
     compiled_rule = results[0]
-    assert compiled_rule.required_elements() == {("heute", "heute", "Interface 2"),
-                                                 ("heute", "heute", "Interface 3"),
-                                                 ("heute", "heute", "Interface 4")}
+    assert compiled_rule.required_elements() == {
+        ("heute", "heute", "Interface 2"),
+        ("heute", "heute", "Interface 3"),
+        ("heute", "heute", "Interface 4"),
+    }
     computed_tree = compiled_rule.compute(bi_aggregation.computation_options, bi_status_fetcher)
     assert computed_tree.assumed_result is None
     assert computed_tree.actual_result.state == 1
@@ -37,15 +39,17 @@ def test_sample_config_networking_rule(
     assert computed_tree.actual_result.in_service_period
 
     # Apply assumed states
-    bi_status_fetcher.set_assumed_states({
-        ("heute", "heute", "Interface 2"): 0,
-        ("heute", "heute", "Interface 3"): 0,
-        ("heute", "heute", "Interface 4"): 0,
-    })
+    bi_status_fetcher.set_assumed_states(
+        {
+            ("heute", "heute", "Interface 2"): 0,
+            ("heute", "heute", "Interface 3"): 0,
+            ("heute", "heute", "Interface 4"): 0,
+        }
+    )
 
-    computed_tree = compiled_rule.compute(bi_aggregation.computation_options,
-                                          bi_status_fetcher,
-                                          use_assumed=True)
+    computed_tree = compiled_rule.compute(
+        bi_aggregation.computation_options, bi_status_fetcher, use_assumed=True
+    )
     assert computed_tree.assumed_result is not None
     assert computed_tree.assumed_result.state == 0
     assert computed_tree.assumed_result.downtime_state == 0

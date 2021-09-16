@@ -21,8 +21,10 @@ def _scan_version_pre_11_2(oid):
 
 
 def scan_f5_bigip(oid):
-    return ".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(
-        ".1.3.6.1.4.1.3375.2.1.4.1.0", "").lower()
+    return (
+        ".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0")
+        and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0", "").lower()
+    )
 
 
 def scan_f5_bigip_cluster_status_pre_11_2(oid):

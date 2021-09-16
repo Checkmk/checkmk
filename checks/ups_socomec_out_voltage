@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_out_voltage import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 ups_out_voltage_default_levels = (210, 180)  # warning / critical
 
 
@@ -24,12 +25,12 @@ def check_socomec_ups_out_voltage(item, params, info):
     return check_ups_out_voltage(item, params, conv_info)
 
 
-check_info['ups_socomec_out_voltage'] = {
+check_info["ups_socomec_out_voltage"] = {
     "inventory_function": inventory_socomec_ups_out_voltage,
     "check_function": check_socomec_ups_out_voltage,
     "service_description": "OUT voltage phase %s",
     "has_perfdata": True,
     "group": "evolt",
-    "snmp_info": (".1.3.6.1.4.1.4555.1.1.1.1.4.4", ['1.1', '1.2']),
+    "snmp_info": (".1.3.6.1.4.1.4555.1.1.1.1.4.4", ["1.1", "1.2"]),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4555.1.1.1",
 }

@@ -20,5 +20,5 @@ description:
 item:
  The instance ID of the MSSQL server process instance.
 
-inventory:
+discovery:
  One service is created for each server process.

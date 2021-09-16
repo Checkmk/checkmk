@@ -5,24 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_check_mk_agent_update():
-    return Dictionary(elements=[
-        ("error_deployment_globally_disabled",
-         MonitoringState(title=_("State if agent deployment is globally disabled"),
-                         default_value=1)),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "error_deployment_globally_disabled",
+                MonitoringState(
+                    title=_("State if agent deployment is globally disabled"), default_value=1
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -31,4 +32,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_check_mk_agent_update,
         title=lambda: _("Agent update"),
-    ))
+    )
+)

@@ -15,7 +15,7 @@
 # <<<filehandler>>>
 # 9376        0        817805
 
-factory_settings['filehandler_default_levels'] = {'levels': (80.0, 90.0)}
+factory_settings["filehandler_default_levels"] = {"levels": (80.0, 90.0)}
 
 
 def inventory_filehandler(info):
@@ -26,24 +26,24 @@ def check_filehandler(_no_item, params, info):
     allocated, _used_or_unused, maximum = info[0]
     state = 0
     perc = float(allocated) / float(maximum) * 100.0
-    infotext = '%.1f%% used (%s of %s file handles)' % (perc, allocated, maximum)
-    warn, crit = params['levels']
+    infotext = "%.1f%% used (%s of %s file handles)" % (perc, allocated, maximum)
+    warn, crit = params["levels"]
 
     if perc >= crit:
         state = 2
     elif perc >= warn:
         state = 1
     if state > 0:
-        infotext += ' (warn/crit at %.1f%%/%.1f%%)' % (warn, crit)
+        infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
-    return state, infotext, [('filehandler_perc', perc, warn, crit)]
+    return state, infotext, [("filehandler_perc", perc, warn, crit)]
 
 
-check_info['filehandler'] = {
-    'check_function': check_filehandler,
-    'inventory_function': inventory_filehandler,
-    'service_description': 'Filehandler',
-    'has_perfdata': True,
-    'default_levels_variable': 'filehandler_default_levels',
-    'group': 'filehandler',
+check_info["filehandler"] = {
+    "check_function": check_filehandler,
+    "inventory_function": inventory_filehandler,
+    "service_description": "Filehandler",
+    "has_perfdata": True,
+    "default_levels_variable": "filehandler_default_levels",
+    "group": "filehandler",
 }

@@ -29,17 +29,19 @@ def check_netapp_api_connection(_no_item, params, info):
         state = max(state, line_state)
 
     if suppressed_warnings:
-        infos.append("%d suppressed warning%s by WATO rule" %
-                     (suppressed_warnings, suppressed_warnings > 1 and "s" or ""))
+        infos.append(
+            "%d suppressed warning%s by WATO rule"
+            % (suppressed_warnings, suppressed_warnings > 1 and "s" or "")
+        )
 
     if infos:
         return state, ", ".join(infos)
     return 0, "The agent was able to retrieve all data from the filer"
 
 
-check_info['netapp_api_connection'] = {
+check_info["netapp_api_connection"] = {
     "inventory_function": inventory_netapp_api_connection,
     "check_function": check_netapp_api_connection,
     "service_description": "NetApp filer connection",
-    "group": "netapp_instance"
+    "group": "netapp_instance",
 }

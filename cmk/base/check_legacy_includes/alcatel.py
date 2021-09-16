@@ -21,8 +21,9 @@ def alcatel_networking_products_scan_function(oid):
     """
     Devices running until AOS6 (including).
     """
-    return oid(".1.3.6.1.2.1.1.2.0"  # MIB object "sysObjectID"
-              ).startswith(".1.3.6.1.4.1.6486.800")  # MIB object "alcatelIND1BaseMIB"
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(  # MIB object "sysObjectID"
+        ".1.3.6.1.4.1.6486.800"
+    )  # MIB object "alcatelIND1BaseMIB"
 
 
 def alcatel_new_networking_products_scan_function(oid):
@@ -30,8 +31,9 @@ def alcatel_new_networking_products_scan_function(oid):
     Devices running at least AOS7 (including).
     Refer to alcatelENT1BaseMIB for more information.
     """
-    return oid(".1.3.6.1.2.1.1.2.0"  # MIB object "sysObjectID"
-              ).startswith(".1.3.6.1.4.1.6486.801")  # MIB object "alcatelENT1BaseMIB"
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(  # MIB object "sysObjectID"
+        ".1.3.6.1.4.1.6486.801"
+    )  # MIB object "alcatelENT1BaseMIB"
 
 
 def inventory_alcatel_cpu(info) -> DiscoveryResult:
@@ -78,7 +80,7 @@ def inventory_alcatel_temp(info) -> DiscoveryResult:
     with_slot = len(info) != 1
     for index, row in enumerate(info):
         for oid, name in enumerate(["Board", "CPU"]):
-            if row[oid] != '0':
+            if row[oid] != "0":
                 if with_slot:
                     yield "Slot %s %s" % (index + 1, name), {}
                 else:

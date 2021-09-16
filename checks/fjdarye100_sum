@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # check_mk plugin to monitor storage systems like Fujitsu ETERNUS DX80 S2 supporting FJDARY-E100.MIB
 # Copyright (c) 2012 FuH Entwicklungsgesellschaft mbH, Umkirch, Germany. All rights reserved.
 # Author: Philipp Hoefflin, 2012, hoefflin+cmk@fuh-e.de
@@ -18,10 +19,10 @@ from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard
 # FJDARY-E100::fjdaryUnitStatus.0 = INTEGER: ok(3)
 
 check_info["fjdarye100_sum"] = {
-    'check_function': check_fjdarye_sum,
-    'inventory_function': inventory_fjdarye_sum,
-    'service_description': 'Summary Status %s',
+    "check_function": check_fjdarye_sum,
+    "inventory_function": inventory_fjdarye_sum,
+    "service_description": "Summary Status %s",
     # 1: fjdaryUnitStatus
-    'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.100.6', ['0']),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100",
+    "snmp_info": (".1.3.6.1.4.1.211.1.21.1.100.6", ["0"]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.100",
 }

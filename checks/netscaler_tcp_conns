@@ -54,6 +54,7 @@ check_info["netscaler_tcp_conns"] = {
         [
             1,  # tcpCurServerConn
             2,  # tcpCurClientConn
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
 }

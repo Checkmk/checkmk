@@ -12,6 +12,6 @@ description:
 item:
  The index of the power module as returned by SNMP.
 
-inventory:
+discovery:
  One service is created for each power module.
 

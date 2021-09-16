@@ -15,9 +15,9 @@ def check_aws_ec2_summary(item, params, parsed):
     instances_by_state = {}
     long_output = []
     for instance in parsed:
-        instance_private_dns_name = instance['PrivateDnsName']
-        instance_id = instance['InstanceId']
-        instance_state = instance['State']['Name']
+        instance_private_dns_name = instance["PrivateDnsName"]
+        instance_id = instance["InstanceId"]
+        instance_state = instance["State"]["Name"]
         instances_by_state.setdefault(instance_state, []).append(instance_id)
         long_output.append("[%s] %s: %s" % (instance_id, instance_private_dns_name, instance_state))
 
@@ -29,9 +29,9 @@ def check_aws_ec2_summary(item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info['aws_ec2_summary'] = {
-    'parse_function': parse_aws,
-    'inventory_function': discover_single,
-    'check_function': check_aws_ec2_summary,
-    'service_description': 'AWS/EC2 Summary',
+check_info["aws_ec2_summary"] = {
+    "parse_function": parse_aws,
+    "inventory_function": discover_single,
+    "check_function": check_aws_ec2_summary,
+    "service_description": "AWS/EC2 Summary",
 }

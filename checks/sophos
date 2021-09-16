@@ -18,66 +18,102 @@
 # .1.3.6.1.4.1.2604.3.16 2 --> SOPHOS::sophosHwPowerSupplies        Indicates whether both power supplies are operating normally
 
 sophos_map_oid = {
-    "4": ("Memory Consumption", {
-        "2": " (the appliance is consuming normal memory)",
-        "3": " (the appliance is consuming inflated memory)",
-        "4": " (the appliance is consuming excessive memory)",
-    }),
-    "5": ("Memory", {
-        "2": " (the appliance detects memory than expected)",
-        "3": " (the appliance detects less memory than expected)",
-        "4": " (the appliance detects insufficient memory than expected)",
-    }),
-    "6": ("RAID", {
-        "2": " (the appliance RAID system is operating normally)",
-        "3": " (the appliance RAID system is operating abnormally)",
-        "4": " (the appliance RAID system is operating viciously)",
-    }),
-    "7": ("CPU Utilization", {
-        "2": " (the appliance CPU is operating normally)",
-        "3": " (the appliance CPU is operating abnormally)",
-        "4": " (the appliance CPU is operating viciously)",
-    }),
-    "8": ("Power Supply Left", {
-        "2": " (the left power supply is operating normally)",
-        "3": " (the left power supply is operating abnormally)",
-        "4": " (the left power supply is operating viciously)",
-    }),
-    "9": ("Power Supply Right", {
-        "2": " (the right power supply is operating normally)",
-        "3": " (the right power supply is operating abnormally)",
-        "4": " (the right power supply is operating viciously)",
-    }),
-    "10": ("Fan Left", {
-        "2": " (the left fan is operating normally)",
-        "3": " (the left fan is operating abnormally)",
-        "4": " (the left fan is operating viciously)",
-    }),
-    "11": ("Fan Right", {
-        "2": " (the right fan is operating normally)",
-        "3": " (the right fan is operating abnormally)",
-        "4": " (the right fan is operating viciously)",
-    }),
-    "12": ("Fan Summary", {
-        "2": " (all fans are operating normally)",
-        "3": " (all fans are operating abnormally)",
-        "4": " (all fans are operating viciously)",
-    }),
-    "13": ("Temperature", {
-        "2": " (the appliance is operating within an acceptable temperature range)",
-        "3": " (the appliance is operating in the margins of an acceptable temperature range)",
-        "4": " (the appliance is operating outside an acceptable temperature range)",
-    }),
-    "14": ("Power Supply Voltage", {
-        "2": " (the appliance is operating within a normal voltage range)",
-        "3": " (the appliance is operating in the margins of a normal voltage range)",
-        "4": " (the appliance is operating outside of a normal voltage range)",
-    }),
-    "16": ("Power Supply Summary", {
-        "2": " (both power supplies are operating normally)",
-        "3": " (one or both power supplies are operating abnormally)",
-        "4": " (one or both power supplies are operating viciously)",
-    }),
+    "4": (
+        "Memory Consumption",
+        {
+            "2": " (the appliance is consuming normal memory)",
+            "3": " (the appliance is consuming inflated memory)",
+            "4": " (the appliance is consuming excessive memory)",
+        },
+    ),
+    "5": (
+        "Memory",
+        {
+            "2": " (the appliance detects memory than expected)",
+            "3": " (the appliance detects less memory than expected)",
+            "4": " (the appliance detects insufficient memory than expected)",
+        },
+    ),
+    "6": (
+        "RAID",
+        {
+            "2": " (the appliance RAID system is operating normally)",
+            "3": " (the appliance RAID system is operating abnormally)",
+            "4": " (the appliance RAID system is operating viciously)",
+        },
+    ),
+    "7": (
+        "CPU Utilization",
+        {
+            "2": " (the appliance CPU is operating normally)",
+            "3": " (the appliance CPU is operating abnormally)",
+            "4": " (the appliance CPU is operating viciously)",
+        },
+    ),
+    "8": (
+        "Power Supply Left",
+        {
+            "2": " (the left power supply is operating normally)",
+            "3": " (the left power supply is operating abnormally)",
+            "4": " (the left power supply is operating viciously)",
+        },
+    ),
+    "9": (
+        "Power Supply Right",
+        {
+            "2": " (the right power supply is operating normally)",
+            "3": " (the right power supply is operating abnormally)",
+            "4": " (the right power supply is operating viciously)",
+        },
+    ),
+    "10": (
+        "Fan Left",
+        {
+            "2": " (the left fan is operating normally)",
+            "3": " (the left fan is operating abnormally)",
+            "4": " (the left fan is operating viciously)",
+        },
+    ),
+    "11": (
+        "Fan Right",
+        {
+            "2": " (the right fan is operating normally)",
+            "3": " (the right fan is operating abnormally)",
+            "4": " (the right fan is operating viciously)",
+        },
+    ),
+    "12": (
+        "Fan Summary",
+        {
+            "2": " (all fans are operating normally)",
+            "3": " (all fans are operating abnormally)",
+            "4": " (all fans are operating viciously)",
+        },
+    ),
+    "13": (
+        "Temperature",
+        {
+            "2": " (the appliance is operating within an acceptable temperature range)",
+            "3": " (the appliance is operating in the margins of an acceptable temperature range)",
+            "4": " (the appliance is operating outside an acceptable temperature range)",
+        },
+    ),
+    "14": (
+        "Power Supply Voltage",
+        {
+            "2": " (the appliance is operating within a normal voltage range)",
+            "3": " (the appliance is operating in the margins of a normal voltage range)",
+            "4": " (the appliance is operating outside of a normal voltage range)",
+        },
+    ),
+    "16": (
+        "Power Supply Summary",
+        {
+            "2": " (both power supplies are operating normally)",
+            "3": " (one or both power supplies are operating abnormally)",
+            "4": " (one or both power supplies are operating viciously)",
+        },
+    ),
 }
 
 
@@ -106,10 +142,10 @@ def check_sophos(item, _no_params, info):
             return state, infotext
 
 
-check_info['sophos'] = {
-    'inventory_function': inventory_sophos,
-    'check_function': check_sophos,
-    'service_description': '%s',
-    'snmp_info': (".1.3.6.1.4.1.2604.3", [OID_END, ""]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2604",
+check_info["sophos"] = {
+    "inventory_function": inventory_sophos,
+    "check_function": check_sophos,
+    "service_description": "%s",
+    "snmp_info": (".1.3.6.1.4.1.2604.3", [OID_END, ""]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2604",
 }

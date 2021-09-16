@@ -7,6 +7,9 @@ description:
  This check measures the CPU utilization of an VMWare ESX Host System.
  It also shows you the number of sockets, cores and threads.
 
-inventory:
+discovery:
  One service is created for each ESX Host System.
 
+cluster:
+ This check measures the averaged CPU utilization for a cluster of ESX Host systems.
+ You can configure multiple WARN/CRIT levels depending on the number of nodes in this cluster.

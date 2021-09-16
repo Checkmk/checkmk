@@ -8,9 +8,10 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <ctime>
+#include <chrono>
 #include <string>
 
-time_t mk_inventory_last(const std::string &path);
+std::chrono::system_clock::time_point mk_inventory_last(
+    const std::string &path);
 
 #endif  // mk_inventory_h

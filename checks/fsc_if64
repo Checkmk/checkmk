@@ -5,12 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-check_info['fsc_if64'] = {
-    'check_function': lambda x, y, z: (1, "This check is deprecated. Please rediscover the services "\
-                                          "of this host to get this fixed automatically"),
-    'inventory_function': lambda _: [],
-    'service_description': 'Interface %s',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.2.1', ["2.2.1.1",]),
-    'snmp_scan_function': lambda _: False,
+check_info["fsc_if64"] = {
+    "check_function": lambda x, y, z: (
+        1,
+        "This check is deprecated. Please rediscover the services "
+        "of this host to get this fixed automatically",
+    ),
+    "inventory_function": lambda _: [],
+    "service_description": "Interface %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.2.1",
+        [
+            "2.2.1.1",
+        ],
+    ),
+    "snmp_scan_function": lambda _: False,
 }

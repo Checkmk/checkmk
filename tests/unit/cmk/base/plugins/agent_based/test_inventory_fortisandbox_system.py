@@ -9,11 +9,11 @@ from cmk.base.plugins.agent_based.inventory_fortisandbox_system import inventory
 
 
 def test_inventory_fortisandbox_system():
-    assert list(inventory_fortisandbox_system(['v2.52-build0340 (GA)'])) == [
+    assert list(inventory_fortisandbox_system(["v2.52-build0340 (GA)"])) == [
         Attributes(
-            path=['software', 'os'],
+            path=["software", "os"],
             inventory_attributes={
-                'Version': 'v2.52-build0340 (GA)',
+                "Version": "v2.52-build0340 (GA)",
             },
         ),
     ]

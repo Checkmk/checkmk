@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 
 # <<ucs_bladecenter_fans:sep(9)>>>
 # equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542
@@ -74,18 +75,21 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
     yield 0, "%d Fans" % len(my_fans)
     for key, fan in sorted(my_fans.items()):
         if fan["OperState"] != "operable":
-            yield 2, "Fan %s %s: average speed %s RPM" % \
-                  (key.split()[-1][2:], fan["OperState"], fan.get("SpeedAvg"))
+            yield 2, "Fan %s %s: average speed %s RPM" % (
+                key.split()[-1][2:],
+                fan["OperState"],
+                fan.get("SpeedAvg"),
+            )
 
 
 check_info["ucs_bladecenter_fans"] = {
-    'parse_function': parse_ucs_bladecenter_fans,
-    'inventory_function': inventory_ucs_bladecenter_fans,
-    'check_function': check_ucs_bladecenter_fans,
-    'service_description': 'Fans %s',
+    "parse_function": parse_ucs_bladecenter_fans,
+    "inventory_function": inventory_ucs_bladecenter_fans,
+    "check_function": check_ucs_bladecenter_fans,
+    "service_description": "Fans %s",
 }
 
-#.
+# .
 #   .--Temperature---------------------------------------------------------.
 #   |     _____                                   _                        |
 #   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -113,18 +117,20 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
     for key, values in parsed.items():
         if key.startswith(sensor_item) and "AmbientTemp" in values:
             loc = key.split()[-1].split(".")
-            sensor_list.append((
-                "Module %s Fan %s" % (loc[0], loc[1]),
-                float(values.get("AmbientTemp")),
-            ))
+            sensor_list.append(
+                (
+                    "Module %s Fan %s" % (loc[0], loc[1]),
+                    float(values.get("AmbientTemp")),
+                )
+            )
     return check_temperature_list(sensor_list, params, "ucs_bladecenter_fans_%s" % item)
 
 
 check_info["ucs_bladecenter_fans.temp"] = {
-    'inventory_function': inventory_ucs_bladecenter_fans_temp,
-    'check_function': check_ucs_bladecenter_fans_temp,
-    'service_description': 'Temperature %s',
-    'group': 'temperature',
-    'has_perfdata': True,
-    'default_levels_variable': 'ucs_bladecenter_fans_temp_default_levels'
+    "inventory_function": inventory_ucs_bladecenter_fans_temp,
+    "check_function": check_ucs_bladecenter_fans_temp,
+    "service_description": "Temperature %s",
+    "group": "temperature",
+    "has_perfdata": True,
+    "default_levels_variable": "ucs_bladecenter_fans_temp_default_levels",
 }

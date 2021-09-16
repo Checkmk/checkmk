@@ -11,8 +11,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "src\engine\engine
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "watest", "watest\watest.vcxproj", "{F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plugin_player", "src\player\plugin_player.vcxproj", "{BC6E8A4C-E851-483C-AB7F-539472154EE7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -53,14 +51,6 @@ Global
 		{F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863}.Release|x64.Build.0 = Release|x64
 		{F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863}.Release|x86.ActiveCfg = Release|Win32
 		{F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863}.Release|x86.Build.0 = Release|Win32
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Debug|x64.ActiveCfg = Debug|x64
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Debug|x64.Build.0 = Debug|x64
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Debug|x86.ActiveCfg = Debug|Win32
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Debug|x86.Build.0 = Debug|Win32
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Release|x64.ActiveCfg = Release|x64
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Release|x64.Build.0 = Release|x64
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Release|x86.ActiveCfg = Release|Win32
-		{BC6E8A4C-E851-483C-AB7F-539472154EE7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

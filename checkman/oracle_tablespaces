@@ -48,6 +48,8 @@ description:
 item:
  The SID and the tablespace name, separated by a dot, for example {"pengt.TEMP"}.
 
-inventory:
+discovery:
  One service is created for each tablespace which is {ONLINE}, {READONLY} or {OFFLINE}.
 
+cluster:
+ In case a cluster is configured, the node with the most data files will be checked.

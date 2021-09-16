@@ -10,6 +10,6 @@ description:
 item:
  Name of the power supply
 
-inventory:
+discovery:
  One service is created for each PSU.
 

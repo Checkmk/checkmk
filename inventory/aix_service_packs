@@ -24,6 +24,6 @@ def inv_aix_service_packs(info):
         node.append({"name": service_pack})
 
 
-inv_info['aix_service_packs'] = {
+inv_info["aix_service_packs"] = {
     "inv_function": inv_aix_service_packs,
 }

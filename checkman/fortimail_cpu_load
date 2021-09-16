@@ -10,5 +10,5 @@ description:
  defined levels can bet set via the ruleset "Fortinet FortiMail CPU
  load".
 
-inventory:
+discovery:
  One check per host will be created.

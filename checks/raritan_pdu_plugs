@@ -9,7 +9,10 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.raritan import *  # pylint: disable=wildcard-import,unused-wildcard-import
-raritan_pdu_plugs_default = '"on"'  # only to be downwards compatible and can be removed any decade now.
+
+raritan_pdu_plugs_default = (
+    '"on"'  # only to be downwards compatible and can be removed any decade now.
+)
 
 
 def parse_raritan_pdu_plugs(info):
@@ -17,7 +20,7 @@ def parse_raritan_pdu_plugs(info):
 
     for outlet_label, outlet_name, outlet_state in info:
         parsed[outlet_label] = {
-            "state": raritan_map_state.get(outlet_state, (None, None)),
+            "state": raritan_map_state.get(outlet_state, (3, "unknown")),
             "outlet_name": outlet_name,
         }
     return parsed
@@ -25,18 +28,7 @@ def parse_raritan_pdu_plugs(info):
 
 def inventory_raritan_pdu_plugs(parsed):
     for key, value in parsed.items():
-        yield key, {'discovered_state': value["state"][1]}
-
-
-def _transform(params):
-    if isinstance(params, dict):
-        return params
-    if isinstance(params, int):
-        state = raritan_map_state.get("%s" % params, (None, None))[1]
-        return {'discovered_state': state}
-    if params in ('on', 'off'):
-        return {'required_state': params}
-    return {}
+        yield key, {"discovered_state": value["state"][1]}
 
 
 @get_parsed_item_data
@@ -47,24 +39,28 @@ def check_raritan_pdu_plugs(_no_item, params, data):
     state, state_info = data["state"]
     yield state, "Status: %s" % state_info
 
-    params = _transform(params)
-    required_state = params.get('required_state', params.get('discovered_state'))
+    required_state = params.get("required_state", params["discovered_state"])
     if state_info != required_state:
         yield 2, "Expected: %s" % required_state
 
 
-check_info['raritan_pdu_plugs'] = {
-    "inventory_function" : inventory_raritan_pdu_plugs,
+check_info["raritan_pdu_plugs"] = {
+    "inventory_function": inventory_raritan_pdu_plugs,
     "parse_function": parse_raritan_pdu_plugs,
-    "check_function" : check_raritan_pdu_plugs,
-    "service_description" : "Plug %s",
-    "group" : "plugs",
-    "snmp_info"  : ( ".1.3.6.1.4.1.13742.6", [
-                                "3.5.3.1.2", # Outlet-Label (Index) (PDU identifier of the outlet)
-                                "3.5.3.1.3", # OutletName (eigene vergebene Bezeichnung für den Ausgang)
-                                "4.1.2.1.3", # Outlet state at present (sh.o. outlet_state_info im check)
-                 ]),
-    "snmp_scan_function" : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6") and \
-                                      (oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2") or \
-                                      oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX3")),
+    "check_function": check_raritan_pdu_plugs,
+    "service_description": "Plug %s",
+    "group": "plugs",
+    "snmp_info": (
+        ".1.3.6.1.4.1.13742.6",
+        [
+            "3.5.3.1.2",  # Outlet-Label (Index) (PDU identifier of the outlet)
+            "3.5.3.1.3",  # OutletName (eigene vergebene Bezeichnung für den Ausgang)
+            "4.1.2.1.3",  # Outlet state at present (sh.o. outlet_state_info im check)
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6")
+    and (
+        oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2")
+        or oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX3")
+    ),
 }

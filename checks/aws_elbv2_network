@@ -9,30 +9,29 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-from cmk.base.plugins.agent_based.utils.aws import (
-    extract_aws_metrics_by_labels,
-    parse_aws,
-)
+from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
 def parse_aws_elbv2_network(info):
-    metrics = extract_aws_metrics_by_labels([
-        'ConsumedLCUs',
-        'ActiveFlowCount',
-        'ActiveFlowCount_TLS',
-        'NewFlowCount',
-        'NewFlowCount_TLS',
-        'HealthyHostCount',
-        'UnHealthyHostCount',
-        'ProcessedBytes',
-        'ProcessedBytes_TLS',
-        'ClientTLSNegotiationErrorCount',
-        'TargetTLSNegotiationErrorCount',
-        'TCP_Client_Reset_Count',
-        'TCP_ELB_Reset_Count',
-        'TCP_Target_Reset_Count',
-    ], parse_aws(info))
+    metrics = extract_aws_metrics_by_labels(
+        [
+            "ConsumedLCUs",
+            "ActiveFlowCount",
+            "ActiveFlowCount_TLS",
+            "NewFlowCount",
+            "NewFlowCount_TLS",
+            "HealthyHostCount",
+            "UnHealthyHostCount",
+            "ProcessedBytes",
+            "ProcessedBytes_TLS",
+            "ClientTLSNegotiationErrorCount",
+            "TargetTLSNegotiationErrorCount",
+            "TCP_Client_Reset_Count",
+            "TCP_ELB_Reset_Count",
+            "TCP_Target_Reset_Count",
+        ],
+        parse_aws(info),
+    )
     # We get exactly one entry: {INST-ID: METRICS}
     # INST-ID is the piggyback host name
     try:
@@ -52,26 +51,28 @@ def parse_aws_elbv2_network(info):
 
 
 def check_aws_elbv2_network_lcu(item, params, parsed):
-    lcus = parsed.get('ConsumedLCUs')
+    lcus = parsed.get("ConsumedLCUs")
     if lcus is None:
         raise MKCounterWrapped("Currently no data from AWS")
-    yield check_levels(lcus,
-                       'aws_consumed_lcus',
-                       params.get('levels'),
-                       human_readable_func=aws_get_float_human_readable,
-                       infoname="Consumption")
+    yield check_levels(
+        lcus,
+        "aws_consumed_lcus",
+        params.get("levels"),
+        human_readable_func=aws_get_float_human_readable,
+        infoname="Consumption",
+    )
 
 
-check_info['aws_elbv2_network'] = {
-    'parse_function': parse_aws_elbv2_network,
-    'inventory_function': lambda p: inventory_aws_generic_single(p, ['ConsumedLCUs']),
-    'check_function': check_aws_elbv2_network_lcu,
-    'service_description': 'AWS/NetworkELB LCUs',
-    'group': 'aws_elbv2_lcu',
-    'has_perfdata': True,
+check_info["aws_elbv2_network"] = {
+    "parse_function": parse_aws_elbv2_network,
+    "inventory_function": lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
+    "check_function": check_aws_elbv2_network_lcu,
+    "service_description": "AWS/NetworkELB LCUs",
+    "group": "aws_elbv2_lcu",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--connections---------------------------------------------------------.
 #   |                                        _   _                         |
 #   |         ___ ___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
@@ -82,37 +83,46 @@ check_info['aws_elbv2_network'] = {
 #   '----------------------------------------------------------------------'
 
 _aws_elbv2_network_connection_types = [
-    'ActiveFlowCount',
-    'ActiveFlowCount_TLS',
-    'NewFlowCount',
-    'NewFlowCount_TLS',
+    "ActiveFlowCount",
+    "ActiveFlowCount_TLS",
+    "NewFlowCount",
+    "NewFlowCount_TLS",
 ]
 
 
 def check_aws_elbv2_network_connections(item, params, parsed):
-    return check_aws_metrics([{
-        'metric_val': parsed.get(cw_metric_name),
-        'metric_name': 'aws_%s_connections' % key,
-        'info_name': info_name,
-        'human_readable_func': aws_get_counts_rate_human_readable
-    } for cw_metric_name, (info_name, key) in zip(_aws_elbv2_network_connection_types, [
-        ('Active', 'active'),
-        ('Active TLS', 'active_tls'),
-        ('New', 'new'),
-        ('New TLS', 'new_tls'),
-    ])])
+    return check_aws_metrics(
+        [
+            {
+                "metric_val": parsed.get(cw_metric_name),
+                "metric_name": "aws_%s_connections" % key,
+                "info_name": info_name,
+                "human_readable_func": aws_get_counts_rate_human_readable,
+            }
+            for cw_metric_name, (info_name, key) in zip(
+                _aws_elbv2_network_connection_types,
+                [
+                    ("Active", "active"),
+                    ("Active TLS", "active_tls"),
+                    ("New", "new"),
+                    ("New TLS", "new_tls"),
+                ],
+            )
+        ]
+    )
 
 
-check_info['aws_elbv2_network.connections'] = {
-    'parse_function': parse_aws_elbv2_network,
-    'inventory_function': lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_connection_types, requirement=any),
-    'check_function': check_aws_elbv2_network_connections,
-    'service_description': 'AWS/NetworkELB Connections',
-    'has_perfdata': True,
+check_info["aws_elbv2_network.connections"] = {
+    "parse_function": parse_aws_elbv2_network,
+    "inventory_function": lambda p: inventory_aws_generic_single(
+        p, _aws_elbv2_network_connection_types, requirement=any
+    ),
+    "check_function": check_aws_elbv2_network_connections,
+    "service_description": "AWS/NetworkELB Connections",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--Healthy hosts-------------------------------------------------------.
 #   |    _   _            _ _   _             _               _            |
 #   |   | | | | ___  __ _| | |_| |__  _   _  | |__   ___  ___| |_ ___      |
@@ -169,7 +179,7 @@ check_info['aws_elbv2_network.connections'] = {
 #     'has_perfdata': True,
 # }
 
-#.
+# .
 #   .--TLS handshakes------------------------------------------------------.
 #   |                          _____ _     ____                            |
 #   |                         |_   _| |   / ___|                           |
@@ -186,29 +196,35 @@ check_info['aws_elbv2_network.connections'] = {
 #   '----------------------------------------------------------------------'
 
 _aws_elbv2_network_tls_types = [
-    'ClientTLSNegotiationErrorCount',
-    'TargetTLSNegotiationErrorCount',
+    "ClientTLSNegotiationErrorCount",
+    "TargetTLSNegotiationErrorCount",
 ]
 
 
 def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
-    return check_aws_metrics([{
-        'metric_val': parsed.get(cw_metric_name),
-        'metric_name': 'aws_failed_tls_%s_handshake' % info_name.lower(),
-        'info_name': info_name,
-        'human_readable_func': aws_get_counts_rate_human_readable
-    } for cw_metric_name, info_name in zip(_aws_elbv2_network_tls_types, ['Client', 'Target'])])
+    return check_aws_metrics(
+        [
+            {
+                "metric_val": parsed.get(cw_metric_name),
+                "metric_name": "aws_failed_tls_%s_handshake" % info_name.lower(),
+                "info_name": info_name,
+                "human_readable_func": aws_get_counts_rate_human_readable,
+            }
+            for cw_metric_name, info_name in zip(_aws_elbv2_network_tls_types, ["Client", "Target"])
+        ]
+    )
 
 
-check_info['aws_elbv2_network.tls_handshakes'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_tls_types, requirement=any),
-    'check_function': check_aws_elbv2_network_tls_handshakes,
-    'service_description': 'AWS/NetworkELB TLS Handshakes',
-    'has_perfdata': True,
+check_info["aws_elbv2_network.tls_handshakes"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
+        p, _aws_elbv2_network_tls_types, requirement=any
+    ),
+    "check_function": check_aws_elbv2_network_tls_handshakes,
+    "service_description": "AWS/NetworkELB TLS Handshakes",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--RST packets---------------------------------------------------------.
 #   |        ____  ____ _____                    _        _                |
 #   |       |  _ \/ ___|_   _|  _ __   __ _  ___| | _____| |_ ___          |
@@ -219,34 +235,43 @@ check_info['aws_elbv2_network.tls_handshakes'] = {
 #   '----------------------------------------------------------------------'
 
 _aws_elbv2_network_rst_packets_types = [
-    'TCP_Client_Reset_Count',
-    'TCP_ELB_Reset_Count',
-    'TCP_Target_Reset_Count',
+    "TCP_Client_Reset_Count",
+    "TCP_ELB_Reset_Count",
+    "TCP_Target_Reset_Count",
 ]
 
 
 def check_aws_elbv2_network_rst_packets(item, params, parsed):
-    return check_aws_metrics([{
-        'metric_val': parsed.get(cw_metric_name),
-        'metric_name': 'aws_%s' % key,
-        'info_name': info_name,
-        'human_readable_func': aws_get_counts_rate_human_readable
-    } for cw_metric_name, (info_name, key) in zip(_aws_elbv2_network_rst_packets_types, [
-        ('From client to target', 'tcp_client_rst'),
-        ('Generated by load balancer', 'tcp_elb_rst'),
-        ('From target to client', 'tcp_target_rst'),
-    ])])
+    return check_aws_metrics(
+        [
+            {
+                "metric_val": parsed.get(cw_metric_name),
+                "metric_name": "aws_%s" % key,
+                "info_name": info_name,
+                "human_readable_func": aws_get_counts_rate_human_readable,
+            }
+            for cw_metric_name, (info_name, key) in zip(
+                _aws_elbv2_network_rst_packets_types,
+                [
+                    ("From client to target", "tcp_client_rst"),
+                    ("Generated by load balancer", "tcp_elb_rst"),
+                    ("From target to client", "tcp_target_rst"),
+                ],
+            )
+        ]
+    )
 
 
-check_info['aws_elbv2_network.rst_packets'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_rst_packets_types, requirement=any),
-    'check_function': check_aws_elbv2_network_rst_packets,
-    'service_description': 'AWS/NetworkELB Reset Packets',
-    'has_perfdata': True,
+check_info["aws_elbv2_network.rst_packets"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
+        p, _aws_elbv2_network_rst_packets_types, requirement=any
+    ),
+    "check_function": check_aws_elbv2_network_rst_packets,
+    "service_description": "AWS/NetworkELB Reset Packets",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--statistics----------------------------------------------------------.
 #   |                    _        _   _     _   _                          |
 #   |                ___| |_ __ _| |_(_)___| |_(_) ___ ___                 |
@@ -257,27 +282,36 @@ check_info['aws_elbv2_network.rst_packets'] = {
 #   '----------------------------------------------------------------------'
 
 _aws_elbv2_network_statistics_metric_names = [
-    'ProcessedBytes',
-    'ProcessedBytes_TLS',
+    "ProcessedBytes",
+    "ProcessedBytes_TLS",
 ]
 
 
 def check_aws_elbv2_network_statistics(item, params, parsed):
-    return check_aws_metrics([{
-        'metric_val': parsed.get(cw_metric_name),
-        'metric_name': 'aws_%s' % key,
-        'info_name': info_name,
-        'human_readable_func': aws_get_bytes_rate_human_readable
-    } for cw_metric_name, (info_name, key) in zip(_aws_elbv2_network_statistics_metric_names, [
-        ('Processed bytes', 'proc_bytes'),
-        ('Processed bytes TLS', 'proc_bytes_tls'),
-    ])])
+    return check_aws_metrics(
+        [
+            {
+                "metric_val": parsed.get(cw_metric_name),
+                "metric_name": "aws_%s" % key,
+                "info_name": info_name,
+                "human_readable_func": aws_get_bytes_rate_human_readable,
+            }
+            for cw_metric_name, (info_name, key) in zip(
+                _aws_elbv2_network_statistics_metric_names,
+                [
+                    ("Processed bytes", "proc_bytes"),
+                    ("Processed bytes TLS", "proc_bytes_tls"),
+                ],
+            )
+        ]
+    )
 
 
-check_info['aws_elbv2_network.statistics'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(
-        p, _aws_elbv2_network_statistics_metric_names, requirement=any),
-    'check_function': check_aws_elbv2_network_statistics,
-    'service_description': 'AWS/NetworkELB Statistics',
-    'has_perfdata': True,
+check_info["aws_elbv2_network.statistics"] = {
+    "inventory_function": lambda p: inventory_aws_generic_single(
+        p, _aws_elbv2_network_statistics_metric_names, requirement=any
+    ),
+    "check_function": check_aws_elbv2_network_statistics,
+    "service_description": "AWS/NetworkELB Statistics",
+    "has_perfdata": True,
 }

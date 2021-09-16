@@ -54,7 +54,8 @@ check_info["synology_raid"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.6574.3.1.1",
         [
-            2,  #raidName
-            3,  #raidStatus
-        ]),
+            2,  # raidName
+            3,  # raidStatus
+        ],
+    ),
 }

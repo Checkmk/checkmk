@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_environment:sep(9)>>>
 # sensor-name PSU1 FAULT  sensor-type discrete    node-name BIN-CL1-N1    discrete-sensor-value OK    discrete-sensor-state normal    threshold-sensor-state normal
 
@@ -38,6 +40,7 @@ def discover_api_environment(predicate=None):
     :return:
         A function which takes a parsed item and discovers it or not, depending on the predicate.
     """
+
     def discovery_netapp_api_environment(parsed):
         for item_name, values in parsed.items():
             if predicate is None:
@@ -52,13 +55,13 @@ def discover_api_environment(predicate=None):
 
 @get_parsed_item_data
 def check_netapp_api_environment_discrete(item, _no_params, parsed):
-    sensor_value = parsed.get('discrete-sensor-value')
+    sensor_value = parsed.get("discrete-sensor-value")
     if sensor_value is None:
         return
 
     # According to the documentation the states may vary depending on the platform,
     # but will always include "normal" and "failed"
-    sensor_state = parsed['discrete-sensor-state']
+    sensor_state = parsed["discrete-sensor-state"]
     if sensor_state == "normal":
         state = 0
     else:
@@ -82,26 +85,27 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
 
     :return:
     """
+
     def _perf_key(_key):
-        return _key.replace('/', '').replace(" ", "_").replace("__", "_").lower()
+        return _key.replace("/", "").replace(" ", "_").replace("__", "_").lower()
 
     # We don't want mV or mA, but V or A as this is what the metrics are built for.
     def _scale(val, _unit):
-        if val is not None and _unit.lower() in ('mv', 'ma'):
+        if val is not None and _unit.lower() in ("mv", "ma"):
             val /= 1000.0
         return val
 
     def _scale_unit(_unit):
-        return {'mv': 'v', 'ma': 'a'}.get(_unit.lower(), _unit.lower())
+        return {"mv": "v", "ma": "a"}.get(_unit.lower(), _unit.lower())
 
-    sensor_value = maybefloat(parsed.get('threshold-sensor-value'))
+    sensor_value = maybefloat(parsed.get("threshold-sensor-value"))
     if sensor_value is None:
         return
 
     # NOTE
     # sensor_type may be fru, discrete (see other check), fan, thermal, current or voltage.
     # (Also battery_life, unknown and counter, but these are currently not used.)
-    unit = parsed.get('value-units', '')
+    unit = parsed.get("value-units", "")
 
     # yapf: disable
     levels = (_scale(maybefloat(parsed.get('warning-high-threshold')), unit),
@@ -110,20 +114,20 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
               _scale(maybefloat(parsed.get('critical-low-threshold')), unit))
     # yapf: enable
 
-    sensor_type = parsed['sensor-type']
-    sensor_name = parsed['sensor-name']
+    sensor_type = parsed["sensor-type"]
+    sensor_name = parsed["sensor-name"]
 
-    if sensor_type == 'thermal':
+    if sensor_type == "thermal":
         return check_temperature(
             _scale(sensor_value, unit),
             _no_params,
-            _perf_key('netapp_environment_thermal_%s' % (sensor_name,)),
+            _perf_key("netapp_environment_thermal_%s" % (sensor_name,)),
             dev_unit=_scale_unit(unit),
             dev_levels=levels[:2],
             dev_levels_lower=levels[2:],
         )
 
-    if sensor_type == 'fan':
+    if sensor_type == "fan":
         # we don't want to see decimal rpms
         human_readable_func = int
     else:
@@ -135,65 +139,70 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
         sensor_type,  # coincidentally the same as ours. (current, voltage, fan)
         levels,
         unit=_scale_unit(unit),
-        human_readable_func=human_readable_func)
+        human_readable_func=human_readable_func,
+    )
 
 
 check_info["netapp_api_environment"] = {
-    'check_function': check_netapp_api_environment_discrete,
-    'inventory_function': discover_api_environment(
-        lambda v: v['sensor-name'].startswith('PSU') and v['sensor-name'].endswith(' FAULT')),
-    'parse_function': _parse_netapp_api_environment,
-    'service_description': 'PSU Controller %s',
-    'group': 'hw_psu',
+    "check_function": check_netapp_api_environment_discrete,
+    "inventory_function": discover_api_environment(
+        lambda v: v["sensor-name"].startswith("PSU") and v["sensor-name"].endswith(" FAULT")
+    ),
+    "parse_function": _parse_netapp_api_environment,
+    "service_description": "PSU Controller %s",
+    "group": "hw_psu",
 }
 
 
 def _is_fan(_sensor_name):
-    return _sensor_name is not None and 'fan' in _sensor_name.lower()
+    return _sensor_name is not None and "fan" in _sensor_name.lower()
 
 
 check_info["netapp_api_environment.fan_faults"] = {
-    'check_function': check_netapp_api_environment_discrete,
-    'inventory_function': discover_api_environment(
-        lambda v: _is_fan(v.get('sensor-name')) and v['sensor-name'].endswith(' Fault')),
-    'parse_function': _parse_netapp_api_environment,
-    'service_description': 'Fan Controller %s',
-    'group': 'hw_fans',
+    "check_function": check_netapp_api_environment_discrete,
+    "inventory_function": discover_api_environment(
+        lambda v: _is_fan(v.get("sensor-name")) and v["sensor-name"].endswith(" Fault")
+    ),
+    "parse_function": _parse_netapp_api_environment,
+    "service_description": "Fan Controller %s",
+    "group": "hw_fans",
 }
 
 check_info["netapp_api_environment.temperature"] = {
-    'check_function': check_netapp_api_environment_threshold,
-    'inventory_function': discover_api_environment(lambda v: v.get('sensor-type') == 'thermal'),
-    'parse_function': _parse_netapp_api_environment,
-    'service_description': 'System Temperature %s',
-    'has_perfdata': True,
-    'group': 'temperature',
+    "check_function": check_netapp_api_environment_threshold,
+    "inventory_function": discover_api_environment(lambda v: v.get("sensor-type") == "thermal"),
+    "parse_function": _parse_netapp_api_environment,
+    "service_description": "System Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
 }
 
 check_info["netapp_api_environment.fans"] = {
-    'check_function': check_netapp_api_environment_threshold,
-    'inventory_function': discover_api_environment(lambda v: v.get('sensor-type') == 'fan'),
-    'parse_function': _parse_netapp_api_environment,
-    'service_description': 'System Fans %s',
-    'has_perfdata': True,
-    'group': 'hw_fans',
+    "check_function": check_netapp_api_environment_threshold,
+    "inventory_function": discover_api_environment(lambda v: v.get("sensor-type") == "fan"),
+    "parse_function": _parse_netapp_api_environment,
+    "service_description": "System Fans %s",
+    "has_perfdata": True,
+    "group": "hw_fans",
 }
 
 check_info["netapp_api_environment.voltage"] = {
-    'check_function': check_netapp_api_environment_threshold,
-    'inventory_function': discover_api_environment(
-        lambda v: v.get('sensor-type') == 'voltage' and v.get('value-units')),
-    'parse_function': _parse_netapp_api_environment,
-    'service_description': 'System Voltage %s',
-    'has_perfdata': True,
-    'group': 'voltage',
+    "check_function": check_netapp_api_environment_threshold,
+    "inventory_function": discover_api_environment(
+        lambda v: v.get("sensor-type") == "voltage" and v.get("value-units")
+    ),
+    "parse_function": _parse_netapp_api_environment,
+    "service_description": "System Voltage %s",
+    "has_perfdata": True,
+    "group": "voltage",
 }
 
 check_info["netapp_api_environment.current"] = {
-    'check_function': check_netapp_api_environment_threshold,
-    'inventory_function': discover_api_environment(
-        lambda v: v.get('sensor-type') == 'current' and v.get('value-units')),
-    'parse_function': _parse_netapp_api_environment,
-    'service_description': 'System Currents %s',
-    'has_perfdata': True,
+    "check_function": check_netapp_api_environment_threshold,
+    "inventory_function": discover_api_environment(
+        lambda v: v.get("sensor-type") == "current" and v.get("value-units")
+    ),
+    "parse_function": _parse_netapp_api_environment,
+    "service_description": "System Currents %s",
+    "has_perfdata": True,
 }

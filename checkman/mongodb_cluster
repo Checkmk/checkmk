@@ -17,5 +17,5 @@ Note: This check will only be discovered, if the agent runs on the primary mongo
 item:
  Name of the cluster
 
-inventory:
+discovery:
  One service is created for each database named 'MongoDB Database: <database name>'.

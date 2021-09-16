@@ -49,6 +49,41 @@ TEST(StringUtilTest, JoinTest) {
     EXPECT_EQ("foo, , bar", mk::join(v{"foo", "", "bar"}, ", "));
 }
 
+TEST(StringUtilTest, LStripTest) {
+    EXPECT_EQ("", mk::lstrip("  "));
+    EXPECT_EQ("xx", mk::lstrip("  \t\n\t  xx"));
+    EXPECT_EQ("xx  ", mk::lstrip("  xx  "));
+    EXPECT_EQ("xx  xx", mk::lstrip("xx  xx"));
+}
+
+TEST(StringUtilTest, EscapeNonprintableTest) {
+    {
+        std::ostringstream out{};
+        out << mk::escape_nonprintable{"\1\xfftoto 42\x7e\x7f\x80"};
+        EXPECT_EQ(R"(\x01\xFFtoto 42~\x7F\x80)", out.str());
+    }
+
+    {
+        std::ostringstream out{};
+        out << mk::escape_nonprintable{"\1\2\3"};
+        EXPECT_EQ(R"(\x01\x02\x03)", out.str());
+    }
+
+    // No UTF-8 support.
+    {
+        std::ostringstream out{};
+        out << mk::escape_nonprintable{"凄くない"};
+        EXPECT_EQ(R"(\xE5\x87\x84\xE3\x81\x8F\xE3\x81\xAA\xE3\x81\x84)",
+                  out.str());
+    }
+
+    {
+        std::ostringstream out{};
+        out << mk::escape_nonprintable{"Blödsinn"};
+        EXPECT_EQ(R"(Bl\xC3\xB6dsinn)", out.str());
+    }
+}
+
 TEST(StringUtilTest, ReplaceFirstTest) {
     EXPECT_EQ("", mk::replace_first("", "", ""));
     EXPECT_EQ("", mk::replace_first("", "", "|"));

@@ -6,13 +6,12 @@
 
 # pylint: disable=protected-access
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName
 
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
-
 import cmk.base.api.agent_based.register.inventory_plugins as inventory_plugins
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
@@ -25,7 +24,8 @@ def test_create_inventory_plugin_missing_kwarg():
 
     with pytest.raises(TypeError):
         _ = inventory_plugins.create_inventory_plugin(
-            inventory_function=dummy_generator)  # type: ignore[call-arg]
+            inventory_function=dummy_generator
+        )  # type: ignore[call-arg]
 
 
 def test_create_inventory_plugin_not_a_generator():

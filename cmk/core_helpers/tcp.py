@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 import socket
-from hashlib import md5, sha256
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple
-
-from Cryptodome.Cipher import AES
+from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
+from cmk.utils.encryption import decrypt_by_agent_protocol, DigestType
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
@@ -40,16 +39,32 @@ class TCPFetcher(AgentFetcher):
         self.use_only_cache: Final = use_only_cache
         self._socket: Optional[socket.socket] = None
 
-    @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
-        address: Tuple[Optional[HostAddress], int] = serialized.pop("address")
-        return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            address=address,
-            **serialized,
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"family={self.family!r}",
+                    f"timeout={self.timeout!r}",
+                    f"encryption_settings={self.encryption_settings!r}",
+                    f"use_only_cache={self.use_only_cache!r}",
+                )
+            )
+            + ")"
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
+        address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
+        return cls(
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            address=address,
+            **serialized_,
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "family": self.family,
@@ -86,16 +101,11 @@ class TCPFetcher(AgentFetcher):
             self._socket.close()
         self._socket = None
 
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
-
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self.use_only_cache:
-            raise MKFetcherError("Got no data: No usable cache file present at %s" %
-                                 self.file_cache.path)
+            raise MKFetcherError(
+                "Got no data: No usable cache file present at %s" % self.file_cache.base_path
+            )
         if self._socket is None:
             raise MKFetcherError("Not connected")
 
@@ -130,7 +140,8 @@ class TCPFetcher(AgentFetcher):
             self._logger.debug("Output is not encrypted")
             if self.encryption_settings["use_regular"] == "enforce":
                 raise MKFetcherError(
-                    "Agent output is plaintext but encryption is enforced by configuration")
+                    "Agent output is plaintext but encryption is enforced by configuration"
+                )
             return output
 
         self._logger.debug("Output is encrypted or invalid")
@@ -141,7 +152,7 @@ class TCPFetcher(AgentFetcher):
 
         try:
             self._logger.debug("Try to decrypt output")
-            output = self._real_decrypt(output)
+            output = self._decrypt_agent_data(output=output)
         except MKFetcherError:
             raise
         except Exception as e:
@@ -160,29 +171,16 @@ class TCPFetcher(AgentFetcher):
             raise MKFetcherError("Too short output from agent: %r" % output)
         return output
 
-    # TODO: Sync with real_type_checks._decrypt_rtc_package
-    def _real_decrypt(self, output: AgentRawData) -> AgentRawData:
+    def _decrypt_agent_data(self, output: AgentRawData) -> AgentRawData:
         try:
-            # simply check if the protocol is an actual number
-            protocol = int(output[:2])
-        except ValueError:
-            raise MKFetcherError("Unsupported protocol version: %r" % output[:2])
-        encrypted_pkg = output[2:]
-        encryption_key = self.encryption_settings["passphrase"]
+            protocol = DigestType(output[:2])
+        except ValueError as exc:
+            raise MKFetcherError from exc
 
-        encrypt_digest = sha256 if protocol == 2 else md5
-
-        # Adapt OpenSSL handling of key and iv
-        def derive_key_and_iv(password: bytes, key_length: int,
-                              iv_length: int) -> Tuple[bytes, bytes]:
-            d = d_i = b''
-            while len(d) < key_length + iv_length:
-                d_i = encrypt_digest(d_i + password).digest()
-                d += d_i
-            return d[:key_length], d[key_length:key_length + iv_length]
-
-        key, iv = derive_key_and_iv(encryption_key.encode("utf-8"), 32, AES.block_size)
-        decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-        decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
-        # Strip of fill bytes of openssl
-        return AgentRawData(decrypted_pkg[0:-decrypted_pkg[-1]])
+        return AgentRawData(
+            decrypt_by_agent_protocol(
+                self.encryption_settings["passphrase"],
+                protocol,
+                output[2:],
+            )
+        )

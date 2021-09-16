@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import pytest  # type: ignore[import]
-from testlib import SpecialAgent  # type: ignore[import]
+
+import pytest
+
+from tests.testlib import SpecialAgent
 
 from cmk.base.sources.programs import SpecialAgentConfiguration
 
@@ -14,34 +16,36 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    'params, expected_args',
+    "params, expected_args",
     [
         (
             {
-                'subscription': 'banana',
-                'tenant': 'strawberry',
-                'client': 'blueberry',
-                'secret': 'vurystrong',
-                'config': {},
+                "subscription": "banana",
+                "tenant": "strawberry",
+                "client": "blueberry",
+                "secret": "vurystrong",
+                "config": {},
             },
             SpecialAgentConfiguration(
                 [
-                    '--subscription',
-                    'banana',
-                    '--tenant',
-                    'strawberry',
-                    '--client',
-                    'blueberry',
+                    "--subscription",
+                    "banana",
+                    "--tenant",
+                    "strawberry",
+                    "--client",
+                    "blueberry",
                 ],
-                json.dumps({
-                    'secret': 'vurystrong',
-                }),
+                json.dumps(
+                    {
+                        "secret": "vurystrong",
+                    }
+                ),
             ),
         ),
     ],
 )
 def test_azure_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_azure')
+    agent = SpecialAgent("agent_azure")
     arguments = agent.argument_func(params, "testhost", "address")
     assert arguments == expected_args

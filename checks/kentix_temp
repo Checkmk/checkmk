@@ -12,38 +12,41 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 
 def inventory_kentix_temp(info):
-    if info[0][0].startswith('2.1.1'):
-        return [('LAN', {})]
-    return [('Rack', {})]
+    if info[0][0].startswith("2.1.1"):
+        return [("LAN", {})]
+    return [("Rack", {})]
 
 
 def check_kentix_temp(item, params, info):
-    info[0][0] = info[0][0].split('.', 3)[-1]
+    info[0][0] = info[0][0].split(".", 3)[-1]
     value, lower_warn, upper_warn, _alarm, _text = info[0]
     temp = float(value) / 10
 
-    return check_temperature(temp,
-                             params,
-                             "kentix_temp_%s" % item,
-                             dev_levels=(float(upper_warn), float(upper_warn)),
-                             dev_levels_lower=(float(lower_warn), float(lower_warn)))
+    return check_temperature(
+        temp,
+        params,
+        "kentix_temp_%s" % item,
+        dev_levels=(float(upper_warn), float(upper_warn)),
+        dev_levels_lower=(float(lower_warn), float(lower_warn)),
+    )
 
 
 check_info["kentix_temp"] = {
-    'check_function': check_kentix_temp,
-    'inventory_function': inventory_kentix_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.37954',
-        ['2.1.1', '3.1.1'],
+    "check_function": check_kentix_temp,
+    "inventory_function": inventory_kentix_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.37954",
+        ["2.1.1", "3.1.1"],
         [
-            '1',  # temperatureValue
-            '2',  # temperatureMin
-            '3',  # temperatureMax
-            '4',  # temperatureAlarm, not used here
-            '5',  # temperatureAlarmtext
-        ]),
+            "1",  # temperatureValue
+            "2",  # temperatureMin
+            "3",  # temperatureMax
+            "4",  # temperatureAlarm, not used here
+            "5",  # temperatureAlarmtext
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.332.11.6"),
     "group": "temperature",
 }

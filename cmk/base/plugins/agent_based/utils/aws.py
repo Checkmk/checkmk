@@ -5,22 +5,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Mapping,
-    Optional,
-    Sequence,
-)
-from ..agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-)
+from dataclasses import dataclass
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence
+
 from ..agent_based_api.v1 import Service
+from ..agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 
 GenericAWSSection = Sequence[Mapping[str, Any]]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
+
+
+@dataclass
+class LambdaFunctionConfiguration:
+    Timeout: float  # limit of the timeout
+    MemorySize: float  # limit of the memory size
+    CodeSize: float  # current code size
+
+
+LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
+
+
+def discover_lambda_functions(
+    section_aws_lambda_summary: Optional[LambdaSummarySection],
+) -> DiscoveryResult:
+    if section_aws_lambda_summary is None:
+        return
+    for lambda_function in section_aws_lambda_summary:
+        yield Service(item=lambda_function)
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:
@@ -42,13 +53,14 @@ def extract_aws_metrics_by_labels(
         extra_keys = []
     values_by_labels: Dict[str, Dict[str, Any]] = {}
     for row in section:
-        row_id = row['Id'].lower()
-        row_label = row['Label']
-        row_values = row['Values']
+        row_id = row["Id"].lower()
+        row_label = row["Label"]
+        row_values = row["Values"]
         for expected_metric_name in expected_metric_names:
             expected_metric_name_lower = expected_metric_name.lower()
-            if (not row_id.startswith(expected_metric_name_lower) and
-                    not row_id.endswith(expected_metric_name_lower)):
+            if not row_id.startswith(expected_metric_name_lower) and not row_id.endswith(
+                expected_metric_name_lower
+            ):
                 continue
 
             try:
@@ -90,4 +102,102 @@ def discover_aws_generic(
 
 
 def aws_rds_service_item(instance_id: str, region: str) -> str:
-    return f'{instance_id} [{region}]'
+    return f"{instance_id} [{region}]"
+
+
+def function_arn_to_item(function_arn: str) -> str:
+    """Human readable representation of the FunctionArn without information loss.
+        The region and the lambda function name is extracted from the FunctionArn
+        (arn:aws:lambda:REGION:account_id:function:LAMBDA_FUNCTION_NAME:OPTIONAL_ALIAS_OR_VERSION).
+        The account_id can be omitted, because it stays equal for all lambda functions of the same AWS account.
+
+    >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function:OPTIONAL_ALIAS_OR_VERSION")
+    'eu-central-1 my_python_test_function OPTIONAL_ALIAS_OR_VERSION'
+    """
+    splitted = function_arn.split(":")
+    return (
+        f"{splitted[3]} {splitted[6]} {splitted[7]}"
+        if len(splitted) == 8
+        else f"{splitted[3]} {splitted[6]}"
+    )
+
+
+def get_region_from_item(item: str) -> str:
+    """
+    >>> get_region_from_item("eu-central-1 my_python_test_function")
+    'eu-central-1'
+    """
+    return item.split(" ")[0]
+
+
+@dataclass
+class LambdaCloudwatchMetrics:
+    Duration: float
+    Errors: float
+    Invocations: float
+    Throttles: float
+    ConcurrentExecutions: Optional[float] = None
+    DeadLetterErrors: Optional[float] = None
+    DestinationDeliveryFailures: Optional[float] = None
+    IteratorAge: Optional[float] = None
+    PostRuntimeExtensionsDuration: Optional[float] = None
+    ProvisionedConcurrencyInvocations: Optional[float] = None
+    ProvisionedConcurrencySpilloverInvocations: Optional[float] = None
+    ProvisionedConcurrencyUtilization: Optional[float] = None
+    ProvisionedConcurrentExecutions: Optional[float] = None
+    UnreservedConcurrentExecutions: Optional[float] = None
+
+    def __post_init__(self):
+        # convert timespans from milliseconds to canonical seconds
+        self.Duration /= 1000.0
+        if self.PostRuntimeExtensionsDuration:
+            self.PostRuntimeExtensionsDuration /= 1000.0
+        if self.IteratorAge:
+            self.IteratorAge /= 1000.0
+
+
+LambdaCloudwatchSection = Mapping[str, LambdaCloudwatchMetrics]
+
+
+@dataclass(frozen=True)
+class LambdaRegionLimits:
+    total_code_size: float
+    concurrent_executions: float
+    unreserved_concurrent_executions: float
+
+
+LambdaRegionLimitsSection = Mapping[str, LambdaRegionLimits]
+
+LambdaQueryStats = Sequence[Mapping[str, str]]
+
+
+@dataclass
+class LambdaInsightMetrics:
+    max_memory_used_bytes: float
+    count_cold_starts_in_percent: float
+    max_init_duration_seconds: Optional[float] = None
+
+    @staticmethod
+    def from_metrics(query_stats: LambdaQueryStats) -> "LambdaInsightMetrics":
+        max_memory_used_bytes: float
+        count_cold_starts: int
+        count_invocations: int
+        max_init_duration_seconds: Optional[float] = None
+        for metric in query_stats:
+            if metric["field"] == "max_memory_used_bytes":
+                max_memory_used_bytes = float(metric["value"])
+            if metric["field"] == "count_cold_starts":
+                count_cold_starts = int(metric["value"])
+            if metric["field"] == "count_invocations":
+                count_invocations = int(metric["value"])
+            if metric["field"] == "max_init_duration_ms":
+                max_init_duration_seconds = float(metric["value"]) / 1000.0
+
+        return LambdaInsightMetrics(
+            max_memory_used_bytes,
+            count_cold_starts * 100.0 / count_invocations,
+            max_init_duration_seconds,
+        )
+
+
+CloudwatchInsightsSection = Mapping[str, LambdaInsightMetrics]

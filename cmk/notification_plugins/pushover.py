@@ -5,8 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+
 import requests
+
 from cmk.notification_plugins import utils
+
 api_url = "https://api.pushover.net/1/messages.json"
 
 
@@ -30,7 +33,7 @@ def get_subject(context):
 
     notification_type = context["NOTIFICATIONTYPE"]
     if notification_type in ["PROBLEM", "RECOVERY"]:
-        s += u"$PREVIOUS@HARDSHORTSTATE$ \u2192 $@SHORTSTATE$"
+        s += "$PREVIOUS@HARDSHORTSTATE$ \u2192 $@SHORTSTATE$"
 
     elif notification_type.startswith("FLAP"):
         if "START" in notification_type:
@@ -61,11 +64,15 @@ def get_text(context):
 
     if "PARAMETER_URL_PREFIX" in context:
         s += " <i>Link: </i>"
-        s += utils.format_link('<a href="%s">%s</a>', utils.host_url_from_context(context),
-                               context["HOSTNAME"])
+        s += utils.format_link(
+            '<a href="%s">%s</a>', utils.host_url_from_context(context), context["HOSTNAME"]
+        )
         if context["WHAT"] != "HOST":
-            s += utils.format_link('<a href="%s">%s</a>', utils.service_url_from_context(context),
-                                   context["SERVICEDESC"])
+            s += utils.format_link(
+                '<a href="%s">%s</a>',
+                utils.service_url_from_context(context),
+                context["SERVICEDESC"],
+            )
 
     return utils.substitute_context(s.replace("@", context["WHAT"]), context)
 
@@ -113,8 +120,10 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         return 1
 
     if response.status_code != 200:
-        sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" %
-                         (response.status_code, response.text))
+        sys.stdout.write(
+            "Failed to send notification. Status: %s, Response: %s\n"
+            % (response.status_code, response.text)
+        )
         return 1
 
     try:

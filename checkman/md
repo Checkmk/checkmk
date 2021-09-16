@@ -11,6 +11,6 @@ description:
 item:
  The Linux raid device without {/dev/}, for example {"md0"}.
 
-inventory:
+discovery:
  One service is created for each RAID device unless it is a RAID-Level 0 architecture.
  The RAID-Level 0 devices's output is completely different from the others.

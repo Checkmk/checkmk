@@ -24,6 +24,6 @@ def inv_netapp_api_disk(info):
         node.append(disk)
 
 
-inv_info['netapp_api_disk'] = {
+inv_info["netapp_api_disk"] = {
     "inv_function": inv_netapp_api_disk,
 }

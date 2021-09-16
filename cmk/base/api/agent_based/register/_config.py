@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Iterable, List, Optional, Set
 from collections import defaultdict
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -17,17 +17,10 @@ from cmk.utils.type_defs import (
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
-from cmk.base.api.agent_based.type_defs import (
-    AgentSectionPlugin,
-    SectionPlugin,
-    SNMPSectionPlugin,
-)
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
-from cmk.base.api.agent_based.register.utils import (
-    rank_sections_by_supersedes,
-    validate_check_ruleset_item_consistency,
-)
+from cmk.base.api.agent_based.register.utils import validate_check_ruleset_item_consistency
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SectionPlugin, SNMPSectionPlugin
 
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
@@ -44,8 +37,9 @@ stored_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
 _check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
 
-_sections_by_parsed_name: Dict[ParsedSectionName, Dict[SectionName,
-                                                       SectionPlugin]] = defaultdict(dict)
+_sections_by_parsed_name: Dict[ParsedSectionName, Dict[SectionName, SectionPlugin]] = defaultdict(
+    dict
+)
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
@@ -68,7 +62,8 @@ def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
 
 def add_section_plugin(section_plugin: SectionPlugin) -> None:
     _sections_by_parsed_name[section_plugin.parsed_section_name][
-        section_plugin.name] = section_plugin
+        section_plugin.name
+    ] = section_plugin
     if isinstance(section_plugin, AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
     else:
@@ -105,22 +100,8 @@ def get_host_label_ruleset(ruleset_name: RuleSetName) -> List[Dict[str, Any]]:
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[InventoryPlugin]:
-    """Returns the registered inventory plugin
-    """
+    """Returns the registered inventory plugin"""
     return registered_inventory_plugins.get(plugin_name)
-
-
-def get_ranked_sections(
-    available_raw_sections: Iterable[SectionName],
-    filter_parsed_section: Optional[Set[ParsedSectionName]],
-) -> List[SectionPlugin]:
-    """
-    Get the raw sections [that will be parsed into the required section] ordered by supersedings
-    """
-    return rank_sections_by_supersedes(
-        ((name, get_section_plugin(name)) for name in available_raw_sections),
-        filter_parsed_section,
-    )
 
 
 def get_relevant_raw_sections(
@@ -142,14 +123,18 @@ def get_relevant_raw_sections(
             parsed_section_names.update(inventory_plugin.sections)
 
     return {
-        section_name: section for parsed_name in parsed_section_names
+        section_name: section
+        for parsed_name in parsed_section_names
         for section_name, section in _sections_by_parsed_name[parsed_name].items()
     }
 
 
 def get_section_plugin(section_name: SectionName) -> SectionPlugin:
-    return (registered_agent_sections.get(section_name) or
-            registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
+    return (
+        registered_agent_sections.get(section_name)
+        or registered_snmp_sections.get(section_name)
+        or trivial_section_factory(section_name)
+    )
 
 
 def get_section_producers(parsed_section_name: ParsedSectionName) -> Set[SectionName]:

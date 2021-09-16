@@ -10,6 +10,6 @@ item:
  The unit name and the phase identifier ("Phase 1"), or Summary for overall
  power and energy.
 
-inventory:
+discovery:
  One service is created for each phase and one summary service is created.
 

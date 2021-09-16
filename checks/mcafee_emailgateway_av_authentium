@@ -24,20 +24,24 @@ def check_mcafee_emailgateway_av_authentium(item, params, info):
 
     activated, engine_version, dat_version = info[0]
     state, state_readable = map_states.get(activated, (3, "unknown[%s]" % activated))
-    return state, "Status: %s, Engine version: %s, DAT version: %s" % \
-           (state_readable, engine_version, dat_version)
+    return state, "Status: %s, Engine version: %s, DAT version: %s" % (
+        state_readable,
+        engine_version,
+        dat_version,
+    )
 
 
-check_info['mcafee_emailgateway_av_authentium'] = {
-    'inventory_function': inventory_mcafee_emailgateway_av_authentium,
-    'check_function': check_mcafee_emailgateway_av_authentium,
-    'service_description': 'AV Authentium',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.4.1.2.3.6',
+check_info["mcafee_emailgateway_av_authentium"] = {
+    "inventory_function": inventory_mcafee_emailgateway_av_authentium,
+    "check_function": check_mcafee_emailgateway_av_authentium,
+    "service_description": "AV Authentium",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.4.1.2.3.6",
         [
-            '4',  # av-authentium-activated
-            '5',  # av-authentium-engine-version
-            '6',  # av-authentium-dat-version
-        ]),
-    'snmp_scan_function': scan_mcafee_emailgateway,
+            "4",  # av-authentium-activated
+            "5",  # av-authentium-engine-version
+            "6",  # av-authentium-dat-version
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_emailgateway,
 }

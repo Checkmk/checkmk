@@ -12,14 +12,16 @@ def inv_oracle_dataguard_stats(parsed):
             db_name, db_unique_name = inst.split(".", 1)
         except ValueError:
             continue
-        node.append({
-            "sid": db_name,
-            "db_unique": "%s.%s" % (db_name, db_unique_name),
-            "role": data.get('database_role'),
-            "switchover": data.get('switchover_status'),
-        })
+        node.append(
+            {
+                "sid": db_name,
+                "db_unique": "%s.%s" % (db_name, db_unique_name),
+                "role": data.get("database_role"),
+                "switchover": data.get("switchover_status"),
+            }
+        )
 
 
-inv_info['oracle_dataguard_stats'] = {
-    'inv_function': inv_oracle_dataguard_stats,
+inv_info["oracle_dataguard_stats"] = {
+    "inv_function": inv_oracle_dataguard_stats,
 }

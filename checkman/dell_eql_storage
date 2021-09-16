@@ -11,6 +11,6 @@ description:
 item:
  The Name of the Member Device
 
-inventory:
+discovery:
  One service is created for each member.
 

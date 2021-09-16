@@ -25,8 +25,8 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
-#include <deque>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -76,7 +76,7 @@ int g_num_queued_connections = 0;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic_int32_t g_livestatus_active_connections{0};
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
+size_t g_thread_stack_size = size_t{1024} * 1024; /* stack size of threads */
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 void *g_nagios_handle;
@@ -89,7 +89,7 @@ int g_max_fd_ever = 0;
 static NagiosPaths fl_paths;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static bool fl_should_terminate = false;
+static bool fl_should_terminate;
 
 struct ThreadInfo {
     pthread_t id;
@@ -117,7 +117,7 @@ Encoding fl_data_encoding{Encoding::utf8};
 static Logger *fl_logger_nagios = nullptr;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
-using ClientQueue_t = Queue<std::deque<int>>;
+using ClientQueue_t = Queue<int>;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static ClientQueue_t *fl_client_queue = nullptr;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -181,6 +181,9 @@ void update_status() {
         static_cast<double>(g_livestatus_active_connections) /
         g_livestatus_threads);
 }
+
+bool shouldTerminate() { return fl_should_terminate; }
+void shouldTerminate(bool value) { fl_should_terminate = value; }
 }  // namespace
 
 void livestatus_count_fork() { counterIncrement(Counter::forks); }
@@ -215,7 +218,7 @@ void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto *logger = fl_core->loggerLivestatus();
     auto last_update_status = std::chrono::system_clock::now();
-    while (!fl_should_terminate) {
+    while (!shouldTerminate()) {
         do_statistics();
         auto now = std::chrono::system_clock::now();
         if (now - last_update_status >= 5s) {
@@ -258,22 +261,23 @@ void *main_thread(void *data) {
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto *logger = fl_core->loggerLivestatus();
-    while (!fl_should_terminate) {
+    while (!shouldTerminate()) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
         if (auto cc = fl_client_queue->pop()) {
             Debug(logger) << "accepted client connection on fd " << *cc;
-            InputBuffer input_buffer(*cc, fl_should_terminate, logger,
-                                     fl_query_timeout, fl_idle_timeout);
+            InputBuffer input_buffer{*cc, [] { return shouldTerminate(); },
+                                     logger, fl_query_timeout, fl_idle_timeout};
             bool keepalive = true;
             unsigned requestnr = 0;
-            while (keepalive && !fl_should_terminate) {
+            while (keepalive && !shouldTerminate()) {
                 if (++requestnr > 1) {
                     Debug(logger) << "handling request " << requestnr
                                   << " on same connection";
                 }
                 counterIncrement(Counter::requests);
-                OutputBuffer output_buffer(*cc, fl_should_terminate, logger);
+                OutputBuffer output_buffer{
+                    *cc, [] { return shouldTerminate(); }, logger};
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
             ::close(*cc);
@@ -326,6 +330,7 @@ void start_threads() {
         return;
     }
 
+    shouldTerminate(false);
     auto *logger = fl_core->loggerLivestatus();
     logger->setLevel(fl_livestatus_log_level);
     logger->setUseParentHandlers(false);
@@ -341,18 +346,30 @@ void start_threads() {
         << "starting main thread and " << g_livestatus_threads
         << " client threads";
 
-    pthread_atfork(livestatus_count_fork, nullptr,
-                   livestatus_cleanup_after_fork);
+    if (auto result = pthread_atfork(livestatus_count_fork, nullptr,
+                                     livestatus_cleanup_after_fork);
+        result != 0) {
+        Warning(fl_logger_nagios)
+            << generic_error{result, "cannot set fork handler"};
+    }
 
     pthread_attr_t attr;
-    pthread_attr_init(&attr);
+    if (auto result = pthread_attr_init(&attr); result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot create livestatus thread attributes"};
+    }
     size_t defsize = 0;
-    if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
+    if (auto result = pthread_attr_getstacksize(&attr, &defsize); result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot get default livestatus thread stack size"};
+    } else {
         Debug(fl_logger_nagios) << "default stack size is " << defsize;
     }
-    if (pthread_attr_setstacksize(&attr, g_thread_stack_size) != 0) {
-        Warning(fl_logger_nagios)
-            << "cannot set thread stack size to " << g_thread_stack_size;
+    if (auto result = pthread_attr_setstacksize(&attr, g_thread_stack_size);
+        result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot set livestatus thread stack size to " +
+                        std::to_string(g_thread_stack_size)};
     } else {
         Debug(fl_logger_nagios)
             << "setting thread stack size to " << g_thread_stack_size;
@@ -364,25 +381,42 @@ void start_threads() {
         if (idx == 0) {
             // start thread that listens on socket
             info.name = "main";
-            pthread_create(&info.id, nullptr, main_thread, &info);
+            if (auto result =
+                    pthread_create(&info.id, nullptr, main_thread, &info);
+                result != 0) {
+                Warning(fl_logger_nagios)
+                    << generic_error{result, "cannot create main thread"};
+            }
             // Our current thread (i.e. the main one, confusing terminology)
             // needs thread-local infos for logging, too.
             tl_info = &info;
         } else {
             info.name = "client " + std::to_string(idx);
-            pthread_create(&info.id, &attr, client_thread, &info);
+            if (auto result =
+                    pthread_create(&info.id, &attr, client_thread, &info);
+                result != 0) {
+                Warning(fl_logger_nagios)
+                    << generic_error{result, "cannot create livestatus thread"};
+            }
         }
     }
 
     g_thread_running = 1;
-    pthread_attr_destroy(&attr);
+    if (auto result = pthread_attr_destroy(&attr); result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot destroy livestatus thread attributes"};
+    }
 }
 
 void terminate_threads() {
     if (g_thread_running != 0) {
-        fl_should_terminate = true;
+        shouldTerminate(true);
         Informational(fl_logger_nagios) << "waiting for main to terminate...";
-        pthread_join(fl_thread_info[0].id, nullptr);
+        if (auto result = pthread_join(fl_thread_info[0].id, nullptr);
+            result != 0) {
+            Warning(fl_logger_nagios) << generic_error{
+                result, "cannot join thread " + fl_thread_info[0].name};
+        }
         Informational(fl_logger_nagios)
             << "waiting for client threads to terminate...";
         fl_client_queue->join();
@@ -390,16 +424,16 @@ void terminate_threads() {
             ::close(*fd);
         }
         for (const auto &info : fl_thread_info) {
-            if (pthread_join(info.id, nullptr) != 0) {
+            if (auto result = pthread_join(info.id, nullptr); result != 0) {
                 Warning(fl_logger_nagios)
-                    << "could not join thread " << info.name;
+                    << generic_error{result, "cannot join thread " + info.name};
             }
         }
         Informational(fl_logger_nagios)
             << "main thread + " << g_livestatus_threads
             << " client threads have finished";
         g_thread_running = 0;
-        fl_should_terminate = false;
+        shouldTerminate(false);
     }
 }
 
@@ -882,18 +916,18 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "service_authorization") {
                 if (right == "strict") {
-                    fl_authorization._service = AuthorizationKind::strict;
+                    fl_authorization._service = ServiceAuthorization::strict;
                 } else if (right == "loose") {
-                    fl_authorization._service = AuthorizationKind::loose;
+                    fl_authorization._service = ServiceAuthorization::loose;
                 } else {
                     Warning(logger) << "invalid service authorization mode, "
                                        "allowed are strict and loose";
                 }
             } else if (left == "group_authorization") {
                 if (right == "strict") {
-                    fl_authorization._group = AuthorizationKind::strict;
+                    fl_authorization._group = GroupAuthorization::strict;
                 } else if (right == "loose") {
-                    fl_authorization._group = AuthorizationKind::loose;
+                    fl_authorization._group = GroupAuthorization::loose;
                 } else {
                     Warning(logger)
                         << "invalid group authorization mode, allowed are strict and loose";

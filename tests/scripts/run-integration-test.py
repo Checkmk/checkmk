@@ -15,25 +15,22 @@ Environment variables VERSION, EDITION, BRANCH affect the package used for
 the test.
 """
 
+import logging
 import os
-import sys
 import pipes
 import subprocess
-import logging
-import shutil
+import sys
 from pathlib import Path
 
-# Make the testlib available
+# Make the tests.testlib available
 script_path = Path(__file__).resolve()
-sys.path.insert(0, str(script_path.parent.parent))
-# Make the repo directory available (cmk/livestatus lib)
 sys.path.insert(0, str(script_path.parent.parent.parent))
 
-from testlib.utils import is_running_as_site_user, cmk_path
-from testlib.site import get_site_factory
-from testlib.version import CMKVersion
+from tests.testlib.site import get_site_factory
+from tests.testlib.utils import cmk_path, is_running_as_site_user
+from tests.testlib.version import CMKVersion
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
 
 
@@ -46,15 +43,25 @@ def main(args):
     logger.info("===============================================")
 
     version = os.environ.get("VERSION", CMKVersion.DAILY)
-    sf = get_site_factory(prefix="int_",
-                          update_from_git=version == "git",
-                          install_test_python_modules=True)
+    sf = get_site_factory(
+        prefix="int_", update_from_git=version == "git", install_test_python_modules=True
+    )
+
+    site = sf.get_existing_site("test")
 
     if os.environ.get("REUSE"):
-        logger.info("Reuse existing site")
-        site = sf.get_existing_site("test")
-        site.start()
+        logger.info("Reuse previously existing site in case it exists (REUSE=1)")
+        if not site.exists():
+            logger.info("Creating new site")
+            site = sf.get_site("test")
+        else:
+            logger.info("Reuse existing site")
+            site.start()
     else:
+        if site.exists():
+            logger.info("Remove previously existing site (REUSE=0)")
+            site.rm()
+
         logger.info("Creating new site")
         site = sf.get_site("test")
 
@@ -67,16 +74,7 @@ def main(args):
     try:
         return _execute_as_site_user(site, args)
     finally:
-        if _is_dockerized():
-            if os.path.exists("/results"):
-                shutil.rmtree("/results")
-                os.mkdir("/results")
-            shutil.copy(site.path("junit.xml"), "/results")
-            shutil.copytree(site.path("var/log"), "/results/logs")
-
-
-def _is_dockerized():
-    return Path("/.dockerenv").exists()
+        sf.save_results()
 
 
 def _execute_as_site_user(site, args):
@@ -86,8 +84,12 @@ def _execute_as_site_user(site, args):
         "BRANCH": site.version._branch,
     }
     for varname in [
-            "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
-            "PYLINT_ARGS", "CI"
+        "WORKSPACE",
+        "PYTEST_ADDOPTS",
+        "BANDIT_OUTPUT_ARGS",
+        "SHELLCHECK_OUTPUT_ARGS",
+        "PYLINT_ARGS",
+        "CI",
     ]:
         if varname in os.environ:
             env_vars[varname] = os.environ[varname]
@@ -99,6 +101,8 @@ def _execute_as_site_user(site, args):
         site.path("local/bin/pytest"),
         "-p",
         "no:cov",
+        "--log-cli-level=DEBUG",
+        "--log-cli-format=%(asctime)s %(levelname)s %(message)s",
         "--junitxml",
         site.path("junit.xml"),
         "-T",

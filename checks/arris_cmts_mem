@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.arris_cmts import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["arris_cmts_mem"] = {
     "levels": (80.0, 90.0),
 }
@@ -24,10 +26,13 @@ def parse_arris_cmts_mem(info):
     for cid, heap, heap_free in info:
         # The Module numbers are starting with 0, not with 1 like the OIDs
         heap, heap_free = float(heap), float(heap_free)
-        parsed.setdefault(int(cid) - 1, {
-            'mem_used': heap - heap_free,
-            'mem_total': heap,
-        })
+        parsed.setdefault(
+            int(cid) - 1,
+            {
+                "mem_used": heap - heap_free,
+                "mem_total": heap,
+            },
+        )
     return parsed
 
 
@@ -62,7 +67,8 @@ check_info["arris_cmts_mem"] = {
             OID_END,
             2,  # cadMeHeapSize
             3,  # cadMeHeapRemaining
-        ]),
+        ],
+    ),
     "group": "memory_multiitem",
     "default_levels_variable": "arris_cmts_mem",
 }

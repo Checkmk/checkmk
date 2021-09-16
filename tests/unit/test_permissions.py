@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Callable, List, Tuple
 
-from testlib import cmk_path
+from tests.testlib import cmk_path
 
 
 def is_executable(path: Path) -> bool:
@@ -26,28 +26,45 @@ _GLOBAL_EXCLUDES = [
 
 _PERMISSIONS: List[Tuple[str, Callable[[Path], bool], List[str]]] = [
     # globbing pattern                check function,   excludes
-    ('active_checks/*', is_executable, ['Makefile', 'check_mkevents.cc']),
-    ('agents/special/agent_*', is_executable, []),
-    ('agents/special/lib/*', is_not_executable, []),
-    ('agents/check_mk_agent.*', is_executable, ['check_mk_agent.spec']),
-    ('agents/plugins/*', is_executable,
-     ['README', 'mk_filestats.pyc', 'mk_jolokia.pyc', 'mk_docker.pyc', "Makefile"]),
-    ('checks/*', is_not_executable, []),
-    ('checkman/*', is_not_executable, []),
-    ('inventory/*', is_not_executable, []),
-    ('pnp-templates/*', is_not_executable, []),
-    ('notifications/*', is_executable, ['README', 'debug']),
-    ('bin/*', is_executable, ['Makefile', 'mkevent.cc', 'mkeventd_open514.cc']),
+    ("active_checks/*", is_executable, ["Makefile", "check_mkevents.cc"]),
+    ("agents/special/agent_*", is_executable, []),
+    ("agents/special/lib/*", is_not_executable, []),
+    ("agents/check_mk_agent.*", is_executable, ["check_mk_agent.spec"]),
+    (
+        "agents/plugins/*",
+        is_executable,
+        ["README", "mk_filestats.pyc", "mk_jolokia.pyc", "mk_docker.pyc", "Makefile"],
+    ),
+    ("checks/*", is_not_executable, []),
+    ("checkman/*", is_not_executable, []),
+    ("inventory/*", is_not_executable, []),
+    ("pnp-templates/*", is_not_executable, []),
+    ("notifications/*", is_executable, ["README", "debug"]),
+    ("bin/*", is_executable, ["Makefile", "mkevent.cc", "mkeventd_open514.cc"]),
     # Enterprise specific
-    ('enterprise/bin/*', is_executable, []),
-    ('enterprise/active_checks/*', is_executable, []),
-    ('enterprise/agents/plugins/*', is_executable, [
-        "chroot_version", "Dockerfile", "Makefile", "pyinstaller-deps.make", "chroot", "src",
-        "cmk_update_agent.pyc", "pip-deps-32.make", "pip-deps.make", "dist",
-        "cmk-update-agent.spec", "cmk-update-agent-32.spec", "build"
-    ]),
-    ('enterprise/alert_handlers/*', is_executable, []),
-    ('enterprise/alert_handlers/*', is_executable, []),
+    ("enterprise/bin/*", is_executable, []),
+    ("enterprise/active_checks/*", is_executable, []),
+    (
+        "enterprise/agents/plugins/*",
+        is_executable,
+        [
+            "chroot_version",
+            "Dockerfile",
+            "Makefile",
+            "pyinstaller-deps.make",
+            "chroot",
+            "src",
+            "cmk_update_agent.pyc",
+            "pip-deps-32.make",
+            "pip-deps.make",
+            "dist",
+            "cmk-update-agent.spec",
+            "cmk-update-agent-32.spec",
+            "build",
+        ],
+    ),
+    ("enterprise/alert_handlers/*", is_executable, []),
+    ("enterprise/alert_handlers/*", is_executable, []),
 ]
 
 

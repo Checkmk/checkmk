@@ -8,12 +8,14 @@
 def inv_k8s_nodes(parsed, inventory_tree):
     node = inventory_tree.get_list("software.applications.kubernetes.nodes:")
 
-    for k8s_node in sorted(parsed.get('nodes', [])):
-        node.append({
-            'name': k8s_node,
-        })
+    for k8s_node in sorted(parsed.get("nodes", [])):
+        node.append(
+            {
+                "name": k8s_node,
+            }
+        )
 
 
-inv_info['k8s_nodes'] = {
-    'inv_function': inv_k8s_nodes,
+inv_info["k8s_nodes"] = {
+    "inv_function": inv_k8s_nodes,
 }

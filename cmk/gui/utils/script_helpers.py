@@ -9,26 +9,18 @@ The intended use is for scripts such as cmk-update-config or init-redis.
 """
 
 from contextlib import contextmanager
-from typing import (
-    Any,
-    Iterator,
-    Mapping,
-)
+from typing import Any, Iterator, Mapping, Optional
 
 from werkzeug.test import create_environ
 
-from cmk.gui.config import (
-    load_config,
-    set_super_user,
-)
+from cmk.gui.config import get_default_config, load_config, make_config_object
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import (
-    AppContext,
-    RequestContext,
-)
+from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.htmllib import html
-from cmk.gui.http import Request
+from cmk.gui.http import Request, Response
 from cmk.gui.modules import load_all_plugins
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.theme import Theme
 
 
 # TODO: Better make our application available?
@@ -46,28 +38,30 @@ def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
 
 @contextmanager
 def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
-    this_html = html(Request(environ))
-
-    # Currently the htmllib.html constructor enables the timeout by default. This side effect
-    # should really be cleaned up.
-    this_html.disable_request_timeout()
-
+    req = Request(environ)
+    resp = Response(mimetype="text/html")
+    funnel = OutputFunnel(resp)
     with RequestContext(
-            this_html,
-            display_options=DisplayOptions(),
-            prefix_logs_with_url=False,
+        req=req,
+        resp=resp,
+        funnel=funnel,
+        config_obj=make_config_object(get_default_config()),
+        html_obj=html(req, resp, funnel, output_format="html"),
+        display_options=DisplayOptions(),
+        theme=Theme(),
+        prefix_logs_with_url=False,
     ):
         yield
 
 
 @contextmanager
-def application_and_request_context() -> Iterator[None]:
-    environ = dict(create_environ(), REQUEST_URI='')
+def application_and_request_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
+    if environ is None:
+        environ = dict(create_environ(), REQUEST_URI="")
     with application_context(environ), request_context(environ):
         yield
 
 
 def initialize_gui_environment() -> None:
-    load_all_plugins()
     load_config()
-    set_super_user()
+    load_all_plugins()

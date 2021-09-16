@@ -4,11 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, Any
+from typing import Any, Dict, List, Mapping
 
-from .agent_based_api.v1 import (startswith, OIDEnd, register, SNMPTree, Service, check_levels,
-                                 render)
-from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
+from .agent_based_api.v1 import (
+    check_levels,
+    OIDEnd,
+    register,
+    render,
+    Service,
+    SNMPTree,
+    startswith,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 OID_SysObjectID = ".1.3.6.1.2.1.1.2.0"
 
@@ -27,11 +34,14 @@ register.snmp_section(
     detect=startswith(OID_SysObjectID, ".1.3.6.1.4.1.12356.101.1"),
     parse_function=parse_fortigate_node_memory,
     fetch=[
-        SNMPTree(base=".1.3.6.1.4.1.12356.101.13.2.1.1", oids=[
-            "11",
-            "4",
-            OIDEnd(),
-        ]),
+        SNMPTree(
+            base=".1.3.6.1.4.1.12356.101.13.2.1.1",
+            oids=[
+                "11",
+                "4",
+                OIDEnd(),
+            ],
+        ),
     ],
 )
 
@@ -46,12 +56,14 @@ def check_fortigate_node_memory(item, params: Mapping[str, Any], section: Sectio
     if memory is None:
         return
 
-    yield from check_levels(memory,
-                            metric_name="mem_used_percent",
-                            levels_upper=params["levels"],
-                            boundaries=(0.0, 100.0),
-                            render_func=render.percent,
-                            label="Usage")
+    yield from check_levels(
+        memory,
+        metric_name="mem_used_percent",
+        levels_upper=params["levels"],
+        boundaries=(0.0, 100.0),
+        render_func=render.percent,
+        label="Usage",
+    )
 
 
 register.check_plugin(

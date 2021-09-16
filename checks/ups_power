@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 ups_power_default_levels = (20, 1)  # warning / critical
 
 
@@ -23,8 +24,7 @@ def check_ups_power(item, params, info):
                 power *= -1
 
             perfdata = [("power", power, warn, crit, 0)]
-            infotext = "power: %dW (warn/crit at %dW/%dW)" % \
-                (power, warn, crit)
+            infotext = "power: %dW (warn/crit at %dW/%dW)" % (power, warn, crit)
 
             if power <= crit:
                 return (2, infotext, perfdata)
@@ -35,7 +35,7 @@ def check_ups_power(item, params, info):
     return (3, "Phase %s not found in SNMP output" % item)
 
 
-check_info['ups_power'] = {
+check_info["ups_power"] = {
     "inventory_function": lambda i: discovery_ups_generic(i, "ups_power_default_levels"),
     "check_function": check_ups_power,
     "service_description": "Power phase %s",

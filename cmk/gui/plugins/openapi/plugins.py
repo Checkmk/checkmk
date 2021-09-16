@@ -3,10 +3,11 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Type, Any, Union
-from marshmallow import Schema, fields, ValidationError
+from typing import Any, Type, Union
+
 from apispec.ext import marshmallow  # type: ignore[import]
 from apispec.ext.marshmallow import common  # type: ignore[import]
+from marshmallow import fields, Schema, ValidationError
 
 
 class ValueTypedDictOpenAPIConverter(marshmallow.OpenAPIConverter):
@@ -24,8 +25,8 @@ class ValueTypedDictOpenAPIConverter(marshmallow.OpenAPIConverter):
         ref_dict = self.get_ref_dict(schema_instance)
 
         return {
-            u'type': u'object',
-            u'additionalProperties': ref_dict,
+            "type": "object",
+            "additionalProperties": ref_dict,
         }
 
 
@@ -52,7 +53,8 @@ class ValueTypedDictSchema(Schema):
             to keep the key and it's value in the value-dict or to remove it.
 
     """
-    key_name: str = 'name'
+
+    key_name: str = "name"
     keep_key: bool = True
     value_type: Union[Type[Schema], fields.Field]
 
@@ -61,6 +63,17 @@ class ValueTypedDictSchema(Schema):
         result = {}
         for entry in obj:
             part = schema.dump(entry)
+            # HACK. marshmallow_oneofschema returns errors instead of raising them. :-(
+            # See https://github.com/marshmallow-code/marshmallow-oneofschema/issues/48
+            is_error_return = (
+                isinstance(part, tuple)
+                and len(part) == 2
+                and part[0] is None
+                and isinstance(part[1], dict)
+                and "_schema" in part[1]
+            )
+            if is_error_return:
+                raise ValidationError(part[1]["_schema"])
             result[part[self.key_name]] = part
             if not self.keep_key:
                 del part[self.key_name]
@@ -68,7 +81,7 @@ class ValueTypedDictSchema(Schema):
 
     def load(self, data, *, many=None, partial=None, unknown=None):
         if not isinstance(data, dict):
-            raise ValidationError({'_schema': f'Data type is invalid: {data}'})
+            raise ValidationError({"_schema": f"Data type is invalid: {data}"})
 
         schema = common.resolve_schema_instance(self.value_type)
         res = []

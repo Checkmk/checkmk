@@ -13,8 +13,8 @@ def check_sap_hana_version(item, params, parsed):
     return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
-check_info['sap_hana_version'] = {
-    'inventory_function': inventory_sap_hana_version,
-    'check_function': check_sap_hana_version,
-    'service_description': 'SAP HANA Version',
+check_info["sap_hana_version"] = {
+    "inventory_function": inventory_sap_hana_version,
+    "check_function": check_sap_hana_version,
+    "service_description": "SAP HANA Version",
 }

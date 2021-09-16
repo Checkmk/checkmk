@@ -13,6 +13,6 @@ description:
 
  This check uses the PEAKFLOW-TMS-MIB.
 
-inventory:
+discovery:
  One service is created.
 

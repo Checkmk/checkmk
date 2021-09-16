@@ -7,11 +7,13 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based.oracle_instance import parse_oracle_instance
+
 checkname = 'oracle_instance'
 
 freeze_time = '2020-01-30 00:00:00'
 
-info = [
+parsed = parse_oracle_instance([
     [
         'TUX2', '12.1.0.1.0', 'OPEN', 'ALLOWED', 'STARTED', '6735',
         '1297771692', 'ARCHIVELOG', 'PRIMARY', 'NO', 'TUX2'
@@ -24,7 +26,7 @@ info = [
         '+ASM', 'FAILURE',
         'ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days'
     ]
-]
+])
 
 discovery = {
     '': [('+ASM', {}), ('TUX2', {}), ('TUX5', {})],

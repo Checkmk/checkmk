@@ -4,14 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
 import ipaddress
+from typing import Dict
 
-from six import ensure_str
-
-from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import ServiceName
 
 TranslationOptions = Dict  # TODO: Improve this type
 
@@ -20,31 +17,18 @@ def translate_hostname(translation: TranslationOptions, hostname: str) -> str:
     return _translate(translation, hostname)
 
 
-def translate_service_description(translation: TranslationOptions,
-                                  service_description: ServiceName) -> ServiceName:
-    if service_description.strip() in \
-        ["Check_MK", "Check_MK Agent",
-         "Check_MK Discovery", "Check_MK inventory",
-         "Check_MK HW/SW Inventory"]:
+def translate_service_description(
+    translation: TranslationOptions, service_description: ServiceName
+) -> ServiceName:
+    if service_description.strip() in [
+        "Check_MK",
+        "Check_MK Agent",
+        "Check_MK Discovery",
+        "Check_MK inventory",
+        "Check_MK HW/SW Inventory",
+    ]:
         return service_description.strip()
     return _translate(translation, service_description)
-
-
-def translate_piggyback_host(
-    backedhost: HostName,
-    translation: TranslationOptions,
-    *,
-    encoding_fallback: str,
-) -> HostName:
-    # To make it possible to match umlauts we need to change the hostname
-    # to a unicode string which can then be matched with regexes etc.
-    # We assume the incoming name is correctly encoded in UTF-8
-    decoded_backedhost = ensure_str_with_fallback(
-        backedhost,
-        encoding="utf-8",
-        fallback=encoding_fallback,
-    )
-    return ensure_str(translate_hostname(translation, decoded_backedhost))
 
 
 def _translate(translation: TranslationOptions, name: str) -> str:
@@ -70,8 +54,8 @@ def _translate(translation: TranslationOptions, name: str) -> str:
         translations = translation.get("regex", [])
 
     for expr, subst in translations:
-        if not expr.endswith('$'):
-            expr += '$'
+        if not expr.endswith("$"):
+            expr += "$"
         rcomp = regex(expr)
         # re.RegexObject.sub() by hand to handle non-existing references
         mo = rcomp.match(name)

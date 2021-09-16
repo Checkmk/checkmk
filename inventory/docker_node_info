@@ -15,7 +15,7 @@ def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
         return
 
     node = inventory_tree.get_dict("software.applications.docker.")
-    _try_set(node, "version", parsed, u"ServerVersion")
+    _try_set(node, "version", parsed, "ServerVersion")
     _try_set(node, "registry", parsed, "IndexServerAddress")
     # {"NodeID":"","NodeAddr":"","LocalNodeState":"inactive","ControlAvailable":false,"Error":"","RemoteManagers":null}
     swarm_data = parsed.get("Swarm", {})
@@ -26,7 +26,7 @@ def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
         swarm_manager = inventory_tree.get_list("software.applications.docker.swarm_manager:")
         swarm_manager += swarm_data["RemoteManagers"]
 
-    labels = parsed.get(u"Labels")
+    labels = parsed.get("Labels")
     if labels:
         node_labels = inventory_tree.get_list("software.applications.docker.node_labels:")
         node_labels += [{"label": label} for label in labels]
@@ -39,7 +39,7 @@ def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
     _try_set(status_node, "num_images", parsed, "Images")
 
 
-inv_info['docker_node_info'] = {
-    'inv_function': inv_docker_node_info,
-    'has_status_data': True,
+inv_info["docker_node_info"] = {
+    "inv_function": inv_docker_node_info,
+    "has_status_data": True,
 }

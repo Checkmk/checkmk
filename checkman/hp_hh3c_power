@@ -11,5 +11,5 @@ description:
 item:
  The power number.
 
-inventory:
+discovery:
  One service is created for each power that is in "active" or "deactive" state.

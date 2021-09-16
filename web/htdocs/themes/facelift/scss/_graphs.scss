@@ -228,6 +228,11 @@ div.graph_with_timeranges {
 
   > div.graph_container {
     display: inline-block;
+
+    div.popup_menu {
+      max-height: 35vh;
+      overflow: auto;
+    }
   }
 
   tr.data > td > div.timerange {

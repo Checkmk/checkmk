@@ -9,25 +9,28 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.enviromux import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['enviromux_default_levels'] = ENVIROMUX_CHECK_DEFAULT_PARAMETERS
 
-check_info['enviromux_sems'] = {
-    'parse_function': parse_enviromux,
-    'inventory_function': inventory_enviromux_temperature,
-    'check_function': check_enviromux_temperature,
-    'service_description': 'Sensor %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.3699.1.1.2.1.4.1.1',
+factory_settings["enviromux_default_levels"] = ENVIROMUX_CHECK_DEFAULT_PARAMETERS
+
+check_info["enviromux_sems"] = {
+    "parse_function": parse_enviromux,
+    "inventory_function": inventory_enviromux_temperature,
+    "check_function": check_enviromux_temperature,
+    "service_description": "Sensor %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.3699.1.1.2.1.4.1.1",
         [
             "1",  # intSensorIndex
             "2",  # intSensorType
@@ -41,15 +44,16 @@ check_info['enviromux_sems'] = {
             "10",  # intSensorMinThreshold
             "11",  # intSensorMaxThreshold
             # These appear to only return bogus values
-            #"12", # intSensorMinWarnThreshold
-            #"13", # intSensorMaxWarnThreshold
-        ]),
-    'has_perfdata': True,
-    'snmp_scan_function': enviromux_sems_scan_function,
-    'group': "temperature",
+            # "12", # intSensorMinWarnThreshold
+            # "13", # intSensorMaxWarnThreshold
+        ],
+    ),
+    "has_perfdata": True,
+    "snmp_scan_function": enviromux_sems_scan_function,
+    "group": "temperature",
 }
 
-#.
+# .
 #   .--Voltage-------------------------------------------------------------.
 #   |                 __     __    _ _                                     |
 #   |                 \ \   / /__ | | |_ __ _  __ _  ___                   |
@@ -61,15 +65,15 @@ check_info['enviromux_sems'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info['enviromux_sems.voltage'] = {
-    'inventory_function': inventory_enviromux_voltage,
-    'check_function': check_enviromux_voltage,
-    'service_description': 'Sensor %s',
-    'has_perfdata': True,
-    'group': "voltage",
-    'default_levels_variable': "enviromux_default_levels",
+check_info["enviromux_sems.voltage"] = {
+    "inventory_function": inventory_enviromux_voltage,
+    "check_function": check_enviromux_voltage,
+    "service_description": "Sensor %s",
+    "has_perfdata": True,
+    "group": "voltage",
+    "default_levels_variable": "enviromux_default_levels",
 }
-#.
+# .
 #   .--Humidity------------------------------------------------------------.
 #   |              _   _                 _     _ _ _                       |
 #   |             | | | |_   _ _ __ ___ (_) __| (_) |_ _   _               |
@@ -81,10 +85,10 @@ check_info['enviromux_sems.voltage'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info['enviromux_sems.humidity'] = {
-    'inventory_function': inventory_enviromux_humidity,
-    'check_function': check_enviromux_humidity,
-    'service_description': 'Sensor %s',
-    'has_perfdata': True,
-    'group': "humidity",
+check_info["enviromux_sems.humidity"] = {
+    "inventory_function": inventory_enviromux_humidity,
+    "check_function": check_enviromux_humidity,
+    "service_description": "Sensor %s",
+    "has_perfdata": True,
+    "group": "humidity",
 }

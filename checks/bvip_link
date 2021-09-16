@@ -9,10 +9,11 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.bvip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["bvip_link_default_levels"] = {
-    'ok_states': [0, 4, 5],
-    'warn_states': [7],
-    'crit_states': [1, 2, 3],
+    "ok_states": [0, 4, 5],
+    "warn_states": [7],
+    "crit_states": [1, 2, 3],
 }
 
 
@@ -36,16 +37,18 @@ def check_bvip_link(_no_item, params, info):
     for line in info:
         count += 1
         link_status = int(line[0])
-        if link_status in params['ok_states']:
+        if link_status in params["ok_states"]:
             state = 0
-        elif link_status in params['crit_states']:
+        elif link_status in params["crit_states"]:
             state = 2
-        elif link_status in params['warn_states']:
+        elif link_status in params["warn_states"]:
             state = 1
         else:
             state = 3
-        yield state, "%s: State: %s" % \
-            (count, states.get(link_status, "Not Implemented (%s)" % link_status))
+        yield state, "%s: State: %s" % (
+            count,
+            states.get(link_status, "Not Implemented (%s)" % link_status),
+        )
 
 
 check_info["bvip_link"] = {

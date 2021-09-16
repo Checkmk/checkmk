@@ -51,16 +51,17 @@
 
 def parse_cisco_fantray(info):
     map_states = {
-        '1': (3, "unknown"),
-        '2': (0, "powered on"),
-        '3': (2, "powered down"),
-        '4': (2, "partial failure, needs replacement as soon as possible.")
+        "1": (3, "unknown"),
+        "2": (0, "powered on"),
+        "3": (2, "powered down"),
+        "4": (2, "partial failure, needs replacement as soon as possible."),
     }
 
     ppre_parsed = {}
     for end_oid, oper_state in info[0]:
-        ppre_parsed.setdefault(end_oid,
-                               map_states.get(oper_state, (3, "unexpected(%s)" % oper_state)))
+        ppre_parsed.setdefault(
+            end_oid, map_states.get(oper_state, (3, "unexpected(%s)" % oper_state))
+        )
 
     pre_parsed = {}
     for end_oid, name in info[1]:
@@ -91,19 +92,27 @@ def check_cisco_fantray(item, _no_params, parsed):
 
 
 check_info["cisco_fantray"] = {
-    'parse_function'      : parse_cisco_fantray,
-    'inventory_function'  : inventory_cisco_fantray,
-    'check_function'      : check_cisco_fantray,
-    'service_description' : 'Fan %s',
-    'snmp_info'           : [('.1.3.6.1.4.1.9.9.117.1.4.1.1', [
-                                OID_END,
-                                '1',        # CISCO-ENTITY-FRU-CONTROL-MIB::cefcFanTrayOperStatus
-                             ]),
-                             ('.1.3.6.1.2.1.47.1.1.1.1', [
-                                OID_END,
-                                CACHED_OID(7), # ENTITY-MIB::entPhysicalName
-                            ])],
+    "parse_function": parse_cisco_fantray,
+    "inventory_function": inventory_cisco_fantray,
+    "check_function": check_cisco_fantray,
+    "service_description": "Fan %s",
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.9.9.117.1.4.1.1",
+            [
+                OID_END,
+                "1",  # CISCO-ENTITY-FRU-CONTROL-MIB::cefcFanTrayOperStatus
+            ],
+        ),
+        (
+            ".1.3.6.1.2.1.47.1.1.1.1",
+            [
+                OID_END,
+                CACHED_OID(7),  # ENTITY-MIB::entPhysicalName
+            ],
+        ),
+    ],
     # Exclude cisco_fan check
-    'snmp_scan_function'  : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-                            and not oid(".1.3.6.1.4.1.9.9.13.1.4.1.2.*"),
+    "snmp_scan_function": lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and not oid(".1.3.6.1.4.1.9.9.13.1.4.1.2.*"),
 }

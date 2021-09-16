@@ -14,16 +14,16 @@ from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard
 def parse_ddn_s2a_errors(info):
     preparsed = parse_ddn_s2a_api_response(info)
     return {
-        "port_type": preparsed[u"port_type"],
-        "link_failure_errs": list(map(int, preparsed[u"link_failure_errs"])),
-        "lost_sync_errs": list(map(int, preparsed[u"lost_sync_errs"])),
-        "loss_of_signal_errs": list(map(int, preparsed[u"loss_of_sig_errs"])),
-        "prim_seq_errs": list(map(int, preparsed[u"prim_seq_errs"])),
-        "crc_errs": list(map(int, preparsed[u"CRC_errs"])),
-        "receive_errs": list(map(int, preparsed[u"receive_errs"])),
-        "ctio_timeouts": list(map(int, preparsed[u"CTIO_timeouts"])),
-        "ctio_xmit_errs": list(map(int, preparsed[u"CTIO_xmit_errs"])),
-        "ctio_other_errs": list(map(int, preparsed[u"CTIO_other_errs"])),
+        "port_type": preparsed["port_type"],
+        "link_failure_errs": list(map(int, preparsed["link_failure_errs"])),
+        "lost_sync_errs": list(map(int, preparsed["lost_sync_errs"])),
+        "loss_of_signal_errs": list(map(int, preparsed["loss_of_sig_errs"])),
+        "prim_seq_errs": list(map(int, preparsed["prim_seq_errs"])),
+        "crc_errs": list(map(int, preparsed["CRC_errs"])),
+        "receive_errs": list(map(int, preparsed["receive_errs"])),
+        "ctio_timeouts": list(map(int, preparsed["CTIO_timeouts"])),
+        "ctio_xmit_errs": list(map(int, preparsed["CTIO_xmit_errs"])),
+        "ctio_other_errs": list(map(int, preparsed["CTIO_other_errs"])),
     }
 
 
@@ -34,14 +34,14 @@ def inventory_ddn_s2a_errors(parsed):
         # so we'll be warned if an error occurs.
         return (value + 1, value + 5)
 
-    for nr, port_type in enumerate(parsed[u"port_type"]):
+    for nr, port_type in enumerate(parsed["port_type"]):
 
         # Note: The API command returning the port errors that we evaluate
         #       in this check differentiates between FC and IB ports, providing
         #       different values according to port type. As we have no example
         #       for the IB ports at this time, we only implement logic for what
         #       we can test.
-        if port_type == u"FC":
+        if port_type == "FC":
 
             yield "%d" % (nr + 1), {
                 "link_failure_errs": value_to_levels(parsed["link_failure_errs"][nr]),
@@ -87,10 +87,12 @@ def check_ddn_s2a_errors(item, params, parsed):
 
     yield check_errors(link_failure_errs, params["link_failure_errs"], "Link failure errors: %d")
     yield check_errors(lost_sync_errs, params["lost_sync_errs"], "Lost sync errors: %d")
-    yield check_errors(loss_of_signal_errs, params["loss_of_signal_errs"],
-                       "Loss of signal errors: %d")
-    yield check_errors(prim_seq_errs, params["prim_seq_errs"],
-                       "PrimSeq errors: %d")  # TODO: What is this?
+    yield check_errors(
+        loss_of_signal_errs, params["loss_of_signal_errs"], "Loss of signal errors: %d"
+    )
+    yield check_errors(
+        prim_seq_errs, params["prim_seq_errs"], "PrimSeq errors: %d"
+    )  # TODO: What is this?
     yield check_errors(crc_errs, params["crc_errs"], "CRC errors: %d")
     yield check_errors(receive_errs, params["receive_errs"], "Receive errors: %d")
     yield check_errors(ctio_timeouts, params["ctio_timeouts"], "CTIO timeouts: %d")
@@ -98,10 +100,10 @@ def check_ddn_s2a_errors(item, params, parsed):
     yield check_errors(ctio_other_errs, params["ctio_other_errs"], "CTIO other errors: %d")
 
 
-check_info['ddn_s2a_errors'] = {
-    'parse_function': parse_ddn_s2a_errors,
-    'inventory_function': inventory_ddn_s2a_errors,
-    'check_function': check_ddn_s2a_errors,
-    'service_description': 'DDN S2A Port Errors %s',
-    'group': "ddn_s2a_port_errors",
+check_info["ddn_s2a_errors"] = {
+    "parse_function": parse_ddn_s2a_errors,
+    "inventory_function": inventory_ddn_s2a_errors,
+    "check_function": check_ddn_s2a_errors,
+    "service_description": "DDN S2A Port Errors %s",
+    "group": "ddn_s2a_port_errors",
 }

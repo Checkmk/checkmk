@@ -169,7 +169,7 @@ div.dashlet {
     }
 
     a {
-      color: rgb(0, 0, 0);
+      color: $font-color-black;
       text-decoration: none;
 
       &:hover {
@@ -190,6 +190,11 @@ div.dashlet > div.title span {
   position: relative;
   top: 4px;
   padding-left: 0; /* left align with titles of contained views */
+}
+
+/* Inside a dashlet, we need a different color here in order to see a difference w.r.t. the title*/
+div.dashlet div.success {
+  background-color: $base-color;
 }
 
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
@@ -345,7 +350,7 @@ div.dashlet.edit {
     &.on div {
       position: absolute;
       padding: 2px 6px;
-      color: #172127;
+      color: $font-color-light-bg;
       text-align: center;
       background-color: $success;
       border-radius: 12px;
@@ -512,18 +517,18 @@ div#dashboard.grid {
   box-sizing: border-box;
 
   &.max {
-    color: #f00;
+    color: $font-color-red;
     background-color: $dashlet-editor-free;
   }
 
   &.grow {
-    color: $white;
+    color: $font-color-white;
     background-color: $dashlet-editor-free;
   }
 
   &.abs {
-    color: #172127;
-    background-color: #13d389;
+    color: $font-color-light-bg;
+    background-color: $success;
   }
 }
 
@@ -675,7 +680,7 @@ div#dashboard.grid {
 }
 
 .dashlet.pnpgraph .dashlet_inner {
-  color: $primary-font-color;
+  color: $font-color;
   text-align: left;
   background-color: $dashlet-inner-bg-color;
 }
@@ -690,21 +695,21 @@ div#dashboard.grid {
 }
 
 .dashlet.pnpgraph div.title a {
-  color: $primary-font-color;
+  color: $font-color;
 }
 
 svg {
   .title,
   .single_value,
   .state_component {
-    fill: $primary-font-color;
+    fill: $font-color;
     text {
       // because there is conflict with a general: svg text
       stroke: none;
     }
   }
   .status_background {
-    opacity: 0.3;
+    opacity: 0.6;
     fill: $dashlet-inner-bg-color;
   }
 
@@ -716,28 +721,36 @@ svg {
     opacity: 0.3;
   }
 
-  .svcstate {
+  .svcstate,
+  .hoststate {
     // Default UX timeseries blue #008EFF, No variable yet, thus equal on themes
     fill: rgb(0, 142, 255);
     stroke: rgb(0, 142, 255);
   }
 
-  .state0 {
+  .state0,
+  .hstate0 {
+    /* OK/UP */
     fill: $success;
     stroke: $success;
   }
 
   .state1 {
+    /* WARN */
     fill: $color-state-1-background;
     stroke: $color-state-1-background;
   }
 
-  .state2 {
+  .state2,
+  .hstate1 {
+    /* CRIT/DOWN */
     fill: $color-state-2-background;
     stroke: $color-state-2-background;
   }
 
-  .state3 {
+  .state3,
+  .hstate2 {
+    /* UNKNOWN/UNREACH */
     fill: $color-state-3-background;
     stroke: $color-state-3-background;
   }
@@ -745,7 +758,7 @@ svg {
   .gauge_span {
     // TODO: Suitable for both themes. Darkgrey is rather in the middle grey.
     // Gives enough contrast on both themes against the color of the gauge level
-    // which is $primary-font-color
+    // which is $font-color
     fill: $darkgrey;
   }
 }
@@ -777,8 +790,7 @@ div.dashlet.nodata {
 
 div.site_overview,
 div.alert_statistics,
-div.hoststats,
-div.servicestats {
+div.stats_dashlet {
   g.element_box:hover {
     path + path {
       fill-opacity: 0.96;
@@ -893,8 +905,7 @@ div.servicestats {
   }
 }
 
-div.hoststats,
-div.servicestats {
+div.stats_dashlet {
   height: 100%;
 
   path.hexagon {
@@ -970,7 +981,7 @@ div.servicestats {
 
       &.count:hover,
       &.text:hover {
-        color: $success;
+        color: $font-color-green;
       }
     }
 
@@ -978,14 +989,13 @@ div.servicestats {
       background-color: transparent;
     }
   }
-}
 
-div.stats_table {
-  div.hoststats & {
+  &.hoststats div.stats_table,
+  &.eventstats div.stats_table {
     top: 44px;
   }
 
-  div.servicestats & {
+  &.servicestats div.stats_table {
     top: 28px;
   }
 }

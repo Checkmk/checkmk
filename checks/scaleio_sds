@@ -9,19 +9,22 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
-#<<<scaleio_sds>>>
-#SDS 3c7af8db00000000:
+# <<<scaleio_sds>>>
+# SDS 3c7af8db00000000:
 #        ID                                                 3c7af8db00000000
 #        NAME                                               sds03
 #        PROTECTION_DOMAIN_ID                               91ebcf4500000000
@@ -32,7 +35,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 #        MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
 #        UNUSED_CAPACITY_IN_KB                              13.2 TB (13471 GB)
 #
-#SDS 3c7ad1cc00000001:
+# SDS 3c7ad1cc00000001:
 #        ID                                                 3c7ad1cc00000001
 #        NAME                                               sds01
 #        PROTECTION_DOMAIN_ID                               91ebcf4500000000
@@ -43,7 +46,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 #        MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
 #        UNUSED_CAPACITY_IN_KB                              13.2 TB (13477 GB)
 #
-#SDS 3c7af8dc00000002:
+# SDS 3c7af8dc00000002:
 #        ID                                                 3c7af8dc00000002
 #        NAME                                               sds02
 #        PROTECTION_DOMAIN_ID                               91ebcf4500000000
@@ -75,13 +78,13 @@ def check_scaleio_sds(item, params, parsed):
     yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info['scaleio_sds'] = {
-    'parse_function': lambda info: parse_scaleio(info, "SDS"),
-    'inventory_function': inventory_scaleio_sds,
-    'check_function': check_scaleio_sds,
-    'service_description': 'ScaleIO SDS capacity %s',
-    'group': "filesystem",
-    'has_perfdata': True,
+check_info["scaleio_sds"] = {
+    "parse_function": lambda info: parse_scaleio(info, "SDS"),
+    "inventory_function": inventory_scaleio_sds,
+    "check_function": check_scaleio_sds,
+    "service_description": "ScaleIO SDS capacity %s",
+    "group": "filesystem",
+    "has_perfdata": True,
 }
 
 
@@ -115,9 +118,9 @@ def check_scaleio_sds_status(item, params, parsed):
         yield 2, "Membership state: %s" % status_member
 
 
-check_info['scaleio_sds.status'] = {
-    'parse_function': lambda info: parse_scaleio(info, "SDS"),
-    'inventory_function': inventory_scaleio_sds_status,
-    'check_function': check_scaleio_sds_status,
-    'service_description': 'ScaleIO SDS status %s',
+check_info["scaleio_sds.status"] = {
+    "parse_function": lambda info: parse_scaleio(info, "SDS"),
+    "inventory_function": inventory_scaleio_sds_status,
+    "check_function": check_scaleio_sds_status,
+    "service_description": "ScaleIO SDS status %s",
 }

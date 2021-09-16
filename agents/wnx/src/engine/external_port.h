@@ -24,21 +24,6 @@ using ReplyFunc =
     std::function<std::vector<uint8_t>(const std::string IpAddress)>;
 }  // namespace cma::world
 
-namespace test {
-inline std::vector<uint8_t> generateData() {
-    std::string t =
-        "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh\n";
-    std::vector<uint8_t> a;
-    a.reserve(400000);
-    for (;;) {
-        if (a.size() > 400000) break;
-        a.insert(a.end(), t.begin(), t.end());
-    }
-    return a;
-}
-
-}  // namespace test
-
 namespace cma::world {
 
 // below is working example from asio
@@ -186,28 +171,6 @@ private:
     // Internal class from  ASIO documentation
     class server {
     public:
-        // this server is not used anymore, left as reference
-        server(asio::io_context& io_context, bool Ipv6, short port,
-               cma::world::ReplyFunc Reply)
-            : acceptor_(
-                  io_context,
-                  asio::ip::tcp::endpoint(
-                      Ipv6 ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), port))
-            , socket_(io_context) {
-#if 0
-            // Binding from ASIO example
-            asio::ip::tcp::resolver resolver(io_context);
-            asio::ip::tcp::endpoint endpoint =
-                *resolver.resolve(address, port).begin();
-            acceptor_.open(endpoint.protocol());
-            acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
-            acceptor_.bind(endpoint);
-            acceptor_.listen();
-#endif
-
-            do_accept(Reply);
-        }
-
         server(asio::io_context& io_context, bool Ipv6, short port)
             : acceptor_(
                   io_context,
@@ -262,51 +225,6 @@ private:
         }
 
     private:
-        // this is obsolete entry point for obsolete server
-        void do_accept(cma::world::ReplyFunc Reply) {
-            acceptor_.async_accept(socket_, [this, Reply](std::error_code ec) {
-                if (ec.value()) {
-                    XLOG::l("Error on connection {} '{}'", ec.value(),
-                            ec.message());
-                } else {
-                    try {
-                        auto remote_ep = socket_.remote_endpoint();
-                        auto addr = remote_ep.address();
-                        auto ip = addr.to_string();
-                        XLOG::d.i("Connected from '{}' ipv6 {}", ip,
-                                  addr.is_v6());
-
-                        auto x =
-                            std::make_shared<AsioSession>(std::move(socket_));
-
-                        // only_from checking
-                        // we are doping it always
-                        if (!cma::cfg::groups::global.isIpAddressAllowed(ip)) {
-                            XLOG::d.i("Address '{}' is not allowed", ip);
-                        } else {
-                            // #TODO blocking call here. This is not a good idea
-                            x->start(Reply);
-                        }
-                    } catch (const std::system_error& e) {
-                        if (e.code().value() == WSAECONNRESET)
-                            XLOG::l.i(XLOG_FLINE + " Client closed connection");
-                        else
-                            XLOG::l(
-                                XLOG_FLINE +
-                                    " Thrown unexpected exception '{}' with value {}",
-                                e.what(), e.code().value());
-                    } catch (const std::exception& e) {
-                        XLOG::l(
-                            XLOG_FLINE + " Thrown unexpected exception '{}'",
-                            e.what());
-                    }
-                }
-
-                if (!mode_one_shot_)
-                    do_accept(Reply);  // only one accept is allowed
-            });
-        }
-
         // ASIO magic
         asio::ip::tcp::acceptor acceptor_;
         asio::ip::tcp::socket socket_;

@@ -720,7 +720,7 @@ inline int64_t QueryPerformanceCo() {
 
 // util to get in windows find path to your binary
 // MAY NOT WORK when you are running as a service
-std::wstring GetCurrentExePath() noexcept;
+std::filesystem::path GetCurrentExePath();
 
 // wrapper for win32 specific function
 // return 0 when no data or error
@@ -964,7 +964,7 @@ IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
 enum class WmiStatus { ok, timeout, error, fail_open, fail_connect, bad_param };
 
 std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
-    IEnumWbemClassObject* enumerator);
+    IEnumWbemClassObject* enumerator, uint32_t timeout);
 
 // in exception column we have
 enum class StatusColumn { ok, timeout };
@@ -998,14 +998,14 @@ public:
     // on error returns empty string and timeout status
     static std::tuple<std::wstring, WmiStatus> produceTable(
         IEnumWbemClassObject* enumerator,
-        const std::vector<std::wstring>& names,
-        std::wstring_view separator) noexcept;
+        const std::vector<std::wstring>& names, std::wstring_view separator,
+        uint32_t wmi_timeout) noexcept;
 
     // work horse to ask certain names from the target
     // on error returns empty string and timeout status
     std::tuple<std::wstring, WmiStatus> queryTable(
         const std::vector<std::wstring>& names, const std::wstring& target,
-        std::wstring_view separator) noexcept;
+        std::wstring_view separator, uint32_t wmi_timeout) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr
@@ -1141,6 +1141,12 @@ void ProtectPathFromUserAccess(const std::filesystem::path& entry,
 std::filesystem::path ExecuteCommandsAsync(
     std::wstring_view name, const std::vector<std::wstring>& commands);
 
+/// \brief Create cmd file in %Temp% and run it.
+///
+/// Returns script name path to be executed
+std::filesystem::path ExecuteCommandsSync(
+    std::wstring_view name, const std::vector<std::wstring>& commands);
+
 /// \brief Changes Access Rights in Windows crazy manner
 ///
 /// Example of usage is
@@ -1161,6 +1167,9 @@ bool ChangeAccessRights(
 std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
 const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end);
+
+std::wstring SidToName(const std::wstring_view sid,
+                       const SID_NAME_USE& sid_type);
 }  // namespace wtools
 
 #endif  // wtools_h__

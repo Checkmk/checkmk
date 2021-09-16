@@ -10,5 +10,5 @@ description:
 item:
  Either {{Battery}} or {{Rectifier}}.
 
-inventory:
+discovery:
  One service is created.

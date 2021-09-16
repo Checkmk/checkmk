@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.docsis import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["docsis_channels_downstream"] = {
     "power": (5.0, 1.0),
 }
@@ -16,7 +17,7 @@ factory_settings["docsis_channels_downstream"] = {
 
 def inventory_docsis_channels_downstream(info):
     for line in info:
-        if line[1] != '0':
+        if line[1] != "0":
             yield line[0], {}
 
 
@@ -35,7 +36,7 @@ def check_docsis_channels_downstream(item, params, info):
             elif power_dbmv <= warn:
                 state = 1
                 infotext += levels
-            yield state, infotext, [('power', power_dbmv, warn, crit)]
+            yield state, infotext, [("power", power_dbmv, warn, crit)]
 
             # Check Frequency
             frequency_mhz = float(frequency) / 1000000
@@ -71,7 +72,8 @@ check_info["docsis_channels_downstream"] = {
             1,  # docsIfDownChannelId
             2,  # docsIfDownChannelFrequency
             6,  # docsIfDownChannelPower (1/10 dBmV)
-        ]),
+        ],
+    ),
     "group": "docsis_channels_downstream",
     "default_levels_variable": "docsis_channels_downstream",
 }

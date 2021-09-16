@@ -4,18 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-
 from typing import Dict
 
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
 from .utils import sap_hana
-from .agent_based_api.v1 import (
-    render,
-    check_levels,
-    register,
-    Service,
-    Result,
-    State as state,
-)
 
 
 def _get_sap_hana_backup_timestamp(backup_time_readable):
@@ -36,13 +29,15 @@ def parse_sap_hana_backup(string_table):
             backup_time_readable = line[1].rsplit(".", 1)[0]
             backup_time_stamp = _get_sap_hana_backup_timestamp(backup_time_readable)
             parsed.setdefault(
-                "%s - %s" % (sid_instance, line[0]), {
+                "%s - %s" % (sid_instance, line[0]),
+                {
                     "sys_end_time": backup_time_stamp,
                     "backup_time_readable": backup_time_readable,
                     "state_name": line[2],
                     "comment": line[3],
                     "message": line[4],
-                })
+                },
+            )
     return parsed
 
 
@@ -61,28 +56,30 @@ def check_sap_hana_backup(item, params, section):
     now = time.time()
 
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
-    state_name = data['state_name']
-    if state_name == 'failed':
+    state_name = data["state_name"]
+    if state_name == "failed":
         cur_state = state.CRIT
-    elif state_name in ['cancel pending', 'canceled']:
+    elif state_name in ["cancel pending", "canceled"]:
         cur_state = state.WARN
-    elif state_name in ['ok', 'successful', 'running']:
+    elif state_name in ["ok", "successful", "running"]:
         cur_state = state.OK
     else:
         cur_state = state.UNKNOWN
     yield Result(state=cur_state, summary="Status: %s" % state_name)
 
-    sys_end_time = data.get('sys_end_time')
+    sys_end_time = data.get("sys_end_time")
     if sys_end_time is not None:
-        yield Result(state=state.OK, summary="Last: %s" % data['backup_time_readable'])
-        yield from check_levels(now - sys_end_time,
-                                metric_name="backup_age",
-                                levels_upper=params['backup_age'],
-                                render_func=render.timespan,
-                                label="Age")
+        yield Result(state=state.OK, summary="Last: %s" % data["backup_time_readable"])
+        yield from check_levels(
+            now - sys_end_time,
+            metric_name="backup_age",
+            levels_upper=params["backup_age"],
+            render_func=render.timespan,
+            label="Age",
+        )
 
     comment = data["comment"]
     if comment:
@@ -100,7 +97,7 @@ def cluster_check_sap_hana_backup(
 ):
     # TODO: This is *not* a real cluster check. We do not evaluate the different node results with
     # each other, but this was the behaviour before the migration to the new Check API.
-    yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
+    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if item in node_section:
             yield from check_sap_hana_backup(item, params, node_section)

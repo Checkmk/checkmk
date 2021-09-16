@@ -17,5 +17,5 @@ description:
 item:
  The name of the location variable configured for the CPU
 
-inventory:
+discovery:
  One service is created for each CPU of the device.

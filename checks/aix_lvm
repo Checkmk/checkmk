@@ -36,12 +36,12 @@
 
 # row6: here open/syncd is OK for every active volume
 
-#lvmconf = {
+# lvmconf = {
 #    rootvg : {
 #         hd5 : ("boot", 1, 2, 2, "closed/syncd", None)
 #         hd4 : ("/",    1, 2, 2, "open/syncd",   "/")
 #    }
-#}
+# }
 
 
 def parse_aix_lvm(info):
@@ -59,9 +59,19 @@ def parse_aix_lvm(info):
             activation, mirror = act_state.split("/")
             if mountpoint == "N/A":
                 mountpoint = None
-            lvmconf[vgname].update({
-                lv: (lvtype, int(num_lp), int(num_pp), int(num_pv), activation, mirror, mountpoint)
-            })
+            lvmconf[vgname].update(
+                {
+                    lv: (
+                        lvtype,
+                        int(num_lp),
+                        int(num_pp),
+                        int(num_pv),
+                        activation,
+                        mirror,
+                        mountpoint,
+                    )
+                }
+            )
     return lvmconf
 
 
@@ -69,7 +79,7 @@ def inventory_aix_lvm(info):
     inventory = []
     for vg, volumes in parse_aix_lvm(info).items():
         for lv in volumes:
-            #inventory.append(("%s/%s" % (vg, lv), ('%s' % volumes[lv][4],)))
+            # inventory.append(("%s/%s" % (vg, lv), ('%s' % volumes[lv][4],)))
             inventory.append(("%s/%s" % (vg, lv), None))
     return inventory
 
@@ -77,7 +87,7 @@ def inventory_aix_lvm(info):
 def check_aix_lvm(item, _no_params, info):
 
     # Get ready to find our item and settings.
-    #target_activation = params
+    # target_activation = params
     target_vg, target_lv = item.split("/")
 
     # Get structured LVM info
@@ -88,7 +98,8 @@ def check_aix_lvm(item, _no_params, info):
         state = 0
 
         lvtype, num_lp, num_pp, num_pv, activation, mirror, _mountpoint = lvmconf[target_vg][
-            target_lv]
+            target_lv
+        ]
 
         # Test if the volume is mirrored.
         # Yes? Test for an even distribution of PP's over volumes.
@@ -122,7 +133,7 @@ def check_aix_lvm(item, _no_params, info):
     return (3, "no such volume found")
 
 
-check_info['aix_lvm'] = {
+check_info["aix_lvm"] = {
     "check_function": check_aix_lvm,
     "inventory_function": inventory_aix_lvm,
     "service_description": "Logical Volume %s",

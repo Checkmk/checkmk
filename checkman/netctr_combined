@@ -15,6 +15,6 @@ item:
  The name of the network interface as shown by {ifconfig},
  for example {"eth0"}
 
-inventory:
+discovery:
  One service is created for each network interface except {lo} and {sit...}.
 

@@ -15,7 +15,7 @@ def parse_ddn_s2a_stats(info):
     parsed = parse_ddn_s2a_api_response(info)
 
     for key in parsed:
-        if key.startswith(u"All_ports"):
+        if key.startswith("All_ports"):
             parsed[key] = parsed[key][0]
 
     return parsed
@@ -34,18 +34,18 @@ ddn_s2a_readhits_default_levels = (85.0, 70.0)
 
 
 def inventory_ddn_s2a_stats_readhits(parsed):
-    if u"All_ports_Read_Hits" in parsed:
+    if "All_ports_Read_Hits" in parsed:
         yield "Total", "ddn_s2a_readhits_default_levels"
-    for nr, _ in enumerate(parsed.get(u"Read_Hits", [])):
+    for nr, _ in enumerate(parsed.get("Read_Hits", [])):
         yield "%d" % (nr + 1), "ddn_s2a_readhits_default_levels"
 
 
 def check_ddn_s2a_stats_readhits(item, params, parsed):
 
     if item == "Total":
-        read_hits = float(parsed[u"All_ports_Read_Hits"])
+        read_hits = float(parsed["All_ports_Read_Hits"])
     else:
-        read_hits = float(parsed[u"Read_Hits"][int(item) - 1])
+        read_hits = float(parsed["Read_Hits"][int(item) - 1])
 
     infotext = "%.1f%%" % read_hits
     if params is None:
@@ -75,7 +75,7 @@ check_info["ddn_s2a_stats.readhits"] = {
     "group": "read_hits",
 }
 
-#.
+# .
 #   .--I/O transactions----------------------------------------------------.
 #   |                            ___    _____                              |
 #   |                           |_ _|  / / _ \                             |
@@ -97,9 +97,9 @@ factory_settings["ddn_s2a_stats_io_default_levels"] = {
 
 
 def inventory_ddn_s2a_stats_io(parsed):
-    if u"All_ports_Read_IOs" in parsed:
+    if "All_ports_Read_IOs" in parsed:
         yield "Total", {}
-    for nr, _ in enumerate(parsed.get(u"Read_IOs", [])):
+    for nr, _ in enumerate(parsed.get("Read_IOs", [])):
         yield "%d" % (nr + 1), {}
 
 
@@ -127,11 +127,11 @@ def check_ddn_s2a_stats_io(item, params, parsed):
         return status, infotext, perfdata
 
     if item == "Total":
-        read_ios_s = float(parsed[u"All_ports_Read_IOs"])
-        write_ios_s = float(parsed[u"All_ports_Write_IOs"])
+        read_ios_s = float(parsed["All_ports_Read_IOs"])
+        write_ios_s = float(parsed["All_ports_Write_IOs"])
     else:
-        read_ios_s = float(parsed[u"Read_IOs"][int(item) - 1])
-        write_ios_s = float(parsed[u"Write_IOs"][int(item) - 1])
+        read_ios_s = float(parsed["Read_IOs"][int(item) - 1])
+        write_ios_s = float(parsed["Write_IOs"][int(item) - 1])
     total_ios_s = read_ios_s + write_ios_s
 
     yield check_io_levels(read_ios_s, params.get("read"), "Read: %.2f 1/s", "disk_read_ios")
@@ -148,7 +148,7 @@ check_info["ddn_s2a_stats.io"] = {
     "group": "storage_iops",
 }
 
-#.
+# .
 #   .--Data rate-----------------------------------------------------------.
 #   |              ____        _                    _                      |
 #   |             |  _ \  __ _| |_ __ _   _ __ __ _| |_ ___                |
@@ -164,9 +164,9 @@ factory_settings["ddn_s2a_stats_default_levels"] = {
 
 
 def inventory_ddn_s2a_stats(parsed):
-    if u"All_ports_Read_MBs" in parsed:
+    if "All_ports_Read_MBs" in parsed:
         yield "Total", {}
-    for nr, _value in enumerate(parsed.get(u"Read_MBs", [])):
+    for nr, _value in enumerate(parsed.get("Read_MBs", [])):
         yield "%d" % (nr + 1), {}
 
 
@@ -195,20 +195,22 @@ def check_ddn_s2a_stats(item, params, parsed):
         return status, infotext, perfdata
 
     if item == "Total":
-        read_mb_s = float(parsed[u"All_ports_Read_MBs"])
-        write_mb_s = float(parsed[u"All_ports_Write_MBs"])
+        read_mb_s = float(parsed["All_ports_Read_MBs"])
+        write_mb_s = float(parsed["All_ports_Write_MBs"])
     else:
-        read_mb_s = float(parsed[u"Read_MBs"][int(item) - 1])
-        write_mb_s = float(parsed[u"Write_MBs"][int(item) - 1])
+        read_mb_s = float(parsed["Read_MBs"][int(item) - 1])
+        write_mb_s = float(parsed["Write_MBs"][int(item) - 1])
     total_mb_s = read_mb_s + write_mb_s
     read = read_mb_s * 1024 * 1024
     write = write_mb_s * 1024 * 1024
     total = total_mb_s * 1024 * 1024
 
-    yield check_datarate_levels(read, read_mb_s, params.get("read"), "Read: %.2f MB/s",
-                                "disk_read_throughput")
-    yield check_datarate_levels(write, write_mb_s, params.get("write"), "Write: %.2f MB/s",
-                                "disk_write_throughput")
+    yield check_datarate_levels(
+        read, read_mb_s, params.get("read"), "Read: %.2f MB/s", "disk_read_throughput"
+    )
+    yield check_datarate_levels(
+        write, write_mb_s, params.get("write"), "Write: %.2f MB/s", "disk_write_throughput"
+    )
     yield check_datarate_levels(total, total_mb_s, params.get("total"), "Total: %.2f MB/s")
 
 

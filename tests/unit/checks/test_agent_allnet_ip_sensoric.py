@@ -4,20 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import SpecialAgent  # type: ignore[import]
+import pytest
+
+from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({}, ["address"]),
-    ({
-        'timeout': 20
-    }, ['--timeout', '20', "address"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        ({}, ["address"]),
+        ({"timeout": 20}, ["--timeout", "20", "address"]),
+    ],
+)
 def test_allnet_ip_sensoric_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_allnet_ip_sensoric')
+    agent = SpecialAgent("agent_allnet_ip_sensoric")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

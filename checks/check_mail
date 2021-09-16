@@ -46,7 +46,7 @@ def check_mail_arguments(params):
     args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 
     if "connect_timeout" in params:
-        args.append("--connect-timeout={params['connect_timeout']}")
+        args.append(f"--connect-timeout={params['connect_timeout']}")
 
     if "forward" in params:
         forward = params["forward"]
@@ -71,10 +71,10 @@ def check_mail_arguments(params):
         if "body_limit" in forward:
             args.append(f"--body-limit={forward['body_limit']}")
 
-        if isinstance(forward.get('cleanup'), bool):  # can never be False
+        if isinstance(forward.get("cleanup"), bool):  # can never be False
             args.append("--cleanup=delete")
-        elif isinstance(forward.get('cleanup'), str):
-            move_to_subfolder = forward['cleanup']
+        elif isinstance(forward.get("cleanup"), str):
+            move_to_subfolder = forward["cleanup"]
             args.append(f"--cleanup={move_to_subfolder}")
 
     return args

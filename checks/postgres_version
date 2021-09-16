@@ -39,7 +39,7 @@ def check_postgres_version(_no_item, _no_params, data):
     yield 0, data
 
 
-check_info['postgres_version'] = {
+check_info["postgres_version"] = {
     "parse_function": parse_postgres_version,
     "inventory_function": discover(),
     "check_function": check_postgres_version,

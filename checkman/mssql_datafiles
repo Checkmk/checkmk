@@ -16,7 +16,7 @@ description:
 item:
  A combination of the instance-, database- and (logical) file-name.
 
-inventory:
+discovery:
  One service is created for each datafile.
  Alternatively there is a rule to summarize files for one database.
  In this case one summary service is created for each database.

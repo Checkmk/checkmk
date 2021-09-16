@@ -9,6 +9,6 @@ description:
  Non-critical errors will return the status {WARN} and
  critical or non-recoverable errors the status {CRIT}.
 
-inventory:
+discovery:
  One service is created for each host.
 

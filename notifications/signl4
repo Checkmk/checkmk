@@ -3,10 +3,7 @@
 # SIGNL4 Alerting
 
 from cmk.notification_plugins import signl4
-from cmk.notification_plugins.utils import (
-    post_request,
-    process_by_result_map,
-)
+from cmk.notification_plugins.utils import post_request, process_by_result_map
 
 if __name__ == "__main__":
     response = post_request(signl4.signl4_msg, url=signl4.signl4_url())

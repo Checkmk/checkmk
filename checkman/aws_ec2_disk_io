@@ -18,6 +18,6 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each disk if all required metrics
  (ReadOps, WriteOps, ReadBytes and WriteBytes) are given.

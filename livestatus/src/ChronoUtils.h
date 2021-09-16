@@ -10,7 +10,6 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <ctime>
 #include <iomanip>
 #include <ratio>
 #include <string>
@@ -34,7 +33,7 @@ inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
 }
 
 inline tm to_tm(std::chrono::system_clock::time_point tp) {
-    time_t t = std::chrono::system_clock::to_time_t(tp);
+    auto t = std::chrono::system_clock::to_time_t(tp);
     struct tm ret;
 // NOTE: A brilliant example of how to make a simple API function a total
 // chaos follows...
@@ -49,8 +48,6 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     // Win32 variant, it keeps us entertained with swapped parameters and a
     // different return value, yay! Signature:
     //    errno_t localtime_s(struct tm* _tm, const time_t *time)
-    // We have to de-confuse cppcheck:
-    // cppcheck-suppress uninitvar
     localtime_s(&ret, &t);
 #else
     // POSIX.1-2008 variant, available under MinGW64 only under obscure
@@ -59,8 +56,6 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     //                           struct tm *restrict result);
     localtime_r(&t, &ret);
 #endif
-    // Reason: see Win32 section above
-    // cppcheck-suppress uninitvar
     return ret;
 }
 

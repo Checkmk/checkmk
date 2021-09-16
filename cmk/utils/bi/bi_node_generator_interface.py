@@ -16,17 +16,17 @@
 import abc
 from typing import List, Optional
 
-from cmk.utils.macros import MacroMapping
 from cmk.utils.bi.bi_lib import (
-    bi_search_registry,
-    bi_action_registry,
-    ABCBICompiledNode,
     ABCBIAction,
+    ABCBICompiledNode,
     ABCBISearch,
-    ABCWithSchema,
     ABCBISearcher,
+    ABCWithSchema,
+    bi_action_registry,
+    bi_search_registry,
 )
 from cmk.utils.bi.type_defs import NodeDict
+from cmk.utils.macros import MacroMapping
 
 
 class ABCBINodeGenerator(ABCWithSchema):

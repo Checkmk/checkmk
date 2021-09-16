@@ -6,6 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .temperature import check_temperature
+
 # suggested by customer
 PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS = {"levels": (35, 40)}
 
@@ -17,7 +18,9 @@ def inventory_pandacom_module_temp(info):
 def check_pandacom_module_temp(item, params, info):
     for slot, temp_str, warn_str, crit_str in info:
         if slot == item:
-            return check_temperature(int(temp_str),
-                                     params,
-                                     "pandacom_%s" % item,
-                                     dev_levels=(int(warn_str), int(crit_str)))
+            return check_temperature(
+                int(temp_str),
+                params,
+                "pandacom_%s" % item,
+                dev_levels=(int(warn_str), int(crit_str)),
+            )

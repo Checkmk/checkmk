@@ -50,14 +50,16 @@ def parse_oracle_sql(info):
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             item_name = tuple(line[0][3:-3].split("|"))
             instance = parsed.setdefault(
-                ("%s SQL %s" % item_name).upper(), {
+                ("%s SQL %s" % item_name).upper(),
+                {
                     "details": [],
                     "perfdata": [],
                     "long": [],
                     "exit": 0,
                     "elapsed": None,
                     "parsing_error": {},
-                })
+                },
+            )
             continue
 
         if instance is None:
@@ -65,9 +67,10 @@ def parse_oracle_sql(info):
 
         key = line[0]
         infotext = ":".join(line[1:]).strip()
-        if key.endswith("ERROR") or key.startswith('ERROR at line') or "|FAILURE|" in key:
-            instance["parsing_error"].setdefault(("instance", "PL/SQL failure", 2), [])\
-                                     .append("%s: %s" % (key.split("|")[-1], infotext))
+        if key.endswith("ERROR") or key.startswith("ERROR at line") or "|FAILURE|" in key:
+            instance["parsing_error"].setdefault(("instance", "PL/SQL failure", 2), []).append(
+                "%s: %s" % (key.split("|")[-1], infotext)
+            )
 
         elif key in ["details", "long"]:
             instance[key].append(infotext)
@@ -76,8 +79,9 @@ def parse_oracle_sql(info):
             try:
                 instance[key] += parse_perfdata(line[1])
             except Exception:
-                instance["parsing_error"].setdefault(("perfdata", "Perfdata error", 3), [])\
-                                         .append(infotext)
+                instance["parsing_error"].setdefault(("perfdata", "Perfdata error", 3), []).append(
+                    infotext
+                )
 
         elif key == "exit":
             instance[key] = int(line[1])
@@ -86,8 +90,9 @@ def parse_oracle_sql(info):
             instance[key] = float(line[1])
 
         else:
-            instance["parsing_error"].setdefault(("unknown", "Unknown error", 3), [])\
-                                     .append(":".join(line).strip())
+            instance["parsing_error"].setdefault(("unknown", "Unknown error", 3), []).append(
+                ":".join(line).strip()
+            )
 
     return parsed
 
@@ -117,11 +122,11 @@ def check_oracle_sql(item, params, parsed):
         yield 0, "\n%s" % "\n".join(data["long"])
 
 
-check_info['oracle_sql'] = {
-    'parse_function': parse_oracle_sql,
-    'inventory_function': inventory_oracle_sql,
-    'check_function': check_oracle_sql,
-    'service_description': 'ORA %s',
-    'has_perfdata': True,
-    'group': 'oracle_sql',
+check_info["oracle_sql"] = {
+    "parse_function": parse_oracle_sql,
+    "inventory_function": inventory_oracle_sql,
+    "check_function": check_oracle_sql,
+    "service_description": "ORA %s",
+    "has_perfdata": True,
+    "group": "oracle_sql",
 }

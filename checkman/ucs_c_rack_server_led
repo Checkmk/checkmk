@@ -39,5 +39,5 @@ description:
 item:
  {{Rack unit}} followed by the index of the rack followed by the index of the LED.
 
-inventory:
+discovery:
  One service is created for each LED.

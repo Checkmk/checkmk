@@ -5,14 +5,14 @@
 
 #include "TableContacts.h"
 
-#include <algorithm>
+// We need it for std::transform, but IWYU "oscillates" a bit here... :-/
+#include <algorithm>  // IWYU pragma: keep
+#include <cstddef>
 #include <cstdint>
-#include <iosfwd>
 #include <iterator>
 #include <memory>
 #include <string_view>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "AttributeListLambdaColumn.h"

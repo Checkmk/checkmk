@@ -12,6 +12,6 @@ description:
 item:
  The name of the printer
 
-inventory:
+discovery:
  One service is created for each printer.
 

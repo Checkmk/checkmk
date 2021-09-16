@@ -8,5 +8,5 @@ description:
  This includes the IP-Address, Current Time, IPv6-Address, Bladecenter Mode, System Name and the System Uptime.
  It is always OK.
 
-inventory:
+discovery:
  One service is created.

@@ -10,13 +10,15 @@ from contextlib import contextmanager
 from typing import Any, Generator, IO, Optional
 
 import cmk.utils.tty as tty
+
 from ._level import VERBOSE
 
 
 # For StreamHandler.setStream()
 @contextmanager
-def set_stream(logger: logging.Logger, handler: logging.StreamHandler,
-               stream: IO[str]) -> Generator[None, None, None]:
+def set_stream(
+    logger: logging.Logger, handler: logging.StreamHandler, stream: IO[str]
+) -> Generator[None, None, None]:
     # See `https://bugs.python.org/issue6333` for why this is necessary.
     old = handler.setStream(stream)
     logger.addHandler(handler)
@@ -86,7 +88,7 @@ def warning(text: str, *args: Any, **kwargs: Any) -> None:
 def _format_warning(text):
     # type (str) -> str
     stripped = text.lstrip()
-    indent = text[:len(text) - len(stripped)]
+    indent = text[: len(text) - len(stripped)]
     return "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
 
 

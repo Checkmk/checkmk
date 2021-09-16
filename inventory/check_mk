@@ -23,6 +23,6 @@ def inv_check_mk(parsed, inventory_tree):
         inventory_tree.get_dict("software.applications.check_mk.")["agent_version"] = version
 
 
-inv_info['check_mk'] = {
+inv_info["check_mk"] = {
     "inv_function": inv_check_mk,
 }

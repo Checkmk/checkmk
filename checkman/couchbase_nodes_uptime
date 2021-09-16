@@ -7,7 +7,7 @@ description:
  This check monitors the nodes uptime. You may provide
  values for WARN and CRIT in the WATO-rules.
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

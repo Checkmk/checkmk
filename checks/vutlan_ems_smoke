@@ -12,7 +12,7 @@
 def parse_vutlan_ems_smoke(info):
     parsed = {}
     for line in info[0]:
-        if line[0].startswith('106'):
+        if line[0].startswith("106"):
             # all OIDs 106xxx are smoke-related
             parsed[line[1]] = bool((int(line[2])))
 
@@ -30,20 +30,20 @@ def check_vutlan_ems_smoke(item, _no_params, parsed):
 
     smoke_detected = parsed[item]
     if smoke_detected:
-        yield 2, 'Smoke detected'
+        yield 2, "Smoke detected"
         return
 
-    yield 0, 'No smoke detected'
+    yield 0, "No smoke detected"
 
 
-check_info['vutlan_ems_smoke'] = {
-    'parse_function': parse_vutlan_ems_smoke,
-    'inventory_function': discover_vutlan_ems_smoke,
-    'check_function': check_vutlan_ems_smoke,
-    'service_description': 'Smoke Detector %s',
-    'snmp_info': [
+check_info["vutlan_ems_smoke"] = {
+    "parse_function": parse_vutlan_ems_smoke,
+    "inventory_function": discover_vutlan_ems_smoke,
+    "check_function": check_vutlan_ems_smoke,
+    "service_description": "Smoke Detector %s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.39052.1.3.1',
+            ".1.3.6.1.4.1.39052.1.3.1",
             [
                 OID_END,
                 7,  # vutlan.mib::ctlUnitElementName (can be user-defined)
@@ -51,5 +51,5 @@ check_info['vutlan_ems_smoke'] = {
             ],
         ),
     ],
-    'snmp_scan_function': lambda oid: 'vutlan ems' in oid('.1.3.6.1.2.1.1.1.0').lower(),
+    "snmp_scan_function": lambda oid: "vutlan ems" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

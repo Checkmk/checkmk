@@ -10,5 +10,5 @@ description:
 item:
  ID of the pump
 
-inventory:
+discovery:
  One service is created for each pump.

@@ -6,15 +6,15 @@
 
 # yapf: disable
 import os
-from typing import Tuple, Callable
-import pytest  # type: ignore[import]
-from testlib import Check  # type: ignore[import]
+from typing import Callable, Tuple
+
+import pytest
+
+from tests.testlib import Check
+
 from cmk.base.check_api import MKCounterWrapped
-from checktestlib import (
-    DiscoveryResult,
-    assertDiscoveryResultsEqual,
-    MockItemState,
-)
+
+from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult, mock_item_state
 
 pytestmark = pytest.mark.checks
 
@@ -83,7 +83,7 @@ def test_docker_container_diskstat_wrapped():
     with pytest.raises(MKCounterWrapped):
         check.run_check("SUMMARY", {}, parsed)
 
-    with MockItemState((0, 0)):
+    with mock_item_state((0, 0)):
         # raise MKCounterWrapped anyway, because counters are missing in info
         with pytest.raises(MKCounterWrapped):
             check.run_check("SUMMARY", {}, parsed)

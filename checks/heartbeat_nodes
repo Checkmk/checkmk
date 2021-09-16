@@ -15,7 +15,7 @@
 
 
 def inventory_heartbeat_nodes(info):
-    return [(line[0], None) for line in info if line[0] != '']
+    return [(line[0], None) for line in info if line[0] != ""]
 
 
 def check_heartbeat_nodes(item, params, info):
@@ -24,31 +24,33 @@ def check_heartbeat_nodes(item, params, info):
             status = 0
             nodeStatus = line[1]
 
-            linkOutput = ''
+            linkOutput = ""
             for link, state in zip(line[2::2], line[3::2]):
-                state_txt = ''
-                if state != 'up':
+                state_txt = ""
+                if state != "up":
                     status = 2
-                    state_txt = ' (!!)'
-                linkOutput += '%s: %s%s, ' % (link, state, state_txt)
-            linkOutput = linkOutput.rstrip(', ')
+                    state_txt = " (!!)"
+                linkOutput += "%s: %s%s, " % (link, state, state_txt)
+            linkOutput = linkOutput.rstrip(", ")
 
-            if nodeStatus in ['active', 'up', 'ping'] and status <= 0:
+            if nodeStatus in ["active", "up", "ping"] and status <= 0:
                 status = 0
-            elif nodeStatus == 'dead' and status <= 2:
+            elif nodeStatus == "dead" and status <= 2:
                 status = 2
 
-            if nodeStatus not in ['active', 'up', 'ping', 'dead']:
+            if nodeStatus not in ["active", "up", "ping", "dead"]:
                 return (3, "Node %s has an unhandled state: %s" % (line[0], nodeStatus))
 
-            return (status,
-                    'Node %s is in state "%s". Links: %s' % (line[0], nodeStatus, linkOutput))
+            return (
+                status,
+                'Node %s is in state "%s". Links: %s' % (line[0], nodeStatus, linkOutput),
+            )
 
     return (3, "Node is not present anymore")
 
 
 check_info["heartbeat_nodes"] = {
-    'check_function': check_heartbeat_nodes,
-    'inventory_function': inventory_heartbeat_nodes,
-    'service_description': 'Heartbeat Node %s',
+    "check_function": check_heartbeat_nodes,
+    "inventory_function": inventory_heartbeat_nodes,
+    "service_description": "Heartbeat Node %s",
 }

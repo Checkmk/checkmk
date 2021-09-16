@@ -12,6 +12,6 @@ description:
 item:
  Type of queue (i.e. {{Executable}}, {{PDF}}, ...)
 
-inventory:
+discovery:
  One service is created for each queue.
 

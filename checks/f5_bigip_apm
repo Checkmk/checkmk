@@ -20,19 +20,20 @@ def inventory_f5_bigip_apm(info):
 
 def check_f5_bigip_apm(item, _no_params, info):
     count = info[0][0]
-    perfdata = [('connections_ssl_vpn', int(count), None, None, 0, None)]
-    return 0, 'Connections: %s' % count, perfdata
+    perfdata = [("connections_ssl_vpn", int(count), None, None, 0, None)]
+    return 0, "Connections: %s" % count, perfdata
 
 
-check_info['f5_bigip_apm'] = {
-    'inventory_function': inventory_f5_bigip_apm,
-    'check_function': check_f5_bigip_apm,
-    'service_description': 'SSL/VPN Connections',
-    'snmp_info': (
-        '.1.3.6.1.4.1.3375.2.6.1.5.3',
+check_info["f5_bigip_apm"] = {
+    "inventory_function": inventory_f5_bigip_apm,
+    "check_function": check_f5_bigip_apm,
+    "service_description": "SSL/VPN Connections",
+    "snmp_info": (
+        ".1.3.6.1.4.1.3375.2.6.1.5.3",
         [
-            '0',  # F5-BIGIP-APM-MIB::apmGlobalConnectivityStatCurConns
-        ]),
-    'snmp_scan_function': scan_f5_bigip,
-    'has_perfdata': True,
+            "0",  # F5-BIGIP-APM-MIB::apmGlobalConnectivityStatCurConns
+        ],
+    ),
+    "snmp_scan_function": scan_f5_bigip,
+    "has_perfdata": True,
 }

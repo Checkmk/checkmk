@@ -27,9 +27,10 @@ def check_qnap_disks(item, _no_params, info):
 
             if "--" in cond:
                 yield 1, "SMART Information missing"
+            elif cond != "GOOD":
+                yield 1, "SMART Warnings"
 
-            yield 0 , "Model: %s, Temperatur: %s, Size: %s" % \
-                      (model, temp, size)
+            yield 0, "Model: %s, Temperature: %s, Size: %s" % (model, temp, size)
 
 
 check_info["qnap_disks"] = {

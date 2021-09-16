@@ -6,18 +6,18 @@
 
 import time
 
+from cmk.base.plugins.agent_based.utils import postgres
+
 from .agent_based_api.v1 import (
     check_levels,
-    IgnoreResults,
     get_value_store,
+    IgnoreResults,
     register,
     render,
     Result,
     Service,
     State,
 )
-
-from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_stats>>>
 # [databases_start]
@@ -91,9 +91,11 @@ def _check_postgres_stats(*, item, params, section, value_store, now):
     stats_field = f"{item_type[0].lower()}time"
     text = f"{item_type.lower().strip('e')}ed"
 
-    times_and_names = [(int(table[stats_field]) if table[stats_field] else -1, table["tname"])
-                       for table in data
-                       if table["sname"] != "pg_catalog"]
+    times_and_names = [
+        (int(table[stats_field]) if table[stats_field] else -1, table["tname"])
+        for table in data
+        if table["sname"] != "pg_catalog"
+    ]
     oldest_element = min(((t, n) for t, n in times_and_names if t != -1), default=None)
     never_checked = [n for t, n in times_and_names if t == -1]
 
@@ -111,12 +113,12 @@ def _check_postgres_stats(*, item, params, section, value_store, now):
 
 
 register.agent_section(
-    name='postgres_stats',
+    name="postgres_stats",
     parse_function=postgres.parse_dbs,
 )
 
 register.check_plugin(
-    name='postgres_stats',
+    name="postgres_stats",
     service_name="PostgreSQL %s",
     discovery_function=discover_postgres_stats,
     check_function=check_postgres_stats,

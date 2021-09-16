@@ -4,24 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
 import functools
-from typing import (
-    Any,
-    Iterable,
-    Generator,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-)
-from .agent_based_api.v1 import (
-    register,
-    Result,
-    Service,
-    State as state,
-    type_defs,
-)
+from typing import Any, Generator, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional
+
+from .agent_based_api.v1 import register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .agent_based_api.v1.clusterize import make_node_notice_results
 
 # <<<veritas_vcs>>>
@@ -106,11 +94,11 @@ from .agent_based_api.v1.clusterize import make_node_notice_results
 #        We keep it that way, but make it configurable.
 
 CHECK_DEFAULT_PARAMETERS = {
-    'map_frozen': {
-        'tfrozen': 1,
-        'frozen': 2,
+    "map_frozen": {
+        "tfrozen": 1,
+        "frozen": 2,
     },
-    'map_states': {
+    "map_states": {
         "ONLINE": 0,
         "RUNNING": 0,
         "OK": 0,
@@ -123,7 +111,13 @@ CHECK_DEFAULT_PARAMETERS = {
     },
 }
 
-Vcs = namedtuple("Vcs", ["attr", "value", "cluster"])
+
+class Vcs(NamedTuple):
+    attr: str
+    value: str
+    cluster: Optional[str]
+
+
 SubSection = MutableMapping[str, List[Vcs]]
 Section = MutableMapping[str, SubSection]
 ClusterSection = Mapping[str, Section]
@@ -133,11 +127,11 @@ def parse_veritas_vcs(string_table: type_defs.StringTable) -> Optional[Section]:
     parsed: Section = {}
 
     for line in string_table:
-        if line == ['#']:
+        if line == ["#"]:
             continue
 
         if line[0] == "ClusState":
-            section = parsed.setdefault('cluster', {})
+            section = parsed.setdefault("cluster", {})
             attr = line[0]
             value = line[1]
 
@@ -145,10 +139,10 @@ def parse_veritas_vcs(string_table: type_defs.StringTable) -> Optional[Section]:
             cluster_name = line[1]
             section.setdefault(cluster_name, []).append(Vcs(attr, value, None))
 
-        elif line[0].startswith('#'):
+        elif line[0].startswith("#"):
             section = parsed.setdefault(line[0][1:].lower(), {})
-            attr_idx = line.index('Attribute')
-            value_idx = line.index('Value')
+            attr_idx = line.index("Attribute")
+            value_idx = line.index("Value")
 
         elif len(line) > 2:
             item_name = line[0]
@@ -167,7 +161,9 @@ register.agent_section(
 )
 
 
-def discover_veritas_vcs_subsection(subsection: SubSection,) -> type_defs.DiscoveryResult:
+def discover_veritas_vcs_subsection(
+    subsection: SubSection,
+) -> type_defs.DiscoveryResult:
     for item_name in subsection:
         yield Service(item=item_name)
 
@@ -179,7 +175,7 @@ def veritas_vcs_boil_down_states_in_cluster(states: Iterable[str]) -> str:
     for dominant in ("FAULTED", "UNKNOWN", "ONLINE", "RUNNING"):
         if dominant in _stat:
             return dominant
-    return "AGGREGATION: %s" % ', '.join(sorted(_stat))
+    return "AGGREGATION: %s" % ", ".join(sorted(_stat))
 
 
 def check_veritas_vcs_subsection(
@@ -191,24 +187,24 @@ def check_veritas_vcs_subsection(
     if list_vcs_tuples is None:
         return  # vanished
 
-    map_frozen = params['map_frozen']
-    map_states = params['map_states']
+    map_frozen = params["map_frozen"]
+    map_states = params["map_states"]
 
     infotexts = []
     for vcs in list_vcs_tuples:
-        if vcs.attr.endswith('State'):
+        if vcs.attr.endswith("State"):
             infotexts.append(vcs.value.lower())
 
-        if vcs.attr.endswith('Frozen') and vcs.value != '0':
-            frozen_txt = vcs.attr.lower().replace('t', 'temporarily ').lower()
+        if vcs.attr.endswith("Frozen") and vcs.value != "0":
+            frozen_txt = vcs.attr.lower().replace("t", "temporarily ").lower()
             yield Result(
                 state=state(map_frozen.get(vcs.attr.lower(), 3)),
                 summary=frozen_txt,
             )
 
-    states = (vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith('State'))
+    states = (vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith("State"))
     state_txt = veritas_vcs_boil_down_states_in_cluster(states)
-    state_int = map_states.get(state_txt, map_states['default'])
+    state_int = map_states.get(state_txt, map_states["default"])
     yield Result(
         state=state(state_int),
         summary="%s" % ", ".join(infotexts),
@@ -237,7 +233,7 @@ def cluster_check_veritas_vcs_subsection(
         if not node_results:
             continue
 
-        if node_results[-1].summary.startswith('cluster: '):
+        if node_results[-1].summary.startswith("cluster: "):
             last_cluster_result = node_results[-1]
             node_results = node_results[:-1]
 
@@ -248,7 +244,7 @@ def cluster_check_veritas_vcs_subsection(
     if worst_state is state.OK:
         yield Result(
             state=state.OK,
-            summary='All nodes OK',
+            summary="All nodes OK",
         )
 
     if last_cluster_result:
@@ -266,7 +262,7 @@ def cluster_check_veritas_vcs_subsection(
 
 
 def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryResult:
-    yield from discover_veritas_vcs_subsection(section.get('cluster', {}))
+    yield from discover_veritas_vcs_subsection(section.get("cluster", {}))
 
 
 def check_veritas_vcs(
@@ -277,7 +273,7 @@ def check_veritas_vcs(
     yield from check_veritas_vcs_subsection(
         item,
         params,
-        section.get('cluster', {}),
+        section.get("cluster", {}),
     )
 
 
@@ -289,22 +285,22 @@ def cluster_check_veritas_vcs(
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
-        {node_name: node_section.get('cluster', {}) for node_name, node_section in section.items()},
+        {node_name: node_section.get("cluster", {}) for node_name, node_section in section.items()},
     )
 
 
 register.check_plugin(
     name="veritas_vcs",
-    sections=['veritas_vcs'],
+    sections=["veritas_vcs"],
     service_name="VCS Cluster %s",
     discovery_function=discover_veritas_vcs,
-    check_ruleset_name='veritas_vcs',
+    check_ruleset_name="veritas_vcs",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_veritas_vcs,
     cluster_check_function=cluster_check_veritas_vcs,
 )
 
-#.
+# .
 #   .--system--------------------------------------------------------------.
 #   |                                 _                                    |
 #   |                   ___ _   _ ___| |_ ___ _ __ ___                     |
@@ -316,7 +312,7 @@ register.check_plugin(
 
 
 def discover_veritas_vcs_system(section: Section) -> type_defs.DiscoveryResult:
-    yield from discover_veritas_vcs_subsection(section.get('system', {}))
+    yield from discover_veritas_vcs_subsection(section.get("system", {}))
 
 
 def check_veritas_vcs_system(
@@ -327,7 +323,7 @@ def check_veritas_vcs_system(
     yield from check_veritas_vcs_subsection(
         item,
         params,
-        section.get('system', {}),
+        section.get("system", {}),
     )
 
 
@@ -339,22 +335,22 @@ def cluster_check_veritas_vcs_system(
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
-        {node_name: node_section.get('system', {}) for node_name, node_section in section.items()},
+        {node_name: node_section.get("system", {}) for node_name, node_section in section.items()},
     )
 
 
 register.check_plugin(
     name="veritas_vcs_system",
-    sections=['veritas_vcs'],
+    sections=["veritas_vcs"],
     service_name="VCS System %s",
     discovery_function=discover_veritas_vcs_system,
-    check_ruleset_name='veritas_vcs',
+    check_ruleset_name="veritas_vcs",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_veritas_vcs_system,
     cluster_check_function=cluster_check_veritas_vcs_system,
 )
 
-#.
+# .
 #   .--service group-------------------------------------------------------.
 #   |                        _                                             |
 #   |    ___  ___ _ ____   _(_) ___ ___    __ _ _ __ ___  _   _ _ __       |
@@ -366,7 +362,7 @@ register.check_plugin(
 
 
 def discover_veritas_vcs_group(section: Section) -> type_defs.DiscoveryResult:
-    yield from discover_veritas_vcs_subsection(section.get('group', {}))
+    yield from discover_veritas_vcs_subsection(section.get("group", {}))
 
 
 def check_veritas_vcs_group(
@@ -377,7 +373,7 @@ def check_veritas_vcs_group(
     yield from check_veritas_vcs_subsection(
         item,
         params,
-        section.get('group', {}),
+        section.get("group", {}),
     )
 
 
@@ -389,22 +385,22 @@ def cluster_check_veritas_vcs_group(
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
-        {node_name: node_section.get('group', {}) for node_name, node_section in section.items()},
+        {node_name: node_section.get("group", {}) for node_name, node_section in section.items()},
     )
 
 
 register.check_plugin(
     name="veritas_vcs_servicegroup",
-    sections=['veritas_vcs'],
+    sections=["veritas_vcs"],
     service_name="VCS Service Group %s",
     discovery_function=discover_veritas_vcs_group,
-    check_ruleset_name='veritas_vcs',
+    check_ruleset_name="veritas_vcs",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_veritas_vcs_group,
     cluster_check_function=cluster_check_veritas_vcs_group,
 )
 
-#.
+# .
 #   .--resource------------------------------------------------------------.
 #   |                                                                      |
 #   |               _ __ ___  ___  ___  _   _ _ __ ___ ___                 |
@@ -416,7 +412,7 @@ register.check_plugin(
 
 
 def discover_veritas_vcs_resource(section: Section) -> type_defs.DiscoveryResult:
-    yield from discover_veritas_vcs_subsection(section.get('resource', {}))
+    yield from discover_veritas_vcs_subsection(section.get("resource", {}))
 
 
 def check_veritas_vcs_resource(
@@ -427,7 +423,7 @@ def check_veritas_vcs_resource(
     yield from check_veritas_vcs_subsection(
         item,
         params,
-        section.get('resource', {}),
+        section.get("resource", {}),
     )
 
 
@@ -440,7 +436,7 @@ def cluster_check_veritas_vcs_resource(
         item,
         params,
         {
-            node_name: node_section.get('resource', {})
+            node_name: node_section.get("resource", {})
             for node_name, node_section in section.items()
         },
     )
@@ -448,10 +444,10 @@ def cluster_check_veritas_vcs_resource(
 
 register.check_plugin(
     name="veritas_vcs_resource",
-    sections=['veritas_vcs'],
+    sections=["veritas_vcs"],
     service_name="VCS Resource %s",
     discovery_function=discover_veritas_vcs_resource,
-    check_ruleset_name='veritas_vcs',
+    check_ruleset_name="veritas_vcs",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_veritas_vcs_resource,
     cluster_check_function=cluster_check_veritas_vcs_resource,

@@ -56,8 +56,9 @@ public:
 
     void updateTimeout();
 
-protected:
     std::vector<std::string> gatherAllowedExtensions() const;
+
+protected:
     static void UpdatePluginMapCmdLine(PluginMap& pm,
                                        cma::srv::ServiceProcessor* sp);
     void gatherAllData(std::string& Out);
@@ -71,7 +72,6 @@ protected:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ModulesCmdLine);
-    FRIEND_TEST(PluginTest, AllowedExtensions);
 #endif
 };
 

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.huawei_switch import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 huawei_switch_stack_unknown_role = "unknown"
 
 
@@ -20,7 +21,7 @@ def parse_huawei_switch_stack(info):
     }
 
     stack_enabled_info, stack_role_info = info
-    if not stack_enabled_info or stack_enabled_info[0][0] != '1':
+    if not stack_enabled_info or stack_enabled_info[0][0] != "1":
         return {}
 
     parsed = {}
@@ -34,7 +35,7 @@ def parse_huawei_switch_stack(info):
 
 def inventory_huawei_switch_stack(parsed):
     for item, role in parsed.items():
-        yield (item, {'expected_role': role})
+        yield (item, {"expected_role": role})
 
 
 @get_parsed_item_data
@@ -42,23 +43,23 @@ def check_huawei_switch_stack(item, params, item_data):
     if item_data == huawei_switch_stack_unknown_role:
         return 2, item_data
 
-    if item_data == params['expected_role']:
+    if item_data == params["expected_role"]:
         return 0, item_data
 
-    return 2, "Unexpected role: %s (Expected: %s)" % (item_data, params['expected_role'])
+    return 2, "Unexpected role: %s (Expected: %s)" % (item_data, params["expected_role"])
 
 
-check_info['huawei_switch_stack'] = {
-    'parse_function': parse_huawei_switch_stack,
-    'inventory_function': inventory_huawei_switch_stack,
-    'check_function': check_huawei_switch_stack,
-    'service_description': 'Stack role %s',
-    'snmp_info': [
-        ('.1.3.6.1.4.1.2011.5.25.183.1', ["5"]),  # hwStackIsStackDevice
+check_info["huawei_switch_stack"] = {
+    "parse_function": parse_huawei_switch_stack,
+    "inventory_function": inventory_huawei_switch_stack,
+    "check_function": check_huawei_switch_stack,
+    "service_description": "Stack role %s",
+    "snmp_info": [
+        (".1.3.6.1.4.1.2011.5.25.183.1", ["5"]),  # hwStackIsStackDevice
         (
-            '.1.3.6.1.4.1.2011.5.25.183.1.20.1',
+            ".1.3.6.1.4.1.2011.5.25.183.1.20.1",
             [OID_END, "3"],  # hwMemberStackRole
         ),
     ],
-    'snmp_scan_function': huawei_switch_scan_function,
+    "snmp_scan_function": huawei_switch_scan_function,
 }

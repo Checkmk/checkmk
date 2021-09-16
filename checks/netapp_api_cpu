@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>
 # cpu_busy        8362860064
@@ -80,7 +82,8 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 check_info["netapp_api_cpu"] = {
     "inventory_function": inventory_netapp_api_cpu,
     "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
-        item, params, parsed, "clustermode"),
+        item, params, parsed, "clustermode"
+    ),
     "service_description": "CPU utilization Node %s",
     "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
@@ -90,7 +93,8 @@ check_info["netapp_api_cpu"] = {
 check_info["netapp_api_cpu.utilization"] = {
     "inventory_function": inventory_netapp_api_cpu_utilization,
     "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
-        item, params, parsed, "7mode"),
+        item, params, parsed, "7mode"
+    ),
     "service_description": "CPU utilization",
     "default_levels_variable": "netapp_api_cpu_cm_default_levels",
     "has_perfdata": True,
@@ -114,15 +118,16 @@ def check_netapp_api_nvram_bat(item, _no_params, parsed):
         "battery_at_end_of_life": 2,
         "battery_unknown": 3,
         "battery_over_charged": 1,
-        "battery_fully_charged": 0
+        "battery_fully_charged": 0,
     }
 
     info = parsed.get("clustermode", {}).get(item)
     if not info or "nvram-battery-status" not in info:
         return
 
-    yield state_map.get(info["nvram-battery-status"], 3), "Status: %s" %\
-                        info["nvram-battery-status"].replace("_", " ").title()
+    yield state_map.get(info["nvram-battery-status"], 3), "Status: %s" % info[
+        "nvram-battery-status"
+    ].replace("_", " ").title()
 
 
 # Clustermode NVRAM Bat

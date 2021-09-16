@@ -19,5 +19,5 @@ description:
 item:
  The name of the Checkmk site.
 
-inventory:
+discovery:
  One service is created for each running Checkmk site on a Checkmk server.

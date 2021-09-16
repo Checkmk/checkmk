@@ -14,6 +14,6 @@ description:
 item:
  The PSU designation
 
-inventory:
+discovery:
  One service is created for each PSU.
 

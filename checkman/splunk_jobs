@@ -10,6 +10,6 @@ description:
 
  You can find details about each job in the long output of the check.
 
-inventory:
+discovery:
  One service is created.
 

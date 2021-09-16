@@ -6,14 +6,8 @@
 
 from typing import Mapping
 
+from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .agent_based_api.v1 import (
-    IgnoreResults,
-    register,
-    Result,
-    Service,
-    State,
-)
 from .utils import postgres
 
 # <<<postgres_query_duration>>>
@@ -81,12 +75,12 @@ def cluster_check_postgres_query_duration(
 
 
 register.agent_section(
-    name='postgres_query_duration',
+    name="postgres_query_duration",
     parse_function=postgres.parse_dbs,
 )
 
 register.check_plugin(
-    name='postgres_query_duration',
+    name="postgres_query_duration",
     service_name="PostgreSQL Query Duration %s",
     discovery_function=discover_postgres_query_duration,
     check_function=check_postgres_query_duration,

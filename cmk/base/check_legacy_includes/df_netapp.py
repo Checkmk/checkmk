@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import saveint
+from cmk.base.check_api import host_extra_conf, host_name, saveint
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 
-from .df import df_inventory, df_check_filesystem_list
+from .df import df_check_filesystem_list, filesystem_groups
 
 
 def inventory_df_netapp(info):
@@ -15,7 +16,7 @@ def inventory_df_netapp(info):
     for volume, size_kb, _used_kb in info:
         if saveint(size_kb) > 0:  # Exclude filesystems with zero size (some snapshots)
             mplist.append(volume)
-    return df_inventory(mplist)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
 def check_df_netapp(item, params, info):
@@ -30,5 +31,6 @@ def check_df_netapp(item, params, info):
 
 
 def is_netapp_filer(oid):
-    return "ontap" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789")
+    return "ontap" in oid(".1.3.6.1.2.1.1.1.0").lower() or oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.789"
+    )

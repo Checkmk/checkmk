@@ -12,9 +12,7 @@
 # <<<timemachine>>>
 # Unable to locate machine directory for host.
 
-factory_settings["timemachine_default_levels"] = {
-    "age": (86400, 172800)  # 1d/2d
-}
+factory_settings["timemachine_default_levels"] = {"age": (86400, 172800)}  # 1d/2d
 
 
 def inventory_timemachine(info):
@@ -36,10 +34,12 @@ def check_timemachine(item, params, info):
     if backup_age < 0:
         return 3, "Timestamp of last backup is in the future: " + timestamp
 
-    infotext = "Last backup was at %s (%s ago)" % (time.strftime(
-        "%c", backup_timeb), get_age_human_readable(backup_age))
+    infotext = "Last backup was at %s (%s ago)" % (
+        time.strftime("%c", backup_timeb),
+        get_age_human_readable(backup_age),
+    )
 
-    warn, crit = params['age']
+    warn, crit = params["age"]
     if backup_age >= crit:
         state = 2
         infotext += ", more than %s ago" % get_age_human_readable(crit)

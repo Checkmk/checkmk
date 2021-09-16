@@ -8,23 +8,10 @@
 
 from typing import List, Mapping, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-from .utils.f5_bigip import (
-    F5_BIGIP,
-    VERSION_V11_2_PLUS,
-)
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.f5_bigip import F5_BIGIP, VERSION_V11_2_PLUS
 
 Section = Mapping[str, str]
 
@@ -46,11 +33,6 @@ def check_f5_bigip_vcmpguests(section: Section) -> CheckResult:
         yield Result(state=state.OK, summary="Guest [%s] is %s" % (guest, status))
 
 
-def cluster_check_f5_bigip_vcmpguests(section: Mapping[str, Section]) -> CheckResult:
-    for gueststates in section.values():
-        yield from check_f5_bigip_vcmpguests(gueststates)
-
-
 register.snmp_section(
     name="f5_bigip_vcmpguests",
     detect=all_of(F5_BIGIP, VERSION_V11_2_PLUS),
@@ -61,7 +43,8 @@ register.snmp_section(
             oids=[
                 "1",  # sysVcmpStatVcmpName
                 "17",  # sysVcmpStatPrompt
-            ]),
+            ],
+        ),
     ],
 )
 
@@ -70,5 +53,4 @@ register.check_plugin(
     service_name="BIG-IP vCMP Guests",
     discovery_function=discovery_f5_bigip_vcmpguests,
     check_function=check_f5_bigip_vcmpguests,
-    cluster_check_function=cluster_check_f5_bigip_vcmpguests,
 )

@@ -42,6 +42,6 @@ def inv_lnx_ip_r(info):
         routes.append(parse_lnx_ip_route(line))
 
 
-inv_info['lnx_ip_r'] = {
+inv_info["lnx_ip_r"] = {
     "inv_function": inv_lnx_ip_r,
 }

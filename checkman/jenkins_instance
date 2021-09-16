@@ -8,5 +8,5 @@ description:
  quieting down state (prevents any new builds from taking place if enabled) and
  if security is used (as configured within Jenkins "Configure Global Security").
 
-inventory:
+discovery:
  One service is created ({"Jenkins Instance"}).

@@ -74,7 +74,7 @@ tr.even0 .aggrtree ul.subtree {
 
 b.bullet {
   margin: 0 5px;
-  color: rgb(170, 170, 170);
+  color: $font-color-dimmed;
 }
 
 .state.assumed {
@@ -120,7 +120,7 @@ td.aggrtree_box {
 }
 
 .bibox_box.open.noleaf {
-  box-shadow: inset 0.5px 0.5px 3px rgb(68, 68, 68);
+  box-shadow: inset 0.5px 0.5px 3px $grey-3;
 }
 
 .bibox_box.noleaf:hover {
@@ -128,7 +128,7 @@ td.aggrtree_box {
 }
 
 .bibox_box.closed.noleaf {
-  box-shadow: 0.5px 0.5px 3px rgb(0, 0, 0);
+  box-shadow: 0.5px 0.5px 3px $black;
 }
 
 .bibox_box.leaf {

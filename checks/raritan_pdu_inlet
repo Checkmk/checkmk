@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -20,13 +21,13 @@ def parse_raritan_pdu_inlet(info):
     precisions = dict([(oid_end, int(decimals)) for oid_end, decimals in info[0]])
     parsed = {}
     for oid_end, availability, sensor_state, value in info[1]:
-        if availability == '1':
-            phase_id, sensor_type = oid_end.split('.')[2:4]
+        if availability == "1":
+            phase_id, sensor_type = oid_end.split(".")[2:4]
             phase = "Phase " + phase_id
             if sensor_type in raritan_map_type:
                 parsed.setdefault(phase, {})
                 key, _key_info = raritan_map_type[sensor_type]  # get key for elphase.include
-                value = float(value) / 10**precisions[oid_end]
+                value = float(value) / 10 ** precisions[oid_end]
                 state, state_info = raritan_map_state[sensor_state]
 
                 if state > 0:
@@ -43,9 +44,9 @@ def check_raritan_pdu_inlet(item, params, info):
         yield res
 
 
-check_info['raritan_pdu_inlet'] = {
+check_info["raritan_pdu_inlet"] = {
     "parse_function": parse_raritan_pdu_inlet,
-    "inventory_function": inventory_elphase,
+    "inventory_function": discover(),
     "check_function": check_raritan_pdu_inlet,
     "service_description": "Input %s",
     "has_perfdata": True,
@@ -56,7 +57,8 @@ check_info['raritan_pdu_inlet'] = {
             [
                 OID_END,
                 "7",  # inletPoleSensorDecimalDigits
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.13742.6.5.2.4.1",
             [
@@ -64,7 +66,8 @@ check_info['raritan_pdu_inlet'] = {
                 2,  # availability
                 3,  # state
                 4,  # value
-            ])
+            ],
+        ),
     ],
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
 }

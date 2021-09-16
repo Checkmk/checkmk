@@ -33,7 +33,10 @@ sap_nagios_state_map = [
 def inventory_sap_dialog(info):
     inv = []
     for line in info:
-        if line[3] == 'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime':
+        if (
+            line[3]
+            == "SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime"
+        ):
             inv.append((line[0], {}))
     return inv
 
@@ -42,8 +45,8 @@ def check_sap_dialog(item, params, info):
     # First extract all infos
     dialog = {}
     for line in info:
-        if line[0] == item and line[3].startswith('SAP CCMS Monitor Templates/Dialog Overview/'):
-            key = line[3].split('/')[-1]
+        if line[0] == item and line[3].startswith("SAP CCMS Monitor Templates/Dialog Overview/"):
+            key = line[3].split("/")[-1]
             perfval = savefloat(line[4])
             uom = line[5]
             dialog[key] = perfval, uom
@@ -59,7 +62,7 @@ def check_sap_dialog(item, params, info):
         raise MKCounterWrapped("no output about sap dialogs in agent output")
 
     def perf_clean_key(s):
-        return s.replace('(', '_').replace(')', '_').replace(' ', '_').replace('.', '_').rstrip('_')
+        return s.replace("(", "_").replace(")", "_").replace(" ", "_").replace(".", "_").rstrip("_")
 
     # {'UsersLoggedIn': (2, '-'), 'ResponseTime(StandardTran.)': (6, 'msec'), 'FrontEndNetTime': (0, 'msec'), 'ResponseTime': (77, 'msec')}
     for key, value in dialog.items():
@@ -70,12 +73,12 @@ def check_sap_dialog(item, params, info):
                 state = 2
             elif value[0] >= warn:
                 state = 1
-        yield state, "%s: %d%s" % (key, value[0], (value[1] != '-' and value[1] or '')), [
+        yield state, "%s: %d%s" % (key, value[0], (value[1] != "-" and value[1] or "")), [
             (perf_clean_key(key), value[0])
         ]
 
 
-check_info['sap.dialog'] = {
+check_info["sap.dialog"] = {
     "check_function": check_sap_dialog,
     "group": "sap_dialog",
     "inventory_function": inventory_sap_dialog,
@@ -101,18 +104,18 @@ def inventory_sap_value(info):
 
     patterns = []
     for value in host_extra_conf(host_name(), inventory_sap_values):
-        patterns.append((value['match'], value.get('limit_item_levels')))
+        patterns.append((value["match"], value.get("limit_item_levels")))
 
     for line in info:
         for pattern, limit_item_levels in patterns:
             if sap_value_path_matches(line[3], pattern):
                 params = {}
                 if limit_item_levels:
-                    path = '/'.join(line[3].split('/')[-limit_item_levels:])
-                    params['limit_item_levels'] = limit_item_levels
+                    path = "/".join(line[3].split("/")[-limit_item_levels:])
+                    params["limit_item_levels"] = limit_item_levels
                 else:
                     path = line[3]
-                inv.append((line[0] + ' ' + path, params))
+                inv.append((line[0] + " " + path, params))
 
     return inv
 
@@ -121,7 +124,7 @@ def sap_value_path_matches(path, pattern):
     if pattern is None:
         return True
 
-    if pattern.startswith('~'):  # regex matching
+    if pattern.startswith("~"):  # regex matching
         reg = regex(pattern[1:])
         return bool(reg.match(path))
 
@@ -131,22 +134,22 @@ def sap_value_path_matches(path, pattern):
 def check_sap_value(item, params, info):
     status = None
     perfdata = []
-    limit = params.get('limit_item_levels')
+    limit = params.get("limit_item_levels")
 
     for line in info:
-        this_path = '/'.join(line[3].split('/')[-limit:]) if limit else line[3]
+        this_path = "/".join(line[3].split("/")[-limit:]) if limit else line[3]
 
-        if line[0] + ' ' + this_path == item:
+        if line[0] + " " + this_path == item:
             status = sap_nagios_state_map[int(line[1])]
-            if line[4] != '-':
+            if line[4] != "-":
                 # This is a performance value, has no output
                 perfval = savefloat(line[4])
-                perfdata = [('value', perfval)]
+                perfdata = [("value", perfval)]
                 uom = line[5]
                 output = "%0.2f%s" % (perfval, uom)
             else:
                 # This is a status field without perfdata
-                output = ' '.join(line[6:])
+                output = " ".join(line[6:])
             break
 
     if status is None:
@@ -155,7 +158,7 @@ def check_sap_value(item, params, info):
     return (status, output, perfdata)
 
 
-check_info['sap.value'] = {
+check_info["sap.value"] = {
     "check_function": check_sap_value,
     "inventory_function": inventory_sap_value,
     "service_description": "%s",
@@ -177,7 +180,9 @@ def sap_groups_of_value(
     patterns: SAPRules,
 ) -> typing.Set[str]:
     return {
-        group_name for line in patterns for group_name, (inclusion, exclusion) in line
+        group_name
+        for line in patterns
+        for group_name, (inclusion, exclusion) in line
         if _patterns_match(value_name, exclusion, inclusion)
     }
 
@@ -205,13 +210,13 @@ def discover_sap_value_groups(info):
 
     patterns_by_group = get_patterns_by_group_name(params)
     for item in inventory:
-        yield (item, {'_group_relevant_patterns': patterns_by_group[item]})
+        yield (item, {"_group_relevant_patterns": patterns_by_group[item]})
 
 
 def check_sap_value_groups(item, params, info):
 
     try:
-        patterns: GroupPatterns = params['_group_relevant_patterns']
+        patterns: GroupPatterns = params["_group_relevant_patterns"]
     except KeyError:
         yield 3, "Rules not found. Please rediscover the services of this host"
         return
@@ -225,9 +230,9 @@ def check_sap_value_groups(item, params, info):
         path = line[3]
         if item in sap_groups_of_value(path, precompiled_rule):
             status = sap_nagios_state_map[int(line[1])]
-            output = ''
-            if line[4] == '-':
-                output = ' '.join(line[6:])
+            output = ""
+            if line[4] == "-":
+                output = " ".join(line[6:])
 
             all_results.append((status, path + output))
             if status > 0:
@@ -248,8 +253,8 @@ def check_sap_value_groups(item, params, info):
         yield state, "\n%s" % text
 
 
-check_info['sap.value_groups'] = {
-    'check_function': check_sap_value_groups,
-    'inventory_function': discover_sap_value_groups,
-    'service_description': "%s",
+check_info["sap.value_groups"] = {
+    "check_function": check_sap_value_groups,
+    "inventory_function": discover_sap_value_groups,
+    "service_description": "%s",
 }

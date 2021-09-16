@@ -10,5 +10,5 @@ description:
 
  The check always returns {OK} state.
 
-inventory:
+discovery:
  One service is created on each LPAR.

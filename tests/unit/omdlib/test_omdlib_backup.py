@@ -9,10 +9,11 @@
 import tarfile
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
+
 import omdlib
-import omdlib.main
 import omdlib.backup
+import omdlib.main
 
 
 @pytest.fixture()
@@ -33,7 +34,7 @@ def site(tmp_path, monkeypatch):
 def test_backup_site_to_tarfile(site, tmp_path):
     # Write some file for testing the backup procedure
     with Path(site.dir + "/test123").open("w", encoding="utf-8") as f:
-        f.write(u"uftauftauftata")
+        f.write("uftauftauftata")
 
     tar_path = tmp_path / "backup.tar"
     with tar_path.open("wb") as backup_tar:
@@ -72,7 +73,9 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
 
     orig_add = omdlib.backup.BackupTarFile.add
 
-    def add(self, name, arcname=None, recursive=True, exclude=None, filter=None):  # pylint: disable=redefined-builtin
+    def add(
+        self, name, arcname=None, recursive=True, exclude=None, filter=None
+    ):  # pylint: disable=redefined-builtin
         if exclude is not None:
             raise DeprecationWarning("TarFile.add's exclude parameter should not be used")
         # The add() was called for test_dir which then calls os.listdir() and

@@ -10,7 +10,7 @@ def check_ironport_misc(item, params, info):
 
 
 check_info["ironport_misc"] = {
-    'check_function': check_ironport_misc,
-    'service_description': '%s',
-    'group': 'obsolete',
+    "check_function": check_ironport_misc,
+    "service_description": "%s",
+    "group": "obsolete",
 }

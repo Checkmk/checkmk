@@ -19,5 +19,5 @@ description:
 item:
  Name of the device and the mode seperated by a space
 
-inventory:
+discovery:
  One service is created for each configured temperature value.

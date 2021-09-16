@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info, MONITORING_STATUS_COLORS
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -342,7 +342,19 @@ metric_info["cmk_services_critical"] = {
     "color": MONITORING_STATUS_COLORS["critical/down"],
 }
 
-#.
+metric_info["age_oldest"] = {
+    "title": _("Oldest age"),
+    "unit": "s",
+    "color": "35/a",
+}
+
+metric_info["age_youngest"] = {
+    "title": _("Youngest age"),
+    "unit": "s",
+    "color": "21/a",
+}
+
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -356,37 +368,52 @@ metric_info["cmk_services_critical"] = {
 
 graph_info["livestatus_requests_per_connection"] = {
     "title": _("Livestatus Requests per Connection"),
-    "metrics": [("livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
-                 _("Average requests per connection")),],
+    "metrics": [
+        (
+            "livestatus_request_rate,livestatus_connect_rate,/#88aa33",
+            "area",
+            _("Average requests per connection"),
+        ),
+    ],
 }
 
 graph_info["livestatus_usage"] = {
     "title": _("Livestatus usage"),
-    "metrics": [("livestatus_usage", "area"),],
+    "metrics": [
+        ("livestatus_usage", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_cmk"] = {
     "title": _("Checkmk helper usage"),
-    "metrics": [("helper_usage_cmk", "area"),],
+    "metrics": [
+        ("helper_usage_cmk", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_fetcher"] = {
     "title": _("Fetcher helper usage"),
-    "metrics": [("helper_usage_fetcher", "area"),],
+    "metrics": [
+        ("helper_usage_fetcher", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_checker"] = {
     "title": _("Checker helper usage"),
-    "metrics": [("helper_usage_checker", "area"),],
+    "metrics": [
+        ("helper_usage_checker", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_generic"] = {
     "title": _("Generic helper usage"),
-    "metrics": [("helper_usage_generic", "area"),],
+    "metrics": [
+        ("helper_usage_generic", "area"),
+    ],
     "range": (0, 100),
 }
 
@@ -524,15 +551,17 @@ graph_info["inbound_and_outbound_messages"] = {
 
 graph_info["cmk_hosts_total"] = {
     "title": _("Total number of hosts"),
-    "metrics": [(
-        "cmk_hosts_up,"
-        "cmk_hosts_down,"
-        "cmk_hosts_unreachable,"
-        "cmk_hosts_in_downtime,"
-        "+,+,+#0485d1",
-        "stack",
-        _("Total"),
-    ),],
+    "metrics": [
+        (
+            "cmk_hosts_up,"
+            "cmk_hosts_down,"
+            "cmk_hosts_unreachable,"
+            "cmk_hosts_in_downtime,"
+            "+,+,+#0485d1",
+            "stack",
+            _("Total"),
+        ),
+    ],
 }
 
 graph_info["cmk_hosts_not_up"] = {
@@ -556,17 +585,19 @@ graph_info["cmk_hosts_not_up"] = {
 
 graph_info["cmk_services_total"] = {
     "title": _("Total number of services"),
-    "metrics": [(
-        "cmk_services_ok,"
-        "cmk_services_in_downtime,"
-        "cmk_services_on_down_hosts,"
-        "cmk_services_warning,"
-        "cmk_services_unknown,"
-        "cmk_services_critical,"
-        "+,+,+,+,+#0485d1",
-        "stack",
-        _("Total"),
-    ),],
+    "metrics": [
+        (
+            "cmk_services_ok,"
+            "cmk_services_in_downtime,"
+            "cmk_services_on_down_hosts,"
+            "cmk_services_warning,"
+            "cmk_services_unknown,"
+            "cmk_services_critical,"
+            "+,+,+,+,+#0485d1",
+            "stack",
+            _("Total"),
+        ),
+    ],
 }
 
 graph_info["cmk_services_not_ok"] = {

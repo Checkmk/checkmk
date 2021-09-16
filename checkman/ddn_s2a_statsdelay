@@ -10,5 +10,5 @@ description:
 item:
  "Disk" or "Host"
 
-inventory:
+discovery:
  Two services are created for each device, one each for disk and host r/w-delay respectively.

@@ -9,24 +9,26 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # TODO together with 'mcafee_emailgateway_av_mcafee'
 # only info check?
 
 
 def check_mcafee_emailgateway_agent(item, params, info):
-    return 0, 'Version: %s, Hostname: %s, Last file update: %s' % tuple(info[0])
+    return 0, "Version: %s, Hostname: %s, Last file update: %s" % tuple(info[0])
 
 
-check_info['mcafee_emailgateway_agent'] = {
-    'inventory_function': inventory_mcafee_gateway_generic,
-    'check_function': check_mcafee_emailgateway_agent,
-    'service_description': 'Agent Info',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.4.1.2.1.1',
+check_info["mcafee_emailgateway_agent"] = {
+    "inventory_function": inventory_mcafee_gateway_generic,
+    "check_function": check_mcafee_emailgateway_agent,
+    "service_description": "Agent Info",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.4.1.2.1.1",
         [
-            '1',  # agent-meg-module-version
-            '2',  # agent-hostname
-            '3',  # agent-last-file-update
-        ]),
-    'snmp_scan_function': scan_mcafee_emailgateway,
+            "1",  # agent-meg-module-version
+            "2",  # agent-hostname
+            "3",  # agent-last-file-update
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_emailgateway,
 }

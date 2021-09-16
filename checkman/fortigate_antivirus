@@ -13,5 +13,5 @@ description:
 item:
  Internal virtual domain index.
 
-inventory:
+discovery:
  One service is created per virtual domain.

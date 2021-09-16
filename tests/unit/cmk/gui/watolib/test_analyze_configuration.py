@@ -6,44 +6,45 @@
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.utils.version as cmk_version
+
 import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 
 
 def test_registered_ac_tests():
     expected_ac_tests = [
-        'ACTestAlertHandlerEventTypes',
-        'ACTestApacheNumberOfProcesses',
-        'ACTestApacheProcessUsage',
-        'ACTestBackupConfigured',
-        'ACTestBackupNotEncryptedConfigured',
-        'ACTestBrokenGUIExtension',
-        'ACTestCheckMKHelperUsage',
-        'ACTestCheckMKFetcherUsage',
-        'ACTestCheckMKCheckerNumber',
-        'ACTestCheckMKCheckerUsage',
-        'ACTestConnectivity',
-        'ACTestESXDatasources',
-        'ACTestEscapeHTMLDisabled',
-        'ACTestGenericCheckHelperUsage',
-        'ACTestHTTPSecured',
-        'ACTestLDAPSecured',
-        'ACTestLiveproxyd',
-        'ACTestLivestatusUsage',
-        'ACTestLivestatusSecured',
-        'ACTestNumberOfUsers',
-        'ACTestOldDefaultCredentials',
-        'ACTestPersistentConnections',
-        'ACTestRulebasedNotifications',
-        'ACTestSizeOfExtensions',
-        'ACTestTmpfs',
-        'ACTestUnexpectedAllowedIPRanges',
+        "ACTestAlertHandlerEventTypes",
+        "ACTestApacheNumberOfProcesses",
+        "ACTestApacheProcessUsage",
+        "ACTestBackupConfigured",
+        "ACTestBackupNotEncryptedConfigured",
+        "ACTestBrokenGUIExtension",
+        "ACTestCheckMKHelperUsage",
+        "ACTestCheckMKFetcherUsage",
+        "ACTestCheckMKCheckerNumber",
+        "ACTestCheckMKCheckerUsage",
+        "ACTestConnectivity",
+        "ACTestESXDatasources",
+        "ACTestEscapeHTMLDisabled",
+        "ACTestGenericCheckHelperUsage",
+        "ACTestHTTPSecured",
+        "ACTestLDAPSecured",
+        "ACTestLiveproxyd",
+        "ACTestLivestatusUsage",
+        "ACTestLivestatusSecured",
+        "ACTestNumberOfUsers",
+        "ACTestOldDefaultCredentials",
+        "ACTestPersistentConnections",
+        "ACTestRulebasedNotifications",
+        "ACTestSizeOfExtensions",
+        "ACTestTmpfs",
+        "ACTestUnexpectedAllowedIPRanges",
     ]
 
     if not cmk_version.is_raw_edition():
         expected_ac_tests += [
-            'ACTestSecureAgentUpdaterTransport',
-            'ACTestSecureNotificationSpoolerMessages',
+            "ACTestSecureAgentUpdaterTransport",
+            "ACTestSecureNotificationSpoolerMessages",
         ]
 
     registered_plugins = sorted(watolib.ac_test_registry.keys())

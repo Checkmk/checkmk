@@ -15,6 +15,6 @@ description:
  may also set a {CRIT} status. You can override this behaviour in the
  "Temperature" rule.
 
-inventory:
+discovery:
  One service is created for each temperature sensor.
 

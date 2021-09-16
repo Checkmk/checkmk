@@ -4,23 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from contextlib import suppress
+from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    IgnoreResultsError,
-    register,
-    render,
-    Result,
-    Service,
-    State as state,
-)
+from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, InodesSubsection
+
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class MSSQLInstanceData(TypedDict):
@@ -28,6 +19,7 @@ class MSSQLInstanceData(TypedDict):
     max_size: Optional[float]
     allocated_size: Optional[float]
     used_size: Optional[float]
+    mountpoint: str
 
 
 SectionDatafiles = Dict[Tuple[Optional[str], str, str], MSSQLInstanceData]
@@ -35,15 +27,16 @@ SectionDatafiles = Dict[Tuple[Optional[str], str, str], MSSQLInstanceData]
 
 def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
     """
-        >>> from pprint import pprint
-        >>> pprint(parse_mssql_datafiles([
-        ...     ['MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
-        ...      'Z:\\mypath\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
-        ... ]))
-        {('MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log'): {'allocated_size': 268435456.0,
-                                                                     'max_size': 2199023255552.0,
-                                                                     'unlimited': False,
-                                                                     'used_size': 16777216.0}}
+    >>> from pprint import pprint
+    >>> pprint(parse_mssql_datafiles([
+    ...     ['MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
+    ...      'Z:\\\\mypath\\\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
+    ... ]))
+    {('MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log'): {'allocated_size': 268435456.0,
+                                                                 'max_size': 2199023255552.0,
+                                                                 'mountpoint': 'Z',
+                                                                 'unlimited': False,
+                                                                 'used_size': 16777216.0}}
     """
     section: SectionDatafiles = {}
     for line in string_table:
@@ -51,21 +44,24 @@ def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
             continue
         if len(line) == 6:
             inst = None
-            database, file_name, _physical_name, max_size, allocated_size, used_size = line
+            database, file_name, physical_name, max_size, allocated_size, used_size = line
             unlimited = False
         elif len(line) == 8:
-            inst, database, file_name, _physical_name, max_size, allocated_size, used_size = line[:
-                                                                                                  7]
-            unlimited = line[7] == '1'
+            inst, database, file_name, physical_name, max_size, allocated_size, used_size = line[:7]
+            unlimited = line[7] == "1"
         else:
             continue
 
-        mssql_instance = section.setdefault((inst, database, file_name), {
-            "unlimited": unlimited,
-            "max_size": None,
-            "allocated_size": None,
-            "used_size": None,
-        })
+        mssql_instance = section.setdefault(
+            (inst, database, file_name),
+            {
+                "unlimited": unlimited,
+                "max_size": None,
+                "allocated_size": None,
+                "used_size": None,
+                "mountpoint": physical_name[0],
+            },
+        )
         with suppress(ValueError):
             mssql_instance["max_size"] = float(max_size) * 1024 * 1024
         with suppress(ValueError):
@@ -104,7 +100,6 @@ def _mssql_datafiles_process_sizes(
     used_size: float,
     allocated_size: float,
     max_size: Optional[float],
-    unlimited: bool,
 ) -> CheckResult:
     def calculate_levels(
         levels: Tuple[float, float],
@@ -124,13 +119,10 @@ def _mssql_datafiles_process_sizes(
 
         return None
 
-    if unlimited:
-        max_size = None
-
     for param_key, name, perf_key, value, reference_value in [
-        ('used_levels', "Used", "data_size", used_size, max_size),
-        ('allocated_used_levels', "Allocated used", None, used_size, allocated_size),
-        ('allocated_levels', "Allocated", "allocated_size", allocated_size, max_size),
+        ("used_levels", "Used", "data_size", used_size, max_size),
+        ("allocated_used_levels", "Allocated used", None, used_size, allocated_size),
+        ("allocated_levels", "Allocated", "allocated_size", allocated_size, max_size),
     ]:
         raw_levels = params.get(param_key, (None, None))
         if isinstance(raw_levels, list):
@@ -165,40 +157,62 @@ def discover_mssql_common(
 
     summarize = params[0].get("summarize_%s" % mode, False)
     for inst, database, file_name in section:
-        yield Service(item=_format_item_mssql_datafiles(
-            inst,
-            database,
-            None if summarize else file_name,
-        ),)
+        yield Service(
+            item=_format_item_mssql_datafiles(
+                inst,
+                database,
+                None if summarize else file_name,
+            ),
+        )
 
 
 def discover_mssql_datafiles(
     params: List[Mapping[str, Any]],
-    section: SectionDatafiles,
+    section_mssql_datafiles: Optional[SectionDatafiles],
+    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
 ) -> DiscoveryResult:
-    yield from discover_mssql_common("datafiles", params, section)
+    if not section_mssql_datafiles:
+        return
+    yield from discover_mssql_common("datafiles", params, section_mssql_datafiles)
 
 
 def discover_mssql_transactionlogs(
     params: List[Mapping[str, Any]],
-    section: SectionDatafiles,
+    section_mssql_transactionlogs: Optional[SectionDatafiles],
+    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
 ) -> DiscoveryResult:
-    yield from discover_mssql_common("transactionlogs", params, section)
+    if not section_mssql_transactionlogs:
+        return
+    yield from discover_mssql_common("transactionlogs", params, section_mssql_transactionlogs)
 
 
-def check_mssql_common(item: str, params: Mapping[str, Any],
-                       section: SectionDatafiles) -> CheckResult:
-    max_size_sum = 0.
-    allocated_size_sum = 0.
-    used_size_sum = 0.
-    unlimited_sum = False
+def check_mssql_common(
+    item: str,
+    params: Mapping[str, Any],
+    section: SectionDatafiles,
+    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+) -> CheckResult:
+    max_size_sum = 0.0
+    allocated_size_sum = 0.0
+    used_size_sum = 0.0
+    unlimited = False
+
+    available_bytes = {}
+    if section_df:
+        available_bytes = {f.mountpoint[0]: f.avail_mb * 1024 * 1024 for f in section_df[0]}
 
     found = False
     for (inst, database, file_name), values in section.items():
-        if _format_item_mssql_datafiles(inst, database, file_name) == item or \
-                _format_item_mssql_datafiles(inst, database, None) == item:
+        if (
+            _format_item_mssql_datafiles(inst, database, file_name) == item
+            or _format_item_mssql_datafiles(inst, database, None) == item
+        ):
             found = True
             max_size = values["max_size"]
+            filesystem_free_size = available_bytes.get(values["mountpoint"], max_size)
+            unlimited = unlimited or values["unlimited"]
+            if (max_size or 0) > (filesystem_free_size or 0) or unlimited:
+                max_size = filesystem_free_size
             allocated_size = values["allocated_size"]
             used_size = values["used_size"]
             if max_size:
@@ -207,37 +221,73 @@ def check_mssql_common(item: str, params: Mapping[str, Any],
                 allocated_size_sum += allocated_size
             if used_size:
                 used_size_sum += used_size
-            unlimited_sum = unlimited_sum or values["unlimited"]
 
     if not found:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise IgnoreResultsError("Failed to connect to database")
 
-    yield from _mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum,
-                                              max_size_sum, unlimited_sum)
+    yield from _mssql_datafiles_process_sizes(
+        params, used_size_sum, allocated_size_sum, max_size_sum
+    )
+
+
+def check_mssql_datafiles(
+    item: str,
+    params: Mapping[str, Any],
+    section_mssql_datafiles: Optional[SectionDatafiles],
+    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+) -> CheckResult:
+    if not section_mssql_datafiles:
+        return
+
+    yield from check_mssql_common(
+        item,
+        params,
+        section_mssql_datafiles,
+        section_df,
+    )
+
+
+def check_mssql_transactionlogs(
+    item: str,
+    params: Mapping[str, Any],
+    section_mssql_transactionlogs: Optional[SectionDatafiles],
+    section_df: Optional[Tuple[BlocksSubsection, InodesSubsection]],
+) -> CheckResult:
+    if not section_mssql_transactionlogs:
+        return
+
+    yield from check_mssql_common(
+        item,
+        params,
+        section_mssql_transactionlogs,
+        section_df,
+    )
 
 
 register.check_plugin(
     name="mssql_datafiles",
+    sections=["mssql_datafiles", "df"],
     service_name="MSSQL Datafile %s",
     discovery_function=discover_mssql_datafiles,
     discovery_ruleset_name="mssql_transactionlogs_discovery",
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
-    check_function=check_mssql_common,
-    check_default_parameters={'used_levels': (80.0, 90.0)},
+    check_function=check_mssql_datafiles,
+    check_default_parameters={"used_levels": (80.0, 90.0)},
     check_ruleset_name="mssql_datafiles",
 )
 
 register.check_plugin(
     name="mssql_transactionlogs",
+    sections=["mssql_transactionlogs", "df"],
     service_name="MSSQL Transactionlog %s",
     discovery_function=discover_mssql_transactionlogs,
     discovery_ruleset_name="mssql_transactionlogs_discovery",
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
-    check_function=check_mssql_common,
-    check_default_parameters={'used_levels': (80.0, 90.0)},
+    check_function=check_mssql_transactionlogs,
+    check_default_parameters={"used_levels": (80.0, 90.0)},
     check_ruleset_name="mssql_transactionlogs",
 )

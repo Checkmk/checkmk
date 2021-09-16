@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.1916.1.1.1.38.1.3.1.1 11960 --> EXTREME-SYSTEM-MIB::extremePowerSupplyOutputVoltage.1.1
 # .1.3.6.1.4.1.1916.1.1.1.38.1.3.1.2 0 --> EXTREME-SYSTEM-MIB::extremePowerSupplyOutputVoltage.1.2
 # .1.3.6.1.4.1.1916.1.1.1.38.1.3.2.1 11990 --> EXTREME-SYSTEM-MIB::extremePowerSupplyOutputVoltage.2.1
@@ -54,21 +55,22 @@ def parse_netextreme_psu_out(info):
     return parsed
 
 
-check_info['netextreme_psu_out'] = {
-    'parse_function': parse_netextreme_psu_out,
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': 'Power Supply %s',
-    'has_perfdata': True,
-    'snmp_info': (
+check_info["netextreme_psu_out"] = {
+    "parse_function": parse_netextreme_psu_out,
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "Power Supply %s",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.1916.1.1.1.38.1",
         [
             OID_END,  # Power Supply Index
             "3",  # extremePowerSupplyOutputVoltage
             "4",  # extremePowerSupplyOutputCurrent
             "5",  # extremePowerSupplyOutputUnitMultiplier
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
-    'group': "el_inphase",
-    'default_levels_variable': "netextreme_psu_out_default_levels",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
+    "group": "el_inphase",
+    "default_levels_variable": "netextreme_psu_out_default_levels",
 }

@@ -1,4 +1,4 @@
-:: Install legacy Python from omd/packages/Python3/windows/python-3.4.4.msi
+:: Install legacy Python from omd/packages/Python/windows/python-3.4.4.msi
 :: May be called only from exec_cmd.bat
 @echo off
 

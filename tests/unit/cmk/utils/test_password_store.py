@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils import password_store
 from cmk.utils.exceptions import MKGeneralException
@@ -18,9 +18,14 @@ def load_patch():
     return {PW_STORE_KEY: PW_STORE}
 
 
-@pytest.mark.parametrize("password_id, password_actual", [(("password", PW_EXPL), PW_EXPL),
-                                                          (("store", PW_STORE_KEY), PW_STORE),
-                                                          (PW_STORE_KEY, PW_STORE)])
+@pytest.mark.parametrize(
+    "password_id, password_actual",
+    [
+        (("password", PW_EXPL), PW_EXPL),
+        (("store", PW_STORE_KEY), PW_STORE),
+        (PW_STORE_KEY, PW_STORE),
+    ],
+)
 def test_extract(monkeypatch, password_id, password_actual):
     monkeypatch.setattr(password_store, "load", load_patch)
     assert password_store.extract(password_id) == password_actual

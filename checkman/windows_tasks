@@ -22,5 +22,5 @@ description:
 item:
  Name of the task
 
-inventory:
+discovery:
  One service is created for each task which is not disabled.

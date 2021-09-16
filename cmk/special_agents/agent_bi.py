@@ -5,25 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import sys
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-import sys
 from typing import Dict, Set
 
 import requests
 import urllib3  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
 import cmk.utils.site
-from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKException
+from cmk.utils.regex import regex
+from cmk.utils.site import omd_site
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class AggregationData:
     def __init__(self, bi_rawdata, config, error):
-        super(AggregationData, self).__init__()
+        super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
 
@@ -130,15 +130,16 @@ class RawdataException(MKException):
 
 class AggregationRawdataGenerator:
     def __init__(self, config):
-        super(AggregationRawdataGenerator, self).__init__()
+        super().__init__()
         self._config = config
 
         self._credentials = config["credentials"]
         if self._credentials == "automation":
             self._username = self._credentials
 
-            secret_file_path = Path(
-                cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
+            secret_file_path = (
+                Path(cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
+            )
 
             with secret_file_path.open(encoding="utf-8") as f:
                 self._secret = f.read()
@@ -148,8 +149,10 @@ class AggregationRawdataGenerator:
         site_config = config["site"]
 
         if site_config == "local":
-            self._site_url = "http://localhost:%d/%s" % (cmk.utils.site.get_apache_port(),
-                                                         cmk_version.omd_site())
+            self._site_url = "http://localhost:%d/%s" % (
+                cmk.utils.site.get_apache_port(),
+                omd_site(),
+            )
         else:
             self._site_url = site_config[1]
 
@@ -166,15 +169,16 @@ class AggregationRawdataGenerator:
             return AggregationData(None, self._config, "Request Error %s" % e)
 
     def _fetch_aggregation_data(self):
-        response = requests.post("%s/check_mk/webapi.py?action=get_bi_aggregations" %
-                                 self._site_url,
-                                 data={
-                                     "_username": self._username,
-                                     "_secret": self._secret,
-                                     "request": repr({"filter": self._config.get("filter", {})}),
-                                     "request_format": "python",
-                                     "output_format": "python"
-                                 })
+        response = requests.post(
+            "%s/check_mk/webapi.py?action=get_bi_aggregations" % self._site_url,
+            data={
+                "_username": self._username,
+                "_secret": self._secret,
+                "request": repr({"filter": self._config.get("filter", {})}),
+                "request_format": "python",
+                "output_format": "python",
+            },
+        )
         response.raise_for_status()
         return response.text
 
@@ -204,10 +208,7 @@ class AggregationRawdataGenerator:
 class AggregationOutputRenderer:
     def render(self, aggregation_data_results):
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info: Dict[str, Set[str]] = {
-            field: set()  #
-            for field in connection_info_fields
-        }
+        connection_info: Dict[str, Set[str]] = {field: set() for field in connection_info_fields}  #
 
         output = []
         for aggregation_result in aggregation_data_results:
@@ -220,8 +221,9 @@ class AggregationOutputRenderer:
 
         if not output:
             if connection_info["generic_errors"]:
-                sys.stderr.write("Agent error(s): %s\n" %
-                                 "\n".join(connection_info["generic_errors"]))
+                sys.stderr.write(
+                    "Agent error(s): %s\n" % "\n".join(connection_info["generic_errors"])
+                )
             else:
                 sys.stderr.write("Got no information. Did you configure a BI aggregation?\n")
             sys.exit(1)

@@ -4,7 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any as _Any, Dict as _Dict, List as _List, Union as _Union
+from __future__ import annotations
+
+from typing import List as _List
+from typing import Tuple as _Tuple
+from typing import TYPE_CHECKING
+from typing import Union as _Union
+
+if TYPE_CHECKING:
+    from cmk.utils.type_defs import EventRule
+    from cmk.base.notify import NotifyPluginParamsDict
 
 import cmk.utils.version as cmk_version
 
@@ -19,7 +28,8 @@ notification_backlog = 10  # keep the last 10 notification contexts for referenc
 # Settings for new rule based notifications
 enable_rulebased_notifications = False
 notification_fallback_email = ""
-notification_rules: _List[_Dict[str, _Any]] = []
+notification_fallback_format: _Tuple[str, NotifyPluginParamsDict] = ("asciimail", {})
+notification_rules: _List["EventRule"] = []
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10
 notification_plugin_timeout = 60

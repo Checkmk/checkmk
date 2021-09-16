@@ -17,20 +17,25 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.4.0
+      rev: v4.0.1
       hooks:
           - id: trailing-whitespace
           - id: check-merge-conflict
             types: [file]
           - id: check-yaml
           - id: end-of-file-fixer
+            exclude: .werks/*
+    - repo: https://github.com/pycqa/isort
+      rev: 5.9.3
+      hooks:
+          - id: isort
+            name: isort (python)
+    - repo: https://github.com/psf/black
+      rev: 21.8b0
+      hooks:
+          - id: black
     - repo: local
       hooks:
-          - id: yapf
-            name: Check yapf
-            entry: scripts/check-yapf -i
-            language: script
-            types: [file, python]
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules

@@ -17,7 +17,7 @@ item:
  its alias. For this check, the index is always 0 and the description and the alias
  are always 'WAN'.
 
-inventory:
+discovery:
  In general, the discovery of network interfaces can be configured using the rule
  "Network interface and switch port discovery". By default, only interfaces which are
  currently found {up} and are of type 6, 32, 62, 117, 127, 128, 129, 180, 181, 182, 205

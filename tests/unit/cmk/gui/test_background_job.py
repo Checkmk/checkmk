@@ -5,22 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import time
 import multiprocessing
 import sys
+import time
 
-import pytest  # type: ignore[import]
+import pytest
 
-import testlib
+import tests.testlib as testlib
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.log
+
 # Loads all GUI modules
 import cmk.gui.modules
-
-import cmk.gui.log
 
 
 @pytest.fixture(autouse=True)
@@ -32,26 +33,28 @@ def debug_logging():
 
 def test_registered_background_jobs():
     expected_jobs = [
-        'ActivateChangesSchedulerBackgroundJob',
-        'ParentScanBackgroundJob',
-        'DummyBackgroundJob',
-        'RenameHostsBackgroundJob',
-        'RenameHostBackgroundJob',
-        'FetchAgentOutputBackgroundJob',
-        'BulkDiscoveryBackgroundJob',
-        'UserSyncBackgroundJob',
-        'ServiceDiscoveryBackgroundJob',
-        'ActivationCleanupBackgroundJob',
-        'CheckmkAutomationBackgroundJob',
-        'DiagnosticsDumpBackgroundJob',
-        'SearchIndexBackgroundJob',
+        "ActivateChangesSchedulerBackgroundJob",
+        "ParentScanBackgroundJob",
+        "DummyBackgroundJob",
+        "RenameHostsBackgroundJob",
+        "RenameHostBackgroundJob",
+        "FetchAgentOutputBackgroundJob",
+        "BulkDiscoveryBackgroundJob",
+        "UserSyncBackgroundJob",
+        "UserProfileCleanupBackgroundJob",
+        "ServiceDiscoveryBackgroundJob",
+        "ActivationCleanupBackgroundJob",
+        "CheckmkAutomationBackgroundJob",
+        "DiagnosticsDumpBackgroundJob",
+        "SearchIndexBackgroundJob",
+        "DiscoveredHostLabelSyncJob",
     ]
 
     if not cmk_version.is_raw_edition():
         expected_jobs += [
-            'BakeAgentsBackgroundJob',
-            'SignAgentsBackgroundJob',
-            'ReportingBackgroundJob',
+            "BakeAgentsBackgroundJob",
+            "SignAgentsBackgroundJob",
+            "ReportingBackgroundJob",
         ]
 
     assert sorted(gui_background_job.job_registry.keys()) == sorted(expected_jobs)
@@ -86,7 +89,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
 
     @classmethod
     def gui_title(cls):
-        return u"Dummy Job"
+        return "Dummy Job"
 
     def __init__(self):
         kwargs = {}
@@ -95,7 +98,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         kwargs["stoppable"] = True
         self.finish_hello_event = multiprocessing.Event()
 
-        super(DummyBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super().__init__(self.job_prefix, **kwargs)
 
     def execute_hello(self, job_interface):
         sys.stdout.write("Hallo :-)\n")
@@ -108,7 +111,8 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job(register_builtin_html):
+@pytest.mark.non_resilient
+def test_start_job(request_context):
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)
 
@@ -125,10 +129,11 @@ def test_start_job(register_builtin_html):
     job.finish_hello_event.set()
 
     testlib.wait_until(
-        lambda: job.get_status()["state"] not in
-        [background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING],
+        lambda: job.get_status()["state"]
+        not in [background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING],
         timeout=5,
-        interval=0.1)
+        interval=0.1,
+    )
 
     status = job.get_status()
     assert status["state"] == background_job.JobStatusStates.FINISHED
@@ -138,14 +143,16 @@ def test_start_job(register_builtin_html):
     assert "Hallo :-)" in output
 
 
-def test_stop_job(register_builtin_html):
+def test_stop_job(request_context):
     job = DummyBackgroundJob()
     job.set_function(job.execute_endless)
     job.start()
 
-    testlib.wait_until(lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
-                       timeout=5,
-                       interval=0.1)
+    testlib.wait_until(
+        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        timeout=5,
+        interval=0.1,
+    )
 
     status = job.get_status()
     assert status["state"] == background_job.JobStatusStates.RUNNING

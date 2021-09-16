@@ -45,7 +45,7 @@ def main(sys_argv=None):
         "Gnogomatic Garglebox",
     ]
 
-    print('<<<local:sep(0)>>>')
+    print("<<<local:sep(0)>>>")
     state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
     state_texts = [
         "Everying is OK now",
@@ -70,7 +70,8 @@ def main(sys_argv=None):
         else:
             new_state = last_state
         print(
-            "%d %s - %s - %s" %
-            (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state]))
+            "%d %s - %s - %s"
+            % (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
+        )
 
     open(state_file, "w").write("%r\n" % history)

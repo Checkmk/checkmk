@@ -10,7 +10,9 @@
 import sys
 
 try:
-    from cmk.cee.notification_plugins import jira_issues  # pylint: disable=cmk-module-layer-violation
+    from cmk.cee.notification_plugins import (
+        jira_issues,  # pylint: disable=cmk-module-layer-violation
+    )
 except ImportError:
     sys.stderr.write("JIRA notification script is only available with CEE / CME\n")
     sys.exit(1)

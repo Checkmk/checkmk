@@ -11,5 +11,5 @@ description:
 item:
  Index of the device
 
-inventory:
+discovery:
  One service is created for each PSE.

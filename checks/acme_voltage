@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.acme import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.1 MAIN 1.20V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.2 MAIN 1.50V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.2
 # .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.3 MAIN 1.80V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.3
@@ -66,24 +68,25 @@ def check_acme_voltage(item, params, info):
     for descr, value_str, state in info:
         if item == descr:
             return check_elphase(
-                descr, params,
-                {descr: {
-                    "voltage": (float(value_str) / 1000.0, acme_environment_states[state])
-                }})
+                descr,
+                params,
+                {descr: {"voltage": (float(value_str) / 1000.0, acme_environment_states[state])}},
+            )
 
 
-check_info['acme_voltage'] = {
-    'inventory_function': inventory_acme_voltage,
-    'check_function': check_acme_voltage,
-    'service_description': 'Voltage %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.9148.3.3.1.2.1.1',
+check_info["acme_voltage"] = {
+    "inventory_function": inventory_acme_voltage,
+    "check_function": check_acme_voltage,
+    "service_description": "Voltage %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9148.3.3.1.2.1.1",
         [
             "3",  # ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr
             "4",  # ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue
             "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState
-        ]),
-    'snmp_scan_function': scan_acme,
-    'group': 'el_inphase',
+        ],
+    ),
+    "snmp_scan_function": scan_acme,
+    "group": "el_inphase",
 }

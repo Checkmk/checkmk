@@ -13,5 +13,5 @@ description:
 item:
  The name of the vhost.
 
-inventory:
+discovery:
  One service for each vhost {"RabbitMQ Node my_vhost"} is created.

@@ -13,5 +13,5 @@ description:
 item:
  The store name of a particular service set
 
-inventory:
+discovery:
  One service is created for each store.

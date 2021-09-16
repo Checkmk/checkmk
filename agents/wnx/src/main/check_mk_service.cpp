@@ -3,39 +3,37 @@
 //
 // Precompiled
 #include "pch.h"
-// system C
-// system C++
-#include <chrono>
-#include <filesystem>
+
+#include "check_mk_service.h"
+
+#include <process.h>  // for exit
+
 #include <iostream>
-#include <string>
-#include <thread>
 
-#include "common/yaml.h"
-
-// Project
+#include "cfg.h"
+#include "cma_core.h"
 #include "common/cmdline_info.h"
+#include "common/yaml.h"
 #include "install_api.h"
+#include "logger.h"
+#include "on_start.h"  // for AppType, OnStartApp, AppType::exe, AppType::srv
+#include "providers/perf_counters_cl.h"
+#include "stdint.h"  // for int64_t, uint32_t, uint64_t
 #include "windows_service_api.h"
 
-// Personal
-#include "cfg.h"
-#include "check_mk_service.h"
-#include "cma_core.h"
-#include "logger.h"
-#include "providers/perf_counters_cl.h"
+using namespace std::chrono_literals;
+using XLOG::Colors;
 
 namespace cma::cmdline {
 
-void PrintBlock(std::string_view title, xlog::internal::Colors title_color,
-                std::function<std::string()> formatter) {
+void PrintBlock(std::string_view title, Colors title_color,
+                const std::function<std::string()> &formatter) {
     xlog::sendStringToStdio(title.data(), title_color);
     auto out = formatter();
-    printf(out.data());
+    printf("%s", out.data());
 }
 
 void PrintMain() {
-    using namespace xlog::internal;
     PrintBlock("Normal Usage:\n", Colors::green, []() {
         return fmt::format(
             "\t{1} <{2}|{3}|{4}|{5}|{6}>\n"
@@ -53,7 +51,6 @@ void PrintMain() {
 }
 
 void PrintAgentUpdater() {
-    using namespace xlog::internal;
     PrintBlock("Agent Updater Usage:\n", Colors::green, []() {
         return fmt::format(
             "\t{1} <{2}|{3}> [args]\n"
@@ -66,7 +63,6 @@ void PrintAgentUpdater() {
 }
 
 void PrintSelfCheck() {
-    using namespace xlog::internal;
     PrintBlock("Self Checking:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} {2} <{3}|{4}|{5} [number of seconds]>\n"
@@ -80,7 +76,6 @@ void PrintSelfCheck() {
 }
 
 void PrintAdHoc() {
-    using namespace xlog::internal;
     PrintBlock("Ad Hoc Testing:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} <{2}> [{3}|{4}]\n"
@@ -96,7 +91,6 @@ void PrintAdHoc() {
 
 // obsolete
 void PrintLegacyTesting() {
-    using namespace xlog::internal;
     PrintBlock("Classic/Legacy Testing:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} {2}\n"
@@ -108,7 +102,6 @@ void PrintLegacyTesting() {
 }
 
 void PrintReinstallWATO() {
-    using namespace xlog::internal;
     PrintBlock(
         "Restore WATO Configuration(only for experienced users):\n",
         Colors::pink, []() {
@@ -122,7 +115,6 @@ void PrintReinstallWATO() {
 }
 
 void PrintInstallUninstall() {
-    using namespace xlog::internal;
     PrintBlock(
         "Install or remove service(only for experienced users):\n",
         Colors::pink, []() {
@@ -138,7 +130,6 @@ void PrintInstallUninstall() {
 }
 
 void PrintShowConfig() {
-    using namespace xlog::internal;
     PrintBlock(
         "Display Config and Environment Variables:\n", Colors::cyan, []() {
             return fmt::format(
@@ -153,7 +144,6 @@ void PrintShowConfig() {
 }
 
 void PrintRealtimeTesting() {
-    using namespace xlog::internal;
     PrintBlock("Realtime Testing:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} {2}\n"
@@ -165,7 +155,6 @@ void PrintRealtimeTesting() {
 }
 
 void PrintCvt() {
-    using namespace xlog::internal;
     PrintBlock(
         "Convert Legacy Agent Ini File into Agent Yml file:\n", Colors::pink,
         []() {
@@ -180,8 +169,6 @@ void PrintCvt() {
 }
 
 void PrintLwaActivate() {
-    using namespace xlog::internal;
-
     PrintBlock("Activate/Deactivate Legacy Agent:\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} <{2}|{3}>\n"
@@ -194,8 +181,6 @@ void PrintLwaActivate() {
 }
 
 void PrintFirewall() {
-    using namespace xlog::internal;
-
     PrintBlock("Configure Firewall Rule:\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} [{2}|{3}]\n"
@@ -206,7 +191,6 @@ void PrintFirewall() {
 }
 
 void PrintUpgrade() {
-    using namespace xlog::internal;
     PrintBlock("Upgrade Legacy Agent(migration):\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} {2} [{3}]\n"
@@ -220,8 +204,6 @@ void PrintUpgrade() {
 }
 
 void PrintCap() {
-    using namespace xlog::internal;
-
     PrintBlock(
         "Install Bakery Files and plugins.cap in install folder:\n",
         Colors::pink, []() {
@@ -233,8 +215,6 @@ void PrintCap() {
 }
 
 void PrintSectionTesting() {
-    using namespace xlog::internal;
-
     PrintBlock("Test sections individually:\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} {2} {3} [{4} [{5}]] \n"
@@ -250,13 +230,8 @@ void PrintSectionTesting() {
     });
 }
 
-}  // namespace cma::cmdline
-
 // print short info about usage plus potential comment about error
-static void ServiceUsage(std::wstring_view comment) {
-    using namespace wtools;
-    using namespace cma::cmdline;
-    using namespace xlog::internal;
+void ServiceUsage(std::wstring_view comment) {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
     if (!comment.empty()) {
@@ -283,64 +258,94 @@ static void ServiceUsage(std::wstring_view comment) {
     }
 
     // undocumented
-    // -winnperf ....... command line for runperf
+    // -winperf ....... command line for runperf
 }
+
+}  // namespace cma::cmdline
+
+namespace cma::details {
+extern bool g_is_service;
+}  // namespace cma::details
 
 namespace cma {
-namespace details {
-extern bool g_is_service;
-}
-
 AppType AppDefaultType() {
     return details::g_is_service ? AppType::srv : AppType::exe;
 }
 
+namespace {
+
 template <typename T>
-auto ToInt(const T W, int Dflt = 0) noexcept {
+auto ToInt(const T value, int dflt) noexcept {
     try {
-        return std::stoi(W);
-    } catch (const std::exception &) {
-        return Dflt;
+        return std::stoi(value);
+    } catch (const std::exception & /*exc*/) {
+        return dflt;
     }
 }
 
 template <typename T>
-auto ToUInt64(const T W, uint64_t Dflt = 0) noexcept {
+auto ToInt(const T value) noexcept {
+    return ToInt(value, 0);
+}
+
+template <typename T>
+auto ToUInt64(const T value, uint64_t dflt) noexcept {
     try {
-        return std::stoull(W);
-    } catch (const std::exception &) {
-        return Dflt;
+        return std::stoull(value);
+    } catch (const std::exception & /*exc*/) {
+        return dflt;
     }
 }
 
 template <typename T>
-auto ToInt64(const T W, int64_t Dflt = 0) noexcept {
+auto ToUInt64(const T value) noexcept {
+    return ToUInt64(value, 0);
+}
+
+template <typename T>
+auto ToInt64(const T value, int64_t dflt) noexcept {
     try {
-        return std::stoll(W);
-    } catch (const std::exception &) {
-        return Dflt;
+        return std::stoll(value);
+    } catch (const std::exception & /*exc*/) {
+        return dflt;
     }
 }
 
 template <typename T>
-auto ToUint(const T W, uint32_t Dflt = 0) noexcept {
+auto ToInt64(const T value) noexcept {
+    return ToInt64(value, 0);
+}
+
+template <typename T>
+auto ToUInt(const T value, uint32_t dflt) noexcept {
     try {
-        return static_cast<uint32_t>(std::stoul(W));
-    } catch (const std::exception &) {
-        return Dflt;
+        return static_cast<uint32_t>(std::stoul(value));
+    } catch (const std::exception & /*exc*/) {
+        return dflt;
     }
 }
+
+template <typename T>
+auto ToUInt(const T value) noexcept {
+    return ToUInt(value, 0);
+}
+}  // namespace
 
 // on check
-int CheckMainService(const std::wstring &What, int Interval) {
-    using namespace std::chrono;
+int CheckMainService(const std::wstring &param, int interval) {
+    auto what = wtools::ToUtf8(param);
 
-    auto what = wtools::ToUtf8(What);
+    if (what == cma::cmdline::kCheckParamMt) {
+        return cma::srv::TestMt();
+    }
 
-    if (what == cma::cmdline::kCheckParamMt) return cma::srv::TestMt();
-    if (what == cma::cmdline::kCheckParamIo) return cma::srv::TestIo();
-    if (what == cma::cmdline::kCheckParamSelf)
-        return cma::srv::TestMainServiceSelf(Interval);
+    if (what == cma::cmdline::kCheckParamIo) {
+        return cma::srv::TestIo();
+    }
+
+    if (what == cma::cmdline::kCheckParamSelf) {
+        return cma::srv::TestMainServiceSelf(interval);
+    }
 
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::setup::ColoredOutputOnStdio(true);
@@ -353,25 +358,16 @@ int CheckMainService(const std::wstring &What, int Interval) {
 
 namespace srv {
 int RunService(std::wstring_view app_name) {
-    // entry from the service engine
-
-    using namespace cma::install;
-    using namespace std::chrono;
-    using namespace cma::cfg;
-
     cma::details::g_is_service = true;  // we know that we are service
 
-    auto ret = cma::srv::ServiceAsService(app_name, 1000ms, [](const void *) {
-        // optional commands listed here
-        // ********
-        // 1. Auto Update when  MSI file is located by specified address
+    auto ret = ServiceAsService(app_name, 1000ms, [](const void * /*nothing*/) {
+        // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
-        // scripting is possible but complicated
-        auto [command, ret] = CheckForUpdateFile(
-            kDefaultMsiFileName,     // file we are looking for
-            GetUpdateDir(),          // dir where file we're searching
-            UpdateProcess::execute,  // start update when file found
-            GetUserInstallDir());    // dir where file to backup
+        auto [command, ret] = cma::install::CheckForUpdateFile(
+            cma::install::kDefaultMsiFileName,     // file we are looking for
+            cma::cfg::GetUpdateDir(),              // dir with file
+            cma::install::UpdateProcess::execute,  // operation if file found
+            cma::cfg::GetUserInstallDir());        // dir where file to backup
 
         if (ret) {
             XLOG::l.i(
@@ -382,7 +378,7 @@ int RunService(std::wstring_view app_name) {
         return true;
     });
 
-    if (ret == 0) ServiceUsage(L"");
+    if (ret == 0) cma::cmdline::ServiceUsage(L"");
 
     return ret == 0 ? 0 : 1;
 }
@@ -390,7 +386,6 @@ int RunService(std::wstring_view app_name) {
 
 namespace {
 void WaitForPostInstall() {
-    using namespace std::chrono_literals;
     if (!cma::install::IsPostInstallRequired()) return;
 
     std::cout << "Finalizing installation, please wait";
@@ -454,7 +449,7 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
 // #TODO Function is over complicated
 // we want to test main function too.
 // so we have main, but callable
-int MainFunction(int argc, wchar_t const *Argv[]) {
+int MainFunction(int argc, wchar_t const *argv[]) {
     std::set_terminate([]() {
         //
         XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");
@@ -463,12 +458,12 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     });
 
     if (argc == 1) {
-        return cma::srv::RunService(Argv[0]);
+        return cma::srv::RunService(argv[0]);
     }
 
     WaitForPostInstall();
 
-    std::wstring param(Argv[1]);
+    std::wstring param(argv[1]);
     if (param == exe::cmdline::kRunOnceParam) {
         // NO READING FROM CONFIG. This is intentional
         //
@@ -476,133 +471,135 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         // -runonce winperf file:a.txt id:12345 timeout:20 238:processor
         std::vector<std::wstring> args;
         for (int i = 2; i < argc; i++) {
-            args.emplace_back(Argv[i]);
+            args.emplace_back(argv[i]);
         }
         return ProcessWinperf(args);
     }
 
     using namespace cma::cmdline;
 
-    cma::OnStartApp();  // path from EXE
+    OnStartApp();  // path from EXE
 
     if (param == wtools::ConvertToUTF16(kInstallParam)) {
-        return cma::srv::InstallMainService();
+        return srv::InstallMainService();
     }
     if (param == wtools::ConvertToUTF16(kRemoveParam)) {
-        return cma::srv::RemoveMainService();
+        return srv::RemoveMainService();
     }
 
     if (param == wtools::ConvertToUTF16(kCheckParam)) {
-        std::wstring param = argc > 2 ? Argv[2] : L"";
-        auto interval = argc > 3 ? ToInt(Argv[3]) : 0;
+        std::wstring param = argc > 2 ? argv[2] : L"";
+        auto interval = argc > 3 ? ToInt(argv[3]) : 0;
         return CheckMainService(param, interval);
     }
 
     if (param == wtools::ConvertToUTF16(kLegacyTestParam)) {
-        return cma::srv::TestLegacy();
+        return srv::TestLegacy();
     }
 
     if (param == wtools::ConvertToUTF16(kRestoreParam)) {
-        return cma::srv::RestoreWATOConfig();
+        return srv::RestoreWATOConfig();
     }
 
     if (param == wtools::ConvertToUTF16(kExecParam) ||
         param == wtools::ConvertToUTF16(kAdhocParam)) {
-        std::wstring second_param = argc > 2 ? Argv[2] : L"";
+        std::wstring second_param = argc > 2 ? argv[2] : L"";
 
-        auto log_on_screen = cma::srv::StdioLog::no;
+        auto log_on_screen = srv::StdioLog::no;
         if (second_param == wtools::ConvertToUTF16(kExecParamShowAll))
-            log_on_screen = cma::srv::StdioLog::extended;
+            log_on_screen = srv::StdioLog::extended;
         else if (second_param == wtools::ConvertToUTF16(kExecParamShowWarn))
-            log_on_screen = cma::srv::StdioLog::yes;
+            log_on_screen = srv::StdioLog::yes;
 
-        return cma::srv::ExecMainService(log_on_screen);
+        return srv::ExecMainService(log_on_screen);
     }
     if (param == wtools::ConvertToUTF16(kRealtimeParam)) {
-        return cma::srv::ExecRealtimeTest(true);
+        return srv::ExecRealtimeTest(true);
     }
     if (param == kSkypeParam) {
-        return cma::srv::ExecSkypeTest();
+        return srv::ExecSkypeTest();
     }
     if (param == wtools::ConvertToUTF16(kResetOhm)) {
-        return cma::srv::ExecResetOhm();
+        return srv::ExecResetOhm();
     }
 
     if (param == wtools::ConvertToUTF16(kStopLegacyParam)) {
-        return cma::srv::ExecStopLegacy();
+        return srv::ExecStopLegacy();
     }
     if (param == wtools::ConvertToUTF16(kStartLegacyParam)) {
-        return cma::srv::ExecStartLegacy();
+        return srv::ExecStartLegacy();
     }
     if (param == wtools::ConvertToUTF16(kCapParam)) {
-        return cma::srv::ExecCap();
+        return srv::ExecCap();
     }
 
     if (param == wtools::ConvertToUTF16(kVersionParam)) {
-        return cma::srv::ExecVersion();
+        return srv::ExecVersion();
     }
 
     if (param == wtools::ConvertToUTF16(kUpdaterParam) ||
         param == wtools::ConvertToUTF16(kCmkUpdaterParam)) {
         std::vector<std::wstring> params;
         for (int k = 2; k < argc; k++) {
-            params.emplace_back(Argv[k]);
+            params.emplace_back(argv[k]);
         }
 
-        return cma::srv::ExecCmkUpdateAgent(params);
+        return srv::ExecCmkUpdateAgent(params);
     }
 
     if (param == wtools::ConvertToUTF16(kPatchHashParam)) {
-        return cma::srv::ExecPatchHash();
+        return srv::ExecPatchHash();
     }
 
     if (param == wtools::ConvertToUTF16(kShowConfigParam)) {
-        std::wstring second_param = argc > 2 ? Argv[2] : L"";
-        return cma::srv::ExecShowConfig(wtools::ToUtf8(second_param));
+        std::wstring second_param = argc > 2 ? argv[2] : L"";
+        return srv::ExecShowConfig(wtools::ToUtf8(second_param));
     }
 
     if (param == wtools::ConvertToUTF16(kUpgradeParam)) {
-        std::wstring second_param = argc > 2 ? Argv[2] : L"";
-        return cma::srv::ExecUpgradeParam(
+        std::wstring second_param = argc > 2 ? argv[2] : L"";
+        return srv::ExecUpgradeParam(
             second_param == wtools::ConvertToUTF16(kUpgradeParamForce));
     }
     // #TODO make a function
     if (param == wtools::ConvertToUTF16(kCvtParam)) {
         if (argc > 2) {
-            auto diag =
-                cma::tools::CheckArgvForValue(argc, Argv, 2, kCvtParamShow)
-                    ? cma::srv::StdioLog::yes
-                    : cma::srv::StdioLog::no;
+            auto diag = tools::CheckArgvForValue(argc, argv, 2, kCvtParamShow)
+                            ? srv::StdioLog::yes
+                            : srv::StdioLog::no;
 
-            auto pos = diag == cma::srv::StdioLog::yes ? 3 : 2;
+            auto pos = diag == srv::StdioLog::yes ? 3 : 2;
             if (argc <= pos) {
                 ServiceUsage(std::wstring(L"inifile is mandatory to call ") +
                              wtools::ConvertToUTF16(kCvtParam) + L"\n");
                 return 2;
             }
 
-            std::wstring ini = argc > pos ? Argv[pos] : L"";
-            std::wstring yml = argc > pos + 1 ? Argv[pos + 1] : L"";
+            std::wstring ini = argc > pos ? argv[pos] : L"";
+            std::wstring yml = argc > pos + 1 ? argv[pos + 1] : L"";
 
-            return cma::srv::ExecCvtIniYaml(ini, yml, diag);
-        } else {
-            ServiceUsage(std::wstring(L"Invalid count of parameters for ") +
-                         wtools::ConvertToUTF16(kCvtParam) + L"\n");
-            return 2;
+            return srv::ExecCvtIniYaml(ini, yml, diag);
         }
+
+        ServiceUsage(std::wstring(L"Invalid count of parameters for ") +
+                     wtools::ConvertToUTF16(kCvtParam) + L"\n");
+        return 2;
     }
 
     if (param == wtools::ConvertToUTF16(kFwParam)) {
-        using namespace cma::srv;
-        using namespace cma::tools;
-        if (argc <= 2) return ExecFirewall(FwMode::show, Argv[0], {});
+        if (argc <= 2) {
+            return srv::ExecFirewall(srv::FwMode::show, argv[0], {});
+        }
 
-        if (CheckArgvForValue(argc, Argv, 2, kFwConfigureParam))
-            return ExecFirewall(FwMode::configure, Argv[0],
-                                kAppFirewallRuleName);
+        if (tools::CheckArgvForValue(argc, argv, 2, kFwConfigureParam)) {
+            return srv::ExecFirewall(srv::FwMode::configure, argv[0],
+                                     srv::kAppFirewallRuleName);
+        }
 
-        if (CheckArgvForValue(argc, Argv, 2, kFwClearParam))
-            return ExecFirewall(FwMode::clear, Argv[0], kAppFirewallRuleName);
+        if (tools::CheckArgvForValue(argc, argv, 2, kFwClearParam)) {
+            return srv::ExecFirewall(srv::FwMode::clear, argv[0],
+                                     srv::kAppFirewallRuleName);
+        }
 
         ServiceUsage(std::wstring(L"Invalid parameter for ") +
                      wtools::ConvertToUTF16(kFwParam) + L"\n");
@@ -610,34 +607,33 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     }
 
     if (param == wtools::ConvertToUTF16(kSectionParam) && argc > 2) {
-        std::wstring section = Argv[2];
-        int delay = argc > 3 ? ToInt(Argv[3]) : 0;
-        auto diag =
-            cma::tools::CheckArgvForValue(argc, Argv, 4, kSectionParamShow)
-                ? cma::srv::StdioLog::yes
-                : cma::srv::StdioLog::no;
-        return cma::srv::ExecSection(section, delay, diag);
+        std::wstring section = argv[2];
+        int delay = argc > 3 ? ToInt(argv[3]) : 0;
+        auto diag = tools::CheckArgvForValue(argc, argv, 4, kSectionParamShow)
+                        ? srv::StdioLog::yes
+                        : srv::StdioLog::no;
+        return srv::ExecSection(section, delay, diag);
     }
 
     if (param == wtools::ConvertToUTF16(kCapExtractParam) && argc > 3) {
-        std::wstring file = Argv[2];
-        std::wstring to = Argv[3];
-        return cma::srv::ExecExtractCap(file, to);
+        std::wstring file = argv[2];
+        std::wstring to = argv[3];
+        return srv::ExecExtractCap(file, to);
     }
 
     if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
-        cma::srv::ExecReloadConfig();
+        srv::ExecReloadConfig();
         return 0;
     }
 
     if (param == wtools::ConvertToUTF16(kUninstallAlert)) {
         XLOG::l.i("UNINSTALL ALERT");
-        cma::srv::ExecUninstallAlert();
+        srv::ExecUninstallAlert();
         return 0;
     }
 
     if (param == wtools::ConvertToUTF16(kRemoveLegacyParam)) {
-        cma::srv::ExecRemoveLegacyAgent();
+        srv::ExecRemoveLegacyAgent();
         return 0;
     }
 
@@ -655,8 +651,8 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 }  // namespace cma
 
 #if !defined(CMK_TEST)
-// This is our main. PLEASE, do not add code here
-int wmain(int argc, wchar_t const *Argv[]) {
-    return cma::MainFunction(argc, Argv);
+// This is our main: do not add code here
+int wmain(int argc, wchar_t const *argv[]) {
+    return cma::MainFunction(argc, argv);
 }
 #endif

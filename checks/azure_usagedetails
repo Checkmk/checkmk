@@ -9,29 +9,32 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['levels_azure_usagedetails'] = {}
+
+factory_settings["levels_azure_usagedetails"] = {}
 
 
 def parse_azure_usagedetails(info):
     parsed = {}
     for detail in list(parse_azure(info).values()):
-        props = detail['properties']
-        service_name = props['consumedService']
+        props = detail["properties"]
+        service_name = props["consumedService"]
         data = parsed.setdefault(
-            service_name, {
-                'costs': collections.Counter(),
-                'usage': 0.0,
-                'subscription_name': props["subscriptionName"],
-            })
-        data['costs'].update({props['currency']: props['pretaxCost']})
-        data['usage'] += props['usageQuantity']
+            service_name,
+            {
+                "costs": collections.Counter(),
+                "usage": 0.0,
+                "subscription_name": props["subscriptionName"],
+            },
+        )
+        data["costs"].update({props["currency"]: props["pretaxCost"]})
+        data["usage"] += props["usageQuantity"]
 
     if parsed:
-        parsed[u"Summary"] = {
-            'costs': sum((d['costs'] for d in list(parsed.values())), collections.Counter()),
-            'usage': sum(d['usage'] for d in list(parsed.values())),
+        parsed["Summary"] = {
+            "costs": sum((d["costs"] for d in list(parsed.values())), collections.Counter()),
+            "usage": sum(d["usage"] for d in list(parsed.values())),
             # use any subscription_name, they're all the same
-            'subscription_name': list(parsed.values())[0]["subscription_name"],
+            "subscription_name": list(parsed.values())[0]["subscription_name"],
         }
 
     return parsed
@@ -40,19 +43,19 @@ def parse_azure_usagedetails(info):
 @get_data_or_go_stale
 def check_azure_usagedetails(_no_item, params, data):
 
-    for currency, amount in list(data.get('costs', {}).items()):
-        levels = params.get('levels')
-        yield check_levels(amount, 'service_costs_%s' % currency.lower(), levels, currency)
+    for currency, amount in list(data.get("costs", {}).items()):
+        levels = params.get("levels")
+        yield check_levels(amount, "service_costs_%s" % currency.lower(), levels, currency)
 
     yield 0, "Subscription: %s" % data["subscription_name"]
 
 
-check_info['azure_usagedetails'] = {
-    'parse_function': parse_azure_usagedetails,
-    'inventory_function': discover(),
-    'check_function': check_azure_usagedetails,
-    'service_description': "Costs %s",
-    'default_levels_variable': 'levels_azure_usagedetails',
-    'group': 'azure_usagedetails',
-    'has_perfdata': True,
+check_info["azure_usagedetails"] = {
+    "parse_function": parse_azure_usagedetails,
+    "inventory_function": discover(),
+    "check_function": check_azure_usagedetails,
+    "service_description": "Costs %s",
+    "default_levels_variable": "levels_azure_usagedetails",
+    "group": "azure_usagedetails",
+    "has_perfdata": True,
 }

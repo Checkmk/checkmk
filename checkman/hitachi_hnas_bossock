@@ -11,7 +11,7 @@ description:
  The checks gets WARN or CRIT depending on the warning and critical levels
  for the number of fibers.
 
-inventory:
+discovery:
  One service is created for each cluster node in the HNAS system.
 
 item:

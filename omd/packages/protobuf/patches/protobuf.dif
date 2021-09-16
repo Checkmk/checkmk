@@ -1,0 +1,10 @@
+--- protobuf-3.17.3/src/google/protobuf/arena.h	2021-08-03 13:38:44.002676110 +0200
++++ protobuf-3.17.3/src/google/protobuf/arena.h	2021-08-03 13:40:26.290921603 +0200
+@@ -442,7 +442,7 @@
+     }
+
+     static Arena* GetArenaForAllocationForNonMessageNonArenaConstructible(
+-        const T* p, std::false_type /*has_get_arena*/) {
++        const T* /* p */, std::false_type /*has_get_arena*/) {
+       return nullptr;
+     } 

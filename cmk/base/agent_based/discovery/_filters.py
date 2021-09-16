@@ -4,15 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Pattern,
-)
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Pattern
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import HostName
@@ -39,11 +31,11 @@ class ServiceFilters(NamedTuple):
     vanished: _ServiceFilter
 
     @classmethod
-    def accept_all(cls) -> 'ServiceFilters':
+    def accept_all(cls) -> "ServiceFilters":
         return cls(_accept_all_services, _accept_all_services)
 
     @classmethod
-    def from_settings(cls, rediscovery_parameters: Dict[str, Any]) -> 'ServiceFilters':
+    def from_settings(cls, rediscovery_parameters: Dict[str, Any]) -> "ServiceFilters":
         service_filter_lists = _get_service_filter_lists(rediscovery_parameters)
 
         new_services_filter = _get_service_filter_func(
@@ -132,14 +124,19 @@ def _get_service_filter_func(
 
     whitelist = (
         regex("|".join(f"({p})" for p in service_whitelist))  #
-        if service_whitelist else _MATCH_EVERYTHING)
+        if service_whitelist
+        else _MATCH_EVERYTHING
+    )
 
     blacklist = (
         regex("|".join(f"({p})" for p in service_blacklist))  #
-        if service_blacklist else _MATCH_NOTHING)
+        if service_blacklist
+        else _MATCH_NOTHING
+    )
 
-    return lambda host_name, service: _filter_service_by_patterns(host_name, service, whitelist,
-                                                                  blacklist)
+    return lambda host_name, service: _filter_service_by_patterns(
+        host_name, service, whitelist, blacklist
+    )
 
 
 def _filter_service_by_patterns(
@@ -148,7 +145,7 @@ def _filter_service_by_patterns(
     whitelist: Pattern[str],
     blacklist: Pattern[str],
 ) -> bool:
-    #TODO Call sites: Why do we not use discovered_service.description;
+    # TODO Call sites: Why do we not use discovered_service.description;
     # Is discovered_service.description already finalized as
     # in config.service_description?
     # (mo): we should indeed make sure that is the case, and use it

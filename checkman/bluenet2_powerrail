@@ -11,7 +11,7 @@ description:
  The device sends the state itsself.
  There are no default levels set.
 
-inventory:
+discovery:
  One service is created for each phase.
 
 item:

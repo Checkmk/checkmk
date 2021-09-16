@@ -17,6 +17,6 @@ description:
 item:
  The name of the slot as given by drsServerSlotNumber
 
-inventory:
+discovery:
  One service is created for each slot if the state is not "absent".
 

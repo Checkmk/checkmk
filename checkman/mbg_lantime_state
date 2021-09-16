@@ -16,6 +16,6 @@ description:
  configured. The refclock offset can either be a positive or negative integer.
 
 
-inventory:
+discovery:
  One service is created for each device.
 

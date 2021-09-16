@@ -7,13 +7,12 @@
 
 #include <algorithm>
 #include <chrono>
-#include <cstdint>
-#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -24,21 +23,20 @@
 #include "BlobColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
-#include "CommentColumn.h"
+#include "CommentRenderer.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
 #include "DoubleColumn.h"
-#include "DowntimeColumn.h"
+#include "DowntimeRenderer.h"
 #include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
-#include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
-#include "LogwatchListColumn.h"
+#include "LogwatchList.h"
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
@@ -515,29 +513,58 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host, DowntimeData>>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host", offsets,
-        mc, false, DowntimeColumn::info::none));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
+        [mc](const host &hst) {
+            return mc->downtimes(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
+    table->addColumn(std::make_unique<ListColumn::Callback<host, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        offsets, mc, false, DowntimeColumn::info::medium));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
+        [mc](const host &hst) {
+            return mc->downtimes(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
+    table->addColumn(std::make_unique<ListColumn::Callback<host, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, mc, false, DowntimeColumn::info::full));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
+        [mc](const host &hst) {
+            return mc->downtimes(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
+    table->addColumn(std::make_unique<ListColumn::Callback<host, CommentData>>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        offsets, mc, false, false, false));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
+        [mc](const host &hst) {
+            return mc->comments(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
+    table->addColumn(std::make_unique<ListColumn::Callback<host, CommentData>>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        offsets, mc, false, true, false));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
+        [mc](const host &hst) {
+            return mc->comments(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
+    table->addColumn(std::make_unique<ListColumn::Callback<host, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, mc, false, true, true));
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
+        [mc](const host &hst) {
+            return mc->comments(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
@@ -601,13 +628,15 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }), mc,
-        false));
+        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }),
+        HostListRenderer{HostListRenderer::verbosity::none}));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct children of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }), mc,
-        false));
-    table->addDynamicColumn(std::make_unique<DynamicRRDColumn<RRDColumn<host>>>(
+        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }),
+        HostListRenderer{HostListRenderer::verbosity::none}));
+    table->addDynamicColumn(std::make_unique<
+                            DynamicRRDColumn<ListColumn::Callback<
+                                host, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         mc, offsets));
@@ -703,12 +732,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [mc](const host &hst) {
             return pnpgraph_present(mc, hst.name, dummy_service_description());
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
         offsets, [mc](const host &hst) {
-            return static_cast<int32_t>(
-                mk_inventory_last(mc->mkInventoryPath() / hst.name));
+            return mk_inventory_last(mc->mkInventoryPath() / hst.name);
         }));
 
     table->addColumn(std::make_unique<BlobColumn::Callback<host>::File>(
@@ -728,10 +756,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         offsets, [mc]() { return mc->structuredStatusPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
-    table->addColumn(std::make_unique<LogwatchListColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
-        mc));
+        [mc](const host &hst, const Column &col) {
+            auto dir =
+                mc->mkLogwatchPath().empty() || std::string{hst.name}.empty()
+                    ? std::filesystem::path()
+                    : std::filesystem::path(mc->mkLogwatchPath()) /
+                          pnp_cleanup(hst.name);
+            return getLogwatchList(dir, col);
+        }));
 
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<host>>(
         prefix + "mk_logwatch_file",
@@ -744,15 +779,27 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DoubleColumn::Callback<host>>(
         prefix + "staleness", "Staleness indicator for this host", offsets,
         [](const host &hst) {
-            return static_cast<double>(time(nullptr) - hst.last_check) /
+            auto now = std::chrono::system_clock::to_time_t(
+                std::chrono::system_clock::now());
+            return static_cast<double>(now - hst.last_check) /
                    ((hst.check_interval == 0 ? 1 : hst.check_interval) *
                     interval_length);
         }));
 
-    table->addColumn(std::make_unique<HostGroupsColumn>(
-        prefix + "groups", "A list of all host groups this host is in",
-        offsets.add([](Row r) { return &r.rawData<host>()->hostgroups_ptr; }),
-        mc));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+        prefix + "groups", "A list of all host groups this host is in", offsets,
+        [mc](const host &hst, const contact *auth_user) {
+            std::vector<std::string> group_names;
+            for (objectlist *list = hst.hostgroups_ptr; list != nullptr;
+                 list = list->next) {
+                auto *hg = static_cast<hostgroup *>(list->object_ptr);
+                if (is_authorized_for_host_group(mc->groupAuthorization(), hg,
+                                                 auth_user)) {
+                    group_names.emplace_back(hg->group_name);
+                }
+            }
+            return group_names;
+        }));
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in", offsets,
@@ -767,19 +814,23 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",
-        offsets_services, mc, 0));
+        offsets_services,
+        ServiceListRenderer{ServiceListRenderer::verbosity::none}, mc));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        offsets_services, mc, 1));
+        offsets_services,
+        ServiceListRenderer{ServiceListRenderer::verbosity::low}, mc));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        offsets_services, mc, 2));
+        offsets_services,
+        ServiceListRenderer{ServiceListRenderer::verbosity::medium}, mc));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        offsets_services, mc, 3));
+        offsets_services,
+        ServiceListRenderer{ServiceListRenderer::verbosity::full}, mc));
 
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "metrics",
@@ -825,8 +876,7 @@ void TableHosts::answerQuery(Query *query) {
     }
 }
 bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for(core()->serviceAuthorization(), ctc,
-                             rowData<host>(row), nullptr);
+    return is_authorized_for_hst(ctc, rowData<host>(row));
 }
 
 Row TableHosts::get(const std::string &primary_key) const {

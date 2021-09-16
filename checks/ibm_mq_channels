@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<ibm_mq_channels:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
 # 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -56,7 +57,7 @@ def parse_ibm_mq_channels(info):
 
 def inventory_ibm_mq_channels(parsed):
     for service_name in parsed:
-        if ':' not in service_name:
+        if ":" not in service_name:
             # Do not show queue manager entry in inventory
             continue
         yield service_name, {}

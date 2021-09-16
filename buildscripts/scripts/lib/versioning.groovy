@@ -19,6 +19,12 @@ def REPO_PATCH_RULES = [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
+"free": [\
+    "folders_to_be_removed": [\
+        "managed", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
 "managed": [\
     "folders_to_be_removed": [],\
     "folders_to_be_created": []] \
@@ -118,12 +124,20 @@ def patch_themes(EDITION) {
                 """
             }
             break
+        case 'free':
+            // Workaround since scss does not support conditional includes
+            THEME_LIST.each { THEME ->
+                sh """
+                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                """
+            }
+            break
     }
 }
 
-def patch_demo(DEMO) {
-    if (DEMO == 'yes') {
-        sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'" .demo/" defines.make'''
+def patch_demo(EDITION) {
+    if (EDITION == 'free') {
+        sh '''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make'''
         sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
         sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{TrialManager.h,test/test_TrialManager.cc}'''
         sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' livestatus/src/TableStatus.cc'''
@@ -134,11 +148,26 @@ def set_version(CMK_VERS) {
     sh "make NEW_VERSION=${CMK_VERS} setversion"
 }
 
-def patch_git_after_checkout(EDITION, DEMO, CMK_VERS) {
+def patch_git_after_checkout(EDITION, CMK_VERS) {
     patch_folders(EDITION)
     patch_themes(EDITION)
-    patch_demo(DEMO)
+    patch_demo(EDITION)
     set_version(CMK_VERS)
+}
+
+def delete_non_cre_files() {
+    non_cre_paths = [
+        "enterprise",
+        "managed",
+        "check_mk_enterprise",
+        "check_mk_managed",
+        "cee",
+        "cme",
+        "cee.py",
+        "cme.py"
+    ]
+    find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
+    sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""
 }
 
 return this

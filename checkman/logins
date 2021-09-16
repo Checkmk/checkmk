@@ -9,6 +9,6 @@ description:
  are set to {20} and {30}.
  For this check to work the "mk_logins" plugin needs to be installed.
 
-inventory:
+discovery:
  One service is created.
 

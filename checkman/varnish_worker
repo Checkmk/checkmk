@@ -10,5 +10,5 @@ description:
  There are no default levels. Upper levels can be set for
  "dropped work requests", "worker threads not created" and "queued work requests".
 
-inventory:
+discovery:
  One service is created.

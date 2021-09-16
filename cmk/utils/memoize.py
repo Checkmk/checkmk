@@ -7,7 +7,7 @@
 It provides a decorator that can be used to cache function results based on the
 given function arguments."""
 
-from typing import Type, Union, Callable, Tuple, Dict, Set, Any
+from typing import Any, Callable, Dict, Set, Tuple, Type, Union
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
@@ -17,12 +17,14 @@ from typing import Type, Union, Callable, Tuple, Dict, Set, Any
 # Algorithm borrowed from Python 3 functools
 # + Add support for "list" args
 # pylint: disable=dangerous-default-value
-def _make_key(args: Tuple,
-              kwds: Dict,
-              kwd_mark: Tuple = (object(),),
-              fasttypes: Set[Type] = {int, str},
-              type: Callable = type,
-              len: Callable = len) -> 'Union[int, str, _HashedSeq]':
+def _make_key(
+    args: Tuple,
+    kwds: Dict,
+    kwd_mark: Tuple = (object(),),
+    fasttypes: Set[Type] = {int, str},
+    type: Callable = type,
+    len: Callable = len,
+) -> "Union[int, str, _HashedSeq]":
     """Make a cache key from optionally typed positional and keyword arguments
     The key is constructed in a way that is flat as possible rather than
     as a nested structure that would take more memory.
@@ -46,20 +48,20 @@ def _make_key(args: Tuple,
 
 
 class _HashedSeq(list):
-    """ This class guarantees that hash() will be called no more than once
-        per element.  This is important because the lru_cache() will hash
-        the key multiple times on a cache miss.
+    """This class guarantees that hash() will be called no more than once
+    per element.  This is important because the lru_cache() will hash
+    the key multiple times on a cache miss.
     """
 
-    __slots__ = ['hashvalue']
+    __slots__ = ["hashvalue"]
 
     def __init__(self, tup, hash=hash):
-        super(_HashedSeq, self).__init__()
+        super().__init__()
         self[:] = tup
         self.hashvalue = hash(tup)
 
     def __hash__(self):
-        #FIXME Removed type declaration 'type: () -> int'
+        # FIXME Removed type declaration 'type: () -> int'
         return self.hashvalue
 
 
@@ -67,12 +69,12 @@ class _HashedSeq(list):
 class MemoizeCache:
     """Simple unbound in memory cache
 
-This decorator can be used to remember the results of single functions. These
-are cached in the function context and referenced using the function arguments.
-Examples:
-  @cmk.utils.memoize.MemoizeCache
+    This decorator can be used to remember the results of single functions. These
+    are cached in the function context and referenced using the function arguments.
+    Examples:
+      @cmk.utils.memoize.MemoizeCache
+    """
 
-"""
     __slots__ = ["_cache", "mem_func"]
 
     def __init__(self, function: Callable) -> None:

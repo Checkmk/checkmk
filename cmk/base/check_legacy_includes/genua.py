@@ -8,6 +8,8 @@
 
 
 def scan_genua(oid):
-    return ("genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "genubox" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-            "genucrypt" in oid(".1.3.6.1.2.1.1.1.0").lower())
+    return (
+        "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower()
+        or "genubox" in oid(".1.3.6.1.2.1.1.1.0").lower()
+        or "genucrypt" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    )

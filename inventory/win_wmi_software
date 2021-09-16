@@ -36,7 +36,7 @@ def inv_win_wmi_software(info):
         entry = {
             "name": pacname,
             "version": version,
-            "vendor": vendor.replace('\x00', ''),  # Can happen, reason unclear
+            "vendor": vendor.replace("\x00", ""),  # Can happen, reason unclear
             "install_date": install_date,
             "language": language,
             "package_type": "wmi",
@@ -44,9 +44,9 @@ def inv_win_wmi_software(info):
         parsed_packages.append(entry)
 
     paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name")))
 
 
-inv_info['win_wmi_software'] = {
+inv_info["win_wmi_software"] = {
     "inv_function": inv_win_wmi_software,
 }

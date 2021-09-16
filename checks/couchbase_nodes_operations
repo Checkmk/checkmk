@@ -16,7 +16,7 @@ def parse_couchbase_nodes_operations(info):
     for line in info:
         if len(line) < 2:
             continue
-        raw_value, node = line[0], ' '.join(line[1:])
+        raw_value, node = line[0], " ".join(line[1:])
         try:
             parsed[node] = float(raw_value)
         except ValueError:
@@ -32,22 +32,22 @@ def parse_couchbase_nodes_operations(info):
 def check_couchbase_nodes_operations(item, params, parsed):
     if item not in parsed or (not parsed[item] and parsed[item] != 0):
         return None
-    return check_levels(parsed[item], 'op_s', params.get('ops'), unit="/s")
+    return check_levels(parsed[item], "op_s", params.get("ops"), unit="/s")
 
 
-check_info['couchbase_nodes_operations'] = {
-    'parse_function': parse_couchbase_nodes_operations,
-    'inventory_function': discover(lambda k, _v: k is not None),
-    'check_function': check_couchbase_nodes_operations,
-    'service_description': 'Couchbase %s Operations',
-    'group': 'couchbase_ops',
-    'has_perfdata': True,
+check_info["couchbase_nodes_operations"] = {
+    "parse_function": parse_couchbase_nodes_operations,
+    "inventory_function": discover(lambda k, _v: k is not None),
+    "check_function": check_couchbase_nodes_operations,
+    "service_description": "Couchbase %s Operations",
+    "group": "couchbase_ops",
+    "has_perfdata": True,
 }
 
-check_info['couchbase_nodes_operations.total'] = {
-    'inventory_function': discover(lambda k, _v: k is None),
-    'check_function': check_couchbase_nodes_operations,
-    'service_description': 'Couchbase Total Operations',
-    'group': 'couchbase_ops_nodes',
-    'has_perfdata': True
+check_info["couchbase_nodes_operations.total"] = {
+    "inventory_function": discover(lambda k, _v: k is None),
+    "check_function": check_couchbase_nodes_operations,
+    "service_description": "Couchbase Total Operations",
+    "group": "couchbase_ops_nodes",
+    "has_perfdata": True,
 }

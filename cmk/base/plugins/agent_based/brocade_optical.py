@@ -4,18 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict, Union
+
 from .agent_based_api.v1 import (
+    get_value_store,
     Metric,
     OIDEnd,
     register,
@@ -23,13 +15,10 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     startswith,
-    State as state,
-    type_defs,
 )
-from .utils import (
-    interfaces,
-    temperature,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
+from .utils import interfaces, temperature
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal
@@ -97,15 +86,15 @@ from .utils import (
 # .1.3.6.1.4.1.1991.1.1.3.3.10.1.4.65.4  -021.8045 dBm: Low-Alarm
 
 OPER_STATUS_MAP = {
-    '1': 'up',
-    '2': 'down',
-    '3': 'testing',
-    '4': 'unknown',
-    '5': 'dormant',
-    '6': 'not present',
-    '7': 'lower layer down',
-    '8': 'degraded',
-    '9': 'admin down',
+    "1": "up",
+    "2": "down",
+    "3": "testing",
+    "4": "unknown",
+    "5": "dormant",
+    "6": "not present",
+    "7": "lower layer down",
+    "8": "degraded",
+    "9": "admin down",
 }
 
 ValueAndStatus = Union[Tuple[float, str], Tuple[None, None]]
@@ -129,7 +118,7 @@ Section = Dict[str, Port]
 
 
 def _parse_value(value_string: str) -> ValueAndStatus:
-    if value_string == 'N/A' or value_string.lower() == "not supported":
+    if value_string == "N/A" or value_string.lower() == "not supported":
         return None, None
     try:
         val, _unit, status = value_string.split()
@@ -198,35 +187,35 @@ def parse_brocade_optical(string_table: List[type_defs.StringTable]) -> Section:
 
     for temp, tx_light, rx_light, if_id in if_data:
         parsed.setdefault(
-            if_id, {
-                'temp': _parse_value(temp),
-                'tx_light': _parse_value(tx_light),
-                'rx_light': _parse_value(rx_light),
-            })
+            if_id,
+            {
+                "temp": _parse_value(temp),
+                "tx_light": _parse_value(tx_light),
+                "rx_light": _parse_value(rx_light),
+            },
+        )
 
     for if_id, if_descr, if_type, if_operstatus in if_info:
         if if_id in parsed:
-            parsed[if_id].update({
-                'port_type': if_type,
-                'description': if_descr,
-                'operational_status': if_operstatus
-            })
+            parsed[if_id].update(
+                {"port_type": if_type, "description": if_descr, "operational_status": if_operstatus}
+            )
 
     # add informational values
     for media_type, part, serial, if_id in if_ids:
         if if_id in parsed:
-            parsed[if_id].update({'type': media_type, 'part': part, 'serial': serial})
+            parsed[if_id].update({"type": media_type, "part": part, "serial": serial})
 
     # add per-lane data
     for temp, tx_light, rx_light, lane in lanes:
-        if_id, lane = lane.split('.')
+        if_id, lane = lane.split(".")
         if if_id in parsed:
-            parsed[if_id].setdefault('lanes', {}).setdefault(
+            parsed[if_id].setdefault("lanes", {}).setdefault(
                 int(lane),
                 {
-                    'temp': _parse_value(temp),
-                    'tx_light': _parse_value(tx_light),
-                    'rx_light': _parse_value(rx_light),
+                    "temp": _parse_value(temp),
+                    "tx_light": _parse_value(tx_light),
+                    "rx_light": _parse_value(rx_light),
                 },
             )
     return parsed
@@ -281,14 +270,16 @@ def _check_matching_conditions(
     port: Port,
     matching_conditions: interfaces.MatchingConditions,
 ) -> bool:
-    port_types = matching_conditions.get('porttypes')
-    port_states = matching_conditions.get('portstates')
-    return ((port_types is None or port['port_type'] in port_types) and
-            (port_states is None or port['operational_status'] in port_states) and
-            interfaces.check_regex_match_conditions(
-                port['description'],
-                matching_conditions.get('match_desc'),
-            ))
+    port_types = matching_conditions.get("porttypes")
+    port_states = matching_conditions.get("portstates")
+    return (
+        (port_types is None or port["port_type"] in port_types)
+        and (port_states is None or port["operational_status"] in port_states)
+        and interfaces.check_regex_match_conditions(
+            port["description"],
+            matching_conditions.get("match_desc"),
+        )
+    )
 
 
 def discover_brocade_optical(
@@ -304,11 +295,11 @@ def discover_brocade_optical(
         # find the most specific rule which applies to this interface and which has single-interface
         # discovery settings
         for rule in params:
-            if 'discovery_single' in rule and _check_matching_conditions(
-                    entry,
-                    rule['matching_conditions'][1],
+            if "discovery_single" in rule and _check_matching_conditions(
+                entry,
+                rule["matching_conditions"][1],
             ):
-                if rule['discovery_single'][0]:
+                if rule["discovery_single"][0]:
                     # if pad_width == 0 then "0" * -X == ""
                     yield Service(item="0" * (pad_width - len(key)) + key)
                 break
@@ -353,9 +344,10 @@ def _check_light(
         return
     txt = _infotext(
         reading,
-        "%s Light%s" % (
-            metric_name.split('_')[0].upper(),
-            lane_num is not None and ' (Lane %d)' % lane_num or '',
+        "%s Light%s"
+        % (
+            metric_name.split("_")[0].upper(),
+            lane_num is not None and " (Lane %d)" % lane_num or "",
         ),
         "dBm",
     )
@@ -371,7 +363,7 @@ def _check_light(
             notice=txt,
         )
     yield Metric(
-        metric_name + (lane_num is not None and '_%d' % lane_num or ''),
+        metric_name + (lane_num is not None and "_%d" % lane_num or ""),
         reading[0],  # type: ignore[arg-type]
     )
 
@@ -381,85 +373,32 @@ def check_brocade_optical(
     params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
-    """
-    >>> from pprint import pprint
-    >>> for output in check_brocade_optical(
-    ...     '001410',
-    ...     {},
-    ...     {'1410': {'description': '10GigabitEthernet23/2',
-    ...               'operational_status': '2',
-    ...               'part': '57-0000076-01',
-    ...               'port_type': '6',
-    ...               'rx_light': (-36.9897, 'Low-Alarm'),
-    ...               'serial': 'ADF2094300014UN',
-    ...               'temp': (31.4882, 'Normal'),
-    ...               'tx_light': (-1.4508, 'Normal'),
-    ...               'type': '10GE LR 10km SFP+'}}
-    ... ):
-    ...     pprint(output)
-    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down')
-    Metric('temp', 31.4882)
-    Result(state=<State.OK: 0>, summary='Temperature: 31.5°C')
-    Result(state=<State.OK: 0>, notice='Configuration: prefer user levels over device levels (no levels found)')
-    Result(state=<State.OK: 0>, summary='TX Light -1.5 dBm (Normal)')
-    Metric('tx_light', -1.4508)
-    Result(state=<State.OK: 0>, summary='RX Light -37.0 dBm (Low-Alarm)')
-    Metric('rx_light', -36.9897)
-    >>> for output in check_brocade_optical(
-    ...     '1409',
-    ...     {'rx_light': True, 'tx_light': True, 'lanes': True},
-    ...     {'1409': {'description': '10GigabitEthernet23/1',
-    ...               'lanes': {1: {'rx_light': (-2.2504, 'Normal'),
-    ...                             'temp': (31.4531, 'Normal'),
-    ...                             'tx_light': (-1.6045, 'Normal')}},
-    ...               'operational_status': '1',
-    ...               'part': '57-0000076-01',
-    ...               'port_type': '6',
-    ...               'rx_light': (-2.2504, 'Normal'),
-    ...               'serial': 'ADF2094300014TL',
-    ...               'temp': (None, None),
-    ...               'tx_light': (-1.6045, 'Normal'),
-    ...               'type': '10GE LR 10km SFP+'}}
-    ... ):
-    ...     pprint(output)
-    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up')
-    Result(state=<State.OK: 0>, summary='TX Light -1.6 dBm (Normal)')
-    Metric('tx_light', -1.6045)
-    Result(state=<State.OK: 0>, summary='RX Light -2.3 dBm (Normal)')
-    Metric('rx_light', -2.2504)
-    Result(state=<State.OK: 0>, notice='Temperature (Lane 1) Temperature: 31.5°C')
-    Metric('port_temp_1', 31.4531)
-    Result(state=<State.OK: 0>, notice='TX Light (Lane 1) -1.6 dBm (Normal)')
-    Metric('tx_light_1', -1.6045)
-    Result(state=<State.OK: 0>, notice='RX Light (Lane 1) -2.3 dBm (Normal)')
-    Metric('rx_light_1', -2.2504)
-    """
-    item = item.lstrip('0')
+    item = item.lstrip("0")
     if item not in section:
         return
     iface = section[item]
 
     add_info = []
-    if 'serial' in iface:
-        add_info.append('S/N %s' % iface['serial'])
-    if 'part' in iface:
-        add_info.append('P/N %s' % iface['part'])
+    if "serial" in iface:
+        add_info.append("S/N %s" % iface["serial"])
+    if "part" in iface:
+        add_info.append("P/N %s" % iface["part"])
 
-    oper_status = iface['operational_status']
-    oper_status_readable = OPER_STATUS_MAP.get(oper_status, 'unknown[%s]' % oper_status)
+    oper_status = iface["operational_status"]
+    oper_status_readable = OPER_STATUS_MAP.get(oper_status, "unknown[%s]" % oper_status)
     if add_info:
         yield Result(
             state=state.OK,
-            summary='[%s] Operational %s' % (", ".join(add_info), oper_status_readable),
+            summary="[%s] Operational %s" % (", ".join(add_info), oper_status_readable),
         )
     else:
         yield Result(
             state=state.OK,
-            summary='Operational %s' % oper_status_readable,
+            summary="Operational %s" % oper_status_readable,
         )
 
     try:
-        temp = iface['temp'][0]
+        temp = iface["temp"][0]
     except KeyError:
         temp = None
     if temp is not None:
@@ -467,48 +406,53 @@ def check_brocade_optical(
             temp,
             None,
             unique_name="brocade_optical_%s" % item,
-            dev_status=_monitoring_state(iface['temp'], params.get('temp', False)),
+            value_store=get_value_store(),
+            dev_status=_monitoring_state(iface["temp"], params.get("temp", False)),
         )
     yield from _check_light(
-        iface['tx_light'],
-        'tx_light',
+        iface["tx_light"],
+        "tx_light",
         params,
     )
     yield from _check_light(
-        iface['rx_light'],
-        'rx_light',
+        iface["rx_light"],
+        "rx_light",
         params,
     )
 
-    if 'lanes' in iface and params.get('lanes'):
-        for num, lane in iface['lanes'].items():
-            temp = lane['temp'][0]
+    if "lanes" in iface and params.get("lanes"):
+        for num, lane in iface["lanes"].items():
+            temp = lane["temp"][0]
             assert temp is not None
             lane_temp_output = list(
                 temperature.check_temperature(
                     temp,
                     None,
                     unique_name="brocade_optical_lane%d_%s" % (num, item),
-                    dev_status=_monitoring_state(lane['temp'], params.get('temp', False)),
-                ))
+                    value_store=get_value_store(),
+                    dev_status=_monitoring_state(lane["temp"], params.get("temp", False)),
+                )
+            )
             lane_temp_result = [res for res in lane_temp_output if isinstance(res, Result)][0]
             lane_temp_metric = [res for res in lane_temp_output if isinstance(res, Metric)][0]
-            yield Result(state=lane_temp_result.state,
-                         notice="Temperature (Lane %d) %s" % (num, lane_temp_result.summary))
+            yield Result(
+                state=lane_temp_result.state,
+                notice="Temperature (Lane %d) %s" % (num, lane_temp_result.summary),
+            )
             yield Metric(
                 "port_%s_%d" % (lane_temp_metric.name, num),
                 lane_temp_metric.value,
             )
 
             yield from _check_light(
-                lane['tx_light'],
-                'tx_light',
+                lane["tx_light"],
+                "tx_light",
                 params,
                 lane_num=num,
             )
             yield from _check_light(
-                lane['rx_light'],
-                'rx_light',
+                lane["rx_light"],
+                "rx_light",
                 params,
                 lane_num=num,
             )

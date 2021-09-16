@@ -342,7 +342,7 @@ def _complete_raw_context_with_notification_vars(raw_context: EventContext) -> N
 
 # Here we decide which notification implementation we are using.
 # Hopefully we can drop a couple of them some day
-# 1. Rule Based Notifiations  (since 1.2.5i1)
+# 1. Rule Based Notifications  (since 1.2.5i1)
 # 2. Flexible Notifications   (since 1.2.2)
 # 3. Plain email notification (refer to git log if you are really interested)
 def locally_deliver_raw_context(

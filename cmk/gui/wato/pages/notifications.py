@@ -606,7 +606,7 @@ class ModeNotifications(ABCNotificationsMode):
             if transactions.check_transaction():
                 nr = request.get_integer_input_mandatory("_replay")
                 watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
-                flash(_("Replayed notifiation number %d") % (nr + 1))
+                flash(_("Replayed notification number %d") % (nr + 1))
                 return None
 
         else:

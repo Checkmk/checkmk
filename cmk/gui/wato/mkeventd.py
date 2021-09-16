@@ -4998,7 +4998,7 @@ rulespec_registry.register(
 #   +----------------------------------------------------------------------+
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
-def mkeventd_update_notifiation_configuration(hosts):
+def mkeventd_update_notification_configuration(hosts):
     contactgroup = config.mkeventd_notify_contactgroup
     remote_console = config.mkeventd_notify_remotehost
 
@@ -5046,7 +5046,7 @@ define command {
         )
 
 
-hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_configuration)
+hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
 
 #   .--Setup search--------------------------------------------------------.
 #   |     ____       _                                         _           |

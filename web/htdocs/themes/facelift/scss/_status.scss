@@ -77,6 +77,10 @@ td.hstate span.state_rounded_fill {
   }
 }
 
+// TODO: Refactor the code so that every element with a class .stateX can apply style
+// and no further class specifications like .bibox_box, .statemini etc. are necessary.
+// This requires that the Python code sets the .stateX class on the correct elements.
+
 /* OK/UP */
 .bibox_box.state0,
 span.content.state0,
@@ -88,7 +92,8 @@ td.fillbackground.state0,
 .statebullet.state0,
 .state0 span,
 .hstate0 span,
-.timeline .state0 {
+.timeline .state0,
+.hostmatrix .state0 {
   &,
   a {
     color: $font-color-black !important;
@@ -110,7 +115,8 @@ td.fillbackground.state1,
 .statemini.state1,
 .statebullet.state1,
 .state1 span,
-.timeline .state1 {
+.timeline .state1,
+.hostmatrix .state1 {
   &,
   a {
     color: $font-color-black !important;
@@ -129,6 +135,7 @@ td.fillbackground.state2,
 .statebullet.state2,
 .state2 span,
 .timeline .state2,
+.hostmatrix .state2,
 .hstate1 span {
   &,
   a {
@@ -147,6 +154,7 @@ td.fillbackground.state3,
 .statebullet.state3,
 .state3 span,
 .timeline .state3,
+.hostmatrix .state3,
 .hstate2 span {
   &,
   a {
@@ -495,23 +503,4 @@ td.matchgroups span {
   margin-right: 3px;
   border: 1px solid $font-color-dimmed;
   border-radius: $theme-border-radius;
-}
-
-// TODO: get rid of the styles below
-table.hostmatrix {
-  .state0 {
-    background-color: $color-state-success-background;
-  }
-
-  .state1 {
-    background-color: $color-state-1-background;
-  }
-
-  .state2 {
-    background-color: $color-state-2-background;
-  }
-
-  .state3 {
-    background-color: $color-state-3-background;
-  }
 }

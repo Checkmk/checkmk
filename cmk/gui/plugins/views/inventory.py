@@ -65,7 +65,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
 )
 from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
-from cmk.gui.type_defs import ColumnName, FilterName, Row, Rows
+from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows
 from cmk.gui.utils.escaping import escape_html, escape_text
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary
@@ -978,6 +978,7 @@ def declare_invtable_view(
     invpath: SDRawPath,
     title_singular: str,
     title_plural: str,
+    icon: Optional[Icon] = None,
 ) -> None:
     _register_info_class(infoname, title_singular, title_plural)
 
@@ -1012,7 +1013,7 @@ def declare_invtable_view(
         painters.append((column, "", ""))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, [invpath])
+    _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
 
 
 InventorySourceRows = Tuple[str, InventoryRows]
@@ -1162,6 +1163,7 @@ def _declare_views(
     painters: List[Tuple[str, str, str]],
     filters: List[FilterName],
     invpaths: List[SDRawPath],
+    icon: Optional[Icon] = None,
 ) -> None:
     is_show_more = True
     if len(invpaths) == 1:
@@ -1234,6 +1236,7 @@ def _declare_views(
         "hard_filters": [],
         "hard_filtervars": [],
         "hide_filters": ["host"],
+        "icon": icon,
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
 
@@ -1250,6 +1253,7 @@ declare_invtable_view(
     ".networking.interfaces:",
     _("Network interface"),
     _("Network interfaces"),
+    "networking",
 )
 
 declare_invtable_view(
@@ -1294,12 +1298,14 @@ declare_invtable_view(
     ".software.applications.check_mk.sites:",
     _("Checkmk site"),
     _("Checkmk sites"),
+    "checkmk",
 )
 declare_invtable_view(
     "invcmkversions",
     ".software.applications.check_mk.versions:",
     _("Checkmk version"),
     _("Checkmk versions"),
+    "checkmk",
 )
 declare_invtable_view(
     "invcontainer",

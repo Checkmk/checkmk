@@ -1331,17 +1331,11 @@ def _preview_params(
     check_source: str,
 ) -> Optional[LegacyCheckParameters]:
 
-    if check_source == "active":
+    if check_source in {"active", "manual"}:
         return service.parameters
 
     if check_source in {"legacy", "custom"}:
         return None
-
-    if plugin is None:
-        return None
-
-    if check_source == "manual":
-        return service.parameters
 
     return config.compute_check_parameters(
         host_name,

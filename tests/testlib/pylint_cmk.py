@@ -211,20 +211,8 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
     name = "cmk_parseable"
 
 
-def verify_pylint_version():
-    import pylint  # type: ignore[import] # pylint: disable=import-outside-toplevel
-
-    if tuple(map(int, pylint.__version__.split("."))) < (1, 5, 5):
-        raise Exception(
-            'You need to use at least pylint 1.5.5. Run "make setup" in '
-            "pylint directory to get the current version."
-        )
-
-
 # Is called by pylint to load this plugin
 def register(linter):
-    verify_pylint_version()
-
     # Disable some CEE/CME specific things when linting CRE repos
     if not is_enterprise_repo():
         # Is used to disable import-error. Would be nice if no-name-in-module could be

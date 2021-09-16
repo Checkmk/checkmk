@@ -30,13 +30,13 @@ import subprocess
 import sys
 from typing import List, Optional, Tuple, TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from omdlib.contexts import SiteContext
+
 from omdlib.utils import chdir
 
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
-
-if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext
 
 logger = logging.getLogger("cmk.omd")
 

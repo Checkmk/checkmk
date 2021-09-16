@@ -59,9 +59,9 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import config, g
+from cmk.gui.globals import config, g, html
 from cmk.gui.globals import request as _request
-from cmk.gui.globals import user
+from cmk.gui.globals import timeout_manager, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
@@ -1959,15 +1959,19 @@ def apply_pre_17_sync_snapshot(
     site_id: SiteId, tar_content: bytes, base_dir: Path, components: List[ReplicationPath]
 ) -> bool:
     """Apply the snapshot received from a central site to the local site"""
-    extract_from_buffer(tar_content, base_dir, components)
+    try:
+        timeout_manager.disable_timeout()
+        extract_from_buffer(tar_content, base_dir, components)
 
-    _save_pre_17_site_globals_on_slave_site(tar_content)
+        _save_pre_17_site_globals_on_slave_site(tar_content)
 
-    # Create rule making this site only monitor our hosts
-    create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
+        # Create rule making this site only monitor our hosts
+        create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
 
-    _execute_post_config_sync_actions(site_id)
-    _execute_cmk_update_config()
+        _execute_post_config_sync_actions(site_id)
+        _execute_cmk_update_config()
+    finally:
+        timeout_manager.enable_timeout(html.request.request_timeout)
 
     return True
 

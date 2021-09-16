@@ -22,8 +22,10 @@ from cmk.gui.modules import load_all_plugins
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 
-
 # TODO: Better make our application available?
+from cmk.gui.utils.timeout_manager import TimeoutManager
+
+
 class DummyApplication:
     def __init__(self, environ, start_response):
         self._environ = environ
@@ -48,6 +50,7 @@ def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
         config_obj=make_config_object(get_default_config()),
         html_obj=html(req, resp, funnel, output_format="html"),
         display_options=DisplayOptions(),
+        timeout_manager=TimeoutManager(),
         theme=Theme(),
         prefix_logs_with_url=False,
     ):

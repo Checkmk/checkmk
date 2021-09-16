@@ -74,7 +74,7 @@ public:
     [[nodiscard]] Logger *logger() const { return &_logger; }
 
 private:
-    mutable ContextLogger _logger;
+    mutable ThreadNameLogger _logger;
     std::string _name;
     std::string _description;
     ColumnOffsets _offsets;

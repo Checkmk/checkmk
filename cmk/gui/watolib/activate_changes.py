@@ -30,6 +30,7 @@ from itertools import filterfalse
 from logging import Logger
 from pathlib import Path
 from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple, Any, Callable
+from cmk.gui.globals import html
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
@@ -1814,15 +1815,19 @@ def get_number_of_pending_changes() -> int:
 def apply_pre_17_sync_snapshot(site_id: SiteId, tar_content: bytes, base_dir: Path,
                                components: List[ReplicationPath]) -> bool:
     """Apply the snapshot received from a central site to the local site"""
-    extract_from_buffer(tar_content, base_dir, components)
+    try:
+        html.disable_request_timeout()
+        extract_from_buffer(tar_content, base_dir, components)
 
-    _save_pre_17_site_globals_on_slave_site(tar_content)
+        _save_pre_17_site_globals_on_slave_site(tar_content)
 
-    # Create rule making this site only monitor our hosts
-    create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
+        # Create rule making this site only monitor our hosts
+        create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
 
-    _execute_post_config_sync_actions(site_id)
-    _execute_cmk_update_config()
+        _execute_post_config_sync_actions(site_id)
+        _execute_cmk_update_config()
+    finally:
+        html.enable_request_timeout()
 
     return True
 

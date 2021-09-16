@@ -878,7 +878,7 @@ class ABCDataSourceInventory(ABCDataSource):
 
 
 # One master function that does all
-def declare_invtable_view(infoname, invpath, title_singular, title_plural):
+def declare_invtable_view(infoname, invpath, title_singular, title_plural, icon=None):
     _register_info_class(infoname, title_singular, title_plural)
 
     # Create the datasource (like a database view)
@@ -909,7 +909,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         painters.append((column, '', ''))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, [invpath])
+    _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1031,7 +1031,7 @@ def _register_info_class(infoname, title_singular, title_plural):
     visual_info_registry.register(info_class)
 
 
-def _declare_views(infoname, title_plural, painters, filters, invpaths):
+def _declare_views(infoname, title_plural, painters, filters, invpaths, icon=None):
     is_show_more = True
     if len(invpaths) == 1:
         hint = _inv_display_hint(invpaths[0])
@@ -1106,6 +1106,7 @@ def _declare_views(infoname, title_plural, painters, filters, invpaths):
         'hard_filters': [],
         'hard_filtervars': [],
         'hide_filters': ["host"],
+        "icon": icon,
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
 
@@ -1122,6 +1123,7 @@ declare_invtable_view(
     ".networking.interfaces:",
     _("Network interface"),
     _("Network interfaces"),
+    "networking",
 )
 
 declare_invtable_view(
@@ -1166,12 +1168,14 @@ declare_invtable_view(
     ".software.applications.check_mk.sites:",
     _("Checkmk site"),
     _("Checkmk sites"),
+    "checkmk",
 )
 declare_invtable_view(
     "invcmkversions",
     ".software.applications.check_mk.versions:",
     _("Checkmk version"),
     _("Checkmk versions"),
+    "checkmk",
 )
 declare_invtable_view(
     "invcontainer",

@@ -283,7 +283,8 @@ class PageCrash(ABCCrashReportPage):
             url_encoded_params = html.urlencode_vars(
                 list(details.items()) + [
                     ("crashdump",
-                     base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
+                     base64.b64encode(_pack_crash_report(
+                         self._get_serialized_crash_report())).decode()),
                 ])
             html.open_div(id_="pending_msg", style="display:none")
             html.show_message(_("Submitting crash report..."))

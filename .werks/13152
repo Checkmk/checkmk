@@ -1,0 +1,13 @@
+Title: Crash reports could not be submitted
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1631775803
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p11
+
+When "Submit Report" in a crash report page was clicked the error
+"a bytes-like object is required, not 'str'" was shown and the report
+was not submitted. This is fixed.

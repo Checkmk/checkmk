@@ -67,8 +67,6 @@ $color-table-border-dark: $grey-6; // dark grey
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
-$primary-border: 1px solid $grey-6;
-
 $dashboard-stats-bg-color: transparent;
 
 $toggle-button-search-img-filter: invert(20%);
@@ -85,7 +83,6 @@ $floatfilter-bg-color: null;
 
 $select2-search-field-color: rgb(63, 75, 93);
 $select2-border-color: $ux-theme-6;
-$select2-search-field-border: none;
 
 $dashlet-body-bg-color: $ux-theme-2;
 

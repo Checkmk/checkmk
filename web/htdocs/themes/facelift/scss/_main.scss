@@ -1188,7 +1188,7 @@ table.modifydowntimes > tbody > tr {
 
   .select2-search--dropdown .select2-search__field {
     background-color: $select2-search-field-color;
-    border: $select2-search-field-border;
+    border: none;
   }
 }
 
@@ -1349,14 +1349,6 @@ div.metricchoice #mk_side_search_field {
 
 td.title {
   display: table-cell;
-}
-
-#form_search input,
-#form_search select,
-#form_search textarea,
-#form_search #mk_side_search_field {
-  width: auto;
-  border: $primary-border;
 }
 
 select.vlof_filter {

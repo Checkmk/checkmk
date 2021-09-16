@@ -44,7 +44,7 @@ class ModeSearch(WatoMode):
             _("Search"),
             breadcrumb,
             form_name="edit_host",
-            button_name="_local",
+            button_name="save",
             save_title=_("Submit"),
             save_icon="search",
             save_is_enabled=True,

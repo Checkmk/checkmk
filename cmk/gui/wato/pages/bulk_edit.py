@@ -50,7 +50,7 @@ class ModeBulkEdit(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Hosts"), breadcrumb, form_name="edit_host", button_name="_save"
+            _("Hosts"), breadcrumb, form_name="edit_host", button_name="save"
         )
 
     def action(self) -> ActionResult:
@@ -141,7 +141,7 @@ class ModeBulkCleanup(WatoMode):
             _("Attributes"),
             breadcrumb,
             form_name="bulkcleanup",
-            button_name="_save",
+            button_name="save",
             save_is_enabled=bool(self._get_attributes_for_bulk_cleanup(hosts)),
         )
 

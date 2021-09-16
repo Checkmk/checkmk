@@ -1550,6 +1550,7 @@ def _page_menu_entries_save(
         is_shortcut=True,
         is_suggested=True,
         shortcut_title=_("Save & go to list"),
+        css_classes=["submit"],
     )
 
     if dropdown_name in _save_pagetype_icons:

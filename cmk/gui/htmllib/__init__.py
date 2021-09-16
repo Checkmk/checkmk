@@ -224,6 +224,8 @@ class ABCHTMLGenerator(abc.ABC):
         self.write_html(self.render_label(content, for_, **attrs))
 
     def render_input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
+        if type_ == "submit":
+            self.form_has_submit_button = True
         attrs["type_"] = type_
         attrs["name"] = name
         return render_start_tag("input", close_tag=True, **attrs)
@@ -828,6 +830,7 @@ class html(ABCHTMLGenerator):
         # Forms
         self.form_name: Optional[str] = None
         self.form_vars: List[str] = []
+        self.form_has_submit_button: bool = False
 
         # Register helpers
         self.output_funnel = output_funnel
@@ -1276,10 +1279,12 @@ class html(ABCHTMLGenerator):
         onsubmit: Optional[str] = None,
         add_transid: bool = True,
     ) -> None:
+        self.form_name = name
         self.form_vars = []
+        self.form_has_submit_button = False
+
         if action is None:
             action = requested_file_name(self.request) + ".py"
-        self.current_form = name
         self.open_form(
             id_="form_%s" % name,
             name=name,
@@ -1296,9 +1301,10 @@ class html(ABCHTMLGenerator):
                 str(transactions.get()),
                 add_var=True,
             )
-        self.form_name = name
 
     def end_form(self) -> None:
+        if not self.form_has_submit_button:
+            self.input(name="save", type_="submit", cssclass="hidden_submit")
         self.close_form()
         self.form_name = None
 

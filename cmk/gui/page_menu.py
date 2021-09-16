@@ -474,6 +474,7 @@ def _make_form_save_link(
         is_shortcut=True,
         is_suggested=True,
         is_enabled=save_is_enabled,
+        css_classes=["submit" if button_name == "save" else ""],
     )
 
 

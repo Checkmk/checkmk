@@ -41,6 +41,7 @@ $font-color-light-grey: $midgrey;
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
 $button-background-hover: lighten($grey-6, 10%);
+$default-submit-button-border-color: darken($success, 25%);
 
 $input-background-color: $ux-theme-5;
 $input-nested-background-color: rgb(63, 75, 93);

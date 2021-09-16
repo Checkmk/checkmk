@@ -11,14 +11,17 @@ for further information.
 
 from typing import NewType
 
-from astroid.nodes import Import, ImportFrom  # type: ignore[import]
-
-# TODO: Statement should be imported from nodes as soon as astroid 2.7.4 is released.
-from astroid.nodes.node_classes import Statement  # type: ignore[import]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 
 from tests.testlib import cmk_path
+
+# TODO: Fix this import horror when the astroid dust has settled. Currently pylint's
+# dependencies oscillate wildly, resulting in an up and down of astroid versions. :-/
+try:
+    from astroid.nodes import Import, ImportFrom, Statement  # type: ignore[import]
+except ImportError:
+    from astroid.node_classes import Import, ImportFrom, Statement  # type: ignore[import]
 
 ModuleName = NewType("ModuleName", str)
 ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path

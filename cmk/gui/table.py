@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import contextmanager
-import re
 import json
+import re
+from contextlib import contextmanager
 from typing import (
     Any,
+    cast,
     Dict,
     Iterator,
     List,
@@ -16,20 +17,19 @@ from typing import (
     NamedTuple,
     Optional,
     Tuple,
-    Union,
     TYPE_CHECKING,
-    cast,
+    Union,
 )
 
 from six import ensure_str
 
-from cmk.gui.utils.html import HTML
-import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
+import cmk.gui.utils as utils
 import cmk.gui.weblib as weblib
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ CellSpec = NamedTuple("CellSpec", [
 
 TableRow = NamedTuple("TableRow", [
     ("cells", List[CellSpec]),
-    ("css", Optional[str]),
+    ("css", 'CSSSpec'),
     ("state", int),
     ("fixed", bool),
     ("row_attributes", 'HTMLTagAttributes'),
@@ -182,9 +182,14 @@ class Table:
         self.css = css
         self.mode = 'row'
 
-    def row(self, *posargs, **kwargs):
+    def row(self,
+            css: 'CSSSpec' = None,
+            state: int = 0,
+            collect_headers: bool = True,
+            fixed: bool = False,
+            **attrs: Any) -> None:
         self._finish_previous()
-        self.next_func = lambda: self._add_row(*posargs, **kwargs)
+        self.next_func = lambda: self._add_row(css, state, collect_headers, fixed, **attrs)
 
     def text_cell(
         self,
@@ -226,7 +231,7 @@ class Table:
         self.next_func = lambda: None
 
     def _add_row(self,
-                 css: Optional[str] = None,
+                 css: 'CSSSpec' = None,
                  state: int = 0,
                  collect_headers: bool = True,
                  fixed: bool = False,
@@ -471,8 +476,12 @@ class Table:
 
             oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
+
             if row.css:
-                class_.append(row.css)
+                if isinstance(row.css, list):
+                    class_.extend([c for c in row.css if c is not None])
+                else:
+                    class_.append(row.css)
             else:
                 for k in ["class_", "class"]:
                     if k in row.row_attributes:

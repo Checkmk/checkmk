@@ -87,7 +87,8 @@ td.fillbackground.state0,
 .statemini.state0,
 .statebullet.state0,
 .state0 span,
-.hstate0 span {
+.hstate0 span,
+.timeline .state0 {
   &,
   a {
     color: $font-color-black !important;
@@ -108,7 +109,8 @@ td.number.state1,
 td.fillbackground.state1,
 .statemini.state1,
 .statebullet.state1,
-.state1 span {
+.state1 span,
+.timeline .state1 {
   &,
   a {
     color: $font-color-black !important;
@@ -126,6 +128,7 @@ td.fillbackground.state2,
 .statemini.state2,
 .statebullet.state2,
 .state2 span,
+.timeline .state2,
 .hstate1 span {
   &,
   a {
@@ -143,6 +146,7 @@ td.number.state3,
 td.fillbackground.state3,
 .statebullet.state3,
 .state3 span,
+.timeline .state3,
 .hstate2 span {
   &,
   a {
@@ -494,8 +498,7 @@ td.matchgroups span {
 }
 
 // TODO: get rid of the styles below
-table.hostmatrix,
-table.timeline {
+table.hostmatrix {
   .state0 {
     background-color: $color-state-success-background;
   }

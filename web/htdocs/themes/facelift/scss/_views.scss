@@ -1114,33 +1114,21 @@ table.data.headerleft.sla {
 
 .sla table.timeline {
   &.standalone.sla {
-    margin-bottom: 5px;
-
     td {
       padding: 0;
-      border: none;
     }
 
     &.period {
       height: 10px;
-      margin-bottom: 5px;
     }
   }
 
-  td.state0.even {
-    background-color: rgb(0, 187, 51);
-  }
-
-  td.state0.odd {
-    background-color: rgb(0, 153, 34);
-  }
-
-  td.state2.even {
-    background-color: rgb(255, 0, 0);
-  }
-
-  td.state2.odd {
-    background-color: rgb(153, 0, 0);
+  td.state0,
+  td.state1,
+  td.state2 {
+    &.odd {
+      opacity: 0.5;
+    }
   }
 }
 

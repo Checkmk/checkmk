@@ -1337,20 +1337,18 @@ def _preview_params(
     if check_source in {"legacy", "custom"}:
         return None
 
-    params: Optional[LegacyCheckParameters] = None
-
     if plugin is None:
-        return params
-    params = service.parameters
-    if check_source != "manual":
-        params = config.compute_check_parameters(
-            host_name,
-            service.check_plugin_name,
-            service.item,
-            params,
-        )
+        return None
 
-    return params
+    if check_source == "manual":
+        return service.parameters
+
+    return config.compute_check_parameters(
+        host_name,
+        service.check_plugin_name,
+        service.item,
+        service.parameters,
+    )
 
 
 def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheckParameters:

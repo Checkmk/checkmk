@@ -1302,7 +1302,7 @@ def _check_preview_table_row(
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
     params = _preview_params(host_config.hostname, service, plugin, check_source)
 
-    if check_source in ["legacy", "active", "custom"]:
+    if check_source in {"active", "custom"}:
         exitcode = None
         output = "WAITING - %s check, cannot be done offline" % check_source.title()
         ruleset_name: Optional[RulesetName] = None
@@ -1350,7 +1350,7 @@ def _preview_check_source(
     service: Service,
     check_source: _ServiceOrigin,
 ) -> str:
-    if check_source in ["legacy", "active", "custom"] and config.service_ignored(
+    if check_source in {"active", "custom"} and config.service_ignored(
         host_name, None, service.description
     ):
         return "%s_ignored" % check_source
@@ -1364,11 +1364,8 @@ def _preview_params(
     check_source: _ServiceOrigin,
 ) -> Optional[LegacyCheckParameters]:
 
-    if check_source in {"active", "manual"}:
+    if check_source in {"active", "manual", "custom"}:
         return service.parameters
-
-    if check_source in {"legacy", "custom"}:
-        return None
 
     return config.compute_check_parameters(
         host_name,

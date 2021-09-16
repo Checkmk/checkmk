@@ -7,32 +7,32 @@ properties([
 
 // Cancel job when there is nothing logged to the console for 15 minutes
 timeout(activity: true, time: 15, unit: 'MINUTES') {
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
+    node (NODE) {
+        stage('checkout sources') {
+            checkout(scm)
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
+        }
+        try {
+            stage("Execute NEB Test") {
+                sh("( cd livestatus/src/test && ./.f12 )")
+            }
+    
+            stage("Execute NEB Test") {
+                sh("( cd enterprise/core/src/test && ./.f12 )")
+            }
+    
+            stage("Analyse Issues") {
+                xunit([GoogleTest(
+                    deleteOutputFiles: true,
+                    failIfNotNew: true,
+                    pattern: 'livestatus/src/test_detail.xml, enterprise/core/src/test_detail.xml',
+                    skipNoTestFiles: false, stopProcessingIfError: true
+                )])
+                def GCC = scanForIssues tool: gcc()
+                publishIssues issues:[GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+            }
+        } catch(Exception e) {
+            notify.notify_error(e)
+        }
     }
-    try {
-        stage("Execute NEB Test") {
-            sh("( cd livestatus/src/test && ./.f12 )")
-        }
-
-        stage("Execute NEB Test") {
-            sh("( cd enterprise/core/src/test && ./.f12 )")
-        }
-
-        stage("Analyse Issues") {
-            xunit([GoogleTest(
-                deleteOutputFiles: true,
-                failIfNotNew: true,
-                pattern: 'livestatus/src/test_detail.xml, enterprise/core/src/test_detail.xml',
-                skipNoTestFiles: false, stopProcessingIfError: true
-            )])
-            def GCC = scanForIssues tool: gcc()
-            publishIssues issues:[GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-        }
-    } catch(Exception e) {
-        notify.notify_error(e)
-    }
-}
 }

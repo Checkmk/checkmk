@@ -7,21 +7,21 @@ properties([
 
 // Cancel job when there is nothing logged to the console for 15 minutes
 timeout(activity: true, time: 15, unit: 'MINUTES') {
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
-    }
-    try {
-        stage("Execute Test") {
-            sh("make -C $WORKSPACE/tests test-format-shell")
+    node (NODE) {
+        stage('checkout sources') {
+            checkout(scm)
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
         }
-        stage("Analyse Issues") {
-            def CLANG = scanForIssues tool: clang()
-            publishIssues issues:[CLANG], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+        try {
+            stage("Execute Test") {
+                sh("make -C $WORKSPACE/tests test-format-shell")
+            }
+            stage("Analyse Issues") {
+                def CLANG = scanForIssues tool: clang()
+                publishIssues issues:[CLANG], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+            }
+        } catch(Exception e) {
+            notify.notify_error(e)
         }
-    } catch(Exception e) {
-        notify.notify_error(e)
     }
-}
 }

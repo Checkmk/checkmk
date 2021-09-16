@@ -9,29 +9,29 @@ withFolderProperties{
 
 // Cancel job when there is nothing logged to the console for 15 minutes
 timeout(activity: true, time: 15, unit: 'MINUTES') {
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
-        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-    }
-}
-
-try {
     node (NODE) {
-        stage('test cmk-docker integration') {
-            withCredentials([usernameColonPassword(credentialsId: 'cmk-credentials', variable: 'CMK_CREDENTIALS')]) {
-                sh """
-                    mkdir -p /home/jenkins/
-                    echo "${CMK_CREDENTIALS}" > /home/jenkins/.cmk-credentials
-                """
-            }
-            dir ('tests') {
-                sh "bash -c \"make test-docker\""
-            }
+        stage('checkout sources') {
+            checkout(scm)
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
+            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
         }
     }
-} catch(Exception e) {
-    notify.notify_error(e)
-}
+    
+    try {
+        node (NODE) {
+            stage('test cmk-docker integration') {
+                withCredentials([usernameColonPassword(credentialsId: 'cmk-credentials', variable: 'CMK_CREDENTIALS')]) {
+                    sh """
+                        mkdir -p /home/jenkins/
+                        echo "${CMK_CREDENTIALS}" > /home/jenkins/.cmk-credentials
+                    """
+                }
+                dir ('tests') {
+                    sh "bash -c \"make test-docker\""
+                }
+            }
+        }
+    } catch(Exception e) {
+        notify.notify_error(e)
+    }
 }

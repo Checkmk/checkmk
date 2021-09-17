@@ -5,7 +5,7 @@ Component: wato
 Date: 1631691932
 Edition: cre
 Level: 1
-Version: 2.0.0p11
+Version: 2.0.0p12
 
 Unpacking configuration snapshots on (slow) remote sites could take longer than 110 seconds and thus cause a timeout
 exception stating <tt>Got invalid data...</tt>. There was a risk that a snapshot could only be half unpacked.

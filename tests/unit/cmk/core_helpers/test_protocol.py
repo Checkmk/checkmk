@@ -33,10 +33,10 @@ from cmk.core_helpers.protocol import (
     CMCLogLevel,
     CMCMessage,
     CMCResults,
-    CMCResultsStats,
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
+    FetcherResultsStats,
     PayloadType,
     ResultStats,
     SNMPResultMessage,
@@ -164,11 +164,11 @@ class TestCMCMessage:
 class TestCMCResultsStats:
     @pytest.fixture
     def stats(self):
-        return CMCResultsStats(7, Snapshot.null())
+        return FetcherResultsStats(7, Snapshot.null())
 
     def test_from_bytes(self, stats):
         assert isinstance(repr(stats), str)
-        assert CMCResultsStats.from_bytes(bytes(stats))
+        assert FetcherResultsStats.from_bytes(bytes(stats))
 
 
 class TestCMCResults:
@@ -196,7 +196,7 @@ class TestCMCResults:
 
     @pytest.fixture
     def payload(self, messages):
-        return CMCResults(messages, CMCResultsStats(7, Snapshot.null()))
+        return CMCResults(messages, FetcherResultsStats(7, Snapshot.null()))
 
     def test_from_bytes(self, payload):
         assert CMCResults.from_bytes(bytes(payload)) == payload

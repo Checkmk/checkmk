@@ -67,9 +67,15 @@ def _in_component(
     return imported == ModuleName(component) or imported.startswith(component + ".")
 
 
-def _is_utility_import(imported: ModuleName) -> bool:
-    """cmk and cmk.utils are allowed to be imported from all over the place"""
-    return imported == "cmk" or _in_component(imported, Component("cmk.utils"))
+def _is_allowed_import(imported: ModuleName) -> bool:
+    """cmk, cmk.utils and cmk.automations are allowed to be imported from all over the place"""
+    return any(
+        (
+            imported == "cmk",
+            _in_component(imported, Component("cmk.utils")),
+            _in_component(imported, Component("cmk.automations")),
+        )
+    )
 
 
 def _is_default_allowed_import(
@@ -77,7 +83,7 @@ def _is_default_allowed_import(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    return _is_utility_import(imported) or _in_component(imported, component)
+    return _is_allowed_import(imported) or _in_component(imported, component)
 
 
 def _allow_default_plus_fetchers_and_snmplib(
@@ -273,7 +279,7 @@ class CMKModuleLayerChecker(BaseChecker):
             )
 
         # the rest (matched no component)
-        return _is_utility_import(imported)
+        return _is_allowed_import(imported)
 
     @staticmethod
     def _is_part_of_component(

@@ -28,6 +28,7 @@ PYTHON3_PATHS=(
     post_rename_site
     update_rrd_fs_names.py
     update_config.py
+    automations
 )
 
 echo "Copy CRE files..."

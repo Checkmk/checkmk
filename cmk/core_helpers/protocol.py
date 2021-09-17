@@ -5,24 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes defining the check helper protocol.
 
-We call "message" a header followed by the corresponding payload.
-
-+---------------+----------------+---------------+----------------+
-| Layer         | Message type   | Header type   | Payload type   |
-+===============+================+===============+================+
-| CMC Layer     | CMCMessage     | CMCHeader     | CMCPayload     |
-+---------------+----------------+---------------+----------------+
-| Fetcher Layer | FetcherMessage | FetcherHeader | ResultMessage  |
-|               |                |               | + ResultStats  |
-+---------------+----------------+---------------+----------------+
-|               |                |      AgentResultMessage        |
-| Result Layer  | ResultMessage  |      SNMPResultMessage         |
-|               |                |      ErrorResultMessage        |
-+---------------+----------------+--------------------------------+
-
 .. uml::
 
+    package "CMC Layer" {
+    class CMCMessage
+    class CMCHeader
     abstract CMCPayload
+    class CMCLogging
+    class CMCEndOfReply
+    class CMCResults
+    }
+    package "Fetcher Layer" {
+    class CMCResultsStats
+    class FetcherMessage
+    class FetcherHeader
+    abstract ResultMessage
+    class ResultStats
+    }
+    package "Result Layer" {
+    class AgentResultMessage
+    class SNMPResultMessage
+    class ErrorResultMessage
+    }
+
     CMCPayload <|-- CMCResults
     CMCPayload <|-- CMCLogging
     CMCPayload <|-- CMCEndOfReply
@@ -30,8 +35,8 @@ We call "message" a header followed by the corresponding payload.
     CMCMessage o-- CMCPayload
 
     CMCResults o-- "*" FetcherMessage
+    CMCResults o-- CMCResultsStats
 
-    abstract ResultMessage
     ResultMessage <|-- AgentResultMessage
     ResultMessage <|-- SNMPResultMessage
     ResultMessage <|-- ErrorResultMessage

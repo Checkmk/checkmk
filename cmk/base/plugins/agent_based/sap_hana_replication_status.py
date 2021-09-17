@@ -46,8 +46,11 @@ register.agent_section(
 
 def discovery_sap_hana_replication_status(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for sid_instance, data in section.items():
-        if data["sys_repl_status"] != "10" and (
-            data.get("mode", "").lower() == "primary" or data.get("mode", "").lower() == "sync"
+        if not data or (
+            data["sys_repl_status"] != "10"
+            and (
+                data.get("mode", "").lower() == "primary" or data.get("mode", "").lower() == "sync"
+            )
         ):
             yield Service(item=sid_instance)
 

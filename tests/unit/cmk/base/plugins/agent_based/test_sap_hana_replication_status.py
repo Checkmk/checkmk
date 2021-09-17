@@ -69,6 +69,12 @@ def test_parse_sap_hana_replication_status(fix_register, info, expected_result):
             ],
             [],
         ),
+        (
+            [
+                ["[[HXE", "90]]"],
+            ],
+            [Service(item="HXE 90")],
+        ),
     ],
 )
 def test_discovery_sap_hana_replication_status(fix_register, info, expected_result):

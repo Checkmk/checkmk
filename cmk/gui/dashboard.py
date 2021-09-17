@@ -1762,12 +1762,13 @@ class EditDashletPage(Page):
         if self._ident is None:
             type_name = html.request.get_str_input_mandatory('type')
             mode = 'add'
-            title = _('Add element')
 
             try:
                 dashlet_type = dashlet_registry[type_name]
             except KeyError:
                 raise MKUserError("type", _('The requested element type does not exist.'))
+
+            title = _("Add element: %s") % dashlet_type.title()
 
             # Initial configuration
             dashlet_spec: DashletConfig = {
@@ -1807,6 +1808,8 @@ class EditDashletPage(Page):
             type_name = dashlet_spec['type']
             dashlet_type = dashlet_registry[type_name]
             single_infos = dashlet_spec['single_infos']
+
+            title = _("Edit element: %s") % dashlet_type.title()
 
         breadcrumb = _dashlet_editor_breadcrumb(self._board, self._dashboard, title)
         html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))

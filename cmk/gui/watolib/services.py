@@ -133,11 +133,13 @@ class Discovery:
             )
         self.do_discovery(discovery_result)
 
-    def do_discovery(self, discovery_result):
+    def do_discovery(self, discovery_result: DiscoveryResult):
         old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
-        remove_disabled_rule, add_disabled_rule, saved_services = set(), set(), set()
-        apply_changes = False
+        remove_disabled_rule: Set[str] = set()
+        add_disabled_rule: Set[str] = set()
+        saved_services: Set[str] = set()
+        apply_changes: bool = False
 
         for (
             table_source,
@@ -160,9 +162,6 @@ class Discovery:
             key = check_type, item
             value = descr, discovered_params, service_labels, found_on_nodes
 
-            if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
-                old_autochecks[key] = value
-
             if table_source != table_target:
                 if table_target == DiscoveryState.UNDECIDED:
                     user.need_permission("wato.service_discovery_to_undecided")
@@ -179,66 +178,18 @@ class Discovery:
 
                 apply_changes = True
 
-            if table_source == DiscoveryState.UNDECIDED:
-                if table_target == DiscoveryState.MONITORED:
-                    autochecks_to_save[key] = value
-                    saved_services.add(descr)
-                elif table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source == DiscoveryState.VANISHED:
-                if table_target != DiscoveryState.REMOVED:
-                    autochecks_to_save[key] = value
-                    saved_services.add(descr)
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source == DiscoveryState.MONITORED:
-                if table_target in [
-                    DiscoveryState.MONITORED,
-                    DiscoveryState.IGNORED,
-                ]:
-                    autochecks_to_save[key] = value
-
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-                else:
-                    saved_services.add(descr)
-
-            elif table_source == DiscoveryState.IGNORED:
-                if table_target in [
-                    DiscoveryState.MONITORED,
-                    DiscoveryState.UNDECIDED,
-                    DiscoveryState.VANISHED,
-                ]:
-                    remove_disabled_rule.add(descr)
-                if table_target in [
-                    DiscoveryState.MONITORED,
-                    DiscoveryState.IGNORED,
-                ]:
-                    autochecks_to_save[key] = value
-                    saved_services.add(descr)
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source in [
-                DiscoveryState.CLUSTERED_NEW,
-                DiscoveryState.CLUSTERED_OLD,
-            ]:
-                autochecks_to_save[key] = value
-                saved_services.add(descr)
-
-            elif table_source in [
-                DiscoveryState.CLUSTERED_VANISHED,
-                DiscoveryState.CLUSTERED_IGNORED,
-            ]:
-                # We keep vanished clustered services on the node with the following reason:
-                # If a service is mapped to a cluster then there are already operations
-                # for adding, removing, etc. of this service on the cluster. Therefore we
-                # do not allow any operation for this clustered service on the related node.
-                # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[key] = value
-                saved_services.add(descr)
+            _apply_state_change(
+                table_source,
+                table_target,
+                key,
+                value,
+                descr,
+                old_autochecks,
+                autochecks_to_save,
+                saved_services,
+                add_disabled_rule,
+                remove_disabled_rule,
+            )
 
         if apply_changes:
             need_sync = False
@@ -423,6 +374,83 @@ class Discovery:
             not self._options.show_checkboxes
             or checkbox_id(check_type, item) in self._discovery_info["update_services"]
         )
+
+
+def _apply_state_change(
+    table_source: str,
+    table_target: str,
+    key: Tuple[Any, Any],
+    value: Tuple[Any, Any, Any, Any],
+    descr: str,
+    old_autochecks: SetAutochecksTable,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: Set[str],
+    add_disabled_rule: Set[str],
+    remove_disabled_rule: Set[str],
+):
+    if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
+        old_autochecks[key] = value
+
+    if table_source == DiscoveryState.UNDECIDED:
+        if table_target == DiscoveryState.MONITORED:
+            autochecks_to_save[key] = value
+            saved_services.add(descr)
+        elif table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+
+    elif table_source == DiscoveryState.VANISHED:
+        if table_target != DiscoveryState.REMOVED:
+            autochecks_to_save[key] = value
+            saved_services.add(descr)
+        if table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+
+    elif table_source == DiscoveryState.MONITORED:
+        if table_target in [
+            DiscoveryState.MONITORED,
+            DiscoveryState.IGNORED,
+        ]:
+            autochecks_to_save[key] = value
+
+        if table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+        else:
+            saved_services.add(descr)
+
+    elif table_source == DiscoveryState.IGNORED:
+        if table_target in [
+            DiscoveryState.MONITORED,
+            DiscoveryState.UNDECIDED,
+            DiscoveryState.VANISHED,
+        ]:
+            remove_disabled_rule.add(descr)
+        if table_target in [
+            DiscoveryState.MONITORED,
+            DiscoveryState.IGNORED,
+        ]:
+            autochecks_to_save[key] = value
+            saved_services.add(descr)
+        if table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+
+    elif table_source in [
+        DiscoveryState.CLUSTERED_NEW,
+        DiscoveryState.CLUSTERED_OLD,
+    ]:
+        autochecks_to_save[key] = value
+        saved_services.add(descr)
+
+    elif table_source in [
+        DiscoveryState.CLUSTERED_VANISHED,
+        DiscoveryState.CLUSTERED_IGNORED,
+    ]:
+        # We keep vanished clustered services on the node with the following reason:
+        # If a service is mapped to a cluster then there are already operations
+        # for adding, removing, etc. of this service on the cluster. Therefore we
+        # do not allow any operation for this clustered service on the related node.
+        # We just display the clustered service state (OLD, NEW, VANISHED).
+        autochecks_to_save[key] = value
+        saved_services.add(descr)
 
 
 def _make_host_audit_log_object(checks: SetAutochecksTable) -> Set[str]:

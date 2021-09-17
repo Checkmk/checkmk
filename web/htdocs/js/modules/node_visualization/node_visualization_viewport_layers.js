@@ -68,26 +68,6 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
     enable_overlay() {
         this.overlay_active = true;
         this.anchor_info = this.selection.append("g").attr("transform", "translate(-50,-50)");
-        //        this.anchor_info.append("rect")
-        //            .attr("id", "horizontal")
-        //            .attr("x", -50)
-        //            .attr("height", 2)
-        //            .attr("fill", "black")
-        //        this.anchor_info.append("rect")
-        //            .attr("id", "vertical")
-        //            .attr("y", -50)
-        //            .attr("width", 2)
-        //            .attr("fill", "black")
-        //
-        //        this.anchor_info.append("text")
-        //            .attr("id", "horizontal_text")
-        //            .attr("x", -50)
-        //            .attr("y", -2)
-        //
-        //        this.anchor_info.append("text")
-        //            .attr("id", "vertical_text")
-        //            .attr("x", 2)
-        //            .attr("y", -42)
 
         this.div_selection
             .append("input")

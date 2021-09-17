@@ -142,13 +142,7 @@ $tag-hover-opacity: 0.5;
 // -----------------------------------------------------------------------------
 $node-vis-darkgrey: rgb(169, 169, 169);
 $node-vis-togglebox-enabled: rgb(255, 215, 0);
-$node-vis-search-box-border: null;
-$node-vis-search-box-bg-color: null;
-$node-vis-search-field-border-color: transparent;
-$node-vis-box-border: 1px solid rgb(204, 207, 219); // grey
-$node-vis-box-shadow: 2px 2px 2px $grey-3;
-$node-vis-toggle-down-bg-color: rgb(230, 230, 230); // light grey
-$node-vis-menu-bg-color: null;
+$node-vis-menu-bg-color: $ux-theme-2;
 $node-vis-history-bg-color: null;
 $node-vis-history-border-color: null;
 $node-vis-history-filter: null;

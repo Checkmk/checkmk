@@ -70,20 +70,12 @@ div.node_vis {
     width: 29px;
     height: 29px;
     padding: 5px;
-    padding-left: 3px;
+    background-color: $input-background-color;
+    border-radius: $theme-border-radius;
 
     img {
       width: 28px;
       height: 28px;
-    }
-
-    &.down {
-      background-color: $node-vis-toggle-down-bg-color; // light grey
-      border-color: $node-vis-toggle-down-bg-color; // light grey
-
-      img {
-        left: 0;
-      }
     }
 
     img[title="Search"] {
@@ -98,10 +90,8 @@ div.node_vis {
 
   div.box,
   img.box {
-    background-color: $bg-color;
-    border: $node-vis-box-border;
+    background-color: $node-vis-menu-bg-color;
     border-radius: 4px;
-    box-shadow: $node-vis-box-shadow;
   }
 
   img.layouting_icon,
@@ -124,14 +114,11 @@ div.node_vis {
     left: 12px;
     width: 250px;
     overflow: hidden;
-    background-color: $node-vis-search-box-bg-color;
-    border: $node-vis-search-box-border;
-    box-shadow: $node-vis-box-shadow;
+    background-color: $input-background-color;
   }
 
   input.search_node {
     width: 236px;
-    border-color: $node-vis-search-field-border-color;
   }
 
   /* infobox */
@@ -194,7 +181,6 @@ div.node_vis {
     margin: 3px;
     margin-top: 8px;
     overflow: hidden;
-    background-color: $node-vis-menu-bg-color;
   }
 
   div#configuration_div table select {
@@ -272,51 +258,14 @@ div.node_vis {
     cursor: move;
   }
 
-  .node_element circle {
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-
-    &.topology_root {
-      stroke-width: 3;
-      stroke: $black;
-    }
-
-    &.collapsed {
-      stroke: rgb(128, 128, 128); // grey
-      stroke-width: 15;
-    }
+  .node_element circle.collapsed {
+    stroke: rgb(128, 128, 128); // grey
+    stroke-width: 15;
   }
 
   .node_element.focus circle {
     stroke: rgb(25, 90, 230); // blue
     stroke-width: 3;
-  }
-
-  .state0 {
-    color: $font-color-black;
-    fill: $success;
-  }
-
-  .state1 {
-    fill: $warning;
-  }
-
-  .state2 {
-    fill: $danger;
-  }
-
-  .state3 {
-    fill: rgb(255, 153, 17);
-  }
-
-  // state pending
-  .state-1 {
-    fill: $color-state-4-background;
-  }
-
-  circle.state_circle {
-    stroke: #000;
-    stroke-width: 1;
   }
 
   .togglebox {

@@ -90,6 +90,7 @@ td.number.state0,
 td.fillbackground.state0,
 .statemini.state0,
 .statebullet.state0,
+.infobox_entry.state0,
 .state0 span,
 .hstate0 span,
 .timeline .state0,
@@ -114,6 +115,7 @@ td.number.state1,
 td.fillbackground.state1,
 .statemini.state1,
 .statebullet.state1,
+.infobox_entry.state1,
 .state1 span,
 .timeline .state1,
 .hostmatrix .state1 {
@@ -133,6 +135,7 @@ td.number.state2,
 td.fillbackground.state2,
 .statemini.state2,
 .statebullet.state2,
+.infobox_entry.state2,
 .state2 span,
 .timeline .state2,
 .hostmatrix .state2,
@@ -152,6 +155,7 @@ td.count.state3,
 td.number.state3,
 td.fillbackground.state3,
 .statebullet.state3,
+.infobox_entry.state3,
 .state3 span,
 .timeline .state3,
 .hostmatrix .state3,
@@ -173,6 +177,48 @@ td.fillbackground.state3,
     a {
       background-color: $color-state-4-background !important;
     }
+  }
+}
+
+svg {
+  .svcstate,
+  .hoststate {
+    // Undefined state (e.g. if no metric is available in the gauge dashlet)
+    fill: rgb(0, 142, 255) !important;
+    stroke: rgb(0, 142, 255) !important;
+  }
+
+  .state0,
+  .hstate0 {
+    /* OK/UP */
+    fill: $color-state-success-background !important;
+    stroke: $color-state-success-background !important;
+  }
+
+  .state1 {
+    /* WARN */
+    fill: $color-state-1-background !important;
+    stroke: $color-state-1-background !important;
+  }
+
+  .state2,
+  .hstate1 {
+    /* CRIT/DOWN */
+    fill: $color-state-2-background !important;
+    stroke: $color-state-2-background !important;
+  }
+
+  .state3,
+  .hstate2 {
+    /* UNKNOWN/UNREACH */
+    fill: $color-state-3-background !important;
+    stroke: $color-state-3-background !important;
+  }
+
+  .state-1 {
+    // PENDING
+    fill: $color-state-4-background !important;
+    stroke: $color-state-4-background !important;
   }
 }
 

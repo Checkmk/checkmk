@@ -20,6 +20,7 @@ oneTimeSetUp () {
     export USERSTOREKEY="storekey"
     export PASSWORD_CONNECT="123"
     export USER_CONNECT="hana"
+    export MK_VARDIR="/vardir"
 
     # shellcheck disable=SC1090
     . "$MK_SAP_HANA_PLUGIN_PATH" >/dev/null 2>&1
@@ -324,6 +325,63 @@ test_mk_sap_hana_skip_sql_queries() {
         :
         assertContains "$actual" "$exp_section"
     done
+}
+
+test_mk_sap_hana_get_alerts_last_check_file_no_remote_host(){
+
+    actual=$(get_alerts_last_check_file "sid" "instance" "_DB")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "$actual"
+}
+
+test_mk_sap_hana_get_alerts_last_check_file_with_remote_host(){
+    REMOTE="hostname"
+
+    actual=$(get_alerts_last_check_file "sid" "instance" "")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance.hostname.last_checked" "$actual"
+
+    REMOTE=""
+}
+
+test_mk_sap_hana_get_last_used_check_file_new_file_exists(){
+
+    file_exists() {
+        local path="$1"
+
+        if [ "$path" == "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" ]; then
+            return 0
+        else
+            return 1
+        fi
+    }
+
+    actual=$(get_last_used_check_file "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "_DB")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "$actual"
+}
+
+test_mk_sap_hana_get_last_used_check_file_old_file_exists(){
+
+    file_exists() {
+        local path="$1"
+
+        if [ "$path" == "/vardir/sap_hana_alerts_sid_instance.last_checked" ]; then
+            return 0
+        else
+            return 1
+        fi
+    }
+
+    actual=$(get_last_used_check_file "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "_DB")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance.last_checked" "$actual"
+}
+
+test_mk_sap_hana_get_last_used_check_file_no_file(){
+
+    file_exists() {
+        return 1
+    }
+
+    actual=$(get_last_used_check_file "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "_DB")
+    assertEquals "" "$actual"
 }
 
 # shellcheck disable=SC1090

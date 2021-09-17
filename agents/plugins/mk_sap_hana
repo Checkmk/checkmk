@@ -352,6 +352,49 @@ QUERY
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+file_exists() {
+    local path="$1"
+
+    if [ -r "$path" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+get_alerts_last_check_file() {
+    local sid="$1"
+    local instance="$2"
+    local db_suffix="$3"
+    local remote_hostname
+
+    remote_hostname=$(echo "$REMOTE" | tr ':' '_')
+
+    if [ -z "$remote_hostname" ]; then
+        echo "$MK_VARDIR/sap_hana_alerts_${sid}_${instance}${db_suffix}.last_checked"
+    else
+        echo "$MK_VARDIR/sap_hana_alerts_${sid}_${instance}${db_suffix}.$remote_hostname.last_checked"
+    fi
+}
+
+get_last_used_check_file() {
+    local alerts_last_check_file="$1"
+    local db_suffix="$2"
+    local old_last_check_file
+
+    if $(file_exists "$alerts_last_check_file"); then
+         echo "$alerts_last_check_file"
+    else
+        # check if the old alerts_last_check file without tenant info is present, hence script is running the first time since the version update
+        old_last_check_file=$(echo ${alerts_last_check_file} | sed -e "s/${db_suffix}\././")  # tenant and instance can be the same, hence replace only tenant followed with a dot
+
+        if $(file_exists "$old_last_check_file"); then
+            echo "$old_last_check_file"
+        fi
+    fi
+}
+
 
 sap_hana_check_alerts() {
     local sid="$1"
@@ -359,22 +402,24 @@ sap_hana_check_alerts() {
     local instance_user="$3"
     local db="$4"
     local credentials="$5"
-    local remote_hostname
+    local ssloption="$6"
+    local db_suffix
     local alerts_last_check
+    local last_used_check_file
     local query_output
     local query_hdbsql_output
 
-    #TODO similiar to logwatch
-    remote_hostname=$(echo "$REMOTE" | tr ':' '_')
-
-    if [ -z "$remote_hostname" ]; then
-        alerts_last_check="$MK_VARDIR/sap_hana_alerts_${sid}_${instance}_${db}.last_checked"
+    if [ -n "$db" ]; then
+        db_suffix=_${db}
     else
-        alerts_last_check="$MK_VARDIR/sap_hana_alerts_${sid}_${instance}_${db}.$remote_hostname.last_checked"
+        db_suffix=""
     fi
 
-    if [ -r "$alerts_last_check" ]; then
-        query_output=$(query_logwatch_alerts_last_check "$alerts_last_check")
+    alerts_last_check_file=$(get_alerts_last_check_file "$sid" "$instance" "$db_suffix")
+    last_used_check_file=$(get_last_used_check_file "$alerts_last_check_file" "$db_suffix")
+
+    if [ -n "$last_used_check_file" ]; then
+        query_output=$(query_logwatch_alerts_last_check "$last_used_check_file")
     else
         query_output=$(query_logwatch_no_alerts)
     fi
@@ -382,7 +427,7 @@ sap_hana_check_alerts() {
     query_hdbsql_output=$(mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$query_output" "$credentials")
     # shellcheck disable=SC2181
     if [ $? = 0 ]; then
-        date +"%Y-%m-%d %H:%M:%S" > "$alerts_last_check" #2016-11-09 16:14:16.410000000
+        date +"%Y-%m-%d %H:%M:%S" > "$alerts_last_check_file" #2016-11-09 16:14:16.410000000
     fi
 
     if [ -n "$query_hdbsql_output" ]; then

@@ -19,13 +19,20 @@ class _AutochecksMocker:
     def __init__(self):
         self.autochecks = {}
 
-    def get_autochecks_of(self, hostname, compute_check_parameters, service_description):
+    def get_autochecks_of(
+        self, hostname, compute_check_parameters, service_description, get_effective_hostname
+    ):
         return [
             autochecks.Service(
                 s.check_plugin_name,
                 s.item,
                 s.description,
-                compute_check_parameters(hostname, s.check_plugin_name, s.item, s.parameters),
+                compute_check_parameters(
+                    get_effective_hostname(hostname, s.description),
+                    s.check_plugin_name,
+                    s.item,
+                    s.parameters,
+                ),
                 s.service_labels,
             )
             for s in self.autochecks.get(hostname, ())

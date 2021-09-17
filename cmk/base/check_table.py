@@ -66,7 +66,7 @@ def _aggregate_check_table_services(
             s for s in config_cache.get_autochecks_of(host_config.hostname) if sfilter.keep(s)
         )
 
-    yield from (s for s in _get_static_check_entries(host_config) if sfilter.keep(s))
+    yield from (s for s in _get_static_check_entries(config_cache, host_config) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
     if host_config.is_cluster:
@@ -128,6 +128,7 @@ class _ServiceFilter:
 
 
 def _get_static_check_entries(
+    config_cache: config.ConfigCache,
     host_config: config.HostConfig,
 ) -> Iterator[Service]:
     entries: List[Service] = []
@@ -136,24 +137,16 @@ def _get_static_check_entries(
         # in this case: move it to the transform of the static services rule.
         check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
 
+        descr = config.service_description(host_config.hostname, check_plugin_name, item)
         new_parameters = config.compute_check_parameters(
-            host_config.hostname,
+            config_cache.host_of_clustered_service(host_config.hostname, descr),
             check_plugin_name,
             item,
             {},
             configured_parameters=(params,),
         )
 
-        entries.append(
-            Service(
-                check_plugin_name=check_plugin_name,
-                item=item,
-                description=config.service_description(
-                    host_config.hostname, check_plugin_name, item
-                ),
-                parameters=new_parameters,
-            )
-        )
+        entries.append(Service(check_plugin_name, item, descr, new_parameters))
 
     # Note: We need to reverse the order of the static_checks. This is
     # because users assume that earlier rules have precedence over later
@@ -172,28 +165,16 @@ def _get_clustered_services(
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.
         node_config = config_cache.get_host_config(node)
-        node_checks = list(_get_static_check_entries(node_config))
+        node_checks = list(_get_static_check_entries(config_cache, node_config))
         if not (skip_autochecks or host_config.is_ping_host):
             node_checks += config_cache.get_autochecks_of(node)
 
-        for service in node_checks:
-            services_host = config_cache.host_of_clustered_service(node, service.description)
-            if services_host != host_config.hostname:
-                continue
-
-            cluster_params = config.compute_check_parameters(
-                host_config.hostname,
-                service.check_plugin_name,
-                service.item,
-                service.parameters,
-            )
-            yield Service(
-                service.check_plugin_name,
-                service.item,
-                service.description,
-                cluster_params,
-                service.service_labels,
-            )
+        yield from (
+            service
+            for service in node_checks
+            if config_cache.host_of_clustered_service(node, service.description)
+            == host_config.hostname
+        )
 
 
 def get_check_table(

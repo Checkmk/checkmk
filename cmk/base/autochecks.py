@@ -76,11 +76,15 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
+        get_effective_hostname: HostOfClusteredService,
     ) -> List[Service]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = list(
                 self._get_autochecks_of_uncached(
-                    hostname, compute_check_parameters, get_service_description
+                    hostname,
+                    compute_check_parameters,
+                    get_service_description,
+                    get_effective_hostname,
                 )
             )
         return self._autochecks[hostname]
@@ -90,6 +94,7 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
+        get_effective_hostname: HostOfClusteredService,
     ) -> Iterable[Service]:
         """Read automatically discovered checks of one host"""
         for autocheck_service in self._read_raw_autochecks(hostname):
@@ -105,7 +110,7 @@ class AutochecksManager:
                 item=autocheck_service.item,
                 description=service_name,
                 parameters=compute_check_parameters(
-                    hostname,
+                    get_effective_hostname(hostname, service_name),
                     autocheck_service.check_plugin_name,
                     autocheck_service.item,
                     autocheck_service.discovered_parameters,

@@ -273,7 +273,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
     def _fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
 
-        success, output, agent_data = watolib.check_mk_automation(
+        success, output, agent_data = watolib.check_mk_automation_deprecated(
             self._request.host.site_id(),
             "get-agent-output",
             [self._request.host.name(), self._request.agent_type],

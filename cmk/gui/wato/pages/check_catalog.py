@@ -440,7 +440,7 @@ class ModeCheckManPage(WatoMode):
             raise MKUserError(None, _("There is no manpage for this check."))
         self._manpage = manpage
 
-        checks = watolib.check_mk_local_automation("get-check-information")
+        checks = watolib.check_mk_local_automation_deprecated("get-check-information")
         if self._check_type in checks:
             self._manpage = {
                 "type": "check_mk",

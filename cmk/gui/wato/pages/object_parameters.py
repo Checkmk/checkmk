@@ -131,8 +131,10 @@ class ModeObjectParameters(WatoMode):
         forms.end()
 
     def _show_host_info(self):
-        host_info = watolib.check_mk_automation(
-            self._host.site_id(), "analyse-host", [self._hostname]
+        host_info = watolib.check_mk_automation_deprecated(
+            self._host.site_id(),
+            "analyse-host",
+            [self._hostname],
         )
         if not host_info:
             return
@@ -143,8 +145,10 @@ class ModeObjectParameters(WatoMode):
     def _show_service_info(self, all_rulesets):
         assert self._service is not None
 
-        serviceinfo = watolib.check_mk_automation(
-            self._host.site_id(), "analyse-service", [self._hostname, self._service]
+        serviceinfo = watolib.check_mk_automation_deprecated(
+            self._host.site_id(),
+            "analyse-service",
+            [self._hostname, self._service],
         )
         if not serviceinfo:
             return

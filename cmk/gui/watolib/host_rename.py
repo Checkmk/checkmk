@@ -19,7 +19,7 @@ from cmk.gui import userdb
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.automations import check_mk_automation_deprecated
 from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text
 from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, CREFolder, Folder, Host
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
@@ -179,8 +179,12 @@ def _rename_hosts_in_check_mk(
         # The sync is automatically done by the remote automation call
         add_change("renamed-hosts", message, sites=[site_id], need_restart=False)
 
-        new_counts = check_mk_automation(
-            site_id, "rename-hosts", [], name_pairs, non_blocking_http=True
+        new_counts = check_mk_automation_deprecated(
+            site_id,
+            "rename-hosts",
+            [],
+            name_pairs,
+            non_blocking_http=True,
         )
 
         _merge_action_counts(action_counts, new_counts)

@@ -21,7 +21,10 @@ from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
-from cmk.gui.watolib.automations import check_mk_automation, sync_changes_before_remote_automation
+from cmk.gui.watolib.automations import (
+    check_mk_automation_deprecated,
+    sync_changes_before_remote_automation,
+)
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -223,14 +226,19 @@ class Discovery:
         site_id = self._host.site_id()
         site_status = states().get(site_id, SiteStatus({}))
         if is_pre_17_remote_site(site_status):
-            check_mk_automation(
+            check_mk_automation_deprecated(
                 site_id,
                 "set-autochecks",
                 [self._host.name()],
                 {x: y[1:3] for x, y in checks.items()},
             )
         else:
-            check_mk_automation(site_id, "set-autochecks", [self._host.name()], checks)
+            check_mk_automation_deprecated(
+                site_id,
+                "set-autochecks",
+                [self._host.name()],
+                checks,
+            )
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
@@ -590,7 +598,7 @@ def _get_check_table_from_remote(api_request):
         # Compatibility for pre 1.6 remote sites.
         # TODO: Replace with helpful exception in 1.7.
         if api_request.options.action == DiscoveryAction.TABULA_RASA:
-            _counts, _failed_hosts = check_mk_automation(
+            _counts, _failed_hosts = check_mk_automation_deprecated(
                 api_request.host.site_id(),
                 "inventory",
                 ["@scan", "refresh", api_request.host.name()],
@@ -606,7 +614,11 @@ def _get_check_table_from_remote(api_request):
 
         options.append(api_request.host.name())
 
-        check_table = check_mk_automation(api_request.host.site_id(), "try-inventory", options)
+        check_table = check_mk_automation_deprecated(
+            api_request.host.site_id(),
+            "try-inventory",
+            options,
+        )
 
         return DiscoveryResult(
             job_status={
@@ -669,15 +681,17 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def _perform_service_scan(self, api_request):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        result = check_mk_automation(
-            api_request.host.site_id(), "try-inventory", self._get_automation_options(api_request)
+        result = check_mk_automation_deprecated(
+            api_request.host.site_id(),
+            "try-inventory",
+            self._get_automation_options(api_request),
         )
         sys.stdout.write(result["output"])
 
     def _perform_automatic_refresh(self, api_request):
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
-        check_mk_automation(
+        check_mk_automation_deprecated(
             siteid=api_request.host.site_id(),
             command="inventory",
             args=["@scan", "refresh", api_request.host.name()],
@@ -730,7 +744,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # somehow.
         return (
             int(time.time()),
-            check_mk_automation(
+            check_mk_automation_deprecated(
                 api_request.host.site_id(),
                 "try-inventory",
                 ["@noscan", api_request.host.name()],

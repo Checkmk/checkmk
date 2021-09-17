@@ -9,12 +9,13 @@ and similar things."""
 
 import ast
 import logging
-import os
 import re
 import subprocess
 import time
 import uuid
-from typing import Any, Dict, NamedTuple, Optional, Sequence, Tuple
+from dataclasses import astuple
+from pathlib import Path
+from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 
 import requests
 import urllib3  # type: ignore[import]
@@ -25,6 +26,9 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
+from cmk.utils.werks import parse_check_mk_version
+
+from cmk.automations.results import result_type_registry, SerializedResult
 
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
@@ -52,7 +56,20 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
-def check_mk_automation(
+def _deserialize_check_mk_automation_result_deprecated(
+    command: str,
+    serialized_result: SerializedResult,
+) -> object:
+    return astuple(result_type_registry[command].deserialize(serialized_result))[0]
+
+
+def remote_automation_call_came_from_pre21() -> bool:
+    if not (remote_version := request.headers.get("x-checkmk-version")):
+        return False
+    return parse_check_mk_version(remote_version) < parse_check_mk_version("2.1.0")
+
+
+def check_mk_automation_deprecated(
     siteid: SiteId,
     command: str,
     args: Optional[Sequence[str]] = None,
@@ -66,9 +83,15 @@ def check_mk_automation(
         args = []
 
     if not siteid or site_is_local(siteid):
-        return check_mk_local_automation(command, args, indata, stdin_data, timeout)
+        return check_mk_local_automation_deprecated(
+            command,
+            args,
+            indata,
+            stdin_data,
+            timeout,
+        )
 
-    return check_mk_remote_automation(
+    return _check_mk_remote_automation_deprecated(
         site_id=siteid,
         command=command,
         args=args,
@@ -80,13 +103,14 @@ def check_mk_automation(
     )
 
 
-def check_mk_local_automation(
+def check_mk_local_automation_serialized(
+    *,
     command: str,
     args: Optional[Sequence[str]] = None,
     indata: Any = "",
     stdin_data: Optional[str] = None,
     timeout: Optional[int] = None,
-) -> Any:
+) -> Tuple[Sequence[str], SerializedResult]:
     if args is None:
         args = []
     new_args = [ensure_str(a) for a in args]
@@ -125,7 +149,7 @@ def check_mk_local_automation(
             encoding="utf-8",
         )
     except Exception as e:
-        raise _local_automation_failure(command=command, cmdline=cmd, exc=e)
+        raise local_automation_failure(command=command, cmdline=cmd, exc=e)
 
     assert p.stdin is not None
     assert p.stdout is not None
@@ -146,7 +170,7 @@ def check_mk_local_automation(
         auto_logger.error(
             "Error running %r (exit code %d)" % (subprocess.list2cmdline(cmd), exitcode)
         )
-        raise _local_automation_failure(
+        raise local_automation_failure(
             command=command, cmdline=cmd, code=exitcode, out=outdata, err=errdata
         )
 
@@ -154,13 +178,40 @@ def check_mk_local_automation(
     if command in ["restart", "reload"]:
         call_hook_activate_changes()
 
+    return cmd, SerializedResult(outdata)
+
+
+def check_mk_local_automation_deprecated(
+    command: str,
+    args: Optional[Sequence[str]] = None,
+    indata: Any = "",
+    stdin_data: Optional[str] = None,
+    timeout: Optional[int] = None,
+) -> Any:
+    cmd, outdata = check_mk_local_automation_serialized(
+        command=command,
+        args=args,
+        indata=indata,
+        stdin_data=stdin_data,
+        timeout=timeout,
+    )
     try:
-        return ast.literal_eval(outdata)
+        return _deserialize_check_mk_automation_result_deprecated(
+            command,
+            outdata,
+        )
     except SyntaxError as e:
-        raise _local_automation_failure(command=command, cmdline=cmd, out=outdata, exc=e)
+        raise local_automation_failure(command=command, cmdline=cmd, out=outdata, exc=e)
 
 
-def _local_automation_failure(command, cmdline, code=None, out=None, err=None, exc=None):
+def local_automation_failure(
+    command,
+    cmdline,
+    code=None,
+    out=None,
+    err=None,
+    exc=None,
+) -> MKGeneralException:
     call = subprocess.list2cmdline(cmdline) if config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
@@ -178,7 +229,8 @@ def _hilite_errors(outdata):
     return re.sub("\nError: *([^\n]*)", "\n<div class=err><b>Error:</b> \\1</div>", outdata)
 
 
-def check_mk_remote_automation(
+def _check_mk_remote_automation_serialized(
+    *,
     site_id: SiteId,
     command: str,
     args: Optional[Sequence[str]],
@@ -187,7 +239,7 @@ def check_mk_remote_automation(
     timeout: Optional[int] = None,
     sync: bool = True,
     non_blocking_http: bool = False,
-) -> Any:
+) -> SerializedResult:
     site = get_site_config(site_id)
     if "secret" not in site:
         raise MKGeneralException(
@@ -206,22 +258,58 @@ def check_mk_remote_automation(
     if non_blocking_http:
         # This will start a background job process on the remote site to execute the automation
         # asynchronously. It then polls the remote site, waiting for completion of the job.
-        return _do_check_mk_remote_automation_in_background_job(
+        return _do_check_mk_remote_automation_in_background_job_serialized(
             site_id, CheckmkAutomationRequest(command, args, indata, stdin_data, timeout)
         )
 
     # Synchronous execution of the actual remote command in a single blocking HTTP request
-    return do_remote_automation(
-        get_site_config(site_id),
-        "checkmk-automation",
-        [
-            ("automation", command),  # The Checkmk automation command
-            ("arguments", mk_repr(args)),  # The arguments for the command
-            ("indata", mk_repr(indata)),  # The input data
-            ("stdin_data", mk_repr(stdin_data)),  # The input data for stdin
-            ("timeout", mk_repr(timeout)),  # The timeout
-        ],
+    return SerializedResult(
+        _do_remote_automation_serialized(
+            site=get_site_config(site_id),
+            command="checkmk-automation",
+            vars_=[
+                ("automation", command),  # The Checkmk automation command
+                ("arguments", mk_repr(args)),  # The arguments for the command
+                ("indata", mk_repr(indata)),  # The input data
+                ("stdin_data", mk_repr(stdin_data)),  # The input data for stdin
+                ("timeout", mk_repr(timeout)),  # The timeout
+            ],
+        )
     )
+
+
+def _check_mk_remote_automation_deprecated(
+    site_id: SiteId,
+    command: str,
+    args: Optional[Sequence[str]],
+    indata: Any,
+    stdin_data: Optional[str] = None,
+    timeout: Optional[int] = None,
+    sync: bool = True,
+    non_blocking_http: bool = False,
+) -> Any:
+    try:
+        return _deserialize_check_mk_automation_result_deprecated(
+            command,
+            serialized_response := _check_mk_remote_automation_serialized(
+                site_id=site_id,
+                command=command,
+                args=args,
+                indata=indata,
+                stdin_data=stdin_data,
+                timeout=timeout,
+                sync=sync,
+                non_blocking_http=non_blocking_http,
+            ),
+        )
+    except SyntaxError:
+        raise MKAutomationException(
+            "%s: <pre>%s</pre>"
+            % (
+                _("Got invalid data"),
+                serialized_response,
+            )
+        )
 
 
 # If the site is not up-to-date, synchronize it first.
@@ -286,7 +374,14 @@ def call_hook_activate_changes():
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
-def do_remote_automation(site, command, vars_, files=None, timeout=None):
+def _do_remote_automation_serialized(
+    *,
+    site,
+    command,
+    vars_,
+    files=None,
+    timeout=None,
+) -> str:
     auto_logger.info("RUN [%s]: %s", site, command)
     auto_logger.debug("VARS: %r", vars_)
 
@@ -312,13 +407,28 @@ def do_remote_automation(site, command, vars_, files=None, timeout=None):
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
 
+    return response
+
+
+def do_remote_automation(site, command, vars_, files=None, timeout=None) -> Any:
+    serialized_response = _do_remote_automation_serialized(
+        site=site,
+        command=command,
+        vars_=vars_,
+        files=files,
+        timeout=timeout,
+    )
     try:
-        response = ast.literal_eval(response)
+        return ast.literal_eval(serialized_response)
     except SyntaxError:
         # The remote site will send non-Python data in case of an error.
-        raise MKAutomationException("%s: <pre>%s</pre>" % (_("Got invalid data"), response))
-
-    return response
+        raise MKAutomationException(
+            "%s: <pre>%s</pre>"
+            % (
+                _("Got invalid data"),
+                serialized_response,
+            )
+        )
 
 
 def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
@@ -416,16 +526,17 @@ class CheckmkAutomationRequest(NamedTuple):
 
 class CheckmkAutomationGetStatusResponse(NamedTuple):
     job_status: Dict[str, Any]
-    result: Any
+    # object occurs in case of a remote automation call from a pre-2.1 central site
+    result: Union[object, str]
 
 
 # There are already at least two custom background jobs that are wrapping remote automation
 # calls but have been implemented individually. Does it make sense to refactor them to use this?
 # - Service discovery of a single host (cmk.gui.wato.pages.services._get_check_table)
 # - Fetch agent / SNMP output (cmk.gui.wato.pages.fetch_agent_output.FetchAgentOutputBackgroundJob)
-def _do_check_mk_remote_automation_in_background_job(
+def _do_check_mk_remote_automation_in_background_job_serialized(
     site_id: SiteId, automation_request: CheckmkAutomationRequest
-) -> Any:
+) -> SerializedResult:
     """Execute the automation in a background job on the remote site
 
     It starts the background job using one call. It then polls the remote site, waiting for
@@ -452,7 +563,9 @@ def _do_check_mk_remote_automation_in_background_job(
             auto_logger.debug("Job is not active anymore. Return the result: %s", result)
             break
 
-    return result
+    assert isinstance(result, str)
+
+    return SerializedResult(result)
 
 
 def _start_remote_automation_job(
@@ -501,15 +614,21 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     def get_request(self) -> str:
         return ast.literal_eval(request.get_ascii_input_mandatory("request"))
 
+    @staticmethod
+    def _load_result(path: Path) -> Union[str, object]:
+        if remote_automation_call_came_from_pre21():
+            return store.load_object_from_file(path, default=None)
+        return store.load_text_from_file(path)
+
     def execute(self, api_request: str) -> Tuple:
         job_id = api_request
         job = CheckmkAutomationBackgroundJob(job_id)
-        job_status = job.get_status_snapshot().get_status_as_dict()[job.get_job_id()]
-
-        result_file_path = os.path.join(job.get_work_dir(), "result.mk")
-        result = store.load_object_from_file(result_file_path, default=None)
-
-        return tuple(CheckmkAutomationGetStatusResponse(job_status=job_status, result=result))
+        return tuple(
+            CheckmkAutomationGetStatusResponse(
+                job_status=job.get_status_snapshot().get_status_as_dict()[job.get_job_id()],
+                result=self._load_result(Path(job.get_work_dir()) / "result.mk"),
+            )
+        )
 
 
 @gui_background_job.job_registry.register
@@ -539,22 +658,52 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
             title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
         )
 
+    @staticmethod
+    def _store_result(
+        *,
+        path: Path,
+        serialized_result: SerializedResult,
+        automation_cmd: str,
+        cmdline_cmd: Iterable[str],
+    ) -> None:
+        if remote_automation_call_came_from_pre21():
+            try:
+                store.save_object_to_file(
+                    path,
+                    result_type_registry[automation_cmd].deserialize(serialized_result).to_pre_21(),
+                )
+            except SyntaxError as e:
+                raise local_automation_failure(
+                    command=automation_cmd,
+                    cmdline=cmdline_cmd,
+                    out=serialized_result,
+                    exc=e,
+                )
+        else:
+            store.save_text_to_file(
+                path,
+                serialized_result,
+            )
+
     def execute_automation(
-        self, job_interface: BackgroundProcessInterface, api_request: CheckmkAutomationRequest
+        self,
+        job_interface: BackgroundProcessInterface,
+        api_request: CheckmkAutomationRequest,
     ) -> None:
         self._logger.info("Starting automation: %s", api_request.command)
         self._logger.debug(api_request)
-
-        result = check_mk_local_automation(
-            api_request.command,
-            api_request.args,
-            api_request.indata,
-            api_request.stdin_data,
-            api_request.timeout,
+        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
+            command=api_request.command,
+            args=api_request.args,
+            indata=api_request.indata,
+            stdin_data=api_request.stdin_data,
+            timeout=api_request.timeout,
         )
-
         # This file will be read by the get-status request
-        result_file_path = os.path.join(job_interface.get_work_dir(), "result.mk")
-        store.save_object_to_file(result_file_path, result)
-
+        self._store_result(
+            path=Path(job_interface.get_work_dir()) / "result.mk",
+            serialized_result=serialized_result,
+            automation_cmd=api_request.command,
+            cmdline_cmd=cmdline_cmd,
+        )
         job_interface.send_result_message(_("Finished."))

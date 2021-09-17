@@ -10,10 +10,11 @@ from types import FrameType
 from typing import Any, Dict, List, NoReturn, Optional
 
 import cmk.utils.debug
-import cmk.utils.python_printer as python_printer
 from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins
+
+from cmk.automations.results import ABCAutomationResult
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
@@ -68,7 +69,7 @@ class Automations:
         finally:
             profiling.output_profile()
 
-        out.output(python_printer.pformat(result))
+        out.output(result.serialize())
         out.output("\n")
 
         return 0
@@ -93,8 +94,8 @@ class Automation(abc.ABC):
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args: List[str]) -> Any:
-        raise NotImplementedError()
+    def execute(self, args: List[str]) -> ABCAutomationResult:
+        ...
 
 
 #

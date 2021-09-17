@@ -2744,7 +2744,7 @@ class FolderChoice(DropdownChoice):
 
 def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
     if "automation_get_check_information" not in g:
-        raw_check_dict = watolib.check_mk_local_automation("get-check-information")
+        raw_check_dict = watolib.check_mk_local_automation_deprecated("get-check-information")
         g.automation_get_check_information = {
             CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())
         }
@@ -2754,7 +2754,7 @@ def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
 
 def get_section_information():
     if "automation_get_section_information" not in g:
-        g.automation_get_section_information = watolib.check_mk_local_automation(
+        g.automation_get_section_information = watolib.check_mk_local_automation_deprecated(
             "get-section-information"
         )
 

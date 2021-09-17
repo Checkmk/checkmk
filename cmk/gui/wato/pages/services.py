@@ -46,9 +46,12 @@ from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_html
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib import automation_command_registry, AutomationCommand
+from cmk.gui.watolib import (
+    automation_command_registry,
+    AutomationCommand,
+    check_mk_automation_deprecated,
+)
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
-from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
@@ -507,7 +510,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             len(discovery_result.host_labels),
         )
         watolib.add_service_change(self._host, "update-host-labels", message)
-        check_mk_automation(
+        check_mk_automation_deprecated(
             self._host.site_id(),
             "update-host-labels",
             [self._host.name()],
@@ -1432,7 +1435,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
         try:
-            state, output = check_mk_automation(
+            state, output = check_mk_automation_deprecated(
                 self._site,
                 "active-check",
                 [self._host_name, self._check_type, self._item],

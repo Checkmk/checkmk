@@ -8,6 +8,8 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
 
+from cmk.automations.results import AnalyseHostResult, GetLabelsOfResult
+
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
 import cmk.base.config as config
@@ -66,10 +68,12 @@ def test_get_labels_of_host(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    assert automation.execute(["host", "test-host"]) == {
-        "label_sources": {"cmk/site": "discovered", "explicit": "explicit"},
-        "labels": {"cmk/site": "NO_SITE", "explicit": "ding"},
-    }
+    assert automation.execute(["host", "test-host"]) == GetLabelsOfResult(
+        {
+            "label_sources": {"cmk/site": "discovered", "explicit": "explicit"},
+            "labels": {"cmk/site": "NO_SITE", "explicit": "ding"},
+        }
+    )
 
 
 def test_get_labels_of_service(monkeypatch):
@@ -85,10 +89,12 @@ def test_get_labels_of_service(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    assert automation.execute(["service", "test-host", "CPU load"]) == {
-        "labels": {"label1": "val1", "label2": "val2"},
-        "label_sources": {"label1": "ruleset", "label2": "ruleset"},
-    }
+    assert automation.execute(["service", "test-host", "CPU load"]) == GetLabelsOfResult(
+        {
+            "labels": {"label1": "val1", "label2": "val2"},
+            "label_sources": {"label1": "ruleset", "label2": "ruleset"},
+        }
+    )
 
 
 def test_analyse_host(monkeypatch):
@@ -105,7 +111,9 @@ def test_analyse_host(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    assert automation.execute(["test-host"]) == {
-        "label_sources": {"cmk/site": "discovered", "explicit": "explicit"},
-        "labels": {"cmk/site": "NO_SITE", "explicit": "ding"},
-    }
+    assert automation.execute(["test-host"]) == AnalyseHostResult(
+        {
+            "label_sources": {"cmk/site": "discovered", "explicit": "explicit"},
+            "labels": {"cmk/site": "NO_SITE", "explicit": "ding"},
+        }
+    )

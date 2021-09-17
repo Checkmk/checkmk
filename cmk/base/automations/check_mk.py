@@ -52,12 +52,13 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     LegacyCheckParameters,
-    SerializedDiscoveryResponse,
     ServiceDetails,
     ServiceState,
     SetAutochecksTable,
     SetAutochecksTablePre20,
 )
+
+from cmk.automations import results as automation_results
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
@@ -131,7 +132,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     # "refresh" - drop all services and reinventorize
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args: List[str]) -> SerializedDiscoveryResponse:
+    def execute(self, args: List[str]) -> automation_results.DiscoveryResult:
         # Error sensitivity
         if args[0] == "@raiseerrors":
             args = args[1:]
@@ -176,7 +177,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 # make the service reflect the new state as soon as possible.
                 self._trigger_discovery_check(config_cache, host_config)
 
-        return AutomationDiscoveryResponse(results).serialize()
+        return automation_results.DiscoveryResult(AutomationDiscoveryResponse(results).serialize())
 
 
 automations.register(AutomationDiscovery())
@@ -187,7 +188,7 @@ class AutomationTryDiscovery(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> Dict[str, Any]:
+    def execute(self, args: List[str]) -> automation_results.TryDiscoveryResult:
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
@@ -207,18 +208,20 @@ class AutomationTryDiscovery(Automation):
                 ]
             )
 
-            return {
-                "output": buf.getvalue(),
-                "check_table": check_preview_table,
-                "host_labels": make_discovered_host_labels(host_label_result.present),
-                "new_labels": make_discovered_host_labels(
-                    [l for l in host_label_result.new if l.name not in changed_labels]
-                ),
-                "vanished_labels": make_discovered_host_labels(
-                    [l for l in host_label_result.vanished if l.name not in changed_labels]
-                ),
-                "changed_labels": changed_labels,
-            }
+            return automation_results.TryDiscoveryResult(
+                {
+                    "output": buf.getvalue(),
+                    "check_table": check_preview_table,
+                    "host_labels": make_discovered_host_labels(host_label_result.present),
+                    "new_labels": make_discovered_host_labels(
+                        [l for l in host_label_result.new if l.name not in changed_labels]
+                    ),
+                    "vanished_labels": make_discovered_host_labels(
+                        [l for l in host_label_result.vanished if l.name not in changed_labels]
+                    ),
+                    "changed_labels": changed_labels,
+                }
+            )
 
     def _execute_discovery(
         self, args: List[str]
@@ -259,7 +262,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # table of (checktype, item). No parameters are specified. Those
     # are either (1) kept from existing autochecks or (2) computed
     # from a new inventory.
-    def execute(self, args: List[str]) -> None:
+    def execute(self, args: List[str]) -> automation_results.SetAutochecksResult:
         hostname = HostName(args[0])
         new_items: Union[SetAutochecksTable, SetAutochecksTablePre20] = ast.literal_eval(
             sys.stdin.read()
@@ -299,6 +302,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)
+        return automation_results.SetAutochecksResult(None)
 
 
 def _transform_pre_20_items(
@@ -341,7 +345,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: List[str]) -> None:
+    def execute(self, args: List[str]) -> automation_results.UpdateHostLabelsResult:
         hostname = HostName(args[0])
         new_host_labels = ast.literal_eval(sys.stdin.read())
         DiscoveredHostLabelsStore(hostname).save(new_host_labels)
@@ -349,6 +353,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
         self._trigger_discovery_check(config_cache, host_config)
+        return automation_results.UpdateHostLabelsResult(None)
 
 
 automations.register(AutomationUpdateHostLabels())
@@ -367,7 +372,7 @@ class AutomationRenameHosts(Automation):
     # several file and directory names. This function has no argument but reads
     # Python pair-list from stdin:
     # [("old1", "new1"), ("old2", "new2")])
-    def execute(self, args: List[str]) -> Dict[str, int]:
+    def execute(self, args: List[str]) -> automation_results.RenameHostsResult:
         renamings: List[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
         actions: List[str] = []
@@ -411,7 +416,7 @@ class AutomationRenameHosts(Automation):
             action_counts.setdefault(action, 0)
             action_counts[action] += 1
 
-        return action_counts
+        return automation_results.RenameHostsResult(action_counts)
 
     def _core_is_running(self) -> bool:
         if config.monitoring_core == "nagios":
@@ -676,7 +681,7 @@ class AutomationAnalyseServices(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> Dict:
+    def execute(self, args: List[str]) -> automation_results.AnalyseServiceResult:
         hostname = HostName(args[0])
         servicedesc = args[1]
 
@@ -691,7 +696,7 @@ class AutomationAnalyseServices(Automation):
                     "label_sources": config_cache.label_sources_of_service(hostname, servicedesc),
                 }
             )
-        return service_info
+        return automation_results.AnalyseServiceResult(service_info)
 
     # Determine the type of the check, and how the parameters are being
     # constructed
@@ -815,13 +820,15 @@ class AutomationAnalyseHost(Automation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: List[str]) -> Dict:
+    def execute(self, args: List[str]) -> automation_results.AnalyseHostResult:
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
-        return {
-            "labels": config_cache.get_host_config(host_name).labels,
-            "label_sources": config_cache.get_host_config(host_name).label_sources,
-        }
+        return automation_results.AnalyseHostResult(
+            {
+                "labels": config_cache.get_host_config(host_name).labels,
+                "label_sources": config_cache.get_host_config(host_name).label_sources,
+            }
+        )
 
 
 automations.register(AutomationAnalyseHost())
@@ -831,7 +838,7 @@ class ABCDeleteHosts:
     needs_config = False
     needs_checks = False
 
-    def execute(self, args: List[str]) -> None:
+    def _execute(self, args: List[str]) -> None:
         for hostname_str in args:
             self._delete_host_files(HostName(hostname_str))
 
@@ -888,9 +895,9 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts, Automation):
     cmd = "delete-hosts"
 
-    def execute(self, args: List[str]) -> None:
-        for hostname_str in args:
-            self._delete_host_files(HostName(hostname_str))
+    def execute(self, args: List[str]) -> automation_results.DeleteHostsResult:
+        self._execute(args)
+        return automation_results.DeleteHostsResult(None)
 
     def _single_file_paths(self, hostname: HostName):
         return [
@@ -928,6 +935,10 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
     local site and are now handled by a remote site"""
 
     cmd = "delete-hosts-known-remote"
+
+    def execute(self, args: List[str]) -> automation_results.DeleteHostsKnownRemoteResult:
+        self._execute(args)
+        return automation_results.DeleteHostsKnownRemoteResult(None)
 
     def _single_file_paths(self, hostname: HostName):
         return [
@@ -967,7 +978,7 @@ class AutomationRestart(Automation):
             return CoreAction.RELOAD
         return CoreAction.RESTART
 
-    def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
+    def execute(self, args: List[str]) -> automation_results.RestartResult:
         with redirect_stdout(open(os.devnull, "w")):
             log.setup_console_logging()
             try:
@@ -984,7 +995,7 @@ class AutomationRestart(Automation):
                     raise
                 raise MKAutomationError(str(e))
 
-            return core_config.get_configuration_warnings()
+            return automation_results.RestartResult(core_config.get_configuration_warnings())
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()
@@ -1028,6 +1039,9 @@ class AutomationReload(AutomationRestart):
             return CoreAction.RESTART
         return CoreAction.RELOAD
 
+    def execute(self, args: List[str]) -> automation_results.ReloadResult:
+        return automation_results.ReloadResult(super().execute(args).config_warnings)
+
 
 automations.register(AutomationReload())
 
@@ -1055,7 +1069,7 @@ class AutomationGetConfiguration(Automation):
     # this option (like before).
     needs_checks = False
 
-    def execute(self, args: List[str]) -> Dict[str, Any]:
+    def execute(self, args: List[str]) -> automation_results.GetConfigurationResult:
         config.load(with_conf_d=False)
 
         # We read the list of variable names from stdin since
@@ -1074,7 +1088,7 @@ class AutomationGetConfiguration(Automation):
                 value = getattr(config, varname)
                 if not hasattr(value, "__call__"):
                     result[varname] = value
-        return result
+        return automation_results.GetConfigurationResult(result)
 
 
 automations.register(AutomationGetConfiguration())
@@ -1085,7 +1099,7 @@ class AutomationGetCheckInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args: List[str]) -> Dict[CheckPluginNameStr, Dict[str, Any]]:
+    def execute(self, args: List[str]) -> automation_results.GetCheckInformationResult:
         manuals = man_pages.all_man_pages()
 
         plugin_infos: Dict[CheckPluginNameStr, Dict[str, Any]] = {}
@@ -1105,7 +1119,7 @@ class AutomationGetCheckInformation(Automation):
             if plugin.discovery_ruleset_name:
                 plugin_info["discovery_ruleset_name"] = str(plugin.discovery_ruleset_name)
 
-        return plugin_infos
+        return automation_results.GetCheckInformationResult(plugin_infos)
 
     @staticmethod
     def _get_title(manuals, plugin) -> str:
@@ -1128,7 +1142,7 @@ class AutomationGetSectionInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args: List[str]) -> Dict[str, Dict[str, str]]:
+    def execute(self, args: List[str]) -> automation_results.GetSectionInformationResult:
 
         section_infos = {
             str(section.name): {
@@ -1147,7 +1161,7 @@ class AutomationGetSectionInformation(Automation):
                 for section in agent_based_register.iter_all_snmp_sections()
             }
         )
-        return section_infos
+        return automation_results.GetSectionInformationResult(section_infos)
 
 
 automations.register(AutomationGetSectionInformation())
@@ -1158,7 +1172,7 @@ class AutomationScanParents(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> cmk.base.parent_scan.Gateways:
+    def execute(self, args: List[str]) -> automation_results.ScanParentsResult:
         settings = {
             "timeout": int(args[0]),
             "probes": int(args[1]),
@@ -1174,7 +1188,7 @@ class AutomationScanParents(Automation):
             gateways = cmk.base.parent_scan.scan_parents_of(
                 config_cache, hostnames, silent=True, settings=settings
             )
-            return gateways
+            return automation_results.ScanParentsResult(gateways)
         except Exception as e:
             raise MKAutomationError("%s" % e)
 
@@ -1187,7 +1201,7 @@ class AutomationDiagHost(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> Tuple[int, str]:
+    def execute(self, args: List[str]) -> automation_results.DiagHostResult:
         hostname = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
@@ -1234,43 +1248,67 @@ class AutomationDiagHost(Automation):
 
         try:
             if test == "ping":
-                return self._execute_ping(host_config, ipaddress)
+                return automation_results.DiagHostResult(
+                    self._execute_ping(
+                        host_config,
+                        ipaddress,
+                    )
+                )
 
             if test == "agent":
-                return self._execute_agent(
-                    host_config,
-                    ipaddress,
-                    agent_port=agent_port,
-                    cmd=cmd,
-                    tcp_connect_timeout=tcp_connect_timeout,
+                return automation_results.DiagHostResult(
+                    self._execute_agent(
+                        host_config,
+                        ipaddress,
+                        agent_port=agent_port,
+                        cmd=cmd,
+                        tcp_connect_timeout=tcp_connect_timeout,
+                    )
                 )
 
             if test == "traceroute":
-                return self._execute_traceroute(host_config, ipaddress)
-
-            if test.startswith("snmp"):
-                return self._execute_snmp(
-                    test,
-                    host_config,
-                    hostname,
-                    ipaddress,
-                    snmp_community,
-                    snmp_timeout,
-                    snmp_retries,
-                    snmpv3_use,
-                    snmpv3_auth_proto,
-                    snmpv3_security_name,
-                    snmpv3_security_password,
-                    snmpv3_privacy_proto,
-                    snmpv3_privacy_password,
+                return automation_results.DiagHostResult(
+                    self._execute_traceroute(
+                        host_config,
+                        ipaddress,
+                    )
                 )
 
-            return 1, "Command not implemented"
+            if test.startswith("snmp"):
+                return automation_results.DiagHostResult(
+                    self._execute_snmp(
+                        test,
+                        host_config,
+                        hostname,
+                        ipaddress,
+                        snmp_community,
+                        snmp_timeout,
+                        snmp_retries,
+                        snmpv3_use,
+                        snmpv3_auth_proto,
+                        snmpv3_security_name,
+                        snmpv3_security_password,
+                        snmpv3_privacy_proto,
+                        snmpv3_privacy_password,
+                    )
+                )
+
+            return automation_results.DiagHostResult(
+                (
+                    1,
+                    "Command not implemented",
+                )
+            )
 
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            return 1, str(e)
+            return automation_results.DiagHostResult(
+                (
+                    1,
+                    str(e),
+                )
+            )
 
     def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
@@ -1469,7 +1507,7 @@ class AutomationActiveCheck(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+    def execute(self, args: List[str]) -> automation_results.ActiveCheckResult:
         hostname = HostName(args[0])
         plugin, raw_item = args[1:]
         item = raw_item
@@ -1484,14 +1522,19 @@ class AutomationActiveCheck(Automation):
                 command_line = self._replace_core_macros(hostname, entry.get("command_line", ""))
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
-                    return self._execute_check_plugin(cmd)
+                    return automation_results.ActiveCheckResult(self._execute_check_plugin(cmd))
 
-                return -1, "Passive check - cannot be executed"
+                return automation_results.ActiveCheckResult(
+                    (
+                        -1,
+                        "Passive check - cannot be executed",
+                    )
+                )
 
         try:
             act_info = config.active_check_info[plugin]
         except KeyError:
-            return None
+            return automation_results.ActiveCheckResult(None)
 
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
@@ -1508,9 +1551,9 @@ class AutomationActiveCheck(Automation):
                     hostname, act_info["command_line"].replace("$ARG1$", command_args)
                 )
                 cmd = core_config.autodetect_plugin(command_line)
-                return self._execute_check_plugin(cmd)
+                return automation_results.ActiveCheckResult(self._execute_check_plugin(cmd))
 
-        return None
+        return automation_results.ActiveCheckResult(None)
 
     def _load_resource_file(self, macros: Dict[str, str]) -> None:
         try:
@@ -1568,16 +1611,18 @@ class AutomationUpdateDNSCache(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> ip_lookup.UpdateDNSCacheResult:
+    def execute(self, args: List[str]) -> automation_results.UpdateDNSCacheResult:
         config_cache = config.get_config_cache()
-        return ip_lookup.update_dns_cache(
-            host_configs=(
-                config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()
-            ),
-            configured_ipv4_addresses=config.ipaddresses,
-            configured_ipv6_addresses=config.ipv6addresses,
-            simulation_mode=config.simulation_mode,
-            override_dns=config.fake_dns,
+        return automation_results.UpdateDNSCacheResult(
+            ip_lookup.update_dns_cache(
+                host_configs=(
+                    config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()
+                ),
+                configured_ipv4_addresses=config.ipaddresses,
+                configured_ipv6_addresses=config.ipv6addresses,
+                simulation_mode=config.simulation_mode,
+                override_dns=config.fake_dns,
+            )
         )
 
 
@@ -1589,7 +1634,7 @@ class AutomationGetAgentOutput(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> Tuple[bool, ServiceDetails, bytes]:
+    def execute(self, args: List[str]) -> automation_results.GetAgentOutputResult:
         hostname = HostName(args[0])
         ty = args[1]
         host_config = config.HostConfig.make_host_config(hostname)
@@ -1646,7 +1691,13 @@ class AutomationGetAgentOutput(Automation):
             if cmk.utils.debug.enabled():
                 raise
 
-        return success, output, info
+        return automation_results.GetAgentOutputResult(
+            (
+                success,
+                output,
+                info,
+            )
+        )
 
 
 automations.register(AutomationGetAgentOutput())
@@ -1657,9 +1708,10 @@ class AutomationNotificationReplay(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> None:
+    def execute(self, args: List[str]) -> automation_results.NotificationReplayResult:
         nr = args[0]
-        return notify.notification_replay_backlog(int(nr))
+        notify.notification_replay_backlog(int(nr))
+        return automation_results.NotificationReplayResult(None)
 
 
 automations.register(AutomationNotificationReplay())
@@ -1670,9 +1722,11 @@ class AutomationNotificationAnalyse(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> Optional[notify.NotifyAnalysisInfo]:
+    def execute(self, args: List[str]) -> automation_results.NotificationAnalyseResult:
         nr = args[0]
-        return notify.notification_analyse_backlog(int(nr))
+        return automation_results.NotificationAnalyseResult(
+            notify.notification_analyse_backlog(int(nr))
+        )
 
 
 automations.register(AutomationNotificationAnalyse())
@@ -1683,9 +1737,9 @@ class AutomationGetBulks(Automation):
     needs_config = False
     needs_checks = False
 
-    def execute(self, args: List[str]) -> notify.NotifyBulks:
+    def execute(self, args: List[str]) -> automation_results.NotificationGetBulksResult:
         only_ripe = args[0] == "1"
-        return notify.find_bulks(only_ripe)
+        return automation_results.NotificationGetBulksResult(notify.find_bulks(only_ripe))
 
 
 automations.register(AutomationGetBulks())
@@ -1696,7 +1750,7 @@ class AutomationGetServiceConfigurations(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> Dict:
+    def execute(self, args: List[str]) -> automation_results.GetServiceConfigurationsResult:
         result: Dict = {"hosts": {}}
         config_cache = config.get_config_cache()
         for hostname in config_cache.all_active_hosts():
@@ -1704,7 +1758,7 @@ class AutomationGetServiceConfigurations(Automation):
             result["hosts"][hostname] = self._get_config_for_host(host_config)
 
         result["checkgroup_of_checks"] = self._get_checkgroup_of_checks()
-        return result
+        return automation_results.GetServiceConfigurationsResult(result)
 
     def _get_config_for_host(
         self, host_config: config.HostConfig
@@ -1742,26 +1796,30 @@ class AutomationGetLabelsOf(Automation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: List[str]) -> Dict[str, Any]:
+    def execute(self, args: List[str]) -> automation_results.GetLabelsOfResult:
         object_type = args[0]
         host_name = HostName(args[1])
 
         config_cache = config.get_config_cache()
 
         if object_type == "host":
-            return {
-                "labels": config_cache.get_host_config(host_name).labels,
-                "label_sources": config_cache.get_host_config(host_name).label_sources,
-            }
+            return automation_results.GetLabelsOfResult(
+                {
+                    "labels": config_cache.get_host_config(host_name).labels,
+                    "label_sources": config_cache.get_host_config(host_name).label_sources,
+                }
+            )
 
         if object_type == "service":
             service_description = args[2]
-            return {
-                "labels": config_cache.labels_of_service(host_name, service_description),
-                "label_sources": config_cache.label_sources_of_service(
-                    host_name, service_description
-                ),
-            }
+            return automation_results.GetLabelsOfResult(
+                {
+                    "labels": config_cache.labels_of_service(host_name, service_description),
+                    "label_sources": config_cache.label_sources_of_service(
+                        host_name, service_description
+                    ),
+                }
+            )
 
         raise NotImplementedError()
 
@@ -1774,17 +1832,21 @@ class AutomationCreateDiagnosticsDump(Automation):
     needs_config = False
     needs_checks = False
 
-    def execute(self, args: DiagnosticsCLParameters) -> Dict[str, Any]:
+    def execute(
+        self, args: DiagnosticsCLParameters
+    ) -> automation_results.CreateDiagnosticsDumpResult:
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
             dump = DiagnosticsDump(deserialize_cl_parameters(args))
             dump.create()
-            return {
-                "output": buf.getvalue(),
-                "tarfile_path": str(dump.tarfile_path),
-                "tarfile_created": dump.tarfile_created,
-            }
+            return automation_results.CreateDiagnosticsDumpResult(
+                {
+                    "output": buf.getvalue(),
+                    "tarfile_path": str(dump.tarfile_path),
+                    "tarfile_created": dump.tarfile_created,
+                }
+            )
 
 
 automations.register(AutomationCreateDiagnosticsDump())

@@ -7,7 +7,15 @@
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
-from cmk.automations.results import ABCAutomationResult
+from cmk.automations.results import ABCAutomationResult, result_type_registry
+
+from cmk.base.automations import automations
+
+
+def test_result_type_registry_completeness():
+    # ensures that all automation calls registered in cmk.base have a corresponding result type
+    # registered in cmk.automations
+    assert sorted(result_type_registry) == sorted(automations._automations)
 
 
 @dataclass

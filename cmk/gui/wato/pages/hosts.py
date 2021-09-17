@@ -339,8 +339,10 @@ class ModeEditHost(ABCHostMode):
 
         if request.var("_update_dns_cache") and self._should_use_dns_cache():
             user.need_permission("wato.update_dns_cache")
-            num_updated, failed_hosts = watolib.check_mk_automation(
-                self._host.site_id(), "update-dns-cache", []
+            num_updated, failed_hosts = watolib.check_mk_automation_deprecated(
+                self._host.site_id(),
+                "update-dns-cache",
+                [],
             )
             infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
             if failed_hosts:

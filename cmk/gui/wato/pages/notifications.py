@@ -605,7 +605,11 @@ class ModeNotifications(ABCNotificationsMode):
         elif request.has_var("_replay"):
             if transactions.check_transaction():
                 nr = request.get_integer_input_mandatory("_replay")
-                watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
+                watolib.check_mk_local_automation_deprecated(
+                    "notification-replay",
+                    [str(nr)],
+                    None,
+                )
                 flash(_("Replayed notification number %d") % (nr + 1))
                 return None
 
@@ -692,8 +696,9 @@ class ModeNotifications(ABCNotificationsMode):
             self._render_bulks(only_ripe=True)
 
     def _render_bulks(self, only_ripe):
-        bulks = watolib.check_mk_local_automation(
-            "notification-get-bulks", ["1" if only_ripe else "0"]
+        bulks = watolib.check_mk_local_automation_deprecated(
+            "notification-get-bulks",
+            ["1" if only_ripe else "0"],
         )
         if not bulks:
             return False
@@ -837,7 +842,11 @@ class ModeNotifications(ABCNotificationsMode):
         # Do analysis
         if request.var("analyse"):
             nr = request.get_integer_input_mandatory("analyse")
-            analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
+            analyse = watolib.check_mk_local_automation_deprecated(
+                "notification-analyse",
+                [str(nr)],
+                None,
+            )
         else:
             analyse = False
 

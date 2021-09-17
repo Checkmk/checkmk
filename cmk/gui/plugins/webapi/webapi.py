@@ -1131,7 +1131,7 @@ class APICallOther(APICallCollection):
             # This is currently the only way to get some actual discovery statitics.
             # Start a dry-run -> Get statistics
             # Do an actual discovery on the nodes -> data is written
-            try_result = watolib.check_mk_automation(
+            try_result = watolib.check_mk_automation_deprecated(
                 host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname]
             )
 
@@ -1144,12 +1144,12 @@ class APICallOther(APICallCollection):
                     old += 1
 
             result = DiscoveryResult(self_new=new, self_kept=old, self_total=new + old)
-            watolib.check_mk_automation(
+            watolib.check_mk_automation_deprecated(
                 host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes()
             )
         else:
             response = AutomationDiscoveryResponse.deserialize(
-                watolib.check_mk_automation(
+                watolib.check_mk_automation_deprecated(
                     siteid=host_attributes.get("site"),
                     command="inventory",
                     args=["@scan", mode, hostname],

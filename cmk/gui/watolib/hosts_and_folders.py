@@ -71,7 +71,7 @@ from cmk.gui.sites import allsites, is_wato_slave_site
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.valuespec import Choices
-from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.automations import check_mk_automation_deprecated
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.search import (
@@ -1975,7 +1975,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
 
         for site_id, site_host_names in hosts_by_site.items():
-            check_mk_automation(site_id, "delete-hosts", site_host_names)
+            check_mk_automation_deprecated(
+                site_id,
+                "delete-hosts",
+                site_host_names,
+            )
 
     def move_hosts(self, host_names, target_folder):
         # 1. Check preconditions

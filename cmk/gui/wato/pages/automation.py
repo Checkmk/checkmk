@@ -7,12 +7,15 @@
 automation functions on slaves,"""
 
 import traceback
+from typing import Iterable
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
+
+from cmk.automations.results import result_type_registry, SerializedResult
 
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
@@ -110,15 +113,48 @@ class ModeAutomation(AjaxPage):
                 raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
             self._execute_automation_command(automation_command)
 
+    @staticmethod
+    def _format_cmk_automation_result(
+        *,
+        serialized_result: SerializedResult,
+        cmk_command: str,
+        cmdline_cmd: Iterable[str],
+    ) -> str:
+        try:
+            return (
+                repr(result_type_registry[cmk_command].deserialize(serialized_result).to_pre_21())
+                if watolib.remote_automation_call_came_from_pre21()
+                else serialized_result
+            )
+        except SyntaxError as e:
+            raise watolib.local_automation_failure(
+                command=cmk_command,
+                cmdline=cmdline_cmd,
+                out=serialized_result,
+                exc=e,
+            )
+
     def _execute_cmk_automation(self):
         cmk_command = request.get_str_input_mandatory("automation")
         args = watolib.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib.mk_eval(request.get_str_input_mandatory("indata"))
         stdin_data = watolib.mk_eval(request.get_str_input_mandatory("stdin_data"))
         timeout = watolib.mk_eval(request.get_str_input_mandatory("timeout"))
-        result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
+        cmdline_cmd, serialized_result = watolib.check_mk_local_automation_serialized(
+            command=cmk_command,
+            args=args,
+            indata=indata,
+            stdin_data=stdin_data,
+            timeout=timeout,
+        )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
-        response.set_data(repr(result))
+        response.set_data(
+            self._format_cmk_automation_result(
+                serialized_result=SerializedResult(serialized_result),
+                cmk_command=cmk_command,
+                cmdline_cmd=cmdline_cmd,
+            )
+        )
 
     def _execute_push_profile(self):
         try:

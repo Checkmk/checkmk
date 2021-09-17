@@ -53,8 +53,12 @@ from cmk.gui.valuespec import (
     FixedValue,
     ValueSpec,
 )
-from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_remote_automation
-from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib import (
+    automation_command_registry,
+    AutomationCommand,
+    check_mk_automation_deprecated,
+    do_remote_automation,
+)
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 _CHECKMK_FILES_NOTE = _(
@@ -446,7 +450,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         site = diagnostics_parameters["site"]
         timeout = request.request_timeout - 2
-        result = check_mk_automation(
+        result = check_mk_automation_deprecated(
             site,
             "create-diagnostics-dump",
             args=serialize_wato_parameters(diagnostics_parameters),

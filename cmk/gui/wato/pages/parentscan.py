@@ -131,7 +131,11 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                 ],
             )
         )
-        return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
+        return watolib.check_mk_automation_deprecated(
+            task.site_id,
+            "scan-parents",
+            params + [task.host_name],
+        )
 
     def _process_parent_scan_results(
         self, task: ParentScanTask, settings: ParentScanSettings, gateways: List

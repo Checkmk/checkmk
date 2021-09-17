@@ -7,7 +7,7 @@
 import socket
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterable, Iterator, List, Mapping, MutableMapping, Optional, Protocol, Tuple
+from typing import Any, Iterable, Iterator, Mapping, MutableMapping, Optional, Protocol, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -15,11 +15,10 @@ import cmk.utils.store as store
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName, UpdateDNSCacheResult
 
 IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
 
-UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
 _fake_dns: Optional[HostAddress] = None
 _enforce_localhost = False

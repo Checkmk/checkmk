@@ -141,11 +141,13 @@ def suppress_automation_calls(mocker):
 
     This is needed because in order for automation calls to work, the site needs to be set up
     properly, which can't be done in an unit-test context."""
-    automation = mocker.patch("cmk.gui.watolib.automations.check_mk_automation")
-    mocker.patch("cmk.gui.watolib.check_mk_automation", new=automation)
+    automation = mocker.patch("cmk.gui.watolib.automations.check_mk_automation_deprecated")
+    mocker.patch("cmk.gui.watolib.check_mk_automation_deprecated", new=automation)
 
-    local_automation = mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
-    mocker.patch("cmk.gui.watolib.check_mk_local_automation", new=local_automation)
+    local_automation = mocker.patch(
+        "cmk.gui.watolib.automations.check_mk_local_automation_deprecated"
+    )
+    mocker.patch("cmk.gui.watolib.check_mk_local_automation_deprecated", new=local_automation)
 
     remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
     mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)

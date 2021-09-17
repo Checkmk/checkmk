@@ -13,7 +13,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
-from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.automations import check_mk_automation_deprecated
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -214,7 +214,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         timeout = request.request_timeout - 2
 
         return AutomationDiscoveryResponse.deserialize(
-            check_mk_automation(
+            check_mk_automation_deprecated(
                 siteid=task.site_id,
                 command="inventory",
                 args=arguments,

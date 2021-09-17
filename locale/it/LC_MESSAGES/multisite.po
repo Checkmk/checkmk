@@ -42545,6 +42545,16 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+"La descrizione del sensore è un testo definito dall'utente. Se usi questa "
+"opzione, devi assicurarti che tutti i sensori abbiano una descrizione unica. "
+"Altrimenti due o più sensori possono avere un alias per lo stesso servizio."
+
 msgid "Single"
 msgstr "Singolo"
 
@@ -49416,15 +49426,6 @@ msgstr "Gli host selezionati non hanno attributi espliciti"
 
 msgid "The selected icon does not exist."
 msgstr "L'icona selezionata non esiste."
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
-msgstr ""
-"La descrizione del sensore è un testo definito dall'utente. Se usi questa "
-"opzione, devi assicurarti che tutti i sensori abbiano una descrizione unica. "
-"Altrimenti due o più sensori possono avere un alias per lo stesso servizio."
 
 msgid "The sensor name"
 msgstr "Il nome del sensore"
@@ -57380,8 +57381,9 @@ msgstr "Utilizzare il proxy"
 msgid "Use proxy settings from the process environment"
 msgstr "Utilizzare le impostazioni proxy dall'ambiente di processo"
 
-msgid "Use sensor description (see help text)"
-msgstr "Usa la descrizione del sensore (vedi testo di aiuto)"
+#, fuzzy
+msgid "Use sensor description"
+msgstr "Descrizione dell'uso"
 
 msgid "Use separate fetchers and checkers"
 msgstr "Usare fetchers e checkers separati"
@@ -64601,6 +64603,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Use sensor description (see help text)"
+#~ msgstr "Usa la descrizione del sensore (vedi testo di aiuto)"
 
 #~ msgid ""
 #~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."

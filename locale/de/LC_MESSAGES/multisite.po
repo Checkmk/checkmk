@@ -42470,6 +42470,12 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+
 msgid "Single"
 msgstr "Einzeln"
 
@@ -49313,12 +49319,6 @@ msgstr "Ausgewählten Hosts habe keine expliziten Merkmale"
 
 msgid "The selected icon does not exist."
 msgstr "Das ausgewählte Symbol ist nicht vorhanden."
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
-msgstr ""
 
 msgid "The sensor name"
 msgstr "Der Sensorname"
@@ -57246,8 +57246,8 @@ msgid "Use proxy settings from the process environment"
 msgstr "Proxy-Einstellungen aus der Prozessumgebung verwenden"
 
 #, fuzzy
-msgid "Use sensor description (see help text)"
-msgstr "Alias/Beschreibung dieser Instanz"
+msgid "Use sensor description"
+msgstr "Beschreibung verwenden"
 
 msgid "Use separate fetchers and checkers"
 msgstr "Separate Fetchers und Checkers verwenden"
@@ -64450,6 +64450,10 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~ msgid "Use sensor description (see help text)"
+#~ msgstr "Alias/Beschreibung dieser Instanz"
 
 #~ msgid ""
 #~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."

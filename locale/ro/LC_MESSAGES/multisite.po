@@ -41305,6 +41305,12 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+
 msgid "Single"
 msgstr ""
 
@@ -47187,12 +47193,6 @@ msgid "The selected hosts have no explicit attributes"
 msgstr ""
 
 msgid "The selected icon does not exist."
-msgstr ""
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
 msgstr ""
 
 #, fuzzy
@@ -53800,8 +53800,8 @@ msgid "Use proxy settings from the process environment"
 msgstr ""
 
 #, fuzzy
-msgid "Use sensor description (see help text)"
-msgstr "O descriere sau comentariu despre acest element"
+msgid "Use sensor description"
+msgstr "foloseste descrierea"
 
 msgid "Use separate fetchers and checkers"
 msgstr ""
@@ -60058,6 +60058,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Use sensor description (see help text)"
+#~ msgstr "O descriere sau comentariu despre acest element"
 
 #, fuzzy
 #~ msgid "Disable Context"

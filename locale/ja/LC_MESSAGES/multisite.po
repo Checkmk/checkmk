@@ -41028,6 +41028,12 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+
 msgid "Single"
 msgstr "シングル"
 
@@ -47418,12 +47424,6 @@ msgstr "選択したホストには明示的な属性がありません"
 
 msgid "The selected icon does not exist."
 msgstr "選択したアイコンは存在しません。"
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
-msgstr ""
 
 msgid "The sensor name"
 msgstr "センサー名"
@@ -54772,8 +54772,9 @@ msgstr "プロキシを使う"
 msgid "Use proxy settings from the process environment"
 msgstr "プロセス環境からのプロキシ設定を使用する"
 
-msgid "Use sensor description (see help text)"
-msgstr ""
+#, fuzzy
+msgid "Use sensor description"
+msgstr "説明を使用する"
 
 msgid "Use separate fetchers and checkers"
 msgstr "別々のフェッチャーとチェッカーを使用する"

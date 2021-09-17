@@ -42422,6 +42422,17 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+"De sensorbeschrijving is een door de gebruiker gedefinieerde tekst. Als u "
+"deze optie gebruikt, moet u ervoor zorgen dat alle sensoren een unieke "
+"beschrijving hebben. Anders kunnen twee of meer sensoren worden gealiased "
+"naar dezelfde dienst."
+
 msgid "Single"
 msgstr "Single"
 
@@ -49296,16 +49307,6 @@ msgstr "De geselecteerde hosts hebben geen expliciete attributen"
 
 msgid "The selected icon does not exist."
 msgstr "Het geselecteerde pictogram bestaat niet."
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
-msgstr ""
-"De sensorbeschrijving is een door de gebruiker gedefinieerde tekst. Als u "
-"deze optie gebruikt, moet u ervoor zorgen dat alle sensoren een unieke "
-"beschrijving hebben. Anders kunnen twee of meer sensoren worden gealiased "
-"naar dezelfde dienst."
 
 msgid "The sensor name"
 msgstr "De naam van de sensor"
@@ -57246,8 +57247,9 @@ msgstr "Gebruik proxy"
 msgid "Use proxy settings from the process environment"
 msgstr "Gebruik proxy-instellingen van de procesomgeving"
 
-msgid "Use sensor description (see help text)"
-msgstr "Sensorbeschrijving gebruiken (zie helptekst)"
+#, fuzzy
+msgid "Use sensor description"
+msgstr "Beschrijving van het gebruik"
 
 msgid "Use separate fetchers and checkers"
 msgstr "Gebruik afzonderlijke fetchers en checkers"
@@ -64464,6 +64466,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Use sensor description (see help text)"
+#~ msgstr "Sensorbeschrijving gebruiken (zie helptekst)"
 
 #~ msgid ""
 #~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."

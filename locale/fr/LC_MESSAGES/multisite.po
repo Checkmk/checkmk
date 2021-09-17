@@ -42955,6 +42955,17 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+"La description du capteur est un texte défini par l'utilisateur. Si vous "
+"utilisez cette option, vous devez vous assurer que tous les capteurs ont une "
+"description unique. Sinon, deux capteurs ou plus peuvent être aliasés au "
+"même service."
+
 msgid "Single"
 msgstr "Simple"
 
@@ -49919,16 +49930,6 @@ msgstr "Les hôtes sélectionnés n'ont pas d'attributs explicites"
 
 msgid "The selected icon does not exist."
 msgstr "L'icône sélectionnée n'existe pas."
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
-msgstr ""
-"La description du capteur est un texte défini par l'utilisateur. Si vous "
-"utilisez cette option, vous devez vous assurer que tous les capteurs ont une "
-"description unique. Sinon, deux capteurs ou plus peuvent être aliasés au "
-"même service."
 
 msgid "The sensor name"
 msgstr "Le nom du capteur"
@@ -57974,8 +57975,9 @@ msgstr "Utiliser un proxy"
 msgid "Use proxy settings from the process environment"
 msgstr "Utiliser les paramètres du proxy de l'environnement du processus"
 
-msgid "Use sensor description (see help text)"
-msgstr "Utiliser la description du capteur (voir le texte d'aide)"
+#, fuzzy
+msgid "Use sensor description"
+msgstr "Description de l'utilisation"
 
 msgid "Use separate fetchers and checkers"
 msgstr "Utiliser des récupérateurs et des vérificateurs séparés"
@@ -65317,6 +65319,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Use sensor description (see help text)"
+#~ msgstr "Utiliser la description du capteur (voir le texte d'aide)"
 
 #~ msgid ""
 #~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."

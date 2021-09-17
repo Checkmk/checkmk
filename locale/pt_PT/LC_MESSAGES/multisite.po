@@ -42453,6 +42453,16 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+"A descrição do sensor é um texto definido pelo usuário. Se você usar esta "
+"opção, você deve garantir que todos os sensores tenham uma descrição única. "
+"Caso contrário, dois ou mais sensores podem ser aliados ao mesmo serviço."
+
 msgid "Single"
 msgstr "Individual"
 
@@ -49305,15 +49315,6 @@ msgstr "Os anfitriões seleccionados não têm atributos explícitos"
 
 msgid "The selected icon does not exist."
 msgstr "O ícone selecionado não existe."
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
-msgstr ""
-"A descrição do sensor é um texto definido pelo usuário. Se você usar esta "
-"opção, você deve garantir que todos os sensores tenham uma descrição única. "
-"Caso contrário, dois ou mais sensores podem ser aliados ao mesmo serviço."
 
 msgid "The sensor name"
 msgstr "O nome do sensor"
@@ -57209,8 +57210,9 @@ msgstr "Use proxy"
 msgid "Use proxy settings from the process environment"
 msgstr "Usar configurações de proxy do ambiente de processo"
 
-msgid "Use sensor description (see help text)"
-msgstr "Use a descrição do sensor (ver texto de ajuda)"
+#, fuzzy
+msgid "Use sensor description"
+msgstr "Descrição do uso"
 
 msgid "Use separate fetchers and checkers"
 msgstr "Use buscadores e verificadores separados"
@@ -64412,6 +64414,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Use sensor description (see help text)"
+#~ msgstr "Use a descrição do sensor (ver texto de ajuda)"
 
 #~ msgid ""
 #~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."

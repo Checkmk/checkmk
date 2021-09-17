@@ -42790,6 +42790,17 @@ msgid ""
 "override this automatism by specifying a node here."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Since the sensor description is a user defined text, multiple sensors may "
+"have the same description. To ensure that items are unique, they are "
+"prefixed with X-Y where X is the device number and Y the index of the sensor."
+msgstr ""
+"La descripción del sensor es un texto definido por el usuario. Si utiliza "
+"esta opción, debe asegurarse de que todos los sensores tienen una "
+"descripción única. De lo contrario, dos o más sensores pueden tener un alias "
+"para el mismo servicio."
+
 msgid "Single"
 msgstr "Solo"
 
@@ -49715,16 +49726,6 @@ msgstr "Los hosts seleccionados no tienen atributos explícitos"
 
 msgid "The selected icon does not exist."
 msgstr "El icono seleccionado no existe."
-
-msgid ""
-"The sensor description is a user defined text. If you use this option, you "
-"must ensure that all sensors have a unique description. Otherwise two or "
-"more sensors can be aliased to the same service."
-msgstr ""
-"La descripción del sensor es un texto definido por el usuario. Si utiliza "
-"esta opción, debe asegurarse de que todos los sensores tienen una "
-"descripción única. De lo contrario, dos o más sensores pueden tener un alias "
-"para el mismo servicio."
 
 msgid "The sensor name"
 msgstr "El nombre del sensor"
@@ -57732,8 +57733,9 @@ msgstr "Utilizar un proxy"
 msgid "Use proxy settings from the process environment"
 msgstr "Utilizar la configuración del proxy desde el entorno del proceso"
 
-msgid "Use sensor description (see help text)"
-msgstr "Utilizar la descripción del sensor (ver texto de ayuda)"
+#, fuzzy
+msgid "Use sensor description"
+msgstr "Descripción del uso"
 
 msgid "Use separate fetchers and checkers"
 msgstr "Utilizar recuperadores y verificadores separados"
@@ -64997,6 +64999,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Use sensor description (see help text)"
+#~ msgstr "Utilizar la descripción del sensor (ver texto de ayuda)"
 
 #~ msgid ""
 #~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."

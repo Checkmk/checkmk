@@ -193,12 +193,28 @@ rulespec_registry.register(
     )
 )
 
+
+def _parameter_valuespec_sap_hana_proc():
+    return Dictionary(
+        required_keys=["coordin"],
+        elements=[
+            (
+                "coordin",
+                TextInput(
+                    title=_("Role"),
+                    allow_empty=False,
+                ),
+            )
+        ],
+    )
+
+
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="sap_hana_proc",
         group=RulespecGroupEnforcedServicesApplications,
         item_spec=lambda: TextInput(title=_("The instance name")),
-        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_sap_hana_proc,
         title=lambda: _("SAP HANA Process"),
     )
 )

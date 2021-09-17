@@ -36,6 +36,7 @@ def _get_import_names_from_pipfile() -> List[str]:
     import_names = []
     for dist_name in parsed_pipfile.data["default"].keys():
         import_names.extend(_get_import_names_from_dist_name(dist_name))
+    assert import_names
     return import_names
 
 

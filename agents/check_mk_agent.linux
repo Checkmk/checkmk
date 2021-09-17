@@ -11,6 +11,7 @@ export MK_RUN_SYNC_PARTS
 
 # Make sure that locally installed binaries are found
 PATH=$PATH:/usr/local/bin
+[ -d /var/qmail/bin ] && PATH=$PATH:/var/qmail/bin
 
 export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}

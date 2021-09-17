@@ -36,6 +36,7 @@ export MK_TMPDIR="/var/run/check_mk"
 
 # Make sure, locally installed binaries are found
 PATH=$PATH:/usr/local/bin:/usr/local/sbin
+[ -d /var/qmail/bin ] && PATH=$PATH:/var/qmail/bin
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own

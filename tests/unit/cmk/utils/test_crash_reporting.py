@@ -10,11 +10,13 @@ import itertools
 import shutil
 import struct
 import uuid
+from functools import lru_cache
 from typing import Any, Dict
 
 import pytest
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.crash_reporting import _format_var_for_export, ABCCrashReport, CrashReportStore
 
 
@@ -129,13 +131,23 @@ def patch_uuid1(monkeypatch):
     monkeypatch.setattr("uuid.uuid1", uuid1)
 
 
-@pytest.mark.usefixtures("patch_uuid1")
+@pytest.fixture
+def cache_general_version_infos(monkeypatch):
+    """Cache the computation to save time for repeated crash report creation"""
+
+    monkeypatch.setattr(
+        cmk_version, "get_general_version_infos", lru_cache(cmk_version.get_general_version_infos)
+    )
+
+
+@pytest.mark.usefixtures("patch_uuid1", "cache_general_version_infos")
 @pytest.mark.parametrize("n_crashes", [15, 45])
 def test_crash_report_store_cleanup(crash_dir, n_crashes):
     store = CrashReportStore()
     assert not set(crash_dir.glob("*"))
 
     crash_ids = []
+
     for num in range(n_crashes):
         try:
             raise ValueError("Crash #%d" % num)

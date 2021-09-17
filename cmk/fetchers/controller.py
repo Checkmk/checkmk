@@ -211,9 +211,9 @@ def _run_fetchers_from_file(
 
     """
     messages: List[protocol.FetcherMessage] = []
-    with Timeout(
+    with CPUTracker() as cpu_tracker, Timeout(
             timeout,
-            message=f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds",
+            message=f'Fetcher for host "{host_name}" timed out after {timeout} seconds',
     ) as timeout_manager:
         fetchers = tuple(_parse_config(serial, host_name))
         try:
@@ -234,7 +234,11 @@ def _run_fetchers_from_file(
         messages = _replace_netsnmp_obfuscated_timeout(messages, timeout_manager.message)
 
     logger.debug("Produced %d messages", len(messages))
-    write_bytes(bytes(protocol.CMCMessage.result_answer(messages, 0, Snapshot.null())))
+    write_bytes(bytes(protocol.CMCMessage.result_answer(
+        messages,
+        timeout,
+        cpu_tracker.duration,
+    )))
     for msg in filter(
             lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,
             messages,

@@ -2626,7 +2626,9 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choic
     """Livestatus query of single column of unique elements.
     Prepare dropdown choices"""
     with sites.set_limit(limit):
-        choices = [(h, h) for h in sorted(sites.live().query_column_unique(query))]
+        choices = [
+            (h, h) for h in sorted(sites.live().query_column_unique(query), key=lambda h: h.lower())
+        ]
 
     if len(choices) > limit:
         choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))

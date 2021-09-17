@@ -3974,7 +3974,7 @@ class ConfigCache:
         part_of_clusters: Optional[List[HostName]] = None,
     ) -> HostName:
         """Return hostname to assign the service to
-        Determine weather a service (found on a physical host) is a clustered
+        Determine wether a service (found on a physical host) is a clustered
         service and - if yes - return the cluster host of the service. If no,
         returns the hostname of the physical host."""
         if part_of_clusters:

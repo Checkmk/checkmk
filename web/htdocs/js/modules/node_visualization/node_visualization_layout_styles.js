@@ -1091,7 +1091,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 node: this.style_root_node,
                 type: "scale",
                 image: "themes/facelift/images/icon_resize.png",
-                call: this.get_drag_callback(() => this.resize_layer_drag()),
+                call: this.get_drag_callback(event => this.resize_layer_drag(event)),
             },
             {
                 node: this.style_root_node,

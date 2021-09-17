@@ -10,7 +10,7 @@ We call "message" a header followed by the corresponding payload.
 +---------------+----------------+---------------+----------------+
 | Layer         | Message type   | Header type   | Payload type   |
 +===============+================+===============+================+
-| CMC Layer     | CMCMessage     | CMCHeader     | FetcherMessage |
+| CMC Layer     | CMCMessage     | CMCHeader     | CMCPayload     |
 +---------------+----------------+---------------+----------------+
 | Fetcher Layer | FetcherMessage | FetcherHeader | ResultMessage  |
 |               |                |               | + ResultStats  |
@@ -20,6 +20,31 @@ We call "message" a header followed by the corresponding payload.
 |               |                |      ErrorResultMessage        |
 +---------------+----------------+--------------------------------+
 
+.. uml::
+
+    abstract CMCPayload
+    CMCPayload <|-- CMCResults
+    CMCPayload <|-- CMCLogging
+    CMCPayload <|-- CMCEndOfReply
+    CMCMessage o--  CMCHeader
+    CMCMessage o-- CMCPayload
+
+    CMCResults o-- "*" FetcherMessage
+
+    abstract ResultMessage
+    ResultMessage <|-- AgentResultMessage
+    ResultMessage <|-- SNMPResultMessage
+    ResultMessage <|-- ErrorResultMessage
+    FetcherMessage o-- FetcherHeader
+    FetcherMessage o-- ResultMessage
+    FetcherMessage o-- ResultStats
+
+    note as N1
+    Every class implements
+    the <i>Prototype</i> interface,
+    not shown for clarity
+    end note
+
 """
 
 from __future__ import annotations
@@ -28,6 +53,7 @@ import abc
 import enum
 import json
 import logging
+import math
 import pickle
 import struct
 from typing import Final, Iterator, Sequence, Type, Union
@@ -43,12 +69,13 @@ from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 from . import FetcherType
 
 __all__ = [
-    "ResultMessage",
-    "PayloadType",
-    "FetcherHeader",
-    "FetcherMessage",
     "CMCHeader",
     "CMCMessage",
+    "CMCPayload",
+    "FetcherHeader",
+    "FetcherMessage",
+    "PayloadType",
+    "ResultMessage",
 ]
 
 
@@ -75,10 +102,6 @@ class CMCLogLevel(str, enum.Enum):
             log.VERBOSE: CMCLogLevel.DEBUG,
             logging.DEBUG: CMCLogLevel.DEBUG,
         }[level]
-
-
-class Header(Protocol):
-    pass
 
 
 class ResultMessage(Protocol):
@@ -260,7 +283,7 @@ class ErrorResultMessage(ResultMessage):
             raise ValueError(data) from exc
 
 
-class FetcherHeader(Header):
+class FetcherHeader(Protocol):
     """Header is fixed size bytes in format:
 
     <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE><STATS_SIZE>
@@ -470,7 +493,7 @@ class FetcherMessage(Protocol):
         return self.payload.result()
 
 
-class CMCHeader(Header):
+class CMCHeader(Protocol):
     """Header is fixed size(6+8+9+9 = 32 bytes) bytes in format
 
       header: <ID>:<'RESULT '|'LOG    '|'ENDREPL'>:<LOGLEVEL>:<SIZE>:
@@ -553,11 +576,108 @@ class CMCHeader(Header):
         return "fetch"
 
 
+class CMCPayload(Protocol):
+    pass
+
+
+class CMCResultsStats(Protocol):
+    fmt = "!I"
+    length = struct.calcsize(fmt)
+
+    def __init__(self, timeout: int, duration: Snapshot) -> None:
+        self.timeout: Final = timeout
+        self.duration: Final = duration
+
+    @property
+    def remaining_time(self) -> int:
+        return max(0, self.timeout - math.ceil(self.duration.process.elapsed))
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.timeout!r}, {self.duration!r})"
+
+    def __iter__(self) -> Iterator[bytes]:
+        conf = json.dumps({"duration": self.duration.serialize(), "timeout": self.timeout}).encode(
+            "ascii"
+        )
+        yield struct.pack(type(self).fmt, len(conf))
+        yield conf
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCResultsStats:
+        conf_len = struct.unpack(cls.fmt, data[: cls.length])[0]
+        conf = json.loads(data[cls.length : cls.length + conf_len].decode("ascii"))
+        return cls(conf["timeout"], Snapshot.deserialize(conf["duration"]))
+
+
+class CMCResults(CMCPayload):
+    fmt = "!I"
+    length = struct.calcsize(fmt)
+
+    def __init__(self, messages: Sequence[FetcherMessage], stats: CMCResultsStats) -> None:
+        self.messages: Final = messages
+        self.stats: Final = stats
+
+    @property
+    def message_count(self) -> int:
+        return len(self.messages)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.messages!r}, {self.stats!r})"
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield struct.pack(type(self).fmt, self.message_count)
+        yield from (bytes(msg) for msg in self.messages)
+        yield from self.stats
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCResults:
+        messages = []
+        index = cls.length
+        for _n in range(struct.unpack(cls.fmt, data[: cls.length])[0]):
+            message = FetcherMessage.from_bytes(data[index:])
+            messages.append(message)
+            index += len(message)
+        return cls(messages, CMCResultsStats.from_bytes(data[index:]))
+
+
+class CMCLogging(CMCPayload):
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.message!r})"
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield self.message.encode("utf-8")
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCLogging:
+        return cls(data.decode("utf-8"))
+
+
+class CMCEndOfReply(CMCPayload):
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}()"
+
+    def __len__(self) -> int:
+        return 0
+
+    def __bytes__(self) -> bytes:
+        return b""
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield from ()
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CMCEndOfReply:
+        return _END_OF_REPLY_PAYLOAD
+
+
 class CMCMessage(Protocol):
     def __init__(
         self,
         header: CMCHeader,
-        *payload: Union[FetcherMessage, str],
+        payload: CMCPayload,
     ) -> None:
         self.header: Final = header
         self.payload: Final = payload
@@ -570,46 +690,37 @@ class CMCMessage(Protocol):
 
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header
-        for msg in self.payload:
-            if isinstance(msg, FetcherMessage):
-                yield from msg
-            else:
-                assert isinstance(msg, str)
-                yield msg.encode("utf-8")
+        yield from self.payload
 
     @classmethod
     def from_bytes(cls, data: bytes) -> CMCMessage:
         header = CMCHeader.from_bytes(data)
         if header.state is CMCHeader.State.RESULT:
-            return CMCMessage(header, *cls._parse_result(header, data))
+            return CMCMessage(
+                header,
+                CMCResults.from_bytes(data[len(header) : len(header) + header.payload_length]),
+            )
         if header.state is CMCHeader.State.LOG:
             return CMCMessage(
                 header,
-                *(data[len(header) : len(header) + header.payload_length].decode("utf-8")),
+                CMCLogging.from_bytes(data[len(header) : len(header) + header.payload_length]),
             )
         assert header.state is CMCHeader.State.END_OF_REPLY
-        return CMCMessage(header, *())
-
-    @staticmethod
-    def _parse_result(header, data) -> Sequence[FetcherMessage]:
-        index = len(header)
-        messages = []
-        while index < len(header) + header.payload_length:
-            message = FetcherMessage.from_bytes(data[index:])
-            index += len(message)
-            messages.append(message)
-        return messages
+        return cls.end_of_reply()
 
     @classmethod
-    def result_answer(cls, *messages: FetcherMessage) -> CMCMessage:
+    def result_answer(
+        cls, messages: Sequence[FetcherMessage], timeout: int, duration: Snapshot
+    ) -> CMCMessage:
+        payload = CMCResults(messages, CMCResultsStats(timeout, duration))
         return cls(
             CMCHeader(
                 name=CMCHeader.default_protocol_name(),
                 state=CMCHeader.State.RESULT,
                 log_level=" ",
-                payload_length=sum(len(msg) for msg in messages),
+                payload_length=len(payload),
             ),
-            *messages,
+            payload,
         )
 
     @classmethod
@@ -628,7 +739,7 @@ class CMCMessage(Protocol):
                 log_level=CMCLogLevel.from_level(level),
                 payload_length=len(message),
             ),
-            message,
+            CMCLogging(message),
         )
 
     @classmethod
@@ -636,6 +747,7 @@ class CMCMessage(Protocol):
         return _END_OF_REPLY
 
 
+_END_OF_REPLY_PAYLOAD = CMCEndOfReply()
 _END_OF_REPLY = CMCMessage(  # Singleton
     CMCHeader(
         name=CMCHeader.default_protocol_name(),
@@ -643,5 +755,5 @@ _END_OF_REPLY = CMCMessage(  # Singleton
         log_level=" ",
         payload_length=0,
     ),
-    *(),
+    _END_OF_REPLY_PAYLOAD,
 )

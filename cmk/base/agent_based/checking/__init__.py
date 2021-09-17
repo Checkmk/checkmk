@@ -7,19 +7,7 @@
 
 import copy
 from collections import defaultdict
-from typing import (
-    Any,
-    Callable,
-    Container,
-    DefaultDict,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-)
+from typing import Any, Container, DefaultDict, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
@@ -397,7 +385,7 @@ def _execute_check(
         ipaddress,
         service,
         plugin,
-        lambda: _final_read_only_check_parameters(service.parameters),
+        service.parameters,
         value_store_manager=value_store_manager,
         persist_value_store_changes=not dry_run,
     )
@@ -421,7 +409,8 @@ def get_aggregated_result(
     ipaddress: Optional[HostAddress],
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
-    params_function: Callable[[], Parameters],
+    # missleading. These are prams that *may* be *partially* time specific
+    timespecific_parameters: LegacyCheckParameters,
     *,
     value_store_manager: value_store.ValueStoreManager,
     persist_value_store_changes: bool,
@@ -503,10 +492,15 @@ def get_aggregated_result(
                 result=RECEIVED_NO_DATA,
                 cache_info=None,
             )
+
         kwargs = {
             **kwargs,
             **({} if service.item is None else {"item": service.item}),
-            **({} if plugin.check_default_parameters is None else {"params": params_function()}),
+            **(
+                {}
+                if plugin.check_default_parameters is None
+                else {"params": _final_read_only_check_parameters(timespecific_parameters)}
+            ),
         }
         with plugin_contexts.current_host(host_config.hostname), plugin_contexts.current_service(
             service

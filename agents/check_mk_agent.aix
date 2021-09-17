@@ -851,7 +851,7 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt
+        ) | optionally_encrypt "${PASSPHRASE}" ""
 
         [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
 

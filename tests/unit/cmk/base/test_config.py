@@ -1770,15 +1770,17 @@ def test_host_config_labels(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     cfg = config_cache.get_host_config(xyz_host)
-    assert cfg.labels == {}
+    assert cfg.labels == {"cmk/site": "NO_SITE"}
 
     cfg = config_cache.get_host_config(test_host)
     assert cfg.labels == {
+        "cmk/site": "NO_SITE",
         "explicit": "ding",
         "from-rule": "rule1",
         "from-rule2": "rule2",
     }
     assert cfg.label_sources == {
+        "cmk/site": "discovered",
         "explicit": "explicit",
         "from-rule": "ruleset",
         "from-rule2": "ruleset",
@@ -1795,8 +1797,14 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
         f.write(repr({"äzzzz": {"value": "eeeeez", "plugin_name": "ding123"}}) + "\n")
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(test_host).labels == {"äzzzz": "eeeeez"}
-    assert config_cache.get_host_config(test_host).label_sources == {"äzzzz": "discovered"}
+    assert config_cache.get_host_config(test_host).labels == {
+        "cmk/site": "NO_SITE",
+        "äzzzz": "eeeeez",
+    }
+    assert config_cache.get_host_config(test_host).label_sources == {
+        "cmk/site": "discovered",
+        "äzzzz": "discovered",
+    }
 
 
 def test_service_label_rules_default() -> None:

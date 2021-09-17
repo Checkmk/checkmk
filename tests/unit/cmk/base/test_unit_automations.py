@@ -66,8 +66,8 @@ def test_get_labels_of_host(monkeypatch):
     ts.apply(monkeypatch)
 
     assert automation.execute(["host", "test-host"]) == {
-        "labels": {"explicit": "ding"},
-        "label_sources": {"explicit": "explicit"},
+        "label_sources": {"cmk/site": "discovered", "explicit": "explicit"},
+        "labels": {"cmk/site": "NO_SITE", "explicit": "ding"},
     }
 
 
@@ -105,6 +105,6 @@ def test_analyse_host(monkeypatch):
     ts.apply(monkeypatch)
 
     assert automation.execute(["test-host"]) == {
-        "labels": {"explicit": "ding"},
-        "label_sources": {"explicit": "explicit"},
+        "label_sources": {"cmk/site": "discovered", "explicit": "explicit"},
+        "labels": {"cmk/site": "NO_SITE", "explicit": "ding"},
     }

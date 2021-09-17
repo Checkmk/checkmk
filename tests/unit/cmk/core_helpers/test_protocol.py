@@ -29,8 +29,11 @@ from cmk.core_helpers import FetcherType
 from cmk.core_helpers.protocol import (
     AgentResultMessage,
     CMCHeader,
+    CMCLogging,
     CMCLogLevel,
     CMCMessage,
+    CMCResults,
+    CMCResultsStats,
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
@@ -112,21 +115,11 @@ class TestCMCHeader:
 
 
 class TestCMCMessage:
-    @pytest.fixture
-    def duration(self):
-        return Snapshot.null()
-
-    @pytest.fixture
-    def fetcher_stats(self, duration):
-        return ResultStats(duration)
-
-    @pytest.fixture
-    def fetcher_payload(self):
-        return AgentResultMessage(AgentRawData(69 * b"\0"))
-
-    @pytest.fixture
-    def fetcher_message(self, fetcher_payload, fetcher_stats):
-        return FetcherMessage(
+    @pytest.mark.parametrize("count", list(range(10)))
+    def test_result_answer(self, count):
+        fetcher_payload = AgentResultMessage(AgentRawData(69 * b"\xff"))
+        fetcher_stats = ResultStats(Snapshot.null())
+        fetcher_message = FetcherMessage(
             FetcherHeader(
                 FetcherType.TCP,
                 PayloadType.AGENT,
@@ -137,41 +130,24 @@ class TestCMCMessage:
             fetcher_payload,
             fetcher_stats,
         )
-
-    @pytest.fixture
-    def header(self, fetcher_message):
-        return CMCHeader(
-            "name",
-            CMCHeader.State.RESULT,
-            "",
-            sum(len(msg) for msg in [fetcher_message]),
-        )
-
-    @pytest.fixture
-    def message(self, header, fetcher_message):
-        return CMCMessage(header, fetcher_message)
-
-    def test_from_bytes(self, message):
-        assert CMCMessage.from_bytes(bytes(message)) == message
-
-    @pytest.mark.parametrize("count", list(range(10)))
-    def test_result_answer(self, fetcher_message, count):
         fetcher_messages = list(repeat(fetcher_message, count))
-        message = CMCMessage.result_answer(*fetcher_messages)
+        timeout = 7
+
+        message = CMCMessage.result_answer(fetcher_messages, timeout, Snapshot.null())
+        assert isinstance(repr(message), str)
         assert CMCMessage.from_bytes(bytes(message)) == message
-        assert len(fetcher_messages) == count
         assert message.header.name == "fetch"
         assert message.header.state == CMCHeader.State.RESULT
         assert message.header.log_level.strip() == ""
         assert message.header.payload_length == len(message) - len(message.header)
-        assert message.header.payload_length == count * len(fetcher_message)
-        assert not set(message.payload) ^ set(fetcher_messages)
+        assert message.header.payload_length == len(message.payload)
 
     def test_log_answer(self):
         log_message = "the log message"
         level = logging.WARN
 
         message = CMCMessage.log_answer(log_message, level)
+        assert isinstance(repr(message), str)
         assert CMCMessage.from_bytes(bytes(message)) == message
         assert message.header.name == "fetch"
         assert message.header.state == CMCHeader.State.LOG
@@ -180,16 +156,68 @@ class TestCMCMessage:
         assert message.header.payload_length == len(log_message)
 
     def test_end_of_reply(self):
-        assert CMCMessage.end_of_reply() is CMCMessage.end_of_reply()
+        message = CMCMessage.end_of_reply()
+        assert isinstance(repr(message), str)
+        assert CMCMessage.from_bytes(bytes(message)) is message
 
 
-class TestEndOfReply:
+class TestCMCResultsStats:
+    @pytest.fixture
+    def stats(self):
+        return CMCResultsStats(7, Snapshot.null())
+
+    def test_from_bytes(self, stats):
+        assert isinstance(repr(stats), str)
+        assert CMCResultsStats.from_bytes(bytes(stats))
+
+
+class TestCMCResults:
+    @pytest.fixture
+    def messages(self):
+        msg = []
+        for payload, stats in (
+            (AgentResultMessage(AgentRawData(42 * b"\0")), ResultStats(Snapshot.null())),
+            (AgentResultMessage(AgentRawData(12 * b"\0")), ResultStats(Snapshot.null())),
+        ):
+            msg.append(
+                FetcherMessage(
+                    FetcherHeader(
+                        FetcherType.TCP,
+                        PayloadType.AGENT,
+                        status=69,
+                        payload_length=len(payload),
+                        stats_length=len(stats),
+                    ),
+                    payload,
+                    stats,
+                )
+            )
+        return msg
+
+    @pytest.fixture
+    def payload(self, messages):
+        return CMCResults(messages, CMCResultsStats(7, Snapshot.null()))
+
+    def test_from_bytes(self, payload):
+        assert CMCResults.from_bytes(bytes(payload)) == payload
+
+
+class TestCMCLogging:
+    @pytest.fixture
+    def payload(self):
+        return CMCLogging("This is very interesting!")
+
+    def test_from_bytes(self, payload):
+        assert CMCLogging.from_bytes(bytes(payload)) == payload
+
+
+class TestCMCEndOfReply:
     @pytest.fixture
     def eor(self):
         return CMCMessage.end_of_reply()
 
     def test_from_bytes(self, eor):
-        assert CMCMessage.from_bytes(bytes(eor)) == eor
+        assert CMCMessage.from_bytes(bytes(eor)) is eor
 
 
 class TestAgentResultMessage:

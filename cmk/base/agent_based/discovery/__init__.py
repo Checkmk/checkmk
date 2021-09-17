@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
 import socket
 import time
 from contextlib import suppress
@@ -16,11 +15,14 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     Optional,
     Sequence,
     Set,
     Tuple,
+    TypeVar,
+    Union,
 )
 
 import livestatus
@@ -30,7 +32,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.check_utils import ActiveCheckResult, worst_service_state, wrap_parameters
+from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
@@ -65,7 +67,6 @@ import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based import checking_classes
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
@@ -76,9 +77,17 @@ from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels, analyse_node_labels
 from .utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
 
-ServicesTableEntry = Tuple[str, Service, List[HostName]]
-ServicesTable = Dict[ServiceID, ServicesTableEntry]
-ServicesByTransition = Dict[str, List[autochecks.ServiceWithNodes]]
+_BasicTransition = Literal["old", "new", "vanished"]
+_Transition = Union[
+    _BasicTransition, Literal["ignored", "clustered_old", "clustered_new", "clustered_vanished"]
+]
+_ServiceOrigin = Union[_Transition, Literal["active", "manual", "custom"]]
+
+_L = TypeVar("_L", bound=str)
+
+ServicesTableEntry = Tuple[_L, Service, List[HostName]]
+ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
+ServicesByTransition = Dict[_ServiceOrigin, List[autochecks.ServiceWithNodes]]
 
 CheckPreviewEntry = Tuple[
     str,
@@ -591,21 +600,29 @@ def _check_service_lists(
     long_infotexts = []
     need_rediscovery = False
 
-    for transition, title, params_key, default_state, service_filter in [
+    for transition, t_services, title, params_key, default_state, service_filter in [
         (
             "new",
+            services_by_transition.get("new", []),
             "unmonitored",
             "severity_unmonitored",
             config.inventory_check_severity,
             service_filters.new,
         ),
-        ("vanished", "vanished", "severity_vanished", 0, service_filters.vanished),
+        (
+            "vanished",
+            services_by_transition.get("vanished", []),
+            "vanished",
+            "severity_vanished",
+            0,
+            service_filters.vanished,
+        ),
     ]:
 
         affected_check_plugin_names: Counter[CheckPluginName] = Counter()
         unfiltered = False
 
-        for (discovered_service, _found_on_nodes) in services_by_transition.get(transition, []):
+        for (discovered_service, _found_on_nodes) in t_services:
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
             if not unfiltered and service_filter(host_name, discovered_service):
@@ -954,22 +971,26 @@ def _get_host_services(
     on_error: OnError,
 ) -> ServicesByTransition:
 
-    services = (
-        _get_cluster_services(
-            host_config,
-            ipaddress,
-            parsed_sections_broker,
-            on_error,
-        )
-        if host_config.is_cluster
-        else _get_node_services(
-            host_config.hostname,
-            ipaddress,
-            parsed_sections_broker,
-            on_error,
-            config.get_config_cache().host_of_clustered_service,
-        )
-    )
+    services: ServicesTable[_ServiceOrigin]
+    if host_config.is_cluster:
+        services = {
+            **_get_cluster_services(
+                host_config,
+                ipaddress,
+                parsed_sections_broker,
+                on_error,
+            )
+        }
+    else:
+        services = {
+            **_get_node_services(
+                host_config.hostname,
+                ipaddress,
+                parsed_sections_broker,
+                on_error,
+                config.get_config_cache().host_of_clustered_service,
+            )
+        }
 
     services.update(_manual_items(host_config))
     services.update(_custom_items(host_config))
@@ -986,7 +1007,7 @@ def _get_node_services(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
     host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
-) -> ServicesTable:
+) -> ServicesTable[_Transition]:
 
     service_result = analyse_discovered_services(
         host_name=host_name,
@@ -1008,43 +1029,56 @@ def _get_node_services(
             service,
             [host_name],
         )
-        for check_source, service in itertools.chain(
-            (("vanished", s) for s in service_result.vanished),
-            (("old", s) for s in service_result.old),
-            (("new", s) for s in service_result.new),
-        )
+        for check_source, service in chain_with_check_source(service_result)
     }
 
 
 def _node_service_source(
     *,
-    check_source: str,
+    check_source: _BasicTransition,
     host_name: HostName,
     cluster_name: HostName,
     service: Service,
-) -> str:
+) -> _Transition:
     if host_name == cluster_name:
         return check_source
 
     if config.service_ignored(cluster_name, service.check_plugin_name, service.description):
         return "ignored"
 
-    return "clustered_" + check_source
+    if check_source == "vanished":
+        return "clustered_vanished"
+    if check_source == "old":
+        return "clustered_old"
+    return "clustered_new"
 
 
-def _manual_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+def chain_with_check_source(
+    service_result: QualifiedDiscovery[Service],
+) -> Iterable[Tuple[_BasicTransition, Service]]:
+    for s in service_result.vanished:
+        yield "vanished", s
+    for s in service_result.old:
+        yield "old", s
+    for s in service_result.new:
+        yield "new", s
+
+
+def _manual_items(
+    host_config: config.HostConfig,
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["manual"]]]]:
     # Find manual checks. These can override discovered checks -> "manual"
     host_name = host_config.hostname
-    yield from (
-        (service.id(), ("manual", service, [host_name]))
-        for service in check_table.get_check_table(host_name, skip_autochecks=True).values()
-    )
+    for service in check_table.get_check_table(host_name, skip_autochecks=True).values():
+        yield service.id(), ("manual", service, [host_name])
 
 
-def _custom_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+def _custom_items(
+    host_config: config.HostConfig,
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["custom"]]]]:
     # Add custom checks -> "custom"
-    yield from (
-        (
+    for entry in host_config.custom_checks:
+        yield (
             (CheckPluginName("custom"), entry["service_description"]),
             (
                 "custom",
@@ -1057,11 +1091,11 @@ def _custom_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, S
                 [host_config.hostname],
             ),
         )
-        for entry in host_config.custom_checks
-    )
 
 
-def _active_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+def _active_items(
+    host_config: config.HostConfig,
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["active"]]]]:
     # Similar for 'active_checks', but here we have parameters
     host_name = host_config.hostname
     for plugin_name, entries in host_config.active_checks:
@@ -1098,7 +1132,9 @@ def _reclassify_disabled_items(
     )
 
 
-def _group_by_transition(transition_services: ServicesTable) -> ServicesByTransition:
+def _group_by_transition(
+    transition_services: ServicesTable[_ServiceOrigin],
+) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
     for transition, service, found_on_nodes in transition_services.values():
         services_by_transition.setdefault(
@@ -1113,12 +1149,12 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
-) -> ServicesTable:
+) -> ServicesTable[_Transition]:
 
     if not host_config.nodes:
         return {}
 
-    cluster_items: ServicesTable = {}
+    cluster_items: ServicesTable[_BasicTransition] = {}
     config_cache = config.get_config_cache()
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
@@ -1136,11 +1172,7 @@ def _get_cluster_services(
             on_error=on_error,
         )
 
-        for check_source, service in itertools.chain(
-            (("vanished", s) for s in services.vanished),
-            (("old", s) for s in services.old),
-            (("new", s) for s in services.new),
-        ):
+        for check_source, service in chain_with_check_source(services):
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,
@@ -1154,18 +1186,18 @@ def _get_cluster_services(
                 )
             )
 
-    return cluster_items
+    return {**cluster_items}  # for the typing...
 
 
 def _cluster_service_entry(
     *,
-    check_source: str,
+    check_source: _BasicTransition,
     host_name: HostName,
     node_name: HostName,
     services_cluster: HostName,
     service: Service,
-    existing_entry: Optional[Tuple[str, Service, List[HostName]]],
-) -> Iterable[Tuple[ServiceID, Tuple[str, Service, List[HostName]]]]:
+    existing_entry: Optional[Tuple[_BasicTransition, Service, List[HostName]]],
+) -> Iterable[Tuple[ServiceID, Tuple[_BasicTransition, Service, List[HostName]]]]:
     if host_name != services_cluster:
         return  # not part of this host
 
@@ -1262,7 +1294,7 @@ def _check_preview_table_row(
     host_config: config.HostConfig,
     ip_address: Optional[HostAddress],
     service: Service,
-    check_source: str,
+    check_source: _ServiceOrigin,
     parsed_sections_broker: ParsedSectionsBroker,
     found_on_nodes: List[HostName],
     value_store_manager: ValueStoreManager,
@@ -1270,7 +1302,7 @@ def _check_preview_table_row(
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
     params = _preview_params(host_config.hostname, service, plugin, check_source)
 
-    if check_source in ["legacy", "active", "custom"]:
+    if check_source in {"active", "custom"}:
         exitcode = None
         output = "WAITING - %s check, cannot be done offline" % check_source.title()
         ruleset_name: Optional[RulesetName] = None
@@ -1279,11 +1311,6 @@ def _check_preview_table_row(
         ruleset_name = (
             str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
         )
-        wrapped_params = (
-            Parameters(wrap_parameters(params))
-            if plugin and plugin.check_default_parameters is not None
-            else None
-        )
 
         exitcode, output, _perfdata = checking.get_aggregated_result(
             parsed_sections_broker,
@@ -1291,7 +1318,7 @@ def _check_preview_table_row(
             ip_address,
             service,
             plugin,
-            lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
+            params,
             value_store_manager=value_store_manager,
             persist_value_store_changes=False,  # never during discovery
         ).result
@@ -1307,8 +1334,8 @@ def _check_preview_table_row(
         str(service.check_plugin_name),
         ruleset_name,
         service.item,
-        service.parameters,
-        params,
+        _wrap_timespecific_for_preview(service.parameters),
+        _wrap_timespecific_for_preview(params),
         service.description,
         exitcode,
         output,
@@ -1321,9 +1348,9 @@ def _check_preview_table_row(
 def _preview_check_source(
     host_name: HostName,
     service: Service,
-    check_source: str,
+    check_source: _ServiceOrigin,
 ) -> str:
-    if check_source in ["legacy", "active", "custom"] and config.service_ignored(
+    if check_source in {"active", "custom"} and config.service_ignored(
         host_name, None, service.description
     ):
         return "%s_ignored" % check_source
@@ -1334,31 +1361,28 @@ def _preview_params(
     host_name: HostName,
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
-    check_source: str,
+    check_source: _ServiceOrigin,
 ) -> Optional[LegacyCheckParameters]:
-    params: Optional[LegacyCheckParameters] = None
 
-    if check_source not in ["legacy", "active", "custom"]:
-        if plugin is None:
-            return params
-        params = service.parameters
-        if check_source != "manual":
-            params = config.compute_check_parameters(
-                host_name,
-                service.check_plugin_name,
-                service.item,
-                params,
-            )
+    if check_source in {"active", "manual", "custom"}:
+        return service.parameters
 
-    if check_source == "active":
-        params = service.parameters
+    return config.compute_check_parameters(
+        host_name,
+        service.check_plugin_name,
+        service.item,
+        service.parameters,
+    )
 
-    if isinstance(params, config.TimespecificParamList):
-        params = {
+
+def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheckParameters:
+    return (
+        {
             "tp_computed_params": {
                 "params": checking.time_resolved_check_parameters(params),
                 "computed_at": time.time(),
             }
         }
-
-    return params
+        if isinstance(params, config.TimespecificParamList)
+        else params
+    )

@@ -88,6 +88,7 @@ set_variable_defaults() {
 preamble_1() { # TODO: split these up more meaningful
     # Make sure that locally installed binaries are found
     PATH=$PATH:/usr/local/bin
+    [ -d /var/qmail/bin ] && PATH=$PATH:/var/qmail/bin
 
     export MK_LIBDIR
     export MK_CONFDIR
@@ -122,6 +123,9 @@ set_up_remote() {
     # is being sent only once to each remote host.
     REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
 
+    # let RTCs know about this remote
+    [ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
+    [ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
     export REMOTE
 }
 
@@ -275,29 +279,38 @@ fi
 set_up_encryption() {
     # shellcheck source=/dev/null
     [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
+    define_optionally_encrypt "${ENCRYPTED:-"no"}"
+}
 
-    if [ "${ENCRYPTED}" = "yes" ]; then
+define_optionally_encrypt() {
+    # if things fail, make sure we don't accidentally send unencrypted data
+    unset optionally_encrypt
+
+    if [ "${1}" != "no" ]; then
         OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
         # Depending on the Checkmk version, a key of proper length (256 bits) is provided.
         # However, always use key derivation here (suitable for passwords of all lengths).
         if [ "${OPENSSL_VERSION}" -ge 10101 ]; then
             optionally_encrypt() {
-                printf "03"
-                openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${PASSPHRASE}"
+                printf "03%s" "${2}"
+                openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${1}"
             }
         elif [ "${OPENSSL_VERSION}" -ge 10000 ]; then
             optionally_encrypt() {
-                printf "02"
-                openssl enc -aes-256-cbc -md sha256 -k "${PASSPHRASE}" -nosalt
+                printf "02%s" "${2}"
+                openssl enc -aes-256-cbc -md sha256 -k "${1}" -nosalt
             }
         else
             optionally_encrypt() {
-                printf "00"
-                openssl enc -aes-256-cbc -md md5 -k "${PASSPHRASE}" -nosalt
+                printf "00%s" "${2}"
+                openssl enc -aes-256-cbc -md md5 -k "${1}" -nosalt
             }
         fi
     else
-        optionally_encrypt() { cat; }
+        optionally_encrypt() {
+            [ -n "${2}" ] && printf "99%s" "${2}"
+            cat
+        }
     fi
 
 }
@@ -1325,15 +1338,19 @@ run_real_time_checks() {
         }
     fi
 
-    if [ -z "${REMOTE}" ]; then
-        echo "ERROR: \$REMOTE not specified. Not sending real-time data." >&2
-    else
-        run_real_time_checks_for_remote "${REMOTE}" "${secret}" >/dev/null &
-    fi
+    define_optionally_encrypt "${ENCRYPTED_RT}"
+    for trigger in "${MK_VARDIR}/rtc_remotes/"?*; do
+        # no such file => no expansion of ?* => nothing to do
+        [ -e "${trigger}" ] && run_real_time_checks_for_remote "${trigger}" "${secret}" >/dev/null &
+    done
 }
 
 _rt_pidfile_is_mine() {
     [ "$(cat "${1}" 2>/dev/null)" = "$$" ]
+}
+
+_rt_pidfile_is_alive() {
+    [ "$(("$(date +%s)" - "$(stat -c %X "${1}")"))" -le "${RTC_TIMEOUT}" ]
 }
 
 _rt_timestamp() {
@@ -1353,32 +1370,25 @@ _rt_sendudp() {
 #  rest: encrypted data
 # Be aware of maximum packet size.
 run_real_time_checks_for_remote() {
-    remote="${1}"
+    pidfile="${1}"
     secret="${2}"
-    pidfile="${MK_VARDIR}/real_time_checks.pid"
+    remote="${pidfile##*/rtc_remotes/}"
+
+    # have I already started for this remote?
+    _rt_pidfile_is_mine "${pidfile}" && return
 
     echo $$ >"${pidfile}"
 
-    if [ "${ENCRYPTED_RT}" != "no" ]; then
-        _rt_opt_encrypt() {
-            printf "00%s" "${2}"
-            openssl enc -aes-256-cbc -md md5 -k "${1}" -nosalt
-        }
-    else
-        _rt_opt_encrypt() {
-            printf "99%s" "${2}"
-            cat
-        }
-    fi
-
     while true; do
-        _rt_pidfile_is_mine "${pidfile}" || exit 1
-        # terminate after configured timeout
-        [ "${RTC_TIMEOUT}" -ge 0 ] || exit 1
+        _rt_pidfile_is_mine "${pidfile}" || return
+        _rt_pidfile_is_alive "${pidfile}" || {
+            rm "${pidfile}"
+            return
+        }
 
         for section in ${RTC_SECTIONS}; do
             section_"${section}" |
-                _rt_opt_encrypt "${secret}" "$(_rt_timestamp)" |
+                optionally_encrypt "${secret}" "$(_rt_timestamp)" |
                 _rt_sendudp "${remote}" "${RTC_PORT}"
         done
 
@@ -1390,12 +1400,11 @@ run_real_time_checks_for_remote() {
             plugin_interpreter=$(get_plugin_interpreter "${script}") || continue
 
             "${plugin_interpreter}" "${script}" |
-                _rt_opt_encrypt "${secret}" "$(_rt_timestamp)" |
+                optionally_encrypt "${secret}" "$(_rt_timestamp)" |
                 _rt_sendudp "${remote}" "${RTC_PORT}"
         done
 
         sleep 1
-        RTC_TIMEOUT=$((RTC_TIMEOUT - 1))
     done
 }
 
@@ -1923,7 +1932,7 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt
+        ) | optionally_encrypt "${PASSPHRASE}" ""
 
         [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
 

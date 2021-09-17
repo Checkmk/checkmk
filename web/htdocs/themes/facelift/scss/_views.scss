@@ -277,7 +277,7 @@ div.floatfilter {
   }
 
   span.select2-selection {
-    border-color: $select2-border-color;
+    border-color: $input-dropdown-border-color;
   }
 
   &.rangespec table.valuespec_tuple {
@@ -356,7 +356,7 @@ table.nform table.valuespec_listof {
 
   .vlof_content,
   .vlof_buttons {
-    border-bottom: 1px solid $nform-hr-color;
+    border-bottom: 1px solid $line-color;
   }
 
   .vlof_content {

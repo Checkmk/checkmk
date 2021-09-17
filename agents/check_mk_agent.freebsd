@@ -112,6 +112,7 @@ preamble_1() {
 
     # Make sure, locally installed binaries are found
     PATH=$PATH:/usr/local/bin:/usr/local/sbin
+    [ -d /var/qmail/bin ] && PATH=$PATH:/var/qmail/bin
 
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
@@ -745,7 +746,7 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt
+        ) | optionally_encrypt "${PASSPHRASE}" ""
 
         [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
 

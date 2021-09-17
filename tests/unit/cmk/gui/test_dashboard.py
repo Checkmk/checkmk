@@ -71,6 +71,8 @@ def test_dashlet_registry_plugins():
             "single_timeseries",
             "state_service",
             "state_host",
+            "host_state_summary",
+            "service_state_summary",
         ]
 
     dashboard._transform_old_dict_based_dashlets()

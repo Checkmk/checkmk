@@ -1261,6 +1261,24 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
         item=_dashboard_add_non_view_dashlet_link(name, "state_service"),
     )
 
+    yield PageMenuEntryCEEOnly(
+        title="Host state summary",
+        icon_name={
+            "icon": "host_state",
+            "emblem": "statistic",
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "host_state_summary"),
+    )
+
+    yield PageMenuEntryCEEOnly(
+        title="Service state summary",
+        icon_name={
+            "icon": "service_state",
+            "emblem": "statistic",
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "service_state_summary"),
+    )
+
 
 def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 

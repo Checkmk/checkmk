@@ -15,11 +15,14 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     Optional,
     Sequence,
     Set,
     Tuple,
+    TypeVar,
+    Union,
 )
 
 import livestatus
@@ -74,9 +77,17 @@ from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels, analyse_node_labels
 from .utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
 
-ServicesTableEntry = Tuple[str, Service, List[HostName]]
-ServicesTable = Dict[ServiceID, ServicesTableEntry]
-ServicesByTransition = Dict[str, List[autochecks.ServiceWithNodes]]
+_BasicTransition = Literal["old", "new", "vanished"]
+_Transition = Union[
+    _BasicTransition, Literal["ignored", "clustered_old", "clustered_new", "clustered_vanished"]
+]
+_ServiceOrigin = Union[_Transition, Literal["active", "manual", "custom"]]
+
+_L = TypeVar("_L", bound=str)
+
+ServicesTableEntry = Tuple[_L, Service, List[HostName]]
+ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
+ServicesByTransition = Dict[_ServiceOrigin, List[autochecks.ServiceWithNodes]]
 
 CheckPreviewEntry = Tuple[
     str,
@@ -960,22 +971,26 @@ def _get_host_services(
     on_error: OnError,
 ) -> ServicesByTransition:
 
-    services = (
-        _get_cluster_services(
-            host_config,
-            ipaddress,
-            parsed_sections_broker,
-            on_error,
-        )
-        if host_config.is_cluster
-        else _get_node_services(
-            host_config.hostname,
-            ipaddress,
-            parsed_sections_broker,
-            on_error,
-            config.get_config_cache().host_of_clustered_service,
-        )
-    )
+    services: ServicesTable[_ServiceOrigin]
+    if host_config.is_cluster:
+        services = {
+            **_get_cluster_services(
+                host_config,
+                ipaddress,
+                parsed_sections_broker,
+                on_error,
+            )
+        }
+    else:
+        services = {
+            **_get_node_services(
+                host_config.hostname,
+                ipaddress,
+                parsed_sections_broker,
+                on_error,
+                config.get_config_cache().host_of_clustered_service,
+            )
+        }
 
     services.update(_manual_items(host_config))
     services.update(_custom_items(host_config))
@@ -992,7 +1007,7 @@ def _get_node_services(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
     host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
-) -> ServicesTable:
+) -> ServicesTable[_Transition]:
 
     service_result = analyse_discovered_services(
         host_name=host_name,
@@ -1020,11 +1035,11 @@ def _get_node_services(
 
 def _node_service_source(
     *,
-    check_source: str,
+    check_source: _BasicTransition,
     host_name: HostName,
     cluster_name: HostName,
     service: Service,
-) -> str:
+) -> _Transition:
     if host_name == cluster_name:
         return check_source
 
@@ -1040,7 +1055,7 @@ def _node_service_source(
 
 def chain_with_check_source(
     service_result: QualifiedDiscovery[Service],
-) -> Iterable[Tuple[str, Service]]:
+) -> Iterable[Tuple[_BasicTransition, Service]]:
     for s in service_result.vanished:
         yield "vanished", s
     for s in service_result.old:
@@ -1049,14 +1064,18 @@ def chain_with_check_source(
         yield "new", s
 
 
-def _manual_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+def _manual_items(
+    host_config: config.HostConfig,
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["manual"]]]]:
     # Find manual checks. These can override discovered checks -> "manual"
     host_name = host_config.hostname
     for service in check_table.get_check_table(host_name, skip_autochecks=True).values():
         yield service.id(), ("manual", service, [host_name])
 
 
-def _custom_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+def _custom_items(
+    host_config: config.HostConfig,
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["custom"]]]]:
     # Add custom checks -> "custom"
     for entry in host_config.custom_checks:
         yield (
@@ -1074,7 +1093,9 @@ def _custom_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, S
         )
 
 
-def _active_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+def _active_items(
+    host_config: config.HostConfig,
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["active"]]]]:
     # Similar for 'active_checks', but here we have parameters
     host_name = host_config.hostname
     for plugin_name, entries in host_config.active_checks:
@@ -1111,7 +1132,9 @@ def _reclassify_disabled_items(
     )
 
 
-def _group_by_transition(transition_services: ServicesTable) -> ServicesByTransition:
+def _group_by_transition(
+    transition_services: ServicesTable[_ServiceOrigin],
+) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
     for transition, service, found_on_nodes in transition_services.values():
         services_by_transition.setdefault(
@@ -1126,12 +1149,12 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
-) -> ServicesTable:
+) -> ServicesTable[_Transition]:
 
     if not host_config.nodes:
         return {}
 
-    cluster_items: ServicesTable = {}
+    cluster_items: ServicesTable[_BasicTransition] = {}
     config_cache = config.get_config_cache()
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
@@ -1163,18 +1186,18 @@ def _get_cluster_services(
                 )
             )
 
-    return cluster_items
+    return {**cluster_items}  # for the typing...
 
 
 def _cluster_service_entry(
     *,
-    check_source: str,
+    check_source: _BasicTransition,
     host_name: HostName,
     node_name: HostName,
     services_cluster: HostName,
     service: Service,
-    existing_entry: Optional[Tuple[str, Service, List[HostName]]],
-) -> Iterable[Tuple[ServiceID, Tuple[str, Service, List[HostName]]]]:
+    existing_entry: Optional[Tuple[_BasicTransition, Service, List[HostName]]],
+) -> Iterable[Tuple[ServiceID, Tuple[_BasicTransition, Service, List[HostName]]]]:
     if host_name != services_cluster:
         return  # not part of this host
 
@@ -1271,7 +1294,7 @@ def _check_preview_table_row(
     host_config: config.HostConfig,
     ip_address: Optional[HostAddress],
     service: Service,
-    check_source: str,
+    check_source: _ServiceOrigin,
     parsed_sections_broker: ParsedSectionsBroker,
     found_on_nodes: List[HostName],
     value_store_manager: ValueStoreManager,
@@ -1325,7 +1348,7 @@ def _check_preview_table_row(
 def _preview_check_source(
     host_name: HostName,
     service: Service,
-    check_source: str,
+    check_source: _ServiceOrigin,
 ) -> str:
     if check_source in ["legacy", "active", "custom"] and config.service_ignored(
         host_name, None, service.description
@@ -1338,7 +1361,7 @@ def _preview_params(
     host_name: HostName,
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
-    check_source: str,
+    check_source: _ServiceOrigin,
 ) -> Optional[LegacyCheckParameters]:
 
     if check_source in {"active", "manual"}:

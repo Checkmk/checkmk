@@ -761,7 +761,7 @@ if [ -n "$DBS" ];then
             HOSTNAME=$(hostname)
         fi
 
-        CREDENTIALS=$(get_credentials $USER $PASSWORD $USERSTOREKEY)
+        CREDENTIALS=$(get_credentials ${USER:-""} ${PASSWORD:-""} ${USERSTOREKEY:-""})
         INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$(query_sap_hana_status)" "$CREDENTIALS")
 
         set_sap_hana_version "$INSTANCE_STATUS"
@@ -771,7 +771,7 @@ if [ -n "$DBS" ];then
         for DB_DATA in ${DBS[*]}; do
             IFS=',' read DB_SID DB_INSTANCE DB USER PASSWORD USERSTOREKEY <<< "${DB_DATA}"
             if [ "$SID" == "$DB_SID" ] && [ "$INSTANCE" == "$DB_INSTANCE" ];then
-                CREDENTIALS=$(get_credentials $USER $PASSWORD $USERSTOREKEY)
+                CREDENTIALS=$(get_credentials ${USER:-""} ${PASSWORD:-""} ${USERSTOREKEY:-""})
                 get_sections "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$HOSTNAME" "$CREDENTIALS"
             fi
         done
@@ -804,7 +804,7 @@ else
             HOSTNAME=$(hostname)
         fi
 
-        CREDENTIALS=$(get_credentials $USER $PASSWORD $USERSTOREKEY)
+        CREDENTIALS=$(get_credentials ${USER:-""} ${PASSWORD:-""} ${USERSTOREKEY:-""})
         INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_sap_hana_status)" "$CREDENTIALS")
 
         set_sap_hana_version "$INSTANCE_STATUS"

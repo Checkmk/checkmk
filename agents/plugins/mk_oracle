@@ -1347,7 +1347,7 @@ sql_rman () {
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|ARCHIVELOG||'
-                     || round((sysdate - completed)*24*60,0)
+                     || case WHEN (sysdate - completed) < 0 THEN 0 ELSE round((sysdate - completed)*24*60,0) END
                      || '|'
               from (
                     select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
@@ -1415,7 +1415,7 @@ sql_rman () {
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|ARCHIVELOG||'
-                     || round((sysdate - completed)*24*60,0)
+                     || case WHEN (sysdate - completed) < 0 THEN 0 ELSE round((sysdate - completed)*24*60,0) END
                      || '|'
               from (
                     select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name

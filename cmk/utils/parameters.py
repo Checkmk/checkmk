@@ -4,9 +4,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Iterable
+from __future__ import annotations
 
-from cmk.utils.type_defs import LegacyCheckParameters
+from typing import Any, Dict, Final, Iterable, Sequence, Tuple
+
+from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
+
+
+# this is not particularly clever, but an easy way to allow for
+# an instance check (for the transitioning phase)
+class TimespecificParameters:
+    def __init__(self, entries: Sequence[TimespecificParameterSet]) -> None:
+        self.entries: Final = tuple(entries)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, TimespecificParameters) and self.entries == other.entries
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.entries!r})"
+
+
+# see how much logic of the time period evaluation has to end up here,
+# then decide whether to move this to type defs.
+class TimespecificParameterSet:
+    def __init__(
+        self,
+        default: LegacyCheckParameters,
+        timeperiod_values: Sequence[Tuple[TimeperiodName, LegacyCheckParameters]],
+    ) -> None:
+        # LegacyCheckParameters is almost as usefull as `object`.
+        # I hope we end up with a more useful type at some point :-(
+        self.default: Final = default
+        self.timeperiod_values: Final = tuple(timeperiod_values)
+
+    @classmethod
+    def from_parameters(cls, parameters: LegacyCheckParameters) -> TimespecificParameterSet:
+        if isinstance(parameters, dict) and "tp_default_value" in parameters:
+            return cls(parameters["tp_default_value"], parameters["tp_values"])
+        return cls(parameters, ())
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, TimespecificParameterSet)
+            and self.default == other.default
+            and self.timeperiod_values == other.timeperiod_values
+        )
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.default!r}, {self.timeperiod_values!r})"
 
 
 def boil_down_parameters(

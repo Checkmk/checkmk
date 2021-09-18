@@ -37,6 +37,7 @@ from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPreviewEntry,
@@ -1366,7 +1367,9 @@ def _preview_check_source(
     return check_source
 
 
-def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheckParameters:
+def _wrap_timespecific_for_preview(
+    params: Union[LegacyCheckParameters, TimespecificParameters]
+) -> LegacyCheckParameters:
     return (
         {
             "tp_computed_params": {
@@ -1374,6 +1377,6 @@ def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheck
                 "computed_at": time.time(),
             }
         }
-        if isinstance(params, config.TimespecificParamList)
+        if isinstance(params, TimespecificParameters)
         else params
     )

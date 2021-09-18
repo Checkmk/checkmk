@@ -7,11 +7,12 @@
 
 import logging
 from contextlib import suppress
-from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence
+from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
 from cmk.base.check_utils import (
@@ -25,7 +26,8 @@ from cmk.base.discovered_labels import ServiceLabel
 from .utils import AutocheckEntry, AutochecksStore
 
 ComputeCheckParameters = Callable[
-    [HostName, CheckPluginName, Item, LegacyCheckParameters], Optional[LegacyCheckParameters]
+    [HostName, CheckPluginName, Item, LegacyCheckParameters],
+    Union[LegacyCheckParameters, TimespecificParameters],
 ]
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]

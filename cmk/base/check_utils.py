@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Final, Mapping, Optional, Sequence, Tuple, TypeVar
+from typing import Any, Dict, Final, Generic, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
 from cmk.base.discovered_labels import ServiceLabel
@@ -14,7 +15,10 @@ ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, "Service"]
 
 
-class Service:
+_Params = TypeVar("_Params", bound=Union[LegacyCheckParameters, TimespecificParameters])
+
+
+class Service(Generic[_Params]):
     __slots__ = ["check_plugin_name", "item", "description", "parameters", "service_labels"]
 
     def __init__(
@@ -22,7 +26,7 @@ class Service:
         check_plugin_name: CheckPluginName,
         item: Item,
         description: str,
-        parameters: LegacyCheckParameters,
+        parameters: _Params,
         service_labels: Optional[Mapping[str, ServiceLabel]] = None,
     ) -> None:
         self.check_plugin_name: Final = check_plugin_name
@@ -69,7 +73,7 @@ class Service:
         )
 
 
-class AutocheckService(Service):
+class AutocheckService(Service[LegacyCheckParameters]):
     """Just a little bit more specific than any service
 
     Autocheck services do not compute the effectice parameters, but only contain the discovered

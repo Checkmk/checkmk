@@ -64,7 +64,11 @@ from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_paramete
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
-from cmk.utils.parameters import boil_down_parameters
+from cmk.utils.parameters import (
+    boil_down_parameters,
+    TimespecificParameters,
+    TimespecificParameterSet,
+)
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.site import omd_site
@@ -185,10 +189,6 @@ ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
 class _NestedExitSpec(ExitSpec, total=False):
     overall: ExitSpec
     individual: Dict[str, ExitSpec]
-
-
-class TimespecificParamList(list):
-    pass
 
 
 def get_variable_names() -> List[str]:
@@ -2259,8 +2259,11 @@ def compute_check_parameters(
     plugin_name: CheckPluginName,
     item: Item,
     params: LegacyCheckParameters,
-    configured_parameters: Optional[Sequence[LegacyCheckParameters]] = None,
-) -> Optional[LegacyCheckParameters]:
+    # the Union[..., Sequence[LegacyCheckParameters]] is just for the fallback below. clean this up.
+    configured_parameters: Optional[
+        Union[TimespecificParameters, Sequence[LegacyCheckParameters]]
+    ] = None,
+) -> Union[None, LegacyCheckParameters, TimespecificParameters]:
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
@@ -2310,13 +2313,16 @@ def _update_with_default_check_parameters(
 
 def _update_with_configured_check_parameters(
     params: LegacyCheckParameters,
-    configured_parameters: Sequence[LegacyCheckParameters],
-) -> LegacyCheckParameters:
+    configured_parameters: Union[TimespecificParameters, Sequence[LegacyCheckParameters]],
+) -> Union[LegacyCheckParameters, TimespecificParameters]:
     if configured_parameters:
-        if has_timespecific_params(configured_parameters):
+        if isinstance(configured_parameters, TimespecificParameters):
             # some parameters include timespecific settings
-            # these will be executed just before the check execution
-            return set_timespecific_param_list(configured_parameters, params)
+            # these will be resolved just before the check execution
+            return TimespecificParameters(
+                list(configured_parameters.entries)
+                + [TimespecificParameterSet.from_parameters(params)]
+            )
 
         return boil_down_parameters(configured_parameters, params)
 
@@ -2344,24 +2350,6 @@ def _get_configured_parameters(
         else []
         # Get parameters configured via check_parameters
     ) + config_cache.service_extra_conf(host, descr, check_parameters)
-
-
-def has_timespecific_params(entries: Any) -> bool:
-    if entries is None:
-        return False
-    if isinstance(entries, dict) and "tp_default_value" in entries:
-        return True
-    try:
-        for entry in entries:
-            if isinstance(entry, dict) and "tp_default_value" in entry:
-                return True
-    except TypeError:
-        return False
-    return False
-
-
-def set_timespecific_param_list(entries, params):
-    return TimespecificParamList(entries + [params])
 
 
 def _get_checkgroup_parameters(
@@ -3042,7 +3030,7 @@ class HostConfig:
     @property
     def static_checks(
         self,
-    ) -> List[Tuple[RulesetName, CheckPluginNameStr, Item, LegacyCheckParameters]]:
+    ) -> Sequence[Tuple[RulesetName, CheckPluginNameStr, Item, TimespecificParameterSet]]:
         """Returns a table of all "manual checks" configured for this host"""
         matched = []
         for checkgroup_name in static_checks:
@@ -3055,7 +3043,14 @@ class HostConfig:
                 else:
                     checktype, item, params = entry
 
-                matched.append((checkgroup_name, checktype, item, params))
+                matched.append(
+                    (
+                        RulesetName(checkgroup_name),
+                        CheckPluginNameStr(checktype),
+                        None if item is None else str(item),
+                        TimespecificParameterSet.from_parameters(params),
+                    )
+                )
 
         return matched
 
@@ -3659,7 +3654,7 @@ class ConfigCache:
         hostname: HostName,
         description: ServiceName,
         check_plugin_name: Optional[CheckPluginName],
-        params: LegacyCheckParameters,
+        params: Union[LegacyCheckParameters, TimespecificParameters],
     ) -> List[str]:
         actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
 

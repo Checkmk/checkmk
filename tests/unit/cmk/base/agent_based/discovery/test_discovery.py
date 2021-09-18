@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Literal, NamedTuple, Sequence, Set, Tuple, Union
+from typing import Dict, List, Literal, Mapping, NamedTuple, Sequence, Set, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -23,6 +23,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostKey,
     HostName,
+    LegacyCheckParameters,
     SectionName,
     SourceType,
 )
@@ -69,11 +70,11 @@ def test_discovered_service_init() -> None:
 
 
 def test_discovered_service_eq() -> None:
-    ser1 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser2 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser3 = discovery.Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
-    ser4 = discovery.Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
-    ser5 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", [])
+    ser1: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
+    ser2: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
+    ser3: Service[LegacyCheckParameters] = Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
+    ser4: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
+    ser5: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", [""])
 
     assert ser1 == ser1  # pylint: disable=comparison-with-itself
     assert ser1 == ser2
@@ -1618,7 +1619,7 @@ def test__perform_host_label_discovery_on_cluster(
 
 def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
 
-    services = {
+    services: Mapping[str, Service[LegacyCheckParameters]] = {
         discovery_status: Service(
             CheckPluginName(f"plugin_{discovery_status}"),
             None,

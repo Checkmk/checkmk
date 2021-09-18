@@ -7,10 +7,8 @@
 
 from collections import defaultdict
 from typing import (
-    Any,
     Container,
     DefaultDict,
-    Dict,
     Iterable,
     List,
     Mapping,
@@ -18,6 +16,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Union,
 )
 
 import cmk.utils.debug
@@ -26,7 +25,11 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
-from cmk.utils.parameters import boil_down_parameters
+from cmk.utils.parameters import (
+    boil_down_parameters,
+    TimespecificParameters,
+    TimespecificParameterSet,
+)
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -429,8 +432,7 @@ def get_aggregated_result(
     ipaddress: Optional[HostAddress],
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
-    # missleading. These are prams that *may* be *partially* time specific
-    timespecific_parameters: LegacyCheckParameters,
+    timespecific_parameters: Union[LegacyCheckParameters, TimespecificParameters],
     *,
     value_store_manager: value_store.ValueStoreManager,
     persist_value_store_changes: bool,
@@ -608,12 +610,15 @@ def _get_monitoring_data_kwargs(
     )
 
 
-def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:
+def _final_read_only_check_parameters(
+    entries: Union[TimespecificParameters, LegacyCheckParameters]
+) -> Parameters:
     raw_parameters = (
         time_resolved_check_parameters(entries)
-        if isinstance(entries, cmk.base.config.TimespecificParamList)
+        if isinstance(entries, TimespecificParameters)
         else entries
     )
+
     # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
     # wrap_parameters is a no-op for dictionaries.
     # For auto-migrated plugins expecting tuples, they will be
@@ -621,44 +626,35 @@ def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Paramet
     return Parameters(wrap_parameters(raw_parameters))
 
 
+# TODO (mo): attach to TimespecificParameters
 def time_resolved_check_parameters(
-    entries: cmk.base.config.TimespecificParamList,
+    ts_params: TimespecificParameters,
 ) -> LegacyCheckParameters:
-    # Check if first entry is not dict based or if its dict based
-    # check if the tp_default_value is not a dict
-    if not isinstance(entries[0], dict) or not isinstance(
-        entries[0].get("tp_default_value", {}), dict
-    ):
-        # This rule is tuple based, means no dict-key merging
-        if not isinstance(entries[0], dict):
-            return entries[0]  # A tuple rule, simply return first match
 
-        return _evaluate_timespecific_entry(
-            entries[0]
-        )  # A timespecific rule, determine the correct tuple
+    # This is kept for compatibility. I am not sure if we shouldn't make this more consistent
+    if not isinstance(ts_params.entries[0].default, dict):
+        return _evaluate_timespecific_entry(ts_params.entries[0])
 
     return boil_down_parameters(
-        # Ignore (old) default parameters like
+        # Ignore parameters derived from old parameters like
         #   'NAME_default_levels' = (80.0, 85.0)
-        # A rule with a timespecifc parameter settings always has an
-        # implicit default parameter set, even if no timeperiod matches.
-        (_evaluate_timespecific_entry(entry) for entry in entries if isinstance(entry, dict)),
+        (
+            _evaluate_timespecific_entry(entry)
+            for entry in ts_params.entries
+            if isinstance(entry.default, dict) or entry.timeperiod_values
+        ),
         {},
     )
 
 
-def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> LegacyCheckParameters:
-    # Dictionary entries without timespecific settings
-    if "tp_default_value" not in entry:
-        return entry
-
-    merged = boil_down_parameters(
-        _filter_active_parameter_subsets(entry["tp_values"]),
-        entry["tp_default_value"],
+# TODO (mo): attach to TimespecificParameterSet
+def _evaluate_timespecific_entry(entry: TimespecificParameterSet) -> LegacyCheckParameters:
+    return boil_down_parameters(
+        _filter_active_parameter_subsets(entry.timeperiod_values), entry.default
     )
-    return merged
 
 
+# TODO (mo): attach to TimespecificParameterSet
 def _filter_active_parameter_subsets(
     subsets: Iterable[Tuple[TimeperiodName, LegacyCheckParameters]],
 ) -> Iterable[LegacyCheckParameters]:

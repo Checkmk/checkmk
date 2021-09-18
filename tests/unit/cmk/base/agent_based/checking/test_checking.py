@@ -6,8 +6,12 @@
 
 # pylint: disable=protected-access
 
-# No stub file
+from typing import Iterable
+
 import pytest
+
+from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.utils.type_defs import LegacyCheckParameters
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.config
@@ -16,33 +20,35 @@ from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.api.agent_based.checking_classes import State as state
 
 
+def make_timespecific_params_list(
+    entries: Iterable[LegacyCheckParameters],
+) -> TimespecificParameters:
+    return TimespecificParameters([TimespecificParameterSet.from_parameters(e) for e in entries])
+
+
 @pytest.mark.parametrize(
     "rules,active_timeperiods,expected_result",
     [
-        (cmk.base.config.TimespecificParamList([(1, 1), (2, 2)]), ["tp1", "tp2"], (1, 1)),
+        (make_timespecific_params_list([(1, 1), (2, 2)]), ["tp1", "tp2"], (1, 1)),
         (
-            cmk.base.config.TimespecificParamList(
-                [(1, 1), {"tp_default_value": (2, 2), "tp_values": []}]
-            ),
+            make_timespecific_params_list([(1, 1), {"tp_default_value": (2, 2), "tp_values": []}]),
             ["tp1", "tp2"],
             (1, 1),
         ),
         (
-            cmk.base.config.TimespecificParamList(
-                [{"tp_default_value": (2, 2), "tp_values": []}, (1, 1)]
-            ),
+            make_timespecific_params_list([{"tp_default_value": (2, 2), "tp_values": []}, (1, 1)]),
             ["tp1", "tp2"],
             (2, 2),
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [{"tp_default_value": (2, 2), "tp_values": [("tp1", (3, 3))]}, (1, 1)]
             ),
             ["tp1", "tp2"],
             (3, 3),
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {"tp_default_value": (2, 2), "tp_values": [("tp2", (4, 4)), ("tp1", (3, 3))]},
                     (1, 1),
@@ -52,7 +58,7 @@ from cmk.base.api.agent_based.checking_classes import State as state
             (4, 4),
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {"tp_default_value": (2, 2), "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]},
                     (1, 1),
@@ -62,7 +68,7 @@ from cmk.base.api.agent_based.checking_classes import State as state
             (2, 2),
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     (1, 1),
                     {"tp_default_value": (2, 2), "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]},
@@ -71,23 +77,21 @@ from cmk.base.api.agent_based.checking_classes import State as state
             [],
             (1, 1),
         ),
-        (cmk.base.config.TimespecificParamList([{1: 1}]), ["tp1", "tp2"], {1: 1}),
+        (make_timespecific_params_list([{1: 1}]), ["tp1", "tp2"], {1: 1}),
         (
-            cmk.base.config.TimespecificParamList(
-                [{1: 1}, {"tp_default_value": {2: 2}, "tp_values": []}]
-            ),
+            make_timespecific_params_list([{1: 1}, {"tp_default_value": {2: 2}, "tp_values": []}]),
             ["tp1", "tp2"],
             {1: 1, 2: 2},
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [{"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]}, {1: 1}]
             ),
             ["tp1", "tp2"],
             {1: 1, 2: 2, 3: 3},
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {"tp_default_value": {2: 4}, "tp_values": [("tp1", {1: 5}), ("tp2", {3: 6})]},
                     {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
@@ -98,7 +102,7 @@ from cmk.base.api.agent_based.checking_classes import State as state
             {1: 5, 2: 4, 3: 6},
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {"tp_default_value": {2: 4}, "tp_values": [("tp3", {1: 5}), ("tp2", {3: 6})]},
                     {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
@@ -109,7 +113,7 @@ from cmk.base.api.agent_based.checking_classes import State as state
             {1: 1, 2: 4, 3: 6},
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {"tp_default_value": {2: 4}, "tp_values": [("tp3", {1: 5}), ("tp2", {3: 6})]},
                     {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
@@ -121,7 +125,7 @@ from cmk.base.api.agent_based.checking_classes import State as state
         ),
         # (Old) tuple based default params
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {
                         "tp_default_value": {"key": (1, 1)},
@@ -141,7 +145,7 @@ from cmk.base.api.agent_based.checking_classes import State as state
             {"key": (2, 2)},
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {
                         "tp_default_value": {"key": (1, 1)},
@@ -161,7 +165,7 @@ from cmk.base.api.agent_based.checking_classes import State as state
             {"key": (1, 1)},
         ),
         (
-            cmk.base.config.TimespecificParamList(
+            make_timespecific_params_list(
                 [
                     {
                         "tp_default_value": {},
@@ -182,7 +186,9 @@ from cmk.base.api.agent_based.checking_classes import State as state
         ),
     ],
 )
-def test_time_resolved_check_parameters(monkeypatch, rules, active_timeperiods, expected_result):
+def test_time_resolved_check_parameters(
+    monkeypatch, rules: TimespecificParameters, active_timeperiods, expected_result
+):
     monkeypatch.setattr(
         cmk.base.core,
         "timeperiod_active",

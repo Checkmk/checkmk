@@ -18,6 +18,7 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -1181,8 +1182,8 @@ def test_host_config_custom_checks(
         (
             "testhost2",
             [
-                ("checkgroup", "checktype1", "item1", {"param1": 1}),
-                ("checkgroup", "checktype2", "item2", {"param2": 2}),
+                ("checkgroup", "checktype1", "item1", TimespecificParameterSet({"param1": 1}, ())),
+                ("checkgroup", "checktype2", "item2", TimespecificParameterSet({"param2": 2}, ())),
             ],
         ),
     ],
@@ -2684,31 +2685,6 @@ class TestPackedConfigStore:
 
         assert precompiled_check_config.exists()
         assert store.read() == {"abc": 1}
-
-
-@pytest.mark.parametrize(
-    "params, expected_result",
-    [
-        (None, False),
-        ({}, False),
-        (
-            {"x": "y"},
-            False,
-        ),
-        ([1, (2, 3)], False),
-        (4, False),
-        (
-            {"tp_default_value": 1, "tp_values": [("24X7", 2)]},
-            True,
-        ),
-        (
-            ["abc", {"tp_default_value": 1, "tp_values": [("24X7", 2)]}],
-            True,
-        ),
-    ],
-)
-def test_has_timespecific_params(params: Optional[Any], expected_result: bool) -> None:
-    assert config.has_timespecific_params(params) is expected_result
 
 
 def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:

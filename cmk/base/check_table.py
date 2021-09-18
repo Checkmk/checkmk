@@ -10,6 +10,7 @@ from contextlib import suppress
 from typing import Iterable, Iterator, List, Mapping, Set
 
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.config as config
@@ -143,7 +144,7 @@ def _get_static_check_entries(
             check_plugin_name,
             item,
             {},
-            configured_parameters=(params,),
+            configured_parameters=TimespecificParameters((params,)),
         )
 
         entries.append(Service(check_plugin_name, item, descr, new_parameters))

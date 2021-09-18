@@ -6,10 +6,11 @@
 
 import socket
 import time
-from typing import Optional
+from typing import Optional, Union
 
 import cmk.utils.render
 import cmk.utils.tty as tty
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import HostName
 
 import cmk.base.agent_based.checking as checking
@@ -135,8 +136,8 @@ def dump_host(hostname: HostName) -> None:
     tty.print_table(headers, colors, table_data, "  ")
 
 
-def _evaluate_params(params: LegacyCheckParameters) -> str:
-    if not isinstance(params, cmk.base.config.TimespecificParamList):
+def _evaluate_params(params: Union[LegacyCheckParameters, TimespecificParameters]) -> str:
+    if not isinstance(params, TimespecificParameters):
         return repr(params)
 
     current_params = checking.time_resolved_check_parameters(params)

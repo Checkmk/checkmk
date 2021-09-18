@@ -29,6 +29,7 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import (
     autochecks_dir,
     counters_dir,
@@ -807,7 +808,7 @@ class AutomationAnalyseServices(Automation):
                         "computed_at": time.time(),
                     }
                 }
-                if isinstance(service.parameters, cmk.base.config.TimespecificParamList)
+                if isinstance(service.parameters, TimespecificParameters)
                 else service.parameters
             )
 

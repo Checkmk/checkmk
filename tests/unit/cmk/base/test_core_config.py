@@ -208,7 +208,7 @@ def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
     host_config = config_cache.get_host_config(hostname)
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
-    service = Service(CheckPluginName("cpu_loads"), None, "CPU load", {})
+    service = Service(CheckPluginName("cpu_loads"), None, "CPU load", {"": ""})
     service_spec = core_config.get_cmk_passive_service_attributes(
         config_cache, host_config, service, check_mk_attrs
     )

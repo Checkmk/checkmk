@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Dict, List
+from typing import Dict, List, Mapping, Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -14,6 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 # No stub file
 from tests.testlib.base import Scenario
 
+from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -259,7 +260,7 @@ def test_get_check_table_of_mgmt_boards(
     monkeypatch: MonkeyPatch, hostname_str: str, expected_result: List[ServiceID]
 ) -> None:
     hostname = HostName(hostname_str)
-    autochecks = {
+    autochecks: Mapping[str, Sequence[Service[LegacyCheckParameters]]] = {
         "mgmt-board-ipmi": [
             Service(
                 CheckPluginName("mgmt_ipmi_sensors"),
@@ -311,7 +312,7 @@ def test_get_check_table_of_mgmt_boards(
     "hostname_str,expected_result",
     [
         ("df_host", [(CheckPluginName("df"), "/snap/core/9066")]),
-        # old format, without TimespecificParamList
+        # old format, without TimespecificParameters
         ("df_host_1", [(CheckPluginName("df"), "/snap/core/9067")]),
         ("df_host_2", [(CheckPluginName("df"), "/snap/core/9068")]),
     ],
@@ -449,11 +450,10 @@ def test_check_table__get_static_check_entries(
     monkeypatch: MonkeyPatch, check_group_parameters: LegacyCheckParameters
 ) -> None:
     hostname = HostName("hostname")
-    static_parameters = {
-        "levels": (1, 2, 3, 4),
-    }
+
+    static_parameters_default = {"levels": (1, 2, 3, 4)}
     static_checks: Dict[str, List] = {
-        "ps": [(("ps", "item", static_parameters), [], [hostname], {})],
+        "ps": [(("ps", "item", static_parameters_default), [], [hostname], {})],
     }
 
     ts = Scenario().add_host(hostname)
@@ -506,4 +506,9 @@ def test_check_table__get_static_check_entries(
 
     assert len(static_check_parameters) == 1
     static_check_parameter = static_check_parameters[0]
-    assert static_check_parameter == static_parameters
+    assert static_check_parameter == TimespecificParameters(
+        (
+            TimespecificParameterSet(static_parameters_default, ()),
+            TimespecificParameterSet({}, ()),
+        )
+    )

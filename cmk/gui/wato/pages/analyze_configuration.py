@@ -271,7 +271,7 @@ class ModeAnalyzeConfig(WatoMode):
                 html.write_text("")
 
         # Add toggleable notitication context
-        table.row(class_="ac_test_details hidden", id_="test_result_details_%s" % test_id)
+        table.row(css="ac_test_details hidden", id_="test_result_details_%s" % test_id)
         table.cell(colspan=2 + 2 * len(site_ids))
 
         html.write_text(test_results_by_site["test"]["help"])
@@ -290,7 +290,7 @@ class ModeAnalyzeConfig(WatoMode):
             html.close_table()
 
         # This dummy row is needed for not destroying the odd/even row highlighting
-        table.row(class_="hidden")
+        table.row(css="hidden")
 
     def _perform_tests(self):
         test_sites = self._analyze_sites()

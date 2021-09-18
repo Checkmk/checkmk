@@ -816,7 +816,7 @@ class ModeNotifications(ABCNotificationsMode):
                 )
 
                 # Add toggleable notitication context
-                table.row(class_="notification_context hidden", id_="notification_context_%d" % nr)
+                table.row(css="notification_context hidden", id_="notification_context_%d" % nr)
                 table.cell(colspan=8)
 
                 html.open_table()
@@ -830,7 +830,7 @@ class ModeNotifications(ABCNotificationsMode):
                 html.close_table()
 
                 # This dummy row is needed for not destroying the odd/even row highlighting
-                table.row(class_="notification_context hidden")
+                table.row(css="notification_context hidden")
 
     # TODO: Refactor this
     def _show_rules(self):

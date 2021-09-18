@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
-import copy
 from collections import defaultdict
 from typing import Any, Container, DefaultDict, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
@@ -15,6 +14,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
+from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -571,38 +571,26 @@ def time_resolved_check_parameters(
             entries[0]
         )  # A timespecific rule, determine the correct tuple
 
-    # This rule is dictionary based, evaluate all entries and merge matching keys
-    timespecific_entries: Dict[str, Any] = {}
-    for entry in entries[::-1]:
-        if not isinstance(entry, dict):
-            # Ignore (old) default parameters like
-            #   'NAME_default_levels' = (80.0, 85.0)
-            # A rule with a timespecifc parameter settings always has an
-            # implicit default parameter set, even if no timeperiod matches.
-            continue
-        timespecific_entries.update(_evaluate_timespecific_entry(entry))
-
-    return timespecific_entries
+    return boil_down_parameters(
+        # Ignore (old) default parameters like
+        #   'NAME_default_levels' = (80.0, 85.0)
+        # A rule with a timespecifc parameter settings always has an
+        # implicit default parameter set, even if no timeperiod matches.
+        (_evaluate_timespecific_entry(entry) for entry in entries if isinstance(entry, dict)),
+        {},
+    )
 
 
-def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> LegacyCheckParameters:
     # Dictionary entries without timespecific settings
     if "tp_default_value" not in entry:
         return entry
 
-    # Timespecific entry, start with default value and update with timespecific entry
-    # Note: This combined_entry may be a dict or tuple, so the update mechanism must handle this correctly
-    # A shallow copy is sufficient
-    combined_entry = copy.copy(entry["tp_default_value"])
-    for tp_entry in _filter_active_parameter_subsets(entry["tp_values"][::-1]):
-        # If multiple timeperiods are active, their settings are also merged
-        # This follows the same logic than merging different rules
-        if isinstance(combined_entry, dict) and isinstance(tp_entry, dict):
-            combined_entry.update(tp_entry)
-        else:
-            combined_entry = tp_entry
-
-    return combined_entry
+    merged = boil_down_parameters(
+        _filter_active_parameter_subsets(entry["tp_values"]),
+        entry["tp_default_value"],
+    )
+    return merged
 
 
 def _filter_active_parameter_subsets(

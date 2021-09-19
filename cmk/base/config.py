@@ -2248,7 +2248,7 @@ def compute_check_parameters(
     plugin_name: CheckPluginName,
     item: Item,
     params: LegacyCheckParameters,
-    for_static_checks: bool = False,
+    configured_parameters: Optional[Sequence[LegacyCheckParameters]] = None,
 ) -> Optional[LegacyCheckParameters]:
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
@@ -2260,10 +2260,12 @@ def compute_check_parameters(
     if plugin.check_default_parameters is not None:
         params = _update_with_default_check_parameters(plugin.check_default_parameters, params)
 
-    if not for_static_checks:
-        params = _update_with_configured_check_parameters(host, plugin, item, params)
+    if configured_parameters is None:
+        configured_parameters = _get_configured_parameters(host, plugin, item)
 
-    return params
+    return _update_with_configured_check_parameters(
+        host, plugin, item, params, configured_parameters
+    )
 
 
 def _update_with_default_check_parameters(
@@ -2300,9 +2302,8 @@ def _update_with_configured_check_parameters(
     plugin: CheckPlugin,
     item: Item,
     params: LegacyCheckParameters,
+    configured_parameters: Sequence[LegacyCheckParameters],
 ) -> LegacyCheckParameters:
-    configured_parameters = _get_configured_parameters(host, plugin, item)
-
     if configured_parameters:
         if has_timespecific_params(configured_parameters):
             # some parameters include timespecific settings

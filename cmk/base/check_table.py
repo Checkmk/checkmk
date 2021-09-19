@@ -146,7 +146,7 @@ def _get_static_check_entries(
             check_plugin_name,
             item,
             params,
-            for_static_checks=True,
+            configured_parameters=(),
         )
 
         if timespec_params:

@@ -45,6 +45,13 @@ def _clear_group_information_request_cache():
 
 
 GroupType = Literal["service", "host", "contact"]
+GroupName = str
+GroupSpec = Dict[GroupName, Any]  # TODO: Improve this type
+# Elements:
+# mandatory: alias: str
+# optional: inventory_paths
+# optional: nagvis_maps
+# optional (CME): customer
 
 
 def add_group(name, group_type: GroupType, extra_info):

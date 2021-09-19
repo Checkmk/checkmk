@@ -2296,14 +2296,34 @@ def _update_with_default_check_parameters(
 
 
 def _update_with_configured_check_parameters(
-    host: HostName, plugin: CheckPlugin, item: Item, params: LegacyCheckParameters
+    host: HostName,
+    plugin: CheckPlugin,
+    item: Item,
+    params: LegacyCheckParameters,
 ) -> LegacyCheckParameters:
+    configured_parameters = _get_configured_parameters(host, plugin, item)
+
+    if configured_parameters:
+        if has_timespecific_params(configured_parameters):
+            # some parameters include timespecific settings
+            # these will be executed just before the check execution
+            return set_timespecific_param_list(configured_parameters, params)
+
+        return boil_down_parameters(configured_parameters, params)
+
+    return params
+
+
+def _get_configured_parameters(
+    host: HostName,
+    plugin: CheckPlugin,
+    item: Item,
+) -> Sequence[LegacyCheckParameters]:
+    config_cache = get_config_cache()
     descr = service_description(host, plugin.name, item)
 
-    config_cache = get_config_cache()
-
-    # Get parameters configured via checkgroup_parameters
-    entries = (
+    return (
+        # Get parameters configured via checkgroup_parameters
         _get_checkgroup_parameters(
             config_cache,
             host,
@@ -2313,20 +2333,8 @@ def _update_with_configured_check_parameters(
         )
         if plugin.check_ruleset_name is not None
         else []
-    )
-
-    # Get parameters configured via check_parameters
-    entries += config_cache.service_extra_conf(host, descr, check_parameters)
-
-    if entries:
-        if has_timespecific_params(entries):
-            # some parameters include timespecific settings
-            # these will be executed just before the check execution
-            return set_timespecific_param_list(entries, params)
-
-        return boil_down_parameters(entries, params)
-
-    return params
+        # Get parameters configured via check_parameters
+    ) + config_cache.service_extra_conf(host, descr, check_parameters)
 
 
 def has_timespecific_params(entries: Any) -> bool:

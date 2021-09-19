@@ -133,29 +133,27 @@ def _get_static_check_entries(
     entries: List[Service] = []
     for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
         # TODO (mo): centralize maincheckify: CMK-4295
+        # in this case: move it to the transform of the static services rule.
         check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
 
-        if config.has_timespecific_params(params):
-            timespec_params = [params]
-            params = {}
-        else:
-            timespec_params = []
-
-        new_params = config.compute_check_parameters(
+        new_parameters = config.compute_check_parameters(
             host_config.hostname,
             check_plugin_name,
             item,
-            params,
-            configured_parameters=(),
+            {},
+            configured_parameters=(params,),
         )
 
-        if timespec_params:
-            params = config.set_timespecific_param_list(timespec_params, new_params)
-        else:
-            params = new_params
-
-        descr = config.service_description(host_config.hostname, check_plugin_name, item)
-        entries.append(Service(check_plugin_name, item, descr, params))
+        entries.append(
+            Service(
+                check_plugin_name=check_plugin_name,
+                item=item,
+                description=config.service_description(
+                    host_config.hostname, check_plugin_name, item
+                ),
+                parameters=new_parameters,
+            )
+        )
 
     # Note: We need to reverse the order of the static_checks. This is
     # because users assume that earlier rules have precedence over later

@@ -3619,6 +3619,7 @@ class ConfigCache:
             hostname,
             compute_check_parameters,
             service_description,  # this is the global function!
+            self.host_of_clustered_service,
         )
 
     def section_name_of(self, section: CheckPluginNameStr) -> str:

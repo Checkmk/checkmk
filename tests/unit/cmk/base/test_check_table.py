@@ -25,6 +25,38 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.check_utils import Service
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_cluster_ignores_nodes_parameters(monkeypatch):
+
+    node = "node"
+    cluster = "cluster"
+
+    service_id = CheckPluginName("smart_temp"), "auto-clustered"
+
+    ts = Scenario()
+    ts.add_host("node")
+    ts.add_cluster("cluster", nodes=["node"])
+    ts.set_ruleset(
+        "clustered_services",
+        [([], ["node"], ["Temperature SMART auto-clustered$"])],
+    )
+    ts.set_autochecks("node", [Service(*service_id, "Temperature SMART auto-clustered", {})])
+    ts.apply(monkeypatch)
+
+    # a rule for the node:
+    monkeypatch.setattr(
+        config,
+        "_update_with_configured_check_parameters",
+        lambda host, plugin, item, params: {
+            "levels_for_node": (1, 2),
+            **params
+        } if host == node else params,
+    )
+
+    clustered_service = check_table.get_check_table(cluster)[service_id]
+    assert clustered_service.parameters == {"levels": (35, 40)}
+
+
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -470,8 +502,8 @@ def test_check_table__get_static_check_entries(monkeypatch, check_group_paramete
 
     host_config = config_cache.get_host_config(hostname)
     static_check_parameters = [
-        service.parameters
-        for service in check_table.HostCheckTable._get_static_check_entries(host_config)
+        service.parameters for service in check_table.HostCheckTable._get_static_check_entries(
+            config_cache, host_config)
     ]
 
     entries = config._get_checkgroup_parameters(

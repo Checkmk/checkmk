@@ -116,12 +116,20 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
 
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
-            manager.get_autochecks_of("host", config.compute_check_parameters,
-                                      config.service_description)
+            manager.get_autochecks_of(
+                "host",
+                config.compute_check_parameters,
+                config.service_description,
+                lambda hostname, _descr: hostname,
+            )
         return
 
-    result = manager.get_autochecks_of("host", config.compute_check_parameters,
-                                       config.service_description)
+    result = manager.get_autochecks_of(
+        "host",
+        config.compute_check_parameters,
+        config.service_description,
+        lambda hostname, _desc: hostname,
+    )
     assert result == expected_result
 
     # Check that the ConfigCache method also returns the correct data

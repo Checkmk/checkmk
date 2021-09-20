@@ -50,7 +50,7 @@ class HostCheckTable(CheckTable):
 
         self.update({
             service.id(): service
-            for service in self._get_static_check_entries(host_config)
+            for service in self._get_static_check_entries(config_cache, host_config)
             if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
         })
 
@@ -64,9 +64,16 @@ class HostCheckTable(CheckTable):
             })
 
     @staticmethod
-    def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Service]:
+    def _get_static_check_entries(
+        config_cache: config.ConfigCache,
+        host_config: config.HostConfig,
+    ) -> Iterator[Service]:
         entries: List[Service] = []
         for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
+            descr = config.service_description(host_config.hostname, check_plugin_name, item)
+
             if config.has_timespecific_params(params):
                 timespec_params = [params]
                 params = {}
@@ -74,7 +81,7 @@ class HostCheckTable(CheckTable):
                 timespec_params = []
 
             new_params = config.compute_check_parameters(
-                host_config.hostname,
+                config_cache.host_of_clustered_service(host_config.hostname, descr),
                 check_plugin_name_str,
                 item,
                 params,
@@ -86,9 +93,6 @@ class HostCheckTable(CheckTable):
             else:
                 params = new_params
 
-            # TODO (mo): centralize maincheckify: CMK-4295
-            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
-            descr = config.service_description(host_config.hostname, check_plugin_name, item)
             entries.append(Service(check_plugin_name, item, descr, params))
 
         # Note: We need to reverse the order of the static_checks. This is
@@ -140,27 +144,13 @@ class HostCheckTable(CheckTable):
         for node in host_config.nodes or []:
             # TODO: Cleanup this to work exactly like the logic above (for a single host)
             node_config = config_cache.get_host_config(node)
-            node_checks = list(self._get_static_check_entries(node_config))
+            node_checks = list(self._get_static_check_entries(config_cache, node_config))
             if not skip_autochecks:
                 node_checks += config_cache.get_autochecks_of(node)
 
-            for service in node_checks:
-                if config_cache.host_of_clustered_service(node, service.description) != hostname:
-                    continue
-
-                cluster_params = config.compute_check_parameters(
-                    hostname,
-                    service.check_plugin_name,
-                    service.item,
-                    service.parameters,
-                )
-                yield Service(
-                    service.check_plugin_name,
-                    service.item,
-                    service.description,
-                    cluster_params,
-                    service.service_labels,
-                )
+            yield from (
+                service for service in node_checks
+                if config_cache.host_of_clustered_service(node, service.description) == hostname)
 
 
 def get_check_table(

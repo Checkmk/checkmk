@@ -3,8 +3,15 @@ FOLDER_ID = currentBuild.fullProjectName.split('/')[0..-2].join('/')
 
 def DISTRO_LIST_DEFAULT = ''
 def NODE = ''
+def EDITION_DEFAULT = ''
 withFolderProperties{
-    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    if(JOB_BASE_NAME == 'trigger-cre') {
+        DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
+        EDITION_DEFAULT = 'raw'
+    } else {
+        DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+        EDITION_DEFAULT = 'enterprise'
+    }
     NODE = env.BUILD_NODE
 }
 
@@ -12,7 +19,7 @@ properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     parameters([
         string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
-        string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
+        string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise or managed' )
     ]),
     pipelineTriggers([
         cron('H 3 * * *')

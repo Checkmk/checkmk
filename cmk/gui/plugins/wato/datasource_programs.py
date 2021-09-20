@@ -777,6 +777,55 @@ def _valuespec_special_agents_kube():
                 ),
             ),
             (
+                "cluster-agent",  # TODO: adjust help texts depending on ingress inclusion
+                Dictionary(
+                    elements=[
+                        (
+                            "node_ip",
+                            TextInput(
+                                title=_("IP address of Kubernetes node"),
+                                allow_empty=False,
+                                help=_(
+                                    "The IP address of any Kubernetes cluster node where a "
+                                    "kubelet is present. Valid nodes can be usually retrieved "
+                                    "using the 'kubectl get nodes -o wide' command."
+                                ),
+                            ),
+                        ),
+                        (
+                            "connection_port",
+                            Integer(
+                                title=_("Port of Kubernetes' checkmk-external service"),
+                                default_value=30035,
+                                help=_("The service port of the running checkmk-external service"),
+                            ),
+                        ),
+                        (
+                            "protocol",
+                            DropdownChoice(
+                                title=_("Protocol"),
+                                choices=[
+                                    ("http", "HTTP"),
+                                    ("https", "HTTPS"),
+                                ],
+                                help=_(
+                                    "The option should match the configured protocol of the "
+                                    "cluster agent."
+                                ),
+                            ),
+                        ),
+                    ],
+                    title=_("Cluster agent connection"),
+                    help=_(
+                        "The Checkmk Kubernetes monitoring setup should be deployed in your "
+                        "Kubernetes cluster. Checkmk needs some additional information in order "
+                        "to query the deployed agent. A guide on how to retrieve this information "
+                        "can be found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+                    ),
+                    optional_keys=[],
+                ),
+            ),
+            (
                 "token",
                 IndividualOrStoredPassword(
                     title=_("Token"),

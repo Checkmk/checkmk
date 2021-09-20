@@ -64,6 +64,11 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
     )
     p.add_argument(
+        "--cluster-agent-endpoint",
+        required=True,
+        help="Endpoint to query metrics from Kubernetes cluster agent",
+    )
+    p.add_argument(
         "--path-prefix",
         default="",
         action=PathPrefixAction,
@@ -221,8 +226,8 @@ def main(args: Optional[List[str]] = None) -> int:
             sys.stderr.write("%s" % e)
         return 1
     except Exception as e:
-        # if arguments.debug:
-        #     raise
+        if arguments.debug:
+            raise
         sys.stderr.write("%s" % e)
         return 1
     return 0

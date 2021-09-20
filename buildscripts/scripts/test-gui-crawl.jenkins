@@ -11,8 +11,7 @@ properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
 ])
 
-// Cancel job when there is nothing logged to the console for 15 minutes
-timeout(activity: true, time: 15, unit: 'MINUTES') {
+timeout(activity: false, time: 35, unit: 'MINUTES') {
     node (NODE) {
         stage('checkout sources') {
             checkout(scm)

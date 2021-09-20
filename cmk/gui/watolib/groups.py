@@ -200,10 +200,6 @@ def save_group_information(
     all_groups: AllGroupSpecs,
     custom_default_config_dir: Optional[str] = None,
 ) -> None:
-    # Split groups data into Checkmk/Multisite parts
-    check_mk_groups: Dict[GroupType, Dict[GroupName, GroupSpec]] = {}
-    multisite_groups: Dict[GroupType, Dict[GroupName, GroupSpec]] = {}
-
     if custom_default_config_dir:
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
@@ -211,19 +207,21 @@ def save_group_information(
         check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
 
+    _save_cmk_base_groups(all_groups, check_mk_config_dir)
+    _save_gui_groups(all_groups, multisite_config_dir)
+
+    _clear_group_information_request_cache()
+
+
+def _save_cmk_base_groups(all_groups: AllGroupSpecs, config_dir: str) -> None:
+    check_mk_groups: Dict[GroupType, Dict[GroupName, str]] = {}
     for group_type, groups in all_groups.items():
         check_mk_groups[group_type] = {}
         for gid, group in groups.items():
             check_mk_groups[group_type][gid] = group["alias"]
 
-            for attr, value in group.items():
-                if attr != "alias":
-                    multisite_groups.setdefault(group_type, {})
-                    multisite_groups[group_type].setdefault(gid, {})
-                    multisite_groups[group_type][gid][attr] = value
-
     # Save Checkmk world related parts
-    store.makedirs(check_mk_config_dir)
+    store.makedirs(config_dir)
     output = wato_fileheader()
     for group_type in get_args(GroupType):
         if check_mk_groups.get(group_type):
@@ -235,10 +233,21 @@ def save_group_information(
                 group_type,
                 format_config_value(check_mk_groups[group_type]),
             )
-    store.save_text_to_file("%s/groups.mk" % check_mk_config_dir, output)
+    store.save_text_to_file("%s/groups.mk" % config_dir, output)
 
-    # Users with passwords for Multisite
-    store.makedirs(multisite_config_dir)
+
+def _save_gui_groups(all_groups: AllGroupSpecs, config_dir: str) -> None:
+    multisite_groups: Dict[GroupType, Dict[GroupName, GroupSpec]] = {}
+
+    for group_type, groups in all_groups.items():
+        for gid, group in groups.items():
+            for attr, value in group.items():
+                if attr != "alias":  # Saved in cmk_base
+                    multisite_groups.setdefault(group_type, {})
+                    multisite_groups[group_type].setdefault(gid, {})
+                    multisite_groups[group_type][gid][attr] = value
+
+    store.makedirs(config_dir)
     output = wato_fileheader()
     for what in get_args(GroupType):
         if multisite_groups.get(what):
@@ -246,9 +255,7 @@ def save_group_information(
                 what,
                 format_config_value(multisite_groups[what]),
             )
-    store.save_text_to_file("%s/groups.mk" % multisite_config_dir, output)
-
-    _clear_group_information_request_cache()
+    store.save_text_to_file("%s/groups.mk" % config_dir, output)
 
 
 def find_usages_of_group(name: GroupName, group_type: GroupType) -> List[Tuple[str, str]]:

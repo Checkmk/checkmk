@@ -1,0 +1,16 @@
+Title: Network topology and BI visualization: fix search menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632140805
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p12
+
+The following issues in the dropdown of the search menu are fixed:
+
+LI:The correct background colors for entries are used
+LI:Nodes are highlighted, if the mouse hovers over entries
+LI:It is possible to select a node with a click on an entry

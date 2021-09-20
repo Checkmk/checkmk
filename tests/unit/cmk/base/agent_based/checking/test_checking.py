@@ -14,8 +14,6 @@ from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSe
 from cmk.utils.type_defs import LegacyCheckParameters
 
 import cmk.base.agent_based.checking as checking
-import cmk.base.config
-import cmk.base.core
 from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.api.agent_based.checking_classes import State as state
 
@@ -189,18 +187,7 @@ def make_timespecific_params_list(
 def test_time_resolved_check_parameters(
     monkeypatch, rules: TimespecificParameters, active_timeperiods, expected_result
 ):
-    monkeypatch.setattr(
-        cmk.base.core,
-        "timeperiod_active",
-        lambda tp: _check_timeperiod(tp, active_timeperiods),
-    )
-
-    resolved_check_params = checking.time_resolved_check_parameters(rules)
-    assert expected_result == resolved_check_params
-
-
-def _check_timeperiod(timeperiod, active_timeperiods):
-    return timeperiod in active_timeperiods
+    assert expected_result == rules.evaluate(lambda tp: tp in active_timeperiods)
 
 
 @pytest.mark.parametrize(

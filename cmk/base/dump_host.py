@@ -13,7 +13,6 @@ import cmk.utils.tty as tty
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import HostName
 
-import cmk.base.agent_based.checking as checking
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -140,10 +139,9 @@ def _evaluate_params(params: Union[LegacyCheckParameters, TimespecificParameters
     if not isinstance(params, TimespecificParameters):
         return repr(params)
 
-    current_params = checking.time_resolved_check_parameters(params)
     return "Timespecific parameters at %s: %r" % (
         cmk.utils.render.date_and_time(time.time()),
-        current_params,
+        params.evaluate(cmk.base.core.timeperiod_active),
     )
 
 

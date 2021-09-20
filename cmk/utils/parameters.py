@@ -6,9 +6,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Final, Iterable, Sequence, Tuple
+from typing import Any, Callable, Dict, Final, Iterable, Optional, Sequence, Tuple
 
+import cmk.utils.debug
 from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
+
+_IsTimeperiodActiveCallback = Callable[[TimeperiodName], Optional[bool]]
 
 
 # this is not particularly clever, but an easy way to allow for
@@ -22,6 +25,22 @@ class TimespecificParameters:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.entries!r})"
+
+    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> LegacyCheckParameters:
+        # This is kept for compatibility. I am not sure if we shouldn't make this more consistent
+        if self.entries and not isinstance(self.entries[0].default, dict):
+            return self.entries[0].evaluate(is_active)
+
+        return boil_down_parameters(
+            # Ignore parameters derived from old parameters like
+            #   'NAME_default_levels' = (80.0, 85.0)
+            (
+                entry.evaluate(is_active)
+                for entry in self.entries
+                if isinstance(entry.default, dict) or entry.timeperiod_values
+            ),
+            {},
+        )
 
 
 # see how much logic of the time period evaluation has to end up here,
@@ -52,6 +71,23 @@ class TimespecificParameterSet:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.default!r}, {self.timeperiod_values!r})"
+
+    def _active_subsets(
+        self,
+        is_active: _IsTimeperiodActiveCallback,
+    ) -> Iterable[LegacyCheckParameters]:
+        for timeperiod_name, tp_entry in self.timeperiod_values:
+            try:
+                if is_active(timeperiod_name):
+                    yield tp_entry
+            except Exception:
+                # Connection error
+                if cmk.utils.debug.enabled():
+                    raise
+                return
+
+    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> LegacyCheckParameters:
+        return boil_down_parameters(self._active_subsets(is_active), self.default)
 
 
 def boil_down_parameters(

@@ -71,7 +71,6 @@ import cmk.core_helpers.cache
 from cmk.core_helpers import factory
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
-import cmk.base.agent_based.checking as checking
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
@@ -804,7 +803,7 @@ class AutomationAnalyseServices(Automation):
             effective_parameters: LegacyCheckParameters = (
                 {
                     "tp_computed_params": {
-                        "params": checking.time_resolved_check_parameters(service.parameters),
+                        "params": service.parameters.evaluate(cmk.base.core.timeperiod_active),
                         "computed_at": time.time(),
                     }
                 }

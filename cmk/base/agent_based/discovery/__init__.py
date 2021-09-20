@@ -1373,7 +1373,7 @@ def _wrap_timespecific_for_preview(
     return (
         {
             "tp_computed_params": {
-                "params": checking.time_resolved_check_parameters(params),
+                "params": params.evaluate(cmk.base.core.timeperiod_active),
                 "computed_at": time.time(),
             }
         }

@@ -25,11 +25,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
-from cmk.utils.parameters import (
-    boil_down_parameters,
-    TimespecificParameters,
-    TimespecificParameterSet,
-)
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -44,7 +40,6 @@ from cmk.utils.type_defs import (
     ServiceName,
     SourceType,
     state_markers,
-    TimeperiodName,
 )
 
 from cmk.core_helpers.protocol import FetcherMessage, FetcherType
@@ -614,7 +609,7 @@ def _final_read_only_check_parameters(
     entries: Union[TimespecificParameters, LegacyCheckParameters]
 ) -> Parameters:
     raw_parameters = (
-        time_resolved_check_parameters(entries)
+        entries.evaluate(cmk.base.core.timeperiod_active)
         if isinstance(entries, TimespecificParameters)
         else entries
     )
@@ -624,50 +619,6 @@ def _final_read_only_check_parameters(
     # For auto-migrated plugins expecting tuples, they will be
     # unwrapped by a decorator of the original check_function.
     return Parameters(wrap_parameters(raw_parameters))
-
-
-# TODO (mo): attach to TimespecificParameters
-def time_resolved_check_parameters(
-    ts_params: TimespecificParameters,
-) -> LegacyCheckParameters:
-
-    # This is kept for compatibility. I am not sure if we shouldn't make this more consistent
-    if not isinstance(ts_params.entries[0].default, dict):
-        return _evaluate_timespecific_entry(ts_params.entries[0])
-
-    return boil_down_parameters(
-        # Ignore parameters derived from old parameters like
-        #   'NAME_default_levels' = (80.0, 85.0)
-        (
-            _evaluate_timespecific_entry(entry)
-            for entry in ts_params.entries
-            if isinstance(entry.default, dict) or entry.timeperiod_values
-        ),
-        {},
-    )
-
-
-# TODO (mo): attach to TimespecificParameterSet
-def _evaluate_timespecific_entry(entry: TimespecificParameterSet) -> LegacyCheckParameters:
-    return boil_down_parameters(
-        _filter_active_parameter_subsets(entry.timeperiod_values), entry.default
-    )
-
-
-# TODO (mo): attach to TimespecificParameterSet
-def _filter_active_parameter_subsets(
-    subsets: Iterable[Tuple[TimeperiodName, LegacyCheckParameters]],
-) -> Iterable[LegacyCheckParameters]:
-    for timeperiod_name, tp_entry in subsets:
-        try:
-            tp_active = cmk.base.core.timeperiod_active(timeperiod_name)
-        except Exception:
-            # Connection error
-            if cmk.utils.debug.enabled():
-                raise
-            return
-        if tp_active:
-            yield tp_entry
 
 
 def _add_state_marker(

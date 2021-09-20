@@ -161,6 +161,8 @@ disable=
     # this provide some micro speedups if fixed
     use-dict-literal,
     use-list-literal,
+    # pylint 2.11 enabled checks
+    consider-using-f-string
 
 
 

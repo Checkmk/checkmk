@@ -101,7 +101,13 @@ def parse_oracle_rman(string_table: StringTable) -> SectionOracleRman:
             continue
 
         try:
-            backupage: Optional[int] = int(backupage_str)
+            # sysdate can be old on slow databases with long running SQLs, therefore we can end up
+            # with a negative number here if the Archivelog backup is running while the agent is
+            # collecting data
+            backupage: Optional[int] = max(
+                int(backupage_str),
+                0,
+            )
         except (ValueError, TypeError):
             backupage = None
 

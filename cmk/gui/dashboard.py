@@ -1798,7 +1798,6 @@ class EditDashletPage(Page):
             dashlet_spec['single_infos'] = single_infos
         else:
             mode = 'edit'
-            title = _('Edit element')
 
             try:
                 dashlet_spec = self._dashboard['dashlets'][self._ident]

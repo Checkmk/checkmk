@@ -1196,6 +1196,8 @@ def show_filter(f: Filter) -> None:
     html.span(f.title)
     html.close_div()
     html.open_div(class_="content")
+    if f.description:
+        html.help(f.description)
     try:
         with html.plugged():
             f.display()

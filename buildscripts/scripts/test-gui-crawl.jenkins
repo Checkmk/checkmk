@@ -11,7 +11,7 @@ properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
 ])
 
-timeout(activity: false, time: 35, unit: 'MINUTES') {
+timeout(activity: false, time: 45, unit: 'MINUTES') {
     node (NODE) {
         stage('checkout sources') {
             checkout(scm)

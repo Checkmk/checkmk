@@ -1,0 +1,13 @@
+Title: Fix disabling of vanished services in service discovery
+Knowledge: doc
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p26
+Date: 1631289631
+
+Using the option "Move to disabled services" on vanished services had no
+effect.

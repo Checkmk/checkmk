@@ -1177,8 +1177,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         // Add optional click handler
         links.each((d, idx, nodes) => {
             if (d.on) {
-                d3.select(nodes[idx]).on("click", (event, d) => {
-                    d.on();
+                d3.select(nodes[idx]).on("click", event => {
+                    d.on(event);
                     this.remove_context_menu();
                 });
             }

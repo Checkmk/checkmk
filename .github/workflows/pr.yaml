@@ -57,7 +57,7 @@ jobs:
         # libkrb5-dev: Needed for building pykerberos.
         # gettext: Needed for some "unit tests" (test_i18n.py)
         sudo apt-get install ksh librrd-dev libldap2-dev libsasl2-dev libkrb5-dev gettext
-        pip install pipenv
+        pip install --upgrade pipenv virtualenv==20.7.2
         make .venv
     - name: Run ${{ matrix.name  }}
       env:

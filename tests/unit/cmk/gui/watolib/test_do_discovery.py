@@ -128,7 +128,7 @@ known_results = {
     (DiscoveryState.VANISHED, DiscoveryState.IGNORED): (
         {},
         {MOCK_KEY: MOCK_VALUE},
-        {MOCK_DESC},
+        set(),
         {MOCK_DESC},
         set(),
     ),

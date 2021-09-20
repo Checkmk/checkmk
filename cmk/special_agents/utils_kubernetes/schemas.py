@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime
 import enum
 import time
+from collections import defaultdict
 from typing import Dict, NewType, Optional
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
@@ -121,9 +122,37 @@ def parse_pod_info(pod: client.V1Pod) -> PodInfo:
     return PodInfo(**info)
 
 
-class PodResources(BaseModel):
-    cpu: float = float("inf")
-    memory: float = float("inf")
+class Resources(BaseModel):
+    limit: float = float("inf")
+    requests: float = 0.0
+
+
+class PodUsageResources(BaseModel):
+    cpu: Resources
+    memory: Resources
+
+
+def pod_resources(pod: client.V1Pod) -> PodUsageResources:
+    memory: Dict[str, float] = defaultdict(float)
+    cpu: Dict[str, float] = defaultdict(float)
+
+    for container in pod.spec.containers:
+        resources = container.resources
+        if not resources:
+            continue
+
+        if resources.limits:
+            memory["limit"] += parse_memory(resources.limits.get("memory", "inf"))
+            cpu["limit"] += parse_frac_prefix(resources.limits.get("cpu", "inf"))
+        else:
+            memory["limit"] += float("inf")
+            cpu["limit"] += float("inf")
+
+        if resources.requests:
+            cpu["requests"] += parse_frac_prefix(resources.requests.get("cpu", "0.0"))
+            memory["requests"] += parse_memory(resources.requests.get("memory", "0.0"))
+
+    return PodUsageResources(cpu=Resources(**cpu), memory=Resources(**memory))
 
 
 class Phase(str, enum.Enum):
@@ -135,16 +164,20 @@ class Phase(str, enum.Enum):
 
 
 class PodAPI(BaseModel):
+    uid: str
     metadata: MetaData
     phase: Phase
     info: PodInfo
+    resources: PodUsageResources
 
     @classmethod
     def from_client(cls, pod: client.V1Pod) -> PodAPI:
         return cls(
+            uid=pod.metadata.uid,
             metadata=parse_metadata(pod.metadata),
             phase=Phase(pod.status.phase.lower()),
             info=parse_pod_info(pod),
+            resources=pod_resources(pod),
         )
 
 
@@ -202,7 +235,7 @@ def node_conditions(node: client.V1Node) -> Optional[NodeStatus]:
     conditions = node.status.conditions
     if not conditions:
         return None
-    return NodeStatus(**{c.type: c.status for c in conditions})
+    return NodeStatus(**{c.type: bool(c.status) for c in conditions})
 
 
 def parse_node_resources(node: client.V1Node) -> Dict[str, NodeResources]:

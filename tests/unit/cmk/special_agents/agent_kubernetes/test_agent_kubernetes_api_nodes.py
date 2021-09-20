@@ -45,7 +45,7 @@ class TestAPINode:
 
         node_raw_metadata = {
             "name": "k8",
-            "creation_timestamp": "2021-05-04T09:01:13Z",
+            "creation_timestamp": datetime.datetime.strptime("2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"),
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)

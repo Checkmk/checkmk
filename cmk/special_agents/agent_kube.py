@@ -12,12 +12,24 @@ is supported: https://github.com/kubernetes-client/python
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
 from collections import Counter, defaultdict
-from typing import DefaultDict, Dict, List, Optional
+from typing import (
+    DefaultDict,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    NamedTuple,
+    NewType,
+    Optional,
+    Sequence,
+)
 
+import requests
 import urllib3  # type: ignore[import]
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 from pydantic import BaseModel
@@ -25,9 +37,29 @@ from pydantic import BaseModel
 import cmk.utils.password_store
 import cmk.utils.profile
 
-from cmk.special_agents.utils.agent_common import SectionWriter
+from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
-from cmk.special_agents.utils_kubernetes.schemas import MetaData, NodeResources, Phase, PodInfo
+from cmk.special_agents.utils_kubernetes.schemas import (
+    MetaData,
+    NodeResources,
+    Phase,
+    PodInfo,
+    PodUsageResources,
+)
+
+MetricName = NewType("MetricName", str)
+MetricValue = NewType("MetricValue", float)
+PodUID = NewType("PodUID", str)
+
+
+class LivePod(NamedTuple):
+    uid: PodUID
+    containers: List[LiveContainer]
+
+
+class LiveContainer(NamedTuple):
+    name: str
+    metrics: Dict[MetricName, MetricValue]
 
 
 class PodResources(BaseModel):
@@ -38,6 +70,11 @@ class PodResources(BaseModel):
     unknown: int = 0
     capacity: int = 0
     allocatable: int = 0
+
+
+class Resources(BaseModel):
+    limit: float
+    requests: float
 
 
 class PathPrefixAction(argparse.Action):
@@ -99,16 +136,31 @@ def setup_logging(verbosity: int) -> None:
 
 
 class Pod:
-    def __init__(self, metadata: MetaData, phase: Phase, info: PodInfo) -> None:
+    def __init__(
+        self,
+        uid: str,
+        metadata: MetaData,
+        phase: Phase,
+        info: PodInfo,
+        resources: PodUsageResources,
+    ) -> None:
+        self.uid = PodUID(uid)
         self.metadata = metadata
         self.node = info.node
         self.phase = phase
+        self.resources = resources
 
     def name(self, prepend_namespace=False) -> str:
         if not prepend_namespace:
             return self.metadata.name
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
+
+    def cpu_resources(self) -> Resources:
+        return Resources(
+            limit=self.resources.cpu.limit,
+            requests=self.resources.cpu.requests,
+        )
 
 
 class Node:
@@ -141,9 +193,8 @@ class Cluster:
             node = Node(node_api.metadata, node_api.resources)
             cluster.add_node(node)
 
-        for pod_api in api_server.pods():
-            pod = Pod(pod_api.metadata, pod_api.phase, pod_api.info)
-            cluster.add_pod(pod)
+        for pod in api_server.pods():
+            cluster.add_pod(Pod(pod.uid, pod.metadata, pod.phase, pod.info, pod.resources))
 
         return cluster
 
@@ -169,12 +220,94 @@ class Cluster:
                 resources[k] += v
         return PodResources(**resources)
 
+    def pods(self) -> Sequence[Pod]:
+        return list(self._pods.values())
 
-def output_cluster_api_sections(cluster: Cluster):
+
+def output_cluster_api_sections(cluster: Cluster) -> None:
     sections = {"k8s_pods_resources": cluster.pod_resources}
     for section_name, section_call in sections.items():
         with SectionWriter(section_name) as writer:
             writer.append(section_call().json())
+
+
+def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
+    def output_sections(cluster_pod: Pod):
+        sections = {"k8s_cpu_resources": cluster_pod.cpu_resources}
+        for name, section_call in sections.items():
+            with SectionWriter(name) as writer:
+                writer.append(section_call().json())
+
+    for pod in api_pods:
+        with ConditionalPiggybackSection(pod.name(prepend_namespace=True)):
+            output_sections(pod)
+
+
+def filter_outdated_pods(
+    live_pods: Sequence[LivePod], uid_piggyback_mappings: Mapping[PodUID, str]
+) -> Iterator[LivePod]:
+    return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
+
+
+def pod_checkmk_sections(containers: List[LiveContainer]) -> None:
+    included_metrics = ["cpu_usage_total"]
+    for metric_name in included_metrics:
+        with SectionWriter(f"k8s_live_{metric_name}") as writer:
+            writer.append_json(
+                {
+                    container.name: container.metrics[MetricName(metric_name)]
+                    for container in containers
+                    if metric_name in container.metrics
+                }
+            )
+
+
+class SetupError(Exception):
+    pass
+
+
+def collect_metrics_from_cluster_agent(cluster_url: str) -> List[str]:
+    cluster_resp = requests.get(f"{cluster_url}/kmetrics", verify=False)
+    if cluster_resp.status_code != 200:
+        raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
+
+    if not cluster_resp.content:
+        raise SetupError("Worker nodes")
+
+    return cluster_resp.content.decode("utf-8").split("\n")
+
+
+def group_metrics_by_pods(nodes_metrics: List[str]) -> Sequence[LivePod]:
+    def group_by_pods(containers_collection) -> List[LivePod]:
+        parsed_pods: Dict[str, List[LiveContainer]] = {}
+
+        for container_name, container_info in containers_collection.items():
+            pod_containers = parsed_pods.setdefault(container_info["pod_uid"], [])
+            pod_containers.append(
+                LiveContainer(
+                    name=container_name,
+                    metrics={
+                        MetricName(metric["name"]): MetricValue(metric["value"])
+                        for metric in container_info["metrics"].values()
+                    },
+                )
+            )
+        return [
+            LivePod(uid=PodUID(pod_uid), containers=containers)
+            for pod_uid, containers in parsed_pods.items()
+        ]
+
+    pods: List[LivePod] = []
+    for collection in nodes_metrics:
+        try:
+            pods.extend(group_by_pods(json.loads(collection)["containers"]))
+        except (KeyError, json.JSONDecodeError):
+            continue
+    return pods
+
+
+def map_uid_to_piggyback_host_name(api_pods: Sequence[Pod]) -> Mapping[PodUID, str]:
+    return {pod.uid: pod.name(prepend_namespace=True) for pod in api_pods}
 
 
 def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
@@ -215,7 +348,18 @@ def main(args: Optional[List[str]] = None) -> int:
             api_server = APIServer.from_kubernetes(api_client)
             cluster = Cluster.from_api_server(api_server)
 
+            # Sections based on API server
             output_cluster_api_sections(cluster)
+            output_pods_api_sections(cluster.pods())  # TODO: make more explicit
+
+            # Sections based on cluster agent live data
+            live_metrics = collect_metrics_from_cluster_agent(arguments.cluster_agent_endpoint)
+            live_pods = group_metrics_by_pods(live_metrics)
+            uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
+
+            for pod in filter_outdated_pods(live_pods, uid_piggyback_mappings):
+                with ConditionalPiggybackSection(uid_piggyback_mappings[pod.uid]):
+                    pod_checkmk_sections(pod.containers)
 
     except urllib3.exceptions.MaxRetryError as e:
         if arguments.debug:

@@ -1360,6 +1360,8 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
     html.span(f.title)
     html.close_div()
     html.open_div(class_="content")
+    if f.description:
+        html.help(f.description)
     try:
         with output_funnel.plugged():
             f.display(value)

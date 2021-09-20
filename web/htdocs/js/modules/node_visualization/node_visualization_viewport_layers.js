@@ -27,7 +27,6 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
                 "Alpha: " +
                     node_visualization_layout_styles.force_simulation._simulation.alpha().toFixed(3)
             );
-        //        this._update_chunk_boundaries()
         if (this.overlay_active == this.viewport.layout_manager.edit_layout) return;
 
         if (this.viewport.layout_manager.edit_layout) this.enable_overlay();
@@ -870,4 +869,5 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 }
 
 node_visualization_utils.layer_registry.register(LayeredIconOverlay, 10);
+node_visualization_utils.layer_registry.register(LayeredDebugLayer, 20);
 node_visualization_utils.layer_registry.register(LayeredNodesLayer, 50);

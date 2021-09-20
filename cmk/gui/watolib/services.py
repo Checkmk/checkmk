@@ -184,12 +184,14 @@ class Discovery:
                 key,
                 value,
                 descr,
-                old_autochecks,
                 autochecks_to_save,
                 saved_services,
                 add_disabled_rule,
                 remove_disabled_rule,
             )
+
+            if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
+                old_autochecks[key] = value
 
         if apply_changes:
             need_sync = False
@@ -382,14 +384,11 @@ def _apply_state_change(
     key: Tuple[Any, Any],
     value: Tuple[Any, Any, Any, Any],
     descr: str,
-    old_autochecks: SetAutochecksTable,
     autochecks_to_save: SetAutochecksTable,
     saved_services: Set[str],
     add_disabled_rule: Set[str],
     remove_disabled_rule: Set[str],
 ):
-    if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
-        old_autochecks[key] = value
 
     if table_source == DiscoveryState.UNDECIDED:
         if table_target == DiscoveryState.MONITORED:
@@ -439,15 +438,10 @@ def _apply_state_change(
     elif table_source in [
         DiscoveryState.CLUSTERED_NEW,
         DiscoveryState.CLUSTERED_OLD,
-    ]:
-        autochecks_to_save[key] = value
-        saved_services.add(descr)
-
-    elif table_source in [
         DiscoveryState.CLUSTERED_VANISHED,
         DiscoveryState.CLUSTERED_IGNORED,
     ]:
-        # We keep vanished clustered services on the node with the following reason:
+        # We keep VANISHED clustered services on the node with the following reason:
         # If a service is mapped to a cluster then there are already operations
         # for adding, removing, etc. of this service on the cluster. Therefore we
         # do not allow any operation for this clustered service on the related node.

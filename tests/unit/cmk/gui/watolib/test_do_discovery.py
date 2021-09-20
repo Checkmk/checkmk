@@ -18,12 +18,11 @@ MOCK_VALUE: Tuple[str, Dict[str, Any], Dict[str, Any], List[str]] = (
 )
 MOCK_DESC = "1st service"
 
-RESULT = Tuple[Dict, Dict, Set, Set, Set]
+RESULT = Tuple[Dict, Set, Set, Set]
 
 
 def _expected_clustered():
     return (
-        {},
         {MOCK_KEY: MOCK_VALUE},
         {MOCK_DESC},
         set(),
@@ -34,7 +33,6 @@ def _expected_clustered():
 # TODO Find a better name
 def _expected_monitored_standard():
     return (
-        {MOCK_KEY: MOCK_VALUE},
         {},
         {MOCK_DESC},
         set(),
@@ -45,7 +43,6 @@ def _expected_monitored_standard():
 # TODO Find a better name
 def _expected_vanished_standard():
     return (
-        {},
         {MOCK_KEY: MOCK_VALUE},
         {MOCK_DESC},
         set(),
@@ -56,7 +53,6 @@ def _expected_vanished_standard():
 # TODO Find a better name
 def _expected_ignored_standard():
     return (
-        {MOCK_KEY: MOCK_VALUE},
         {},
         set(),
         set(),
@@ -72,20 +68,17 @@ def _get_combinations() -> List:
 known_results = {
     (DiscoveryState.MONITORED, DiscoveryState.MONITORED): (
         {MOCK_KEY: MOCK_VALUE},
-        {MOCK_KEY: MOCK_VALUE},
         {MOCK_DESC},
         set(),
         set(),
     ),
     (DiscoveryState.MONITORED, DiscoveryState.UNDECIDED): (
-        {MOCK_KEY: MOCK_VALUE},
         {},
         {MOCK_DESC},
         set(),
         set(),
     ),
     (DiscoveryState.MONITORED, DiscoveryState.IGNORED): (
-        {MOCK_KEY: MOCK_VALUE},
         {MOCK_KEY: MOCK_VALUE},
         set(),
         {MOCK_DESC},
@@ -126,7 +119,6 @@ known_results = {
         DiscoveryState.LEGACY_IGNORED,
     ): _expected_monitored_standard(),
     (DiscoveryState.VANISHED, DiscoveryState.IGNORED): (
-        {},
         {MOCK_KEY: MOCK_VALUE},
         set(),
         {MOCK_DESC},
@@ -167,7 +159,6 @@ known_results = {
         DiscoveryState.LEGACY_IGNORED,
     ): _expected_vanished_standard(),
     (DiscoveryState.UNDECIDED, DiscoveryState.MONITORED): (
-        {},
         {MOCK_KEY: MOCK_VALUE},
         {MOCK_DESC},
         set(),
@@ -175,13 +166,11 @@ known_results = {
     ),
     (DiscoveryState.UNDECIDED, DiscoveryState.IGNORED): (
         {},
-        {},
         set(),
         {MOCK_DESC},
         set(),
     ),
     (DiscoveryState.IGNORED, DiscoveryState.MONITORED): (
-        {MOCK_KEY: MOCK_VALUE},
         {MOCK_KEY: MOCK_VALUE},
         {MOCK_DESC},
         set(),
@@ -189,20 +178,17 @@ known_results = {
     ),
     (DiscoveryState.IGNORED, DiscoveryState.IGNORED): (
         {MOCK_KEY: MOCK_VALUE},
-        {MOCK_KEY: MOCK_VALUE},
         {MOCK_DESC},
         {MOCK_DESC},
         set(),
     ),
     (DiscoveryState.IGNORED, DiscoveryState.UNDECIDED): (
-        {MOCK_KEY: MOCK_VALUE},
         {},
         set(),
         set(),
         {MOCK_DESC},
     ),
     (DiscoveryState.IGNORED, DiscoveryState.VANISHED): (
-        {MOCK_KEY: MOCK_VALUE},
         {},
         set(),
         set(),
@@ -355,7 +341,6 @@ known_results = {
 
 empty_result: RESULT = (
     {},
-    {},
     set(),
     set(),
     set(),
@@ -365,7 +350,7 @@ empty_result: RESULT = (
 def test_apply_state_change():
 
     for table_source, table_target in _get_combinations():
-        result: RESULT = {}, {}, set(), set(), set()
+        result: RESULT = {}, set(), set(), set()
         _apply_state_change(
             table_source,
             table_target,

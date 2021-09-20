@@ -105,6 +105,10 @@ def parse_oracle_rman(string_table: StringTable) -> SectionOracleRman:
         except (ValueError, TypeError):
             backupage = None
 
+        # sysdate can be old on slow databases with long running SQLs...
+        if backupage < 0:
+            backupage = 0
+            
         section.setdefault(
             item,
             {

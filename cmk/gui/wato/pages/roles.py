@@ -302,10 +302,11 @@ class ModeEditRole(RoleManagement, WatoMode):
         if html.form_submitted("search"):
             return None
 
-        alias = request.get_unicode_input("alias")
+        alias = request.get_unicode_input_mandatory("alias")
 
         unique, info = watolib.is_alias_used("roles", self._role_id, alias)
         if not unique:
+            assert info is not None
             raise MKUserError("alias", info)
 
         new_id = request.get_ascii_input_mandatory("id")

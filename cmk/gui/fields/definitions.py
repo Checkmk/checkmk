@@ -31,7 +31,7 @@ from cmk.gui import sites, watolib
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
-from cmk.gui.groups import load_group_information
+from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.sites import allsites
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
@@ -1049,7 +1049,7 @@ class _CustomerField(_fields.String):
         return None if value == "global" else value
 
 
-def verify_group_exists(group_type: str, name):
+def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
     specific_existing_groups = load_group_information()[group_type]
     return name in specific_existing_groups
 

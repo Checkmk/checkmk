@@ -100,16 +100,16 @@ def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
     return fetch_specific_groups(groups, group_type)
 
 
-def prepare_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def prepare_groups(group_type: GroupType, entries: List[Dict[str, Any]]) -> GroupSpecs:
     specific_existing_groups = load_group_information()[group_type]
-    groups: Dict[str, Dict[str, Any]] = {}
+    groups: GroupSpecs = {}
     already_existing = []
     for details in entries:
         name = details["name"]
         if name in specific_existing_groups:
             already_existing.append(name)
             continue
-        group_details = {"alias": details["alias"]}
+        group_details: GroupSpec = {"alias": details["alias"]}
         if version.is_managed_edition():
             group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
@@ -222,7 +222,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
     return attributes
 
 
-def group_edit_details(body):
+def group_edit_details(body) -> GroupSpec:
     group_details = {k: v for k, v in body.items() if k != "customer"}
 
     if version.is_managed_edition() and "customer" in body:
@@ -230,7 +230,7 @@ def group_edit_details(body):
     return group_details
 
 
-def updated_group_details(name, group_type, changed_details):
+def updated_group_details(name: GroupName, group_type: GroupType, changed_details) -> GroupSpec:
     """Updates the group details without saving
 
     Args:

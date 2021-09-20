@@ -243,6 +243,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
             self._name = request.get_ascii_input_mandatory("name").strip()
             watolib.add_group(self._name, self.type_name, self.group)
         else:
+            assert self._name is not None
             watolib.edit_group(self._name, self.type_name, self.group)
 
         return redirect(mode_url("%s_groups" % self.type_name))

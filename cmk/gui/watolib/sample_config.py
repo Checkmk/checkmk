@@ -16,7 +16,7 @@ from cmk.gui.plugins.watolib.utils import sample_config_generator_registry, Samp
 from cmk.gui.userdb import create_cmk_automation_user
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
-from cmk.gui.watolib.groups import save_group_information
+from cmk.gui.watolib.groups import AllGroupSpecs, GroupName, GroupSpec, save_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.notifications import save_notification_rules
 from cmk.gui.watolib.rulesets import FolderRulesets
@@ -94,8 +94,8 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         save_global_settings(self._initial_global_settings())
 
         # A contact group for all hosts and services
-        groups = {
-            "contact": {"all": {"alias": "Everything"}},
+        groups: AllGroupSpecs = {
+            "contact": {GroupName("all"): GroupSpec(alias="Everything")},
         }
         save_group_information(groups)
 

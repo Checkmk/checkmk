@@ -4,15 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any, Dict, get_args, Literal
 
 import cmk.utils.paths
 import cmk.utils.store as store
 
 from cmk.gui.globals import g
 
+GroupType = Literal["host", "service", "contact"]
+GroupName = str
+# Elements:
+# mandatory: alias: str
+# optional: inventory_paths
+# optional: nagvis_maps
+# optional (CME): customer
 GroupSpec = Dict[str, Any]  # TODO: Improve this type
-GroupSpecs = Dict[str, GroupSpec]
+GroupSpecs = Dict[GroupName, GroupSpec]
+AllGroupSpecs = Dict[GroupType, GroupSpecs]
 
 
 def load_host_group_information() -> GroupSpecs:
@@ -27,7 +35,7 @@ def load_contact_group_information() -> GroupSpecs:
     return load_group_information()["contact"]
 
 
-def load_group_information() -> Dict[str, GroupSpecs]:
+def load_group_information() -> AllGroupSpecs:
     if "group_information" in g:
         return g.group_information
 
@@ -35,8 +43,8 @@ def load_group_information() -> Dict[str, GroupSpecs]:
     gui_groups = _load_gui_groups()
 
     # Merge information from Checkmk and Multisite worlds together
-    groups: Dict[str, Dict[str, GroupSpec]] = {}
-    for what in ["host", "service", "contact"]:
+    groups: Dict[GroupType, Dict[GroupName, GroupSpec]] = {}
+    for what in get_args(GroupType):
         groups[what] = {}
         for gid, alias in cmk_base_groups["define_%sgroups" % what].items():
             groups[what][gid] = {"alias": alias}
@@ -48,9 +56,9 @@ def load_group_information() -> Dict[str, GroupSpecs]:
     return groups
 
 
-def _load_cmk_base_groups():
-    """Load group information from Checkmk world"""
-    group_specs: Dict[str, GroupSpecs] = {
+def _load_cmk_base_groups() -> Dict[GroupName, Dict[GroupName, str]]:
+    """Load group alias maps from Checkmk world"""
+    group_specs: Dict[str, Dict[GroupName, str]] = {
         "define_hostgroups": {},
         "define_servicegroups": {},
         "define_contactgroups": {},
@@ -61,7 +69,7 @@ def _load_cmk_base_groups():
     )
 
 
-def _load_gui_groups():
+def _load_gui_groups() -> Dict[str, GroupSpecs]:
     # Now load information from the Web world
     group_specs: Dict[str, GroupSpecs] = {
         "multisite_hostgroups": {},

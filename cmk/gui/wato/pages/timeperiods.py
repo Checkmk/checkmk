@@ -762,8 +762,10 @@ class ModeEditTimeperiod(WatoMode):
             )
 
     def _validate_alias(self, value, varprefix):
+        assert self._name is not None
         unique, message = watolib.is_alias_used("timeperiods", self._name, value)
         if not unique:
+            assert message is not None
             raise MKUserError("alias", message)
 
     def _vs_weekdays(self):

@@ -14,7 +14,7 @@
 
 import json
 
-JenkinsJobInfo = collections.namedtuple(
+JenkinsJobInfo = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "job_info",
     [
         "display_name",

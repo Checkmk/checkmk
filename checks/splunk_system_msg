@@ -23,7 +23,7 @@
 # change practices to avoid changing files, or work with support to identify the
 # problem.
 
-SplunkMessage = collections.namedtuple(
+SplunkMessage = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "SplunkMessage",
     [
         "name",

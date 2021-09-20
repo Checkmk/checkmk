@@ -24,7 +24,9 @@ factory_settings["hp_proliant_psu_levels"] = {
 
 def parse_hp_proliant_psu(info):
     parsed = {}
-    Psu = collections.namedtuple("Psu", ["chassis", "bay", "condition", "used", "max"])
+    Psu = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "Psu", ["chassis", "bay", "condition", "used", "max"]
+    )
     for chassis, bay, present, cond, used, capacity_maximum in info:
         if present != "3" or capacity_maximum == "0":
             continue
@@ -34,7 +36,9 @@ def parse_hp_proliant_psu(info):
         except ValueError:
             pass
     if parsed:
-        PsuTotal = collections.namedtuple("Psu", ["used", "max"])
+        PsuTotal = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+            "Psu", ["used", "max"]
+        )
         parsed["Total"] = PsuTotal(
             sum(v.used for v in parsed.values()), sum(v.max for v in parsed.values())
         )

@@ -63,7 +63,7 @@ def _parse_valid_dict(kwarg_name: str, dict_: Optional[AttrDict]) -> AttrDict:
 
 
 class Attributes(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_AttributesTuple",
         [
             ("path", List[str]),
@@ -114,7 +114,7 @@ class Attributes(
 
 
 class TableRow(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_TableRowTuple",
         [
             ("path", List[str]),

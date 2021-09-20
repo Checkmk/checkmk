@@ -33,7 +33,7 @@ class ServiceLabel(PluginSuppliedLabel):
 
 
 class Service(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_ServiceTuple",
         [
             ("item", Optional[str]),
@@ -185,7 +185,7 @@ class State(enum.Enum):
 
 
 class Metric(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_MetricTuple",
         [
             ("name", str),
@@ -284,7 +284,7 @@ class Metric(
 
 
 class Result(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_ResultTuple",
         [
             ("state", State),

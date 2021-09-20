@@ -121,7 +121,7 @@ class SNMPDetectSpec(_SNMPDetectBaseType):
 
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "SNMPHostConfig",
         [
             ("is_ipv6_primary", bool),

@@ -15,7 +15,9 @@ factory_settings["win_printer_default_levels"] = {
     "crit_states": [9, 10],
 }
 
-WinPrinter = collections.namedtuple("WinPrinter", ["jobs", "status", "error"])
+WinPrinter = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "WinPrinter", ["jobs", "status", "error"]
+)
 
 
 def parse_win_printers(info):

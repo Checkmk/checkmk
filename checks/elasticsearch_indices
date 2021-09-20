@@ -7,7 +7,7 @@
 # <<<elasticsearch_indices>>>
 # filebeat-6.5.4 11492614 801366929
 
-ElasticIndex = collections.namedtuple(
+ElasticIndex = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "ElasticIndex",
     [
         "count",

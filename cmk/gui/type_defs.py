@@ -73,7 +73,7 @@ PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
 
 class PainterSpec(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "PainterSpec",
         [
             ("painter_name", PainterNameSpec),

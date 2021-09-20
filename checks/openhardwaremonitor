@@ -63,7 +63,7 @@ OpenhardwaremonitorTraits = {
     "Factor": {"unit": "1", "factor": 1.0},
     "Data": {"unit": " B", "factor": 1073741824.0},
 }
-OpenhardwaremonitorSensor = collections.namedtuple(
+OpenhardwaremonitorSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "OpenhardwaremonitorSensor", ("reading", "unit", "perf_var", "WMIstatus")
 )
 

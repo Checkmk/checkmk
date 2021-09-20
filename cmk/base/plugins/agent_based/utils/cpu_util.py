@@ -18,7 +18,7 @@ from ..agent_based_api.v1.type_defs import CheckResult
 
 
 class CPUInfo(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_CPUInfo",
         [
             ("name", str),

@@ -7,7 +7,7 @@ index b90f50e..4ff2f5d 100644
        /* check if we get a match on 'raw' ip or cidr */
        for (j=0; j<n_addresses; j++) {
 -        if ( strcmp(addresses[j], expected_address[i]) == 0
-+        if ( (strcasecmp(addresses[j], expected_address[i]) == 0
++        if ( strcasecmp(addresses[j], expected_address[i]) == 0
               || ip_match_cidr(addresses[j], expected_address[i]) ) {
            result = STATE_OK;
            addr_match &= ~(1 << j);

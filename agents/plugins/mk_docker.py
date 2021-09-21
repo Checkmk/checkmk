@@ -66,7 +66,7 @@ except ImportError:
                      '{"Critical": "Error: mk_docker requires the docker library.'
                      ' Please install it on the monitored system (%s install docker)."}\n' %
                      ('pip3' if sys.version_info.major == 3 else 'pip'))
-    sys.exit(1)
+    sys.exit(0)
 
 if int(docker.__version__.split('.')[0]) < 2:
     sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
@@ -74,7 +74,7 @@ if int(docker.__version__.split('.')[0]) < 2:
                      '{"Critical": "Error: mk_docker requires the docker library >= 2.0.0.'
                      ' Please install it on the monitored system (%s install docker)."}\n' %
                      ('pip3' if sys.version_info.major == 3 else 'pip'))
-    sys.exit(1)
+    sys.exit(0)
 
 DEBUG = "--debug" in sys.argv[1:]
 
@@ -654,7 +654,7 @@ def main():
         if DEBUG:
             raise
         report_exception_to_server(exc, "MKDockerClient.__init__")
-        sys.exit(1)
+        sys.exit(0)
 
     set_version_info(client)
 

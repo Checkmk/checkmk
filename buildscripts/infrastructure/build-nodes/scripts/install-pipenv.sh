@@ -5,4 +5,23 @@
 
 set -e -o pipefail
 
+# read optional command line argument
+if [ "$#" -eq 1 ]; then
+    PYTHON_VERSION=$1
+else
+    cd "${SCRIPT_DIR}"
+    while true; do
+        if [ -e defines.make ]; then
+            PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)
+            break
+        elif [ $PWD == / ]; then
+            failure "could not determine Python version"
+        else
+            cd ..
+        fi
+    done
+fi
+
 pip3 install pipenv==2021.5.29 virtualenv==20.7.2
+
+ln -sf "/opt/Python-${PYTHON_VERSION}/bin/pipenv"* /opt/bin

@@ -35,7 +35,7 @@ class ServiceWithNodes(NamedTuple):
     nodes: List[HostName]
 
 
-class _AutocheckService(NamedTuple):
+class _AutocheckEntry(NamedTuple):
     check_plugin_name: CheckPluginName
     item: Item
     discovered_parameters: LegacyCheckParameters
@@ -57,7 +57,7 @@ class AutochecksManager:
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
         self._discovered_labels_of: Dict[HostName, Dict[ServiceName, DiscoveredServiceLabels]] = {}
-        self._raw_autochecks_cache: Dict[HostName, Sequence[_AutocheckService]] = {}
+        self._raw_autochecks_cache: Dict[HostName, Sequence[_AutocheckEntry]] = {}
 
     def get_autochecks_of(
         self,
@@ -137,7 +137,7 @@ class AutochecksManager:
     def _read_raw_autochecks(
         self,
         hostname: HostName,
-    ) -> Sequence[_AutocheckService]:
+    ) -> Sequence[_AutocheckEntry]:
         if hostname not in self._raw_autochecks_cache:
             self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(hostname)
         return self._raw_autochecks_cache[hostname]
@@ -147,7 +147,7 @@ class AutochecksManager:
     def _read_raw_autochecks_uncached(
         self,
         hostname: HostName,
-    ) -> Sequence[_AutocheckService]:
+    ) -> Sequence[_AutocheckEntry]:
         """Read automatically discovered checks of one host"""
         path = _autochecks_path_for(hostname)
         try:
@@ -196,7 +196,7 @@ class AutochecksManager:
                 labels.add_label(ServiceLabel(label_id, label_value))
 
             services.append(
-                _AutocheckService(
+                _AutocheckEntry(
                     check_plugin_name=plugin_name,
                     item=item,
                     discovered_parameters=entry["parameters"],

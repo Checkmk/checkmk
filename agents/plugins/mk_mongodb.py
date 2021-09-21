@@ -893,8 +893,8 @@ def main(argv=None):
     LOGGER.debug("parsed args: %r", args)
     if LOGGER.isEnabledFor(logging.INFO):
         LOGGER.info("python version: %s", sys.version.replace("\n", " "))
-        if hasattr(pymongo, "version"):
-            LOGGER.info("pymongo version: %s", pymongo.version)
+        LOGGER.info("pymongo version: %s", PYMONGO_VERSION)
+        LOGGER.info("mk_mongodb version: %s", __version__)
 
     config_parser = MongoDBConfigParser()
     config_parser.read_from_filename(os.path.abspath(args.config_file))

@@ -538,9 +538,9 @@ class Integer(ValueSpec):
 
 
 class Filesize(Integer):
-    """Filesize in Byte, KByte, MByte, Gigabyte, Terabyte"""
+    """Filesize in byte, kibi byte, mibi byte, gibi byte, tibi byte"""
 
-    _names = ["Byte", "KByte", "MByte", "GByte", "TByte"]
+    _names = ["Byte", "KiB", "MiB", "GiB", "TiB"]
 
     def get_exponent(self, value: int) -> _Tuple[int, int]:
         for exp, count in ((exp, 1024 ** exp) for exp in reversed(range(len(self._names)))):

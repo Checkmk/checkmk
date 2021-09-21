@@ -140,15 +140,12 @@ $tag-hover-opacity: 0.8;
 // -----------------------------------------------------------------------------
 // Node visualization
 // -----------------------------------------------------------------------------
-$node-vis-darkgrey: rgb(169, 169, 169);
-$node-vis-togglebox-enabled: rgb(94, 93, 93);
+$node-vis-darkgrey: $ux-theme-5;
+$node-vis-togglebox-enabled: $success;
 $node-vis-menu-bg-color: $ux-theme-1;
 $node-vis-history-bg-color: $grey-1;
 $node-vis-history-border-color: $grey-1;
 $node-vis-history-filter: invert(70%);
-$node-vis-growth-root-color: rgb(169, 169, 169);
-$topology-filter-bg-color: $ux-theme-1;
-$topology-filter-border-color: $grey-6;
 
 $agent-config-inner-title-bg-color: $ux-theme-1;
 

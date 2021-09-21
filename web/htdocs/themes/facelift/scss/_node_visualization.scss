@@ -13,25 +13,9 @@
   height: 100%;
 }
 
-#topology_filters {
-  position: absolute;
-  top: 124px;
-  right: 22px;
-  left: 22px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
 .topology_center,
 .topology_remote {
   fill: transparent;
-}
-
-#topology_filters div.floatfilter,
-#topology_filters input#search {
-  pointer-events: all;
-  background-color: $topology-filter-bg-color;
-  border-color: $topology-filter-border-color;
 }
 
 #node_visualization_root_div {
@@ -84,7 +68,7 @@ div.node_vis {
   }
 
   .node_element .growth_root {
-    stroke: $node-vis-growth-root-color;
+    stroke: $font-color-dimmed;
     stroke-width: 1;
   }
 
@@ -259,12 +243,11 @@ div.node_vis {
   }
 
   .node_element circle.collapsed {
-    stroke: rgb(128, 128, 128); // grey
     stroke-width: 15;
   }
 
   .node_element.focus circle {
-    stroke: rgb(25, 90, 230); // blue
+    stroke: rgb(25, 90, 230) !important; // blue
     stroke-width: 3;
   }
 
@@ -274,8 +257,12 @@ div.node_vis {
     height: 27px;
     text-align: center;
     vertical-align: middle;
+    cursor: pointer;
+    background: $input-background-color;
+    border-radius: $theme-border-radius;
 
     &.enabled {
+      color: $font-color-black;
       background: $node-vis-togglebox-enabled;
     }
   }
@@ -430,19 +417,17 @@ div.node_vis path.dashed,
 
 .style_overlay {
   pointer-events: none;
-  opacity: 0.2;
   fill: none;
-  stroke: $node-vis-darkgrey;
+  stroke: $line-color;
   stroke-width: 2px;
   stroke-linejoin: round;
 }
 
 .block_style_overlay {
-  opacity: 0.3;
   vector-effect: non-scaling-stroke;
   fill: $node-vis-darkgrey;
   stroke: $node-vis-darkgrey;
-  stroke-width: 2px;
+  stroke-width: $spacing;
   stroke-linejoin: round;
 }
 

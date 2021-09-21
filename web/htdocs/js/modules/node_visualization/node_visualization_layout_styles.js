@@ -418,8 +418,6 @@ export class AbstractLayoutStyle {
                 .classed("layouting_icon", true)
                 .classed("box", true)
                 .attr("src", element.image)
-                .style("background", "white")
-                .style("opacity", "0.9")
                 .style("position", "absolute")
                 .style("pointer-events", "all")
                 .each((d, idx, nodes) => {

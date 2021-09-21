@@ -273,4 +273,4 @@ def switch_to_site_user(site: 'SiteContext') -> None:
 def _groups_of(username: str) -> List[int]:
     # Note: Do NOT use grp.getgrall to fetch all availabile groups
     # Certain setups might have ldap group authorization and may start excessive queries
-    return list(map(int, os.popen("id -G '%s'" % username).read().split()))
+    return list(map(int, subprocess.check_output(["id", "-G", username]).split()))

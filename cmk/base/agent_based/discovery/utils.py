@@ -14,9 +14,11 @@ from typing import (
     Generic,
     Hashable,
     Iterable,
+    Literal,
     NoReturn,
     Optional,
     Sequence,
+    Tuple,
     Type,
     TypeVar,
 )
@@ -120,3 +122,13 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
     def empty(cls) -> "QualifiedDiscovery":
         """create an empty instance"""
         return cls(preexisting=(), current=(), key=repr)
+
+    def chain_with_qualifier(
+        self,
+    ) -> Iterable[Tuple[Literal["vanished", "old", "new"], _DiscoveredItem]]:
+        for i in self.vanished:
+            yield "vanished", i
+        for i in self.old:
+            yield "old", i
+        for i in self.new:
+            yield "new", i

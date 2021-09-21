@@ -1029,7 +1029,7 @@ def _get_node_services(
             service,
             [host_name],
         )
-        for check_source, service in chain_with_check_source(service_result)
+        for check_source, service in service_result.chain_with_qualifier()
     }
 
 
@@ -1051,17 +1051,6 @@ def _node_service_source(
     if check_source == "old":
         return "clustered_old"
     return "clustered_new"
-
-
-def chain_with_check_source(
-    service_result: QualifiedDiscovery[Service],
-) -> Iterable[Tuple[_BasicTransition, Service]]:
-    for s in service_result.vanished:
-        yield "vanished", s
-    for s in service_result.old:
-        yield "old", s
-    for s in service_result.new:
-        yield "new", s
 
 
 def _manual_items(
@@ -1172,7 +1161,7 @@ def _get_cluster_services(
             on_error=on_error,
         )
 
-        for check_source, service in chain_with_check_source(services):
+        for check_source, service in services.chain_with_qualifier():
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,

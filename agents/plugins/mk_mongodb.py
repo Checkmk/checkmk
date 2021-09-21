@@ -35,6 +35,7 @@ import os
 import sys
 import time
 from collections import defaultdict
+from urllib.parse import quote_plus
 
 PY2 = sys.version_info[0] == 2
 
@@ -43,14 +44,11 @@ try:
 except ImportError:
     pass
 
-if PY2:
-    from urllib import quote_plus  # pylint: disable=no-name-in-module
-else:
-    from urllib.parse import quote_plus
 
 try:
     import pymongo  # type: ignore[import] # pylint: disable=import-error
     import pymongo.errors  # type: ignore[import] # pylint: disable=import-error
+    from bson.json_util import dumps  # type: ignore[import]
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
@@ -59,7 +57,6 @@ except ImportError:
     )
     sys.exit(1)
 
-from bson.json_util import dumps  # type: ignore[import]
 
 MK_VARDIR = os.environ.get("MK_VARDIR")
 PYMONGO_VERSION = tuple(int(i) for i in pymongo.version.split("."))

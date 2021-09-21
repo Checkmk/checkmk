@@ -5,23 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    Alternative,
-    FixedValue,
-)
-
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    CheckParameterRulespecWithItem,
+)
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    FixedValue,
+    MonitoringState,
+    TextInput,
 )
 
 # Duplicated code from checkplugin... one bright day we may import from there?
 STATE_EVAL_KEY = "evaluation_mode"
 AS_DISCOVERED = "as_discovered"
 STATES_DURING_DISC_KEY = "states_during_discovery"
+
+
+def _item_spec_wut_webio():
+    return TextInput(
+        title=_("Input channel"),
+        help=_("Name of the input channel, e.g. WEBIO-094849 Input 0"),
+    )
 
 
 def _valuespec_wut_webio_check():
@@ -52,8 +59,10 @@ def _valuespec_wut_webio_check():
                             elements=[
                                 (
                                     "Off",
-                                    MonitoringState(title=_("State if input is OFF"),
-                                                    default_value=2),
+                                    MonitoringState(
+                                        title=_("State if input is OFF"),
+                                        default_value=2,
+                                    ),
                                 ),
                                 (
                                     "On",
@@ -73,5 +82,6 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="wut_webio",
         group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_wut_webio,
         parameter_valuespec=_valuespec_wut_webio_check,
     ))

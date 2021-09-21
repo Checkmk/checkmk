@@ -105,6 +105,8 @@ _UCD_MEM = any_of(
         # Otherwise use ucd_mem for listed devices in UCD.
         UCD,
     ),
+    # cisco support suggests, that ucd oids should be used for this ironport (SUP-7780)
+    contains(".1.3.6.1.2.1.1.1.0", "ironport model c190, asyncos version: 14"),
 )
 
 _NOT_UCD_MEM = all_of(
@@ -133,6 +135,8 @@ _NOT_UCD_MEM = all_of(
         # Otherwise use ucd_mem for listed devices in UCD.
         _NOT_UCD,
     ),
+    # cisco support suggests, that ucd oids should be used for this ironport (SUP-7780)
+    not_contains(".1.3.6.1.2.1.1.1.0", "ironport model c190, asyncos version: 14"),
 )
 
 # Some devices report incorrect data on both HR and UCD, eg. F5 BigIP

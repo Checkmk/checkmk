@@ -1,0 +1,13 @@
+Title: prefer ucd_mem over hr_mem in case of ironport 14
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1632225028
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+If monitoring ironports the hr_mem check does not provide the right data. Because of this ucd_mem is preferred.
+
+The change is incompatible because you have to rediscover the affected hosts so ucd_mem is used instead of hr_mem.

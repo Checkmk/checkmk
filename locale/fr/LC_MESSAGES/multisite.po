@@ -3339,6 +3339,10 @@ msgstr "Ajouter une règle d'état de disque"
 msgid "Add element"
 msgstr "Ajouter un élément"
 
+#, fuzzy, python-format
+msgid "Add element: %s"
+msgstr "Ajouter un élément"
+
 msgid "Add elements to your sidebar"
 msgstr "Ajouter des éléments à votre barre latérale"
 
@@ -14987,6 +14991,9 @@ msgstr ""
 msgid "Display average"
 msgstr "Afficher la moyenne"
 
+msgid "Display axis labels for the selected/automatic data range"
+msgstr ""
+
 msgid "Display dashboard title"
 msgstr "Afficher le titre du tableau de bord"
 
@@ -16548,6 +16555,10 @@ msgid "Edit dashboard"
 msgstr "Modifier le tableau de bord"
 
 msgid "Edit element"
+msgstr "Élément d'édition"
+
+#, fuzzy, python-format
+msgid "Edit element: %s"
 msgstr "Élément d'édition"
 
 msgid "Edit forecast graph"
@@ -41081,6 +41092,11 @@ msgstr ""
 "correspondre que sur les types d'événements <a href=\"%s\">créés par le "
 "noyau</a>."
 
+msgid ""
+"Select the range in between which the values are displayed. This only "
+"affects the dashlet if 'Show historic values' is selected"
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the service event types and transitions this rule should handle."
@@ -42093,9 +42109,10 @@ msgstr ""
 msgid "Set the organisation of the InfluxDB server."
 msgstr "Définir l'organisation du serveur InfluxDB."
 
+#, fuzzy
 msgid ""
 "Set the range in which data is displayed. Having selected a metric before "
-"auto selects here the matching unit of the metric."
+"auto selects the matching unit of the metric."
 msgstr ""
 "Définissez l'intervalle dans lequel les données sont affichées. Le fait "
 "d'avoir sélectionné une métrique auparavant sélectionne automatiquement ici "

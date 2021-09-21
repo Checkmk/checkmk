@@ -3301,6 +3301,10 @@ msgstr "Voeg diskstate regel toe"
 msgid "Add element"
 msgstr "Element toevoegen"
 
+#, fuzzy, python-format
+msgid "Add element: %s"
+msgstr "Element toevoegen"
+
 msgid "Add elements to your sidebar"
 msgstr "Voeg elementen toe aan uw zijbalk"
 
@@ -14803,6 +14807,9 @@ msgstr ""
 msgid "Display average"
 msgstr "Gemiddelde tonen"
 
+msgid "Display axis labels for the selected/automatic data range"
+msgstr ""
+
 msgid "Display dashboard title"
 msgstr "Titel dashboard weergeven"
 
@@ -16341,6 +16348,10 @@ msgid "Edit dashboard"
 msgstr "Bewerk dashboard"
 
 msgid "Edit element"
+msgstr "Element bewerken"
+
+#, fuzzy, python-format
+msgid "Edit element: %s"
 msgstr "Element bewerken"
 
 msgid "Edit forecast graph"
@@ -40566,6 +40577,11 @@ msgstr ""
 "afhandelen.<br>Note: U kunt alleen overeenkomen met typen gebeurtenissen <a "
 "href=\"%s\">aangemaakt door de kern</a>."
 
+msgid ""
+"Select the range in between which the values are displayed. This only "
+"affects the dashlet if 'Show historic values' is selected"
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the service event types and transitions this rule should handle."
@@ -41572,9 +41588,10 @@ msgstr ""
 msgid "Set the organisation of the InfluxDB server."
 msgstr "Gebruik de status van de dienst..."
 
+#, fuzzy
 msgid ""
 "Set the range in which data is displayed. Having selected a metric before "
-"auto selects here the matching unit of the metric."
+"auto selects the matching unit of the metric."
 msgstr ""
 "Stel het bereik in waarin de gegevens worden weergegeven. Als u eerder een "
 "metriek hebt geselecteerd, wordt hier automatisch de bijbehorende eenheid "

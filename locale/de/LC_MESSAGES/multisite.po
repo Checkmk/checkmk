@@ -3280,6 +3280,10 @@ msgstr "Regel hinzufügen"
 msgid "Add element"
 msgstr "Element hinzufügen"
 
+#, fuzzy, python-format
+msgid "Add element: %s"
+msgstr "Element hinzufügen"
+
 msgid "Add elements to your sidebar"
 msgstr "Elemente zur Ihrer Seitenleiste hinzufügen"
 
@@ -14811,6 +14815,9 @@ msgstr ""
 msgid "Display average"
 msgstr "Durchschnitt anzeigen"
 
+msgid "Display axis labels for the selected/automatic data range"
+msgstr ""
+
 msgid "Display dashboard title"
 msgstr "Titel der Übersicht anzeigen"
 
@@ -16349,6 +16356,10 @@ msgid "Edit dashboard"
 msgstr "Übersicht bearbeiten"
 
 msgid "Edit element"
+msgstr "Element bearbeiten"
+
+#, fuzzy, python-format
+msgid "Edit element: %s"
 msgstr "Element bearbeiten"
 
 msgid "Edit forecast graph"
@@ -40613,6 +40624,11 @@ msgstr ""
 "<br>Bitte beachten: Sie können hier nur Ereignistypen filtern, die auch vom "
 "<a href=\"%s\">Monitoring-Kern erzeugt werden</a>."
 
+msgid ""
+"Select the range in between which the values are displayed. This only "
+"affects the dashlet if 'Show historic values' is selected"
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the service event types and transitions this rule should handle."
@@ -41618,9 +41634,10 @@ msgstr ""
 msgid "Set the organisation of the InfluxDB server."
 msgstr "Den Zustand verwenden von Service..."
 
+#, fuzzy
 msgid ""
 "Set the range in which data is displayed. Having selected a metric before "
-"auto selects here the matching unit of the metric."
+"auto selects the matching unit of the metric."
 msgstr ""
 "Stellen Sie den Bereich ein, in dem die Daten angezeigt werden. Wenn Sie "
 "zuvor eine Metrik ausgewählt haben, wird hier automatisch die passende "

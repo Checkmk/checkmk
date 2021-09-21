@@ -3172,6 +3172,10 @@ msgstr "diskstateルールを追加します"
 msgid "Add element"
 msgstr "エレメントを追加"
 
+#, fuzzy, python-format
+msgid "Add element: %s"
+msgstr "エレメントを追加"
+
 msgid "Add elements to your sidebar"
 msgstr "サイドバーに要素を追加する"
 
@@ -14293,6 +14297,9 @@ msgstr ""
 msgid "Display average"
 msgstr "平均を表示"
 
+msgid "Display axis labels for the selected/automatic data range"
+msgstr ""
+
 msgid "Display dashboard title"
 msgstr "ダッシュボードのタイトルを表示する"
 
@@ -15802,6 +15809,10 @@ msgid "Edit dashboard"
 msgstr "ダッシュボードの編集"
 
 msgid "Edit element"
+msgstr "要素を編集する"
+
+#, fuzzy, python-format
+msgid "Edit element: %s"
 msgstr "要素を編集する"
 
 msgid "Edit forecast graph"
@@ -39248,6 +39259,11 @@ msgstr ""
 "はサービス通知に適用されません。<br>注:一致できるのは、<a href=\"%s\">コアに"
 "よって作成された</a>イベントタイプのみです。"
 
+msgid ""
+"Select the range in between which the values are displayed. This only "
+"affects the dashlet if 'Show historic values' is selected"
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the service event types and transitions this rule should handle."
@@ -40218,9 +40234,10 @@ msgstr ""
 msgid "Set the organisation of the InfluxDB server."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Set the range in which data is displayed. Having selected a metric before "
-"auto selects here the matching unit of the metric."
+"auto selects the matching unit of the metric."
 msgstr ""
 "データを表示する範囲を設定します。メトリックを自動に選択する前に、ここでメト"
 "リック位の一致単位を選択します。"

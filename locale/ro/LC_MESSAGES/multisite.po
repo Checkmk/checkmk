@@ -3044,6 +3044,10 @@ msgstr ""
 msgid "Add element"
 msgstr "Adaugă element"
 
+#, fuzzy, python-format
+msgid "Add element: %s"
+msgstr "Adaugă element"
+
 #, fuzzy
 msgid "Add elements to your sidebar"
 msgstr "Adaugă un snapin pe sidebar"
@@ -14304,6 +14308,9 @@ msgstr ""
 msgid "Display average"
 msgstr ""
 
+msgid "Display axis labels for the selected/automatic data range"
+msgstr ""
+
 msgid "Display dashboard title"
 msgstr ""
 
@@ -15811,6 +15818,10 @@ msgstr "Adaugă element"
 
 #, fuzzy
 msgid "Edit element"
+msgstr "Adaugă element"
+
+#, fuzzy, python-format
+msgid "Edit element: %s"
 msgstr "Adaugă element"
 
 # georgem ##############
@@ -39440,6 +39451,11 @@ msgid ""
 "core</a>."
 msgstr ""
 
+msgid ""
+"Select the range in between which the values are displayed. This only "
+"affects the dashlet if 'Show historic values' is selected"
+msgstr ""
+
 #, python-format
 msgid ""
 "Select the service event types and transitions this rule should handle."
@@ -40472,7 +40488,7 @@ msgstr ""
 
 msgid ""
 "Set the range in which data is displayed. Having selected a metric before "
-"auto selects here the matching unit of the metric."
+"auto selects the matching unit of the metric."
 msgstr ""
 
 msgid ""

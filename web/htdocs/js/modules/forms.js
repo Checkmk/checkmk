@@ -75,7 +75,7 @@ function enable_label_input_fields(container) {
                         return x.textContent.split(":")[0];
                     });
 
-                    if (existing_keys_array.includes(label_key)) {
+                    if (existing_keys_array.includes(label_key) && !t.state.editing) {
                         return key_error_msg;
                     }
                 } else {

@@ -1,0 +1,14 @@
+Title: Fix error on editing labels in rule conditions
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632223260
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+If existing label conditions in rulesets were edited, e.g. "foo:bar" to
+"foo:baz", the error "Only one value per KEY can be used at a time.foo:baz is
+already used." occured.
+

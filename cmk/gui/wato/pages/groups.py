@@ -205,18 +205,19 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         super().__init__()
 
     def _from_vars(self) -> None:
-        self._name = GroupName(request.get_ascii_input("edit"))  # missing -> new group
+        edit_group = request.get_ascii_input("edit")  # missing -> new group
+        self._name = GroupName(edit_group) if edit_group else None
         self._new = self._name is None
 
         if self._new:
-            clone_group = GroupName(request.get_ascii_input("clone"))
+            clone_group = request.get_ascii_input("clone")
             if clone_group:
-                self._name = clone_group
-
+                self._name = GroupName(clone_group)
                 self.group = self._get_group(self._name)
             else:
                 self.group = {}
         else:
+            assert self._name is not None
             self.group = self._get_group(self._name)
 
         self.group.setdefault("alias", self._name)

@@ -51,7 +51,11 @@ def prefer_hr_else_ucd(oid):
 
     # PhotonOS contains hrSystemUptime OID BUT uses UCD,
     # so use UCD in any case
-    if "photon" in oid(".1.3.6.1.2.1.1.1.0").lower():
+    sys_descr_lower = oid(".1.3.6.1.2.1.1.1.0").lower()
+    if "photon" in sys_descr_lower:
+        return True
+    # cisco support suggests, that ucd oids should be used for this ironport (SUP-7780)
+    if "ironport model c190, asyncos version: 14" in sys_descr_lower:
         return True
 
     return _is_ucd(oid) and not oid(".1.3.6.1.2.1.25.1.1.0")
@@ -117,9 +121,14 @@ def _is_ucd_mem(oid):
     # hrSystemUptime OID in walk.
     # Set no_hr_uptime to True if you do not care about
     # Format: ("device_name", no_hr_uptime)
-    decision_matrix = [("pfsense", not oid(".1.3.6.1.2.1.25.1.1.0")),
-                       ("ironport model c3", not oid(".1.3.6.1.2.1.25.1.1.0")),
-                       ("bomgar", not oid(".1.3.6.1.2.1.25.1.1.0")), ("photon", True)]
+    decision_matrix = [
+        ("pfsense", not oid(".1.3.6.1.2.1.25.1.1.0")),
+        ("ironport model c3", not oid(".1.3.6.1.2.1.25.1.1.0")),
+        # cisco support suggests, that ucd oids should be used for this ironport (SUP-7780)
+        ("ironport model c190, asyncos version: 14", True),
+        ("bomgar", not oid(".1.3.6.1.2.1.25.1.1.0")),
+        ("photon", True)
+    ]
     for device_name, no_hr_uptime in decision_matrix:
         if device_name in sys_descr and no_hr_uptime:
             return True

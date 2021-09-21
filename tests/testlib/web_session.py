@@ -942,8 +942,8 @@ class CMKOpenAPISession:
         )
         return resp
 
-    def sign_agents(self, key_id, passphrase, assertion=True):
-        request_params = {"key_id": key_id, "passphrase": passphrase}
+    def sign_agents(self, fingerprint, passphrase, assertion=True):
+        request_params = {"fingerprint": fingerprint, "passphrase": passphrase}
         resp = self.request(
             "post",
             "domain-types/agent/actions/sign/invoke",

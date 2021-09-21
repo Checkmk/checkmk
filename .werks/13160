@@ -1,0 +1,15 @@
+Title: Change key_id parameter to key fingerprint for REST API agent endpoints
+Class: fix
+Compatible: compat
+Component: core
+Date: 1631519807
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+In the previous version, the REST API asked the user to provide
+the key_id parameter for agent related endpoints in order to sign
+the agents. This was not possible as the key_id is only used internally.
+This werk, therefore, changes the key_id requirement to the key fingerprint
+which can be queried through another endpoint and is also visible in WATO.

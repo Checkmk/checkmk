@@ -6,6 +6,7 @@
 """Create an initial Checkmk configuration for new sites"""
 
 import os
+from typing import Any, Dict
 
 from cmk.utils import store
 from cmk.utils.tags import sample_tag_config, TagConfig
@@ -27,7 +28,7 @@ from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 # TODO: Must only be unlocked when it was not locked before. We should find a more
 # robust way for doing something like this. If it is locked before, it can now happen
 # that this call unlocks the wider locking when calling this funktion in a wrong way.
-def init_wato_datastructures(with_wato_lock=False):
+def init_wato_datastructures(with_wato_lock: bool = False) -> None:
     if (
         os.path.exists(ConfigDomainCACertificates.trusted_cas_file)
         and not _need_to_create_sample_config()
@@ -46,7 +47,7 @@ def init_wato_datastructures(with_wato_lock=False):
         init()
 
 
-def _need_to_create_sample_config():
+def _need_to_create_sample_config() -> bool:
     if (
         os.path.exists(multisite_dir() + "tags.mk")
         or os.path.exists(wato_root_dir() + "rules.mk")
@@ -58,7 +59,7 @@ def _need_to_create_sample_config():
     return True
 
 
-def _create_sample_config():
+def _create_sample_config() -> None:
     """Create a very basic sample configuration
 
     But only if none of the files that we will create already exists. That is
@@ -83,14 +84,14 @@ def _create_sample_config():
 @sample_config_generator_registry.register
 class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "basic_wato_config"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 10
 
-    def generate(self):
+    def generate(self) -> None:
         save_global_settings(self._initial_global_settings())
 
         # A contact group for all hosts and services
@@ -284,7 +285,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         ]
         save_notification_rules(notification_rules)
 
-    def _initial_global_settings(self):
+    def _initial_global_settings(self) -> Dict[str, Any]:
         settings = {
             "use_new_descriptions_for": [
                 "aix_memory",
@@ -379,7 +380,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
         return settings
 
-    def _initialize_tag_config(self):
+    def _initialize_tag_config(self) -> None:
         tag_config = TagConfig()
         tag_config.parse_config(sample_tag_config())
         TagConfigFile().save(tag_config.get_dict_format())
@@ -391,14 +392,14 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
     find to execute it only for new created sites."""
 
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "acknowledge_initial_werks"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 40
 
-    def generate(self):
+    def generate(self) -> None:
         # Local import has been added to quick-fix an import cycle between cmk.gui.werks and watolib
         import cmk.gui.werks as werks
 
@@ -410,12 +411,12 @@ class ConfigGeneratorAutomationUser(SampleConfigGenerator):
     """Create the default Checkmk "automation" user"""
 
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "create_automation_user"
 
     @classmethod
-    def sort_index(cls):
+    def sort_index(cls) -> int:
         return 60
 
-    def generate(self):
+    def generate(self) -> None:
         create_cmk_automation_user()

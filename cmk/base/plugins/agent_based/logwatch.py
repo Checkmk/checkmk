@@ -44,7 +44,7 @@ import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    host_extra_conf, host_name,
+    host_name, service_extra_conf,
 )
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service
@@ -67,10 +67,10 @@ def _get_discovery_groups(params: AllParams) -> Sequence[List[Tuple[str, Groupin
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 
-def _compile_params() -> Dict[str, Any]:
+def _compile_params(item: str) -> Dict[str, Any]:
     compiled_params: Dict[str, Any] = {"reclassify_patterns": []}
 
-    for rule in host_extra_conf(host_name(), cmk.base.config.logwatch_rules):
+    for rule in service_extra_conf(host_name(), item, cmk.base.config.logwatch_rules):
         if isinstance(rule, dict):
             compiled_params["reclassify_patterns"].extend(rule["reclassify_patterns"])
             if "reclassify_states" in rule:
@@ -180,7 +180,7 @@ def check_logwatch(
             loglines.extend(item_data['lines'])
 
     found = item in logwatch.discoverable_items(*section.values())
-    yield from check_logwatch_generic(item, _compile_params(), loglines, found)
+    yield from check_logwatch_generic(item, _compile_params(item), loglines, found)
 
 
 register.check_plugin(
@@ -303,7 +303,7 @@ def check_logwatch_groups(
                     loglines.extend(item_data['lines'])
                 break
 
-    yield from check_logwatch_generic(item, _compile_params(), loglines, True)
+    yield from check_logwatch_generic(item, _compile_params(item), loglines, True)
 
 
 register.check_plugin(

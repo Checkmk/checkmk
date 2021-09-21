@@ -7,7 +7,19 @@
 from __future__ import annotations
 
 import abc
-from typing import cast, Final, Generic, Mapping, Optional, Sequence, Tuple, TypeVar
+import copy
+from typing import (
+    cast,
+    Final,
+    Generic,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+)
 
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -41,16 +53,18 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         )
 
     def __add__(self, other: HostSections) -> HostSections:
-        new_sections = dict(self.sections)
+        new_sections = copy.deepcopy(dict(self.sections))
         for section_name, section_content in other.sections.items():
             new_sections.setdefault(
                 section_name,
                 cast(TRawDataSection, []),
             ).extend(section_content)
 
-        new_piggybacked_raw_data = dict(self.piggybacked_raw_data)
+        new_piggybacked_raw_data: MutableMapping[HostName, List[bytes]] = {
+            k: list(v) for k, v in self.piggybacked_raw_data.items()
+        }
         for hostname, raw_lines in other.piggybacked_raw_data.items():
-            list(new_piggybacked_raw_data.setdefault(hostname, [])).extend(raw_lines)
+            new_piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
 
         # TODO: It should be supported that different sources produce equal sections.
         # this is handled for the self.sections data by simply concatenating the lines

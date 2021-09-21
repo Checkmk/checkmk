@@ -49,7 +49,6 @@ function enable_label_input_fields(container) {
             pattern: /^[^:]+:[^:]+$/,
             dropdown: {
                 enabled: 1, // show dropdown on first character
-                fuzzySearch: false,
                 caseSensitive: false,
             },
             editTags: {

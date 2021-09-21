@@ -215,7 +215,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
                 self.group = self._get_group(self._name)
             else:
-                self.group = GroupSpec({})
+                self.group: GroupSpec = {}
         else:
             self.group = self._get_group(self._name)
 

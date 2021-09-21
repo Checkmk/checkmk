@@ -13,9 +13,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     State as state,
-    type_defs,
 )
 from cmk.base.plugins.agent_based import oracle_rman
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 PARSED_SECTION: oracle_rman.SectionOracleRman = {
     'AFIS11.ARCHIVELOG': {
@@ -48,18 +48,75 @@ PARSED_SECTION: oracle_rman.SectionOracleRman = {
 }
 
 
-@pytest.mark.parametrize("string_table, parsed", [([
+@pytest.mark.parametrize(
+    "string_table, parsed",
     [
-        'AFIS2', 'COMPLETED', '2016-07-12_02:05:39', '2016-07-12_02:05:39', 'DB_INCR', '0', '460',
-        '545791334'
+        pytest.param(
+            [
+                [
+                    "AFIS2",
+                    "COMPLETED",
+                    "2016-07-12_02:05:39",
+                    "2016-07-12_02:05:39",
+                    "DB_INCR",
+                    "0",
+                    "460",
+                    "545791334",
+                ],
+                [
+                    "AFIS11",
+                    "COMPLETED",
+                    "2016-07-12_09:50:46",
+                    "2016-07-12_08:08:05",
+                    "ARCHIVELOG",
+                    "",
+                    "103",
+                    "",
+                ],
+                [
+                    "TUX2",
+                    "COMPLETED",
+                    "2014-07-08_17:27:59",
+                    "2014-07-08_17:29:35",
+                    "DB_INCR",
+                    "32",
+                ],
+            ],
+            PARSED_SECTION,
+            id="normal case",
+        ),
+        pytest.param(
+            [
+                [
+                    "AFIS2",
+                    "COMPLETED",
+                    "2016-07-12_02:05:39",
+                    "2016-07-12_02:05:39",
+                    "DB_INCR",
+                    "0",
+                    "-5",
+                    "545791334",
+                ],
+            ],
+            {
+                "AFIS2.DB_INCR_0": {
+                    "backupage": 0,
+                    "backuplevel": "0",
+                    "backupscn": 545791334,
+                    "backuptype": "DB_INCR",
+                    "sid": "AFIS2",
+                    "status": "COMPLETED",
+                    "used_incr_0": False,
+                },
+            },
+            id="backupage < 0",
+        ),
     ],
-    [
-        'AFIS11', 'COMPLETED', '2016-07-12_09:50:46', '2016-07-12_08:08:05', 'ARCHIVELOG', '',
-        '103', ''
-    ],
-    ["TUX2", "COMPLETED", "2014-07-08_17:27:59", "2014-07-08_17:29:35", "DB_INCR", "32"],
-], PARSED_SECTION)])
-def test_parse(string_table, parsed):
+)
+def test_parse(
+    string_table: StringTable,
+    parsed: oracle_rman.SectionOracleRman,
+) -> None:
     assert oracle_rman.parse_oracle_rman(string_table) == parsed
 
 

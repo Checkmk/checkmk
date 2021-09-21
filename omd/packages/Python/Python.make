@@ -83,7 +83,7 @@ $(PYTHON_COMPILE): $(PYTHON_UNPACK) $(OPENSSL_INTERMEDIATE_INSTALL)
 	        --with-ensurepip=install \
 	        --with-openssl=$(PACKAGE_OPENSSL_DESTDIR) \
 	        $(PYTHON_ENABLE_OPTIMIZATIONS) \
-	        LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_OPENSSL_LDFLAGS)"
+	        LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_OPENSSL_LDFLAGS)"
 	cd $(PYTHON_BUILD_DIR) ; \
 	    $(MAKE) -j2
 	$(TOUCH) $@

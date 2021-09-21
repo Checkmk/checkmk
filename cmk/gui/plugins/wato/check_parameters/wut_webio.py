@@ -10,12 +10,19 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState, TextInput
 
 # Duplicated code from checkplugin... one bright day we may import from there?
 STATE_EVAL_KEY = "evaluation_mode"
 AS_DISCOVERED = "as_discovered"
 STATES_DURING_DISC_KEY = "states_during_discovery"
+
+
+def _item_spec_wut_webio():
+    return TextInput(
+        title=_("Input channel"),
+        help=_("Name of the input channel, e.g. WEBIO-094849 Input 0"),
+    )
 
 
 def _valuespec_wut_webio_check():
@@ -51,7 +58,8 @@ def _valuespec_wut_webio_check():
                                 (
                                     "Off",
                                     MonitoringState(
-                                        title=_("State if input is OFF"), default_value=2
+                                        title=_("State if input is OFF"),
+                                        default_value=2,
                                     ),
                                 ),
                                 (
@@ -73,6 +81,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="wut_webio",
         group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_wut_webio,
         parameter_valuespec=_valuespec_wut_webio_check,
     )
 )

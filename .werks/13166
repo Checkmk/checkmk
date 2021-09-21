@@ -1,0 +1,13 @@
+Title: ucs_c_rack_server_power: Fixed "KeyError: 'consumedPower'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632218062
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+This werk fixes the crash in ucs_c_rack_server_powery line 54: "KeyError: 'consumedPower'".
+The datatype changed from int to float in newer versions of ucs bladecenter.
+

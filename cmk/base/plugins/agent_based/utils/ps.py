@@ -225,6 +225,8 @@ def process_matches(command_line, process_pattern, match_groups=None):
 def format_process_list(processes: "ProcessAggregator", html_output):
     def format_value(pvalue: _ProcessValue) -> str:
         value, unit = pvalue
+        if unit == "kB":
+            return render.bytes(float(value) * 1024)
         if isinstance(value, float):
             return "%.1f%s" % (value, unit)
         return "%s%s" % (value, unit)

@@ -561,8 +561,9 @@ class Filesize(Integer):
 
     def from_html_vars(self, varprefix: str) -> int:
         try:
-            return request.get_integer_input_mandatory(varprefix + "_size") * (
-                1024 ** request.get_integer_input_mandatory(varprefix + "_unit")
+            return int(
+                request.get_float_input_mandatory(varprefix + "_size")
+                * (1024 ** request.get_integer_input_mandatory(varprefix + "_unit"))
             )
         except Exception:
             raise MKUserError(varprefix + "_size", _("Please enter a valid integer number"))

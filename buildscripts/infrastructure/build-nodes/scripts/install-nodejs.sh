@@ -21,7 +21,9 @@ debian-* | ubuntu-* | cma)
 sles-*)
     echo "Installing for SLES"
     zypper -n --no-gpg-checks in --replacefiles --force-resolution nodejs10 npm10
-    ln -s /usr/bin/npx10 /usr/bin/npx
+    if [ ! -e /usr/bin/npx ]; then
+        ln -s /usr/bin/npx10 /usr/bin/npx
+    fi
     exit 0
     ;;
 *)

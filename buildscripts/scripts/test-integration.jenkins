@@ -30,7 +30,7 @@ DISTRO_LIST = DISTRO_LIST - ['cma']
 
 currentBuild.description = '\nVersion: ' + VERSION + '\nEdition: ' + EDITION + '\nDistros: ' + DISTRO_LIST
 
-timeout(activity: false, time: 115, unit: 'MINUTES') {
+timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         stage('checkout sources') {
             checkout(scm)

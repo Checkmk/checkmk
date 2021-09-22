@@ -9,7 +9,7 @@ withFolderProperties {
     NODE = env.BUILD_NODE
 }
 
-timeout(activity: false, time: 45, unit: 'MINUTES') {
+timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def WORKSPACE = pwd()
         def RESULTS = WORKSPACE + "/results"

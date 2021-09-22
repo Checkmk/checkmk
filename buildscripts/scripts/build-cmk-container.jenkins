@@ -37,8 +37,7 @@ def get_cmk_version(BRANCH, VERSION){
     }
 }
 
-// Cancel job when there is nothing logged to the console for 15 minutes
-timeout(activity: true, time: 15, unit: 'MINUTES') {
+timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def PACKAGE_DIR = WORKSPACE + '/download'
     

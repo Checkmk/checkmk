@@ -16,8 +16,7 @@ def DOCKER_BUILDS = [:]
 
 currentBuild.description = 'Building for the following Distros:\n' + DISTRO_LIST
 
-// Cancel job when there is nothing logged to the console for 15 minutes
-timeout(activity: true, time: 15, unit: 'MINUTES') {
+timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         def VERS_TAG
         def BRANCH

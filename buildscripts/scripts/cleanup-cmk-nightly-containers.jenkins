@@ -30,8 +30,7 @@ def hostNames(label) {
 
 def NODE_LIST = hostNames(BUILD_NODE)
 
-// Cancel job when there is nothing logged to the console for 15 minutes
-timeout(activity: true, time: 15, unit: 'MINUTES') {
+timeout(time: 12, unit: 'HOURS') {
     node ('both') {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             def COMMON_IMAGE = docker.image('nexus3-cli')

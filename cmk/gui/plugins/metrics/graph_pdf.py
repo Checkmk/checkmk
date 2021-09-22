@@ -234,7 +234,7 @@ def render_graph_pdf(
     if graph_render_options["show_graph_time"]:
         title_top = top - (mm_per_ex_by_render_options(graph_render_options) * 2)
         pdf_document.render_aligned_text(
-            0,
+            left - right_margin,
             title_top,
             width,
             mm_per_ex_by_render_options(graph_render_options) * 2,

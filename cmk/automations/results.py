@@ -12,6 +12,7 @@ from typing import Any, Literal, Mapping, Optional, Tuple, Type, TypeVar
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.python_printer import pformat
 from cmk.utils.type_defs import (
+    AgentRawData,
     CheckPluginNameStr,
     ConfigurationWarnings,
     Gateways,
@@ -281,7 +282,16 @@ result_type_registry.register(UpdateDNSCacheResult)
 
 @dataclass
 class GetAgentOutputResult(ABCAutomationResult):
-    result: Tuple[bool, ServiceDetails, bytes]
+    success: bool
+    service_details: ServiceDetails
+    raw_agent_data: AgentRawData
+
+    def to_pre_21(self) -> Tuple[bool, ServiceDetails, AgentRawData]:
+        return (
+            self.success,
+            self.service_details,
+            self.raw_agent_data,
+        )
 
     @staticmethod
     def automation_call() -> str:

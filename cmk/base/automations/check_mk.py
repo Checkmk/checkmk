@@ -45,6 +45,7 @@ from cmk.utils.paths import (
     var_dir,
 )
 from cmk.utils.type_defs import (
+    AgentRawData,
     AutomationDiscoveryResponse,
     CheckPluginName,
     CheckPluginNameStr,
@@ -1692,11 +1693,9 @@ class AutomationGetAgentOutput(Automation):
                 raise
 
         return automation_results.GetAgentOutputResult(
-            (
-                success,
-                output,
-                info,
-            )
+            success,
+            output,
+            AgentRawData(info),
         )
 
 

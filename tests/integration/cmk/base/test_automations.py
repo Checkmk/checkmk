@@ -16,7 +16,7 @@ from tests.testlib.utils import get_standard_linux_agent_output
 import cmk.utils.paths
 from cmk.utils.type_defs import HostName, SetAutochecksTable
 
-from cmk.automations.results import result_type_registry
+from cmk.automations import results
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
@@ -132,7 +132,7 @@ def _execute_automation(
         assert stdout == expect_stdout, error_msg
 
     if parse_data:
-        return result_type_registry[cmd].deserialize(stdout)
+        return results.result_type_registry[cmd].deserialize(stdout)
 
 
 def test_automation_discovery_no_host(test_cfg, site):
@@ -405,32 +405,30 @@ def test_automation_notification_get_bulks(test_cfg, site):
 
 
 def test_automation_get_agent_output(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "get-agent-output",
         args=["modes-test-host", "agent"],
-    ).result
-    assert isinstance(data, tuple)
-    assert len(data) == 3
+    )
+    assert isinstance(result, results.GetAgentOutputResult)
 
-    assert data[1] == ""
-    assert isinstance(data[2], bytes)
-    assert b"<<<uptime>>>" in data[2]
-    assert data[0] is True
+    assert result.service_details == ""
+    assert isinstance(result.raw_agent_data, bytes)
+    assert b"<<<uptime>>>" in bytes(result.raw_agent_data)
+    assert result.success is True
 
 
 def test_automation_get_agent_output_unknown_host(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "get-agent-output",
         args=["xxxhost", "agent"],
-    ).result
-    assert isinstance(data, tuple)
-    assert len(data) == 3
+    )
+    assert isinstance(result, results.GetAgentOutputResult)
 
-    assert data[1].startswith("Failed to fetch data from ")
-    assert data[2] == b""
-    assert data[0] is False
+    assert result.service_details.startswith("Failed to fetch data from ")
+    assert result.raw_agent_data == b""
+    assert result.success is False
 
 
 # TODO: active-check: Add test for real active_checks check

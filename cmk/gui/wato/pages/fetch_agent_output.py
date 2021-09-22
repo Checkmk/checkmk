@@ -25,7 +25,7 @@ from cmk.gui.plugins.views.utils import make_host_breadcrumb
 from cmk.gui.sites import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.watolib import automation_command_registry, AutomationCommand
+from cmk.gui.watolib import automation_command_registry, AutomationCommand, get_agent_output
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -273,19 +273,24 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
     def _fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
 
-        success, output, agent_data = watolib.check_mk_automation_deprecated(
+        agent_output_result = get_agent_output(
             self._request.host.site_id(),
-            "get-agent-output",
-            [self._request.host.name(), self._request.agent_type],
+            self._request.host.name(),
+            self._request.agent_type,
         )
 
-        if not success:
-            job_interface.send_progress_update(_("Failed: %s") % output)
+        if not agent_output_result.success:
+            job_interface.send_progress_update(
+                _("Failed: %s") % agent_output_result.service_details
+            )
 
         preview_filepath = os.path.join(
             job_interface.get_work_dir(), AgentOutputPage.file_name(self._request)
         )
-        store.save_text_to_file(preview_filepath, agent_data.decode("utf-8"))
+        store.save_text_to_file(
+            preview_filepath,
+            agent_output_result.raw_agent_data.decode("utf-8"),
+        )
 
         download_url = makeuri_contextless(
             request,

@@ -1,0 +1,13 @@
+Title: Graph images: use a consistent position for the graph time range
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1632312693
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+In reports the graph time range is now diplayed on the top right. Before
+it was added directly after the title. In HTML emails of notifications
+and PNG exports a small margin on the right is added.

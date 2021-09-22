@@ -1,0 +1,11 @@
+Title: Add missing colors to the state column of active checks in the service discovery
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632294243
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+

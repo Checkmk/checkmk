@@ -240,5 +240,7 @@ function handle_execute_active_check(oDiv, response_json) {
     utils.remove_class(oTdState, "statep");
     utils.add_class(oTdState, "state" + state);
 
-    oTdState.innerHTML = statename;
+    let span = document.createElement("span");
+    span.innerHTML = statename;
+    oTdState.replaceChild(span, oTdState.firstChild);
 }

@@ -159,18 +159,6 @@ def suppress_automation_calls(mocker):
 
 
 @pytest.fixture()
-def inline_local_automation_calls(mocker):
-    # Only works from Python3 code.
-    def call_automation(cmd, args):
-        from cmk.base.automations import automations
-
-        return automations.execute(cmd, args)
-
-    mocker.patch("cmk.gui.watolib.automations.check_mk_automation", new=call_automation)
-    mocker.patch("cmk.gui.watolib.check_mk_automation", new=call_automation)
-
-
-@pytest.fixture()
 def make_html_object_explode(mocker):
     class HtmlExploder:
         def __init__(self, *args, **kw):

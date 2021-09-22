@@ -11,6 +11,7 @@ from typing import (
     Any,
     Dict,
     Generator,
+    Iterator,
     List,
     Mapping,
     MutableMapping,
@@ -36,6 +37,10 @@ from ..agent_based_api.v1 import (
 from ..agent_based_api.v1 import State as state
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 from . import cpu, memory
+
+# typing: nothing intentional, just adapt to sad reality
+_ProcessValue = Tuple[Union[str, float], str]
+_Process = List[Tuple[str, _ProcessValue]]
 
 
 @dataclass(frozen=True)
@@ -217,15 +222,17 @@ def process_matches(command_line, process_pattern, match_groups=None):
 # value is again a 2-field tuple, first is the value, second is the unit.
 # This function is actually fairly generic so it could be used for other
 # data structured the same way
-def format_process_list(processes, html_output):
-    def format_value(value):
-        value, unit = value
+def format_process_list(processes: "ProcessAggregator", html_output):
+    def format_value(pvalue: _ProcessValue) -> str:
+        value, unit = pvalue
         if isinstance(value, float):
             return "%.1f%s" % (value, unit)
         return "%s%s" % (value, unit)
 
     # keys to output and default values:
-    headers = dict.fromkeys((key for process in processes for key, _value in process), "")
+    headers: Mapping[str, _ProcessValue] = {
+        key: ("", "") for process in processes for key, _value in process
+    }
 
     if html_output:
         table_bracket = "<table>%s</table>"
@@ -235,7 +242,7 @@ def format_process_list(processes, html_output):
         header_line = "<tr><th>" + "</th><th>".join(headers) + "</th></tr>"
 
         # make sure each process has all fields from the table
-        processes = [{**headers, **dict(process)}.items() for process in processes]
+        process_list = [list({**headers, **dict(process)}.items()) for process in processes]
 
     else:
         table_bracket = "%s"
@@ -243,6 +250,7 @@ def format_process_list(processes, html_output):
         cell_bracket = "%s %s"
         cell_seperator = ", "
         header_line = ""
+        process_list = list(processes)
 
     return table_bracket % (
         header_line
@@ -256,13 +264,13 @@ def format_process_list(processes, html_output):
                         if key in headers
                     ]
                 )
-                for process in processes
+                for process in process_list
             ]
         )
     )
 
 
-def parse_ps_time(text):
+def parse_ps_time(text: str) -> int:
     """Parse time as output by ps into seconds
 
     >>> parse_ps_time("12:17")
@@ -308,17 +316,20 @@ class ProcessAggregator:
         self.percent_cpu = 0.0
         self.max_elapsed: Optional[float] = None
         self.min_elapsed: Optional[float] = None
-        self.processes = []
+        self.processes: List[_Process] = []
         self.running_on_nodes = set()
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> _Process:
         return self.processes[item]
 
+    def __iter__(self) -> Iterator[_Process]:
+        return iter(self.processes)
+
     @property
-    def count(self):
+    def count(self) -> int:
         return len(self.processes)
 
-    def append(self, process):
+    def append(self, process: _Process) -> None:
         self.processes.append(process)
 
     def core_weight(self, is_win):
@@ -339,7 +350,7 @@ class ProcessAggregator:
         # Use default of division
         return 1.0 / self.cpu_cores
 
-    def lifetimes(self, process_info, process):
+    def lifetimes(self, process_info, process: _Process):
         # process_info.cputime contains the used CPU time and possibly,
         # separated by /, also the total elapsed time since the birth of the
         # process.
@@ -369,7 +380,7 @@ class ProcessAggregator:
                     )
                 )
 
-    def cpu_usage(self, value_store, process_info, process):
+    def cpu_usage(self, value_store, process_info, process: _Process):
 
         now = time.time()
 
@@ -443,8 +454,7 @@ def process_capture(
         if not process_matches(command_line, params.get("process"), params.get("match_groups")):
             continue
 
-        # typing: nothing intentional, just adapt to sad reality
-        process: List[Tuple[str, Tuple[Union[str, float], str]]] = []
+        process: _Process = []
 
         if node_name is not None:
             ps_aggregator.running_on_nodes.add(node_name)
@@ -702,7 +712,7 @@ def individual_process_check(
             if the_item == "pid":
                 pid = value
             elif the_item.startswith("cpu usage"):
-                cpu_usage += value
+                cpu_usage += float(value)  # float conversion fo mypy
 
         result = list(
             check_levels(

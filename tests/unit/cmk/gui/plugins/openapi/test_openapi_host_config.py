@@ -3,10 +3,19 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 
+import pytest
 
-def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automation_calls, with_host):
+from cmk.automations.results import DeleteHostsResult, RenameHostsResult
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_cluster_host(
+    wsgi_app,
+    with_automation_user,
+):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -75,7 +84,12 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
-def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls):
+def test_openapi_hosts(
+    monkeypatch: pytest.MonkeyPatch,
+    wsgi_app,
+    with_automation_user,
+):
+
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -151,6 +165,10 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         content_type="application/json",
     )
 
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: DeleteHostsResult(),
+    )
     wsgi_app.follow_link(
         resp,
         ".../delete",
@@ -160,10 +178,15 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
 
 
 def test_openapi_bulk_hosts(
+    monkeypatch: pytest.MonkeyPatch,
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: DeleteHostsResult(),
+    )
+
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -287,10 +310,14 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation
 def test_openapi_host_rename(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    monkeypatch.setattr(
+        "cmk.gui.watolib.host_rename.rename_hosts",
+        lambda *args, **kwargs: RenameHostsResult({}),
+    )
+
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 

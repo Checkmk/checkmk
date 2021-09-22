@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, NamedTuple, Optional, Sequence, Type, TypeVar
+from typing import Any, Iterable, NamedTuple, Optional, Sequence, Tuple, Type, TypeVar
 
 from livestatus import SiteId
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import DiscoveredHostLabelsDict, HostName, ServiceName, SetAutochecksTable
 
 from cmk.automations import results
 
@@ -145,6 +145,96 @@ def try_discovery(
             args=[*flags, host_name],
         ),
         results.TryDiscoveryResult,
+    )
+
+
+def set_autochecks(
+    site_id: SiteId,
+    host_name: HostName,
+    checks: SetAutochecksTable,
+) -> results.SetAutochecksResult:
+    return _deserialize(
+        _automation_serialized(
+            "set-autochecks",
+            siteid=site_id,
+            args=[host_name],
+            indata=checks,
+        ),
+        results.SetAutochecksResult,
+    )
+
+
+def update_host_labels(
+    site_id: SiteId,
+    host_name: HostName,
+    host_labels: DiscoveredHostLabelsDict,
+) -> results.UpdateHostLabelsResult:
+    return _deserialize(
+        _automation_serialized(
+            "update-host-labels",
+            siteid=site_id,
+            args=[host_name],
+            indata=host_labels,
+        ),
+        results.UpdateHostLabelsResult,
+    )
+
+
+def rename_hosts(
+    site_id: SiteId,
+    name_pairs: Sequence[Tuple[HostName, HostName]],
+) -> results.RenameHostsResult:
+    return _deserialize(
+        _automation_serialized(
+            "rename-hosts",
+            siteid=site_id,
+            indata=name_pairs,
+            non_blocking_http=True,
+        ),
+        results.RenameHostsResult,
+    )
+
+
+def analyse_service(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+) -> results.AnalyseServiceResult:
+    return _deserialize(
+        _automation_serialized(
+            "analyse-service",
+            siteid=site_id,
+            args=[host_name, service_name],
+        ),
+        results.AnalyseServiceResult,
+    )
+
+
+def analyse_host(
+    site_id: SiteId,
+    host_name: HostName,
+) -> results.AnalyseHostResult:
+    return _deserialize(
+        _automation_serialized(
+            "analyse-host",
+            siteid=site_id,
+            args=[host_name],
+        ),
+        results.AnalyseHostResult,
+    )
+
+
+def delete_hosts(
+    site_id: SiteId,
+    host_names: Sequence[HostName],
+) -> results.DeleteHostsResult:
+    return _deserialize(
+        _automation_serialized(
+            "delete-hosts",
+            siteid=site_id,
+            args=host_names,
+        ),
+        results.DeleteHostsResult,
     )
 
 

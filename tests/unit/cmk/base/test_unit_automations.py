@@ -112,8 +112,6 @@ def test_analyse_host(monkeypatch):
     ts.apply(monkeypatch)
 
     assert automation.execute(["test-host"]) == AnalyseHostResult(
-        {
-            "label_sources": {"cmk/site": "discovered", "explicit": "explicit"},
-            "labels": {"cmk/site": "NO_SITE", "explicit": "ding"},
-        }
+        label_sources={"cmk/site": "discovered", "explicit": "explicit"},
+        labels={"cmk/site": "NO_SITE", "explicit": "ding"},
     )

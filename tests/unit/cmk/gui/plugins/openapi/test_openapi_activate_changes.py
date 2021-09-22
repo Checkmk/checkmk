@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.plugins.openapi.restful_objects import constructors
@@ -44,8 +46,8 @@ def test_openapi_list_currently_running_activations(
 
 
 def test_openapi_activate_changes(
+    monkeypatch: pytest.MonkeyPatch,
     wsgi_app,
-    suppress_automation_calls,
     with_automation_user,
     mock_livestatus: MockLiveStatusConnection,
 ):
@@ -100,7 +102,10 @@ def test_openapi_activate_changes(
             break
 
     # We delete the host again
-
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: None,
+    )
     wsgi_app.follow_link(
         host_created,
         ".../delete",

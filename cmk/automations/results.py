@@ -22,6 +22,8 @@ from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import (
     Gateways,
     HostName,
+    Labels,
+    LabelSources,
     NotifyAnalysisInfo,
     NotifyBulks,
     ServiceDetails,
@@ -121,7 +123,8 @@ result_type_registry.register(TryDiscoveryResult)
 
 @dataclass
 class SetAutochecksResult(ABCAutomationResult):
-    _result: None
+    def to_pre_21(self) -> None:
+        return None
 
     @staticmethod
     def automation_call() -> str:
@@ -133,7 +136,8 @@ result_type_registry.register(SetAutochecksResult)
 
 @dataclass
 class UpdateHostLabelsResult(ABCAutomationResult):
-    _result: None
+    def to_pre_21(self) -> None:
+        return None
 
     @staticmethod
     def automation_call() -> str:
@@ -169,7 +173,11 @@ result_type_registry.register(AnalyseServiceResult)
 
 @dataclass
 class AnalyseHostResult(ABCAutomationResult):
-    label_info: Mapping
+    labels: Labels
+    label_sources: LabelSources
+
+    def to_pre_21(self) -> Mapping[str, Any]:
+        return asdict(self)
 
     @staticmethod
     def automation_call() -> str:
@@ -181,7 +189,8 @@ result_type_registry.register(AnalyseHostResult)
 
 @dataclass
 class DeleteHostsResult(ABCAutomationResult):
-    _result: None
+    def to_pre_21(self) -> None:
+        return None
 
     @staticmethod
     def automation_call() -> str:

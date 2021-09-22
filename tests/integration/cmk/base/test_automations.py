@@ -213,25 +213,26 @@ def test_automation_discovery_with_cache_option(test_cfg, site):
 
 
 def test_automation_analyse_service_autocheck(test_cfg, site):
-    data = _execute_automation(
+    automation_result = _execute_automation(
         site,
         "analyse-service",
         args=["modes-test-host", "Apache 127.0.0.1:5000 Status"],
-    ).service_info
-
-    assert data["origin"] == "auto"
-    assert data["checktype"] == "apache_status"
-    assert data["item"] == "127.0.0.1:5000"
-    assert data["checkgroup"] == "apache_status"
+    )
+    assert isinstance(automation_result, results.AnalyseServiceResult)
+    assert automation_result.service_info["origin"] == "auto"
+    assert automation_result.service_info["checktype"] == "apache_status"
+    assert automation_result.service_info["item"] == "127.0.0.1:5000"
+    assert automation_result.service_info["checkgroup"] == "apache_status"
 
 
 def test_automation_analyse_service_no_check(test_cfg, site):
-    data = _execute_automation(
+    automation_result = _execute_automation(
         site,
         "analyse-service",
         args=["modes-test-host", "XXX CPU load"],
-    ).service_info
-    assert data == {}
+    )
+    assert isinstance(automation_result, results.AnalyseServiceResult)
+    assert automation_result.service_info == {}
 
 
 def test_automation_try_discovery_not_existing_host(test_cfg, site):
@@ -270,13 +271,15 @@ def test_automation_set_autochecks(test_cfg, site):
     }
 
     try:
-        data = _execute_automation(
-            site,
-            "set-autochecks",
-            args=[hostname],
-            stdin=repr(new_items),
-        )._result
-        assert data is None
+        assert isinstance(
+            _execute_automation(
+                site,
+                "set-autochecks",
+                args=[hostname],
+                stdin=repr(new_items),
+            ),
+            results.SetAutochecksResult,
+        )
 
         autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
         assert os.path.exists(autochecks_file)

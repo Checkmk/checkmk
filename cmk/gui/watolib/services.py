@@ -23,11 +23,7 @@ from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
-from cmk.gui.watolib.automations import (
-    check_mk_automation_deprecated,
-    MKAutomationException,
-    sync_changes_before_remote_automation,
-)
+from cmk.gui.watolib.automations import MKAutomationException, sync_changes_before_remote_automation
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -229,17 +225,16 @@ class Discovery:
         site_id = self._host.site_id()
         site_status = states().get(site_id, SiteStatus({}))
         if is_pre_17_remote_site(site_status):
-            check_mk_automation_deprecated(
+            # is this branch still needed?
+            watolib.set_autochecks(
                 site_id,
-                "set-autochecks",
-                [self._host.name()],
-                {x: y[1:3] for x, y in checks.items()},
+                self._host.name(),
+                {x: y[1:3] for x, y in checks.items()},  # type: ignore[misc]
             )
         else:
-            check_mk_automation_deprecated(
+            watolib.set_autochecks(
                 site_id,
-                "set-autochecks",
-                [self._host.name()],
+                self._host.name(),
                 checks,
             )
 

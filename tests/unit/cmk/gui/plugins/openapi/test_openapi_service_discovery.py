@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.automations.results import TryDiscoveryResult
+from cmk.automations.results import SetAutochecksResult, TryDiscoveryResult
 
 mock_discovery_result = TryDiscoveryResult(
     check_table=[
@@ -801,6 +801,10 @@ def test_openapi_discovery(
     monkeypatch.setattr(
         "cmk.gui.watolib.services.watolib.try_discovery",
         lambda *args, **kwargs: mock_discovery_result,
+    )
+    monkeypatch.setattr(
+        "cmk.gui.watolib.services.watolib.set_autochecks",
+        lambda *args, **kwargs: SetAutochecksResult(),
     )
 
     username, secret = with_automation_user

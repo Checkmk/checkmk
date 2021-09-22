@@ -24,6 +24,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
@@ -131,25 +132,24 @@ class ModeObjectParameters(WatoMode):
         forms.end()
 
     def _show_host_info(self):
-        host_info = watolib.check_mk_automation_deprecated(
+        host_info = analyse_host(
             self._host.site_id(),
-            "analyse-host",
-            [self._hostname],
+            self._hostname,
         )
         if not host_info:
             return
 
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
-        self._show_labels(host_info["labels"], "host", host_info["label_sources"])
+        self._show_labels(host_info.labels, "host", host_info.label_sources)
 
     def _show_service_info(self, all_rulesets):
         assert self._service is not None
 
-        serviceinfo = watolib.check_mk_automation_deprecated(
+        serviceinfo = analyse_service(
             self._host.site_id(),
-            "analyse-service",
-            [self._hostname, self._service],
-        )
+            self._hostname,
+            self._service,
+        ).service_info
         if not serviceinfo:
             return
 

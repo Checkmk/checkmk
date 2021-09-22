@@ -300,7 +300,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)
-        return automation_results.SetAutochecksResult(None)
+        return automation_results.SetAutochecksResult()
 
 
 def _transform_pre_20_items(
@@ -351,7 +351,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
         self._trigger_discovery_check(config_cache, host_config)
-        return automation_results.UpdateHostLabelsResult(None)
+        return automation_results.UpdateHostLabelsResult()
 
 
 automations.register(AutomationUpdateHostLabels())
@@ -822,10 +822,8 @@ class AutomationAnalyseHost(Automation):
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
         return automation_results.AnalyseHostResult(
-            {
-                "labels": config_cache.get_host_config(host_name).labels,
-                "label_sources": config_cache.get_host_config(host_name).label_sources,
-            }
+            config_cache.get_host_config(host_name).labels,
+            config_cache.get_host_config(host_name).label_sources,
         )
 
 
@@ -895,7 +893,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
 
     def execute(self, args: List[str]) -> automation_results.DeleteHostsResult:
         self._execute(args)
-        return automation_results.DeleteHostsResult(None)
+        return automation_results.DeleteHostsResult()
 
     def _single_file_paths(self, hostname: HostName):
         return [

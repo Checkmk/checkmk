@@ -50,6 +50,7 @@ from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
     check_mk_automation_deprecated,
+    update_host_labels,
 )
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 from cmk.gui.watolib.changes import make_object_audit_log_url
@@ -510,10 +511,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             len(discovery_result.host_labels),
         )
         watolib.add_service_change(self._host, "update-host-labels", message)
-        check_mk_automation_deprecated(
+        update_host_labels(
             self._host.site_id(),
-            "update-host-labels",
-            [self._host.name()],
+            self._host.name(),
             discovery_result.host_labels,
         )
 

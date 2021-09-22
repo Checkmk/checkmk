@@ -376,12 +376,20 @@ def with_groups(request_context, with_admin_login, suppress_automation_calls):
 
 
 @pytest.fixture()
-def with_host(request_context, with_admin_login, suppress_automation_calls):
+def with_host(
+    monkeypatch: pytest.MonkeyPatch,
+    request_context,
+    with_admin_login,
+):
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts(
         [(hostname, {}, None) for hostname in hostnames]
     )
     yield hostnames
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: None,
+    )
     hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
 
 

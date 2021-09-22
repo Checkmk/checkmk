@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List, Optional
+from typing import List, Optional, TypedDict
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -212,12 +212,17 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
     return elements
 
 
+class ValueWithUnitElement(TypedDict):
+    title: str
+    default: float
+
+
 class ValuesWithUnits(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         vs_name: str,
         metric_vs_name: str,
-        elements: List[str],
+        elements: List[ValueWithUnitElement],
         validate_value_elemets: Optional[ValueSpecValidateFunc] = None,
         help: Optional[ValueSpecHelp] = None,
     ):
@@ -228,15 +233,15 @@ class ValuesWithUnits(CascadingDropdown):
         self._validate_value_elements = validate_value_elemets
 
     def _unit_vs(self, info):
-        def set_vs(vs, title):
+        def set_vs(vs, title, default):
             if vs.__name__ in ["Float", "Integer"]:
-                return vs(title=title, unit=info["symbol"])
-            return vs(title=title)
+                return vs(title=title, unit=info["symbol"], default_value=default)
+            return vs(title=title, default_value=default)
 
         vs = info.get("valuespec") or Float
 
         return Tuple(
-            elements=[set_vs(vs, elem) for elem in self._elements],
+            elements=[set_vs(vs, elem["title"], elem["default"]) for elem in self._elements],
             validate=self._validate_value_elements,
         )
 

@@ -33,14 +33,17 @@ register.agent_section(
 
 
 def discovery_prometheus_build(section: Section) -> DiscoveryResult:
+    if not section:
+        return
     yield Service()
 
 
 def check_prometheus_build(section: Section) -> CheckResult:
-    yield Result(
-        state=state.OK,
-        summary=f"Version: {section['version']}",
-    )
+    if "version" in section:
+        yield Result(
+            state=state.OK,
+            summary=f"Version: {section['version']}",
+        )
 
     if "reload_config_status" in section:
         successful_reload = section["reload_config_status"]

@@ -38,12 +38,12 @@ from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
 from cmk.utils.type_defs import (
     CheckPluginName,
-    CheckPluginNameStr,
+    CheckPreviewEntry,
+    CheckPreviewTable,
     DiscoveryResult,
     EVERYTHING,
     HostAddress,
     HostName,
-    Item,
     MetricTuple,
     RulesetName,
     ServiceName,
@@ -88,22 +88,6 @@ _L = TypeVar("_L", bound=str)
 ServicesTableEntry = Tuple[_L, Service, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
 ServicesByTransition = Dict[_ServiceOrigin, List[autochecks.ServiceWithNodes]]
-
-CheckPreviewEntry = Tuple[
-    str,
-    CheckPluginNameStr,
-    Optional[RulesetName],
-    Item,
-    LegacyCheckParameters,
-    LegacyCheckParameters,
-    str,
-    Optional[int],
-    str,
-    List[MetricTuple],
-    Dict[str, str],
-    List[HostName],
-]
-CheckPreviewTable = List[CheckPreviewEntry]
 
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |

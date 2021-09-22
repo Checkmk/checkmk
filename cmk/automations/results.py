@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from ast import literal_eval
-from dataclasses import astuple, dataclass
+from dataclasses import asdict, astuple, dataclass
 from typing import Any, Literal, Mapping, Optional, Tuple, Type, TypeVar
 
 from cmk.utils.plugin_registry import Registry
@@ -14,11 +14,16 @@ from cmk.utils.python_printer import pformat
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginNameStr,
+    CheckPreviewTable,
     ConfigurationWarnings,
+    DiscoveredHostLabelsDict,
+)
+from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.utils.type_defs import (
     Gateways,
+    HostName,
     NotifyAnalysisInfo,
     NotifyBulks,
-    SerializedDiscoveryResponse,
     ServiceDetails,
     ServiceState,
 )
@@ -65,10 +70,26 @@ class ABCAutomationResult(ABC):
 
 @dataclass
 class DiscoveryResult(ABCAutomationResult):
-    serialized_response: SerializedDiscoveryResponse
+    hosts: Mapping[HostName, SingleHostDiscoveryResult]
 
-    def to_pre_21(self) -> Mapping[Literal["results"], SerializedDiscoveryResponse]:
-        return {"results": self.serialized_response}
+    def _to_dict(self) -> Mapping[HostName, Mapping[str, Any]]:
+        return {k: asdict(v) for k, v in self.hosts.items()}
+
+    @staticmethod
+    def _from_dict(
+        serialized: Mapping[HostName, Mapping[str, Any]]
+    ) -> Mapping[HostName, SingleHostDiscoveryResult]:
+        return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
+
+    def serialize(self) -> SerializedResult:
+        return SerializedResult(pformat(self._to_dict()))
+
+    def to_pre_21(self) -> Mapping[Literal["results"], Mapping[HostName, Mapping[str, Any]]]:
+        return {"results": self._to_dict()}
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> "DiscoveryResult":
+        return cls(cls._from_dict(literal_eval(serialized_result)))
 
     @staticmethod
     def automation_call() -> str:
@@ -80,7 +101,15 @@ result_type_registry.register(DiscoveryResult)
 
 @dataclass
 class TryDiscoveryResult(ABCAutomationResult):
-    result: Mapping[str, Any]
+    output: str
+    check_table: CheckPreviewTable
+    host_labels: DiscoveredHostLabelsDict
+    new_labels: DiscoveredHostLabelsDict
+    vanished_labels: DiscoveredHostLabelsDict
+    changed_labels: DiscoveredHostLabelsDict
+
+    def to_pre_21(self) -> Mapping[str, Any]:
+        return asdict(self)
 
     @staticmethod
     def automation_call() -> str:

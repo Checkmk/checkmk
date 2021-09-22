@@ -46,7 +46,6 @@ from cmk.utils.paths import (
 )
 from cmk.utils.type_defs import (
     AgentRawData,
-    AutomationDiscoveryResponse,
     CheckPluginName,
     CheckPluginNameStr,
     DiscoveryResult,
@@ -178,7 +177,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 # make the service reflect the new state as soon as possible.
                 self._trigger_discovery_check(config_cache, host_config)
 
-        return automation_results.DiscoveryResult(AutomationDiscoveryResponse(results).serialize())
+        return automation_results.DiscoveryResult(results)
 
 
 automations.register(AutomationDiscovery())
@@ -210,18 +209,16 @@ class AutomationTryDiscovery(Automation):
             )
 
             return automation_results.TryDiscoveryResult(
-                {
-                    "output": buf.getvalue(),
-                    "check_table": check_preview_table,
-                    "host_labels": make_discovered_host_labels(host_label_result.present),
-                    "new_labels": make_discovered_host_labels(
-                        [l for l in host_label_result.new if l.name not in changed_labels]
-                    ),
-                    "vanished_labels": make_discovered_host_labels(
-                        [l for l in host_label_result.vanished if l.name not in changed_labels]
-                    ),
-                    "changed_labels": changed_labels,
-                }
+                output=buf.getvalue(),
+                check_table=check_preview_table,
+                host_labels=make_discovered_host_labels(host_label_result.present),
+                new_labels=make_discovered_host_labels(
+                    [l for l in host_label_result.new if l.name not in changed_labels]
+                ),
+                vanished_labels=make_discovered_host_labels(
+                    [l for l in host_label_result.vanished if l.name not in changed_labels]
+                ),
+                changed_labels=changed_labels,
             )
 
     def _execute_discovery(

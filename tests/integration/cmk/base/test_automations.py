@@ -14,7 +14,7 @@ from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-im
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName, SetAutochecksTable
+from cmk.utils.type_defs import DiscoveryResult, HostName, SetAutochecksTable
 
 from cmk.automations import results
 
@@ -150,74 +150,66 @@ def test_automation_discovery_no_host(test_cfg, site):
 
 
 def test_automation_discovery_single_host(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "inventory",
         args=["@raiseerrors", "new", "modes-test-host"],
-    ).serialized_response
+    )
 
-    assert isinstance(data, dict)
-    assert len(data) == 1
-
-    assert data["modes-test-host"]["diff_text"] == "Nothing was changed."
-    assert data["modes-test-host"]["error_text"] is None
+    assert isinstance(result, results.DiscoveryResult)
+    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host"].error_text is None
 
 
 def test_automation_discovery_multiple_hosts(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "inventory",
         args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"],
-    ).serialized_response
+    )
 
-    assert isinstance(data, dict)
-    assert len(data) == 2
-
-    assert data["modes-test-host"]["diff_text"] == "Nothing was changed."
-    assert data["modes-test-host"]["error_text"] is None
-    assert data["modes-test-host2"]["diff_text"] == "Nothing was changed."
-    assert data["modes-test-host2"]["error_text"] is None
+    assert isinstance(result, results.DiscoveryResult)
+    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host"].error_text is None
+    assert result.hosts["modes-test-host2"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host2"].error_text is None
 
 
 def test_automation_discovery_not_existing_host(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "inventory",
         args=["@raiseerrors", "new", "xxxhost"],
-    ).serialized_response
+    )
 
-    assert isinstance(data, dict)
-    assert len(data) == 1
-
-    assert data == {
-        "xxxhost": {
-            "clustered_new": 0,
-            "clustered_old": 0,
-            "clustered_vanished": 0,
-            "diff_text": None,
-            "error_text": "",
-            "self_kept": 0,
-            "self_new": 0,
-            "self_new_host_labels": 0,
-            "self_removed": 0,
-            "self_total": 0,
-            "self_total_host_labels": 0,
-        }
+    assert isinstance(result, results.DiscoveryResult)
+    assert result.hosts == {
+        "xxxhost": DiscoveryResult(
+            clustered_new=0,
+            clustered_old=0,
+            clustered_vanished=0,
+            diff_text=None,
+            error_text="",
+            self_kept=0,
+            self_new=0,
+            self_new_host_labels=0,
+            self_removed=0,
+            self_total=0,
+            self_total_host_labels=0,
+        )
     }
 
 
 def test_automation_discovery_with_cache_option(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "inventory",
         args=["new", "modes-test-host"],
-    ).serialized_response
+    )
 
-    assert isinstance(data, dict)
-    assert len(data) == 1
-
-    assert data["modes-test-host"]["diff_text"] == "Nothing was changed."
-    assert data["modes-test-host"]["error_text"] is None
+    assert isinstance(result, results.DiscoveryResult)
+    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host"].error_text is None
 
 
 def test_automation_analyse_service_autocheck(test_cfg, site):
@@ -260,14 +252,14 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
 
 
 def test_automation_try_discovery_host(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "try-inventory",
         args=["modes-test-host"],
-    ).result
-    assert isinstance(data, dict)
-    assert isinstance(data["output"], str)
-    assert isinstance(data["check_table"], list)
+    )
+    assert isinstance(result, results.TryDiscoveryResult)
+    assert isinstance(result.output, str)
+    assert isinstance(result.check_table, list)
 
 
 def test_automation_set_autochecks(test_cfg, site):

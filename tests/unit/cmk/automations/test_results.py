@@ -7,9 +7,10 @@
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
+from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.version import is_raw_edition
 
-from cmk.automations.results import ABCAutomationResult, result_type_registry
+from cmk.automations.results import ABCAutomationResult, DiscoveryResult, result_type_registry
 
 from cmk.base.automations import automations
 
@@ -51,3 +52,39 @@ def test_serialization() -> None:
         },
     )
     assert automation_res_test == AutomationResultTest.deserialize(automation_res_test.serialize())
+
+
+class TestDiscoveryResult:
+    HOSTS = {
+        "host_1": SingleHostDiscoveryResult(
+            clustered_new=0,
+            clustered_old=0,
+            clustered_vanished=0,
+            diff_text=None,
+            error_text="",
+            self_kept=0,
+            self_new=0,
+            self_new_host_labels=0,
+            self_removed=0,
+            self_total=0,
+            self_total_host_labels=0,
+        ),
+        "host_2": SingleHostDiscoveryResult(
+            clustered_new=1,
+            clustered_old=2,
+            clustered_vanished=3,
+            diff_text="something changed",
+            error_text="error",
+            self_kept=4,
+            self_new=5,
+            self_new_host_labels=6,
+            self_removed=7,
+            self_total=8,
+            self_total_host_labels=9,
+        ),
+    }
+
+    def test_serialization(self):
+        assert DiscoveryResult.deserialize(
+            DiscoveryResult(self.HOSTS).serialize()
+        ) == DiscoveryResult(self.HOSTS)

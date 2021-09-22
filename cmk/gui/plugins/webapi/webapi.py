@@ -17,7 +17,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
+from cmk.utils.type_defs import DiscoveryResult
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
@@ -1131,32 +1131,35 @@ class APICallOther(APICallCollection):
             # This is currently the only way to get some actual discovery statitics.
             # Start a dry-run -> Get statistics
             # Do an actual discovery on the nodes -> data is written
-            try_result = watolib.check_mk_automation_deprecated(
-                host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname]
+            try_result = watolib.try_discovery(
+                host_attributes.get("site"),
+                ["@scan"],
+                hostname,
             )
 
             new = 0
             old = 0
-            for entry in try_result["check_table"]:
+            for entry in try_result.check_table:
                 if entry[0] == "new":
                     new += 1
                 elif entry[0] == "old":
                     old += 1
 
             result = DiscoveryResult(self_new=new, self_kept=old, self_total=new + old)
-            watolib.check_mk_automation_deprecated(
-                host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes()
+            watolib.discovery(
+                host_attributes.get("site"),
+                mode,
+                ["@scan"],
+                host.cluster_nodes(),
             )
         else:
-            response = AutomationDiscoveryResponse.deserialize(
-                watolib.check_mk_automation_deprecated(
-                    siteid=host_attributes.get("site"),
-                    command="inventory",
-                    args=["@scan", mode, hostname],
-                    non_blocking_http=True,
-                )
-            )
-            result = response.results[hostname]
+            result = watolib.discovery(
+                host_attributes.get("site"),
+                mode,
+                ["@scan"],
+                [hostname],
+                non_blocking_http=True,
+            ).hosts[hostname]
 
         if result.error_text:
             if not host.discovery_failed():

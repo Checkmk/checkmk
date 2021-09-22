@@ -112,6 +112,42 @@ def _deserialize(
         )
 
 
+def discovery(
+    site_id: SiteId,
+    mode: str,
+    flags: Iterable[str],
+    host_names: Iterable[HostName],
+    *,
+    timeout: Optional[int] = None,
+    non_blocking_http: bool = False,
+) -> results.DiscoveryResult:
+    return _deserialize(
+        _automation_serialized(
+            "inventory",
+            siteid=site_id,
+            args=[*flags, mode, *host_names],
+            timeout=timeout,
+            non_blocking_http=non_blocking_http,
+        ),
+        results.DiscoveryResult,
+    )
+
+
+def try_discovery(
+    site_id: SiteId,
+    flags: Iterable[str],
+    host_name: HostName,
+) -> results.TryDiscoveryResult:
+    return _deserialize(
+        _automation_serialized(
+            "try-inventory",
+            siteid=site_id,
+            args=[*flags, host_name],
+        ),
+        results.TryDiscoveryResult,
+    )
+
+
 def get_agent_output(
     site_id: SiteId,
     host_name: HostName,

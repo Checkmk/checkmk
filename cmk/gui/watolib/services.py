@@ -10,10 +10,12 @@ import os
 import sys
 import time
 from hashlib import sha256
-from typing import Any, Dict, List, NamedTuple, Set, Tuple
+from typing import Any, Dict, Iterable, List, NamedTuple, Sequence, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import SetAutochecksTable
+
+from cmk.automations.results import TryDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
@@ -23,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
 from cmk.gui.watolib.automations import (
     check_mk_automation_deprecated,
+    MKAutomationException,
     sync_changes_before_remote_automation,
 )
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
@@ -87,7 +90,7 @@ class DiscoveryAction:
 
 
 CheckTableEntry = Tuple  # TODO: Improve this type
-CheckTable = List[CheckTableEntry]  # TODO: Improve this type
+CheckTable = Sequence[CheckTableEntry]  # TODO: Improve this type
 
 
 class DiscoveryResult(NamedTuple):
@@ -596,13 +599,8 @@ def _get_check_table_from_remote(api_request):
             raise
 
         # Compatibility for pre 1.6 remote sites.
-        # TODO: Replace with helpful exception in 1.7.
         if api_request.options.action == DiscoveryAction.TABULA_RASA:
-            _counts, _failed_hosts = check_mk_automation_deprecated(
-                api_request.host.site_id(),
-                "inventory",
-                ["@scan", "refresh", api_request.host.name()],
-            )
+            raise MKAutomationException(_("Tabula rasa not supported any more"))
 
         if api_request.options.action == DiscoveryAction.REFRESH:
             options = ["@scan"]
@@ -612,20 +610,16 @@ def _get_check_table_from_remote(api_request):
         if not api_request.options.ignore_errors:
             options.append("@raiseerrors")
 
-        options.append(api_request.host.name())
-
-        check_table = check_mk_automation_deprecated(
-            api_request.host.site_id(),
-            "try-inventory",
-            options,
-        )
-
         return DiscoveryResult(
             job_status={
                 "is_active": False,
                 "state": JobStatusStates.INITIALIZED,
             },
-            check_table=check_table,
+            check_table=watolib.try_discovery(
+                api_request.host.site_id(),
+                options,
+                api_request.host.name(),
+            ).check_table,
             check_table_created=int(time.time()),
             host_labels={},
             new_labels={},
@@ -657,7 +651,17 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             host_name=host_name,
             estimated_duration=last_job_status.get("duration"),
         )
-        self._pre_try_discovery: Tuple[int, Dict] = (0, {})
+        self._pre_try_discovery = (
+            0,
+            TryDiscoveryResult(
+                output="",
+                check_table=[],
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
+            ),
+        )
 
     def discover(
         self, api_request: StartDiscoveryRequest, job_interface: BackgroundProcessInterface
@@ -681,20 +685,22 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def _perform_service_scan(self, api_request):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        result = check_mk_automation_deprecated(
-            api_request.host.site_id(),
-            "try-inventory",
-            self._get_automation_options(api_request),
+        sys.stdout.write(
+            watolib.try_discovery(
+                api_request.host.site_id(),
+                self._get_automation_flags(api_request),
+                api_request.host.name(),
+            ).output
         )
-        sys.stdout.write(result["output"])
 
     def _perform_automatic_refresh(self, api_request):
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
-        check_mk_automation_deprecated(
-            siteid=api_request.host.site_id(),
-            command="inventory",
-            args=["@scan", "refresh", api_request.host.name()],
+        watolib.discovery(
+            api_request.host.site_id(),
+            "refresh",
+            ["@scan"],
+            api_request.host.name(),
             non_blocking_http=True,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
@@ -702,18 +708,16 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         #            (api_request.host.name(), count_added)
         # watolib.add_service_change(api_request.host, "refresh-autochecks", message)
 
-    def _get_automation_options(self, api_request: StartDiscoveryRequest) -> List[str]:
+    def _get_automation_flags(self, api_request: StartDiscoveryRequest) -> Iterable[str]:
         if api_request.options.action == DiscoveryAction.REFRESH:
-            options = ["@scan"]
+            flags = ["@scan"]
         else:
-            options = ["@noscan"]
+            flags = ["@noscan"]
 
         if not api_request.options.ignore_errors:
-            options.append("@raiseerrors")
+            flags.append("@raiseerrors")
 
-        options.append(api_request.host.name())
-
-        return options
+        return flags
 
     def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
@@ -730,24 +734,26 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         return DiscoveryResult(
             job_status=job_status,
             check_table_created=check_table_created,
-            check_table=result.get("check_table", []),
-            host_labels=result.get("host_labels", {}),
-            new_labels=result.get("new_labels", {}),
-            vanished_labels=result.get("vanished_labels", {}),
-            changed_labels=result.get("changed_labels", {}),
+            check_table=result.check_table,
+            host_labels=result.host_labels,
+            new_labels=result.new_labels,
+            vanished_labels=result.vanished_labels,
+            changed_labels=result.changed_labels,
         )
 
     @staticmethod
-    def _get_try_discovery(api_request: StartDiscoveryRequest) -> Tuple[int, Dict]:
+    def _get_try_discovery(
+        api_request: StartDiscoveryRequest,
+    ) -> Tuple[int, TryDiscoveryResult]:
         # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         return (
             int(time.time()),
-            check_mk_automation_deprecated(
+            watolib.try_discovery(
                 api_request.host.site_id(),
-                "try-inventory",
-                ["@noscan", api_request.host.name()],
+                ["@noscan"],
+                api_request.host.name(),
             ),
         )
 

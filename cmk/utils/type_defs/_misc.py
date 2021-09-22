@@ -7,7 +7,7 @@
 import enum
 import sys
 from collections.abc import Container
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
@@ -135,21 +135,6 @@ class DiscoveryResult:
     diff_text: Optional[str] = None
 
 
-SerializedDiscoveryResponse = Mapping[HostName, Mapping[str, Any]]
-
-
-@dataclass
-class AutomationDiscoveryResponse:
-    results: Mapping[HostName, DiscoveryResult]
-
-    def serialize(self) -> SerializedDiscoveryResponse:
-        return {k: asdict(v) for k, v in self.results.items()}
-
-    @classmethod
-    def deserialize(cls, serialized: SerializedDiscoveryResponse) -> "AutomationDiscoveryResponse":
-        return cls(results={k: DiscoveryResult(**v) for k, v in serialized.items()})
-
-
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
 
@@ -220,3 +205,27 @@ class ExitSpec(TypedDict, total=False):
     missing_sections: int
     specific_missing_sections: List[Tuple[str, int]]
     restricted_address_mismatch: int
+
+
+class HostLabelValueDict(TypedDict):
+    value: str
+    plugin_name: Optional[str]
+
+
+DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+
+CheckPreviewEntry = Tuple[
+    str,
+    CheckPluginNameStr,
+    Optional[RulesetName],
+    Item,
+    LegacyCheckParameters,
+    LegacyCheckParameters,
+    str,
+    Optional[int],
+    str,
+    List[MetricTuple],
+    Dict[str, str],
+    List[HostName],
+]
+CheckPreviewTable = Sequence[CheckPreviewEntry]

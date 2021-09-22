@@ -134,7 +134,7 @@ from cmk.gui.watolib.automations import (
     remote_automation_call_came_from_pre21,
 )
 from cmk.gui.watolib.changes import add_change, add_service_change, log_audit, make_diff_text
-from cmk.gui.watolib.check_mk_automations import get_agent_output
+from cmk.gui.watolib.check_mk_automations import discovery, get_agent_output, try_discovery
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainCore,

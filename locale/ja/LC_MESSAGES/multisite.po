@@ -1758,11 +1758,14 @@ msgstr "<tt>%s</tt> は予約済みのキーワードです。"
 msgid "<tt>JAVA_HOME</tt> - path to Java installation"
 msgstr "<tt>JAVA_HOME</ tt> - Javaインストールへのパス"
 
-msgid "<tt>ORACLE_HOME</tt> to use for remote access"
+#, python-format
+msgid "<tt>ORACLE_HOME</tt> to use for remote access %s"
 msgstr ""
 
+#, python-format
 msgid ""
-"<tt>TNS_ADMIN</tt> to use for <tt>sqlnet.ora</tt> and <tt>tnsnames.ora</tt>"
+"<tt>TNS_ADMIN</tt> to use for <tt>sqlnet.ora</tt> and <tt>tnsnames.ora</tt> "
+"%s"
 msgstr ""
 
 msgid "??"
@@ -3363,7 +3366,8 @@ msgstr "プラグインを追加"
 msgid "Add plugin configuration"
 msgstr "プラグイン構成を追加する"
 
-msgid "Add pre or postfix to TNSALIASes"
+#, fuzzy, python-format
+msgid "Add pre or postfix to TNSALIASes %s"
 msgstr "TNSALIASに前置または後置を追加します"
 
 msgid "Add random hosts"
@@ -7068,10 +7072,11 @@ msgid ""
 "on your target system."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "By activating this option you will deploy the agent plugin <tt>mk_oracle</"
-"tt> on your target system. Currently only Linux is supported, but AIX and "
-"Windows will follow."
+"tt> on your target system. Currently not all options are available in all "
+"operating systems."
 msgstr ""
 "このオプションをアクティブにすると、エージェントプラグイン<tt>mk_oracle</tt>"
 "がターゲットシステムにデプロイされます。現在、Linuxのみがサポートされています"
@@ -32353,7 +32358,8 @@ msgstr "ORACLE %s 待ち時間クラス(FG)"
 msgid "ORACLE DB time statistics"
 msgstr "ORACLE DBの時間統計"
 
-msgid "ORACLE Databases (Linux, Solaris, AIX)"
+#, fuzzy
+msgid "ORACLE Databases (Linux, Solaris, AIX, Windows)"
 msgstr "ORACLEデータベース(Linux、Solaris、AIX)"
 
 msgid "ORACLE IOSTAT Bytes"
@@ -36994,7 +37000,8 @@ msgstr "SSHを介したLinuxでのリモート実行"
 msgid "Remote file"
 msgstr "リモートファイル"
 
-msgid "Remote instances"
+#, fuzzy, python-format
+msgid "Remote instances %s"
 msgstr "リモートインスタンス"
 
 msgid ""
@@ -43999,7 +44006,8 @@ msgstr "TLS処理されたバイト"
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Httpsが無効になっています"
 
-msgid "TNS Alias"
+#, fuzzy, python-format
+msgid "TNS Alias %s"
 msgstr "TNSエイリアス"
 
 msgid "TP Link: Used memory via SNMP"

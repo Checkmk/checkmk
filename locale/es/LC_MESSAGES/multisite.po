@@ -1853,11 +1853,14 @@ msgstr "<tt>%s</tt> es una palabra clave reservada."
 msgid "<tt>JAVA_HOME</tt> - path to Java installation"
 msgstr "<tt>JAVA_HOME</tt> - ruta de instalación de Java"
 
-msgid "<tt>ORACLE_HOME</tt> to use for remote access"
+#, fuzzy, python-format
+msgid "<tt>ORACLE_HOME</tt> to use for remote access %s"
 msgstr "<tt>ORACLE_HOME</tt> a utilizar para el acceso remoto"
 
+#, fuzzy, python-format
 msgid ""
-"<tt>TNS_ADMIN</tt> to use for <tt>sqlnet.ora</tt> and <tt>tnsnames.ora</tt>"
+"<tt>TNS_ADMIN</tt> to use for <tt>sqlnet.ora</tt> and <tt>tnsnames.ora</tt> "
+"%s"
 msgstr ""
 "<tt>TNS_ADMIN</tt> a utilizar para <tt>sqlnet.ora</tt> y <tt>tnsnames.ora</"
 "tt>"
@@ -3517,7 +3520,8 @@ msgstr "Añadir plugin"
 msgid "Add plugin configuration"
 msgstr "Añadir la configuración del plugin"
 
-msgid "Add pre or postfix to TNSALIASes"
+#, fuzzy, python-format
+msgid "Add pre or postfix to TNSALIASes %s"
 msgstr "Añadir pre o postfix a las TNSALIAS"
 
 msgid "Add random hosts"
@@ -7380,10 +7384,11 @@ msgstr ""
 "Activando esta opción desplegará el plugin de agente <tt>mk_db2</tt> en su "
 "sistema de destino."
 
+#, fuzzy
 msgid ""
 "By activating this option you will deploy the agent plugin <tt>mk_oracle</"
-"tt> on your target system. Currently only Linux is supported, but AIX and "
-"Windows will follow."
+"tt> on your target system. Currently not all options are available in all "
+"operating systems."
 msgstr ""
 "Activando esta opción desplegará el plugin de agente <tt>mk_oracle</tt> en "
 "su sistema de destino. Actualmente sólo se soporta Linux, pero AIX y Windows "
@@ -33754,7 +33759,8 @@ msgstr "ORACLE %s clase de espera (FG)"
 msgid "ORACLE DB time statistics"
 msgstr "Estadísticas de tiempo de la base de datos ORACLE"
 
-msgid "ORACLE Databases (Linux, Solaris, AIX)"
+#, fuzzy
+msgid "ORACLE Databases (Linux, Solaris, AIX, Windows)"
 msgstr "Bases de datos ORACLE (Linux, Solaris, AIX)"
 
 msgid "ORACLE IOSTAT Bytes"
@@ -38586,7 +38592,8 @@ msgstr "Ejecución remota en Linux a través de SSH"
 msgid "Remote file"
 msgstr "Archivo remoto"
 
-msgid "Remote instances"
+#, fuzzy, python-format
+msgid "Remote instances %s"
 msgstr "Instancias remotas"
 
 msgid ""
@@ -45906,7 +45913,8 @@ msgstr "Bytes procesados por TLS"
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https desactivado"
 
-msgid "TNS Alias"
+#, fuzzy, python-format
+msgid "TNS Alias %s"
 msgstr "Alias TNS"
 
 msgid "TP Link: Used memory via SNMP"

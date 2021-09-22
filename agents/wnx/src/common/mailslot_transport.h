@@ -40,7 +40,7 @@ constexpr const char* const kMailSlotLogFilePrivate =
     "\\Logs\\cmk_mail_log.log";
 constexpr const char* const kMailSlotLogFileName = "cmk_mail.log";
 
-inline bool IsMailApiTraced() { return true; }
+inline bool IsMailApiTraced() { return false; }
 
 inline std::string GetMailApiLog() {
     namespace fs = std::filesystem;

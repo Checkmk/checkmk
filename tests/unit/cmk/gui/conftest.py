@@ -33,9 +33,8 @@ import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import watolib
 from cmk.gui.globals import config
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
-from cmk.gui.wsgi import make_app
 
 SPEC_LOCK = threading.Lock()
 
@@ -325,14 +324,9 @@ class WebTestAppForCMK(webtest.TestApp):
         return self
 
 
-@lru_cache
-def _session_wsgi_callable(debug):
-    return make_app(debug=debug)
-
-
 def _make_webtest(debug):
     cookies = CookieJar()
-    return WebTestAppForCMK(_session_wsgi_callable(debug), cookiejar=cookies)
+    return WebTestAppForCMK(session_wsgi_app(debug), cookiejar=cookies)
 
 
 @pytest.fixture()

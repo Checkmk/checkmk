@@ -9,6 +9,7 @@ The intended use is for scripts such as cmk-update-config or init-redis.
 """
 
 from contextlib import contextmanager
+from functools import lru_cache
 from typing import Any, Iterator, Mapping, Optional
 
 from werkzeug.test import create_environ
@@ -24,17 +25,17 @@ from cmk.gui.utils.theme import Theme
 
 # TODO: Better make our application available?
 from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.wsgi import make_app
 
 
-class DummyApplication:
-    def __init__(self, environ, start_response):
-        self._environ = environ
-        self._start_response = start_response
+@lru_cache
+def session_wsgi_app(debug):
+    return make_app(debug=debug)
 
 
 @contextmanager
 def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
-    with AppContext(DummyApplication(environ, None)):
+    with AppContext(session_wsgi_app(debug=False)):
         yield
 
 

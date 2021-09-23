@@ -19,6 +19,7 @@ isort = "*"  # used as a plugin for editors
 lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 lxml-stubs = "*"  # used for type checking
 mock = "*"  # used in checktestlib in unit tests
+mocket = "*"    # used for mocking kubernetes python client
 mockldap = "*"  # used in test_userdb_ldap_connector unit test
 pylint = "==3.0.0-a4"  # used by test/Makefile's test-pylint target. TODO: pylint is pinned due to an internal bug with the latest release 2.11.1. Unpin as soon this is resolved.
 mypy = "*"  # used by test/static/Makefile's test-mypy target

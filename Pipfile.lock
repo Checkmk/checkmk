@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8b8b0152b6e23db8a9b1f32dd01720a76640ab01443c5c43df7cfb0e20b7e31b"
+            "sha256": "72620b4aa09373847c5aca8ae498971519d5b42755e376e350cd0b2aec948a7d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1483,6 +1483,14 @@
             "markers": "python_version >= '3.6'",
             "version": "==6.0b1"
         },
+        "decorator": {
+            "hashes": [
+                "sha256:7b12e7c3c6ab203a29e157335e9122cb03de9ab7264b137594103fd4a683b374",
+                "sha256:e59913af105b9860aa2c8d3272d9de5a56a4e608db9a2f167a8480b323d529a7"
+            ],
+            "markers": "python_version >= '3.5'",
+            "version": "==5.1.0"
+        },
         "distlib": {
             "hashes": [
                 "sha256:c8b54e8454e5bf6237cc84c20e8264c3e991e824ef27e8f1e81049867d861e31",
@@ -1631,6 +1639,14 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
             "version": "==1.1.1"
+        },
+        "http-parser": {
+            "hashes": [
+                "sha256:441d3a57c6227230f98aa97539da006fda0f8f4880bc4c5cd895ff2138a52621",
+                "sha256:779f6666c32e831f755bf8c410df8a0d5a498b374506bfe0e74d5b3def746de3",
+                "sha256:fc025894367cff34fcfc7386980b146b9498e9324cf3dc8992b39609e6158401"
+            ],
+            "version": "==0.9.0"
         },
         "identify": {
             "hashes": [
@@ -1879,6 +1895,13 @@
             ],
             "index": "pypi",
             "version": "==4.0.3"
+        },
+        "mocket": {
+            "hashes": [
+                "sha256:1fcb4203ae257145b97c865135b3a064b47f20f42dde88c8579f43d88f1a7dfb"
+            ],
+            "index": "pypi",
+            "version": "==3.10.0"
         },
         "mockldap": {
             "hashes": [
@@ -2361,6 +2384,14 @@
             ],
             "index": "pypi",
             "version": "==1.2.2"
+        },
+        "python-magic": {
+            "hashes": [
+                "sha256:4fec8ee805fea30c07afccd1592c0f17977089895bdfaae5fec870a84e997626",
+                "sha256:de800df9fb50f8ec5974761054a708af6e4246b03b4bdaee993f948947b0ebcf"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
+            "version": "==0.4.24"
         },
         "pytz": {
             "hashes": [

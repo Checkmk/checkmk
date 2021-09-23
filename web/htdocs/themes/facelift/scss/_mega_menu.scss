@@ -44,7 +44,7 @@
 
   #mk_side_search_monitoring,
   #mk_side_search_setup {
-    max-width: 250px;
+    width: 250px;
     padding: (2 * $spacing) 0 (2 * $spacing) (2 * $spacing);
     box-sizing: border-box;
 
@@ -184,6 +184,7 @@
       bottom: 0;
       left: 64px;
       z-index: 1000;
+      min-width: $single-column-mega-menu-width;
       padding-bottom: $megamenu-spacing-bottom;
       background-color: $base-color;
       border-right: $popup-border;
@@ -191,10 +192,6 @@
 
       &.min {
         left: 48px;
-      }
-
-      &.single_column {
-        width: $single-column-mega-menu-width;
       }
 
       a {

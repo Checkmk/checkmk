@@ -202,7 +202,8 @@ result_type_registry.register(DeleteHostsResult)
 
 @dataclass
 class DeleteHostsKnownRemoteResult(ABCAutomationResult):
-    _result: None
+    def to_pre_21(self) -> None:
+        return None
 
     @staticmethod
     def automation_call() -> str:
@@ -399,30 +400,6 @@ class NotificationGetBulksResult(ABCAutomationResult):
 
 
 result_type_registry.register(NotificationGetBulksResult)
-
-
-@dataclass
-class GetServiceConfigurationsResult(ABCAutomationResult):
-    result: Mapping
-
-    @staticmethod
-    def automation_call() -> str:
-        return "get-service-configurations"
-
-
-result_type_registry.register(GetServiceConfigurationsResult)
-
-
-@dataclass
-class GetLabelsOfResult(ABCAutomationResult):
-    result: Mapping[str, Any]
-
-    @staticmethod
-    def automation_call() -> str:
-        return "get-labels-of"
-
-
-result_type_registry.register(GetLabelsOfResult)
 
 
 @dataclass

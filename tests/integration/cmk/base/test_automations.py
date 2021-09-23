@@ -494,16 +494,6 @@ def test_automation_get_configuration(test_cfg, site):
         site.write_file("etc/check_mk/main.mk", "")
 
 
-def test_automation_get_service_configurations(test_cfg, site):
-    data = _execute_automation(site, "get-service-configurations").result
-    assert isinstance(data, dict)
-    assert data["checkgroup_of_checks"]
-    assert data["hosts"]["modes-test-host"]
-    assert ("apache_status", "Apache 127.0.0.1:5000 Status", {}) in data["hosts"][
-        "modes-test-host"
-    ]["checks"]
-
-
 def test_automation_create_diagnostics_dump(test_cfg, site):
     result = _execute_automation(site, "create-diagnostics-dump")
     assert isinstance(result, results.CreateDiagnosticsDumpResult)

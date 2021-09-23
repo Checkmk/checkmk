@@ -934,7 +934,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
 
     def execute(self, args: List[str]) -> automation_results.DeleteHostsKnownRemoteResult:
         self._execute(args)
-        return automation_results.DeleteHostsKnownRemoteResult(None)
+        return automation_results.DeleteHostsKnownRemoteResult()
 
     def _single_file_paths(self, hostname: HostName):
         return [
@@ -1737,88 +1737,6 @@ class AutomationGetBulks(Automation):
 
 
 automations.register(AutomationGetBulks())
-
-
-class AutomationGetServiceConfigurations(Automation):
-    cmd = "get-service-configurations"
-    needs_config = True
-    needs_checks = True
-
-    def execute(self, args: List[str]) -> automation_results.GetServiceConfigurationsResult:
-        result: Dict = {"hosts": {}}
-        config_cache = config.get_config_cache()
-        for hostname in config_cache.all_active_hosts():
-            host_config = config_cache.get_host_config(hostname)
-            result["hosts"][hostname] = self._get_config_for_host(host_config)
-
-        result["checkgroup_of_checks"] = self._get_checkgroup_of_checks()
-        return automation_results.GetServiceConfigurationsResult(result)
-
-    def _get_config_for_host(
-        self, host_config: config.HostConfig
-    ) -> Dict[str, List[Tuple[str, str, Any]]]:
-        return {
-            "checks": [
-                (str(s.check_plugin_name), s.description, s.parameters)
-                for s in check_table.get_check_table(host_config.hostname).values()
-            ],
-            "active_checks": self._get_active_checks(host_config),
-        }
-
-    def _get_active_checks(self, host_config: config.HostConfig) -> List[Tuple[str, str, Any]]:
-        actchecks = []
-        for plugin_name, entries in host_config.active_checks:
-            for params in entries:
-                description = config.active_check_service_description(
-                    host_config.hostname, plugin_name, params
-                )
-                actchecks.append((plugin_name, description, params))
-        return actchecks
-
-    def _get_checkgroup_of_checks(self) -> Dict[str, Optional[str]]:
-        return {
-            str(plugin.name): str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
-            for plugin in agent_based_register.iter_all_check_plugins()
-        }
-
-
-automations.register(AutomationGetServiceConfigurations())
-
-
-class AutomationGetLabelsOf(Automation):
-    cmd = "get-labels-of"
-    needs_config = True
-    needs_checks = False
-
-    def execute(self, args: List[str]) -> automation_results.GetLabelsOfResult:
-        object_type = args[0]
-        host_name = HostName(args[1])
-
-        config_cache = config.get_config_cache()
-
-        if object_type == "host":
-            return automation_results.GetLabelsOfResult(
-                {
-                    "labels": config_cache.get_host_config(host_name).labels,
-                    "label_sources": config_cache.get_host_config(host_name).label_sources,
-                }
-            )
-
-        if object_type == "service":
-            service_description = args[2]
-            return automation_results.GetLabelsOfResult(
-                {
-                    "labels": config_cache.labels_of_service(host_name, service_description),
-                    "label_sources": config_cache.label_sources_of_service(
-                        host_name, service_description
-                    ),
-                }
-            )
-
-        raise NotImplementedError()
-
-
-automations.register(AutomationGetLabelsOf())
 
 
 class AutomationCreateDiagnosticsDump(Automation):

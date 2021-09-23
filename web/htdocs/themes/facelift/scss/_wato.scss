@@ -1481,3 +1481,7 @@ table.data.analyze_config td.buttons {
 .wato h3 {
   @include table-header-mixin;
 }
+
+div.wato div.matching_message {
+  margin-left: $spacing;
+}

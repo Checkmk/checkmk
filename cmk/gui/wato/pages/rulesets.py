@@ -878,6 +878,7 @@ class ModeEditRuleset(WatoMode):
         self._create_form()
 
     def _explain_match_type(self, match_type):
+        html.open_div(class_="matching_message")
         html.b("%s: " % _("Matching"))
         if match_type == "first":
             html.write_text(_("The first matching rule defines the parameter."))
@@ -895,6 +896,7 @@ class ModeEditRuleset(WatoMode):
 
         else:
             html.write_text(_("Unknown match type: %s") % match_type)
+        html.close_div()
 
     def _rule_listing(self, ruleset):
         rules = ruleset.get_rules()

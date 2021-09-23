@@ -202,79 +202,79 @@ metric_info["num_disabled_alerts"] = {
 def register_omd_apache_metrics():
     for ty, unit in [("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s")]:
         metric_info[ty + "_cmk_views"] = {
-            "title": _("Checkmk: Views"),
+            "title": "%s: %s" % (_("Checkmk: Views"), ty.capitalize()),
             "unit": unit,
             "color": "#ff8080",
         }
 
         metric_info[ty + "_cmk_wato"] = {
-            "title": _("Checkmk: WATO"),
+            "title": "%s: %s" % (_("Checkmk: WATO"), ty.capitalize()),
             "unit": unit,
             "color": "#377cab",
         }
 
         metric_info[ty + "_cmk_bi"] = {
-            "title": _("Checkmk: BI"),
+            "title": "%s: %s" % (_("Checkmk: BI"), ty.capitalize()),
             "unit": unit,
             "color": "#4eb0f2",
         }
 
         metric_info[ty + "_cmk_snapins"] = {
-            "title": _("Checkmk: Sidebar elements"),
+            "title": "%s: %s" % (_("Checkmk: Sidebar elements"), ty.capitalize()),
             "unit": unit,
             "color": "#ff4040",
         }
 
         metric_info[ty + "_cmk_dashboards"] = {
-            "title": _("Checkmk: Dashboards"),
+            "title": "%s: %s" % (_("Checkmk: Dashboards"), ty.capitalize()),
             "unit": unit,
             "color": "#4040ff",
         }
 
         metric_info[ty + "_cmk_other"] = {
-            "title": _("Checkmk: Other"),
+            "title": "%s: %s" % (_("Checkmk: Other"), ty.capitalize()),
             "unit": unit,
             "color": "#5bb9eb",
         }
 
         metric_info[ty + "_nagvis_snapin"] = {
-            "title": _("NagVis: Sidebar element"),
+            "title": "%s: %s" % (_("NagVis: Sidebar element"), ty.capitalize()),
             "unit": unit,
             "color": "#f2904e",
         }
 
         metric_info[ty + "_nagvis_ajax"] = {
-            "title": _("NagVis: AJAX"),
+            "title": "%s: %s" % (_("NagVis: AJAX"), ty.capitalize()),
             "unit": unit,
             "color": "#af91eb",
         }
 
         metric_info[ty + "_nagvis_other"] = {
-            "title": _("NagVis: Other"),
+            "title": "%s: %s" % (_("NagVis: Other"), ty.capitalize()),
             "unit": unit,
             "color": "#f2df40",
         }
 
         metric_info[ty + "_images"] = {
-            "title": _("Image"),
+            "title": "%s: %s" % (_("Image"), ty.capitalize()),
             "unit": unit,
             "color": "#91cceb",
         }
 
         metric_info[ty + "_styles"] = {
-            "title": _("Styles"),
+            "title": "%s: %s" % (_("Styles"), ty.capitalize()),
             "unit": unit,
             "color": "#c6f24e",
         }
 
         metric_info[ty + "_scripts"] = {
-            "title": _("Scripts"),
+            "title": "%s: %s" % (_("Scripts"), ty.capitalize()),
             "unit": unit,
             "color": "#4ef26c",
         }
 
         metric_info[ty + "_other"] = {
-            "title": _("Other"),
+            "title": "%s: %s" % (_("Other"), ty.capitalize()),
             "unit": unit,
             "color": "#4eeaf2",
         }

@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Dict, Sequence
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
@@ -23,16 +29,20 @@ class CoreAPI:
         self._collect_pods()
 
     def _collect_pods(self):
-        self._pods.update({
-            pod.metadata.name: PodAPI.from_client(pod)
-            for pod in self.connection.list_pod_for_all_namespaces().items
-        })
+        self._pods.update(
+            {
+                pod.metadata.name: PodAPI.from_client(pod)
+                for pod in self.connection.list_pod_for_all_namespaces().items
+            }
+        )
 
     def _collect_nodes(self):
-        self._nodes.update({
-            node.metadata.name: NodeAPI.from_client(node)
-            for node in self.connection.list_node().items
-        })
+        self._nodes.update(
+            {
+                node.metadata.name: NodeAPI.from_client(node)
+                for node in self.connection.list_node().items
+            }
+        )
 
 
 class APIServer:

@@ -1,8 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from __future__ import annotations
 
 import datetime
 import enum
-from typing import Dict, Optional, NewType
+from typing import Dict, NewType, Optional
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 from pydantic import BaseModel
@@ -12,41 +18,41 @@ Labels = NewType("Labels", Dict[str, str])
 
 
 def parse_frac_prefix(value: str) -> float:
-    if value.endswith('m'):
+    if value.endswith("m"):
         return 0.001 * float(value[:-1])
     return float(value)
 
 
 def parse_memory(value: str) -> float:
-    if value.endswith('Ki'):
-        return 1024**1 * float(value[:-2])
-    if value.endswith('Mi'):
-        return 1024**2 * float(value[:-2])
-    if value.endswith('Gi'):
-        return 1024**3 * float(value[:-2])
-    if value.endswith('Ti'):
-        return 1024**4 * float(value[:-2])
-    if value.endswith('Pi'):
-        return 1024**5 * float(value[:-2])
-    if value.endswith('Ei'):
-        return 1024**6 * float(value[:-2])
+    if value.endswith("Ki"):
+        return 1024 ** 1 * float(value[:-2])
+    if value.endswith("Mi"):
+        return 1024 ** 2 * float(value[:-2])
+    if value.endswith("Gi"):
+        return 1024 ** 3 * float(value[:-2])
+    if value.endswith("Ti"):
+        return 1024 ** 4 * float(value[:-2])
+    if value.endswith("Pi"):
+        return 1024 ** 5 * float(value[:-2])
+    if value.endswith("Ei"):
+        return 1024 ** 6 * float(value[:-2])
 
-    if value.endswith('K') or value.endswith('k'):
+    if value.endswith("K") or value.endswith("k"):
         return 1e3 * float(value[:-1])
-    if value.endswith('M'):
+    if value.endswith("M"):
         return 1e6 * float(value[:-1])
-    if value.endswith('G'):
+    if value.endswith("G"):
         return 1e9 * float(value[:-1])
-    if value.endswith('T'):
+    if value.endswith("T"):
         return 1e12 * float(value[:-1])
-    if value.endswith('P'):
+    if value.endswith("P"):
         return 1e15 * float(value[:-1])
-    if value.endswith('E'):
+    if value.endswith("E"):
         return 1e18 * float(value[:-1])
 
     # millibytes are a useless, but valid option:
     # https://github.com/kubernetes/kubernetes/issues/28741
-    if value.endswith('m'):
+    if value.endswith("m"):
         return 1e-3 * float(value[:-1])
 
     return float(value)
@@ -84,7 +90,7 @@ class PodInfo(BaseModel):
     dns_policy: Optional[str] = None
     host_ip: Optional[str] = None
     pod_ip: str
-    qos_class: Literal['burstable', 'besteffort', 'guaranteed']
+    qos_class: Literal["burstable", "besteffort", "guaranteed"]
 
 
 def parse_pod_info(pod: client.V1Pod) -> PodInfo:
@@ -93,25 +99,27 @@ def parse_pod_info(pod: client.V1Pod) -> PodInfo:
         info.update({"node": pod.spec.node_name, "host_network": pod.spec.host_network})
 
     if pod.status:
-        info.update({
-            "host_ip": pod.status.host_ip,
-            "pod_ip": pod.status.pod_ip,
-            "qos_class": pod.status.qos_class.lower()
-        })
+        info.update(
+            {
+                "host_ip": pod.status.host_ip,
+                "pod_ip": pod.status.pod_ip,
+                "qos_class": pod.status.qos_class.lower(),
+            }
+        )
     return PodInfo(**info)
 
 
 class PodResources(BaseModel):
-    cpu: float = float('inf')
-    memory: float = float('inf')
+    cpu: float = float("inf")
+    memory: float = float("inf")
 
 
 class Phase(str, enum.Enum):
-    RUNNING = 'running'
-    PENDING = 'pending'
-    SUCCEEDED = 'succeeded'
-    FAILED = 'failed'
-    UNKNOWN = 'unknown '
+    RUNNING = "running"
+    PENDING = "pending"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown "
 
 
 class PodAPI(BaseModel):
@@ -167,11 +175,12 @@ def node_labels(labels: Labels) -> Labels:
 
     is_control_plane = (
         # 1.18 returns an empty string, 1.20 returns 'true'
-        ('node-role.kubernetes.io/control-plane' in labels) or
-        ('node-role.kubernetes.io/master' in labels))
+        ("node-role.kubernetes.io/control-plane" in labels)
+        or ("node-role.kubernetes.io/master" in labels)
+    )
 
-    labels['cmk/kubernetes_object'] = "control-plane_node" if is_control_plane else "worker_node"
-    labels['cmk/kubernetes'] = "yes"
+    labels["cmk/kubernetes_object"] = "control-plane_node" if is_control_plane else "worker_node"
+    labels["cmk/kubernetes"] = "yes"
     return labels
 
 
@@ -204,15 +213,15 @@ def node_resources(capacity, allocatable) -> Dict[str, NodeResources]:
         return resources
 
     if capacity:
-        resources['capacity'] = NodeResources(
-            cpu=parse_frac_prefix(capacity.get('cpu', 0.0)),
-            memory=parse_memory(capacity.get('memory', 0.0)),
-            pods=capacity.get('pods', 0),
+        resources["capacity"] = NodeResources(
+            cpu=parse_frac_prefix(capacity.get("cpu", 0.0)),
+            memory=parse_memory(capacity.get("memory", 0.0)),
+            pods=capacity.get("pods", 0),
         )
     if allocatable:
-        resources['allocatable'] = NodeResources(
-            cpu=parse_frac_prefix(allocatable.get('cpu', 0.0)),
-            memory=parse_memory(allocatable.get('memory', 0.0)),
-            pods=allocatable.get('pods', 0),
+        resources["allocatable"] = NodeResources(
+            cpu=parse_frac_prefix(allocatable.get("cpu", 0.0)),
+            memory=parse_memory(allocatable.get("memory", 0.0)),
+            pods=allocatable.get("pods", 0),
         )
     return resources

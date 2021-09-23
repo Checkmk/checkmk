@@ -34,7 +34,7 @@ timeout(time: 12, unit: 'HOURS') {
                     """
                 }
                 dir ('tests') {
-                    def CMK_VERSION = versioning.get_cmk_version(scm, VERSION)
+                    def CMK_VERSION = versioning.get_cmk_version(scm, params.VERSION)
                     sh "make test-docker EDITION='$EDITION' VERSION='$CMK_VERSION'"
                 }
             }

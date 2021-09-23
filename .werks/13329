@@ -1,0 +1,12 @@
+Title: Add missing state colors in analyze configuration
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632401781
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+The state colors in the right columns in the analyze configuration
+page of the setup menu was missing.

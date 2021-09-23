@@ -214,9 +214,7 @@ class ModeAnalyzeConfig(WatoMode):
                 css = "state state%d" % result.status
 
             table.cell(site_id, css=css)
-            html.open_div(title=result.text)
-            html.write_text(result.status_name())
-            html.close_div()
+            html.span(result.status_name(), title=result.text)
 
             table.cell("", css="buttons")
 

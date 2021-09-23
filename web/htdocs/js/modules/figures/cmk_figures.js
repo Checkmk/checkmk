@@ -501,9 +501,11 @@ export class FigureBase {
     }
 
     get_scale_render_function() {
+        // Create uniform behaviour with Graph dashlets: Display no unit at y-axis if value is 0
+        const f = render_function => v => Math.abs(v) < 10e-16 ? "0" : render_function(v);
         if (this._data.plot_definitions.length > 0)
-            return plot_render_function(this._data.plot_definitions[0]);
-        return plot_render_function({});
+            return f(plot_render_function(this._data.plot_definitions[0]));
+        return f(plot_render_function({}));
     }
 }
 

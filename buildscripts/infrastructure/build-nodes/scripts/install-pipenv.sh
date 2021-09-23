@@ -27,4 +27,5 @@ fi
 
 pip3 install pipenv==2021.5.29 virtualenv==20.7.2
 
-ln -sf "/opt/Python-${PYTHON_VERSION}/bin/pipenv"* /opt/bin
+ln -sf "/opt/Python-${PYTHON_VERSION}/bin/pipenv"* /usr/bin
+

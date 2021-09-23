@@ -52,6 +52,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     LegacyCheckParameters,
+    SerializedDiscoveryResponse,
     ServiceDetails,
     ServiceState,
     SetAutochecksTable,
@@ -130,7 +131,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     # "refresh" - drop all services and reinventorize
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args: List[str]) -> Dict[str, Any]:
+    def execute(self, args: List[str]) -> SerializedDiscoveryResponse:
         # Error sensitivity
         if args[0] == "@raiseerrors":
             args = args[1:]

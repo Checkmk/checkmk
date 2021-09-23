@@ -155,8 +155,8 @@ def test_automation_discovery_single_host(test_cfg, site):
     assert isinstance(data, dict)
     assert len(data) == 1
 
-    assert data["results"]["modes-test-host"]["diff_text"] == "Nothing was changed."
-    assert data["results"]["modes-test-host"]["error_text"] is None
+    assert data["modes-test-host"]["diff_text"] == "Nothing was changed."
+    assert data["modes-test-host"]["error_text"] is None
 
 
 def test_automation_discovery_multiple_hosts(test_cfg, site):
@@ -165,12 +165,12 @@ def test_automation_discovery_multiple_hosts(test_cfg, site):
     )
 
     assert isinstance(data, dict)
-    assert len(data) == 1
+    assert len(data) == 2
 
-    assert data["results"]["modes-test-host"]["diff_text"] == "Nothing was changed."
-    assert data["results"]["modes-test-host"]["error_text"] is None
-    assert data["results"]["modes-test-host2"]["diff_text"] == "Nothing was changed."
-    assert data["results"]["modes-test-host2"]["error_text"] is None
+    assert data["modes-test-host"]["diff_text"] == "Nothing was changed."
+    assert data["modes-test-host"]["error_text"] is None
+    assert data["modes-test-host2"]["diff_text"] == "Nothing was changed."
+    assert data["modes-test-host2"]["error_text"] is None
 
 
 def test_automation_discovery_not_existing_host(test_cfg, site):
@@ -179,7 +179,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
     assert isinstance(data, dict)
     assert len(data) == 1
 
-    assert data["results"] == {
+    assert data == {
         "xxxhost": {
             "clustered_new": 0,
             "clustered_old": 0,
@@ -202,8 +202,8 @@ def test_automation_discovery_with_cache_option(test_cfg, site):
     assert isinstance(data, dict)
     assert len(data) == 1
 
-    assert data["results"]["modes-test-host"]["diff_text"] == "Nothing was changed."
-    assert data["results"]["modes-test-host"]["error_text"] is None
+    assert data["modes-test-host"]["diff_text"] == "Nothing was changed."
+    assert data["modes-test-host"]["error_text"] is None
 
 
 def test_automation_analyse_service_autocheck(test_cfg, site):

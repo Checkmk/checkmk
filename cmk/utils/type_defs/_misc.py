@@ -135,18 +135,19 @@ class DiscoveryResult:
     diff_text: Optional[str] = None
 
 
+SerializedDiscoveryResponse = Mapping[HostName, Mapping[str, Any]]
+
+
 @dataclass
 class AutomationDiscoveryResponse:
-    results: Dict[HostName, DiscoveryResult]
+    results: Mapping[HostName, DiscoveryResult]
 
-    def serialize(self):
-        return {
-            "results": {k: asdict(v) for k, v in self.results.items()},
-        }
+    def serialize(self) -> SerializedDiscoveryResponse:
+        return {k: asdict(v) for k, v in self.results.items()}
 
     @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "AutomationDiscoveryResponse":
-        return cls(results={k: DiscoveryResult(**v) for k, v in serialized["results"].items()})
+    def deserialize(cls, serialized: SerializedDiscoveryResponse) -> "AutomationDiscoveryResponse":
+        return cls(results={k: DiscoveryResult(**v) for k, v in serialized.items()})
 
 
 UserId = NewType("UserId", str)

@@ -339,15 +339,14 @@ class ModeEditHost(ABCHostMode):
 
         if request.var("_update_dns_cache") and self._should_use_dns_cache():
             user.need_permission("wato.update_dns_cache")
-            num_updated, failed_hosts = watolib.check_mk_automation_deprecated(
-                self._host.site_id(),
-                "update-dns-cache",
-                [],
+            update_dns_cache_result = watolib.update_dns_cache(self._host.site_id())
+            infotext = (
+                _("Successfully updated IP addresses of %d hosts.")
+                % update_dns_cache_result.n_updated
             )
-            infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
-            if failed_hosts:
+            if update_dns_cache_result.failed_hosts:
                 infotext += "<br><br><b>Hostnames failed to lookup:</b> " + ", ".join(
-                    ["<tt>%s</tt>" % h for h in failed_hosts]
+                    ["<tt>%s</tt>" % h for h in update_dns_cache_result.failed_hosts]
                 )
             flash(infotext)
             return None

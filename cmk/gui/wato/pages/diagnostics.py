@@ -56,7 +56,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
-    check_mk_automation_deprecated,
+    create_diagnostics_dump,
     do_remote_automation,
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -450,18 +450,16 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         site = diagnostics_parameters["site"]
         timeout = request.request_timeout - 2
-        result = check_mk_automation_deprecated(
+        result = create_diagnostics_dump(
             site,
-            "create-diagnostics-dump",
-            args=serialize_wato_parameters(diagnostics_parameters),
-            timeout=timeout,
-            non_blocking_http=True,
+            serialize_wato_parameters(diagnostics_parameters),
+            timeout,
         )
 
-        job_interface.send_progress_update(result["output"])
+        job_interface.send_progress_update(result.output)
 
-        if result["tarfile_created"]:
-            tarfile_path = result["tarfile_path"]
+        if result.tarfile_created:
+            tarfile_path = result.tarfile_path
             download_url = makeuri_contextless(
                 request,
                 [("site", site), ("tarfile_name", str(Path(tarfile_path).name))],

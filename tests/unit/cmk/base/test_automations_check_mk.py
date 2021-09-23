@@ -45,8 +45,6 @@ class TestAutomationDiagHost:
     def test_execute(self, hostname, ipaddress, raw_data):
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         assert check_mk.AutomationDiagHost().execute(args) == DiagHostResult(
-            (
-                0,
-                raw_data,
-            )
+            0,
+            raw_data,
         )

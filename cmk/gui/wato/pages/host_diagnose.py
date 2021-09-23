@@ -463,13 +463,14 @@ class ModeAjaxDiagHost(AjaxPage):
             else:
                 args[9] = api_request.get("snmpv3_security_name", "")
 
-        result = watolib.check_mk_automation_deprecated(
+        result = watolib.diag_host(
             host.site_id(),
-            "diag-host",
-            [hostname, _test] + args,
+            hostname,
+            _test,
+            *args,
         )
         return {
             "next_transid": transactions.fresh_transid(),
-            "status_code": result[0],
-            "output": ensure_str(result[1], errors="replace"),
+            "status_code": result.return_code,
+            "output": ensure_str(result.response, errors="replace"),
         }

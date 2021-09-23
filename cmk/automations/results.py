@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, Literal, Mapping, Optional, Tuple, Type, TypeVar
+from typing import Any, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar
 
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.python_printer import pformat
@@ -284,7 +284,14 @@ result_type_registry.register(ScanParentsResult)
 
 @dataclass
 class DiagHostResult(ABCAutomationResult):
-    result: Tuple[int, str]
+    return_code: int
+    response: str
+
+    def to_pre_21(self) -> Tuple[int, str]:
+        return (
+            self.return_code,
+            self.response,
+        )
 
     @staticmethod
     def automation_call() -> str:
@@ -296,7 +303,18 @@ result_type_registry.register(DiagHostResult)
 
 @dataclass
 class ActiveCheckResult(ABCAutomationResult):
-    result: Optional[Tuple[ServiceState, ServiceDetails]]
+    state: Optional[ServiceState]
+    output: ServiceDetails
+
+    def to_pre_21(self) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+        return (
+            None
+            if self.state is None
+            else (
+                self.state,
+                self.output,
+            )
+        )
 
     @staticmethod
     def automation_call() -> str:
@@ -308,7 +326,14 @@ result_type_registry.register(ActiveCheckResult)
 
 @dataclass
 class UpdateDNSCacheResult(ABCAutomationResult):
-    result: UpdateDNSCacheResultRaw
+    n_updated: int
+    failed_hosts: Sequence[HostName]
+
+    def to_pre_21(self) -> UpdateDNSCacheResultRaw:
+        return (
+            self.n_updated,
+            list(self.failed_hosts),
+        )
 
     @staticmethod
     def automation_call() -> str:
@@ -401,7 +426,12 @@ result_type_registry.register(GetLabelsOfResult)
 
 @dataclass
 class CreateDiagnosticsDumpResult(ABCAutomationResult):
-    result: Mapping[str, Any]
+    output: str
+    tarfile_path: str
+    tarfile_created: bool
+
+    def to_pre_21(self) -> Mapping[str, Any]:
+        return asdict(self)
 
     @staticmethod
     def automation_call() -> str:

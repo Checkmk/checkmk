@@ -8,6 +8,7 @@ from typing import Any, Iterable, NamedTuple, Optional, Sequence, Tuple, Type, T
 
 from livestatus import SiteId
 
+from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import DiscoveredHostLabelsDict, HostName, ServiceName, SetAutochecksTable
 
@@ -238,6 +239,64 @@ def delete_hosts(
     )
 
 
+def scan_parents(
+    site_id: SiteId,
+    host_name: HostName,
+    *params: str,
+) -> results.ScanParentsResult:
+    return _deserialize(
+        _automation_serialized(
+            "scan-parents",
+            siteid=site_id,
+            args=[*params, host_name],
+        ),
+        results.ScanParentsResult,
+    )
+
+
+def diag_host(
+    site_id: SiteId,
+    host_name: HostName,
+    test: str,
+    *args: str,
+) -> results.DiagHostResult:
+    return _deserialize(
+        _automation_serialized(
+            "diag-host",
+            siteid=site_id,
+            args=[host_name, test, *args],
+        ),
+        results.DiagHostResult,
+    )
+
+
+def active_check(
+    site_id: SiteId,
+    host_name: HostName,
+    check_type: str,
+    item: str,
+) -> results.ActiveCheckResult:
+    return _deserialize(
+        _automation_serialized(
+            "active-check",
+            siteid=site_id,
+            args=[host_name, check_type, item],
+            sync=False,
+        ),
+        results.ActiveCheckResult,
+    )
+
+
+def update_dns_cache(site_id: SiteId) -> results.UpdateDNSCacheResult:
+    return _deserialize(
+        _automation_serialized(
+            "update-dns-cache",
+            siteid=site_id,
+        ),
+        results.UpdateDNSCacheResult,
+    )
+
+
 def get_agent_output(
     site_id: SiteId,
     host_name: HostName,
@@ -250,4 +309,21 @@ def get_agent_output(
             args=[host_name, agent_type],
         ),
         results.GetAgentOutputResult,
+    )
+
+
+def create_diagnostics_dump(
+    site_id: SiteId,
+    serialized_params: DiagnosticsCLParameters,
+    timeout: int,
+) -> results.CreateDiagnosticsDumpResult:
+    return _deserialize(
+        _automation_serialized(
+            "create-diagnostics-dump",
+            siteid=site_id,
+            args=serialized_params,
+            timeout=timeout,
+            non_blocking_http=True,
+        ),
+        results.CreateDiagnosticsDumpResult,
     )

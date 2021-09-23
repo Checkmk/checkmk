@@ -1245,7 +1245,7 @@ class AutomationDiagHost(Automation):
         try:
             if test == "ping":
                 return automation_results.DiagHostResult(
-                    self._execute_ping(
+                    *self._execute_ping(
                         host_config,
                         ipaddress,
                     )
@@ -1253,7 +1253,7 @@ class AutomationDiagHost(Automation):
 
             if test == "agent":
                 return automation_results.DiagHostResult(
-                    self._execute_agent(
+                    *self._execute_agent(
                         host_config,
                         ipaddress,
                         agent_port=agent_port,
@@ -1264,7 +1264,7 @@ class AutomationDiagHost(Automation):
 
             if test == "traceroute":
                 return automation_results.DiagHostResult(
-                    self._execute_traceroute(
+                    *self._execute_traceroute(
                         host_config,
                         ipaddress,
                     )
@@ -1272,7 +1272,7 @@ class AutomationDiagHost(Automation):
 
             if test.startswith("snmp"):
                 return automation_results.DiagHostResult(
-                    self._execute_snmp(
+                    *self._execute_snmp(
                         test,
                         host_config,
                         hostname,
@@ -1290,20 +1290,16 @@ class AutomationDiagHost(Automation):
                 )
 
             return automation_results.DiagHostResult(
-                (
-                    1,
-                    "Command not implemented",
-                )
+                1,
+                "Command not implemented",
             )
 
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
             return automation_results.DiagHostResult(
-                (
-                    1,
-                    str(e),
-                )
+                1,
+                str(e),
             )
 
     def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
@@ -1518,19 +1514,20 @@ class AutomationActiveCheck(Automation):
                 command_line = self._replace_core_macros(hostname, entry.get("command_line", ""))
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
-                    return automation_results.ActiveCheckResult(self._execute_check_plugin(cmd))
+                    return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
 
                 return automation_results.ActiveCheckResult(
-                    (
-                        -1,
-                        "Passive check - cannot be executed",
-                    )
+                    -1,
+                    "Passive check - cannot be executed",
                 )
 
         try:
             act_info = config.active_check_info[plugin]
         except KeyError:
-            return automation_results.ActiveCheckResult(None)
+            return automation_results.ActiveCheckResult(
+                None,
+                "Failed to compute check result",
+            )
 
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
@@ -1547,9 +1544,12 @@ class AutomationActiveCheck(Automation):
                     hostname, act_info["command_line"].replace("$ARG1$", command_args)
                 )
                 cmd = core_config.autodetect_plugin(command_line)
-                return automation_results.ActiveCheckResult(self._execute_check_plugin(cmd))
+                return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
 
-        return automation_results.ActiveCheckResult(None)
+        return automation_results.ActiveCheckResult(
+            None,
+            "Failed to compute check result",
+        )
 
     def _load_resource_file(self, macros: Dict[str, str]) -> None:
         try:
@@ -1610,7 +1610,7 @@ class AutomationUpdateDNSCache(Automation):
     def execute(self, args: List[str]) -> automation_results.UpdateDNSCacheResult:
         config_cache = config.get_config_cache()
         return automation_results.UpdateDNSCacheResult(
-            ip_lookup.update_dns_cache(
+            *ip_lookup.update_dns_cache(
                 host_configs=(
                     config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()
                 ),
@@ -1835,11 +1835,9 @@ class AutomationCreateDiagnosticsDump(Automation):
             dump = DiagnosticsDump(deserialize_cl_parameters(args))
             dump.create()
             return automation_results.CreateDiagnosticsDumpResult(
-                {
-                    "output": buf.getvalue(),
-                    "tarfile_path": str(dump.tarfile_path),
-                    "tarfile_created": dump.tarfile_created,
-                }
+                output=buf.getvalue(),
+                tarfile_path=str(dump.tarfile_path),
+                tarfile_created=dump.tarfile_created,
             )
 
 

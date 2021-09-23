@@ -46,12 +46,7 @@ from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_html
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib import (
-    automation_command_registry,
-    AutomationCommand,
-    check_mk_automation_deprecated,
-    update_host_labels,
-)
+from cmk.gui.watolib import automation_command_registry, AutomationCommand, update_host_labels
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.rulespecs import rulespec_registry
@@ -1435,12 +1430,14 @@ class ModeAjaxExecuteCheck(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
         try:
-            state, output = check_mk_automation_deprecated(
+            active_check_result = watolib.active_check(
                 self._site,
-                "active-check",
-                [self._host_name, self._check_type, self._item],
-                sync=False,
+                self._host_name,
+                self._check_type,
+                self._item,
             )
+            state = 3 if active_check_result.state is None else active_check_result.state
+            output = active_check_result.output
         except Exception as e:
             state = 3
             output = "%s" % e

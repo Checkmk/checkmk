@@ -322,12 +322,11 @@ def test_automation_update_dns_cache(
 
         site.write_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
-        data = _execute_automation(site, "update-dns-cache").result
-        assert isinstance(data, tuple)
-        assert len(data) == 2
+        result = _execute_automation(site, "update-dns-cache")
+        assert isinstance(result, results.UpdateDNSCacheResult)
 
-        assert data[0] > 0
-        assert data[1] == ["update-dns-cache-host"]
+        assert result.n_updated > 0
+        assert result.failed_hosts == ["update-dns-cache-host"]
 
         assert site.file_exists(cache_path)
 
@@ -429,21 +428,25 @@ def test_automation_get_agent_output_unknown_host(test_cfg, site):
 # TODO: active-check: Add test for real active_checks check
 # TODO: active-check: Add test for real custom_checks check
 def test_automation_active_check_unknown(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "active-check",
         args=["xxxhost", "xxxplugin", "xxxitem"],
-    ).result
-    assert data is None
+    )
+    assert isinstance(result, results.ActiveCheckResult)
+    assert result.state is None
+    assert result.output == "Failed to compute check result"
 
 
 def test_automation_active_check_unknown_custom(test_cfg, site):
-    data = _execute_automation(
+    result = _execute_automation(
         site,
         "active-check",
         args=["xxxhost", "custom", "xxxitem"],
-    ).result
-    assert data is None
+    )
+    assert isinstance(result, results.ActiveCheckResult)
+    assert result.state is None
+    assert result.output == "Failed to compute check result"
 
 
 def test_automation_get_configuration(test_cfg, site):
@@ -493,12 +496,11 @@ def test_automation_get_service_configurations(test_cfg, site):
 
 
 def test_automation_create_diagnostics_dump(test_cfg, site):
-    data = _execute_automation(site, "create-diagnostics-dump").result
-    tarfile_path = data["tarfile_path"]
-    assert isinstance(data, dict)
-    assert "+ COLLECT DIAGNOSTICS INFORMATION" in data["output"]
-    assert tarfile_path.endswith(".tar.gz")
-    assert "var/check_mk/diagnostics" in tarfile_path
+    result = _execute_automation(site, "create-diagnostics-dump")
+    assert isinstance(result, results.CreateDiagnosticsDumpResult)
+    assert "+ COLLECT DIAGNOSTICS INFORMATION" in result.output
+    assert result.tarfile_path.endswith(".tar.gz")
+    assert "var/check_mk/diagnostics" in result.tarfile_path
 
 
 # TODO: rename-hosts

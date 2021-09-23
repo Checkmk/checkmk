@@ -452,15 +452,13 @@ def _active_check_main_core(
     logging.debug("use protocol for fetching: %r", args.fetch_protocol)
     try:
         return check_fn(args)
-    except ConnectError as e:
-        return 3, str(e), None
-    except FetchMailsError as e:
-        return 3, str(e), None
-    except SendMailError as e:
-        return 3, str(e), None
-    except ForwardToECError as e:
+    except (ConnectError, FetchMailsError, SendMailError, ForwardToECError) as e:
+        if args.debug:
+            raise
         return 3, str(e), None
     except CleanupMailboxError as e:
+        if args.debug:
+            raise
         return 2, str(e), None
     except Exception as e:
         if args.debug:

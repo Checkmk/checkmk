@@ -50,17 +50,18 @@ class ConfigDomainCore(ABCConfigDomain):
 
     def activate(self):
         # TODO: Cleanup
-        from cmk.gui.watolib.automations import check_mk_local_automation_deprecated
+        from cmk.gui.watolib.check_mk_automations import reload, restart
 
-        return check_mk_local_automation_deprecated(config.wato_activation_method)
+        return {
+            "restart": restart,
+            "reload": reload,
+        }[config.wato_activation_method]().config_warnings
 
     def default_globals(self):
         # TODO: Cleanup
-        from cmk.gui.watolib.automations import check_mk_local_automation_deprecated
+        from cmk.gui.watolib.check_mk_automations import get_configuration
 
-        return check_mk_local_automation_deprecated(
-            "get-configuration", [], self._get_global_config_var_names()
-        )
+        return get_configuration(*self._get_global_config_var_names()).result
 
 
 @config_domain_registry.register

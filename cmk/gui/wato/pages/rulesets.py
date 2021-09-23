@@ -664,7 +664,7 @@ class ModeEditRuleset(WatoMode):
         # take translations into account (see cmk.base.config.service_description()).
         check_command = request.get_ascii_input("check_command")
         if check_command:
-            checks = watolib.check_mk_local_automation_deprecated("get-check-information")
+            checks = watolib.get_check_information().plugin_infos
             if check_command.startswith("check_mk-"):
                 check_command = check_command[9:]
                 self._name = "checkgroup_parameters:" + checks[check_command].get("group", "")

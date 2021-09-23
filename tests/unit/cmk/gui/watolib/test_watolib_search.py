@@ -12,6 +12,8 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from cmk.automations.results import GetConfigurationResult
+
 from cmk.gui.globals import user
 from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainApache,
@@ -376,6 +378,14 @@ class TestIndexSearcher:
 
 
 class TestRealisticSearch:
+    @staticmethod
+    @pytest.fixture()
+    def suppress_get_configuration_automation_call(monkeypatch: MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            "cmk.gui.watolib.check_mk_automations.get_configuration",
+            lambda *args, **kwargs: GetConfigurationResult({}),
+        )
+
     @pytest.mark.usefixtures(
         "load_plugins",
         "with_admin_login",
@@ -383,7 +393,7 @@ class TestRealisticSearch:
         "fake_diskspace_default_globals",
         "fake_apache_default_globals",
         "fake_rrdcached_default_globals",
-        "suppress_automation_calls",
+        "suppress_get_configuration_automation_call",
     )
     def test_real_search_without_exception(
         self,
@@ -417,7 +427,7 @@ class TestRealisticSearch:
         "fake_diskspace_default_globals",
         "fake_apache_default_globals",
         "fake_rrdcached_default_globals",
-        "suppress_automation_calls",
+        "suppress_get_configuration_automation_call",
     )
     def test_index_is_built_as_super_user(
         self,
@@ -447,7 +457,7 @@ class TestRealisticSearch:
         "fake_diskspace_default_globals",
         "fake_apache_default_globals",
         "fake_rrdcached_default_globals",
-        "suppress_automation_calls",
+        "suppress_get_configuration_automation_call",
     )
     def test_dcd_not_found_if_not_super_user(
         self,

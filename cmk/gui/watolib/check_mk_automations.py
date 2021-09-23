@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, NamedTuple, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence, Tuple, Type, TypeVar
 
 from livestatus import SiteId
 
@@ -239,6 +239,44 @@ def delete_hosts(
     )
 
 
+def restart() -> results.RestartResult:
+    return _deserialize(
+        _automation_serialized("restart"),
+        results.RestartResult,
+    )
+
+
+def reload() -> results.ReloadResult:
+    return _deserialize(
+        _automation_serialized("reload"),
+        results.ReloadResult,
+    )
+
+
+def get_configuration(*config_var_names: str) -> results.GetConfigurationResult:
+    return _deserialize(
+        _automation_serialized(
+            "get-configuration",
+            indata=list(config_var_names),
+        ),
+        results.GetConfigurationResult,
+    )
+
+
+def get_check_information() -> results.GetCheckInformationResult:
+    return _deserialize(
+        _automation_serialized("get-check-information"),
+        results.GetCheckInformationResult,
+    )
+
+
+def get_section_information() -> results.GetSectionInformationResult:
+    return _deserialize(
+        _automation_serialized("get-section-information"),
+        results.GetSectionInformationResult,
+    )
+
+
 def scan_parents(
     site_id: SiteId,
     host_name: HostName,
@@ -312,6 +350,36 @@ def get_agent_output(
     )
 
 
+def notification_replay(notification_number: int) -> results.NotificationReplayResult:
+    return _deserialize(
+        _automation_serialized(
+            "notification-replay",
+            args=[str(notification_number)],
+        ),
+        results.NotificationReplayResult,
+    )
+
+
+def notification_analyse(notification_number: int) -> results.NotificationAnalyseResult:
+    return _deserialize(
+        _automation_serialized(
+            "notification-analyse",
+            args=[str(notification_number)],
+        ),
+        results.NotificationAnalyseResult,
+    )
+
+
+def notification_get_bulks(only_ripe: bool) -> results.NotificationGetBulksResult:
+    return _deserialize(
+        _automation_serialized(
+            "notification-get-bulks",
+            args=[str(int(only_ripe))],
+        ),
+        results.NotificationGetBulksResult,
+    )
+
+
 def create_diagnostics_dump(
     site_id: SiteId,
     serialized_params: DiagnosticsCLParameters,
@@ -326,4 +394,14 @@ def create_diagnostics_dump(
             non_blocking_http=True,
         ),
         results.CreateDiagnosticsDumpResult,
+    )
+
+
+def bake_agents(indata: Optional[Mapping[str, Any]] = None) -> results.BakeAgentsResult:
+    return _deserialize(
+        _automation_serialized(
+            "bake-agents",
+            indata="" if indata is None else indata,
+        ),
+        results.BakeAgentsResult,
     )

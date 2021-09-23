@@ -1705,7 +1705,7 @@ class AutomationNotificationReplay(Automation):
     def execute(self, args: List[str]) -> automation_results.NotificationReplayResult:
         nr = args[0]
         notify.notification_replay_backlog(int(nr))
-        return automation_results.NotificationReplayResult(None)
+        return automation_results.NotificationReplayResult()
 
 
 automations.register(AutomationNotificationReplay())

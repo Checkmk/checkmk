@@ -605,11 +605,7 @@ class ModeNotifications(ABCNotificationsMode):
         elif request.has_var("_replay"):
             if transactions.check_transaction():
                 nr = request.get_integer_input_mandatory("_replay")
-                watolib.check_mk_local_automation_deprecated(
-                    "notification-replay",
-                    [str(nr)],
-                    None,
-                )
+                watolib.notification_replay(nr)
                 flash(_("Replayed notification number %d") % (nr + 1))
                 return None
 
@@ -696,10 +692,7 @@ class ModeNotifications(ABCNotificationsMode):
             self._render_bulks(only_ripe=True)
 
     def _render_bulks(self, only_ripe):
-        bulks = watolib.check_mk_local_automation_deprecated(
-            "notification-get-bulks",
-            ["1" if only_ripe else "0"],
-        )
+        bulks = watolib.notification_get_bulks(only_ripe).result
         if not bulks:
             return False
 
@@ -716,7 +709,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Bulk ID"), bulk_id)
                 table.cell(_("Max. Age (sec)"), str(interval), css="number")
                 table.cell(_("Age (sec)"), str(age), css="number")
-                if interval and age >= interval:
+                if interval and age >= float(interval):
                     html.icon("warning", _("Age of oldest notification is over maximum age"))
                 table.cell(_("Timeperiod"), str(timeperiod))
                 table.cell(_("Max. Count"), str(maxcount), css="number")
@@ -840,15 +833,10 @@ class ModeNotifications(ABCNotificationsMode):
     # TODO: Refactor this
     def _show_rules(self):
         # Do analysis
+        analyse = None
         if request.var("analyse"):
             nr = request.get_integer_input_mandatory("analyse")
-            analyse = watolib.check_mk_local_automation_deprecated(
-                "notification-analyse",
-                [str(nr)],
-                None,
-            )
-        else:
-            analyse = False
+            analyse = watolib.notification_analyse(nr).result
 
         start_nr = 0
         rules = self._get_notification_rules()

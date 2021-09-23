@@ -366,7 +366,8 @@ result_type_registry.register(GetAgentOutputResult)
 
 @dataclass
 class NotificationReplayResult(ABCAutomationResult):
-    _result: None
+    def to_pre_21(self) -> None:
+        return None
 
     @staticmethod
     def automation_call() -> str:
@@ -443,7 +444,7 @@ result_type_registry.register(CreateDiagnosticsDumpResult)
 
 @dataclass
 class BakeAgentsResult(ABCAutomationResult):
-    warnings: Optional[str]
+    warnings_as_json: str
 
     @staticmethod
     def automation_call() -> str:

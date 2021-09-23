@@ -328,6 +328,8 @@ test_mk_sap_hana_skip_sql_queries() {
 }
 
 test_mk_sap_hana_get_ssl_option_with_ssl(){
+
+    # Mocks read_global_ini
     read_global_ini () {
         echo "sslenforce = true"
     }
@@ -338,6 +340,7 @@ test_mk_sap_hana_get_ssl_option_with_ssl(){
 
 test_mk_sap_hana_get_ssl_option_without_ssl(){
 
+    # Mocks read_global_ini
     read_global_ini () {
         echo "sslenforce = false"
     }
@@ -363,6 +366,7 @@ test_mk_sap_hana_get_alerts_last_check_file_with_remote_host(){
 
 test_mk_sap_hana_get_last_used_check_file_new_file_exists(){
 
+    # Mocks file_exists
     file_exists() {
         local path="$1"
 
@@ -379,6 +383,7 @@ test_mk_sap_hana_get_last_used_check_file_new_file_exists(){
 
 test_mk_sap_hana_get_last_used_check_file_old_file_exists(){
 
+    # Mocks file_exists
     file_exists() {
         local path="$1"
 
@@ -395,6 +400,7 @@ test_mk_sap_hana_get_last_used_check_file_old_file_exists(){
 
 test_mk_sap_hana_get_last_used_check_file_no_file(){
 
+    # Mocks file_exists
     file_exists() {
         return 1
     }

@@ -67,6 +67,8 @@ def DOCKER_GROUP_ID = ''
 
 timeout(time: 12, unit: 'HOURS') {
     node(NODE) {
+        SOURCE_DIR = WORKSPACE + "/git"
+
         stage('Prepare version directory') {
             sh('rm -rf "${WORKSPACE}/versions/"*')
             sh('mkdir -p "${WORKSPACE}/versions"')
@@ -74,7 +76,7 @@ timeout(time: 12, unit: 'HOURS') {
     
         stage('Checkout sources') {
             /// takes place as regular Jenkins user
-            dir("${WORKSPACE}/git") {
+            dir(SOURCE_DIR) {
                 checkout_git(scm, VERSION)
     
                 // Clean up left overs from previous runs, but keep previously
@@ -161,7 +163,6 @@ timeout(time: 12, unit: 'HOURS') {
             BUILD_IMAGE.inside(DOCKER_ARGS) {
                 create_source_package(WORKSPACE, CMK_VERS)
     
-                SOURCE_DIR = WORKSPACE + "/git"
                 def SOURCE_PACKAGE_NAME = get_source_package_name(WORKSPACE, EDITION, CMK_VERS)
                 def BUILD_SOURCE_PACKAGE_PATH = SOURCE_DIR + "/" + SOURCE_PACKAGE_NAME
                 def FINAL_SOURCE_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + SOURCE_PACKAGE_NAME
@@ -169,7 +170,7 @@ timeout(time: 12, unit: 'HOURS') {
                 copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
     
                 cleanup_source_package(WORKSPACE, FINAL_SOURCE_PACKAGE_PATH)
-                test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, CMK_VERS)
+                test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, SOURCE_DIR, CMK_VERS)
     
                 upload_artifacts.upload(
                     NAME: "source",
@@ -208,15 +209,13 @@ timeout(time: 12, unit: 'HOURS') {
                             }
     
                             def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
-                            BUILD_IMAGE.inside(DOCKER_ARGS) {
+                            BUILD_IMAGE.inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro") {
                                 def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                                 def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
                                 def FINAL_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + PACKAGE_NAME
     
-                                clean_venv()
-    
                                 sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
-                                test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, CMK_VERS)
+                                test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, SOURCE_DIR, CMK_VERS)
                                 copy_package(BUILD_PACKAGE_PATH, DISTRO, FINAL_PACKAGE_PATH)
     
                                 upload_artifacts.upload(
@@ -448,21 +447,14 @@ def sign_package(PACKAGE_PATH, DISTRO, WORKSPACE) {
     }
 }
 
-def test_package(PACKAGE_PATH, NAME, WORKSPACE, CMK_VERS) {
+def test_package(PACKAGE_PATH, NAME, WORKSPACE, GIT_DIR, CMK_VERS) {
     stage(NAME + ' test package') {
         try {
-            dir("${WORKSPACE}/git/tests") {
-                withEnv(["PACKAGE_PATH=${PACKAGE_PATH}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit-${NAME}.xml'"]) {
-                    sh "make VERSION=${CMK_VERS} test-packaging"
-                }
+            withEnv(["PACKAGE_PATH=${PACKAGE_PATH}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit-${NAME}.xml'"]) {
+                sh("make -C \"${GIT_DIR}/tests\" VERSION=${CMK_VERS} test-packaging")
             }
         } finally {
             step([$class: 'JUnitResultArchiver', testResults: 'junit-' + NAME + '.xml'])
         }
     }
 }
-
-def clean_venv() {
-    sh('rm -rf git/.venv')
-}
-

@@ -38628,8 +38628,8 @@ msgstr "Substituição"
 msgid "Replay this notification, send it again!"
 msgstr "Repete esta notificação, envia-a novamente!"
 
-#, python-format
-msgid "Replayed notifiation number %d"
+#, fuzzy, python-format
+msgid "Replayed notification number %d"
 msgstr "Notificação repetida número %d"
 
 msgid "Replica Lag"

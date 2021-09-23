@@ -39080,8 +39080,8 @@ msgstr "Remplacement"
 msgid "Replay this notification, send it again!"
 msgstr "Rejouez cette notification, envoyez-la à nouveau !"
 
-#, python-format
-msgid "Replayed notifiation number %d"
+#, fuzzy, python-format
+msgid "Replayed notification number %d"
 msgstr "Numéro de la notification rejouée %d"
 
 msgid "Replica Lag"

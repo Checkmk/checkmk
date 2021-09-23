@@ -37319,8 +37319,8 @@ msgstr "置換"
 msgid "Replay this notification, send it again!"
 msgstr "この通知をリプレイして、もう一度送信してください。"
 
-#, python-format
-msgid "Replayed notifiation number %d"
+#, fuzzy, python-format
+msgid "Replayed notification number %d"
 msgstr "再生された通知番号%d"
 
 msgid "Replica Lag"

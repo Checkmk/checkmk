@@ -37444,9 +37444,9 @@ msgstr ""
 msgid "Replay this notification, send it again!"
 msgstr ""
 
-#, python-format
-msgid "Replayed notifiation number %d"
-msgstr ""
+#, fuzzy, python-format
+msgid "Replayed notification number %d"
+msgstr "%d reguli de notificări globale"
 
 #, fuzzy
 msgid "Replica Lag"
@@ -62402,10 +62402,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Delete host!"
 #~ msgstr "Sterge Elementul"
-
-#, fuzzy
-#~ msgid "Deleted notification rule %d"
-#~ msgstr "%d reguli de notificări globale"
 
 #, fuzzy
 #~ msgid "Disk I/O Operations"

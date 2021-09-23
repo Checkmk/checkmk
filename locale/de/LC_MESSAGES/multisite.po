@@ -38638,8 +38638,8 @@ msgstr "Ersetzung"
 msgid "Replay this notification, send it again!"
 msgstr "Diesen Alarm erneut zustellen!"
 
-#, python-format
-msgid "Replayed notifiation number %d"
+#, fuzzy, python-format
+msgid "Replayed notification number %d"
 msgstr "Alarm Nummer %d wieder eingespielt"
 
 msgid "Replica Lag"

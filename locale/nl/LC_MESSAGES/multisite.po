@@ -38594,8 +38594,8 @@ msgstr "Vervanging"
 msgid "Replay this notification, send it again!"
 msgstr "Herhaal deze melding, verstuur het opnieuw!"
 
-#, python-format
-msgid "Replayed notifiation number %d"
+#, fuzzy, python-format
+msgid "Replayed notification number %d"
 msgstr "Opnieuw verzonden notificatie nummer %d"
 
 msgid "Replica Lag"

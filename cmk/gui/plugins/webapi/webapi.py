@@ -17,7 +17,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import DiscoveryResult
+from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
@@ -38,7 +38,6 @@ from cmk.gui.plugins.webapi import (
     validate_config_hash,
     validate_host_attributes,
 )
-from cmk.gui.watolib.automations import execute_automation_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
@@ -1149,8 +1148,13 @@ class APICallOther(APICallCollection):
                 host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes()
             )
         else:
-            response = execute_automation_discovery(
-                site_id=host_attributes.get("site"), args=["@scan", mode, hostname]
+            response = AutomationDiscoveryResponse.deserialize(
+                watolib.check_mk_automation(
+                    siteid=host_attributes.get("site"),
+                    command="inventory",
+                    args=["@scan", mode, hostname],
+                    non_blocking_http=True,
+                )
             )
             result = response.results[hostname]
 

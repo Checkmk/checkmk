@@ -7,13 +7,13 @@
 from typing import List, NamedTuple
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import DiscoveryResult
+from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
-from cmk.gui.watolib.automations import AutomationDiscoveryResponse, execute_automation_discovery
+from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -213,8 +213,14 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         timeout = request.request_timeout - 2
 
-        return execute_automation_discovery(
-            site_id=task.site_id, args=arguments, timeout=timeout, non_blocking_http=True
+        return AutomationDiscoveryResponse.deserialize(
+            check_mk_automation(
+                siteid=task.site_id,
+                command="inventory",
+                args=arguments,
+                timeout=timeout,
+                non_blocking_http=True,
+            )
         )
 
     def _process_discovery_results(

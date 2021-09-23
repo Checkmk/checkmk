@@ -21,11 +21,7 @@ from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
-from cmk.gui.watolib.automations import (
-    check_mk_automation,
-    execute_automation_discovery,
-    sync_changes_before_remote_automation,
-)
+from cmk.gui.watolib.automations import check_mk_automation, sync_changes_before_remote_automation
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -681,8 +677,11 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def _perform_automatic_refresh(self, api_request):
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
-        execute_automation_discovery(
-            site_id=api_request.host.site_id(), args=["@scan", "refresh", api_request.host.name()]
+        check_mk_automation(
+            siteid=api_request.host.site_id(),
+            command="inventory",
+            args=["@scan", "refresh", api_request.host.name()],
+            non_blocking_http=True,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
         # message = _("Refreshed check configuration of host '%s' with %d services") % \

@@ -489,7 +489,7 @@ class Site:
                 self._set_number_of_helpers()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
-            self._enabled_liveproxyd_debug_logging()
+                self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
             self._enable_gui_debug_logging()
             self._tune_nagios()

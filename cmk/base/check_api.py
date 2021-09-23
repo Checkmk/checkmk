@@ -120,7 +120,7 @@ from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     EvalableFloat as as_float,
 )
-from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.type_defs import HostName, MetricName, RuleConditionsSpec
 from cmk.utils.type_defs import Ruleset as _Ruleset
 from cmk.utils.type_defs import SectionName as _SectionName
 from cmk.utils.type_defs import (
@@ -255,7 +255,7 @@ def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, An
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-def all_matching_hosts(condition: Dict[str, Any], with_foreign_hosts: bool) -> Set[HostName]:
+def all_matching_hosts(condition: RuleConditionsSpec, with_foreign_hosts: bool) -> Set[HostName]:
     return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         condition, with_foreign_hosts
     )

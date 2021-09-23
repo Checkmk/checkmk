@@ -20,9 +20,8 @@ from cmk.utils.regex import escape_regex_chars
 from cmk.utils.tags import GroupedTag
 from cmk.utils.type_defs import (
     HostName,
-    HostNameConditions,
+    HostOrServiceConditions,
     ServiceName,
-    ServiceNameConditions,
     TagConditionNE,
     TagConditionNOR,
     TagConditionOR,
@@ -2544,8 +2543,8 @@ class ModeNewRule(ABCEditRuleMode):
         return self._get_rule_conditions_from_vars().host_folder
 
     def _set_rule(self):
-        host_name_conditions: HostNameConditions = None
-        service_description_conditions: ServiceNameConditions = None
+        host_name_conditions: HostOrServiceConditions = None
+        service_description_conditions: HostOrServiceConditions = None
 
         if request.has_var("_new_host_rule"):
             hostname = request.get_ascii_input("host")

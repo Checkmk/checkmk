@@ -20,6 +20,8 @@ from cmk.utils.rulesets.tuple_rulesets import (
 from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import (
     HostName,
+    HostOrServiceConditions,
+    RuleConditionsSpec,
     Ruleset,
     RuleValue,
     ServiceName,
@@ -114,9 +116,7 @@ class RulesetMatcher:
 
         self._service_match_cache: Dict = {}
 
-    def is_matching_host_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
-    ) -> bool:
+    def is_matching_host_ruleset(self, match_object: RulesetMatchObject, ruleset: Ruleset) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -128,7 +128,7 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_host_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict[str, Any]]
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
     ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
@@ -162,7 +162,7 @@ class RulesetMatcher:
             yield value
 
     def is_matching_service_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -175,7 +175,7 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_service_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict[str, Any]]
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
     ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
@@ -472,7 +472,9 @@ class RulesetOptimizer:
             )
         return new_rules
 
-    def _convert_pattern_list(self, patterns: List[str]) -> PreprocessedPattern:
+    def _convert_pattern_list(
+        self, patterns: Optional[HostOrServiceConditions]
+    ) -> PreprocessedPattern:
         """Compiles a list of service match patterns to a to a single regex
 
         Reducing the number of individual regex matches improves the performance dramatically.
@@ -481,10 +483,10 @@ class RulesetOptimizer:
         if not patterns:
             return False, regex("")  # Match everything
 
-        negate, patterns = parse_negated_condition_list(patterns)
+        negate, parsed_patterns = parse_negated_condition_list(patterns)
 
         pattern_parts = []
-        for p in patterns:
+        for p in parsed_patterns:
             if isinstance(p, dict):
                 pattern_parts.append(p["$regex"])
             else:
@@ -493,7 +495,7 @@ class RulesetOptimizer:
         return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
 
     def _all_matching_hosts(
-        self, condition: Dict[str, Any], with_foreign_hosts: bool
+        self, condition: RuleConditionsSpec, with_foreign_hosts: bool
     ) -> Set[HostName]:
         """Returns a set containing the names of hosts that match the given
         tags and hostlist conditions."""
@@ -828,7 +830,7 @@ def matches_labels(object_labels, required_labels) -> bool:
     return True
 
 
-def parse_negated_condition_list(entries):
+def parse_negated_condition_list(entries: HostOrServiceConditions) -> Tuple[bool, Any]:
     if isinstance(entries, dict) and "$nor" in entries:
         return True, entries["$nor"]
     return False, entries

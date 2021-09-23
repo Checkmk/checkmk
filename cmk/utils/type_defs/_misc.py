@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import enum
 import sys
 from collections.abc import Container
@@ -38,7 +40,36 @@ AgentRawData = NewType("AgentRawData", bytes)
 
 RulesetName = str
 RuleValue = Any  # TODO: Improve this type
-RuleSpec = Dict[str, Any]  # TODO: Improve this type
+
+
+# TODO: Improve this type
+class RuleConditionsSpec(TypedDict, total=False):
+    host_tags: Any
+    host_labels: Any
+    host_name: Any
+    service_description: HostOrServiceConditions
+    service_labels: Any
+    host_folder: Any
+
+
+# TODO: Improve this type
+class _RuleSpecBase(TypedDict):
+    id: str
+    # TODO: Make the TypedDict generic over the value once it is supported
+    # in mypy: https://github.com/python/mypy/issues/3863 (CMK-8632)
+    value: Any
+    condition: RuleConditionsSpec
+
+
+class RuleSpec(_RuleSpecBase, total=False):
+    options: RuleOptions
+
+
+_DictConditions = Dict[str, List[Union[Dict[str, str], str]]]
+_ListConditions = List[Union[Dict[str, str], str]]
+HostOrServiceConditions = Union[None, _DictConditions, _ListConditions]  # TODO: refine type
+
+RuleOptions = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
@@ -75,12 +106,6 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
 
-HostNameConditions = Union[
-    None, Dict[str, List[Union[Dict[str, str], str]]], List[Union[Dict[str, str], str]]
-]
-ServiceNameConditions = Union[
-    None, Dict[str, List[Union[Dict[str, str], str]]], List[Union[Dict[str, str], str]]
-]
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int

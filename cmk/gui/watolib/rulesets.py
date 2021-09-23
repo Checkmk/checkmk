@@ -15,10 +15,12 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.type_defs import (
-    HostNameConditions,
+    HostOrServiceConditions,
     Labels,
+    RuleConditionsSpec,
+    RuleOptions,
+    RulesetName,
     RuleSpec,
-    ServiceNameConditions,
     TagConditionNE,
     TaggroupIDToTagCondition,
     TagID,
@@ -45,9 +47,9 @@ from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEG
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
 
-RulesetName = str
 FolderPath = str
 SearchOptions = Dict[str, Any]
+
 
 # This macro is needed to make the to_config() methods be able to use native
 # pprint/repr for the ruleset data structures. Have a look at
@@ -61,10 +63,10 @@ class RuleConditions:
         host_folder: str,
         host_tags: Optional[TaggroupIDToTagCondition] = None,
         host_labels: Optional[Labels] = None,
-        host_name: HostNameConditions = None,
-        service_description: ServiceNameConditions = None,
+        host_name: HostOrServiceConditions = None,
+        service_description: HostOrServiceConditions = None,
         service_labels: Optional[Labels] = None,
-    ):
+    ) -> None:
         self.host_folder = host_folder
         self.host_tags: TaggroupIDToTagCondition = host_tags or {}
         self.host_labels = host_labels or {}
@@ -72,7 +74,7 @@ class RuleConditions:
         self.service_description = service_description
         self.service_labels = service_labels or {}
 
-    def from_config(self, conditions):
+    def from_config(self, conditions: Any) -> RuleConditions:
         self.host_folder = conditions.get("host_folder", self.host_folder)
         self.host_tags = conditions.get("host_tags", {})
         self.host_labels = conditions.get("host_labels", {})
@@ -81,7 +83,7 @@ class RuleConditions:
         self.service_labels = conditions.get("service_labels", {})
         return self
 
-    def to_config_with_folder_macro(self):
+    def to_config_with_folder_macro(self) -> RuleConditionsSpec:
         """Create serializable data structure for the conditions
 
         In the WATO folder hierarchy each folder may have a rules.mk which
@@ -103,16 +105,16 @@ class RuleConditions:
         cfg["host_folder"] = _FOLDER_PATH_MACRO
         return cfg
 
-    def to_config_with_folder(self):
+    def to_config_with_folder(self) -> RuleConditionsSpec:
         cfg = self._to_config()
         cfg["host_folder"] = self.host_folder
         return cfg
 
-    def to_config_without_folder(self):
+    def to_config_without_folder(self) -> RuleConditionsSpec:
         return self._to_config()
 
-    def _to_config(self):
-        cfg: RuleSpec = {}
+    def _to_config(self) -> RuleConditionsSpec:
+        cfg: RuleConditionsSpec = {}
 
         if self.host_tags:
             cfg["host_tags"] = self.host_tags
@@ -131,9 +133,9 @@ class RuleConditions:
 
         return cfg
 
-    def has_only_explicit_service_conditions(self):
+    def has_only_explicit_service_conditions(self) -> bool:
         if self.service_description is None:
-            return
+            return False
 
         return all(
             not isinstance(i, dict) or i["$regex"].endswith("$") for i in self.service_description
@@ -828,7 +830,7 @@ class Rule:
         self.value = True if self.ruleset.rulespec.is_binary_ruleset else None
         self.id = ""  # Will be populated later
 
-    def from_config(self, rule_config):
+    def from_config(self, rule_config: Any) -> None:
         try:
             self._initialize()
             self._parse_rule(rule_config)
@@ -836,20 +838,17 @@ class Rule:
             logger.exception("error parsing rule")
             raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
-    def _parse_rule(self, rule_config):
+    def _parse_rule(self, rule_config: Any) -> None:
         if isinstance(rule_config, dict):
             self._parse_dict_rule(rule_config)
         else:
             raise NotImplementedError()
 
-    def _parse_dict_rule(self, rule_config):
+    def _parse_dict_rule(self, rule_config: Dict[Any, Any]) -> None:
         # cmk-update-config uses this to load rules from the config file for rewriting them To make
         # this possible, we need to accept missing "id" fields here. During runtime this is not
         # needed anymore, since cmk-update-config has updated all rules from the user configuration.
-        if "id" in rule_config:
-            self.id = rule_config["id"]
-        else:
-            self.id = utils.gen_id()
+        self.id = rule_config["id"] if "id" in rule_config else utils.gen_id()
 
         self.rule_options = rule_config.get("options", {})
         self.value = rule_config["value"]
@@ -864,7 +863,7 @@ class Rule:
         self.conditions = RuleConditions(self.folder.path())
         self.conditions.from_config(conditions)
 
-    def to_config(self):
+    def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non WATO hosts.
         for_config = (
@@ -874,11 +873,11 @@ class Rule:
         )
         return self._to_config(for_config)
 
-    def to_web_api(self):
+    def to_web_api(self) -> RuleSpec:
         return self._to_config(self.conditions.to_config_without_folder())
 
-    def _to_config(self, conditions):
-        result = {
+    def _to_config(self, conditions: RuleConditionsSpec) -> RuleSpec:
+        result: RuleSpec = {
             "id": self.id,
             "value": self.value,
             "condition": conditions,
@@ -890,7 +889,7 @@ class Rule:
 
         return result
 
-    def _rule_options_to_config(self):
+    def _rule_options_to_config(self) -> RuleOptions:
         ro = {}
         if self.rule_options.get("disabled"):
             ro["disabled"] = True
@@ -917,7 +916,7 @@ class Rule:
             },
         )
 
-    def is_ineffective(self):
+    def is_ineffective(self) -> bool:
         """Whether or not this rule does not match at all
 
         Interesting: This has always tried host matching. Whether or not a service ruleset

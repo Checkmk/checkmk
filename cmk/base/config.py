@@ -2187,7 +2187,7 @@ def _get_plugin_parameters(
     default_parameters: Optional[ParametersTypeAlias],
     ruleset_name: Optional[RuleSetName],
     ruleset_type: Literal["all", "merged"],
-    rules_getter_function: Callable[[RuleSetName], List[Dict[str, Any]]],
+    rules_getter_function: Callable[[RuleSetName], Ruleset],
 ) -> Union[None, Parameters, List[Parameters]]:
     if default_parameters is None:
         # This means the function will not acctept any params.

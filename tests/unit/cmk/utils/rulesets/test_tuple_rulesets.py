@@ -17,7 +17,7 @@ import cmk.utils.version as cmk_version
 import cmk.base.config as config
 
 # NOTE: A lot of signatures regarding rules and rule sets are simply lying:
-# They claim to expect a RuleSpec or Ruleset (from cmk.utils.type_defs), but
+# They claim to expect a RuleConditionsSpec or Ruleset (from cmk.utils.type_defs), but
 # they are silently handling a very chaotic tuple-based structure, too. We
 # really, really need to fix all those signatures! For now, we just annotate
 # our test data below with horrible hand-made types...

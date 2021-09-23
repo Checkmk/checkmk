@@ -16,7 +16,7 @@ from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import (
     CheckPluginName,
     HostName,
-    RuleSpec,
+    RuleConditionsSpec,
     RuleValue,
     ServiceName,
     TagCondition,
@@ -571,7 +571,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
 )
 def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     monkeypatch: MonkeyPatch,
-    rule_spec: RuleSpec,
+    rule_spec: RuleConditionsSpec,
     expected_result: Sequence[RuleValue],
 ) -> None:
     ts = Scenario()

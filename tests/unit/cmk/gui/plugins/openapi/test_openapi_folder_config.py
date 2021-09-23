@@ -378,7 +378,8 @@ def test_openapi_update_with_invalid_attribute_folder(wsgi_app, with_automation_
     )
 
 
-def test_openapi_bulk_actions_folders(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_bulk_actions_folders(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -444,7 +445,8 @@ def test_openapi_bulk_actions_folders(wsgi_app, with_automation_user, suppress_a
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
 
 
-def test_openapi_folder_update(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_folder_update(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -493,7 +495,8 @@ def test_openapi_folder_update(wsgi_app, with_automation_user, suppress_automati
     assert resp.json["title"] == "fo"
 
 
-def test_openapi_folder_root(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_folder_root(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 

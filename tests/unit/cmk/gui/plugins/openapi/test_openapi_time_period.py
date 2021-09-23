@@ -3,12 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
+
+import pytest
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
 
 
-def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_time_period(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -63,7 +67,8 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
     }
 
 
-def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_time_period_collection(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -111,7 +116,8 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress
     assert len(resp_col.json_body["value"]) == 1
 
 
-def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -122,9 +128,8 @@ def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user, suppress_aut
     _ = wsgi_app.call_method("put", base + "/objects/time_period/24X7", status=405)
 
 
-def test_openapi_timeperiod_unmodified_update(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -288,9 +293,8 @@ def test_openapi_timeperiod_unmodified_update(
     }
 
 
-def test_openapi_timeperiod_complex_update(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -360,9 +364,8 @@ def test_openapi_timeperiod_complex_update(
     }
 
 
-def test_openapi_timeperiod_excluding_exclude(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_excluding_exclude(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 

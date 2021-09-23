@@ -17,8 +17,8 @@ from cmk.automations import results
 from cmk.gui.i18n import _
 from cmk.gui.sites import site_is_local
 from cmk.gui.watolib.automations import (
-    _check_mk_remote_automation_serialized,
     check_mk_local_automation_serialized,
+    check_mk_remote_automation_serialized,
     local_automation_failure,
     MKAutomationException,
 )
@@ -62,7 +62,7 @@ def _automation_serialized(
 
     return AutomationResponse(
         command=command,
-        serialized_result=_check_mk_remote_automation_serialized(
+        serialized_result=check_mk_remote_automation_serialized(
             site_id=siteid,
             command=command,
             args=args,

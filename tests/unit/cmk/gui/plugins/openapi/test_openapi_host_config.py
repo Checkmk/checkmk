@@ -292,7 +292,8 @@ def test_openapi_bulk_hosts(
     )
 
 
-def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_bulk_simple(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -355,10 +356,10 @@ def test_openapi_host_rename(
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_error_on_not_existing_host(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     monkeypatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
@@ -391,10 +392,10 @@ def test_openapi_host_rename_error_on_not_existing_host(
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_on_invalid_hostname(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     monkeypatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
@@ -427,10 +428,10 @@ def test_openapi_host_rename_on_invalid_hostname(
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_with_pending_activate_changes(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -461,10 +462,10 @@ def test_openapi_host_rename_with_pending_activate_changes(
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_move(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -497,10 +498,10 @@ def test_openapi_host_move(
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_move_to_non_valid_folder(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -533,10 +534,10 @@ def test_openapi_host_move_to_non_valid_folder(
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_move_of_non_existing_host(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -552,10 +553,10 @@ def test_openapi_host_move_of_non_existing_host(
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_update_invalid(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))

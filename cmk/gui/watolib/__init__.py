@@ -123,8 +123,6 @@ from cmk.gui.watolib.analyze_configuration import (
 )
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
-    check_mk_automation_deprecated,
-    check_mk_local_automation_deprecated,
     check_mk_local_automation_serialized,
     do_remote_automation,
     do_site_login,

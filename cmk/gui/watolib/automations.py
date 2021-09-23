@@ -13,7 +13,6 @@ import re
 import subprocess
 import time
 import uuid
-from dataclasses import astuple
 from pathlib import Path
 from typing import Any, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 
@@ -38,7 +37,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.sites import get_site_config, site_is_local
+from cmk.gui.sites import get_site_config
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.sites import SiteManagementFactory
@@ -56,51 +55,10 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
-def _deserialize_check_mk_automation_result_deprecated(
-    command: str,
-    serialized_result: SerializedResult,
-) -> object:
-    return astuple(result_type_registry[command].deserialize(serialized_result))[0]
-
-
 def remote_automation_call_came_from_pre21() -> bool:
     if not (remote_version := request.headers.get("x-checkmk-version")):
         return False
     return parse_check_mk_version(remote_version) < parse_check_mk_version("2.1.0")
-
-
-def check_mk_automation_deprecated(
-    siteid: SiteId,
-    command: str,
-    args: Optional[Sequence[str]] = None,
-    indata: Any = "",
-    stdin_data: Optional[str] = None,
-    timeout: Optional[int] = None,
-    sync: bool = True,
-    non_blocking_http: bool = False,
-) -> Any:
-    if args is None:
-        args = []
-
-    if not siteid or site_is_local(siteid):
-        return check_mk_local_automation_deprecated(
-            command,
-            args,
-            indata,
-            stdin_data,
-            timeout,
-        )
-
-    return _check_mk_remote_automation_deprecated(
-        site_id=siteid,
-        command=command,
-        args=args,
-        indata=indata,
-        stdin_data=stdin_data,
-        timeout=timeout,
-        sync=sync,
-        non_blocking_http=non_blocking_http,
-    )
 
 
 def check_mk_local_automation_serialized(
@@ -181,29 +139,6 @@ def check_mk_local_automation_serialized(
     return cmd, SerializedResult(outdata)
 
 
-def check_mk_local_automation_deprecated(
-    command: str,
-    args: Optional[Sequence[str]] = None,
-    indata: Any = "",
-    stdin_data: Optional[str] = None,
-    timeout: Optional[int] = None,
-) -> Any:
-    cmd, outdata = check_mk_local_automation_serialized(
-        command=command,
-        args=args,
-        indata=indata,
-        stdin_data=stdin_data,
-        timeout=timeout,
-    )
-    try:
-        return _deserialize_check_mk_automation_result_deprecated(
-            command,
-            outdata,
-        )
-    except SyntaxError as e:
-        raise local_automation_failure(command=command, cmdline=cmd, out=outdata, exc=e)
-
-
 def local_automation_failure(
     command,
     cmdline,
@@ -229,7 +164,7 @@ def _hilite_errors(outdata):
     return re.sub("\nError: *([^\n]*)", "\n<div class=err><b>Error:</b> \\1</div>", outdata)
 
 
-def _check_mk_remote_automation_serialized(
+def check_mk_remote_automation_serialized(
     *,
     site_id: SiteId,
     command: str,
@@ -276,40 +211,6 @@ def _check_mk_remote_automation_serialized(
             ],
         )
     )
-
-
-def _check_mk_remote_automation_deprecated(
-    site_id: SiteId,
-    command: str,
-    args: Optional[Sequence[str]],
-    indata: Any,
-    stdin_data: Optional[str] = None,
-    timeout: Optional[int] = None,
-    sync: bool = True,
-    non_blocking_http: bool = False,
-) -> Any:
-    try:
-        return _deserialize_check_mk_automation_result_deprecated(
-            command,
-            serialized_response := _check_mk_remote_automation_serialized(
-                site_id=site_id,
-                command=command,
-                args=args,
-                indata=indata,
-                stdin_data=stdin_data,
-                timeout=timeout,
-                sync=sync,
-                non_blocking_http=non_blocking_http,
-            ),
-        )
-    except SyntaxError:
-        raise MKAutomationException(
-            "%s: <pre>%s</pre>"
-            % (
-                _("Got invalid data"),
-                serialized_response,
-            )
-        )
 
 
 # If the site is not up-to-date, synchronize it first.

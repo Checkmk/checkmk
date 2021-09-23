@@ -39,10 +39,8 @@ from cmk.gui.watolib import hosts_and_folders, search
 SPEC_LOCK = threading.Lock()
 
 
-class Automation(NamedTuple):
+class RemoteAutomation(NamedTuple):
     automation: MagicMock
-    local_automation: MagicMock
-    remote_automation: MagicMock
     responses: Any
 
 
@@ -135,26 +133,14 @@ def with_admin_login(with_admin):
 
 
 @pytest.fixture()
-def suppress_automation_calls(mocker):
-    """Stub out calls to the "automation" system
-
-    This is needed because in order for automation calls to work, the site needs to be set up
+def suppress_remote_automation_calls(mocker):
+    """Stub out calls to the remote automation system
+    This is needed because in order for remote automation calls to work, the site needs to be set up
     properly, which can't be done in an unit-test context."""
-    automation = mocker.patch("cmk.gui.watolib.automations.check_mk_automation_deprecated")
-    mocker.patch("cmk.gui.watolib.check_mk_automation_deprecated", new=automation)
-
-    local_automation = mocker.patch(
-        "cmk.gui.watolib.automations.check_mk_local_automation_deprecated"
-    )
-    mocker.patch("cmk.gui.watolib.check_mk_local_automation_deprecated", new=local_automation)
-
     remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
     mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)
-
-    yield Automation(
-        automation=automation,
-        local_automation=local_automation,
-        remote_automation=remote_automation,
+    yield RemoteAutomation(
+        automation=remote_automation,
         responses=None,
     )
 
@@ -359,7 +345,7 @@ def logged_in_admin_wsgi_app(wsgi_app, with_admin):
 
 
 @pytest.fixture()
-def with_groups(request_context, with_admin_login, suppress_automation_calls):
+def with_groups(request_context, with_admin_login, suppress_remote_automation_calls):
     watolib.add_group("windows", "host", {"alias": "windows"})
     watolib.add_group("routers", "service", {"alias": "routers"})
     watolib.add_group("admins", "contact", {"alias": "admins"})

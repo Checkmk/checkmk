@@ -3,15 +3,18 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import urllib
+
+import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_livestatus_service(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
     with_host,
 ):
@@ -93,10 +96,10 @@ def test_openapi_livestatus_service(
         assert len(resp.json["value"]) == 1
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_livestatus_collection_link(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
     with_host,
 ):
@@ -149,10 +152,10 @@ def test_openapi_livestatus_collection_link(
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_specific_service(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
     with_host,
 ):
@@ -210,10 +213,10 @@ def test_openapi_specific_service(
         }
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_service_with_slash_character(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
     with_host,
 ):
@@ -273,10 +276,10 @@ def test_openapi_service_with_slash_character(
         }
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_non_existing_service(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
     with_host,
 ):

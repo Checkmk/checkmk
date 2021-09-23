@@ -777,19 +777,6 @@ mock_discovery_result = TryDiscoveryResult(
 )
 
 
-def test_service_discovery(
-    wsgi_app,
-    with_automation_user,
-    inline_background_jobs,
-    suppress_automation_calls,
-    mock_livestatus,
-):
-    username, secret = with_automation_user
-    suppress_automation_calls.local_automation.return_value = mock_discovery_result
-    suppress_automation_calls.automation.return_value = mock_discovery_result
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
-
 @pytest.mark.usefixtures("with_host")
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_discovery(

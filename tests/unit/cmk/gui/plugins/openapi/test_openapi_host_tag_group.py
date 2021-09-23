@@ -3,12 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
+
+import pytest
 
 from cmk.utils.tags import BuiltinTagConfig
 
 
-def test_openapi_host_tag_group_update(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -63,9 +67,8 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user, suppress_
     }
 
 
-def test_openapi_host_tag_group_get_collection(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_get_collection(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -81,7 +84,8 @@ def test_openapi_host_tag_group_get_collection(
     assert len(col_resp.json_body["value"]) == builtin_groups_count
 
 
-def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -123,9 +127,8 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user, suppress_
     )
 
 
-def test_openapi_host_tag_group_invalid_id(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -147,7 +150,8 @@ def test_openapi_host_tag_group_invalid_id(
     )
 
 
-def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -196,9 +200,8 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user, suppres
     )
 
 
-def test_openapi_host_tag_group_update_use_case(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 

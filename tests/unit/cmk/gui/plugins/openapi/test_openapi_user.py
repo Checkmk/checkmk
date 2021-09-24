@@ -76,31 +76,32 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
-    edit_users(
-        {
-            "user": {
-                "attributes": {
-                    "ui_theme": None,
-                    "ui_sidebar_position": None,
-                    "nav_hide_icons_title": None,
-                    "icons_per_item": None,
-                    "show_mode": None,
-                    "start_url": None,
-                    "force_authuser": False,
-                    "enforce_pw_change": False,
-                    "alias": "User Name",
-                    "locked": False,
-                    "pager": "",
-                    "roles": [],
-                    "contactgroups": [],
-                    "email": "",
-                    "fallback_contact": False,
-                    "disable_notifications": {},
-                },
-                "is_new_user": True,
+    with freeze_time("2021-09-24 12:36:00"):
+        edit_users(
+            {
+                "user": {
+                    "attributes": {
+                        "ui_theme": None,
+                        "ui_sidebar_position": None,
+                        "nav_hide_icons_title": None,
+                        "icons_per_item": None,
+                        "show_mode": None,
+                        "start_url": None,
+                        "force_authuser": False,
+                        "enforce_pw_change": False,
+                        "alias": "User Name",
+                        "locked": False,
+                        "pager": "",
+                        "roles": [],
+                        "contactgroups": [],
+                        "email": "",
+                        "fallback_contact": False,
+                        "disable_notifications": {},
+                    },
+                    "is_new_user": True,
+                }
             }
-        }
-    )
+        )
 
     user_attributes = _load_internal_attributes("user")
 
@@ -116,6 +117,9 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
         "pager": "",
         "roles": [],
         "user_scheme_serial": 0,
+        "last_pw_change": 1632486960,
+        "num_failed_logins": 0,
+        "serial": 0,
     }
 
 
@@ -345,6 +349,7 @@ def test_openapi_user_internal_with_notifications(wsgi_app, with_automation_user
         "serial": 1,
         "last_pw_change": 1265013000,
         "enforce_pw_change": True,
+        "num_failed_logins": 0,
     }
 
 
@@ -510,6 +515,7 @@ def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, mon
         "serial": 1,
         "last_pw_change": 1265011200,
         "enforce_pw_change": True,
+        "num_failed_logins": 0,
     }
 
     with freeze_time("2010-02-01 08:30:00"):
@@ -542,6 +548,7 @@ def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, mon
         "serial": 1,  # this is 2 internally but the function is not invoked here
         "last_pw_change": 1265011200,
         "enforce_pw_change": True,
+        "num_failed_logins": 0,
     }
 
     with freeze_time("2010-02-01 09:00:00"):
@@ -570,6 +577,7 @@ def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, mon
         "serial": 1,
         "last_pw_change": 1265011200,  # no change in time from previous edit
         "enforce_pw_change": True,
+        "num_failed_logins": 0,
     }
 
 

@@ -33,7 +33,8 @@ import cmk.gui.plugins.userdb
 import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, g, html, local, request, response, session
+from cmk.gui.globals import config, html, local, request, response, session
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
@@ -689,14 +690,12 @@ def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
+@request_memoize()
 def load_users(lock: bool = False) -> Users:
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
         store.aquire_lock(_contacts_filepath())
-
-    if "users" in g:
-        return g.users
 
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
@@ -826,9 +825,6 @@ def load_users(lock: bool = False) -> Users:
                         "automation_secret": secret,
                     }
 
-    # populate the users cache
-    g.users = result
-
     return result
 
 
@@ -897,8 +893,8 @@ def save_users(profiles: Users) -> None:
     # to be written (like during user syncs, wato, ...)
     release_users_lock()
 
-    # populate the users cache
-    g.users = updated_profiles
+    # Invalidate the users memoized data
+    load_users.cache_clear()
 
     # Call the users_saved hook
     hooks.call("users-saved", updated_profiles)

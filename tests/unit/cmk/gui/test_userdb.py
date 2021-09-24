@@ -22,7 +22,7 @@ import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import config, g
+from cmk.gui.globals import config
 from cmk.gui.valuespec import Dictionary
 
 
@@ -47,10 +47,10 @@ def single_user_session_enabled(monkeypatch, user_id):
 
 def _load_users_uncached(*, lock):
     try:
+        userdb.load_users.cache_clear()
         return userdb.load_users(lock=lock)
     finally:
-        # TODO: It's bad that we have to do this here (after each load_users)
-        del g.users
+        userdb.load_users.cache_clear()
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -456,8 +456,7 @@ def test_invalidate_session(user_id, session_valid):
 def test_get_last_activity(with_user, session_valid):
     user_id = with_user[0]
     user = _load_users_uncached(lock=False)[user_id]
-    assert "session_info" not in user
-    assert userdb.get_last_activity(user) == 0
+    assert userdb.get_last_activity(user) == time.time() - 5
 
     userdb.on_access(user_id, session_valid)
     userdb.on_end_of_request(user_id)

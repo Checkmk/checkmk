@@ -72,7 +72,7 @@ register.check_plugin(
             assert service.item == "Parameters({'default': 42})"
             break
     else:
-        assert False, '"test_check_1" not discovered'
+        raise AssertionError('"test_check_1" not discovered')
 
     # And now overwrite the setting in the config
     site.write_file(
@@ -89,7 +89,7 @@ register.check_plugin(
             assert service.item == "Parameters({'default': 42, 'levels': (1, 2)})"
             break
     else:
-        assert False, '"test_check_1" not discovered'
+        raise AssertionError('"test_check_1" not discovered')
 
 
 def test_test_check_1_all_rule(
@@ -152,7 +152,7 @@ register.check_plugin(
             assert service.item == "[Parameters({'default': 42})]"
             break
     else:
-        assert False, '"test_check_2" not discovered'
+        raise AssertionError('"test_check_2" not discovered')
 
     # And now overwrite the setting in the config
     site.write_file(
@@ -171,4 +171,4 @@ register.check_plugin(
             )
             break
     else:
-        assert False, '"test_check_2" not discovered'
+        raise AssertionError('"test_check_2" not discovered')

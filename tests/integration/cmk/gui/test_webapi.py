@@ -591,7 +591,7 @@ def test_edit_group_missing(web, group_type):  # noqa: F811 # pylint: disable=re
             assert str(e) != str(None)
             return
 
-        assert False
+        raise AssertionError()
     finally:
         web.delete_group(group_type, group_id)
 
@@ -862,7 +862,7 @@ def graph_test_config(web, site):  # noqa: F811 # pylint: disable=redefined-oute
                 )
             )
         else:
-            assert False, "RRD file %s missing" % rrd_path
+            raise AssertionError("RRD file %s missing" % rrd_path)
 
         yield
     finally:

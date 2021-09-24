@@ -17,7 +17,8 @@ import cmk.utils
 import cmk.utils.paths
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import g, user
+from cmk.gui.globals import user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
@@ -26,9 +27,10 @@ def add_message(message: str) -> None:
     _git_messages().append(message)
 
 
+@request_memoize()
 def _git_messages() -> List[str]:
     """Initializes the request global data structure and returns it"""
-    return g.setdefault("wato_git_messages", [])
+    return []
 
 
 def do_git_commit() -> None:

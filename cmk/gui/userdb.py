@@ -840,7 +840,7 @@ def load_custom_attr(
     userid: UserId,
     key: str,
     conv_func: Callable[[str], Any],
-    default: Any = None,
+    default: Optional[Any] = None,
     lock: bool = False,
 ) -> Any:
     path = Path(custom_attr_path(userid, key))

@@ -74,7 +74,7 @@ TableRows = List[Union[TableRow, GroupHeader]]
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
-    title: "HTMLContent" = None,
+    title: Optional["HTMLContent"] = None,
     searchable: bool = True,
     sortable: bool = True,
     foldable: bool = False,
@@ -135,7 +135,7 @@ class Table:
     def __init__(
         self,
         table_id: Optional[str] = None,
-        title: "HTMLContent" = None,
+        title: Optional["HTMLContent"] = None,
         searchable: bool = True,
         sortable: bool = True,
         foldable: bool = False,
@@ -189,7 +189,7 @@ class Table:
 
     def row(
         self,
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
@@ -206,7 +206,7 @@ class Table:
         self,
         title: "HTMLContent" = "",
         text: "HTMLContent" = "",
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -227,7 +227,7 @@ class Table:
 
     def _add_row(
         self,
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
@@ -261,7 +261,7 @@ class Table:
         self,
         title: "HTMLContent" = "",
         text: "HTMLContent" = "",
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,

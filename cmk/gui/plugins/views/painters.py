@@ -21,7 +21,8 @@ from cmk.utils.type_defs import Timestamp
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import config, g, html, output_funnel, request, response
+from cmk.gui.globals import config, html, output_funnel, request, response
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
@@ -5146,7 +5147,7 @@ class PainterHostDockerNode(Painter):
         output = docker_nodes.get(row["host_name"])
         # Output with node: "Container running on node mynode2"
         # Output without node: "Container running"
-        if output is None or not "node" in output:
+        if output is None or "node" not in output:
             return "", ""
 
         node = output.split()[-1]
@@ -5162,22 +5163,19 @@ class PainterHostDockerNode(Painter):
         return "", content
 
 
+@request_memoize()
 def _get_docker_container_status_outputs() -> Dict[str, str]:
     """Returns a map of all known hosts with their docker nodes
 
     It is important to cache this query per request and also try to use the
     liveproxyd query cached.
     """
-    if "docker_nodes" in g:
-        return g.docker_nodes
     query: str = (
         "GET services\n"
         "Columns: host_name service_plugin_output\n"
         "Filter: check_command = check_mk-docker_container_status\n"
     )
-    docker_nodes: Dict[str, str] = {row[0]: row[1] for row in sites.live().query(query)}
-    g.docker_nodes = docker_nodes
-    return docker_nodes
+    return {row[0]: row[1] for row in sites.live().query(query)}
 
 
 class AbstractPainterSpecificMetric(Painter):
@@ -5209,28 +5207,26 @@ class AbstractPainterSpecificMetric(Painter):
 
     @property
     def parameters(self) -> Dictionary:
-        if "painter_specific_metric_choices" in g:
-            choices = g.painter_specific_metric_choices
-        else:
-            choices = []
-            for key, value in metrics.metric_info.items():
-                choices.append((key, value.get("title")))
-            choices.sort(key=lambda x: x[1])
-            g.painter_specific_metric_choices = choices
-
         return Dictionary(
             elements=[
                 (
                     "metric",
                     DropdownChoice(
                         title=_("Show metric"),
-                        choices=choices,
+                        choices=self._metric_choices(),
                         help=_("If available, the following metric will be shown"),
                     ),
                 ),
                 ("column_title", TextInput(title=_("Custom title"))),
             ],
             optional_keys=["column_title"],
+        )
+
+    @classmethod
+    @request_memoize()
+    def _metric_choices(cls) -> List[Tuple[str, str]]:
+        return sorted(
+            [(k, v.get("title", k)) for k, v in metrics.metric_info.items()], key=lambda x: x[1]
         )
 
     def _render(self, row, cell, perf_data_entries, check_command):

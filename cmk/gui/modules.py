@@ -37,7 +37,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.pages
 import cmk.gui.plugins.main_modules
 import cmk.gui.utils as utils
-from cmk.gui.globals import g
+from cmk.gui.hooks import request_memoize
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module
@@ -153,18 +153,13 @@ def _find_local_web_plugins() -> Iterator[str]:
 _last_web_plugins_update = 0.0
 
 
+@request_memoize()
 def _local_web_plugins_have_changed() -> bool:
     global _last_web_plugins_update
-
-    if "local_web_plugins_have_changed" in g:
-        return g.local_web_plugins_have_changed
 
     this_time = 0.0
     for path in _find_local_web_plugins():
         this_time = max(os.stat(path).st_mtime, this_time)
     last_time = _last_web_plugins_update
     _last_web_plugins_update = this_time
-
-    have_changed = this_time > last_time
-    g.local_web_plugins_have_changed = have_changed
-    return have_changed
+    return this_time > last_time

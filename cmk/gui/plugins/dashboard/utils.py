@@ -41,7 +41,8 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response
-from cmk.gui.globals import config, g, html, request
+from cmk.gui.globals import config, html, request
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
@@ -796,11 +797,10 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
 class DashboardStore:
     @classmethod
+    @request_memoize()
     def get_instance(cls):
-        """Use the request globals to prevent multiple instances during a request"""
-        if "dashboard_store" not in g:
-            g.dashboard_store = cls()
-        return g.dashboard_store
+        """Load dashboards only once for each request"""
+        return cls()
 
     def __init__(self):
         self.all = self._load_all()
@@ -932,8 +932,6 @@ def transform_stats_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.
 def _transform_builtin_dashboards() -> None:
-    if "builtin_dashboards_transformed" in g:
-        return  # Only do this once
     for name, dashboard in builtin_dashboards.items():
         # Do not transform dashboards which are already in the new format
         if "context" in dashboard:
@@ -1027,7 +1025,6 @@ def _transform_builtin_dashboards() -> None:
         dashboard.setdefault("context", {})
         dashboard.setdefault("topic", _("Overview"))
         dashboard.setdefault("description", dashboard.get("title", ""))
-    g.builtin_dashboards_transformed = True
 
 
 def copy_view_into_dashlet(
@@ -1048,7 +1045,7 @@ def copy_view_into_dashlet(
         # but we do this for the rare edge case during legacy dashboard conversion, so
         # this should be sufficient
         view = None
-        for (_u, n), this_view in get_all_views().items():
+        for (_unused, n), this_view in get_all_views().items():
             # take the first view with a matching name
             if view_name == n:
                 view = this_view

@@ -26,12 +26,14 @@ timeout(time: 12, unit: 'HOURS') {
                     stage('execute test') {
                         dir ('tests') {
                             def EXIT_CODE = sh(
-                                script: "BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make test-bandit",
+                                script: "BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make test-bandit"
                             )
                             println("Exit code was: " + EXIT_CODE)
                         }
                     }
-
+                } catch(Exception e) {
+                    notify.notify_error(e)
+                } finally {
                     stage('process results') {
                         archiveArtifacts("bandit_results.xml")
                         xunit([Custom(
@@ -43,8 +45,6 @@ timeout(time: 12, unit: 'HOURS') {
                             stopProcessingIfError: true
                         )])
                     }
-                } catch(Exception e) {
-                    notify.notify_error(e)
                 }
             }
         }

@@ -15,7 +15,8 @@ from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redi
 from cmk.utils.type_defs import Labels as _Labels
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import g, user
+from cmk.gui.globals import user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 
 if TYPE_CHECKING:
@@ -217,7 +218,6 @@ class LabelsCache:
         return IntegrityCheckResponse.USE
 
 
+@request_memoize()
 def get_labels_cache() -> LabelsCache:
-    if "labels_cache" not in g:
-        g.labels_cache = LabelsCache()
-    return g.labels_cache
+    return LabelsCache()

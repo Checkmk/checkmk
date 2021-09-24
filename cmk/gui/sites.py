@@ -96,6 +96,8 @@ def cleanup_connections() -> Iterator[None]:
 # sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
+    if not g:
+        return
     logger.debug("Disconnecing site connections")
     if "live" in g:
         g.live.disconnect()

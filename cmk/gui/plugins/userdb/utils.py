@@ -6,7 +6,6 @@
 
 import abc
 import os
-from contextlib import suppress
 from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
@@ -17,7 +16,8 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import config, g, user
+from cmk.gui.globals import config, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import UserSpec
@@ -149,25 +149,18 @@ def cleanup_connection_id(connection_id: Optional[str]) -> str:
     return connection_id
 
 
+@request_memoize(maxsize=None)
 def get_connection(connection_id: Optional[str]) -> "Optional[UserConnector]":
     """Returns the connection object of the requested connection id
 
     This function maintains a cache that for a single connection_id only one object per request is
     created."""
-    if "user_connections" not in g:
-        g.user_connections = {}
-
-    if connection_id not in g.user_connections:
-        connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
-        # NOTE: We cache even failed lookups.
-        g.user_connections[connection_id] = connections_with_id[0] if connections_with_id else None
-
-    return g.user_connections[connection_id]
+    connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
+    return connections_with_id[0] if connections_with_id else None
 
 
 def clear_user_connection_cache() -> None:
-    with suppress(AttributeError):
-        del g.user_connections
+    get_connection.cache_clear()
 
 
 def active_connections() -> "List[Tuple[str, UserConnector]]":

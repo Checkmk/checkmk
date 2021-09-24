@@ -59,7 +59,7 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import config, g, html
+from cmk.gui.globals import config, html
 from cmk.gui.globals import request as _request
 from cmk.gui.globals import timeout_manager, user
 from cmk.gui.i18n import _
@@ -1435,8 +1435,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._detach_from_parent()
 
         # Cleanup existing livestatus connections (may be opened later when needed)
-        if g:
-            sites_disconnect()
+        sites_disconnect()
 
         self._close_apache_fds()
 

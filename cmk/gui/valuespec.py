@@ -36,19 +36,7 @@ from collections.abc import MutableMapping
 from collections.abc import Sequence as ABCSequence
 from enum import Enum
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Final,
-    Generic,
-    ItemsView,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    NamedTuple,
-)
+from typing import Any, Callable, Dict, Final, Generic, Iterable, List, Literal, Mapping, NamedTuple
 from typing import Optional as _Optional
 from typing import Pattern, Protocol, Sequence, SupportsFloat
 from typing import Tuple as _Tuple
@@ -6051,7 +6039,7 @@ class PageAutocompleteLabels(AjaxPage):
             self._get_labels(Labels.World(api_request["world"]), api_request["search_label"])
         )
 
-    def _get_labels(self, world, search_label: str) -> ItemsView[str, str]:
+    def _get_labels(self, world, search_label: str) -> List[_Tuple[str, str]]:
         if world is Labels.World.CONFIG:
             return self._get_labels_from_config(search_label)
 
@@ -6060,17 +6048,15 @@ class PageAutocompleteLabels(AjaxPage):
 
         raise NotImplementedError()
 
-    def _get_labels_from_config(self, search_label: str) -> ItemsView[str, str]:
+    def _get_labels_from_config(self, search_label: str) -> List[_Tuple[str, str]]:
         # TODO: Until we have a config specific implementation we now use the labels known to the
         # core. This is not optimal, but better than doing nothing.
         # To implement a setup specific search, we need to decide which occurrences of labels we
         # want to search: hosts / folders, rules, ...?
         return self._get_labels_from_core(search_label)
 
-    def _get_labels_from_core(self, search_label: str) -> ItemsView[str, str]:
-        labels = get_labels_cache().get_labels()
-
-        return labels.items()
+    def _get_labels_from_core(self, search_label: str) -> List[_Tuple[str, str]]:
+        return list(get_labels_cache().get_labels().items())
 
 
 class IconSelector(ValueSpec):

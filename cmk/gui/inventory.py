@@ -36,7 +36,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import config, g, html, request, response, user
+from cmk.gui.globals import config, html, request, response, user
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Row
@@ -317,6 +317,7 @@ class LoadStructuredDataError(MKException):
     pass
 
 
+@request_memoize(maxsize=None)
 def _load_structured_data_tree(
     tree_type: Literal["inventory", "status_data"], hostname: Optional[HostName]
 ) -> Optional[StructuredDataNode]:
@@ -324,28 +325,22 @@ def _load_structured_data_tree(
     if not hostname:
         return None
 
-    inventory_tree_cache = g.setdefault(tree_type, {})
-    if hostname in inventory_tree_cache:
-        inventory_tree = inventory_tree_cache[hostname]
-    else:
-        if "/" in hostname:
-            # just for security reasons
-            return None
+    if "/" in hostname:
+        # just for security reasons
+        return None
 
-        tree_store = StructuredDataStore(
-            Path(cmk.utils.paths.inventory_output_dir)
-            if tree_type == "inventory"
-            else Path(cmk.utils.paths.status_data_dir)
-        )
+    tree_store = StructuredDataStore(
+        Path(cmk.utils.paths.inventory_output_dir)
+        if tree_type == "inventory"
+        else Path(cmk.utils.paths.status_data_dir)
+    )
 
-        try:
-            inventory_tree = tree_store.load(host_name=hostname)
-        except Exception as e:
-            if config.debug:
-                html.show_warning("%s" % e)
-            raise LoadStructuredDataError()
-        inventory_tree_cache[hostname] = inventory_tree
-    return inventory_tree
+    try:
+        return tree_store.load(host_name=hostname)
+    except Exception as e:
+        if config.debug:
+            html.show_warning("%s" % e)
+        raise LoadStructuredDataError()
 
 
 def _load_status_data_tree(hostname: Optional[HostName], row: Row) -> Optional[StructuredDataNode]:

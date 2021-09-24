@@ -6,7 +6,7 @@
 import functools
 import sys
 import traceback
-from typing import Any, Callable, Dict, List, Literal, NamedTuple, Union
+from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Union
 
 import cmk.gui.i18n
 from cmk.gui.globals import config, html
@@ -109,7 +109,7 @@ ClearEvents = Union[List[ClearEvent], ClearEvent]
 
 def _scoped_memoize(
     clear_events: ClearEvents,
-    maxsize: int = 128,
+    maxsize: Optional[int] = 128,
     typed: bool = False,
 ):
     """A scoped memoization decorator.
@@ -149,7 +149,7 @@ def _scoped_memoize(
     return _decorator
 
 
-def request_memoize(maxsize: int = 128, typed: bool = False):
+def request_memoize(maxsize: Optional[int] = 128, typed: bool = False):
     """A cache decorator which only has a scope for one request.
 
     Args:

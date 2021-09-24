@@ -7,15 +7,20 @@
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
+from cmk.utils.version import is_raw_edition
+
 from cmk.automations.results import ABCAutomationResult, result_type_registry
 
 from cmk.base.automations import automations
 
 
-def test_result_type_registry_completeness():
+def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
-    assert sorted(result_type_registry) == sorted(automations._automations)
+    automations_missing = {"bake-agents"} if is_raw_edition() else set()
+    assert sorted(set(result_type_registry) - automations_missing) == sorted(
+        automations._automations
+    )
 
 
 @dataclass
@@ -31,7 +36,7 @@ class AutomationResultTest(ABCAutomationResult):
         return "test"
 
 
-def test_serialization():
+def test_serialization() -> None:
     automation_res_test = AutomationResultTest(
         a=1,
         b="string",

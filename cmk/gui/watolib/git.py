@@ -9,6 +9,7 @@ import glob
 import os
 import subprocess
 from pathlib import Path
+from typing import List
 
 from six import ensure_str
 
@@ -21,16 +22,16 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
 
-def add_message(message):
+def add_message(message: str) -> None:
     _git_messages().append(message)
 
 
-def _git_messages():
+def _git_messages() -> List[str]:
     """Initializes the request global data structure and returns it"""
     return g.setdefault("wato_git_messages", [])
 
 
-def do_git_commit():
+def do_git_commit() -> None:
     author = "%s <%s>" % (user.id, user.email)
     git_dir = cmk.utils.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
@@ -72,7 +73,7 @@ def do_git_commit():
         _git_command(["commit", "--author", author, "-m", message])
 
 
-def _git_add_files():
+def _git_add_files() -> None:
     path_pattern = os.path.join(cmk.utils.paths.default_config_dir, "*.d/wato")
     rel_paths = [
         os.path.relpath(p, cmk.utils.paths.default_config_dir) for p in glob.glob(path_pattern)
@@ -80,7 +81,7 @@ def _git_add_files():
     _git_command(["add", "--all", ".gitignore"] + rel_paths)
 
 
-def _git_command(args):
+def _git_command(args: List[str]) -> None:
     command = ["git"] + [ensure_str(a) for a in args]
     logger.debug(
         "GIT: Execute in %s: %s",
@@ -112,7 +113,7 @@ def _git_command(args):
         )
 
 
-def _git_has_pending_changes():
+def _git_has_pending_changes() -> bool:
     try:
         p = subprocess.Popen(
             ["git", "status", "--porcelain"],
@@ -128,7 +129,7 @@ def _git_has_pending_changes():
 
 
 # TODO: Use cmk.store
-def _write_gitignore_files():
+def _write_gitignore_files() -> None:
     """Make sure that .gitignore-files are present and up to date
 
     Only files below the "wato" directories should be under git control. The files in

@@ -204,6 +204,8 @@ class RequestContext:
             self._web_log_handler = logging.getLogger().handlers[0]
             self._web_log_handler.addFilter(self._prepend_url_filter)
 
+        _call_hook("request-context-enter")
+
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
@@ -213,7 +215,16 @@ class RequestContext:
         if self.timeout_manager is not None:
             self.timeout_manager.disable_timeout()
 
+        _call_hook("request-context-exit")
+
         _request_ctx_stack.pop()
+
+
+def _call_hook(name: str) -> None:
+    # TODO: cyclical import with hooks -> globals
+    from cmk.gui import hooks
+
+    hooks.call("request-context-exit")
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,

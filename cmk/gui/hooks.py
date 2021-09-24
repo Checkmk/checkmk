@@ -98,6 +98,8 @@ ClearEvent = Literal[
     "ldap-sync-finished",
     "request-start",
     "request-end",
+    "request-context-enter",
+    "request-context-exit",
     "roles-saved",
     "users-saved",
 ]
@@ -161,4 +163,6 @@ def request_memoize(maxsize: int = 128, typed: bool = False):
         A `_scoped_memoize` decorator which clears on every request-start.
 
     """
-    return _scoped_memoize(clear_events=["request-end"], maxsize=maxsize, typed=typed)
+    return _scoped_memoize(
+        clear_events=["request-end", "request-context-exit"], maxsize=maxsize, typed=typed
+    )

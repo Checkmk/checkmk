@@ -37,6 +37,7 @@ import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import config, g, html, request, response, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import TextInput, ValueSpec
@@ -381,18 +382,16 @@ def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[Structur
     return struct_tree
 
 
+@request_memoize()
 def _get_permitted_inventory_paths():
     """
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.
     """
-    if "permitted_inventory_paths" in g:
-        return g.permitted_inventory_paths
 
     user_groups = [] if user.id is None else userdb.contactgroups_of_user(user.id)
 
     if not user_groups:
-        g.permitted_inventory_paths = None
         return None
 
     forbid_whole_tree = False
@@ -401,11 +400,9 @@ def _get_permitted_inventory_paths():
         inventory_paths = config.multisite_contactgroups.get(user_group, {}).get("inventory_paths")
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
-            g.permitted_inventory_paths = None
             return None
 
         if inventory_paths == "allow_all":
-            g.permitted_inventory_paths = None
             return None
 
         if inventory_paths == "forbid_all":
@@ -415,10 +412,8 @@ def _get_permitted_inventory_paths():
         permitted_paths.extend(inventory_paths[1])
 
     if forbid_whole_tree and not permitted_paths:
-        g.permitted_inventory_paths = []
         return []
 
-    g.permitted_inventory_paths = permitted_paths
     return permitted_paths
 
 

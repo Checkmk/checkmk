@@ -24,7 +24,8 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, g
+from cmk.gui.globals import config
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.valuespec import DropdownChoiceEntry, DropdownChoices
@@ -144,16 +145,13 @@ def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
     ]
 
 
+@request_memoize()
 def _eventd_configuration() -> ec.ConfigFromWATO:
-    if "eventd_configuration" in g:
-        return g.eventd_configuration
-
-    settings = ec.settings(
-        "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
+    return ec.load_config(
+        ec.settings(
+            "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
+        )
     )
-    cfg = ec.load_config(settings)
-    g.eventd_configuration = cfg
-    return cfg
 
 
 def daemon_running() -> bool:

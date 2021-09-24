@@ -9,7 +9,7 @@ from typing import Any, Dict, get_args, Literal
 import cmk.utils.paths
 import cmk.utils.store as store
 
-from cmk.gui.globals import g
+from cmk.gui.hooks import request_memoize
 
 GroupType = Literal["host", "service", "contact"]
 GroupName = str
@@ -35,10 +35,8 @@ def load_contact_group_information() -> GroupSpecs:
     return load_group_information()["contact"]
 
 
+@request_memoize()
 def load_group_information() -> AllGroupSpecs:
-    if "group_information" in g:
-        return g.group_information
-
     cmk_base_groups = _load_cmk_base_groups()
     gui_groups = _load_gui_groups()
 
@@ -52,7 +50,6 @@ def load_group_information() -> AllGroupSpecs:
             if gid in gui_groups["multisite_%sgroups" % what]:
                 groups[what][gid].update(gui_groups["multisite_%sgroups" % what][gid])
 
-    g.group_information = groups
     return groups
 
 

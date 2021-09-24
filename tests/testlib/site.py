@@ -554,7 +554,7 @@ class Site:
             if os.path.exists("%s/.f12" % path):
                 print('Executing .f12 in "%s"...' % path)
                 assert (
-                    os.system(  #
+                    os.system(  # nosec
                         'cd "%s" ; '
                         "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                         "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "

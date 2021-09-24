@@ -829,11 +829,9 @@ def matches_labels(object_labels, required_labels) -> bool:
 
 
 def parse_negated_condition_list(entries):
-    negate = False
     if isinstance(entries, dict) and "$nor" in entries:
-        negate = True
-        entries = entries["$nor"]
-    return negate, entries
+        return True, entries["$nor"]
+    return False, entries
 
 
 class RulesetToDictTransformer:

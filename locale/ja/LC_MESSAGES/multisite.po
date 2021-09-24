@@ -14435,6 +14435,13 @@ msgstr "すべてのBI集計を表示します"
 msgid "Displays all aggregations of a certain group."
 msgstr "特定のグループのすべての集計を表示します。"
 
+#, fuzzy
+msgid "Displays amount of hosts in a selected state."
+msgstr "ホストとサービスのアラートの棒グラフを表示します。"
+
+msgid "Displays amount of services in a selected state."
+msgstr ""
+
 msgid "Displays an introduction and Checkmk logo."
 msgstr "イントロダクションとCheckmkロゴを表示します。"
 
@@ -21456,6 +21463,10 @@ msgstr "ホストの状態"
 
 msgid "Host state (first character)"
 msgstr "ホストの状態(最初の文字)"
+
+#, fuzzy
+msgid "Host state summary"
+msgstr "ホストの状態"
 
 msgid "Host state translation"
 msgstr "ホスト状態の変換"
@@ -31536,9 +31547,6 @@ msgstr "通知スプーラーの構成"
 msgid "Notification Spooler Connection"
 msgstr "通知スプーラ接続"
 
-msgid "Notification Spooler insecure messages"
-msgstr "通知スプーラの安全でないメッセージ"
-
 msgid "Notification Spooling"
 msgstr "通知スプーリング"
 
@@ -32574,15 +32582,6 @@ msgid ""
 "text, for example a line from a logfile. Using this dialog it is possible to "
 "analyze and debug your whole set of logfile patterns."
 msgstr ""
-
-msgid ""
-"Once all connected sites use versions newer than 1.4.0p37 for 1.4.0 branch "
-"or 1.5.0p7 for 1.5.0 branch it is highly recommended to disable the insecure "
-"message format in the global settings."
-msgstr ""
-"接続されているすべてのサイトで、1.4.0ブランチの場合は1.4.0p37、1.5.0ブランチ"
-"の場合は1.5.0p7より新しいバージョンを使用する場合は、グローバル設定で安全でな"
-"いメッセージ形式を無効にすることを強くお勧めします。"
 
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
@@ -39122,9 +39121,6 @@ msgstr "安全なGUI(HTTP)"
 msgid "Secure LDAP"
 msgstr "安全なLDAP"
 
-msgid "Secure notification spooler messages"
-msgstr "安全な通知スプーラメッセージ"
-
 msgid "Security"
 msgstr "セキュリティ"
 
@@ -39298,6 +39294,10 @@ msgstr "選択済み"
 
 msgid "Selected sections will not be executed by the agent."
 msgstr "選択したセクションはエージェントによって実行されません。"
+
+#, fuzzy
+msgid "Selected state"
+msgstr "期待される状態"
 
 msgid "Selection"
 msgstr "選択"
@@ -39838,6 +39838,10 @@ msgstr "サービス状態のパーセンテージ"
 
 msgid "Service state percentage display options"
 msgstr "サービス状態のパーセンテージ表示オプション"
+
+#, fuzzy
+msgid "Service state summary"
+msgstr "サービス状態経過日数"
 
 msgid "Service state translation"
 msgstr "サービス状態の変換"
@@ -47415,9 +47419,6 @@ msgstr "編集しようとしているスケジュールが存在しません。
 msgid "The secret access key for your AWS account"
 msgstr "AWSアカウントのシークレットアクセスキー"
 
-msgid "The secure message format is used."
-msgstr "安全なメッセージ形式が使用されます。"
-
 #, python-format
 msgid "The selected %s have been deleted."
 msgstr "選択した %s が削除されました。"
@@ -54716,12 +54717,6 @@ msgstr "通知で使用"
 msgid "Use index"
 msgstr "インデックスを使用する"
 
-msgid ""
-"Use insecure message format for compatibility with 1.4.0p36, 1.5.0p6 or older"
-msgstr ""
-"1.4.0p36、1.5.0p6以前との互換性のために安全でないメッセージ形式を使用してくだ"
-"さい"
-
 msgid "Use invertible C-style mangling"
 msgstr "反転可能なC-styleのマングリングを使用する"
 
@@ -55857,20 +55852,6 @@ msgstr "サーバーのバージョン"
 
 msgid "Versions"
 msgstr "バージョン"
-
-msgid ""
-"Versions before Check_MK 1.4.0p37 and 1.5.0p7 used an insecure message "
-"format for the communication between two notification spooler instances. "
-"This format made it possible for an attacker that is able to manipulate one "
-"of the communication partners to inject code into the other communication "
-"partner. In case all your sites have newer versions it is highly recommended "
-"to disable this setting for all sites."
-msgstr ""
-"Check_MK 1.4.0p37および1.5.0p7より前のバージョンでは、2つの通知スプーラーイン"
-"スタンス間の通信に安全でないメッセージ形式が使用されていました。この形式によ"
-"り、通信パートナーの1つを操作できる攻撃者が、他の通信パートナーにコードを挿入"
-"することが可能になりました。すべてのサイトに新しいバージョンがある場合は、す"
-"べてのサイトでこの設定を無効にすることを強くお勧めします。"
 
 msgid "Vertical axis mirroring"
 msgstr "垂直軸ミラーリング"
@@ -61555,6 +61536,45 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Notification Spooler insecure messages"
+#~ msgstr "通知スプーラの安全でないメッセージ"
+
+#~ msgid ""
+#~ "Once all connected sites use versions newer than 1.4.0p37 for 1.4.0 "
+#~ "branch or 1.5.0p7 for 1.5.0 branch it is highly recommended to disable "
+#~ "the insecure message format in the global settings."
+#~ msgstr ""
+#~ "接続されているすべてのサイトで、1.4.0ブランチの場合は1.4.0p37、1.5.0ブラン"
+#~ "チの場合は1.5.0p7より新しいバージョンを使用する場合は、グローバル設定で安"
+#~ "全でないメッセージ形式を無効にすることを強くお勧めします。"
+
+#~ msgid "Secure notification spooler messages"
+#~ msgstr "安全な通知スプーラメッセージ"
+
+#~ msgid "The secure message format is used."
+#~ msgstr "安全なメッセージ形式が使用されます。"
+
+#~ msgid ""
+#~ "Use insecure message format for compatibility with 1.4.0p36, 1.5.0p6 or "
+#~ "older"
+#~ msgstr ""
+#~ "1.4.0p36、1.5.0p6以前との互換性のために安全でないメッセージ形式を使用して"
+#~ "ください"
+
+#~ msgid ""
+#~ "Versions before Check_MK 1.4.0p37 and 1.5.0p7 used an insecure message "
+#~ "format for the communication between two notification spooler instances. "
+#~ "This format made it possible for an attacker that is able to manipulate "
+#~ "one of the communication partners to inject code into the other "
+#~ "communication partner. In case all your sites have newer versions it is "
+#~ "highly recommended to disable this setting for all sites."
+#~ msgstr ""
+#~ "Check_MK 1.4.0p37および1.5.0p7より前のバージョンでは、2つの通知スプーラー"
+#~ "インスタンス間の通信に安全でないメッセージ形式が使用されていました。この形"
+#~ "式により、通信パートナーの1つを操作できる攻撃者が、他の通信パートナーに"
+#~ "コードを挿入することが可能になりました。すべてのサイトに新しいバージョンが"
+#~ "ある場合は、すべてのサイトでこの設定を無効にすることを強くお勧めします。"
 
 #~ msgid ""
 #~ "The given text is wrong encoded. You need to provide a UTF-8 encoded text."

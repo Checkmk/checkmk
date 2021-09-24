@@ -14952,6 +14952,13 @@ msgstr "Geeft alle BI-aggregaties weer."
 msgid "Displays all aggregations of a certain group."
 msgstr "Geeft alle aggregaties van een bepaalde groep weer."
 
+#, fuzzy
+msgid "Displays amount of hosts in a selected state."
+msgstr "Geeft een staafdiagram weer voor host- en service-waarschuwingen."
+
+msgid "Displays amount of services in a selected state."
+msgstr ""
+
 msgid "Displays an introduction and Checkmk logo."
 msgstr "Toont een inleiding en het Checkmk-logo."
 
@@ -22192,6 +22199,10 @@ msgstr "Gastheerstaat"
 
 msgid "Host state (first character)"
 msgstr "Gastheerstaat (eerste teken)"
+
+#, fuzzy
+msgid "Host state summary"
+msgstr "Gastheerstaat"
 
 msgid "Host state translation"
 msgstr "Host state vertaling"
@@ -32649,9 +32660,6 @@ msgstr "Kennisgeving Spooler Configuratie"
 msgid "Notification Spooler Connection"
 msgstr "Kennisgeving Spooler Verbinding"
 
-msgid "Notification Spooler insecure messages"
-msgstr "Melding Spooler onveilige berichten"
-
 msgid "Notification Spooling"
 msgstr "Kennisgeving Spooling"
 
@@ -33705,15 +33713,6 @@ msgstr ""
 "tekst, bijvoorbeeld een regel uit een logfile. Met behulp van dit "
 "dialoogvenster is het mogelijk om je hele set logfile patronen te analyseren "
 "en te debuggen."
-
-msgid ""
-"Once all connected sites use versions newer than 1.4.0p37 for 1.4.0 branch "
-"or 1.5.0p7 for 1.5.0 branch it is highly recommended to disable the insecure "
-"message format in the global settings."
-msgstr ""
-"Zodra alle aangesloten sites versies gebruiken die nieuwer zijn dan 1.4.0p37 "
-"voor de 1.4.0 tak of 1.5.0p7 voor de 1.5.0 tak, is het sterk aanbevolen om "
-"het onveilige berichtenformaat uit te schakelen in de globale instellingen."
 
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
@@ -40427,9 +40426,6 @@ msgstr "Beveiligde GUI (HTTP)"
 msgid "Secure LDAP"
 msgstr "Beveilig LDAP"
 
-msgid "Secure notification spooler messages"
-msgstr "Beveiligde melding spooler berichten"
-
 msgid "Security"
 msgstr "Beveiliging"
 
@@ -40624,6 +40620,10 @@ msgstr "Geselecteerd"
 
 msgid "Selected sections will not be executed by the agent."
 msgstr "Geselecteerde secties zullen niet worden uitgevoerd door de agent."
+
+#, fuzzy
+msgid "Selected state"
+msgstr "Verwachte toestand"
 
 msgid "Selection"
 msgstr "Selectie"
@@ -41171,6 +41171,10 @@ msgstr "Dienststaat percentage"
 
 msgid "Service state percentage display options"
 msgstr "Weergaveopties voor servicestatuspercentages"
+
+#, fuzzy
+msgid "Service state summary"
+msgstr "Leeftijd dienststaat"
 
 msgid "Service state translation"
 msgstr "Dienst staat vertaling"
@@ -49296,9 +49300,6 @@ msgstr "De agenda die u probeert te bewerken bestaat niet."
 msgid "The secret access key for your AWS account"
 msgstr "De geheime toegangssleutel voor uw AWS account"
 
-msgid "The secure message format is used."
-msgstr "Het beveiligde berichtformaat wordt gebruikt."
-
 #, python-format
 msgid "The selected %s have been deleted."
 msgstr "De geselecteerde %s zijn verwijderd."
@@ -57186,12 +57187,6 @@ msgstr "Gebruik in kennisgevingen"
 msgid "Use index"
 msgstr "Gebruik index"
 
-msgid ""
-"Use insecure message format for compatibility with 1.4.0p36, 1.5.0p6 or older"
-msgstr ""
-"Gebruik onveilig berichtformaat voor compatibiliteit met 1.4.0p36, 1.5.0p6 "
-"of ouder"
-
 msgid "Use invertible C-style mangling"
 msgstr "Gebruik inverteerbare C-stijl mangling"
 
@@ -58398,22 +58393,6 @@ msgstr "Versie van server"
 
 msgid "Versions"
 msgstr "Versies"
-
-msgid ""
-"Versions before Check_MK 1.4.0p37 and 1.5.0p7 used an insecure message "
-"format for the communication between two notification spooler instances. "
-"This format made it possible for an attacker that is able to manipulate one "
-"of the communication partners to inject code into the other communication "
-"partner. In case all your sites have newer versions it is highly recommended "
-"to disable this setting for all sites."
-msgstr ""
-"Versies vóór Check_MK 1.4.0p37 en 1.5.0p7 gebruikten een onveilig "
-"berichtformaat voor de communicatie tussen twee instanties van de "
-"notificatiepooler. Dit formaat maakte het mogelijk voor een aanvaller die in "
-"staat is om een van de communicatiepartners te manipuleren om code in de "
-"andere communicatiepartner te injecteren. In het geval dat al uw sites "
-"nieuwere versies hebben is het sterk aanbevolen om deze instelling uit te "
-"schakelen voor alle sites."
 
 msgid "Vertical axis mirroring"
 msgstr "Verticale as spiegeling"
@@ -64491,6 +64470,48 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Notification Spooler insecure messages"
+#~ msgstr "Melding Spooler onveilige berichten"
+
+#~ msgid ""
+#~ "Once all connected sites use versions newer than 1.4.0p37 for 1.4.0 "
+#~ "branch or 1.5.0p7 for 1.5.0 branch it is highly recommended to disable "
+#~ "the insecure message format in the global settings."
+#~ msgstr ""
+#~ "Zodra alle aangesloten sites versies gebruiken die nieuwer zijn dan "
+#~ "1.4.0p37 voor de 1.4.0 tak of 1.5.0p7 voor de 1.5.0 tak, is het sterk "
+#~ "aanbevolen om het onveilige berichtenformaat uit te schakelen in de "
+#~ "globale instellingen."
+
+#~ msgid "Secure notification spooler messages"
+#~ msgstr "Beveiligde melding spooler berichten"
+
+#~ msgid "The secure message format is used."
+#~ msgstr "Het beveiligde berichtformaat wordt gebruikt."
+
+#~ msgid ""
+#~ "Use insecure message format for compatibility with 1.4.0p36, 1.5.0p6 or "
+#~ "older"
+#~ msgstr ""
+#~ "Gebruik onveilig berichtformaat voor compatibiliteit met 1.4.0p36, "
+#~ "1.5.0p6 of ouder"
+
+#~ msgid ""
+#~ "Versions before Check_MK 1.4.0p37 and 1.5.0p7 used an insecure message "
+#~ "format for the communication between two notification spooler instances. "
+#~ "This format made it possible for an attacker that is able to manipulate "
+#~ "one of the communication partners to inject code into the other "
+#~ "communication partner. In case all your sites have newer versions it is "
+#~ "highly recommended to disable this setting for all sites."
+#~ msgstr ""
+#~ "Versies vóór Check_MK 1.4.0p37 en 1.5.0p7 gebruikten een onveilig "
+#~ "berichtformaat voor de communicatie tussen twee instanties van de "
+#~ "notificatiepooler. Dit formaat maakte het mogelijk voor een aanvaller die "
+#~ "in staat is om een van de communicatiepartners te manipuleren om code in "
+#~ "de andere communicatiepartner te injecteren. In het geval dat al uw sites "
+#~ "nieuwere versies hebben is het sterk aanbevolen om deze instelling uit te "
+#~ "schakelen voor alle sites."
 
 #~ msgid "Use sensor description (see help text)"
 #~ msgstr "Sensorbeschrijving gebruiken (zie helptekst)"

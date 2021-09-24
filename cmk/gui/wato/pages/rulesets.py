@@ -83,6 +83,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
@@ -662,7 +663,7 @@ class ModeEditRuleset(WatoMode):
         # take translations into account (see cmk.base.config.service_description()).
         check_command = request.get_ascii_input("check_command")
         if check_command:
-            checks = watolib.get_check_information().plugin_infos
+            checks = get_check_information().plugin_infos
             if check_command.startswith("check_mk-"):
                 check_command = check_command[9:]
                 self._name = "checkgroup_parameters:" + checks[check_command].get("group", "")

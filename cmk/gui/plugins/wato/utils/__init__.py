@@ -156,6 +156,12 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     wato_fileheader,
     wato_root_dir,
 )
+from cmk.gui.watolib.check_mk_automations import (
+    get_check_information as get_check_information_automation,
+)
+from cmk.gui.watolib.check_mk_automations import (
+    get_section_information as get_section_information_automation,
+)
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
     ReplicationPath,
 )
@@ -2743,7 +2749,7 @@ class FolderChoice(DropdownChoice):
 
 def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
     if "automation_get_check_information" not in g:
-        raw_check_dict = watolib.get_check_information().plugin_infos
+        raw_check_dict = get_check_information_automation().plugin_infos
         g.automation_get_check_information = {
             CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())
         }
@@ -2753,6 +2759,6 @@ def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
 
 def get_section_information():
     if "automation_get_section_information" not in g:
-        g.automation_get_section_information = watolib.get_section_information().section_infos
+        g.automation_get_section_information = get_section_information_automation().section_infos
 
     return g.automation_get_section_information

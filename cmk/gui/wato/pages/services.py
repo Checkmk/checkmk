@@ -46,9 +46,10 @@ from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_html
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib import automation_command_registry, AutomationCommand, update_host_labels
+from cmk.gui.watolib import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.check_mk_automations import active_check, update_host_labels
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
@@ -1427,7 +1428,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
 
     def page(self):
         try:
-            active_check_result = watolib.active_check(
+            active_check_result = active_check(
                 self._site,
                 self._host_name,
                 self._check_type,

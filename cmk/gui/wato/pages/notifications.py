@@ -71,6 +71,11 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages.users import ModeEditUser
+from cmk.gui.watolib.check_mk_automations import (
+    notification_analyse,
+    notification_get_bulks,
+    notification_replay,
+)
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
@@ -606,7 +611,7 @@ class ModeNotifications(ABCNotificationsMode):
         elif request.has_var("_replay"):
             if transactions.check_transaction():
                 nr = request.get_integer_input_mandatory("_replay")
-                watolib.notification_replay(nr)
+                notification_replay(nr)
                 flash(_("Replayed notification number %d") % (nr + 1))
                 return None
 
@@ -693,7 +698,7 @@ class ModeNotifications(ABCNotificationsMode):
             self._render_bulks(only_ripe=True)
 
     def _render_bulks(self, only_ripe):
-        bulks = watolib.notification_get_bulks(only_ripe).result
+        bulks = notification_get_bulks(only_ripe).result
         if not bulks:
             return False
 
@@ -837,7 +842,7 @@ class ModeNotifications(ABCNotificationsMode):
         analyse = None
         if request.var("analyse"):
             nr = request.get_integer_input_mandatory("analyse")
-            analyse = watolib.notification_analyse(nr).result
+            analyse = notification_analyse(nr).result
 
         start_nr = 0
         rules = self._get_notification_rules()

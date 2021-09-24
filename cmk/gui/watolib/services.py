@@ -24,6 +24,7 @@ from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
 from cmk.gui.watolib.automations import MKAutomationException, sync_changes_before_remote_automation
+from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -226,13 +227,13 @@ class Discovery:
         site_status = states().get(site_id, SiteStatus({}))
         if is_pre_17_remote_site(site_status):
             # is this branch still needed?
-            watolib.set_autochecks(
+            set_autochecks(
                 site_id,
                 self._host.name(),
                 {x: y[1:3] for x, y in checks.items()},  # type: ignore[misc]
             )
         else:
-            watolib.set_autochecks(
+            set_autochecks(
                 site_id,
                 self._host.name(),
                 checks,
@@ -610,7 +611,7 @@ def _get_check_table_from_remote(api_request):
                 "is_active": False,
                 "state": JobStatusStates.INITIALIZED,
             },
-            check_table=watolib.try_discovery(
+            check_table=try_discovery(
                 api_request.host.site_id(),
                 options,
                 api_request.host.name(),
@@ -681,7 +682,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
         sys.stdout.write(
-            watolib.try_discovery(
+            try_discovery(
                 api_request.host.site_id(),
                 self._get_automation_flags(api_request),
                 api_request.host.name(),
@@ -691,7 +692,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def _perform_automatic_refresh(self, api_request):
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
-        watolib.discovery(
+        discovery(
             api_request.host.site_id(),
             "refresh",
             ["@scan"],
@@ -745,7 +746,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # somehow.
         return (
             int(time.time()),
-            watolib.try_discovery(
+            try_discovery(
                 api_request.host.site_id(),
                 ["@noscan"],
                 api_request.host.name(),

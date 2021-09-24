@@ -37,6 +37,7 @@ from cmk.gui.valuespec import (
     Password,
 )
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.check_mk_automations import diag_host
 
 
 @mode_registry.register
@@ -462,7 +463,7 @@ class ModeAjaxDiagHost(AjaxPage):
             else:
                 args[9] = api_request.get("snmpv3_security_name", "")
 
-        result = watolib.diag_host(
+        result = diag_host(
             host.site_id(),
             hostname,
             _test,

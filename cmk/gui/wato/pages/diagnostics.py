@@ -54,12 +54,8 @@ from cmk.gui.valuespec import (
     FixedValue,
     ValueSpec,
 )
-from cmk.gui.watolib import (
-    automation_command_registry,
-    AutomationCommand,
-    create_diagnostics_dump,
-    do_remote_automation,
-)
+from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_remote_automation
+from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 _CHECKMK_FILES_NOTE = _(

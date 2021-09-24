@@ -38,6 +38,7 @@ from cmk.gui.plugins.webapi import (
     validate_config_hash,
     validate_host_attributes,
 )
+from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
@@ -1131,7 +1132,7 @@ class APICallOther(APICallCollection):
             # This is currently the only way to get some actual discovery statitics.
             # Start a dry-run -> Get statistics
             # Do an actual discovery on the nodes -> data is written
-            try_result = watolib.try_discovery(
+            try_result = try_discovery(
                 host_attributes.get("site"),
                 ["@scan"],
                 hostname,
@@ -1146,14 +1147,14 @@ class APICallOther(APICallCollection):
                     old += 1
 
             result = DiscoveryResult(self_new=new, self_kept=old, self_total=new + old)
-            watolib.discovery(
+            discovery(
                 host_attributes.get("site"),
                 mode,
                 ["@scan"],
                 host.cluster_nodes(),
             )
         else:
-            result = watolib.discovery(
+            result = discovery(
                 host_attributes.get("site"),
                 mode,
                 ["@scan"],

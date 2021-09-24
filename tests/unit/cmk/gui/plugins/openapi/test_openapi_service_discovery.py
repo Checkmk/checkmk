@@ -786,11 +786,11 @@ def test_openapi_discovery(
     mock_livestatus,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.watolib.services.watolib.try_discovery",
+        "cmk.gui.watolib.services.try_discovery",
         lambda *args, **kwargs: mock_discovery_result,
     )
     monkeypatch.setattr(
-        "cmk.gui.watolib.services.watolib.set_autochecks",
+        "cmk.gui.watolib.services.set_autochecks",
         lambda *args, **kwargs: SetAutochecksResult(),
     )
 

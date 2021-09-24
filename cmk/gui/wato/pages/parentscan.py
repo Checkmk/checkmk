@@ -22,6 +22,7 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.wato import get_hosts_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 
@@ -121,7 +122,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                 self._logger.exception(msg)
 
     def _execute_parent_scan(self, task: ParentScanTask, settings: ParentScanSettings) -> List:
-        return watolib.scan_parents(
+        return scan_parents(
             task.site_id,
             task.host_name,
             *map(

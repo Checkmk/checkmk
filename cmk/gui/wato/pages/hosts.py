@@ -39,6 +39,7 @@ from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.check_mk_automations import update_dns_cache
 from cmk.gui.watolib.hosts_and_folders import CREHost
 
 
@@ -340,7 +341,7 @@ class ModeEditHost(ABCHostMode):
 
         if request.var("_update_dns_cache") and self._should_use_dns_cache():
             user.need_permission("wato.update_dns_cache")
-            update_dns_cache_result = watolib.update_dns_cache(self._host.site_id())
+            update_dns_cache_result = update_dns_cache(self._host.site_id())
             infotext = (
                 _("Successfully updated IP addresses of %d hosts.")
                 % update_dns_cache_result.n_updated

@@ -132,29 +132,6 @@ from cmk.gui.watolib.automations import (
     remote_automation_call_came_from_pre21,
 )
 from cmk.gui.watolib.changes import add_change, add_service_change, log_audit, make_diff_text
-from cmk.gui.watolib.check_mk_automations import (
-    active_check,
-    analyse_host,
-    analyse_service,
-    bake_agents,
-    create_diagnostics_dump,
-    delete_hosts,
-    diag_host,
-    discovery,
-    get_agent_output,
-    get_check_information,
-    get_configuration,
-    get_section_information,
-    notification_analyse,
-    notification_get_bulks,
-    notification_replay,
-    rename_hosts,
-    scan_parents,
-    set_autochecks,
-    try_discovery,
-    update_dns_cache,
-    update_host_labels,
-)
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainCore,

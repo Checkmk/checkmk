@@ -201,7 +201,7 @@ def get_replication_paths() -> List[ReplicationPath]:
         # know.
         ReplicationPath("dir", "usersettings",
                         os.path.relpath(cmk.utils.paths.var_dir + "/web", cmk.utils.paths.omd_root),
-                        ["*/report-thumbnails"]),
+                        ["report-thumbnails", "session_info.mk"]),
         ReplicationPath(
             "dir", "mkps",
             os.path.relpath(cmk.utils.paths.var_dir + "/packages", cmk.utils.paths.omd_root), []),
@@ -2187,7 +2187,9 @@ def _get_config_sync_file_infos(replication_paths: List[ReplicationPath],
                 if entry.is_dir() and not entry.is_symlink():
                     continue  # Do not add directories at all
 
-                if entry.parent.name in general_dir_excludes:
+                if entry.parent.name in general_dir_excludes or \
+                        entry.parent.name in replication_path.excludes or \
+                        entry.name in replication_path.excludes:
                     continue
 
                 entry_site_path = entry.relative_to(base_dir)

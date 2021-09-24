@@ -2005,7 +2005,7 @@ def main(argv=None):
         if opt.debug:
             raise
         sys.stderr.write("%s\n" % exc)
-        return 0 if opt.agent else 1
+        return 1
 
     sys.stdout.writelines("%s\n" % line for line in vsphere_output)
 

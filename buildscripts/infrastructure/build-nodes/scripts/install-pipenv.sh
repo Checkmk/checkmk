@@ -27,5 +27,8 @@ fi
 
 pip3 install pipenv==2021.5.29 virtualenv==20.7.2
 
-ln -sf "/opt/Python-${PYTHON_VERSION}/bin/pipenv"* /usr/bin
-
+# link pipenv to /usr/bin to be in PATH. Fallback to /opt/bin if no permissions for writting to /usr/bin.
+#   /opt/bin does not work as default, because `make -C omd deb` requires it to be in /usr/bin.
+#   only /usr/bin does not work, because GitHub Actions do not have permissions to write there.
+PIPENV_PATH="/opt/Python-${PYTHON_VERSION}/bin/pipenv"
+ln -sf "${PIPENV_PATH}"* /usr/bin || ln -sf "${PIPENV_PATH}"* /opt/bin

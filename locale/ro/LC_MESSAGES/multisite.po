@@ -44339,6 +44339,9 @@ msgstr ""
 msgid "Tabula rasa"
 msgstr ""
 
+msgid "Tabula rasa not supported any more"
+msgstr ""
+
 #, fuzzy
 msgid "Tag"
 msgstr "Tag-uri"

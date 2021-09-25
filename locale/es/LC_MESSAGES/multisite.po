@@ -46003,6 +46003,9 @@ msgstr "Tabloide"
 msgid "Tabula rasa"
 msgstr ""
 
+msgid "Tabula rasa not supported any more"
+msgstr ""
+
 msgid "Tag"
 msgstr "Etiqueta"
 

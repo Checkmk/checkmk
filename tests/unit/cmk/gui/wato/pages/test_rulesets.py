@@ -12,6 +12,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import TagConditionNE, TaggroupID, TagID
 
+import cmk.gui.watolib as watolib
 from cmk.gui.htmllib import HTML
 from cmk.gui.wato.pages.rulesets import config, RuleConditionRenderer
 
@@ -92,6 +93,18 @@ def patch_tag_config(
         "tags",
         tag_config,
     )
+
+
+@pytest.fixture(name="folder_lookup")
+def fixture_folder_lookup(mocker):
+    folder_cache = {"cached_host": "cached_host_value"}
+    mocker.patch.object(watolib.Folder, "get_folder_lookup_cache", return_value=folder_cache)
+
+    class MockHost:
+        def edit_url(self):
+            return "cached_host_url"
+
+    mocker.patch.object(watolib.Host, "host", return_value=MockHost())
 
 
 class TestRuleConditionRenderer:
@@ -256,9 +269,19 @@ class TestRuleConditionRenderer:
                 "Host name is <b>foo</b>",
                 id="FIXME: Unsupported key in dict",
             ),
+            pytest.param(
+                ["cached_host"],
+                'Host name is <b><a href="cached_host_url">cached_host</a></b>',
+                id="Host with folder hint",
+            ),
+            pytest.param(
+                [{"$regex": "f?o"}, "cached_host"],
+                'Host name matches regex <b>f?o</b>  or is  <b><a href="cached_host_url">cached_host</a></b>',
+                id="Regex and host with folder hint",
+            ),
         ],
     )
-    def test_render_host_condition_text(self, conditions, expected) -> None:
+    def test_render_host_condition_text(self, folder_lookup, conditions, expected) -> None:
         assert RuleConditionRenderer()._render_host_condition_text(conditions) == HTML(expected)
 
     @pytest.mark.parametrize(
@@ -276,6 +299,6 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text_raises(self, conditions, exception):
+    def test_render_host_condition_text_raises(self, folder_lookup, conditions, exception):
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)

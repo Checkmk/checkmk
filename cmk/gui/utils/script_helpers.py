@@ -22,14 +22,14 @@ from cmk.gui.http import Request, Response
 from cmk.gui.modules import load_all_plugins
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
-
-# TODO: Better make our application available?
 from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.wsgi import make_app
 
 
 @lru_cache
 def session_wsgi_app(debug):
+    # TODO: Temporary hack. Can be removed once #12954 has been ported from 2.0.0
+    from cmk.gui.wsgi import make_app
+
     return make_app(debug=debug)
 
 

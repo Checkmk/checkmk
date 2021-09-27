@@ -180,3 +180,102 @@ class TestRuleConditionRenderer:
             HTML("Host tag: Tag group 3 is <b>Tag 3.1</b>"),
             HTML("Host does not have tag <b>Auxiliary tag 1</b>"),
         ]
+
+    # FIXME: some texts contain double spaces
+    # FIXME: add special case if only one regex is given?
+    @pytest.mark.parametrize(
+        "conditions, expected",
+        [
+            pytest.param(
+                [],
+                "This rule does <b>never</b> apply due " "to an empty list of explicit hosts!",
+                id="No conditions",
+            ),
+            pytest.param(
+                ["foo"],
+                "Host name is <b>foo</b>",
+                id="Single host",
+            ),
+            pytest.param(
+                ["foo", "bar"],
+                "Host name is <b>foo</b>  or <b>bar</b>",
+                id="Two hosts names",
+            ),
+            pytest.param(
+                ["foo", "bar", "baz"],
+                "Host name is <b>foo</b>, <b>bar</b>  or <b>baz</b>",
+                id="Three host names",
+            ),
+            pytest.param(
+                [{"$regex": "f?o"}],
+                "Host name matches one of regex <b>f?o</b>",
+                id="Single regex",
+            ),
+            pytest.param(
+                [{"$regex": "f?o"}, {"$regex": "b.*r"}],
+                "Host name matches one of regex <b>f?o</b>  or <b>b.*r</b>",
+                id="Two regexes",
+            ),
+            pytest.param(
+                [{"$regex": "f?o"}, "bar"],
+                "Host name matches regex <b>f?o</b>  or is  <b>bar</b>",
+                id="Regex and host name",
+            ),
+            pytest.param(
+                [{"$regex": "f?o"}, "bar", {"$regex": "ba.*r"}],
+                "Host name matches regex <b>f?o</b>, is  <b>bar</b>  or matches regex <b>ba.*r</b>",
+                id="Regex, host name and regex",
+            ),
+            pytest.param(
+                {"$nor": ["foo"]},
+                "Host name is not one of <b>foo</b>",
+                id="Negation with single host name",
+            ),
+            pytest.param(
+                {"$nor": ["foo", "bar"]},
+                "Host name is not one of <b>foo</b>  or <b>bar</b>",
+                id="Negation with two host names",
+            ),
+            pytest.param(
+                {"$nor": [{"$regex": "f?o"}]},
+                "Host name is not one of regex <b>f?o</b>",
+                id="Negation with one regex",
+            ),
+            pytest.param(
+                {"$nor": [{"$regex": "f?o"}, {"$regex": "b.*r"}]},
+                "Host name is not one of regex <b>f?o</b>  or <b>b.*r</b>",
+                id="Negation with two regexes",
+            ),
+            pytest.param(
+                {"$nor": [{"$regex": "f?o"}, "bar", {"$regex": "b.*r"}, "foo"]},
+                "Host name does not match regex <b>f?o</b>, is not <b>bar</b>, does not match regex <b>b.*r</b>  or is not <b>foo</b>",
+                id="Negation with regex, host name and regex",
+            ),
+            pytest.param(
+                {"foo": []},
+                "Host name is <b>foo</b>",
+                id="FIXME: Unsupported key in dict",
+            ),
+        ],
+    )
+    def test_render_host_condition_text(self, conditions, expected) -> None:
+        assert RuleConditionRenderer()._render_host_condition_text(conditions) == HTML(expected)
+
+    @pytest.mark.parametrize(
+        "conditions, exception",
+        [
+            pytest.param(
+                {"$nor": []},
+                IndexError,
+                id="FIXME: Negation expects at least one condition",
+            ),
+            pytest.param(
+                {"$nor": [{"foo": "bar"}]},
+                TypeError,
+                id="FIXME: Unsupported key in nested dict",
+            ),
+        ],
+    )
+    def test_render_host_condition_text_raises(self, conditions, exception):
+        with pytest.raises(exception):
+            assert RuleConditionRenderer()._render_host_condition_text(conditions)

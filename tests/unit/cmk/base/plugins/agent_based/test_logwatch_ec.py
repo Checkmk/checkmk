@@ -7,10 +7,8 @@
 import pytest
 
 from cmk.base.plugins.agent_based import logwatch_ec
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
-
-pytestmark = pytest.mark.checks
 
 INFO1 = [
     ["[[[log1]]]"],
@@ -19,6 +17,13 @@ INFO1 = [
     ["[[[log4:cannotopen]]]"],
     ["[[[log5]]]"],
     ["[[[log1:missing]]]"],
+]
+
+INFO2 = [
+    ["[[[log2]]]"],
+    ["[[[log3:missing]]]"],
+    ["[[[log4:cannotopen]]]"],
+    ["[[[log5]]]"],
 ]
 
 
@@ -132,3 +137,79 @@ def test_logwatch_ec_inventory_groups(monkeypatch, info, fwd_rule, expected_resu
     monkeypatch.setattr(logwatch_ec.logwatch, "get_ec_rule_params", lambda: fwd_rule)
     actual_result = list(logwatch_ec.discover_group(parsed))
     assert actual_result == expected_result
+
+
+def test_check_logwatch_ec_common_single_node() -> None:
+    assert list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log1",
+            {},
+            {
+                "node1": parse_logwatch(INFO1),
+            },
+            service_level=10,
+        )
+    ) == [
+        Result(state=State.OK, summary="Forwarded 0 messages"),
+        Metric("messages", 0.0),
+    ]
+
+
+def test_check_logwatch_ec_common_single_node_item_missing() -> None:
+    assert not list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log1",
+            {},
+            {
+                "node1": parse_logwatch(INFO2),
+            },
+            service_level=10,
+        )
+    )
+
+
+def test_check_logwatch_ec_common_multiple_nodes() -> None:
+    assert list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log1",
+            {},
+            {
+                "node1": parse_logwatch(INFO1),
+                "node2": parse_logwatch(INFO1),
+            },
+            service_level=10,
+        )
+    ) == [
+        Result(state=State.OK, summary="Forwarded 0 messages"),
+        Metric("messages", 0.0),
+    ]
+
+
+def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> None:
+    assert not list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log1",
+            {},
+            {
+                "node1": parse_logwatch(INFO2),
+                "node2": parse_logwatch(INFO2),
+            },
+            service_level=10,
+        )
+    )
+
+
+def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> None:
+    # TODO: Fix this in the next commit
+    with pytest.raises(KeyError):
+        assert list(
+            logwatch_ec.check_logwatch_ec_common(
+                "log1",
+                {},
+                {
+                    "node1": parse_logwatch(INFO1),
+                    "node2": parse_logwatch(INFO2),
+                },
+                service_level=10,
+            )
+        )

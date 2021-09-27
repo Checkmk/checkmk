@@ -6,7 +6,19 @@
 """Performing the actual checks."""
 
 from collections import defaultdict
-from typing import Any, Container, DefaultDict, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import (
+    Any,
+    Container,
+    DefaultDict,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
@@ -24,6 +36,7 @@ from cmk.utils.type_defs import (
     HostKey,
     HostName,
     MetricTuple,
+    ParsedSectionName,
     ServiceCheckResult,
     ServiceName,
     SourceType,
@@ -442,71 +455,41 @@ def get_aggregated_result(
         if host_config.is_cluster
         else plugin.check_function
     )
-    source_type = (
-        SourceType.MANAGEMENT if service.check_plugin_name.is_management_name() else SourceType.HOST
-    )
-    try:
-        kwargs = (
-            get_section_cluster_kwargs(
-                parsed_sections_broker,
-                config_cache.get_clustered_service_node_keys(
-                    host_config.hostname,
-                    source_type,
-                    service.description,
-                )
-                or [],
-                plugin.sections,
-            )
-            if host_config.is_cluster
-            else get_section_kwargs(
-                parsed_sections_broker,
-                HostKey(host_config.hostname, ipaddress, source_type),
-                plugin.sections,
-            )
-        )
-        if not kwargs and not service.check_plugin_name.is_management_name():
-            # in 1.6 some plugins where discovered for management boards, but with
-            # the regular host plugins name. In this case retry with the source type
-            # forced to MANAGEMENT:
-            kwargs = (
-                get_section_cluster_kwargs(
-                    parsed_sections_broker,
-                    config_cache.get_clustered_service_node_keys(
-                        host_config.hostname,
-                        SourceType.MANAGEMENT,
-                        service.description,
-                    )
-                    or [],
-                    plugin.sections,
-                )
-                if host_config.is_cluster
-                else get_section_kwargs(
-                    parsed_sections_broker,
-                    HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
-                    plugin.sections,
-                )
-            )
-        if not kwargs:  # no data found
-            return AggregatedResult(
-                submit=False,
-                data_received=False,
-                result=RECEIVED_NO_DATA,
-                cache_info=None,
-            )
 
-        kwargs = {
-            **kwargs,
-            **({} if service.item is None else {"item": service.item}),
-            **(
-                {}
-                if plugin.check_default_parameters is None
-                else {"params": _final_read_only_check_parameters(timespecific_parameters)}
-            ),
-        }
+    section_kws, error_result = _get_section_kwargs(
+        parsed_sections_broker,
+        host_config,
+        config_cache,
+        ipaddress,
+        service,
+        plugin.sections,
+    )
+    if not section_kws:  # no data found
+        return AggregatedResult(
+            submit=False,
+            data_received=False,
+            result=error_result,
+            cache_info=None,
+        )
+
+    item_kw = {} if service.item is None else {"item": service.item}
+    params_kw = (
+        {}
+        if plugin.check_default_parameters is None
+        else {"params": _final_read_only_check_parameters(timespecific_parameters)}
+    )
+
+    try:
         with plugin_contexts.current_host(host_config.hostname), plugin_contexts.current_service(
             service
         ), value_store_manager.namespace(service.id()):
-            result = _aggregate_results(check_function(**kwargs))
+            result = _aggregate_results(
+                check_function(
+                    **item_kw,
+                    **params_kw,
+                    **section_kws,
+                )
+            )
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
@@ -528,7 +511,7 @@ def get_aggregated_result(
                 host_name=host_config.hostname,
                 service_name=service.description,
                 plugin_name=service.check_plugin_name,
-                plugin_kwargs=globals().get("kwargs", {}),
+                plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_manual=service.id() in table,
             ),
             [],
@@ -540,6 +523,62 @@ def get_aggregated_result(
         result=result,
         cache_info=parsed_sections_broker.get_cache_info(plugin.sections),
     )
+
+
+def _get_section_kwargs(
+    parsed_sections_broker: ParsedSectionsBroker,
+    host_config: config.HostConfig,
+    config_cache: config.ConfigCache,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    sections: Sequence[ParsedSectionName],
+) -> Tuple[Mapping[str, object], ServiceCheckResult]:
+    source_type = (
+        SourceType.MANAGEMENT if service.check_plugin_name.is_management_name() else SourceType.HOST
+    )
+    kwargs = (
+        get_section_cluster_kwargs(
+            parsed_sections_broker,
+            config_cache.get_clustered_service_node_keys(
+                host_config.hostname,
+                source_type,
+                service.description,
+            )
+            or [],
+            sections,
+        )
+        if host_config.is_cluster
+        else get_section_kwargs(
+            parsed_sections_broker,
+            HostKey(host_config.hostname, ipaddress, source_type),
+            sections,
+        )
+    )
+
+    if not kwargs and not service.check_plugin_name.is_management_name():
+        # in 1.6 some plugins where discovered for management boards, but with
+        # the regular host plugins name. In this case retry with the source type
+        # forced to MANAGEMENT:
+        kwargs = (
+            get_section_cluster_kwargs(
+                parsed_sections_broker,
+                config_cache.get_clustered_service_node_keys(
+                    host_config.hostname,
+                    SourceType.MANAGEMENT,
+                    service.description,
+                )
+                or [],
+                sections,
+            )
+            if host_config.is_cluster
+            else get_section_kwargs(
+                parsed_sections_broker,
+                HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
+                sections,
+            )
+        )
+
+    return kwargs, RECEIVED_NO_DATA
 
 
 def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:

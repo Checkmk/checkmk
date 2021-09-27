@@ -47,7 +47,7 @@ class RuleConditionsSpec(TypedDict, total=False):
     host_tags: Any
     host_labels: Any
     host_name: Any
-    service_description: HostOrServiceConditions
+    service_description: Optional[HostOrServiceConditions]
     service_labels: Any
     host_folder: Any
 
@@ -67,7 +67,7 @@ class RuleSpec(_RuleSpecBase, total=False):
 
 _DictConditions = Dict[str, List[Union[Dict[str, str], str]]]
 _ListConditions = List[Union[Dict[str, str], str]]
-HostOrServiceConditions = Union[None, _DictConditions, _ListConditions]  # TODO: refine type
+HostOrServiceConditions = Union[_DictConditions, _ListConditions]  # TODO: refine type
 
 RuleOptions = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type

@@ -63,8 +63,8 @@ class RuleConditions:
         host_folder: str,
         host_tags: Optional[TaggroupIDToTagCondition] = None,
         host_labels: Optional[Labels] = None,
-        host_name: HostOrServiceConditions = None,
-        service_description: HostOrServiceConditions = None,
+        host_name: Optional[HostOrServiceConditions] = None,
+        service_description: Optional[HostOrServiceConditions] = None,
         service_labels: Optional[Labels] = None,
     ) -> None:
         self.host_folder = host_folder

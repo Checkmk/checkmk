@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 3
+PYTHON3_MODULES_BUILD_ID := 4
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -28,7 +28,7 @@ PYTHON3_MODULES_LIST :=
 PYTHON3_MODULES_LIST += setuptools_scm-4.1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
-PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += python-dateutil-2.8.2.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += PyYAML-5.4.1.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += wrapt-1.12.1.tar.gz # needed by vcrpy
@@ -54,11 +54,12 @@ PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
 
 PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
-PYTHON3_MODULES_LIST += urllib3-1.25.10.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += urllib3-1.26.7.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += pbr-5.4.4.tar.gz # needed by jira, pyghmi
 PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
-PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
+PYTHON3_MODULES_LIST += requests-2.26.0.tar.gz # needed by DCD
+PYTHON3_MODULES_LIST += charset-normalizer-2.0.6.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz # needed by Jinja2
@@ -91,7 +92,7 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
-PYTHON3_MODULES_LIST += Pillow-8.1.2.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += Pillow-8.3.2.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy
@@ -106,10 +107,10 @@ PYTHON3_MODULES_LIST += rsa-4.6.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 
-PYTHON3_MODULES_LIST += jmespath-0.9.4.tar.gz # needed by boto3 (aws)
-PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
-PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
-PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += jmespath-0.10.0.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += botocore-1.21.49.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += s3transfer-0.5.0.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += boto3-1.18.49.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += python-snap7-0.10.tar.gz # needed by Siemens PLC special agent
 
 PYTHON3_MODULES_LIST += pymssql-2.1.5.tar.gz # needed by check_sql active check

@@ -15,7 +15,7 @@ docker = "==4.4.2"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
 freezegun = "==1.1.0"  # used by various unit tests
 isort = "==5.7.0"  # used as a plugin for editors
-lxml = "==4.6.2"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
+lxml = "==4.6.3"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 mock = "==4.0.3"  # used in checktestlib in unit tests
 mockldap = "==0.3.0.post1"  # used in test_userdb_ldap_connector unit test
 pylint = "==2.6.2"  # used by test/Makefile's test-pylint target
@@ -53,7 +53,7 @@ pipfile = "*"
 setuptools_scm = "==4.1.2"  # needed by various setup.py
 setuptools-git = "==1.2"  # needed by various setup.py
 six = "==1.15.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, python-active-directory
-python-dateutil = "==2.8.1"  # direct dependency
+python-dateutil = "==2.8.2"  # direct dependency
 PyYAML = "==5.4.1"  # needed by vcrpy
 wrapt = "==1.12.1"  # needed by vcrpy
 yarl = "==1.6.0"  # needed by vcrpy
@@ -75,11 +75,12 @@ pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
 certifi = "==2019.11.28"  # needed by requests
 chardet = "==3.0.4"  # needed by requests
-urllib3 = "==1.25.10"  # needed by requests
+urllib3 = "==1.26.7"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pbr = "==5.4.4"  # needed by jira
 pyghmi = "==1.5.13"  # needed by base for IPMI
-requests = {version = "==2.22.0",extras = ["security"]}  # needed by DCD, connexion
+requests = {version = "==2.26.0",extras = ["security"]}  # needed by DCD, connexion
+charset-normalizer = "==2.0.6" # needed by requests
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr
 MarkupSafe = "==1.1.1"  # needed by Jinja2
@@ -108,7 +109,7 @@ PyJWT = "==1.7.1"  # needed by jira
 docutils = "==0.15.2"  # needed by boto3 (aws)
 jira = "==2.0.0"  # needed by jira
 adal = "==1.2.0"  # needed by agent_azure
-Pillow = "==8.1.2"  # needed by GUI
+Pillow = "==8.3.2"  # needed by GUI
 python-ldap = "==3.3.1"  # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.4"  # needed by GUI (API XML format)
 Cython = "==0.29.19"  # needed by numpy
@@ -121,10 +122,10 @@ google-auth = "==1.21.3"  # needed by kubernetes
 rsa = "==4.6"  # needed by kubernetes
 websocket_client = "==0.57.0"  # needed by kubernetes
 kubernetes = "==10.0.1"  # needed by kubernetes
-jmespath = "==0.9.4"  # needed by boto3 (aws)
-botocore = "==1.14.11"  # needed by boto3 (aws)
-s3transfer = "==0.3.2"  # needed by boto3 (aws)
-boto3 = "==1.11.11"  # needed by boto3 (aws)
+jmespath = "==0.10.0"  # needed by boto3 (aws)
+botocore = "==1.21.49"  # needed by boto3 (aws)
+s3transfer = "==0.5.0"  # needed by boto3 (aws)
+boto3 = "==1.18.49"  # needed by boto3 (aws)
 python-snap7 = "==0.10"  # needed by Siemens PLC special agent
 pymssql = "==2.1.5"  # needed by check_sql active check
 PyMySQL = "==0.9.3"  # needed by check_sql active check

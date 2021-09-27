@@ -36,6 +36,9 @@ VARIABLES:
     - NAME: CHANGED_PYLINT_RC_FILE
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/.pylintrc' - || true"
 
+    - NAME: CHANGED_PIPFILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Pipfile' - || true"
+
       # Gather the list of changed agent plugins
     - NAME: CHANGED_AGENT_PLUGINS
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"
@@ -90,7 +93,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
     - NAME: 'Python Unit Test'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"

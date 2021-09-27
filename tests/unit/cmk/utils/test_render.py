@@ -54,6 +54,31 @@ def test_percent_std(perc, result):
 
 
 @pytest.mark.parametrize(
+    "value, precision, result",
+    [
+        (0.00009, 2, "9.00e-5"),
+        (0.00009, 1, "9.0e-5"),
+        (0.00009, 0, "9e-5"),
+        (0.009, 3, "0.009"),
+        (0.009, 2, "0.01"),
+        (0.009, 1, "0.0"),
+        (0.009, 0, "0"),
+        (0.1, 2, "0.10"),
+        (100, 0, "100"),
+        (100, 2, "100"),
+        (100, 4, "100.00"),
+        (100, 5, "100.000"),
+        (10000, 5, "10000.0"),
+        (10000, 6, "10000.00"),
+        (1000000, 2, "10.00e+5"),
+        (9000000, 2, "9.00e+6"),
+    ],
+)
+def test_scientific(value, precision, result):
+    assert cmk.utils.render.scientific(value, precision) == result
+
+
+@pytest.mark.parametrize(
     "perc, result",
     [
         (0.00009, "9.0e-5%"),

@@ -2318,12 +2318,12 @@ class RuleConditionRenderer:
 
         # Other cases should not occur, e.g. list of explicit hosts
         # plus watolib.ALL_HOSTS.
-        condition_txt = self._render_host_condition_text(conditions)
+        condition_txt = self._render_host_condition_text(conditions.host_name)
         if condition_txt:
             yield condition_txt
 
-    def _render_host_condition_text(self, conditions) -> HTML:
-        if conditions.host_name == []:
+    def _render_host_condition_text(self, conditions: HostOrServiceConditions) -> HTML:
+        if conditions == []:
             return escape_html_permissive(
                 _("This rule does <b>never</b> apply due " "to an empty list of explicit hosts!")
             )
@@ -2331,9 +2331,7 @@ class RuleConditionRenderer:
         condition: List[HTML] = []
         text_list: List[HTML] = []
 
-        is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(
-            conditions.host_name
-        )
+        is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
 
         regex_count = len(
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]

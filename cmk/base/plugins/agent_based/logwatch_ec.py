@@ -19,19 +19,22 @@ import errno
 import os
 import socket
 import time
-
 from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.type_defs import CheckPluginName  # pylint: disable=cmk-module-layer-violation
+
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 # import from legacy API until we come up with something better
-from cmk.base.check_api import host_name, service_extra_conf  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+    host_name, service_extra_conf,
+)
 
+from .agent_based_api.v1 import Metric, register, Result, Service
+from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .agent_based_api.v1 import Metric, register, Result, Service, State as state
 from .utils import logwatch
 
 ClusterSection = Dict[Optional[str], logwatch.Section]
@@ -191,13 +194,19 @@ def discover_logwatch_ec_common(
 
 
 def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Iterable[str]:
-    # node info ignored (only used in regular logwatch check)
-    for node_data in cluster_section.values():
-        for line in node_data['logfiles'][item]['lines']:
-            # skip context lines and ignore lines
-            # skip context lines, ignore lines and empty lines
-            if line[0] not in ['.', 'I'] and len(line) > 1:
-                yield line
+    yield from (
+        line
+        # node info ignored (only used in regular logwatch check)
+        for node_data in cluster_section.values()
+        for line in node_data["logfiles"].get(
+            item,
+            logwatch.ItemData(  # pylint: disable=not-callable
+                attr="",
+                lines=[],
+            ),
+        )["lines"]
+        # skip context lines, ignore lines and empty lines
+        if line[0] not in [".", "I"] and len(line) > 1)
 
 
 def check_logwatch_ec_common(

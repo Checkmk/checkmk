@@ -1,0 +1,16 @@
+Title: <tt>logwatch_ec</tt>: Fix crash with <tt>KeyError</tt> in cluster mode
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632738625
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p12
+
+In a clustered setup, the check plugin <tt>logwatch_ec</tt>, used for
+forwarding log messages collected by the logwatch agent plugin to the
+Event Console, might have crashed with a <tt>KeyError</tt>. This
+happened if a logfile was present only on some, but not all cluster
+nodes.

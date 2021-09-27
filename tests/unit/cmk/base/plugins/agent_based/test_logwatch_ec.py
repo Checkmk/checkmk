@@ -163,15 +163,16 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
 
 
 def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> None:
-    # TODO: Fix this in the next commit
-    with pytest.raises(KeyError):
-        assert list(
-            logwatch_ec.check_logwatch_ec_common(
-                "log1",
-                {},
-                {
-                    "node1": parse_logwatch(INFO1),
-                    "node2": parse_logwatch(INFO2),
-                },
-                service_level=10,
-            ))
+    assert list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log1",
+            {},
+            {
+                "node1": parse_logwatch(INFO1),
+                "node2": parse_logwatch(INFO2),
+            },
+            service_level=10,
+        )) == [
+            Result(state=State.OK, summary="Forwarded 0 messages"),
+            Metric("messages", 0.0),
+        ]

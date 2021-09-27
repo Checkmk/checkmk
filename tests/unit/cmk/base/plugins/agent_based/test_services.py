@@ -5,12 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    State as state,
-    Result,
-)
+
 import cmk.base.plugins.agent_based.services as services
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 STRING_TABLE = [
     ['wscsvc', 'running/auto', 'Security', 'Center'],
@@ -115,6 +113,16 @@ def test_discovery_windows_services(params, discovered_services):
         Result(state=state.CRIT, summary='Windows Search: stopped (start type is demand)'),
         Result(state=state.CRIT, summary='Windows Update: stopped (start type is disabled)'),
     ]),
+    (
+        "WSearch",
+        {
+            "else": 0,
+            "states": [],
+        },
+        [
+            Result(state=state.OK, summary="Windows Search: stopped (start type is demand)"),
+        ],
+    ),
     ("NonExistent", {
         "states": [(None, "demand", 1)],
     }, [

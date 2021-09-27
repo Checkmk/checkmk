@@ -6,6 +6,11 @@ SHELL ["/bin/bash", "-c"]
 ARG ARTIFACT_STORAGE
 ARG PACKAGES
 
+# This certificate is needed for downloading packages from our Repo
+# and is missing in this Distro.
+COPY ISRG_Root_X1.pem /etc/ssl/certs/
+RUN cd /etc/ssl/certs/ && c_rehash
+
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp1 sles12sp1 \
     && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
     && zypper -n --no-gpg-checks in --replacefiles --force-resolution \

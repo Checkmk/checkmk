@@ -210,11 +210,13 @@ def discover_logwatch_ec_common(
 def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Iterable[str]:
     # node info ignored (only used in regular logwatch check)
     for node_data in cluster_section.values():
-        for line in node_data.logfiles[item]["lines"]:
-            # skip context lines and ignore lines
-            # skip context lines, ignore lines and empty lines
-            if line[0] not in [".", "I"] and len(line) > 1:
-                yield line
+        if item in node_data.logfiles:
+            # in a cluster setup, it's possible that not all nodes always send every logfile
+            for line in node_data.logfiles[item]["lines"]:
+                # skip context lines and ignore lines
+                # skip context lines, ignore lines and empty lines
+                if line[0] not in [".", "I"] and len(line) > 1:
+                    yield line
 
 
 def check_logwatch_ec_common(

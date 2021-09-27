@@ -24342,6 +24342,10 @@ msgstr "入力帯域幅"
 msgid "Input broadcast packets"
 msgstr "入力ブロードキャストパケット"
 
+#, fuzzy
+msgid "Input channel"
+msgstr "入力名"
+
 msgid "Input multicast packets"
 msgstr "入力マルチキャストパケット"
 
@@ -30323,6 +30327,9 @@ msgstr "エンクロージャーの名前 (例: エンクロージャー1)"
 
 msgid "Name of the form to populate and submit"
 msgstr "入力して送信するフォームの名前"
+
+msgid "Name of the input channel, e.g. WEBIO-094849 Input 0"
+msgstr ""
 
 msgid "Name of the instance in the monitoring"
 msgstr "監視中のインスタンスの名前"

@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-06-23 20:34+0000\n"
-"Last-Translator: Timo Klecker (DECOIT) <klecker@decoit.de>\n"
+"PO-Revision-Date: 2021-09-27 12:46+0000\n"
+"Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -2388,7 +2388,7 @@ msgid "API host"
 msgstr "API Host"
 
 msgid "API integrations if configured, else Checkmk agent"
-msgstr ""
+msgstr "API Integrationen (sofern konfiguriert), andernfalls Checkmk Agent"
 
 msgid "API key"
 msgstr "API-Schlüssel"
@@ -3305,7 +3305,6 @@ msgstr "Zu überwachende Dateien hinzufügen"
 msgid "Add filter"
 msgstr "Filter hinzufügen"
 
-#, fuzzy
 msgid "Add folder"
 msgstr "Unterverzeichnis hinzufügen"
 
@@ -3321,9 +3320,8 @@ msgstr "Host-Attribut hinzufügen"
 msgid "Add host group"
 msgstr "Hostgruppe hinzufügen"
 
-#, fuzzy
 msgid "Add host to the monitoring"
-msgstr "Zu überwachende Dateien hinzufügen"
+msgstr "Host zum Monitoring hinzufügen"
 
 msgid "Add instance to be monitored"
 msgstr "Zu überwachende Instanz hinzufügen"
@@ -3557,6 +3555,8 @@ msgid ""
 "Add text of events to data forwarded to the Event Console. Newline "
 "characters are replaced by '~'."
 msgstr ""
+"Bei der Weiterleitung an die Event Console den Text des Ereignisses "
+"hinzufügen. Zeilenumbrüche werden ersetzt durch '~'."
 
 msgid "Add these contact groups to the host"
 msgstr "Diese Kontaktgruppen zum Host hinzufügen"
@@ -4960,7 +4960,7 @@ msgstr "Erlaubt, eigene %s zu löschen."
 msgid "Allows to edit %s created by other users."
 msgstr "Erlaubt, von anderen Benutzern erstellte %s zu bearbeiten."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Allows to view and edit %s created by other users."
 msgstr "Erlaubt, von anderen Benutzern erstellte %s zu bearbeiten."
 
@@ -5892,13 +5892,11 @@ msgstr "Fehler im Authentifizierungssystem"
 msgid "Authentication failed. Invalid login/password."
 msgstr "Anmeldung fehlgeschlagen. Benutzername/Passwort ungültig."
 
-#, fuzzy
 msgid "Authentication failures (last 5 minutes)"
-msgstr "Authentifizierungsfehler"
+msgstr "Authentifizierungsfehler (der letzten 5 Minuten)"
 
-#, fuzzy
 msgid "Authentication failures within the last 5 minutes"
-msgstr "Logswitche in den letzten 60 Sekunden"
+msgstr "Fehlerhafte Anmeldungen  in den letzten 5 Minuten"
 
 #, fuzzy
 msgid "Authentication mechanism"
@@ -6977,9 +6975,8 @@ msgstr "Defekte GUI-Erweiterungen"
 msgid "Browse the catalog of all check plugins, create static checks"
 msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
 
-#, fuzzy
 msgid "Bucket"
-msgstr "Buckets"
+msgstr "Bucket"
 
 msgid "Bucket memory"
 msgstr "Bucket Speicher"
@@ -7896,13 +7893,11 @@ msgstr "CPU-Leerlaufzeit"
 msgid "CPU in percent"
 msgstr "CPU in Prozent"
 
-#, fuzzy
 msgid "CPU inventory of all hosts"
 msgstr "CPU-bezogene Inventur aller Hosts"
 
-#, fuzzy
 msgid "CPU load"
-msgstr "Hochladen"
+msgstr "CPU load"
 
 msgid "CPU load (not utilization!)"
 msgstr "CPU-Auslastung (nicht Nutzung!)"
@@ -8637,13 +8632,12 @@ msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 "Das Standardthema der Benutzeroberfläche der Checkmk-Installation ändern"
 
-#, fuzzy
 msgid "Changed"
-msgstr "Änderung"
+msgstr "Geändert"
 
 #, python-format
 msgid "Changed %s from %s to %s"
-msgstr ""
+msgstr "%s geändert von %s zu %s"
 
 #, python-format
 msgid "Changed Configuration variable %s to %s."
@@ -8733,7 +8727,6 @@ msgstr "Instanzspezifische Konfigurationsvariable %s nach %s geändert."
 msgid "Changes"
 msgstr "Änderung(en)"
 
-#, fuzzy
 msgid "Changes since last dump"
 msgstr "Anzahl der Änderungen seit dem letzten Dump"
 
@@ -8815,7 +8808,6 @@ msgstr "CheckMK-Status der Piggyback-Hosts innerhalb dieses Zeitraums prüfen"
 msgid "Check Parameter"
 msgstr "Check-Parameter"
 
-#, fuzzy
 msgid "Check Plugin"
 msgstr "Checkplugins"
 
@@ -11417,6 +11409,10 @@ msgid ""
 "you have to wait until the other process has finished. Please try again "
 "later."
 msgstr ""
+"Die Checkmk-Konfiguration konnte nicht gesperrt werden. Es läuft ein anderer "
+"Prozess, der diese Sperre hält. Damit Sie die gewünschte Aktion durchführen "
+"können, müssen Sie warten, bis der andere Prozess beendet ist. Bitte "
+"versuchen Sie es später noch einmal."
 
 msgid "Count"
 msgstr "Anzahl"
@@ -12095,6 +12091,8 @@ msgstr "Kritisch, wenn alle Lizenzen benutzt sind"
 
 msgid "Criticality of the service when sensors detect that power is off."
 msgstr ""
+"Kritikalität des Dienstes, wenn Sensoren erkennen, dass die Stromversorgung "
+"ausgeschaltet ist."
 
 msgid "Current"
 msgstr "Strom"
@@ -13355,6 +13353,8 @@ msgid ""
 "Define levels on the number of authentication failures within the last 5 "
 "minutes."
 msgstr ""
+"Definieren Sie Stufen für die Anzahl von Authentifizierungsfehlern innerhalb "
+"der letzten 5 Minuten."
 
 #, fuzzy
 msgid "Define levels on the queue length."
@@ -19575,7 +19575,7 @@ msgid "FortiGate HighAvailability"
 msgstr "Serviceverfügbarkeit"
 
 msgid "FortiSandbox Software"
-msgstr ""
+msgstr "FortiSandbox Software"
 
 msgid "Fortigate Active Sessions"
 msgstr "Fortigate aktive Sessions"
@@ -19600,13 +19600,13 @@ msgid "Fortinet FortiAuthenticator Authentication Failures"
 msgstr "Authentifizierungsfehler"
 
 msgid "Fortinet FortiGate AntiVirus Detections"
-msgstr ""
+msgstr "Fortinet FortiGate AntiVirus-Erkennungen"
 
 msgid "Fortinet FortiGate IPS Detections"
-msgstr ""
+msgstr "Fortinet FortiGate IPS-Erkennungen"
 
 msgid "Fortinet FortiMail CPU load"
-msgstr ""
+msgstr "Fortinet FortiMail CPU-Auslastung"
 
 #, fuzzy
 msgid "Fortinet FortiMail disk usage"
@@ -20345,6 +20345,11 @@ msgid ""
 "with a subgroup are excluded from the main file group. One service is "
 "created for each subgroup."
 msgstr ""
+"Gruppieren Sie Dateien innerhalb einer Dateigruppe weiter in Untergruppen. "
+"Geben Sie einen Namen für die Untergruppe und eine Bedingung an, nach der "
+"die Dateien gruppiert werden. Dateien, die zu einer Untergruppe gehören, "
+"sind von der Hauptdateigruppe ausgeschlossen. Für jede Untergruppe wird ein "
+"Dienst erstellt."
 
 msgid "Group interface presence"
 msgstr "Auftreten der Interfacegruppe"
@@ -25306,6 +25311,10 @@ msgstr "Eingehende Bandbreite"
 
 msgid "Input broadcast packets"
 msgstr "Eingehende Broadcastpakete"
+
+#, fuzzy
+msgid "Input channel"
+msgstr "Name des Eingangs"
 
 msgid "Input multicast packets"
 msgstr "Eingehende Multicastpakete"
@@ -31428,6 +31437,9 @@ msgstr "Name des Gehäuses, z.B. \"Enclosure 1\""
 msgid "Name of the form to populate and submit"
 msgstr "Name des Formulars, das ausgefüllt und abgeschickt wird"
 
+msgid "Name of the input channel, e.g. WEBIO-094849 Input 0"
+msgstr ""
+
 msgid "Name of the instance in the monitoring"
 msgstr "Name der Instanz im Monitoring"
 
@@ -33839,6 +33851,12 @@ msgid ""
 "that this may lead to a service description that is not unique, resulting in "
 "some services, which are not shown!"
 msgstr ""
+"Gilt nur für Installationen im Clustermodus. Die Dienstbeschreibung von "
+"Snapvault-Diensten setzt sich standardmäßig aus dem Ziel-VServer (SVM) und "
+"dem Zielvolume zusammen. Aktivieren Sie dieses Kontrollkästchen, wenn Sie "
+"das Zielvolume als eigenständige Dienstbeschreibung verwenden möchten. Bitte "
+"beachten Sie, dass dies zu einer nicht eindeutigen Service-Beschreibung "
+"führen kann, was dazu führt, dass einige Services nicht angezeigt werden!"
 
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
@@ -42941,6 +42959,16 @@ msgid ""
 "If enabled one log entry per view rendering that exceeeds the configured "
 "threshold is logged to <b>var/log/web.log</b>."
 msgstr ""
+"Einige eingebaute oder eigene Ansichten können länger dauern als erwartet. "
+"Um langsame Ansichten zu erkennen, müssen Sie<ul><li>die Protokollstufe auf "
+"<b>DEBUG</b> setzen unter <b>Setup > Allgemein > Globale Einstellungen > "
+"Benutzeroberfläche > Log levels > Slow views</b>,</li><li>einen "
+"Schwellenwert (in Sekunden) unter <b>Setup > Allgemein > Globale "
+"Einstellungen > Benutzeroberfläche > Schwellenwert für langsame "
+"Ansichten</b>.</li></ul>Die Protokollierung ist standardmäßig deaktiviert. "
+"Der Standardschwellenwert ist auf 60 Sekunden eingestellt. Wenn aktiviert, "
+"wird ein Protokolleintrag pro Ansichtsdarstellung, die den konfigurierten "
+"Schwellenwert überschreitet, in <b>var/log/web.log</b> protokolliert."
 
 #, python-format
 msgid "Some but not all package types are signed with key '%s'"
@@ -44196,6 +44224,8 @@ msgstr "Status, wenn dieser Tunnel nicht gefunden wird."
 msgid ""
 "State if the local or the remote device state are other than active/standby."
 msgstr ""
+"Status, wenn der lokale oder der entfernte Gerätezustand ein anderer als "
+"aktiv/standby ist."
 
 msgid "State if tunnel is not found"
 msgstr "Status, wenn dieser Tunnel nicht gefunden wird."
@@ -45928,9 +45958,8 @@ msgstr "Text von der URL %s"
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "Textgruppen von regulären Ausdrücken, mit Leerzeichen separiert"
 
-#, fuzzy
 msgid "Text logfiles (Linux, Solaris, Windows)"
-msgstr "Text-Logdateien (Linux, Windows)"
+msgstr "Text-Logdateien (Linux, Solaris, Windows)"
 
 msgid "Text of the first match group from expression match"
 msgstr "Text der ersten Match-Gruppe des regulären Ausdrucks"
@@ -46223,7 +46252,6 @@ msgstr ""
 "empfohlen den Aufruf des Checkmk-Agenten direkt über die Datenquellen des "
 "Hosts zu konfigurieren."
 
-#, fuzzy
 msgid ""
 "The Checkmk agent supports a feature called real-time checks where it sends "
 "status updates of specific monitoring information more often than the "

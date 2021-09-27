@@ -25297,6 +25297,10 @@ msgstr "Invoerbandbreedte"
 msgid "Input broadcast packets"
 msgstr "Input broadcast pakketten"
 
+#, fuzzy
+msgid "Input channel"
+msgstr "Invoer Naam"
+
 msgid "Input multicast packets"
 msgstr "Invoer multicast-pakketten"
 
@@ -31403,6 +31407,9 @@ msgstr "Naam van de leefruimte, bijv. leefruimte 1"
 
 msgid "Name of the form to populate and submit"
 msgstr "Naam van het formulier dat moet worden ingevuld en verzonden"
+
+msgid "Name of the input channel, e.g. WEBIO-094849 Input 0"
+msgstr ""
 
 msgid "Name of the instance in the monitoring"
 msgstr "Naam van de instantie in de bewaking"

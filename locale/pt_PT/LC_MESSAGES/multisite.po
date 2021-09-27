@@ -25297,6 +25297,10 @@ msgstr "Largura de banda de entrada"
 msgid "Input broadcast packets"
 msgstr "Pacotes de transmissão de entrada"
 
+#, fuzzy
+msgid "Input channel"
+msgstr "Nome de entrada"
+
 msgid "Input multicast packets"
 msgstr "Pacotes multicast de entrada"
 
@@ -31421,6 +31425,9 @@ msgstr "Nome do invólucro, por exemplo, Invólucro 1"
 
 msgid "Name of the form to populate and submit"
 msgstr "Nome do formulário a preencher e enviar"
+
+msgid "Name of the input channel, e.g. WEBIO-094849 Input 0"
+msgstr ""
 
 msgid "Name of the instance in the monitoring"
 msgstr "Nome da instância no monitoramento"

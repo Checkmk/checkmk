@@ -23861,6 +23861,10 @@ msgid "Input broadcast packets"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Input channel"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Input multicast packets"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -30213,6 +30217,9 @@ msgid "Name of the enclosure, e.g. Enclosure 1"
 msgstr ""
 
 msgid "Name of the form to populate and submit"
+msgstr ""
+
+msgid "Name of the input channel, e.g. WEBIO-094849 Input 0"
 msgstr ""
 
 msgid "Name of the instance in the monitoring"

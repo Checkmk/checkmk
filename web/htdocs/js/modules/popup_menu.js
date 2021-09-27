@@ -448,7 +448,6 @@ export function resize_mega_menu_popup(menu_popup) {
         }
 
         const topic = visible_topics[visible_topics.length - 1];
-        let menu_width = Math.min(maximum_popup_width(), topic.offsetWidth * ncol);
 
         // If we have only a single column, we need a bigger menu width, as the search field and
         // the more button needs to have enough space
@@ -461,7 +460,7 @@ export function resize_mega_menu_popup(menu_popup) {
             resize_mega_menu_popup(menu_popup);
             return;
         }
-        menu_popup.style.width = menu_width + "px";
+        menu_popup.style.width = Math.min(maximum_popup_width(), topic.offsetWidth * ncol) + "px";
     } else {
         const items = extended_topic.getElementsByTagName("ul")[0];
         const visible_items = Array.prototype.slice

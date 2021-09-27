@@ -367,8 +367,11 @@
           }
 
           &.extended {
-            width: auto;
-            max-width: 100%;
+            &:not(.single_column) {
+              width: auto;
+              max-width: 100%;
+            }
+
             padding-top: 0;
             overflow-x: hidden;
             overflow-y: scroll;

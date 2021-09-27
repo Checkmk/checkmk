@@ -11,6 +11,7 @@ from typing import Callable, Tuple, TYPE_CHECKING
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
 from Cryptodome.Protocol.KDF import PBKDF2
+from OpenSSL import crypto  # type: ignore[import]
 
 if TYPE_CHECKING:
     import hashlib
@@ -81,3 +82,9 @@ def _derive_openssl_key_and_iv(
 
 def _strip_fill_bytes(content: bytes) -> bytes:
     return content[0:-content[-1]]
+
+
+def sign_key_fingerprint(certificate: bytes) -> str:
+    """Get the fingerprint using the sign key's certificate"""
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, certificate)
+    return cert.digest("sha256").decode('utf-8')

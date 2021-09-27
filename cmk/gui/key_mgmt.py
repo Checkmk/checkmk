@@ -37,7 +37,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
-from cmk.gui.watolib.utils import sign_key_fingerprint
+from cmk.utils.encryption import sign_key_fingerprint
 
 
 class KeypairStore:

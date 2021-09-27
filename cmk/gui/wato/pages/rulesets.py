@@ -2344,8 +2344,7 @@ class RuleConditionRenderer:
         folder_lookup_cache = watolib.Folder.get_folder_lookup_cache()
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
-            is_regex = regex_count > 0
-            if is_regex:
+            if regex_count > 0:
                 condition.append(
                     escape_html_permissive(
                         _("is not one of regex") if is_negate else _("matches one of regex")
@@ -2358,40 +2357,45 @@ class RuleConditionRenderer:
 
             for host_spec in host_name_conditions:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
-                    host_spec = host_spec["$regex"]
-
-                if not is_regex:
+                    text_list.append(html.render_b(host_spec["$regex"]))
+                elif isinstance(host_spec, str):
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
                     if folder_hint is not None:
                         host = watolib.Host.host(host_spec)
-                        host_spec = html.render_a(host_spec, host.edit_url())
-
-                text_list.append(html.render_b(host_spec))
+                        text_list.append(html.render_b(html.render_a(host_spec, host.edit_url())))
+                    else:
+                        text_list.append(html.render_b(host_spec))
+                else:
+                    raise ValueError("Unsupported host spec")
 
         else:
             # Mixed entries
             for host_spec in host_name_conditions:
-                is_regex = isinstance(host_spec, dict) and "$regex" in host_spec
-                if is_regex:
-                    host_spec = host_spec["$regex"]
-
-                if not is_regex:
+                if isinstance(host_spec, dict) and "$regex" in host_spec:
+                    expression = _("does not match regex") if is_negate else _("matches regex")
+                    text_list.append(
+                        escape_html_permissive(expression + " ")
+                        + html.render_b(host_spec["$regex"])
+                    )
+                elif isinstance(host_spec, str):
+                    expression = _("is not") if is_negate else _("is ")
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
                     if folder_hint is not None:
                         host = watolib.Host.host(host_spec)
-                        host_spec = html.render_a(host_spec, host.edit_url())
-
-                if is_negate:
-                    expression = "%s" % (is_regex and _("does not match regex") or _("is not"))
+                        text_list.append(
+                            escape_html_permissive(expression + " ")
+                            + html.render_b(html.render_a(host_spec, host.edit_url()))
+                        )
+                    else:
+                        text_list.append(
+                            escape_html_permissive(expression + " ") + html.render_b(host_spec)
+                        )
                 else:
-                    expression = "%s" % (is_regex and _("matches regex") or _("is "))
-                text_list.append(
-                    escape_html_permissive(expression + " ") + html.render_b(host_spec)
-                )
+                    raise ValueError("Unsupported host spec")
 
         if len(text_list) == 1:
             condition.append(text_list[0])
@@ -2442,23 +2446,28 @@ class RuleConditionRenderer:
                 )
 
             for item_spec in service_conditions:
-                is_regex = isinstance(item_spec, dict) and "$regex" in item_spec
-                if is_regex:
-                    item_spec = item_spec["$regex"]
-                text_list.append(html.render_b(item_spec.rstrip("$")))
+                if isinstance(item_spec, dict) and "$regex" in item_spec:
+                    text_list.append(html.render_b(item_spec["$regex"].rstrip("$")))
+                elif isinstance(item_spec, str):
+                    text_list.append(html.render_b(item_spec.rstrip("$")))
+                else:
+                    raise ValueError("Unsupported item spec")
         else:
             for item_spec in service_conditions:
-                is_regex = isinstance(item_spec, dict) and "$regex" in item_spec
-                if is_regex:
-                    item_spec = item_spec["$regex"]
-
-                is_exact = item_spec[-1] == "$"
-                if is_negate:
-                    expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
+                if isinstance(item_spec, dict) and "$regex" in item_spec:
+                    spec = item_spec["$regex"]
+                elif isinstance(item_spec, str):
+                    spec = item_spec
                 else:
-                    expression = "%s" % (is_exact and _("is ") or _("begins with "))
+                    raise ValueError("Unsupported item spec")
+
+                is_exact = spec[-1] == "$"
+                if is_negate:
+                    expression = _("is not ") if is_exact else _("begins not with ")
+                else:
+                    expression = _("is ") if is_exact else _("begins with ")
                 text_list.append(
-                    escape_html_permissive(expression) + html.render_b(item_spec.rstrip("$"))
+                    escape_html_permissive(expression) + html.render_b(spec.rstrip("$"))
                 )
 
         if len(text_list) == 1:

@@ -15,6 +15,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.type_defs import (
+    HostOrServiceConditionRegex,
     HostOrServiceConditions,
     Labels,
     RuleConditionsSpec,
@@ -165,7 +166,9 @@ class RuleConditions:
     def item_list(self):
         return self._condition_list(self.service_description, is_service=True)
 
-    def _condition_list(self, object_list, is_service):
+    def _condition_list(
+        self, object_list: Optional[HostOrServiceConditions], is_service: bool
+    ) -> Optional[Tuple[List[str], bool]]:
         if object_list is None:
             return None
 
@@ -1193,7 +1196,7 @@ def _match_one_of_search_expression(
     return False
 
 
-def service_description_to_condition(service_description: str) -> Dict[str, str]:
+def service_description_to_condition(service_description: str) -> HostOrServiceConditionRegex:
     r"""Packs a service description to be used as explicit match condition
 
     >>> service_description_to_condition("abc")

@@ -21,6 +21,7 @@ from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
+    HostOrServiceConditionsSimple,
     RuleConditionsSpec,
     Ruleset,
     RuleValue,
@@ -583,22 +584,21 @@ class RulesetOptimizer:
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def matches_host_name(self, host_entries, hostname):
+    def matches_host_name(
+        self, host_entries: Optional[HostOrServiceConditions], hostname: HostName
+    ) -> bool:
         if not host_entries:
             return True
 
         negate, host_entries = parse_negated_condition_list(host_entries)
+        if hostname == "":  # -> generic agent host
+            return negate
 
         for entry in host_entries:
-            use_regex = isinstance(entry, dict)
-
-            if hostname is True:  # -> generic agent host
-                continue
-
-            if not use_regex and hostname == entry:
+            if not isinstance(entry, dict) and hostname == entry:
                 return not negate
 
-            if use_regex and regex(entry["$regex"]).match(hostname) is not None:
+            if isinstance(entry, dict) and regex(entry["$regex"]).match(hostname) is not None:
                 return not negate
 
         return negate
@@ -613,13 +613,14 @@ class RulesetOptimizer:
             for taggroup_id, tag_condition in required_tags.items()
         )
 
+    # TODO: improve and cleanup types
     def _condition_cache_id(
         self,
-        hostlist,
+        hostlist: Optional[HostOrServiceConditions],
         tag_conditions: TaggroupIDToTagCondition,
-        labels,
-        rule_path,
-    ):
+        labels: Any,
+        rule_path: Any,
+    ) -> Tuple[Tuple[str, ...], Tuple[Tuple[str, Any], ...], Tuple[Tuple[Any, Any], ...], Any]:
         host_parts: List[str] = []
 
         if hostlist is not None:
@@ -830,10 +831,14 @@ def matches_labels(object_labels, required_labels) -> bool:
     return True
 
 
-def parse_negated_condition_list(entries: HostOrServiceConditions) -> Tuple[bool, Any]:
+def parse_negated_condition_list(
+    entries: HostOrServiceConditions,
+) -> Tuple[bool, HostOrServiceConditionsSimple]:
     if isinstance(entries, dict) and "$nor" in entries:
         return True, entries["$nor"]
-    return False, entries
+    if isinstance(entries, list):
+        return False, entries
+    raise ValueError("unsupported conditions")
 
 
 class RulesetToDictTransformer:

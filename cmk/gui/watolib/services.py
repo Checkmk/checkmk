@@ -10,10 +10,10 @@ import os
 import sys
 import time
 from hashlib import sha256
-from typing import Any, Dict, Iterable, List, NamedTuple, Sequence, Set, Tuple
+from typing import Any, Iterable, List, NamedTuple, Sequence, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import SetAutochecksTable
+from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
 
 from cmk.automations.results import TryDiscoveryResult
 
@@ -267,7 +267,9 @@ class Discovery:
 
         modified_folders = []
 
-        service_patterns = [service_description_to_condition(s) for s in services]
+        service_patterns: HostOrServiceConditions = [
+            service_description_to_condition(s) for s in services
+        ]
         modified_folders += self._remove_from_rule_of_host(
             ruleset, service_patterns, value=not value
         )
@@ -305,7 +307,7 @@ class Discovery:
         return []
 
     def _update_rule_of_host(
-        self, ruleset: watolib.Ruleset, service_patterns: List[Dict[str, str]], value: Any
+        self, ruleset: watolib.Ruleset, service_patterns: HostOrServiceConditions, value: Any
     ) -> List[watolib.CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)

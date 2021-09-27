@@ -41,12 +41,17 @@ AgentRawData = NewType("AgentRawData", bytes)
 RulesetName = str
 RuleValue = Any  # TODO: Improve this type
 
+# FIXME: A lot of signatures regarding rules and rule sets are simply lying:
+# They claim to expect a RuleConditionsSpec or Ruleset (from cmk.utils.type_defs), but
+# they are silently handling a very chaotic tuple-based structure, too. We
+# really, really need to fix all those signatures! Some test cases for tuples are in
+# test_tuple_rulesets.py. They contain some horrible hand-made types...
 
 # TODO: Improve this type
 class RuleConditionsSpec(TypedDict, total=False):
     host_tags: Any
     host_labels: Any
-    host_name: Any
+    host_name: Optional[HostOrServiceConditions]
     service_description: Optional[HostOrServiceConditions]
     service_labels: Any
     host_folder: Any
@@ -65,9 +70,20 @@ class RuleSpec(_RuleSpecBase, total=False):
     options: RuleOptions
 
 
-_DictConditions = Dict[str, List[Union[Dict[str, str], str]]]
-_ListConditions = List[Union[Dict[str, str], str]]
-HostOrServiceConditions = Union[_DictConditions, _ListConditions]  # TODO: refine type
+HostOrServiceConditionRegex = TypedDict(
+    "HostOrServiceConditionRegex",
+    {"$regex": str},
+)
+HostOrServiceConditionsSimple = List[Union[HostOrServiceConditionRegex, str]]
+HostOrServiceConditionsNegated = TypedDict(
+    "HostOrServiceConditionsNegated",
+    {"$nor": HostOrServiceConditionsSimple},
+)
+
+HostOrServiceConditions = Union[
+    HostOrServiceConditionsSimple,
+    HostOrServiceConditionsNegated,
+]  # TODO: refine type
 
 RuleOptions = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type

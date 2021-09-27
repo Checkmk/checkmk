@@ -265,11 +265,6 @@ class TestRuleConditionRenderer:
                 id="Negation with regex, host name and regex",
             ),
             pytest.param(
-                {"foo": []},
-                "Host name is <b>foo</b>",
-                id="FIXME: Unsupported key in dict",
-            ),
-            pytest.param(
                 ["cached_host"],
                 'Host name is <b><a href="cached_host_url">cached_host</a></b>',
                 id="Host with folder hint",
@@ -294,8 +289,13 @@ class TestRuleConditionRenderer:
             ),
             pytest.param(
                 {"$nor": [{"foo": "bar"}]},
-                TypeError,
-                id="FIXME: Unsupported key in nested dict",
+                ValueError,
+                id="Unsupported key in nested dict (mypy should warn)",
+            ),
+            pytest.param(
+                {"foo": []},
+                ValueError,
+                id="Unsupported key in dict (mypy should warn)",
             ),
         ],
     )

@@ -25,7 +25,7 @@ from dateutil import tz
 import cmk.utils.password_store
 import cmk.utils.paths
 
-from cmk.special_agents.utils import vcrtrace
+import cmk.special_agents.utils as utils
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -927,7 +927,7 @@ def parse_arguments(argv):
     parser.add_argument(
         "--vcrtrace",
         "--tracefile",
-        action=vcrtrace(before_record_request=ESXConnection.filter_request),
+        action=utils.vcrtrace(before_record_request=ESXConnection.filter_request),
     )
     parser.add_argument(
         "-t",

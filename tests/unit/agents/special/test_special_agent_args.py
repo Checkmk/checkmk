@@ -117,10 +117,6 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     "agent_storeonce4x": ["USER", "PASSWORD", "HOST"],
     "agent_cisco_prime": ["--hostname", "HOSTNAME"],
     "agent_innovaphone": [
-        "--debug",
-        "--verbose",
-        "--vcrtrace",
-        "TRACEFILE",
         "User",
         "MyPass",
         "Hostname",

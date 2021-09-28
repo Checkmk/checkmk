@@ -76,8 +76,8 @@ def query_redis(
         return query_callback()
     except MKTimeout:
         raise
-    except Exception:
-        raise DataUnavailableException()
+    except Exception as e:
+        raise DataUnavailableException(e)
     finally:
         if query_lock.owned():
             query_lock.release()

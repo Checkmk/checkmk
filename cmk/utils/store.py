@@ -76,6 +76,20 @@ def lock_checkmk_configuration():
         release_lock(path)
 
 
+def base_configuration_lockfile():
+    return default_config_dir + "/main.mk"
+
+
+@contextmanager
+def lock_cmk_base_configuration():
+    path = base_configuration_lockfile()
+    aquire_lock(path)
+    try:
+        yield
+    finally:
+        release_lock(path)
+
+
 # TODO: Use lock_checkmk_configuration() and nuke this!
 def lock_exclusive():
     aquire_lock(configuration_lockfile())

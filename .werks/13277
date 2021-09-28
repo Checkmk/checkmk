@@ -1,0 +1,16 @@
+Title: Prevent possible broken synchronization to remote sites
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p26
+Date: 1632812297
+Class: fix
+
+Background processes like the <tt>Automatic service discovery</tt> and the DCD may automatically
+trigger a rebuild of the monitoring core configuration. Due to a race condition, this can also
+happen on remote sites while a snapshot is being unpacked, resulting in invalid/incomplete configurations
+and missing hosts.
+
+It is no longer possible to create the core configuration while a snapshot unpack is in progress.
+Instead, the process in question waits until the unpacking has finished.

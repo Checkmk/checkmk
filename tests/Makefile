@@ -207,7 +207,7 @@ test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
 test-gui-crawl: prepare-node-modules prepare-playwright
-	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
+	$(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"

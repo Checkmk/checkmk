@@ -2380,7 +2380,7 @@ class RuleConditionRenderer:
                         + html.render_b(host_spec["$regex"])
                     )
                 elif isinstance(host_spec, str):
-                    expression = _("is not") if is_negate else _("is ")
+                    expression = _("is not") if is_negate else _("is")
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
@@ -2401,7 +2401,7 @@ class RuleConditionRenderer:
             condition.append(text_list[0])
         else:
             condition.append(HTML(", ").join(text_list[:-1]))
-            condition.append(escape_html_permissive(_(" or ")) + text_list[-1])
+            condition.append(escape_html_permissive(_("or ")) + text_list[-1])
 
         return HTML(" ").join(condition)
 

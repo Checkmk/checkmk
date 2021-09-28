@@ -194,14 +194,13 @@ class TestRuleConditionRenderer:
             HTML("Host does not have tag <b>Auxiliary tag 1</b>"),
         ]
 
-    # FIXME: some texts contain double spaces
-    # FIXME: add special case if only one regex is given?
+    # FIXME: add special case if only one regex is given
     @pytest.mark.parametrize(
         "conditions, expected",
         [
             pytest.param(
                 [],
-                "This rule does <b>never</b> apply due " "to an empty list of explicit hosts!",
+                "This rule does <b>never</b> apply due to an empty list of explicit hosts!",
                 id="No conditions",
             ),
             pytest.param(
@@ -211,12 +210,12 @@ class TestRuleConditionRenderer:
             ),
             pytest.param(
                 ["foo", "bar"],
-                "Host name is <b>foo</b>  or <b>bar</b>",
+                "Host name is <b>foo</b> or <b>bar</b>",
                 id="Two hosts names",
             ),
             pytest.param(
                 ["foo", "bar", "baz"],
-                "Host name is <b>foo</b>, <b>bar</b>  or <b>baz</b>",
+                "Host name is <b>foo</b>, <b>bar</b> or <b>baz</b>",
                 id="Three host names",
             ),
             pytest.param(
@@ -226,17 +225,17 @@ class TestRuleConditionRenderer:
             ),
             pytest.param(
                 [{"$regex": "f?o"}, {"$regex": "b.*r"}],
-                "Host name matches one of regex <b>f?o</b>  or <b>b.*r</b>",
+                "Host name matches one of regex <b>f?o</b> or <b>b.*r</b>",
                 id="Two regexes",
             ),
             pytest.param(
                 [{"$regex": "f?o"}, "bar"],
-                "Host name matches regex <b>f?o</b>  or is  <b>bar</b>",
+                "Host name matches regex <b>f?o</b> or is <b>bar</b>",
                 id="Regex and host name",
             ),
             pytest.param(
                 [{"$regex": "f?o"}, "bar", {"$regex": "ba.*r"}],
-                "Host name matches regex <b>f?o</b>, is  <b>bar</b>  or matches regex <b>ba.*r</b>",
+                "Host name matches regex <b>f?o</b>, is <b>bar</b> or matches regex <b>ba.*r</b>",
                 id="Regex, host name and regex",
             ),
             pytest.param(
@@ -246,7 +245,7 @@ class TestRuleConditionRenderer:
             ),
             pytest.param(
                 {"$nor": ["foo", "bar"]},
-                "Host name is not one of <b>foo</b>  or <b>bar</b>",
+                "Host name is not one of <b>foo</b> or <b>bar</b>",
                 id="Negation with two host names",
             ),
             pytest.param(
@@ -256,12 +255,12 @@ class TestRuleConditionRenderer:
             ),
             pytest.param(
                 {"$nor": [{"$regex": "f?o"}, {"$regex": "b.*r"}]},
-                "Host name is not one of regex <b>f?o</b>  or <b>b.*r</b>",
+                "Host name is not one of regex <b>f?o</b> or <b>b.*r</b>",
                 id="Negation with two regexes",
             ),
             pytest.param(
                 {"$nor": [{"$regex": "f?o"}, "bar", {"$regex": "b.*r"}, "foo"]},
-                "Host name does not match regex <b>f?o</b>, is not <b>bar</b>, does not match regex <b>b.*r</b>  or is not <b>foo</b>",
+                "Host name does not match regex <b>f?o</b>, is not <b>bar</b>, does not match regex <b>b.*r</b> or is not <b>foo</b>",
                 id="Negation with regex, host name and regex",
             ),
             pytest.param(
@@ -271,7 +270,7 @@ class TestRuleConditionRenderer:
             ),
             pytest.param(
                 [{"$regex": "f?o"}, "cached_host"],
-                'Host name matches regex <b>f?o</b>  or is  <b><a href="cached_host_url">cached_host</a></b>',
+                'Host name matches regex <b>f?o</b> or is <b><a href="cached_host_url">cached_host</a></b>',
                 id="Regex and host with folder hint",
             ),
         ],

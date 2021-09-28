@@ -12,7 +12,7 @@ import subprocess
 from contextlib import suppress
 from typing import Any, Final, Mapping, Optional, Union
 
-from six import ensure_binary, ensure_str
+from six import ensure_str
 
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
@@ -144,7 +144,7 @@ class ProgramFetcher(AgentFetcher):
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(
-            input=ensure_binary(self.stdin) if self.stdin else None
+            input=self.stdin.encode() if self.stdin else None
         )
         if self._process.returncode == 127:
             exepath = self.cmdline.split()[0]  # for error message, hide options!

@@ -13,7 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Union
 
-from six import ensure_binary, ensure_str
+from six import ensure_str
 from werkzeug.local import LocalProxy
 
 import cmk.utils.paths
@@ -136,7 +136,7 @@ def _load_secret() -> str:
 
 
 def _generate_secret() -> str:
-    return ensure_str(utils.get_random_string(256))
+    return utils.get_random_string(256)
 
 
 def _load_serial(username: UserId) -> int:
@@ -151,14 +151,14 @@ def _load_serial(username: UserId) -> int:
 
 
 def _generate_auth_hash(username: UserId, session_id: str) -> str:
-    return _generate_hash(username, ensure_str(username) + session_id)
+    return _generate_hash(username, username + session_id)
 
 
 def _generate_hash(username: UserId, value: str) -> str:
     """Generates a hash to be added into the cookie value"""
     secret = _load_secret()
     serial = _load_serial(username)
-    return sha256(ensure_binary(value + str(serial) + secret)).hexdigest()
+    return sha256((value + str(serial) + secret).encode()).hexdigest()
 
 
 def del_auth_cookie() -> None:
@@ -172,7 +172,7 @@ def del_auth_cookie() -> None:
 
 
 def _auth_cookie_value(username: UserId, session_id: str) -> str:
-    return ":".join([ensure_str(username), session_id, _generate_auth_hash(username, session_id)])
+    return ":".join([username, session_id, _generate_auth_hash(username, session_id)])
 
 
 def _invalidate_auth_session() -> None:
@@ -336,12 +336,12 @@ def _check_auth(req: Request) -> Optional[UserId]:
 
 def verify_automation_secret(user_id: UserId, secret: str) -> bool:
     if secret and user_id and "/" not in user_id:
-        path = Path(cmk.utils.paths.var_dir) / "web" / ensure_str(user_id) / "automation.secret"
+        path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
         if not path.is_file():
             return False
 
         with path.open(encoding="utf-8") as f:
-            return ensure_str(f.read()).strip() == secret
+            return f.read().strip() == secret
 
     return False
 
@@ -369,7 +369,7 @@ def _check_auth_http_header() -> Optional[UserId]:
     if not user_id:
         return None
 
-    user_id = UserId(ensure_str(user_id))
+    user_id = UserId(user_id)
     set_auth_type("http_header")
 
     return user_id

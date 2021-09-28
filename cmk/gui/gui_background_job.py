@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from typing import Type
 
-from six import ensure_str
-
 import cmk.utils.plugin_registry
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
@@ -424,14 +422,14 @@ class JobRenderer:
 
         # Dynamic data
         loginfo = job_status.get("loginfo")
-        runtime_info = ensure_str(cmk.utils.render.timespan(job_status.get("duration", 0)))
+        runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
         if (
             job_status["state"] == background_job.JobStatusStates.RUNNING
             and job_status.get("estimated_duration") is not None
         ):
             runtime_info += " (%s: %s)" % (
                 _("estimated duration"),
-                ensure_str(cmk.utils.render.timespan(job_status["estimated_duration"])),
+                cmk.utils.render.timespan(job_status["estimated_duration"]),
             )
         for left, right in [
             (_("Runtime"), runtime_info),

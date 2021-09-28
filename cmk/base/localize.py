@@ -11,8 +11,6 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from six import ensure_str
-
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -101,7 +99,7 @@ def do_localize(args: List[str]) -> None:
 
     alias: Optional[str] = None
     if len(args) > 2:
-        alias = ensure_str(args[2])
+        alias = args[2]
 
     commands = {
         "update": _localize_update,

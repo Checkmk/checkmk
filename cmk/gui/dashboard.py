@@ -23,8 +23,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
 
@@ -794,18 +792,12 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInpu
 
     with output_funnel.plugged():
         if isinstance(e, MKException):
-            # Unify different string types from exception messages to a unicode string
-            try:
-                exc_txt = str(e)
-            except UnicodeDecodeError:
-                exc_txt = ensure_str(str(e))
-
             html.show_error(
                 _(
                     "Problem while rendering dashboard element %d of type %s: %s. Have a look at "
                     "<tt>var/log/web.log</tt> for further information."
                 )
-                % (dashlet.dashlet_id, dashlet.type_name(), exc_txt)
+                % (dashlet.dashlet_id, dashlet.type_name(), str(e))
             )
             return output_funnel.drain()
 

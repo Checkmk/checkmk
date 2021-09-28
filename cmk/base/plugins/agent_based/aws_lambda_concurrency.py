@@ -127,13 +127,13 @@ def check_aws_lambda_concurrency(
         else None
     )
     if region_limits:
-        if metrics.ConcurrentExecutions:
+        if metrics.ConcurrentExecutions is not None:
             yield from _check_concurrent_executions_in_percent(
                 metrics.ConcurrentExecutions * 100.0 / region_limits.concurrent_executions,
                 levels_upper=params["levels_concurrent_executions_in_percent"],
             )
 
-        if metrics.UnreservedConcurrentExecutions:
+        if metrics.UnreservedConcurrentExecutions is not None:
             yield from check_levels(
                 metrics.UnreservedConcurrentExecutions
                 * 100.0
@@ -144,7 +144,7 @@ def check_aws_lambda_concurrency(
                 render_func=render.percent,
             )
 
-    if metrics.ConcurrentExecutions:
+    if metrics.ConcurrentExecutions is not None:
         if levels_concurrent_executions := params.get("levels_concurrent_executions_absolute"):
             yield from check_levels(
                 metrics.ConcurrentExecutions,
@@ -154,7 +154,7 @@ def check_aws_lambda_concurrency(
                 render_func=lambda f: "%.2f/s" % f,
             )
 
-    if metrics.UnreservedConcurrentExecutions:
+    if metrics.UnreservedConcurrentExecutions is not None:
         if levels_unreserved_concurrent_executions := params.get(
             "levels_unreserved_concurrent_executions_absolute"
         ):
@@ -166,7 +166,7 @@ def check_aws_lambda_concurrency(
                 render_func=lambda f: "%.2f/s" % f,
             )
 
-    if metrics.ProvisionedConcurrentExecutions:
+    if metrics.ProvisionedConcurrentExecutions is not None:
         yield from check_levels(
             metrics.ProvisionedConcurrentExecutions,
             levels_upper=params.get("levels_provisioned_concurrency_executions"),
@@ -175,7 +175,7 @@ def check_aws_lambda_concurrency(
             render_func=lambda f: "%.4f/s" % f,
         )
 
-    if metrics.ProvisionedConcurrencyInvocations:
+    if metrics.ProvisionedConcurrencyInvocations is not None:
         yield from check_levels(
             metrics.ProvisionedConcurrencyInvocations,
             levels_upper=params.get("levels_provisioned_concurrency_invocations"),
@@ -183,7 +183,7 @@ def check_aws_lambda_concurrency(
             label="provisioned concurrency invocations",
             render_func=lambda f: "%.4f/s" % f,
         )
-    if metrics.ProvisionedConcurrencySpilloverInvocations:
+    if metrics.ProvisionedConcurrencySpilloverInvocations is not None:
         yield from check_levels(
             metrics.ProvisionedConcurrencySpilloverInvocations,
             levels_upper=params["levels_provisioned_concurrency_spillover_invocations"],
@@ -191,7 +191,7 @@ def check_aws_lambda_concurrency(
             label="provisioned concurrency spillover invocations",
             render_func=lambda f: "%.4f/s" % f,
         )
-    if metrics.ProvisionedConcurrencyUtilization:
+    if metrics.ProvisionedConcurrencyUtilization is not None:
         yield from check_levels(
             metrics.ProvisionedConcurrencyUtilization * 100.0,
             levels_upper=params["levels_provisioned_concurrency_utilization"],

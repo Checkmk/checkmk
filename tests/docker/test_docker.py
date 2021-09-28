@@ -6,9 +6,9 @@
 
 # pylint: disable=redefined-outer-name
 
+import logging
 import os
 import subprocess
-import sys
 
 import pytest
 import requests
@@ -26,6 +26,8 @@ import docker  # type: ignore[import]
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", "master")
+
+logger = logging.getLogger()
 
 
 def build_version():
@@ -69,7 +71,7 @@ def resolve_image_alias(alias):
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
-    print("Starting helper container for build secrets")
+    logger.info("Starting helper container for build secrets")
     secret_container = client.containers.run(
         image="busybox",
         command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
@@ -79,7 +81,7 @@ def _build(request, client, version, add_args=None):
     )
     request.addfinalizer(lambda: secret_container.remove(force=True))
 
-    print("Building docker image: %s" % _image_name(version))
+    logger.info("Building docker image (or reuse existing): %s", _image_name(version))
     try:
         image, build_logs = client.images.build(
             path=build_path,
@@ -93,20 +95,21 @@ def _build(request, client, version, add_args=None):
             },
         )
     except docker.errors.BuildError as e:
-        sys.stdout.write("= Build log ==================\n")
+        logger.info("= Build log ==================")
         for entry in e.build_log:
             if "stream" in entry:
-                sys.stdout.write(entry["stream"])
+                logger.info(entry["stream"])
             elif "errorDetail" in entry:
                 continue  # Is already part of the exception message
             else:
-                sys.stdout.write("UNEXPECTED FORMAT: %r\n" % entry)
-        sys.stdout.write("= Build log ==================\n")
+                logger.info("UNEXPECTED FORMAT: %r", entry)
+        logger.info("= Build log ==================")
         raise
 
     # TODO: Enable this on CI system. Removing during development slows down testing
     # request.addfinalizer(lambda: client.images.remove(image.id, force=True))
 
+    logger.info("Built image: %s", image.short_id)
     attrs = image.attrs
     config = attrs["Config"]
 
@@ -155,7 +158,7 @@ def _pull(client, version):
     if version.edition() != "raw":
         raise Exception("Can only fetch raw edition at the moment")
 
-    print("Downloading docker image: checkmk/check-mk-raw:%s" % version.version)
+    logger.info("Downloading docker image: checkmk/check-mk-raw:%s", version.version)
     return client.images.pull("checkmk/check-mk-raw", tag=version.version)
 
 
@@ -178,6 +181,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
         ) from e
 
     c = client.containers.run(image=_image.id, detach=True, **kwargs)
+    logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
     try:
         site_id = kwargs.get("environment", {}).get("CMK_SITE_ID", "cmk")
@@ -197,7 +201,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
         assert "STARTING SITE" in output
         assert _exec_run(c, ["omd", "status"], user=site_id)[0] == 0
     finally:
-        sys.stdout.write("Log so far: %s\n" % c.logs().decode("utf-8"))
+        logger.debug("Log so far: %s", c.logs().decode("utf-8"))
 
     return c
 

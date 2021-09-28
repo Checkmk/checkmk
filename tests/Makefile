@@ -160,7 +160,7 @@ test-composition: prepare-node-modules
 
 test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
-	$(PYTEST) -T docker docker
+	$(PYTEST) -T docker --log-cli-level=INFO docker
 
 test-format-python: test-format-python-isort test-format-python-black
 

@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-09-27 12:46+0000\n"
-"Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
+"PO-Revision-Date: 2021-09-28 04:33+0000\n"
+"Last-Translator: Timo Klecker (DECOIT) <klecker@decoit.de>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -42964,10 +42964,10 @@ msgstr ""
 "<b>DEBUG</b> setzen unter <b>Setup > Allgemein > Globale Einstellungen > "
 "Benutzeroberfläche > Log levels > Slow views</b>,</li><li>einen "
 "Schwellenwert (in Sekunden) unter <b>Setup > Allgemein > Globale "
-"Einstellungen > Benutzeroberfläche > Schwellenwert für langsame "
-"Ansichten</b>.</li></ul>Die Protokollierung ist standardmäßig deaktiviert. "
-"Der Standardschwellenwert ist auf 60 Sekunden eingestellt. Wenn aktiviert, "
-"wird ein Protokolleintrag pro Ansichtsdarstellung, die den konfigurierten "
+"Einstellungen > Benutzeroberfläche > Schwellenwert für langsame Ansichten</"
+"b>.</li></ul>Die Protokollierung ist standardmäßig deaktiviert. Der "
+"Standardschwellenwert ist auf 60 Sekunden eingestellt. Wenn aktiviert, wird "
+"ein Protokolleintrag pro Ansichtsdarstellung, die den konfigurierten "
 "Schwellenwert überschreitet, in <b>var/log/web.log</b> protokolliert."
 
 #, python-format
@@ -46259,7 +46259,7 @@ msgid ""
 "Use this rule to configure the baked agents to send real-time data to the "
 "Checkmk server."
 msgstr ""
-"Der Check_MK-Agent unterstützt ein Feature names Real-Time-Checks, das "
+"Der Checkmk-Agent unterstützt ein Feature names Real-Time-Checks, das "
 "bestimmte Statusinformationen häufiger als das normale Checkintervall des "
 "Hosts sendet, zum Beispiel jede Sekunde. Benutzen Sie diese Regel, um die "
 "gebackenen Agenten Echtzeitdaten an den Check_MK-Server schicken zu lassen."
@@ -47457,7 +47457,7 @@ msgstr ""
 
 #, python-format
 msgid "The datatype must be a tuple, but is %s"
-msgstr ""
+msgstr "Der Datentyp muss ein Tuple sein, es ist aber %s"
 
 #, python-format
 msgid "The datatype must be list, but is %s"
@@ -51788,6 +51788,14 @@ msgid ""
 "from the main section name in the configuration file. For example: [My "
 "Subgroup@My Main Section]."
 msgstr ""
+"Diese Option ist nur relevant, wenn Sie die Dateigruppierung aktiviert haben "
+"und das Zeichen \"@\" in einem Ihrer Untergruppennamen verwenden möchten. "
+"Wenn dies der Fall ist, wählen Sie bitte ein beliebiges ASCII-Zeichen, das "
+"NICHT in einem Ihrer Untergruppennamen verwendet wird. Sie können auch eine "
+"Kombination von Zeichen angeben. Zur Information: Das "
+"Untergruppentrennzeichen wird verwendet, um den Untergruppennamen vom "
+"Hauptabschnittsnamen in der Konfigurationsdatei zu trennen. Zum Beispiel: "
+"[My Subgroup@My Main Section]."
 
 msgid ""
 "This option is only relevant when you limit the number of messages or the "
@@ -55360,15 +55368,15 @@ msgid "Treshold"
 msgstr "Schwellwert"
 
 msgid "Trial expired"
-msgstr ""
+msgstr "Probezeit abgelaufen"
 
 #, python-format
 msgid "Trial expires in %s days"
-msgstr ""
+msgstr "Testversion läuft in %s Tagen ab"
 
 #, python-format
 msgid "Trial expires today (%s)"
-msgstr ""
+msgstr "Testversion läuft heute ab (%s)"
 
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"
@@ -58463,7 +58471,7 @@ msgid ""
 msgstr ""
 
 msgid "Vibrate only"
-msgstr ""
+msgstr "Nur vibrieren"
 
 msgid "VictorOPS REST Endpoint"
 msgstr "VictorOPS REST-Endpunkt"
@@ -64004,9 +64012,9 @@ msgstr ""
 msgid "remove"
 msgstr "Entferne"
 
-#, fuzzy, python-format
+#, python-format
 msgid "remove the following %d %s?"
-msgstr " die folgenden %d Absturz-%s"
+msgstr "die folgenden %d-%s entfernen?"
 
 msgid "repeat every 20'th row"
 msgstr "Wiederhole jede 20. Zeile"
@@ -64384,7 +64392,7 @@ msgid "views"
 msgstr "Ansichten"
 
 msgid "virus"
-msgstr ""
+msgstr "Virus"
 
 #, fuzzy
 msgid "volume name and mountpoint"

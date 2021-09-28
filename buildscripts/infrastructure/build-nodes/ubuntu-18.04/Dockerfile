@@ -1,4 +1,6 @@
-FROM ubuntu:18.04
+ARG IMAGE_UBUNTU_18_04
+# hadolint ignore=DL3006
+FROM ${IMAGE_UBUNTU_18_04}
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"

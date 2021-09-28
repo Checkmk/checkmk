@@ -1,4 +1,6 @@
-FROM debian:10
+ARG IMAGE_DEBIAN_10
+# hadolint ignore=DL3006
+FROM ${IMAGE_DEBIAN_10}
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"

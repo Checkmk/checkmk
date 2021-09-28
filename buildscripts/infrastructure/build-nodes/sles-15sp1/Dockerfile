@@ -1,4 +1,6 @@
-FROM registry.suse.com/suse/sle15:15.1
+ARG IMAGE_SLES_15SP1
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_15SP1}
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"

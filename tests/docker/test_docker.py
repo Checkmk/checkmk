@@ -48,6 +48,21 @@ def _prepare_build():
     assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
 
 
+def resolve_image_alias(alias):
+    """Resolves given "Docker image alias" using the common `resolve.sh` and returns an image
+    name which can be used with `docker run`
+    >>> image = resolve_image_alias("IMAGE_CMK_BASE")
+    >>> assert image and isinstance(image, str)
+    """
+    return subprocess.check_output(
+        [
+            os.path.join(testlib.utils.cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"),
+            alias
+        ],
+        universal_newlines=True,
+    ).split("\n", maxsplit=1)[0]
+
+
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
@@ -76,6 +91,7 @@ def _build(request, client, version, add_args=None):
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition(),
                 "CMK_DL_CREDENTIALS": ":".join(testlib.utils.get_cmk_download_credentials()),
+                "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
     except docker.errors.BuildError as e:
@@ -474,3 +490,12 @@ def test_update(request, client, version):
     assert _exec_run(c_new, ["test", "-f", "pre-update-marker"],
                      user="cmk",
                      workdir="/omd/sites/cmk")[0] == 0
+
+
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    import doctest
+
+    assert not doctest.testmod().failed
+    pytest.main(["-T=docker", "-vvsx", __file__])

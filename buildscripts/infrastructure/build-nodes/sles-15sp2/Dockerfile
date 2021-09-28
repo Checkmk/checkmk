@@ -1,7 +1,6 @@
-FROM registry.suse.com/suse/sle15:15.2.8.2.794
-# Pin to a fixed version for the moment to have it in line with our package mirror.
-# Once the package mirror has been updated, we can set it back to the major version.
-#FROM registry.suse.com/suse/sle15:15.2
+ARG IMAGE_SLES_15SP2
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_15SP2}
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"

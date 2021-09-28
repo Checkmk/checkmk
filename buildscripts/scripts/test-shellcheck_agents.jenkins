@@ -9,26 +9,15 @@ node (NODE) {
     stage('checkout sources') {
         checkout(scm)
         notify = load 'buildscripts/scripts/lib/notify.groovy'
-        str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-        withFolderProperties{
-            TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
-        }
     }
     try {
         stage("Execute Test") {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def TEST_IMAGE = docker.image(TEST_CONTAINER)
-                TEST_IMAGE.pull()
-            }
-            ENV_VARS = ["TEST_CONTAINER=${TEST_CONTAINER}"]
-            withEnv(ENV_VARS) {
-                sh("""
-                    cd "$WORKSPACE/tests"
-                    # CI specific arguments
-                    make SHELLCHECK_OUTPUT_ARGS="-f gcc" test-shellcheck || true
-                    exit 0
-                """)
-            }
+            sh("""
+                cd "$WORKSPACE/tests"
+                # CI specific arguments
+                make SHELLCHECK_OUTPUT_ARGS="-f gcc" test-shellcheck || true
+                exit 0
+               """)
         }
         stage("Analyse Issues") {
             def GCC = scanForIssues(tool: gcc())
@@ -44,7 +33,8 @@ node (NODE) {
                 ]
             )
         }
-    }catch(Exception e) {
+    } catch(Exception e) {
         notify.notify_error(e)
     }
 }
+

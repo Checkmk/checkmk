@@ -49,6 +49,16 @@ def test_check_f5_bigip_cluster_status(arg, result):
     "arg,result",
     [
         ((def_params, 4), [Result(state=state.OK, summary="Node is active")]),
+        (
+            (
+                {
+                    "type": "active_standby",
+                    "v11_2_states": {"0": 2, "1": 2, "2": 2, "3": 2, "4": 0},
+                },
+                4,
+            ),
+            [Result(state=state.OK, summary="Node is active")],
+        ),
         ((def_params, 3), [Result(state=state.OK, summary="Node is standby")]),
         ((def_params, 2), [Result(state=state.CRIT, summary="Node is forced offline")]),
         ((def_params, 1), [Result(state=state.CRIT, summary="Node is offline")]),

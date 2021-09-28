@@ -4612,38 +4612,22 @@ class AWSSectionsUSEast(AWSSections):
     """
 
     def init_sections(self, services, region, config, s3_limits_distributor=None):
-        # ---clients---------------------------------------------------------
-        ce_client = self._init_client("ce")
-
-        cloudwatch_client = self._init_client("cloudwatch")
-        wafv2_client = self._init_client("wafv2")
-
-        # ---distributors----------------------------------------------------
-        wafv2_limits_distributor = ResultDistributor()
-        wafv2_summary_distributor = ResultDistributor()
-
-        # ---sections with distributors--------------------------------------
-        wafv2_limits = WAFV2Limits(
-            wafv2_client, region, config, "CLOUDFRONT", distributor=wafv2_limits_distributor
-        )
-        wafv2_summary = WAFV2Summary(
-            wafv2_client, region, config, "CLOUDFRONT", distributor=wafv2_summary_distributor
-        )
-
-        # ---sections--------------------------------------------------------
-        ce = CostsAndUsage(ce_client, region, config)
-
-        wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, False)
-
-        # ---register sections to distributors-------------------------------
-        wafv2_limits_distributor.add(wafv2_summary)
-        wafv2_summary_distributor.add(wafv2_web_acl)
-
-        # ---register sections for execution---------------------------------
         if "ce" in services:
-            self._sections.append(ce)
+            self._sections.append(CostsAndUsage(self._init_client("ce"), region, config))
 
         if "wafv2" in services and config.service_config["wafv2_cloudfront"]:
+            wafv2_client = self._init_client("wafv2")
+            wafv2_limits_distributor = ResultDistributor()
+            wafv2_limits = WAFV2Limits(
+                wafv2_client, region, config, "CLOUDFRONT", distributor=wafv2_limits_distributor
+            )
+            wafv2_summary_distributor = ResultDistributor()
+            wafv2_summary = WAFV2Summary(
+                wafv2_client, region, config, "CLOUDFRONT", distributor=wafv2_summary_distributor
+            )
+            wafv2_limits_distributor.add(wafv2_summary)
+            wafv2_web_acl = WAFV2WebACL(self._init_client("cloudwatch"), region, config, False)
+            wafv2_summary_distributor.add(wafv2_web_acl)
             if config.service_config.get("wafv2_limits"):
                 self._sections.append(wafv2_limits)
             self._sections.append(wafv2_summary)

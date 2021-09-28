@@ -18,18 +18,12 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import update_customer_info, complement_customer
+from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
 
-from cmk.gui import fields, userdb
+from cmk.gui import userdb
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 from cmk.gui.watolib.users import edit_users, delete_users
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
-
-USERNAME = {
-    'username': fields.String(
-        description="The username to delete",
-        example='user',
-    )
-}
 
 TIMESTAMP_RANGE = Tuple[float, float]
 

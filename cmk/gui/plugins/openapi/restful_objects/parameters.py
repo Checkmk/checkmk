@@ -92,3 +92,10 @@ SITES = List(
     description="Restrict the query to this particular site.",
     missing=[],
 )
+
+USERNAME = {
+    'username': String(
+        description="A username.",
+        example='user',
+    )
+}

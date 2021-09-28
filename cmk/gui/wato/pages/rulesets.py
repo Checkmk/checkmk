@@ -2327,33 +2327,26 @@ class RuleConditionRenderer:
     def _render_host_condition_text(self, conditions: HostOrServiceConditions) -> HTML:
         if conditions == []:
             return escape_html_permissive(
-                _("This rule does <b>never</b> apply due " "to an empty list of explicit hosts!")
+                _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
             )
 
-        condition: List[HTML] = []
-        text_list: List[HTML] = []
-
         is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
+
+        condition: List[HTML] = [escape_html_permissive(_("Host name"))]
 
         regex_count = len(
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]
         )
 
-        condition.append(escape_html_permissive(_("Host name")))
-
         folder_lookup_cache = watolib.Folder.get_folder_lookup_cache()
+        text_list: List[HTML] = []
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
-            if regex_count > 0:
-                condition.append(
-                    escape_html_permissive(
-                        _("is not one of regex") if is_negate else _("matches one of regex")
-                    )
-                )
+            if is_negate:
+                phrase = _("is not one of regex") if regex_count else _("is not one of")
             else:
-                condition.append(
-                    escape_html_permissive(_("is not one of") if is_negate else _("is"))
-                )
+                phrase = _("matches one of regex") if regex_count else _("is")
+            condition.append(escape_html_permissive(phrase))
 
             for host_spec in host_name_conditions:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
@@ -2414,6 +2407,11 @@ class RuleConditionRenderer:
         if not item_type or conditions is None:
             return
 
+        is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
+        if not service_conditions:
+            yield escape_html_permissive(_("Does not match any service"))
+            return
+
         condition = HTML()
         if item_type == "service":
             condition = escape_html_permissive(_("Service name"))
@@ -2424,12 +2422,6 @@ class RuleConditionRenderer:
                 condition = escape_html_permissive(_("Item"))
         condition += HTML(" ")
 
-        is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
-
-        if not service_conditions:
-            yield escape_html_permissive(_("Does not match any service"))
-            return
-
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"]
         )
@@ -2437,13 +2429,10 @@ class RuleConditionRenderer:
         text_list: List[HTML] = []
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
-                condition += escape_html_permissive(
-                    exact_match_count == 0 and _("does not begin with ") or ("is not ")
-                )
+                phrase = _("is not ") if exact_match_count else _("does not begin with ")
             else:
-                condition += escape_html_permissive(
-                    exact_match_count == 0 and _("begins with ") or ("is ")
-                )
+                phrase = _("is ") if exact_match_count else _("begins with ")
+            condition += escape_html_permissive(phrase)
 
             for item_spec in service_conditions:
                 if isinstance(item_spec, dict) and "$regex" in item_spec:

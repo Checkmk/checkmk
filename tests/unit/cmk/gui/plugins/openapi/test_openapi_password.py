@@ -61,10 +61,10 @@ def test_openapi_password(wsgi_app, with_automation_user):
     )
     assert resp.json["extensions"] == {
         "comment": "Something but nothing random",
-        "docu_url": "",
+        "documentation_url": "",
         "password": "tt",
         "owned_by": None,
-        "shared_with": ["all"],
+        "shared": ["all"],
         "customer": "global",
     }
 

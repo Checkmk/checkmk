@@ -2574,13 +2574,12 @@ def _get_context_page_menu_topics(view: View, info: VisualInfo, is_single_info: 
 
         by_topic.setdefault(topic, []).append(entry)
 
-    availability_entry = _get_availability_entry(view, info, is_single_info)
-    if availability_entry:
-        by_topic.setdefault(topics["history"], []).append(availability_entry)
+    if config.user.may("pagetype_topic.history"):
+        if (availability_entry := _get_availability_entry(view, info, is_single_info)):
+            by_topic.setdefault(topics["history"], []).append(availability_entry)
 
-    combined_graphs_entry = _get_combined_graphs_entry(view, info, is_single_info)
-    if combined_graphs_entry:
-        by_topic.setdefault(topics["history"], []).append(combined_graphs_entry)
+        if (combined_graphs_entry := _get_combined_graphs_entry(view, info, is_single_info)):
+            by_topic.setdefault(topics["history"], []).append(combined_graphs_entry)
 
     # Return the sorted topics
     for topic, entries in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title())):

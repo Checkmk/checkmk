@@ -29,11 +29,11 @@ from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 class TagConfigFile(WatoSimpleConfigFile):
-    """Handles loading the 1.6 tag definitions from GUI tags.mk or
-    the pre 1.6 tag configuration from hosttags.mk
+    """Handles loading the 1.6 tag definitions from GUI tags.mk
 
-    When saving the configuration it also writes out the tags.mk for
-    the cmk.base world.
+    The pre 1.6 tag configuration from hosttags.mk was loaded and transformed until 2.0.
+
+    When saving the configuration it also writes out the tags.mk for the cmk.base world.
     """
 
     def __init__(self):
@@ -41,26 +41,10 @@ class TagConfigFile(WatoSimpleConfigFile):
         super().__init__(config_file_path=file_path, config_variable="wato_tags")
 
     def _load_file(self, lock=False):
-        if not self._config_file_path.exists():
-            return self._load_pre_16_config(lock=lock)
-        return super()._load_file(lock=lock)
-
-    def _pre_16_hosttags_path(self):
-        return Path(multisite_dir(), "hosttags.mk")
-
-    def _load_pre_16_config(self, lock):
-        legacy_cfg = store.load_mk_file(
-            str(self._pre_16_hosttags_path()),
-            {"wato_host_tags": [], "wato_aux_tags": []},
-            lock=lock,
-        )
-
-        _migrate_old_sample_config_tag_groups(
-            legacy_cfg["wato_host_tags"], legacy_cfg["wato_aux_tags"]
-        )
-        return cmk.utils.tags.transform_pre_16_tags(
-            legacy_cfg["wato_host_tags"], legacy_cfg["wato_aux_tags"]
-        )
+        cfg = super()._load_file(lock=lock)
+        if not cfg:  # Initialize with empty default config
+            return {"tag_groups": [], "aux_tags": []}
+        return cfg
 
     def save(self, cfg):
         super().save(cfg)
@@ -68,7 +52,7 @@ class TagConfigFile(WatoSimpleConfigFile):
 
         # Cleanup pre 1.6 config files (tags were just saved with new path)
         try:
-            self._pre_16_hosttags_path().unlink()
+            Path(multisite_dir(), "hosttags.mk").unlink()
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
@@ -459,123 +443,6 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             ruleset.delete_rule(rule)
 
     return affected_rulesets
-
-
-# Previous to 1.5 the "Agent type" tag group was created as sample config and was not
-# a builtin tag group (which can not be modified by the user). With werk #5535 we changed
-# the tag scheme and need to deal with the user config (which might extend the original tag group).
-# Use two strategies:
-#
-# a) Check whether or not the tag group has been modified. If not, simply remove it from the user
-#    config and use the builtin tag group in the future.
-# b) Extend the tag group in the user configuration with the tag configuration we need for 1.5.
-# TODO: Move to wato/watolib and register using register_post_config_load_hook()
-def _migrate_old_sample_config_tag_groups(host_tags, aux_tags_):
-    _remove_old_sample_config_tag_groups(host_tags, aux_tags_)
-    _extend_user_modified_tag_groups(host_tags)
-
-
-def _remove_old_sample_config_tag_groups(host_tags, aux_tags_):
-    legacy_tag_group_default = (
-        "agent",
-        "Agent type",
-        [
-            ("cmk-agent", "Check_MK Agent (Server)", ["tcp"]),
-            ("snmp-only", "SNMP (Networking device, Appliance)", ["snmp"]),
-            ("snmp-v1", "Legacy SNMP device (using V1)", ["snmp"]),
-            ("snmp-tcp", "Dual: Check_MK Agent + SNMP", ["snmp", "tcp"]),
-            ("ping", "No Agent", []),
-        ],
-    )
-
-    try:
-        host_tags.remove(legacy_tag_group_default)
-
-        # Former tag choices (see above) are added as aux tags to allow the user to migrate
-        # these tags and the objects that use them
-        aux_tags_.insert(
-            0, ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)")
-        )
-        aux_tags_.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
-    except ValueError:
-        pass  # Not there or modified
-
-    legacy_aux_tag_ids = [
-        "snmp",
-        "tcp",
-    ]
-
-    for aux_tag in aux_tags_[:]:
-        if aux_tag[0] in legacy_aux_tag_ids:
-            aux_tags_.remove(aux_tag)
-
-
-def _extend_user_modified_tag_groups(host_tags):
-    """This method supports migration from <1.5 to 1.5 in case the user has a customized "Agent type" tag group
-    See help of migrate_old_sample_config_tag_groups() and werk #5535 and #6446 for further information.
-
-    Disclaimer: The host_tags data structure is a mess which will hopefully be cleaned up during 1.6 development.
-    Basically host_tags is a list of configured tag groups. Each tag group is represented by a tuple like this:
-
-    # tag_group_id, tag_group_title, tag_choices
-    ('agent', u'Agent type',
-        [
-            # tag_id, tag_title, aux_tag_ids
-            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping',      u'No Agent', []),
-        ],
-    )
-    """
-    tag_group = None
-    for this_tag_group in host_tags:
-        if this_tag_group[0] == "agent":
-            tag_group = this_tag_group
-
-    if tag_group is None:
-        return  # Tag group does not exist
-
-    # Mark all existing tag choices as legacy to help the user that this should be cleaned up
-    for index, tag_choice in enumerate(tag_group[2][:]):
-        if tag_choice[0] in ["no-agent", "special-agents", "all-agents", "cmk-agent"]:
-            continue  # Don't prefix the standard choices
-
-        if tag_choice[1].startswith("Legacy: "):
-            continue  # Don't prefix already prefixed choices
-
-        tag_choice_list = list(tag_choice)
-        tag_choice_list[1] = "Legacy: %s" % tag_choice_list[1]
-        tag_group[2][index] = tuple(tag_choice_list)
-
-    tag_choices = [c[0] for c in tag_group[2]]
-
-    if "no-agent" not in tag_choices:
-        tag_group[2].insert(0, ("no-agent", _("No API integrations, no Checkmk agent"), []))
-
-    if "special-agents" not in tag_choices:
-        tag_group[2].insert(
-            0, ("special-agents", _("Configured API integrations, no Checkmk agent"), ["tcp"])
-        )
-
-    if "all-agents" not in tag_choices:
-        tag_group[2].insert(
-            0, ("all-agents", _("Configured API integrations and Checkmk agent"), ["tcp"])
-        )
-
-    if "cmk-agent" not in tag_choices:
-        tag_group[2].insert(
-            0, ("cmk-agent", _("API integrations if configured, else Checkmk agent"), ["tcp"])
-        )
-    else:
-        # Change title of cmk-agent tag choice and move to top
-        for index, tag_choice in enumerate(tag_group[2]):
-            if tag_choice[0] == "cmk-agent":
-                tag_choice_list = list(tag_group[2].pop(index))
-                tag_choice_list[1] = _("API integrations if configured, else Checkmk agent")
-                tag_group[2].insert(0, tuple(tag_choice_list))
-                break
 
 
 # Creates a includable PHP file which provides some functions which

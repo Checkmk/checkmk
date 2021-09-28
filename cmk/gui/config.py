@@ -150,8 +150,7 @@ def load_config() -> None:
         _load_config_file_to(p, raw_config)
 
     raw_config["sites"] = prepare_raw_site_config(raw_config["sites"])
-
-    _prepare_tag_config(raw_config)
+    raw_config["tags"] = cmk.utils.tags.get_effective_tag_config(raw_config["wato_tags"])
 
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
     for br in builtin_role_ids:
@@ -186,20 +185,6 @@ def make_config_object(raw_config: Dict[str, Any]) -> Config:
         )
 
     return cls(**raw_config)
-
-
-def _prepare_tag_config(raw_config: Dict[str, Any]) -> None:
-    # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
-    # the wato_host_tags and wato_aux_tags to the new structure
-    tag_config = raw_config["wato_tags"]
-    if not any(tag_config.values()) and (
-        raw_config["wato_host_tags"] or raw_config["wato_aux_tags"]
-    ):
-        tag_config = cmk.utils.tags.transform_pre_16_tags(
-            raw_config["wato_host_tags"], raw_config["wato_aux_tags"]
-        )
-
-    raw_config["tags"] = cmk.utils.tags.get_effective_tag_config(tag_config)
 
 
 def execute_post_config_load_hooks() -> None:

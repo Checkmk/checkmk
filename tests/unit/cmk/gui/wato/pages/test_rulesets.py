@@ -302,3 +302,116 @@ class TestRuleConditionRenderer:
     def test_render_host_condition_text_raises(self, folder_lookup, conditions, exception):
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)
+
+    @pytest.mark.parametrize(
+        "item_type, item_name, conditions, expected",
+        [
+            pytest.param(
+                "foo",
+                "bar",
+                None,
+                [],
+                id="conditions is None",
+            ),
+            pytest.param(
+                None,
+                "foo",
+                [],
+                [],
+                id="item_type is None",
+            ),
+            pytest.param(
+                "",
+                "foo",
+                [],
+                [],
+                id="item_type is empty",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                [],
+                [HTML("Does not match any service")],
+                id="item_type and item_name without conditions",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                ["bar"],
+                [HTML("Service name is <b>bar</b>")],
+                id="item_type and item_name without conditions",
+            ),
+            pytest.param(
+                "item",
+                "foo",
+                ["bar"],
+                [HTML("foo is <b>bar</b>")],
+                id="item with one name",
+            ),
+            pytest.param(
+                "item",
+                "foo",
+                ["bar", "baz"],
+                [HTML("foo is <b>bar</b> or <b>baz</b>")],
+                id="item with two names",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                [{"$regex": "b?r"}, "baz"],
+                [HTML("Service name begins with <b>b?r</b> or begins with <b>baz</b>")],
+                id="service with one regex and one name",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                [{"$regex": "b?r"}, {"$regex": "b.*z"}],
+                [HTML("Service name begins with <b>b?r</b> or <b>b.*z</b>")],
+                id="service with two regexes",
+            ),
+            pytest.param(
+                "item",
+                "foo",
+                {"$nor": ["bar"]},
+                [HTML("foo is not <b>bar</b>")],
+                id="negated item with one name",
+            ),
+            pytest.param(
+                "item",
+                "foo",
+                {"$nor": [{"$regex": "b?z"}]},
+                [HTML("foo does not begin with <b>b?z</b>")],
+                id="negated item with one regex",
+            ),
+            pytest.param(
+                "item",
+                "foo",
+                {"$nor": ["bar", "baz"]},
+                [HTML("foo is not <b>bar</b> or <b>baz</b>")],
+                id="negated item with two names",
+            ),
+            pytest.param(
+                "item",
+                "foo",
+                {"$nor": ["bar", {"$regex": "b?z"}, "bam"]},
+                [
+                    HTML(
+                        "foo begins not with <b>bar</b>, begins not with <b>b?z</b> or begins not with <b>bam</b>"
+                    )
+                ],
+                id="negated item with two names and one regex",
+            ),
+            pytest.param(
+                "item",
+                "foo",
+                {"$nor": [{"$regex": "f.*o"}, {"$regex": "b?z"}]},
+                [HTML("foo does not begin with <b>f.*o</b> or <b>b?z</b>")],
+                id="negated item with two regexes",
+            ),
+        ],
+    )
+    def test_service_conditions(self, item_type, item_name, conditions, expected):
+        assert (
+            list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
+            == expected
+        )

@@ -2198,7 +2198,9 @@ class RuleConditionRenderer:
         yield from self._tag_conditions(conditions.host_tags)
         yield from self._host_label_conditions(conditions)
         yield from self._host_conditions(conditions)
-        yield from self._service_conditions(rulespec, conditions)
+        yield from self._service_conditions(
+            rulespec.item_type, rulespec.item_name, conditions.service_description
+        )
         yield from self._service_label_conditions(conditions)
 
     def _tag_conditions(self, host_tag_conditions: TaggroupIDToTagCondition) -> Iterable[HTML]:
@@ -2399,23 +2401,26 @@ class RuleConditionRenderer:
 
         return HTML(" ").join(condition)
 
-    def _service_conditions(self, rulespec: Rulespec, conditions: RuleConditions) -> Iterable[HTML]:
-        if not rulespec.item_type or conditions.service_description is None:
+    def _service_conditions(
+        self,
+        item_type: Optional[str],
+        item_name: Optional[str],
+        conditions: Optional[HostOrServiceConditions],
+    ) -> Iterable[HTML]:
+        if not item_type or conditions is None:
             return
 
         condition = HTML()
-        if rulespec.item_type == "service":
+        if item_type == "service":
             condition = escape_html_permissive(_("Service name"))
-        elif rulespec.item_type == "item":
-            if rulespec.item_name is not None:
-                condition = escape_html_permissive(rulespec.item_name)
+        elif item_type == "item":
+            if item_name is not None:
+                condition = escape_html_permissive(item_name)
             else:
                 condition = escape_html_permissive(_("Item"))
         condition += HTML(" ")
 
-        is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(
-            conditions.service_description
-        )
+        is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
 
         if not service_conditions:
             yield escape_html_permissive(_("Does not match any service"))

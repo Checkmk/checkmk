@@ -388,8 +388,6 @@ class ModeDiagHost(WatoMode):
 @page_registry.register_page("wato_ajax_diag_host")
 class ModeAjaxDiagHost(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 

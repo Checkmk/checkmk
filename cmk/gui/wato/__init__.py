@@ -296,7 +296,6 @@ from cmk.gui.watolib import (
     ConfigDomainGUI,
     ConfigDomainOMD,
     declare_host_attribute,
-    init_wato_datastructures,
     LivestatusViaTCP,
     make_action_link,
     NagiosTextAttribute,

@@ -20,7 +20,7 @@ import cmk.gui.pages
 import cmk.gui.plugins.webapi
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.watolib as watolib
+import cmk.gui.watolib
 import cmk.gui.watolib.read_only
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException, MKException, MKUserError
@@ -114,7 +114,6 @@ def page_api():
 
         api_call = _get_api_call()
         _check_permissions(api_call)
-        watolib.init_wato_datastructures()  # Initialize host and site attributes
         request_object = _get_request(api_call)
         _check_formats(output_format, api_call, request_object)
         _check_request_keys(api_call, request_object)

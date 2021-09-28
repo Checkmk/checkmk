@@ -202,8 +202,6 @@ class ClearFailedNotificationPage(Page):
             _acknowledge_failed_notifications(acktime, time.time())
 
             if user.authorized_login_sites():
-                watolib.init_wato_datastructures(with_wato_lock=True)
-
                 title = _("Replicate user profile")
                 breadcrumb = make_simple_page_breadcrumb(
                     mega_menu_registry.menu_monitoring(), title

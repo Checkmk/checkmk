@@ -25,7 +25,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.utils.logged_in import UserContext
-from cmk.gui.watolib import init_wato_datastructures
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.hosts_and_folders import Folder, Host, update_metadata
@@ -46,8 +45,6 @@ def execute_network_scan_job() -> None:
     """Executed by the multisite cron job once a minute. Is only executed in the
     central site. Finds the next folder to scan and starts it via WATO
     automation. The result is written to the folder in the master site."""
-    init_wato_datastructures(with_wato_lock=True)
-
     if is_wato_slave_site():
         return  # Don't execute this job on slaves.
 

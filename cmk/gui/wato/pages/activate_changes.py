@@ -628,8 +628,6 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
 @page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
@@ -679,8 +677,6 @@ class ModeAjaxStartActivation(AjaxPage):
 @page_registry.register_page("ajax_activation_state")
 class ModeAjaxActivationState(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()

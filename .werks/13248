@@ -1,0 +1,12 @@
+Title: Fix empty BI sidebar snapins
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1632832986
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+The sidebar snapins "BI aggregation groups" and "BI aggregation groups tree"
+were previously empty, even if BI groups and/or trees were configured.

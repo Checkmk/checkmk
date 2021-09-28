@@ -6,7 +6,7 @@
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import Any, List, Mapping, Optional
+from typing import List, Mapping, Optional
 
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -26,6 +26,7 @@ from .utils.f5_bigip import (
     VERSION_PRE_V11_2,
     VERSION_V11_2_PLUS,
     F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
+    F5BigipClusterStatusVSResult,
 )
 
 NodeState = int
@@ -52,7 +53,7 @@ def _node_result(
     node_name: str,
     node_state: NodeState,
     is_gt_v11_2: bool,
-    params: Mapping[str, Any],
+    params: F5BigipClusterStatusVSResult,
 ) -> Result:
     """Turn given node details into
     >>> _node_result("", 4, True, {'type': 'active_standby'})
@@ -60,7 +61,7 @@ def _node_result(
     >>> _node_result("", 3, False, {'type': 'active_standby'})
     Result(state=<State.OK: 0>, summary='Node is active')
     """
-    state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {})}
+    state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {}).items()}
     state_mapping = {**{0: 3, 1: 2, 2: 2, 3: 0, 4: 0}, **state_mapping_from_params}
     return Result(
         state=state(state_mapping[node_state] if is_gt_v11_2 else 0),
@@ -72,7 +73,7 @@ def _node_result(
 
 
 def _check_f5_bigip_cluster_status_common(
-    params: Mapping[str, Any],
+    params: F5BigipClusterStatusVSResult,
     section: NodeState,
     is_gt_v11_2: bool,
 ) -> CheckResult:
@@ -80,7 +81,7 @@ def _check_f5_bigip_cluster_status_common(
 
 
 def _cluster_check_f5_bigip_cluster_status_common(
-    params: Mapping[str, Any],
+    params: F5BigipClusterStatusVSResult,
     section: Mapping[str, NodeState],
     is_gt_v11_2: bool,
 ) -> CheckResult:
@@ -110,7 +111,8 @@ def _cluster_check_f5_bigip_cluster_status_common(
 ### Older than v11.2
 
 
-def check_f5_bigip_cluster_status(params: Mapping[str, Any], section: int) -> CheckResult:
+def check_f5_bigip_cluster_status(params: F5BigipClusterStatusVSResult,
+                                  section: int) -> CheckResult:
     """
     >>> for r in check_f5_bigip_cluster_status({"type": "active_standby"}, 3):
     ...     print(r)
@@ -120,7 +122,7 @@ def check_f5_bigip_cluster_status(params: Mapping[str, Any], section: int) -> Ch
 
 
 def cluster_check_f5_bigip_cluster_status(
-    params: Mapping[str, Any],
+    params: F5BigipClusterStatusVSResult,
     section: Mapping[str, NodeState],
 ) -> CheckResult:
     """
@@ -156,12 +158,13 @@ register.check_plugin(
 ### From v11.2 and up
 
 
-def check_f5_bigip_cluster_status_v11_2(params: Mapping[str, Any], section: int) -> CheckResult:
+def check_f5_bigip_cluster_status_v11_2(params: F5BigipClusterStatusVSResult,
+                                        section: int) -> CheckResult:
     yield from _check_f5_bigip_cluster_status_common(params, section, True)
 
 
 def cluster_check_f5_bigip_cluster_status_v11_2(
-    params: Mapping[str, Any],
+    params: F5BigipClusterStatusVSResult,
     section: Mapping[str, NodeState],
 ) -> CheckResult:
     yield from _cluster_check_f5_bigip_cluster_status_common(params, section, True)

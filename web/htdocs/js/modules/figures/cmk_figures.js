@@ -887,3 +887,51 @@ export function metric_value_component(selection, options) {
         unit.attr("dx", font_size / 6 + "px").attr("dy", font_size / 8 + "px");
     }
 }
+
+/**
+ * Function to provide default options for metric_value_component
+ * @param {Object} size - Size of container to draw to
+ * @param {number} size.width - Width of container
+ * @param {number} size.height - Height of container
+ * @param {Object} options - Configuration the values
+ * @param {number} options.font_size - Overwrite auto font_size (calculated by size)
+ * @param {boolean} options.visible - Overwrite auto visible (true)
+ * @param {Object} options.position - Overwrite a position value
+ * @param {number} options.position.y - Overwrite y position
+ *
+ * The function provides the following options in the result:
+ * * position
+ * * font_size
+ * * visible
+ */
+export function metric_value_component_options_big_centered_text(size, options) {
+    if (options == undefined) {
+        options = {};
+    }
+
+    let font_size = Math.min(size.width / 5, (size.height * 2) / 3);
+    if (options.font_size !== undefined) {
+        font_size = options.font_size;
+    }
+
+    let visible = true;
+    if (options.visible !== undefined) {
+        visible = options.visible;
+    }
+
+    const position_x = size.width / 2;
+
+    let position_y = size.height / 2;
+    if (options.position !== undefined && options.position.y !== undefined) {
+        position_y = options.position.y;
+    }
+
+    return {
+        position: {
+            x: position_x,
+            y: position_y,
+        },
+        font_size: font_size,
+        visible: visible,
+    };
+}

@@ -35,7 +35,7 @@ node(NODE) {
                         sh "./bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -d"
                     }
                 }
-               stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/build-nodes/*/Dockerfile,buildscripts/infrastructure/build-nodes/*/*.repo'
+               stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/build-nodes/*/Dockerfile,buildscripts/infrastructure/build-nodes/*/*.repo,buildscripts/infrastructure/build-nodes/*/*.pem'
             }
         }
     }

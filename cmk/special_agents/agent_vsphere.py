@@ -7,7 +7,6 @@
 
 import argparse
 import collections
-import datetime
 import errno
 import json
 import re
@@ -15,12 +14,12 @@ import socket
 import sys
 import time
 from pathlib import Path
-from typing import Any, Counter, Dict, List
+from typing import Any, Counter, Dict, List, Sequence
 from xml.dom import minidom  # type: ignore[import]
 
+import dateutil.parser
 import requests
 import urllib3  # type: ignore[import]
-from dateutil import tz
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -1644,19 +1643,17 @@ def get_section_snapshot_summary(vms):
     ]
 
 
-def get_section_systemtime(connection, opt):
+def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[str]:
     try:
         response = connection.query_server("systemtime")
-        elements = get_pattern("<returnval>(.*)</returnval>", response)
-        if elements:
-            naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
-            utc = naive.replace(tzinfo=tz.tzutc())
-            localtime = utc.astimezone(tz.tzlocal())
-            return ["<<<systemtime>>>", localtime.strftime("%s") + " " + str(time.time())]
-    except Exception:
-        if opt.debug:
+        raw_systime = get_pattern("<returnval>(.*)</returnval>", response)[0]
+    except (IndexError, Exception):
+        if debug:
             raise
-    return []
+        return []
+
+    systime = dateutil.parser.isoparse(raw_systime).timestamp()
+    return ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
 
 def is_placeholder_vm(devices):
@@ -1953,7 +1950,7 @@ def fetch_data(connection, opt):
     if "hostsystem" in opt.modules:
         output += get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt)
 
-    output += get_section_systemtime(connection, opt)
+    output += get_section_systemtime(connection, bool(opt.debug))
 
     return output
 

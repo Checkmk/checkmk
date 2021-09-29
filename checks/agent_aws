@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Mapping, Tuple, Union
+from typing import Any, Dict, Mapping, Tuple, Union
 from cmk.utils import password_store
 
 
@@ -57,14 +57,16 @@ def _get_services_config(services):
 def _get_proxy_args_and_secrets(details):
     proxy_args = ["--proxy-host", details["proxy_host"]]
 
-    proxy_port = details.get("proxy_port")
-    if proxy_port:
+    if proxy_port := details.get("proxy_port"):
         proxy_args += ["--proxy-port", str(proxy_port)]
 
-    proxy_secrets = {}
+    proxy_secrets: Dict[str, str] = {}
     for secret in ("proxy_user", "proxy_password"):
         if secret in details:
-            proxy_secrets[secret] = str(details[secret])
+            value = details[secret]
+            if secret == "proxy_password":
+                value = password_store.extract(details[secret])
+            proxy_secrets[secret] = str(value)
     return proxy_args, proxy_secrets
 
 

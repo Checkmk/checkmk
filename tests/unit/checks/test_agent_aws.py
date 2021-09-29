@@ -24,7 +24,7 @@ pytestmark = pytest.mark.checks
                     'proxy_host': '1.1.1',
                     'proxy_port': 22,
                     'proxy_user': 'banana',
-                    'proxy_password': 'banana123',
+                    'proxy_password': ('password', 'banana123'),
                 },
                 'assume_role': {},
                 'global_services': {

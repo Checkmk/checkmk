@@ -2715,7 +2715,7 @@ def _valuespec_special_agents_aws():
                          title=_("Username"),
                          size=32,
                      )),
-                     ("proxy_password", TextAscii(title=_("Password"))),
+                     ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
                  ],
                  optional_keys=["proxy_port", "proxy_user", "proxy_password"],
              )),

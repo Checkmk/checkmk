@@ -1,0 +1,12 @@
+Title: agent_aws: Add option to use password store in proxy settings
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1632909874
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p12
+
+Previously, it was only possible to set an explicit password for "Proxy server
+details" in rule "Amazon Web Services (AWS)".

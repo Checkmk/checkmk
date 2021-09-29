@@ -70,7 +70,13 @@ from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
 from . import _cluster_modes, _submit_to_core
-from .utils import AggregatedResult, CHECK_NOT_IMPLEMENTED, ITEM_NOT_FOUND, RECEIVED_NO_DATA
+from .utils import (
+    AggregatedResult,
+    CHECK_NOT_IMPLEMENTED,
+    cluster_received_no_data,
+    ITEM_NOT_FOUND,
+    RECEIVED_NO_DATA,
+)
 
 # .
 #   .--Checking------------------------------------------------------------.
@@ -573,17 +579,18 @@ def _get_monitoring_data_kwargs_by_source(
     source_type: SourceType,
 ) -> Tuple[Mapping[str, object], ServiceCheckResult]:
     if host_config.is_cluster:
+        nodes = config_cache.get_clustered_service_node_keys(
+            host_config,
+            source_type,
+            service.description,
+        )
         return (
             get_section_cluster_kwargs(
                 parsed_sections_broker,
-                config_cache.get_clustered_service_node_keys(
-                    host_config,
-                    source_type,
-                    service.description,
-                ),
+                nodes,
                 sections,
             ),
-            RECEIVED_NO_DATA,
+            cluster_received_no_data(nodes),
         )
 
     return (

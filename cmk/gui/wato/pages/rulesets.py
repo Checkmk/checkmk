@@ -232,7 +232,7 @@ class ABCRulesetMode(WatoMode):
                     )
                     html.open_div(class_="text")
 
-                    url_vars = [
+                    url_vars: HTTPVariables = [
                         ("mode", "edit_ruleset"),
                         ("varname", ruleset.name),
                         ("back_mode", self.name()),
@@ -898,7 +898,7 @@ class ModeEditRuleset(WatoMode):
             html.write_text(_("Unknown match type: %s") % match_type)
         html.close_div()
 
-    def _rule_listing(self, ruleset):
+    def _rule_listing(self, ruleset: watolib.Ruleset) -> None:
         rules = ruleset.get_rules()
         if not rules:
             html.div(_("There are no rules defined in this set."), class_="info")
@@ -1745,8 +1745,9 @@ class ABCEditRuleMode(WatoMode):
             self._show_rule_editor()
 
     def _show_rule_editor(self) -> None:
-        if self._ruleset.help():
-            html.div(HTML(self._ruleset.help()), class_="info")
+        help_text = self._ruleset.help()
+        if help_text:
+            html.div(HTML(help_text), class_="info")
 
         html.begin_form("rule_editor", method="POST")
 

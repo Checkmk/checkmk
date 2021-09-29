@@ -9,7 +9,7 @@
 import copy
 import os
 from functools import partial
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from six import ensure_str
 
@@ -17,7 +17,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import DiscoveryResult
+from cmk.utils.type_defs import DiscoveryResult, TagID
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
@@ -882,8 +882,10 @@ class APICallHosttags(APICallCollection):
                     used_tags.add((attr_name[4:], value))
         return used_tags
 
-    def _get_used_tags_from_rules(self):
-        used_tags = set()
+    def _get_used_tags_from_rules(
+        self,
+    ) -> Set[Tuple[TagID, Optional[TagID]]]:
+        used_tags: Set[Tuple[TagID, Optional[TagID]]] = set()
 
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
@@ -891,17 +893,20 @@ class APICallHosttags(APICallCollection):
             for _folder, _rulenr, rule in ruleset.get_rules():
                 for tag_group_id, tag_spec in rule.conditions.host_tags.items():
                     if isinstance(tag_spec, dict):
+                        # NOTE: mypy cannot distinguish variants of a union of TypedDicts. It would
+                        # be possible via the tagged union pattern, but this would alter the dicts.
+                        # https://mypy.readthedocs.io/en/stable/more_types.html#unions-of-typeddicts
                         if "$ne" in tag_spec:
-                            used_tags.add((tag_group_id, tag_spec["$ne"]))
+                            used_tags.add((tag_group_id, tag_spec["$ne"]))  # type: ignore[typeddict-item]
                             continue
 
                         if "$or" in tag_spec:
-                            for tag_id in tag_spec["$or"]:
+                            for tag_id in tag_spec["$or"]:  # type: ignore[typeddict-item,misc]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 
                         if "$nor" in tag_spec:
-                            for tag_id in tag_spec["$nor"]:
+                            for tag_id in tag_spec["$nor"]:  # type: ignore[typeddict-item,misc]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 

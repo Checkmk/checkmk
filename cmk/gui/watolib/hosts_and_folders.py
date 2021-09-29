@@ -1000,7 +1000,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             # intentionally.
             self._num_hosts = len(self._hosts or {})
 
-    def save(self):
+    def save(self) -> None:
         self.persist_instance()
         Folder.invalidate_caches()
         self.load_instance()
@@ -1040,7 +1040,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                     entry, subfolder_path, parent_folder=self, root_dir=self._root_dir
                 )
 
-    def wato_info_path(self):
+    def wato_info_path(self) -> str:
         return self.filesystem_path() + "/.wato"
 
     def hosts_file_path(self) -> str:
@@ -1049,7 +1049,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def hosts_file_path_without_extension(self) -> str:
         return self.filesystem_path() + "/hosts"
 
-    def rules_file_path(self):
+    def rules_file_path(self) -> str:
         return self.filesystem_path() + "/rules.mk"
 
     def add_to_dictionary(self, dictionary):
@@ -1057,7 +1057,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         for subfolder in self._subfolders.values():
             subfolder.add_to_dictionary(dictionary)
 
-    def drop_caches(self):
+    def drop_caches(self) -> None:
         super().drop_caches()
         self._choices_for_moving_host = None
 

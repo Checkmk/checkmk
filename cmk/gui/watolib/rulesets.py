@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import pprint
 import re
-from typing import Any, cast, Container, Dict, List, Optional, Tuple, Union
+from typing import Any, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -293,26 +293,26 @@ class RulesetCollection:
 
         store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
 
-    def exists(self, name) -> bool:
+    def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
 
-    def get(self, name, deflt=None):
+    def get(self, name: RulesetName, deflt=None) -> Ruleset:
         return self._rulesets[name]
 
-    def set(self, name, ruleset):
+    def set(self, name: RulesetName, ruleset: Ruleset) -> None:
         self._rulesets[name] = ruleset
 
-    def delete(self, name):
+    def delete(self, name: RulesetName):
         del self._rulesets[name]
 
-    def get_rulesets(self):
+    def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
         return self._rulesets
 
-    def set_rulesets(self, rulesets):
+    def set_rulesets(self, rulesets: Dict[RulesetName, Ruleset]) -> None:
         self._rulesets = rulesets
 
     # Groups the rulesets in 3 layers (main group, sub group, rulesets)
-    def get_grouped(self):
+    def get_grouped(self) -> List[Tuple[str, List[Tuple[str, List[Ruleset]]]]]:
         grouped_dict: Dict[str, Dict[str, List[Ruleset]]] = {}
         for ruleset in self._rulesets.values():
             main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
@@ -820,7 +820,7 @@ class Rule:
         # Content of the rule itself
         self._initialize()
 
-    def clone(self, preserve_id: bool = False) -> "Rule":
+    def clone(self, preserve_id: bool = False) -> Rule:
         cloned = Rule(self.folder, self.ruleset)
         cloned.from_config(self.to_config())
         if not preserve_id:
@@ -829,8 +829,9 @@ class Rule:
 
     def _initialize(self) -> None:
         self.conditions = RuleConditions(self.folder.path())
+        # TODO: refine types
         self.rule_options: Dict[str, Any] = {}
-        self.value = True if self.ruleset.rulespec.is_binary_ruleset else None
+        self.value: Any = True if self.ruleset.rulespec.is_binary_ruleset else None
         self.id = ""  # Will be populated later
 
     def from_config(self, rule_config: Any) -> None:

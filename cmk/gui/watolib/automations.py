@@ -56,9 +56,10 @@ class MKAutomationException(MKGeneralException):
 
 
 def remote_automation_call_came_from_pre21() -> bool:
+    # The header is sent by Checkmk as of 2.0.0p1. In case it is missing, assume we are too old.
     if not (remote_version := request.headers.get("x-checkmk-version")):
-        return False
-    return parse_check_mk_version(remote_version) < parse_check_mk_version("2.1.0")
+        return True
+    return parse_check_mk_version(remote_version) < parse_check_mk_version("2.1.0i1")
 
 
 def check_mk_local_automation_serialized(

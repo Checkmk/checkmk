@@ -85,7 +85,12 @@ class TestCheckmkAutomationBackgroundJob:
         "check_mk_local_automation_serialized",
         "save_text_to_file",
     )
-    def test_execute_automation_post_21(self) -> None:
+    def test_execute_automation_post_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            automations.request,
+            "headers",
+            {"x-checkmk-version": "2.1.0i1"},
+        )
         automations.CheckmkAutomationBackgroundJob(
             "job_id",
             api_request := automations.CheckmkAutomationRequest(
@@ -101,17 +106,22 @@ class TestCheckmkAutomationBackgroundJob:
         )
         assert RESULT == "(2, None)"
 
+    @pytest.mark.parametrize("set_version", [True, False])
     @pytest.mark.usefixtures(
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "save_object_to_file",
     )
-    def test_execute_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            automations.request,
-            "headers",
-            {"x-checkmk-version": "2.0.0p10"},
-        )
+    def test_execute_automation_pre_21(
+        self, set_version: bool, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        if set_version:
+            monkeypatch.setattr(
+                automations.request,
+                "headers",
+                {"x-checkmk-version": "2.0.0p10"},
+            )
+
         automations.CheckmkAutomationBackgroundJob(
             "job_id",
             api_request := automations.CheckmkAutomationRequest(

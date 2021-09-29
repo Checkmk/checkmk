@@ -75,19 +75,28 @@ class TestModeAutomation:
         "setup_request",
     )
     def test_execute_cmk_automation_post_21(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(
+            request,
+            "headers",
+            {"x-checkmk-version": "2.1.0"},
+        )
         automation.ModeAutomation()._execute_cmk_automation()
         assert response.get_data() == b"((1, 2), 'abc')"
 
+    @pytest.mark.parametrize("set_version", [True, False])
     @pytest.mark.usefixtures(
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
     )
-    def test_execute_cmk_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setattr(
-            request,
-            "headers",
-            {"x-checkmk-version": "2.0.0p10"},
-        )
+    def test_execute_cmk_automation_pre_21(
+        self, set_version: bool, monkeypatch: pytest.MonkeyPatch
+    ):
+        if set_version:
+            monkeypatch.setattr(
+                request,
+                "headers",
+                {"x-checkmk-version": "2.0.0p10"},
+            )
         automation.ModeAutomation()._execute_cmk_automation()
         assert response.get_data() == b"{'field_1': (1, 2), 'field_2': 'abc'}"

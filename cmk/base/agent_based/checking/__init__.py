@@ -540,11 +540,10 @@ def _get_section_kwargs(
         get_section_cluster_kwargs(
             parsed_sections_broker,
             config_cache.get_clustered_service_node_keys(
-                host_config.hostname,
+                host_config,
                 source_type,
                 service.description,
-            )
-            or [],
+            ),
             sections,
         )
         if host_config.is_cluster
@@ -563,11 +562,10 @@ def _get_section_kwargs(
             get_section_cluster_kwargs(
                 parsed_sections_broker,
                 config_cache.get_clustered_service_node_keys(
-                    host_config.hostname,
+                    host_config,
                     SourceType.MANAGEMENT,
                     service.description,
-                )
-                or [],
+                ),
                 sections,
             )
             if host_config.is_cluster

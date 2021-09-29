@@ -2230,23 +2230,11 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    # regardless of config: descr == None -> return None
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            HostName("cluster.test"),
-            SourceType.HOST,
-            None,
-        )
-        is None
-    )
-    # still None, we have no cluster:
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            HostName("cluster.test"),
-            SourceType.HOST,
-            "Test Service",
-        )
-        is None
+    # empty, we have no cluster:
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(HostName("cluster.test")),
+        SourceType.HOST,
+        "Test Service",
     )
 
 
@@ -2263,23 +2251,18 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    # None for a node:
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            HostName("node1.test"),
-            SourceType.HOST,
-            "Test Service",
-        )
-        is None
+    # empty for a node:
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(HostName("node1.test")),
+        SourceType.HOST,
+        "Test Service",
     )
-    # empty list for cluster (we have not clustered the service)
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            cluster_test,
-            SourceType.HOST,
-            "Test Service",
-        )
-        == []
+
+    # empty for cluster (we have not clustered the service)
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(cluster_test),
+        SourceType.HOST,
+        "Test Service",
     )
 
 
@@ -2310,7 +2293,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
     )
     assert config_cache.get_clustered_service_node_keys(
-        cluster,
+        config_cache.get_host_config(cluster),
         SourceType.HOST,
         "Test Service",
     ) == [
@@ -2322,22 +2305,10 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            cluster,
-            SourceType.HOST,
-            "Test Unclustered",
-        )
-        == []
-    )
-    # regardless of config: descr == None -> return None
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            cluster,
-            SourceType.HOST,
-            None,
-        )
-        is None
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(cluster),
+        SourceType.HOST,
+        "Test Unclustered",
     )
 
 

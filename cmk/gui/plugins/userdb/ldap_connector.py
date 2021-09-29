@@ -492,9 +492,8 @@ class LDAPUserConnector(UserConnector):
     def _user_id_attr(self):
         return self._config.get('user_id', self.ldap_attr('user_id')).lower()
 
-    # TODO: Add .lower() here and remove at call sites
     def _member_attr(self):
-        return self._config.get('group_member', self.ldap_attr('member'))
+        return self._config.get('group_member', self.ldap_attr('member')).lower()
 
     def has_bind_credentials_configured(self):
         return self._config.get('bind', ('', ''))[0] != ''
@@ -748,7 +747,7 @@ class LDAPUserConnector(UserConnector):
         # Filter out users by the optional filter_group
         filter_group_dn = self._config.get('user_filter_group', None)
         if filter_group_dn:
-            member_attr = self._member_attr().lower()
+            member_attr = self._member_attr()
             is_member = False
             for member in self._get_filter_group_members(filter_group_dn):
                 if member_attr == "memberuid" and raw_user_id == member:
@@ -780,7 +779,7 @@ class LDAPUserConnector(UserConnector):
         # Create filter by the optional filter_group
         filter_group_dn = self._config.get('user_filter_group', None)
         if filter_group_dn:
-            member_attr = self._member_attr().lower()
+            member_attr = self._member_attr()
             # posixGroup objects use the memberUid attribute to specify the group memberships.
             # This is the username instead of the users DN. So the username needs to be used
             # for filtering here.
@@ -829,7 +828,7 @@ class LDAPUserConnector(UserConnector):
 
     # TODO: Use get_group_memberships()?
     def _get_filter_group_members(self, filter_group_dn):
-        member_attr = self._member_attr().lower()
+        member_attr = self._member_attr()
 
         try:
             group = self._ldap_search(
@@ -875,7 +874,7 @@ class LDAPUserConnector(UserConnector):
     def _get_direct_group_memberships(self, filters: List[str], filt_attr: str) -> GroupMemberships:
         groups: GroupMemberships = {}
         filt = self.ldap_filter('groups')
-        member_attr = self._member_attr().lower()
+        member_attr = self._member_attr()
 
         if self.is_active_directory() or filt_attr != 'distinguishedname':
             if filters:
@@ -2106,8 +2105,10 @@ def get_connection_choices(add_this=True):
 
 # This is either the user id or the user distinguished name,
 # depending on the LDAP server to communicate with
+# OPENLDAP _member_attr() -> memberuid
+# AD _member_attr() -> member
 def get_group_member_cmp_val(connection, user_id, ldap_user):
-    return user_id if connection._member_attr().lower() == 'memberuid' else ldap_user['dn']
+    return user_id.lower() if connection._member_attr() == 'memberuid' else ldap_user['dn']
 
 
 def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):

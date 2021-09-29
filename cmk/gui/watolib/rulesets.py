@@ -829,8 +829,8 @@ class Rule:
 
     def _initialize(self) -> None:
         self.conditions = RuleConditions(self.folder.path())
-        # TODO: refine types
-        self.rule_options: Dict[str, Any] = {}
+        self.rule_options: RuleOptions = {}
+        # TODO: refine type
         self.value: Any = True if self.ruleset.rulespec.is_binary_ruleset else None
         self.id = ""  # Will be populated later
 
@@ -853,8 +853,11 @@ class Rule:
         # this possible, we need to accept missing "id" fields here. During runtime this is not
         # needed anymore, since cmk-update-config has updated all rules from the user configuration.
         self.id = rule_config["id"] if "id" in rule_config else utils.gen_id()
+        assert isinstance(self.id, str)
 
         self.rule_options = rule_config.get("options", {})
+        assert all(isinstance(k, str) for k in self.rule_options)
+
         self.value = rule_config["value"]
 
         conditions = rule_config["condition"].copy()

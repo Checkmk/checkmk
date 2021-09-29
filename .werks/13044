@@ -1,0 +1,9 @@
+Title: Add support for Stormshield appliance >= 3.7.18
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1632915600
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p12

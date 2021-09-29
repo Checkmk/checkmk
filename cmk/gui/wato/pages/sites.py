@@ -55,7 +55,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariableGroup
 from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site, site_is_local, SiteStatus
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, UserId
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import (
     make_confirm_link,
@@ -81,6 +81,7 @@ from cmk.gui.watolib.activate_changes import (
     clear_site_replication_status,
     get_trial_expired_message,
 )
+from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
 from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 
@@ -649,7 +650,7 @@ class ModeDistributedMonitoring(WatoMode):
         error = None
         # Fetch name/password of admin account
         if request.has_var("_name"):
-            name = request.get_unicode_input_mandatory("_name", "").strip()
+            name = UserId(request.get_unicode_input_mandatory("_name", "").strip())
             passwd = request.get_ascii_input_mandatory("_passwd", "").strip()
             try:
                 if not html.get_checkbox("_confirm"):
@@ -661,7 +662,7 @@ class ModeDistributedMonitoring(WatoMode):
                         ),
                     )
 
-                secret = watolib.do_site_login(login_id, name, passwd)
+                secret = do_site_login(login_id, name, passwd)
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)

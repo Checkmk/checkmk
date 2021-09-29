@@ -25,6 +25,7 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import UserId
 from cmk.utils.werks import parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
@@ -369,7 +370,7 @@ def get_url_json(url, insecure, auth=None, data=None, files=None, timeout=None):
     return get_url_raw(url, insecure, auth, data, files, timeout).json()
 
 
-def do_site_login(site_id, name, password):
+def do_site_login(site_id: SiteId, name: UserId, password: str) -> str:
     sites = SiteManagementFactory().factory().load_sites()
     site = sites[site_id]
     if not name:

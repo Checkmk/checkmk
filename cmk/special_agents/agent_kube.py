@@ -169,10 +169,12 @@ class Cluster:
                 resources[k] += v
         return PodResources(**resources)
 
-    def sections(self) -> None:
-        # with ConditionalPiggybackSection(self.name):
-        with SectionWriter("k8s_pod_resources") as writer:
-            writer.append(self.pod_resources().json())
+
+def output_cluster_api_sections(cluster: Cluster):
+    sections = {"k8s_pods_resources": cluster.pod_resources}
+    for section_name, section_call in sections.items():
+        with SectionWriter(section_name) as writer:
+            writer.append(section_call().json())
 
 
 def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
@@ -212,7 +214,8 @@ def main(args: Optional[List[str]] = None) -> int:
             api_client = make_api_client(arguments)
             api_server = APIServer.from_kubernetes(api_client)
             cluster = Cluster.from_api_server(api_server)
-            cluster.sections()
+
+            output_cluster_api_sections(cluster)
 
     except urllib3.exceptions.MaxRetryError as e:
         if arguments.debug:

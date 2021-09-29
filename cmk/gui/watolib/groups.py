@@ -17,7 +17,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import g, html, request, user
+from cmk.gui.globals import html, request, user
 from cmk.gui.groups import (
     AllGroupSpecs,
     GroupName,
@@ -50,7 +50,7 @@ if cmk_version.is_managed_edition():
 
 
 def _clear_group_information_request_cache() -> None:
-    g.pop("group_information", None)
+    load_group_information.cache_clear()
 
 
 def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:

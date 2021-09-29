@@ -33,12 +33,14 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import config, g, html, request, transactions, user
+from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.groups import (
+    GroupSpecs,
     load_contact_group_information,
     load_host_group_information,
     load_service_group_information,
 )
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import page_registry
@@ -675,32 +677,29 @@ def HostGroupChoice(**kwargs):
     return DualListChoice(choices=_sorted_host_group_choices, **kwargs)
 
 
-def _sorted_contact_group_choices():
-    if "sorted_contact_group_choices" not in g:
-        g.sorted_contact_group_choices = _group_choices(load_contact_group_information())
-    return g.sorted_contact_group_choices
+@request_memoize()
+def _sorted_contact_group_choices() -> Choices:
+    return _group_choices(load_contact_group_information())
 
 
-def _sorted_service_group_choices():
-    if "sorted_service_group_choices" not in g:
-        g.sorted_service_group_choices = _group_choices(load_service_group_information())
-    return g.sorted_service_group_choices
+@request_memoize()
+def _sorted_service_group_choices() -> Choices:
+    return _group_choices(load_service_group_information())
 
 
-def _sorted_host_group_choices():
-    if "sorted_host_group_choices" not in g:
-        g.sorted_host_group_choices = _group_choices(load_host_group_information())
-    return g.sorted_host_group_choices
+@request_memoize()
+def _sorted_host_group_choices() -> Choices:
+    return _group_choices(load_host_group_information())
 
 
-def _group_choices(group_information):
+def _group_choices(group_information: GroupSpecs) -> Choices:
     return sorted(
         [(k, t["alias"] and t["alias"] or k) for (k, t) in group_information.items()],
         key=lambda x: x[1].lower(),
     )
 
 
-def passwordstore_choices():
+def passwordstore_choices() -> Choices:
     pw_store = PasswordStore()
     return [
         (ident, pw["title"])
@@ -2165,12 +2164,11 @@ class DictHostTagCondition(Transform):
             back=self._from_valuespec,
         )
 
+    @request_memoize()
     def _get_cached_tag_group_choices(self):
         # In case one has configured a lot of tag groups / id recomputing this for
         # every DictHostTagCondition instance takes a lot of time
-        if "tag_group_choices" not in g:
-            g.tag_group_choices = self._get_tag_group_choices()
-        return g.tag_group_choices
+        return self._get_tag_group_choices()
 
     def _get_tag_group_choices(self):
         choices = []
@@ -2747,18 +2745,12 @@ class FolderChoice(DropdownChoice):
         DropdownChoice.__init__(self, **kwargs)
 
 
+@request_memoize()
 def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
-    if "automation_get_check_information" not in g:
-        raw_check_dict = get_check_information_automation().plugin_infos
-        g.automation_get_check_information = {
-            CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())
-        }
-
-    return g.automation_get_check_information
+    raw_check_dict = get_check_information_automation().plugin_infos
+    return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 
 
-def get_section_information():
-    if "automation_get_section_information" not in g:
-        g.automation_get_section_information = get_section_information_automation().section_infos
-
-    return g.automation_get_section_information
+@request_memoize()
+def get_section_information() -> Mapping[str, Mapping[str, str]]:
+    return get_section_information_automation().section_infos

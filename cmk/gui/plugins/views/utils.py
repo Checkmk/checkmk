@@ -7,6 +7,8 @@
 
 # TODO: More feature related splitting up would be better
 
+from __future__ import annotations
+
 import abc
 import functools
 import hashlib
@@ -59,7 +61,8 @@ import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, display_options, g, html, request, response, theme, user
+from cmk.gui.globals import config, display_options, html, request, response, theme, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.log import logger
@@ -119,11 +122,10 @@ class PainterOptions:
     # TODO: We should have some View instance that uses an object of this class as helper instead,
     #       but this would be a bigger change involving a lot of view rendering code.
     @classmethod
-    def get_instance(cls) -> "PainterOptions":
-        """Use the request globals to prevent multiple instances during a request"""
-        if "painter_options" not in g:
-            g.painter_options = cls()
-        return g.painter_options
+    @request_memoize()
+    def get_instance(cls) -> PainterOptions:
+        """Return the request bound instance"""
+        return cls()
 
     def __init__(self) -> None:
         super().__init__()
@@ -1718,11 +1720,10 @@ def render_cache_info(what: str, row: Row) -> str:
 
 class ViewStore:
     @classmethod
-    def get_instance(cls) -> "ViewStore":
-        """Use the request globals to prevent multiple instances during a request"""
-        if "view_store" not in g:
-            g.view_store = cls()
-        return g.view_store
+    @request_memoize()
+    def get_instance(cls) -> ViewStore:
+        """Return the request bound instance"""
+        return cls()
 
     def __init__(self) -> None:
         self.all = self._load_all_views()

@@ -16,7 +16,7 @@ import cmk.gui.i18n
 import cmk.gui.log as log
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.globals import g, html, request, timeout_manager, transactions, user
+from cmk.gui.globals import html, request, timeout_manager, transactions, user
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
     Permission,
@@ -122,8 +122,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
             timeout_manager.disable_timeout()
 
         # Close livestatus connections inherited from the parent process
-        if g:
-            sites.disconnect()
+        sites.disconnect()
 
         super().initialize_environment()
 

@@ -39,12 +39,14 @@
 
 import json
 import re
+from typing import Set
 
 import cmk.utils
 import cmk.utils.render
 
 import cmk.gui.bi as bi
-from cmk.gui.globals import config, g, html, request, response, user
+from cmk.gui.globals import config, html, request, response, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
@@ -1061,9 +1063,7 @@ class StarsIcon(Icon):
         return _("Stars")
 
     def render(self, what, row, tags, custom_vars):
-        if "stars" not in g:
-            g.stars = user.stars.copy()
-        stars = g.stars
+        stars = self._get_stars()
 
         if what == "host":
             starred = row["host_name"] in stars
@@ -1074,6 +1074,10 @@ class StarsIcon(Icon):
 
         if starred:
             return "starred", _("This %s is one of your favorites") % title
+
+    @request_memoize()
+    def _get_stars(self) -> Set[str]:
+        return user.stars.copy()
 
 
 # .

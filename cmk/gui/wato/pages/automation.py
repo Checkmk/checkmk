@@ -30,9 +30,9 @@ from cmk.gui.utils.logged_in import SuperUserContext
 
 @page_registry.register_page("automation_login")
 class ModeAutomationLogin(AjaxPage):
-    """Is executed by the central Check_MK site during creation of the WATO master/slave sync to
+    """Is executed by the central Checkmk site to get the site secret of the remote site
 
-    When the page method is execute a remote (master) site has successfully
+    When the page method is execute a remote (central) site has successfully
     logged in using valid credentials of an administrative user. The login is
     done be exchanging a login secret. If such a secret is not yet present it
     is created on the fly."""
@@ -48,18 +48,19 @@ class ModeAutomationLogin(AjaxPage):
 
         response.set_content_type("text/plain")
 
+        # Parameter was added with 1.5.0p10
         if not request.has_var("_version"):
-            # Be compatible to calls from sites using versions before 1.5.0p10.
-            # Deprecate with 1.7 by throwing an exception in this situation.
-            resp = _get_login_secret(create_on_demand=True)
-        else:
-            resp = {
-                "version": cmk_version.__version__,
-                "edition_short": cmk_version.edition_short(),
-                "login_secret": _get_login_secret(create_on_demand=True),
-            }
+            raise MKGeneralException(_("Your central site is incompatible with this remote site"))
 
-        response.set_data(repr(resp))
+        response.set_data(
+            repr(
+                {
+                    "version": cmk_version.__version__,
+                    "edition_short": cmk_version.edition_short(),
+                    "login_secret": _get_login_secret(create_on_demand=True),
+                }
+            )
+        )
 
 
 @page_registry.register_page("noauth:automation")

@@ -32,6 +32,7 @@
 
 # pylint: disable=broad-except
 
+import calendar
 import datetime
 import errno
 import getopt
@@ -44,7 +45,6 @@ import time
 from typing import Optional, Text  # pylint: disable=unused-import
 from xml.dom import minidom  # type: ignore
 
-from dateutil import tz
 from pathlib2 import Path
 
 import cmk.utils.paths
@@ -1275,10 +1275,8 @@ def section_systemtime(connection):
         elements = get_pattern('<returnval>(.*)</returnval>', response)
         if elements:
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
-            utc = naive.replace(tzinfo=tz.tzutc())
-            localtime = utc.astimezone(tz.tzlocal())
             output("<<<systemtime>>>")
-            output(localtime.strftime("%s") + " " + str(time.time()))
+            output("%s %s" % (calendar.timegm(naive.timetuple()), time.time()))
     except Exception:
         if opt_debug:
             raise

@@ -1,0 +1,12 @@
+Title: Agent vSphere: Fix time offset error for 'systemtime' service
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p28
+Date: 1632919409
+
+

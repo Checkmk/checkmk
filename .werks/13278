@@ -1,0 +1,10 @@
+Title: Fixed broken ActivateChanges on remote sites due to invalid file locking
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p27
+Date: 1632940229
+Class: fix
+
+

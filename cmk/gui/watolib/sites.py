@@ -725,7 +725,7 @@ class AutomationPushSnapshot(AutomationCommand):
 
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool
-        with store.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration(), store.lock_cmk_base_configuration():
             # Disable the request timeout for this block because the entire cleanup/unzipping phase
             # does not support interrupts of any kind. Any interrupt most likely causes data corruption.
 

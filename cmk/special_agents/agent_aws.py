@@ -747,10 +747,6 @@ class AWSSectionLabels(AWSSection):
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
-class AWSSectionGeneric(AWSSection):
-    pass
-
-
 class AWSSectionCloudwatch(AWSSection):
     def get_live_data(self, *args):
         (colleague_contents,) = args
@@ -829,7 +825,7 @@ class AWSSectionCloudwatch(AWSSection):
 # The GetCostAndUsageRequest operation supports only DAILY and MONTHLY granularities.
 
 
-class CostsAndUsage(AWSSectionGeneric):
+class CostsAndUsage(AWSSection):
     @property
     def name(self):
         return "costs_and_usage"
@@ -1195,7 +1191,7 @@ class EC2Limits(AWSSectionLimits):
         )
 
 
-class EC2Summary(AWSSectionGeneric):
+class EC2Summary(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ec2_names"]
@@ -1347,7 +1343,7 @@ class EC2Labels(AWSSectionLabels):
         return AWSComputedContent(computed_content, raw_content.cache_timestamp)
 
 
-class EC2SecurityGroups(AWSSectionGeneric):
+class EC2SecurityGroups(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ec2_names"]
@@ -1613,7 +1609,7 @@ class EBSLimits(AWSSectionLimits):
         return AWSComputedContent(volumes, raw_content.cache_timestamp)
 
 
-class EBSSummary(AWSSectionGeneric):
+class EBSSummary(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ebs_names"]
@@ -1883,7 +1879,7 @@ class S3Limits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
-class S3Summary(AWSSectionGeneric):
+class S3Summary(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["s3_names"]
@@ -2183,7 +2179,7 @@ class GlacierLimits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
-class GlacierSummary(AWSSectionGeneric):
+class GlacierSummary(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["glacier_names"]
@@ -2279,7 +2275,7 @@ class GlacierSummary(AWSSectionGeneric):
         return [AWSSectionResult("", None)]
 
 
-class Glacier(AWSSectionGeneric):
+class Glacier(AWSSection):
     @property
     def name(self):
         return "glacier"
@@ -2396,7 +2392,7 @@ class ELBLimits(AWSSectionLimits):
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
-class ELBSummaryGeneric(AWSSectionGeneric):
+class ELBSummaryGeneric(AWSSection):
     def __init__(self, client, region, config, distributor=None, resource=""):
 
         self._resource = resource
@@ -2533,7 +2529,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
         return AWSComputedContent(computed_content, raw_content.cache_timestamp)
 
 
-class ELBHealth(AWSSectionGeneric):
+class ELBHealth(AWSSection):
     @property
     def name(self):
         return "elb_health"
@@ -2817,7 +2813,7 @@ class ELBv2Limits(AWSSectionLimits):
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
-class ELBv2TargetGroups(AWSSectionGeneric):
+class ELBv2TargetGroups(AWSSection):
     @property
     def name(self):
         return "elbv2_target_groups"
@@ -3267,7 +3263,7 @@ class RDSLimits(AWSSectionLimits):
         return AWSComputedContent(None, 0.0)
 
 
-class RDSSummary(AWSSectionGeneric):
+class RDSSummary(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["rds_names"]
@@ -3479,7 +3475,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
-class CloudwatchAlarms(AWSSectionGeneric):
+class CloudwatchAlarms(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["cloudwatch_alarms"]
@@ -3640,7 +3636,7 @@ class DynamoDBLimits(AWSSectionLimits):
         return AWSComputedContent(tables, raw_content.cache_timestamp)
 
 
-class DynamoDBSummary(AWSSectionGeneric):
+class DynamoDBSummary(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["dynamodb_names"]
@@ -3925,7 +3921,7 @@ class WAFV2Limits(AWSSectionLimits):
         return AWSComputedContent(web_acls, raw_content.cache_timestamp)
 
 
-class WAFV2Summary(AWSSectionGeneric):
+class WAFV2Summary(AWSSection):
     def __init__(self, client, region, config, scope, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
@@ -4149,7 +4145,7 @@ class LambdaRegionLimits(AWSSectionLimits):
         return AWSComputedContent(limits, raw_content.cache_timestamp)
 
 
-class LambdaSummary(AWSSectionGeneric):
+class LambdaSummary(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["lambda_names"]
@@ -4518,7 +4514,7 @@ class HealthCheck(TypedDict, total=False):
     HealthCheckVersion: int
 
 
-class Route53HealthChecks(AWSSectionGeneric):
+class Route53HealthChecks(AWSSection):
     def __init__(self, client, region, config, distributor=None) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["route53_names"]

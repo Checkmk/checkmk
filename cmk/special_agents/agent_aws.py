@@ -4858,206 +4858,94 @@ class AWSSectionsGeneric(AWSSections):
             s3_limits_distributor, ResultDistributorS3Limits
         ), "AWSSectionsGeneric.init_sections: s3_limits_distributor should be an instance of ResultDistributorS3Limits"
 
-        # ---clients---------------------------------------------------------
-        ec2_client = self._init_client("ec2")
-        s3_client = self._init_client("s3")
-        elb_client = self._init_client("elb")
-        elbv2_client = self._init_client("elbv2")
-        service_quotas_client = self._init_client("service-quotas")
-
-        glacier_client = self._init_client("glacier")
-        rds_client = self._init_client("rds")
         cloudwatch_client = self._init_client("cloudwatch")
-        cloudwatch_logs_client = self._init_client("logs")
-        dynamodb_client = self._init_client("dynamodb")
-        wafv2_client = self._init_client("wafv2")
-        lambda_client = self._init_client("lambda")
-
-        # ---distributors----------------------------------------------------
-        ec2_limits_distributor = ResultDistributor()
-        ec2_summary_distributor = ResultDistributor()
-
-        elb_limits_distributor = ResultDistributor()
-        elb_summary_distributor = ResultDistributor()
-
-        elbv2_limits_distributor = ResultDistributor()
-        elbv2_summary_distributor = ResultDistributor()
-
-        ebs_limits_distributor = ResultDistributor()
+        ec2_client = self._init_client("ec2")
         ebs_summary_distributor = ResultDistributor()
-
-        s3_summary_distributor = ResultDistributor()
-
-        glacier_limits_distributor = ResultDistributor()
-        glacier_summary_distributor = ResultDistributor()
-
-        rds_summary_distributor = ResultDistributor()
-
-        cloudwatch_alarms_limits_distributor = ResultDistributor()
-
-        dynamodb_limits_distributor = ResultDistributor()
-        dynamodb_summary_distributor = ResultDistributor()
-
-        wafv2_limits_distributor = ResultDistributor()
-        wafv2_summary_distributor = ResultDistributor()
-
-        # ---sections with distributors--------------------------------------
-        ec2_limits = EC2Limits(
-            ec2_client, region, config, ec2_limits_distributor, service_quotas_client
-        )
-        ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
-
-        ebs_limits = EBSLimits(ec2_client, region, config, ebs_limits_distributor)
         ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
 
-        elb_limits = ELBLimits(elb_client, region, config, elb_limits_distributor)
-        elb_summary = ELBSummaryGeneric(
-            elb_client, region, config, elb_summary_distributor, resource="elb"
-        )
-
-        elbv2_limits = ELBv2Limits(elbv2_client, region, config, elbv2_limits_distributor)
-        elbv2_summary = ELBSummaryGeneric(
-            elbv2_client, region, config, elbv2_summary_distributor, resource="elbv2"
-        )
-
-        # S3 is special because there are no per-region limits, but only a global per-account limit.
-        # The list of buckets can be queried from any region, however, the metrics for the
-        # individual buckets must be queried from the region the bucket resides in. Therefore, we
-        # only want to run S3Limits once, namely for the first region (does not matter which region
-        # that is). The results will then be distributed to the S3Summary objects across all regions
-        # using the special distributor for S3 limits.
-        if s3_limits_distributor.is_empty():
-            s3_limits: Union[None, S3Limits] = S3Limits(
-                s3_client, region, config, s3_limits_distributor
-            )
-        else:
-            s3_limits = None
-        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
-
-        glacier_limits = GlacierLimits(glacier_client, region, config, glacier_limits_distributor)
-        glacier_summary = GlacierSummary(
-            glacier_client, region, config, glacier_summary_distributor
-        )
-
-        rds_summary = RDSSummary(rds_client, region, config, rds_summary_distributor)
-
-        cloudwatch_alarms_limits = CloudwatchAlarmsLimits(
-            cloudwatch_client, region, config, cloudwatch_alarms_limits_distributor
-        )
-
-        dynamodb_limits = DynamoDBLimits(
-            dynamodb_client, region, config, dynamodb_limits_distributor
-        )
-        dynamodb_summary = DynamoDBSummary(
-            dynamodb_client, region, config, dynamodb_summary_distributor
-        )
-
-        wafv2_limits = WAFV2Limits(
-            wafv2_client, region, config, "REGIONAL", distributor=wafv2_limits_distributor
-        )
-        wafv2_summary = WAFV2Summary(
-            wafv2_client, region, config, "REGIONAL", distributor=wafv2_summary_distributor
-        )
-
-        # ---sections--------------------------------------------------------
-        ec2_labels = EC2Labels(ec2_client, region, config)
-        ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
-        ec2 = EC2(cloudwatch_client, region, config)
-
-        ebs = EBS(cloudwatch_client, region, config)
-
-        elb_labels = ELBLabelsGeneric(elb_client, region, config, resource="elb")
-        elb_health = ELBHealth(elb_client, region, config)
-        elb = ELB(cloudwatch_client, region, config)
-
-        elbv2_labels = ELBLabelsGeneric(elbv2_client, region, config, resource="elbv2")
-        elbv2_target_groups = ELBv2TargetGroups(elbv2_client, region, config)
-        elbv2_application = ELBv2Application(cloudwatch_client, region, config)
-        elbv2_application_target_groups_http = ELBv2ApplicationTargetGroupsHTTP(
-            cloudwatch_client, region, config
-        )
-        elbv2_application_target_groups_lambda = ELBv2ApplicationTargetGroupsLambda(
-            cloudwatch_client, region, config
-        )
-        elbv2_network = ELBv2Network(cloudwatch_client, region, config)
-
-        rds_limits = RDSLimits(rds_client, region, config)
-        rds = RDS(cloudwatch_client, region, config)
-
-        s3 = S3(cloudwatch_client, region, config)
-        s3_requests = S3Requests(cloudwatch_client, region, config)
-
-        glacier = Glacier(cloudwatch_client, region, config)
-
-        cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
-
-        dynamodb_table = DynamoDBTable(cloudwatch_client, region, config)
-
-        wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, True)
-        # ---register sections to distributors-------------------------------
-        ec2_limits_distributor.add(ec2_summary)
-        ec2_summary_distributor.add(ec2_labels)
-        ec2_summary_distributor.add(ec2_security_groups)
-        ec2_summary_distributor.add(ec2)
-        ec2_summary_distributor.add(ebs_summary)
-
-        ebs_limits_distributor.add(ebs_summary)
-        ebs_summary_distributor.add(ebs)
-
-        elb_limits_distributor.add(elb_summary)
-        elb_summary_distributor.add(elb_labels)
-        elb_summary_distributor.add(elb_health)
-        elb_summary_distributor.add(elb)
-
-        elbv2_limits_distributor.add(elbv2_summary)
-        elbv2_summary_distributor.add(elbv2_labels)
-        elbv2_summary_distributor.add(elbv2_target_groups)
-        elbv2_summary_distributor.add(elbv2_application)
-        elbv2_summary_distributor.add(elbv2_application_target_groups_http)
-        elbv2_summary_distributor.add(elbv2_application_target_groups_lambda)
-        elbv2_summary_distributor.add(elbv2_network)
-
-        s3_limits_distributor.add(s3_summary)
-        s3_summary_distributor.add(s3)
-        s3_summary_distributor.add(s3_requests)
-
-        glacier_limits_distributor.add(glacier_summary)
-        glacier_summary_distributor.add(glacier)
-
-        rds_summary_distributor.add(rds)
-
-        cloudwatch_alarms_limits_distributor.add(cloudwatch_alarms)
-
-        dynamodb_limits_distributor.add(dynamodb_summary)
-        dynamodb_summary_distributor.add(dynamodb_table)
-
-        wafv2_limits_distributor.add(wafv2_summary)
-        wafv2_summary_distributor.add(wafv2_web_acl)
-
-        # ---register sections for execution---------------------------------
         if "ec2" in services:
+            ec2_summary_distributor = ResultDistributor()
+            ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
+            ec2_labels = EC2Labels(ec2_client, region, config)
+            ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
+            ec2 = EC2(cloudwatch_client, region, config)
+            ec2_limits_distributor = ResultDistributor()
+            ec2_limits_distributor.add(ec2_summary)
+            ec2_summary_distributor.add(ec2_labels)
+            ec2_summary_distributor.add(ec2_security_groups)
+            ec2_summary_distributor.add(ec2)
+            ec2_summary_distributor.add(ebs_summary)
             if config.service_config.get("ec2_limits"):
-                self._sections.append(ec2_limits)
+                self._sections.append(
+                    EC2Limits(
+                        ec2_client,
+                        region,
+                        config,
+                        ec2_limits_distributor,
+                        self._init_client("service-quotas"),
+                    )
+                )
             self._sections.append(ec2_summary)
             self._sections.append(ec2_labels)
             self._sections.append(ec2_security_groups)
             self._sections.append(ec2)
 
         if "ebs" in services:
+            ebs = EBS(cloudwatch_client, region, config)
+            ebs_limits_distributor = ResultDistributor()
+            ebs_limits_distributor.add(ebs_summary)
+            ebs_summary_distributor.add(ebs)
             if config.service_config.get("ebs_limits"):
-                self._sections.append(ebs_limits)
+                self._sections.append(EBSLimits(ec2_client, region, config, ebs_limits_distributor))
             self._sections.append(ebs_summary)
             self._sections.append(ebs)
 
         if "elb" in services:
+            elb_client = self._init_client("elb")
+            elb_limits_distributor = ResultDistributor()
+            elb_labels = ELBLabelsGeneric(elb_client, region, config, resource="elb")
+            elb_health = ELBHealth(elb_client, region, config)
+            elb = ELB(cloudwatch_client, region, config)
+            elb_summary_distributor = ResultDistributor()
+            elb_summary = ELBSummaryGeneric(
+                elb_client, region, config, elb_summary_distributor, resource="elb"
+            )
+            elb_limits_distributor.add(elb_summary)
+            elb_summary_distributor.add(elb_labels)
+            elb_summary_distributor.add(elb_health)
+            elb_summary_distributor.add(elb)
             if config.service_config.get("elb_limits"):
-                self._sections.append(elb_limits)
+                self._sections.append(ELBLimits(elb_client, region, config, elb_limits_distributor))
             self._sections.append(elb_summary)
             self._sections.append(elb_labels)
             self._sections.append(elb_health)
             self._sections.append(elb)
 
         if "elbv2" in services:
+            elbv2_client = self._init_client("elbv2")
+            elbv2_limits_distributor = ResultDistributor()
+            elbv2_limits = ELBv2Limits(elbv2_client, region, config, elbv2_limits_distributor)
+            elbv2_summary_distributor = ResultDistributor()
+            elbv2_summary = ELBSummaryGeneric(
+                elbv2_client, region, config, elbv2_summary_distributor, resource="elbv2"
+            )
+            elbv2_labels = ELBLabelsGeneric(elbv2_client, region, config, resource="elbv2")
+            elbv2_target_groups = ELBv2TargetGroups(elbv2_client, region, config)
+            elbv2_application = ELBv2Application(cloudwatch_client, region, config)
+            elbv2_application_target_groups_http = ELBv2ApplicationTargetGroupsHTTP(
+                cloudwatch_client, region, config
+            )
+            elbv2_application_target_groups_lambda = ELBv2ApplicationTargetGroupsLambda(
+                cloudwatch_client, region, config
+            )
+            elbv2_network = ELBv2Network(cloudwatch_client, region, config)
+            elbv2_limits_distributor.add(elbv2_summary)
+            elbv2_summary_distributor.add(elbv2_labels)
+            elbv2_summary_distributor.add(elbv2_target_groups)
+            elbv2_summary_distributor.add(elbv2_application)
+            elbv2_summary_distributor.add(elbv2_application_target_groups_http)
+            elbv2_summary_distributor.add(elbv2_application_target_groups_lambda)
+            elbv2_summary_distributor.add(elbv2_network)
             if config.service_config.get("elbv2_limits"):
                 self._sections.append(elbv2_limits)
             self._sections.append(elbv2_summary)
@@ -5069,6 +4957,27 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elbv2_network)
 
         if "s3" in services:
+            # S3 is special because there are no per-region limits, but only a global per-account limit.
+            # The list of buckets can be queried from any region, however, the metrics for the
+            # individual buckets must be queried from the region the bucket resides in. Therefore, we
+            # only want to run S3Limits once, namely for the first region (does not matter which region
+            # that is). The results will then be distributed to the S3Summary objects across all regions
+            # using the special distributor for S3 limits.
+            s3_client = self._init_client("s3")
+            if s3_limits_distributor.is_empty():
+                s3_limits: Union[None, S3Limits] = S3Limits(
+                    s3_client, region, config, s3_limits_distributor
+                )
+            else:
+                s3_limits = None
+            s3_summary_distributor = ResultDistributor()
+            s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
+
+            s3_limits_distributor.add(s3_summary)
+            s3 = S3(cloudwatch_client, region, config)
+            s3_summary_distributor.add(s3)
+            s3_requests = S3Requests(cloudwatch_client, region, config)
+            s3_summary_distributor.add(s3_requests)
             if config.service_config.get("s3_limits") and s3_limits:
                 self._sections.append(s3_limits)
             self._sections.append(s3_summary)
@@ -5077,30 +4986,78 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(s3_requests)
 
         if "glacier" in services:
+            glacier = Glacier(cloudwatch_client, region, config)
+            glacier_client = self._init_client("glacier")
+            glacier_limits_distributor = ResultDistributor()
+            glacier_limits = GlacierLimits(
+                glacier_client, region, config, glacier_limits_distributor
+            )
+            glacier_summary_distributor = ResultDistributor()
+            glacier_summary = GlacierSummary(
+                glacier_client, region, config, glacier_summary_distributor
+            )
+            glacier_limits_distributor.add(glacier_summary)
+            glacier_summary_distributor.add(glacier)
             if config.service_config.get("glacier_limits"):
                 self._sections.append(glacier_limits)
             self._sections.append(glacier_summary)
             self._sections.append(glacier)
 
         if "rds" in services:
+            rds_client = self._init_client("rds")
+            rds_summary_distributor = ResultDistributor()
+            rds_summary = RDSSummary(rds_client, region, config, rds_summary_distributor)
+            rds_limits = RDSLimits(rds_client, region, config)
+            rds = RDS(cloudwatch_client, region, config)
+            rds_summary_distributor.add(rds)
             if config.service_config.get("rds_limits"):
                 self._sections.append(rds_limits)
             self._sections.append(rds_summary)
             self._sections.append(rds)
 
         if "cloudwatch_alarms" in services:
+            cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
+            cloudwatch_alarms_limits_distributor = ResultDistributor()
+            cloudwatch_alarms_limits = CloudwatchAlarmsLimits(
+                cloudwatch_client, region, config, cloudwatch_alarms_limits_distributor
+            )
+            cloudwatch_alarms_limits_distributor.add(cloudwatch_alarms)
             if config.service_config.get("cloudwatch_alarms_limits"):
                 self._sections.append(cloudwatch_alarms_limits)
             if "cloudwatch_alarms" in config.service_config:
                 self._sections.append(cloudwatch_alarms)
 
         if "dynamodb" in services:
+            dynamodb_client = self._init_client("dynamodb")
+            dynamodb_limits_distributor = ResultDistributor()
+            dynamodb_limits = DynamoDBLimits(
+                dynamodb_client, region, config, dynamodb_limits_distributor
+            )
+            dynamodb_summary_distributor = ResultDistributor()
+            dynamodb_summary = DynamoDBSummary(
+                dynamodb_client, region, config, dynamodb_summary_distributor
+            )
+            dynamodb_table = DynamoDBTable(cloudwatch_client, region, config)
+            dynamodb_limits_distributor.add(dynamodb_summary)
+            dynamodb_summary_distributor.add(dynamodb_table)
             if config.service_config.get("dynamodb_limits"):
                 self._sections.append(dynamodb_limits)
             self._sections.append(dynamodb_summary)
             self._sections.append(dynamodb_table)
 
         if "wafv2" in services:
+            wafv2_client = self._init_client("wafv2")
+            wafv2_limits_distributor = ResultDistributor()
+            wafv2_limits = WAFV2Limits(
+                wafv2_client, region, config, "REGIONAL", distributor=wafv2_limits_distributor
+            )
+            wafv2_summary_distributor = ResultDistributor()
+            wafv2_summary = WAFV2Summary(
+                wafv2_client, region, config, "REGIONAL", distributor=wafv2_summary_distributor
+            )
+            wafv2_limits_distributor.add(wafv2_summary)
+            wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, True)
+            wafv2_summary_distributor.add(wafv2_web_acl)
             if config.service_config.get("wafv2_limits"):
                 self._sections.append(wafv2_limits)
             self._sections.append(wafv2_summary)
@@ -5114,9 +5071,9 @@ class AWSSectionsGeneric(AWSSections):
                 lambda_cloudwatch,
                 lambda_cloudwatch_insights,
             ) = create_lamdba_sections(
-                lambda_client,
+                self._init_client("lambda"),
                 cloudwatch_client,
-                cloudwatch_logs_client,
+                self._init_client("logs"),
                 region,
                 config,
             )

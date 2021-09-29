@@ -1825,14 +1825,13 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     return vms, vm_esx_host
 
 
-def get_section_vm(vms, time_reference):
+def get_section_vm(vms):
     section_lines = []
     for vm_name, vm_data in sorted(vms.items()):
         if vm_data.get("name"):
             section_lines += [
                 "<<<<%s>>>>" % vm_name,
                 "<<<esx_vsphere_vm>>>",
-                "time_reference %d" % time_reference,
             ]
             section_lines.extend("%s %s" % entry for entry in sorted(vm_data.items()))
     section_lines += ["<<<<>>>>"]
@@ -1893,16 +1892,6 @@ def get_sections_clusters(connection, vm_esx_host, opt):
     return section_lines
 
 
-def _retrieve_system_time(connection):
-    response = connection.query_server("systemtime")
-    elements = get_pattern("<returnval>(.*)</returnval>", response)
-    return (
-        int(datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ").timestamp())
-        if elements
-        else 0
-    )
-
-
 def fetch_data(connection, opt):
     output = []
 
@@ -1945,9 +1934,8 @@ def fetch_data(connection, opt):
     # Virtual machines
     ###########################
     if "virtualmachine" in opt.modules:
-        time_reference = _retrieve_system_time(connection)
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output += get_section_vm(vms, time_reference)
+        output += get_section_vm(vms)
         output += get_section_virtual_machines(vms)
 
         if not opt.direct or opt.snapshots_on_host:

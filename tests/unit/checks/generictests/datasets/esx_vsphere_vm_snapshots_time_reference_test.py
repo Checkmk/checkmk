@@ -13,7 +13,6 @@ checkname = "esx_vsphere_vm"
 parsed = parse_esx_vsphere_vm(
     [
         ["snapshot.rootSnapshotList", "732", "1594041788", "poweredOn", "FransTeil2"],
-        ["time_reference", "1594096464"],
     ]
 )
 

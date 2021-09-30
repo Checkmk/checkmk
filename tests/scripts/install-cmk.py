@@ -143,7 +143,8 @@ class ABCPackageManager(abc.ABC):
         raise NotImplementedError()
 
     def _build_system_package_path(self, version: str, package_name: str) -> Path:
-        return Path("/bauwelt/download").joinpath(version, package_name)
+        """On Jenkins inside a container the previous built packages get mounted into /packages."""
+        return Path("/packages", version, package_name)
 
     def _download_package(self, version: str, package_name: str) -> Path:
         temp_package_path = Path("/tmp", package_name)

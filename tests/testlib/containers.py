@@ -313,12 +313,6 @@ def _is_based_on_current_base_image(
 
 def _image_build_volumes():
     volumes = {
-        # Used to gather the Checkmk package from. In case it is not available
-        # the package will be downloaded from the download server
-        "/bauwelt/download": {
-            "bind": "/bauwelt/download",
-            "mode": "ro",
-        },
         # Credentials file for fetching the package from the download server. Used by
         # testlib/version.py in case the version package needs to be downloaded
         os.path.join(os.environ["HOME"], ".cmk-credentials"): {
@@ -326,6 +320,11 @@ def _image_build_volumes():
             "mode": "ro",
         },
     }
+    if "WORKSPACE" in os.environ:
+        volumes[os.path.join(os.environ["WORKSPACE"], "packages")] = {
+            "bind": "/packages",
+            "mode": "ro",
+        }
     volumes.update(_git_repos())
     return volumes
 

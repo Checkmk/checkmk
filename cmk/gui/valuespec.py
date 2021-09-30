@@ -4695,33 +4695,25 @@ class Tuple(ValueSpec):
     def set_focus(self, varprefix):
         self._elements[0].set_focus(varprefix + "_0")
 
+    def _iter_value(self, value: Sequence[Any]) -> Iterable[_Tuple[int, ValueSpec, Any]]:
+        for idx, element in enumerate(self._elements):
+            yield idx, element, value[idx]
+
     def value_to_text(self, value):
-        return "" + ", ".join(
-            [element.value_to_text(val) for (element, val) in zip(self._elements, value)]) + ""
+        return "" + ", ".join(el.value_to_text(val) for _, el, val in self._iter_value(value)) + ""
 
-    def value_to_json(self, value):
-        json_value = []
-        for idx, element in enumerate(self._elements):
-            json_value.append(element.value_to_json(value[idx]))
-        return json_value
+    def value_to_json(self, value: Any) -> List[Any]:
+        return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
-    def value_from_json(self, json_value):
-        real_value = []
-        for idx, element in enumerate(self._elements):
-            real_value.append(element.value_from_json(json_value[idx]))
-        return tuple(real_value)
+    def value_from_json(self, json_value: Any) -> _Tuple[Any, ...]:
+        return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))
 
     def from_html_vars(self, varprefix):
-        value = []
-        for no, element in enumerate(self._elements):
-            vp = varprefix + "_" + str(no)
-            value.append(element.from_html_vars(vp))
-        return tuple(value)
+        return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
 
     def _validate_value(self, value, varprefix):
-        for no, (element, val) in enumerate(zip(self._elements, value)):
-            vp = varprefix + "_" + str(no)
-            element.validate_value(val, vp)
+        for idx, el, val in self._iter_value(value):
+            el.validate_value(val, f"{varprefix}_{idx}")
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, tuple):
@@ -4732,9 +4724,8 @@ class Tuple(ValueSpec):
                 varprefix,
                 _("The number of elements in the tuple must be exactly %d.") % len(self._elements))
 
-        for no, (element, val) in enumerate(zip(self._elements, value)):
-            vp = varprefix + "_" + str(no)
-            element.validate_datatype(val, vp)
+        for idx, el, val in self._iter_value(value):
+            el.validate_datatype(val, f"{varprefix}_{idx}")
 
     def transform_value(self, value: _Tuple[Any, ...]) -> _Tuple[Any, ...]:
         assert isinstance(value, tuple), "Tuple.transform_value() got a non-tuple: %r" % (value,)

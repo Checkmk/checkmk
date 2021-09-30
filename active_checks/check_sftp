@@ -136,7 +136,7 @@ def parse_arguments(sys_args):
         "host=",
         "user=",
         "secret=",
-        "privat-key",
+        "private-key=",
         "port=",
         "get-remote=",
         "get-local=",

@@ -3005,9 +3005,9 @@ class CascadingDropdown(ValueSpec):
         if vs is None and ident == value:
             return title
 
-        assert isinstance(value, tuple), "value is %r (not a tuple) and vs not None" % (value,)
+        assert isinstance(value, tuple) and vs is not None
 
-        rendered_value = vs and vs.value_to_text(value[1])
+        rendered_value = vs.value_to_text(value[1])
         if not rendered_value:
             return title
 

@@ -1,0 +1,12 @@
+Title: Add SNMP support for Extreme SLX9640
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1633003376
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p12
+
+Fans, cpu, memory, status, info, power supply and ambient temperature are now
+reported.

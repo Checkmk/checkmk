@@ -1,0 +1,13 @@
+Title: CMC would eat flapping notifications
+Class: fix
+Compatible: compat
+Component: core
+Date: 1632994130
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p12
+
+The core would not notify if a host or a service is flapping
+if it is in an OK-state at the moment of the notification.

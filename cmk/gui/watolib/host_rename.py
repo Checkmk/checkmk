@@ -133,7 +133,7 @@ def _rename_host_in_rulesets(folder, oldname, newname):
                     log_audit(
                         "edit-rule",
                         _('Renamed host condition from "%s" to "%s"') % (oldname, newname),
-                        diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()),
+                        diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
                         object_ref=rule.object_ref(),
                     )
 

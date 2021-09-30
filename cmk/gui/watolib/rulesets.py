@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import pprint
 import re
-from typing import Any, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, cast, Container, Dict, List, Mapping, Optional, Tuple, Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -498,7 +498,7 @@ class Ruleset:
             _('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
             % (orig_rule.id, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
-            diff_text=make_diff_text({}, rule.to_web_api()),
+            diff_text=make_diff_text({}, rule.to_log()),
             object_ref=rule.object_ref(),
         )
 
@@ -664,7 +664,7 @@ class Ruleset:
             _('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
             % (index, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
-            diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()),
+            diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
             object_ref=rule.object_ref(),
         )
         self._on_change()
@@ -883,10 +883,18 @@ class Rule:
     def to_web_api(self) -> RuleSpec:
         return self._to_config(self.conditions.to_config_without_folder())
 
-    def _to_config(self, conditions: RuleConditionsSpec) -> RuleSpec:
+    def to_log(self) -> RuleSpec:
+        """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
+        return self._to_config(
+            self.conditions.to_config_without_folder(), self.ruleset.valuespec().value_to_json_safe
+        )
+
+    def _to_config(
+        self, conditions: RuleConditionsSpec, value_func: Callable[[Any], Any] = lambda x: x
+    ) -> RuleSpec:
         result: RuleSpec = {
             "id": self.id,
-            "value": self.value,
+            "value": value_func(self.value),
             "condition": conditions,
         }
 

@@ -5240,32 +5240,29 @@ class Dictionary(ValueSpec):
         return html.render_table(s)
 
     def value_to_json(self, value):
-        json_value = {}
-        for param, vs in self._get_elements():
-            if param not in value:
-                continue
-            json_value[param] = vs.value_to_json(value[param])
-        return json_value
+        return {
+            param: vs.value_to_json(value[param])
+            for param, vs in self._get_elements()
+            if param in value
+        }
 
     def value_from_json(self, json_value):
-        real_value = {}
-        for param, vs in self._get_elements():
-            if param not in json_value:
-                continue
-            real_value[param] = vs.value_from_json(json_value[param])
-        return real_value
+        return {
+            param: vs.value_from_json(json_value[param])
+            for param, vs in self._get_elements()
+            if param in json_value
+        }
 
     def from_html_vars(self, varprefix):
-        value = {}
-        for param, vs in self._get_elements():
-            vp = varprefix + "_p_" + param
+        return {
+            param: vs.from_html_vars(f"{varprefix}_p_{param}")
+            for param, vs in self._get_elements()
             if (
                 not self._optional_keys
                 or param in self._required_keys
-                or html.get_checkbox(vp + "_USE")
-            ):
-                value[param] = vs.from_html_vars(vp)
-        return value
+                or html.get_checkbox(f"{varprefix}_p_{param}_USE")
+            )
+        }
 
     def validate_datatype(self, value, varprefix):
         value = self.migrate(value)
@@ -5277,9 +5274,8 @@ class Dictionary(ValueSpec):
 
         for param, vs in self._get_elements():
             if param in value:
-                vp = varprefix + "_p_" + param
                 try:
-                    vs.validate_datatype(value[param], vp)
+                    vs.validate_datatype(value[param], f"{varprefix}_p_{param}")
                 except MKUserError as e:
                     raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e))
             elif not self._optional_keys or param in self._required_keys:
@@ -5302,8 +5298,7 @@ class Dictionary(ValueSpec):
 
         for param, vs in self._get_elements():
             if param in value:
-                vp = varprefix + "_p_" + param
-                vs.validate_value(value[param], vp)
+                vs.validate_value(value[param], f"{varprefix}_p_{param}")
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
@@ -5315,7 +5310,7 @@ class Dictionary(ValueSpec):
                 for param, vs in self._get_elements()  #
                 if param in value
             },
-            **{param: value[param] for param in self._ignored_keys if param in value},  #  #
+            **{param: value[param] for param in self._ignored_keys if param in value},  #
         }
 
     def has_show_more(self) -> bool:

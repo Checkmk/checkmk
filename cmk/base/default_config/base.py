@@ -6,6 +6,7 @@
 
 from typing import Dict as _Dict
 from typing import List as _List
+from typing import Literal as _Literal
 from typing import Optional as _Optional
 
 from cmk.utils.type_defs import Ruleset, TagsOfHosts
@@ -285,4 +286,4 @@ legacy_checks: _List = []
 logwatch_rules: _List = []
 
 config_storage_format = "standard"  # new in 2.1. Possible also: "raw"
-microcore_config_format = "bin"  # new in 2.1. Possible also: "pb"
+microcore_config_format: _Literal["binary", "protobuf"] = "binary"  # new in 2.1.

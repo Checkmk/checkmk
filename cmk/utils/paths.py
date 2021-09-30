@@ -120,6 +120,6 @@ def make_experimental_config_file() -> Path:
     Used to enable features which is "in development" and not good enough to be enabled by default.
     Example of experimental.mk:
     config_storage_format = "raw"
-    microcore_config_format = "pb"
+    microcore_config_format = "protobuf"
     """
     return Path(default_config_dir) / "experimental.mk"

@@ -1,0 +1,14 @@
+Title: Disable quick Python reinstall for Windows agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1633001665
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p12
+
+The feature is disabled as not stable enough.
+
+It is still possible to enable the feature in check_mk.user.yml

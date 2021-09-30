@@ -3098,8 +3098,11 @@ class CascadingDropdown(ValueSpec):
             )
         )
 
+    def _ident(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceIdent:
+        return value[0] if isinstance(value, tuple) else value
+
     def value_to_text(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
-        value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
+        value_ident = self._ident(value)
 
         try:
             ident, title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
@@ -3133,7 +3136,7 @@ class CascadingDropdown(ValueSpec):
         )
 
     def value_to_json(self, value: CascadingDropdownChoiceValue):
-        value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
+        value_ident = self._ident(value)
         try:
             ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
         except StopIteration:
@@ -3219,7 +3222,7 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
     def transform_value(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceValue:
-        value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
+        value_ident = self._ident(value)
         try:
             ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
         except StopIteration:

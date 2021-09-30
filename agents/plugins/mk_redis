@@ -108,6 +108,6 @@ for INSTANCE in ${REDIS_INSTANCES[*]}; do
     echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
     # execute command
-    $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS
+    $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS || true
     echo
 done

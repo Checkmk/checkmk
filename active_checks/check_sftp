@@ -46,7 +46,7 @@ def connection(opt_key, opt_host, opt_user, opt_pass, opt_port, opt_timeout):
         )
     else:
         client.connect(
-            opt_host, username=opt_user, pkey=opt_key, port=opt_port, timeout=opt_timeout
+            opt_host, username=opt_user, key_filename=opt_key, port=opt_port, timeout=opt_timeout
         )
     return client
 
@@ -164,7 +164,7 @@ def parse_arguments(sys_args):
         elif opt in ["--secret"]:
             opt_pass = arg
         elif opt in ["--private-key"]:
-            opt_pass = arg
+            opt_key = arg
         elif opt in ["--port"]:
             opt_port = int(arg)
         elif opt in ["--timeout"]:

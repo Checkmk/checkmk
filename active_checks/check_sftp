@@ -21,7 +21,7 @@ OPTIONS:
   --host HOST            SFTP server address
   --user USER            Username for sftp login
   --secret SECRET        Secret/Password for sftp login
-  --private-key KEY      Path to rsa private Key file for sftp login
+  --private-key-file KEY      Path to rsa private Key file for sftp login
   --port PORT            Alternative port number (default is 22 for the connection)
   --get-remote FILE      Path to the file which to pull from SFTP server (e.g.
                          /tmp/testfile.txt)
@@ -136,7 +136,7 @@ def parse_arguments(sys_args):
         "host=",
         "user=",
         "secret=",
-        "private-key=",
+        "private-key-file=",
         "port=",
         "get-remote=",
         "get-local=",
@@ -163,7 +163,7 @@ def parse_arguments(sys_args):
             opt_user = arg
         elif opt in ["--secret"]:
             opt_pass = arg
-        elif opt in ["--private-key"]:
+        elif opt in ["--private-key-file"]:
             opt_key = arg
         elif opt in ["--port"]:
             opt_port = int(arg)

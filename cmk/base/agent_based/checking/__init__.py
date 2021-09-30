@@ -456,7 +456,7 @@ def get_aggregated_result(
         else plugin.check_function
     )
 
-    section_kws, error_result = _get_section_kwargs(
+    section_kws, error_result = _get_monitoring_data_kwargs(
         parsed_sections_broker,
         host_config,
         config_cache,
@@ -525,7 +525,7 @@ def get_aggregated_result(
     )
 
 
-def _get_section_kwargs(
+def _get_monitoring_data_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
@@ -536,47 +536,64 @@ def _get_section_kwargs(
     source_type = (
         SourceType.MANAGEMENT if service.check_plugin_name.is_management_name() else SourceType.HOST
     )
-    kwargs = (
-        get_section_cluster_kwargs(
-            parsed_sections_broker,
-            config_cache.get_clustered_service_node_keys(
-                host_config,
-                source_type,
-                service.description,
-            ),
-            sections,
-        )
-        if host_config.is_cluster
-        else get_section_kwargs(
-            parsed_sections_broker,
-            HostKey(host_config.hostname, ipaddress, source_type),
-            sections,
-        )
+
+    kwargs, err_result = _get_monitoring_data_kwargs_by_source(
+        parsed_sections_broker,
+        host_config,
+        config_cache,
+        ipaddress,
+        service,
+        sections,
+        source_type,
+    )
+    if kwargs or source_type is SourceType.MANAGEMENT:
+        return kwargs, err_result
+
+    # in 1.6 some plugins where discovered for management boards, but with
+    # the regular host plugins name. In this case retry with the source type
+    # forced to MANAGEMENT:
+    return _get_monitoring_data_kwargs_by_source(
+        parsed_sections_broker,
+        host_config,
+        config_cache,
+        ipaddress,
+        service,
+        sections,
+        SourceType.MANAGEMENT,
     )
 
-    if not kwargs and not service.check_plugin_name.is_management_name():
-        # in 1.6 some plugins where discovered for management boards, but with
-        # the regular host plugins name. In this case retry with the source type
-        # forced to MANAGEMENT:
-        kwargs = (
+
+def _get_monitoring_data_kwargs_by_source(
+    parsed_sections_broker: ParsedSectionsBroker,
+    host_config: config.HostConfig,
+    config_cache: config.ConfigCache,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    sections: Sequence[ParsedSectionName],
+    source_type: SourceType,
+) -> Tuple[Mapping[str, object], ServiceCheckResult]:
+    if host_config.is_cluster:
+        return (
             get_section_cluster_kwargs(
                 parsed_sections_broker,
                 config_cache.get_clustered_service_node_keys(
                     host_config,
-                    SourceType.MANAGEMENT,
+                    source_type,
                     service.description,
                 ),
                 sections,
-            )
-            if host_config.is_cluster
-            else get_section_kwargs(
-                parsed_sections_broker,
-                HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
-                sections,
-            )
+            ),
+            RECEIVED_NO_DATA,
         )
 
-    return kwargs, RECEIVED_NO_DATA
+    return (
+        get_section_kwargs(
+            parsed_sections_broker,
+            HostKey(host_config.hostname, ipaddress, source_type),
+            sections,
+        ),
+        RECEIVED_NO_DATA,
+    )
 
 
 def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:

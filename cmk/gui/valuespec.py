@@ -4799,9 +4799,7 @@ class Dictionary(ValueSpec):
         self._indent = indent
 
     def migrate(self, value):
-        if self._migrate:
-            return self._migrate(value)
-        return value
+        return self._migrate(value) if self._migrate else value
 
     def _get_elements(self) -> DictionaryElements:
         yield from self._elements()

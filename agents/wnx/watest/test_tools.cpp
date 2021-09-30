@@ -60,13 +60,18 @@ std::string GetFabricYmlContent() {
 
 class TestEnvironment : public ::testing::Environment {
 public:
-    static constexpr std::string_view temp_test_prefix_{"tmp_watest_"};
+    static constexpr std::string_view temp_test_prefix_{"tmp_watest"};
     virtual ~TestEnvironment() = default;
 
     void SetUp() override {
-        auto folder_name =
-            fmt::format("{}{}", temp_test_prefix_, ::GetCurrentProcessId());
-        temp_dir_ = fs::temp_directory_path() / folder_name;
+        auto test_root = cma::tools::win::GetEnv(cma::env::test_root);
+        if (!test_root.empty() && fs::exists(test_root)) {
+            temp_dir_ = fs::path(test_root) / temp_test_prefix_;
+        } else {
+            auto folder_name = fmt::format("{}_{}", temp_test_prefix_,
+                                           ::GetCurrentProcessId());
+            temp_dir_ = fs::temp_directory_path() / folder_name;
+        }
         fs::create_directories(temp_dir_);
     }
 

@@ -2204,6 +2204,9 @@ msgstr ""
 msgid "AWS/RDS Replica lag"
 msgstr ""
 
+msgid "AWS/Route53"
+msgstr ""
+
 msgid "AWS/S3 Bucket Objects"
 msgstr ""
 
@@ -9384,6 +9387,10 @@ msgstr ""
 #, fuzzy
 msgid "Cluster Name"
 msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Cluster agent connection"
+msgstr "Perioada de timp Noua"
 
 #, python-format
 msgid ""
@@ -17549,6 +17556,10 @@ msgid "Explicit renaming"
 msgstr ""
 
 #, fuzzy
+msgid "Explicit services"
+msgstr " (potrivire exactă)"
+
+#, fuzzy
 msgid "Explicit set"
 msgstr " (potrivire exactă)"
 
@@ -20167,6 +20178,13 @@ msgstr ""
 msgid "Health"
 msgstr ""
 
+#, fuzzy
+msgid "Health check healty count"
+msgstr "Output adițional de la Plugin"
+
+msgid "Health check percentage healty"
+msgstr ""
+
 msgid "Heap and non-heap memory"
 msgstr ""
 
@@ -22018,6 +22036,10 @@ msgstr ""
 
 #, fuzzy
 msgid "IP address family"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "IP address of Kubernetes node"
 msgstr "Adresă"
 
 msgid "IP address or FQDN of JVM webserver"
@@ -27274,6 +27296,10 @@ msgid "Lower levels for first output item"
 msgstr ""
 
 #, fuzzy
+msgid "Lower levels for health check percentage healty"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Lower levels for health lifetime"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -29478,6 +29504,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Monitor CloudFront WAFs"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitor Route53"
 msgstr " pe siteul de monitorizare: "
 
 msgid "Monitor all files in folder"
@@ -35306,6 +35336,9 @@ msgstr ""
 msgid "Port numbers"
 msgstr "Portul TCO"
 
+msgid "Port of Kubernetes' checkmk-external service"
+msgstr ""
+
 #, fuzzy
 msgid "Port specification"
 msgstr "Notificari"
@@ -38117,6 +38150,9 @@ msgstr "Conexiune Noua"
 msgid "Roundtrip"
 msgstr ""
 
+msgid "Route53"
+msgstr ""
+
 msgid "Router (FQDN, IP-Address)"
 msgstr ""
 
@@ -38821,6 +38857,9 @@ msgstr ""
 #, fuzzy
 msgid "SSL connections"
 msgstr "Conexiuni Active"
+
+msgid "SSL handshake time"
+msgstr ""
 
 #, fuzzy
 msgid "SSL/TLS"
@@ -44794,6 +44833,13 @@ msgid ""
 "arguments."
 msgstr ""
 
+msgid ""
+"The Checkmk Kubernetes monitoring setup should be deployed in your "
+"Kubernetes cluster. Checkmk needs some additional information in order to "
+"query the deployed agent. A guide on how to retrieve this information can be "
+"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+msgstr ""
+
 msgid "The Checkmk Micro Core"
 msgstr ""
 
@@ -44968,6 +45014,12 @@ msgid ""
 "identifying a view. You can create several views with the same title but "
 "only one per view name. If you create a view that has the same view name as "
 "a builtin view, then your view will override that (shadowing it)."
+msgstr ""
+
+msgid ""
+"The IP address of any Kubernetes cluster node where a kubelet is present. "
+"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
+"command."
 msgstr ""
 
 msgid ""
@@ -46792,6 +46844,9 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr ""
 
+msgid "The option should match the configured protocol of the cluster agent."
+msgstr ""
+
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -47284,6 +47339,9 @@ msgstr ""
 #, fuzzy
 msgid "The service name"
 msgstr "Numele Elementului"
+
+msgid "The service port of the running checkmk-external service"
+msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -50904,6 +50962,9 @@ msgstr ""
 msgid "Time to connect"
 msgstr "Portul TCP pentru conexiune"
 
+msgid "Time to first byte"
+msgstr ""
+
 #, fuzzy
 msgid "Time to negotiate SSL"
 msgstr "Portul TCP pentru conexiune"
@@ -53138,6 +53199,10 @@ msgid "Upper levels for Load Balancers"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels for SSL handshake time"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels for Soap Service Errors"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -53176,6 +53241,10 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Upper levels for concurrent executions in percent of the region limit"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for connection_time"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Upper levels for connections in use"
@@ -53350,6 +53419,10 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Upper levels for throttles"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for time to first byte"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
@@ -57930,6 +58003,9 @@ msgstr ""
 msgid "Your %s has been saved."
 msgstr ""
 
+msgid "Your central site is incompatible with this remote site"
+msgstr ""
+
 msgid "Your changes have been saved nevertheless."
 msgstr ""
 
@@ -59405,6 +59481,10 @@ msgstr ""
 msgid "optional"
 msgstr ""
 
+#, fuzzy
+msgid "or "
+msgstr " sau "
+
 msgid "orderly stop"
 msgstr ""
 
@@ -60465,10 +60545,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Monitor single state (Deprecated)"
-#~ msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
-#~ msgid "Monitor state"
 #~ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
@@ -62614,10 +62690,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Hostname, marked red if down"
 #~ msgstr "Agregare noua"
-
-#, fuzzy
-#~ msgid "IP address of JVM webserver"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "Indexes"

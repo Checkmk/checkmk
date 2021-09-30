@@ -2598,6 +2598,9 @@ msgstr "Limites AWS/RDS"
 msgid "AWS/RDS Replica lag"
 msgstr "décalage des répliques AWS/RDS"
 
+msgid "AWS/Route53"
+msgstr ""
+
 msgid "AWS/S3 Bucket Objects"
 msgstr "Objets Bucket AWS/S3"
 
@@ -10070,6 +10073,10 @@ msgstr "IP en grappe"
 
 msgid "Cluster Name"
 msgstr "Nom du cluster"
+
+#, fuzzy
+msgid "Cluster agent connection"
+msgstr "Version de l'agent Checkmk"
 
 #, python-format
 msgid ""
@@ -18265,6 +18272,10 @@ msgstr "Gamme explicite"
 msgid "Explicit renaming"
 msgstr "Renommage explicite"
 
+#, fuzzy
+msgid "Explicit services"
+msgstr "Services d'édition"
+
 msgid "Explicit set"
 msgstr "Ensemble explicite"
 
@@ -20972,6 +20983,13 @@ msgstr "Rubriques"
 msgid "Health"
 msgstr "Santé"
 
+#, fuzzy
+msgid "Health check healty count"
+msgstr "Contrôleur de comptage Checkmk"
+
+msgid "Health check percentage healty"
+msgstr ""
+
 msgid "Heap and non-heap memory"
 msgstr "Mémoire de type tas et non tas"
 
@@ -23093,6 +23111,10 @@ msgstr "Adresse IP"
 
 msgid "IP address family"
 msgstr "Famille d'adresses IP"
+
+#, fuzzy
+msgid "IP address of Kubernetes node"
+msgstr "Nœuds Kubernetes"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr "Adresse IP ou FQDN du serveur web de la JVM"
@@ -28966,6 +28988,10 @@ msgstr "Niveaux inférieurs pour l'âge du certificat"
 msgid "Lower levels for first output item"
 msgstr "Niveaux inférieurs pour le premier élément de sortie"
 
+#, fuzzy
+msgid "Lower levels for health check percentage healty"
+msgstr "Niveaux inférieurs pour la santé à vie"
+
 msgid "Lower levels for health lifetime"
 msgstr "Niveaux inférieurs pour la santé à vie"
 
@@ -31088,6 +31114,10 @@ msgstr "Surveillance et graphique des couloirs"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "Surveiller les WAFs de CloudFront"
+
+#, fuzzy
+msgid "Monitor Route53"
+msgstr "Contrôlé sur place"
 
 msgid "Monitor all files in folder"
 msgstr "Surveiller tous les fichiers du dossier"
@@ -37008,6 +37038,9 @@ msgstr "Numéro de port :"
 msgid "Port numbers"
 msgstr "Numéros de port"
 
+msgid "Port of Kubernetes' checkmk-external service"
+msgstr ""
+
 msgid "Port specification"
 msgstr "Spécifications du port"
 
@@ -39744,6 +39777,10 @@ msgstr "Durée du voyage aller-retour"
 msgid "Roundtrip"
 msgstr "Aller-retour"
 
+#, fuzzy
+msgid "Route53"
+msgstr "Routes"
+
 msgid "Router (FQDN, IP-Address)"
 msgstr "Routeur (FQDN, adresse IP)"
 
@@ -40451,6 +40488,9 @@ msgstr "Vérification du certificat SSL"
 
 msgid "SSL connections"
 msgstr "Connexions SSL"
+
+msgid "SSL handshake time"
+msgstr ""
 
 msgid "SSL/TLS"
 msgstr "SSL/TLS"
@@ -46706,6 +46746,13 @@ msgstr ""
 "Cette règle peut être utilisée pour configurer l'agent afin qu'il exécute "
 "les plugins de votre choix en utilisant les arguments donnés."
 
+msgid ""
+"The Checkmk Kubernetes monitoring setup should be deployed in your "
+"Kubernetes cluster. Checkmk needs some additional information in order to "
+"query the deployed agent. A guide on how to retrieve this information can be "
+"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+msgstr ""
+
 msgid "The Checkmk Micro Core"
 msgstr "Le micro noyau Checkmk"
 
@@ -46958,6 +47005,12 @@ msgstr ""
 "même titre mais une seule par nom de vue. Si vous créez une vue qui a le "
 "même nom qu'une vue intégrée, alors votre vue remplacera cette dernière (en "
 "l'imitant)."
+
+msgid ""
+"The IP address of any Kubernetes cluster node where a kubelet is present. "
+"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
+"command."
+msgstr ""
 
 msgid ""
 "The IP of the other hostname needs to be the same IP as the host address"
@@ -49403,6 +49456,9 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr "La puissance d'émission opérationnelle"
 
+msgid "The option should match the configured protocol of the cluster agent."
+msgstr ""
+
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -50046,6 +50102,9 @@ msgstr ""
 
 msgid "The service name"
 msgstr "Le nom du service"
+
+msgid "The service port of the running checkmk-external service"
+msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -55134,6 +55193,10 @@ msgstr "Format de l'horodateur"
 msgid "Time to connect"
 msgstr "Il est temps de se connecter"
 
+#, fuzzy
+msgid "Time to first byte"
+msgstr "Décalage horaire"
+
 msgid "Time to negotiate SSL"
 msgstr "Il est temps de négocier le SSL"
 
@@ -57333,6 +57396,10 @@ msgstr "Niveaux supérieurs d'utilisation des swaps IVE"
 msgid "Upper levels for Load Balancers"
 msgstr "Niveaux supérieurs pour les équilibreurs de charge"
 
+#, fuzzy
+msgid "Upper levels for SSL handshake time"
+msgstr "Niveaux supérieurs pour le temps CPU"
+
 msgid "Upper levels for Soap Service Errors"
 msgstr "Niveaux supérieurs pour les erreurs de service du savon"
 
@@ -57369,6 +57436,10 @@ msgstr "Niveaux supérieurs pour les exceptions rencontrées"
 #, fuzzy
 msgid "Upper levels for concurrent executions in percent of the region limit"
 msgstr "Niveaux supérieurs en pourcentage de la limite"
+
+#, fuzzy
+msgid "Upper levels for connection_time"
+msgstr "Niveaux supérieurs pour les connexions en cours d'utilisation"
 
 msgid "Upper levels for connections in use"
 msgstr "Niveaux supérieurs pour les connexions en cours d'utilisation"
@@ -57530,6 +57601,10 @@ msgstr "Niveaux supérieurs pour la taille de la chambre forte"
 
 #, fuzzy
 msgid "Upper levels for throttles"
+msgstr "Niveaux supérieurs pour l'âge"
+
+#, fuzzy
+msgid "Upper levels for time to first byte"
 msgstr "Niveaux supérieurs pour l'âge"
 
 msgid "Upper levels for total index size"
@@ -63224,6 +63299,10 @@ msgstr "Votre %s a été supprimé."
 msgid "Your %s has been saved."
 msgstr "Votre %s a été sauvegardé."
 
+#, fuzzy
+msgid "Your central site is incompatible with this remote site"
+msgstr "Vous n'êtes pas connecté au site distant."
+
 msgid "Your changes have been saved nevertheless."
 msgstr "Vos modifications ont néanmoins été enregistrées."
 
@@ -64677,6 +64756,10 @@ msgstr "ouvrir"
 
 msgid "optional"
 msgstr "en option"
+
+#, fuzzy
+msgid "or "
+msgstr " ou "
 
 msgid "orderly stop"
 msgstr "arrêt méthodique"

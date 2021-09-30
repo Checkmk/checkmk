@@ -2542,6 +2542,9 @@ msgstr "AWS/RDS Grenzwerte"
 msgid "AWS/RDS Replica lag"
 msgstr "AWS/RDS Replica lag"
 
+msgid "AWS/Route53"
+msgstr ""
+
 msgid "AWS/S3 Bucket Objects"
 msgstr "AWS/S3 Bucket-Objekte"
 
@@ -9926,6 +9929,10 @@ msgstr "Cluster-IP"
 
 msgid "Cluster Name"
 msgstr "Clustername"
+
+#, fuzzy
+msgid "Cluster agent connection"
+msgstr "Checkmk Agent Version"
 
 #, python-format
 msgid ""
@@ -18057,6 +18064,10 @@ msgstr "Expliziter Bereich"
 msgid "Explicit renaming"
 msgstr "Explizite Umbenennung"
 
+#, fuzzy
+msgid "Explicit services"
+msgstr "Services Editieren"
+
 msgid "Explicit set"
 msgstr "Explizites Set"
 
@@ -20758,6 +20769,13 @@ msgstr "Überschriften"
 msgid "Health"
 msgstr "Integrität"
 
+#, fuzzy
+msgid "Health check healty count"
+msgstr "Checkmk Checker Anzahl"
+
+msgid "Health check percentage healty"
+msgstr ""
+
 msgid "Heap and non-heap memory"
 msgstr "Heap- und nicht-Heap-Speicher"
 
@@ -22848,6 +22866,10 @@ msgstr "IP Adresse"
 
 msgid "IP address family"
 msgstr "IP-Adressfamilie"
+
+#, fuzzy
+msgid "IP address of Kubernetes node"
+msgstr "Kubernetes-Knoten"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr "IP-Adresse oder FQDN des JVM-Webservers"
@@ -28635,6 +28657,10 @@ msgstr "Untere Schwellen für das Alter des Zertifikats"
 msgid "Lower levels for first output item"
 msgstr "Untergrenzen für erstes ausgegebenes Element"
 
+#, fuzzy
+msgid "Lower levels for health check percentage healty"
+msgstr "Untere Schwellen der Health-Lebensdauer"
+
 msgid "Lower levels for health lifetime"
 msgstr "Untere Schwellen der Health-Lebensdauer"
 
@@ -30735,6 +30761,10 @@ msgstr "Überwachung & Graphen für einzelne Lanes"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "Cloudfront WAFs überwachen"
+
+#, fuzzy
+msgid "Monitor Route53"
+msgstr "Monitoring-Zustand"
 
 msgid "Monitor all files in folder"
 msgstr "Alle Dateien im Verzeichnis überwachen"
@@ -36595,6 +36625,9 @@ msgstr "Port Nummer:"
 msgid "Port numbers"
 msgstr "Port-Nummern"
 
+msgid "Port of Kubernetes' checkmk-external service"
+msgstr ""
+
 msgid "Port specification"
 msgstr "Portspezifikation"
 
@@ -39309,6 +39342,10 @@ msgstr "Umlaufzeit"
 msgid "Roundtrip"
 msgstr "Roundtrip"
 
+#, fuzzy
+msgid "Route53"
+msgstr "Routen"
+
 msgid "Router (FQDN, IP-Address)"
 msgstr "Router (FQDN, IP-Address)"
 
@@ -40011,6 +40048,9 @@ msgstr "SSL Zertifikats Überprüfung"
 
 msgid "SSL connections"
 msgstr "SSL-Verbindungen"
+
+msgid "SSL handshake time"
+msgstr ""
 
 msgid "SSL/TLS"
 msgstr "SSL/TLS"
@@ -46180,6 +46220,13 @@ msgstr ""
 "den Agenten so zu konfigurieren, dass er Plugins Ihrer Wahl mit den "
 "gegebenen Argumenten ausführt."
 
+msgid ""
+"The Checkmk Kubernetes monitoring setup should be deployed in your "
+"Kubernetes cluster. Checkmk needs some additional information in order to "
+"query the deployed agent. A guide on how to retrieve this information can be "
+"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+msgstr ""
+
 msgid "The Checkmk Micro Core"
 msgstr "Der Checkmk Micro Core"
 
@@ -46429,6 +46476,12 @@ msgstr ""
 "können mehrere Ansichten mit demselben Titel aber nur eine pro ID "
 "erstellen.  Wenn Sie eine Ansicht mit einer bereits vorhandenen ID erzeugen, "
 "dann wird diese Ansicht die vorhandene überlagern."
+
+msgid ""
+"The IP address of any Kubernetes cluster node where a kubelet is present. "
+"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
+"command."
+msgstr ""
 
 msgid ""
 "The IP of the other hostname needs to be the same IP as the host address"
@@ -48821,6 +48874,9 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr "Operationelle Übertragungsleistung"
 
+msgid "The option should match the configured protocol of the cluster agent."
+msgstr ""
+
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -49454,6 +49510,9 @@ msgstr ""
 
 msgid "The service name"
 msgstr "Der Servicename"
+
+msgid "The service port of the running checkmk-external service"
+msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -54450,6 +54509,10 @@ msgstr "Format des Zeitstempels"
 msgid "Time to connect"
 msgstr "Zeit zum Verbinden"
 
+#, fuzzy
+msgid "Time to first byte"
+msgstr "Zeitverschiebung"
+
 msgid "Time to negotiate SSL"
 msgstr "Zeit für SSL-Verbindungsaufbau"
 
@@ -56637,6 +56700,10 @@ msgstr "Obere Schwellen für die IVE Swap-Nutzung"
 msgid "Upper levels for Load Balancers"
 msgstr "Obere Schwellwerte für Load Balancers"
 
+#, fuzzy
+msgid "Upper levels for SSL handshake time"
+msgstr "Obere Schwellen für die CPU-Zeit"
+
 msgid "Upper levels for Soap Service Errors"
 msgstr "Obergrenzen für Soap-Service-Fehler"
 
@@ -56673,6 +56740,10 @@ msgstr "Obere Schwellen für aufgetretene Exceptions"
 #, fuzzy
 msgid "Upper levels for concurrent executions in percent of the region limit"
 msgstr "Obere Schwellen in Prozent des Grenzwerts"
+
+#, fuzzy
+msgid "Upper levels for connection_time"
+msgstr "Obere Schwellen für die aktiven Verbindungen"
 
 msgid "Upper levels for connections in use"
 msgstr "Obere Schwellen für die aktiven Verbindungen"
@@ -56829,6 +56900,10 @@ msgstr "Obergrenze für die Tresorgröße"
 
 #, fuzzy
 msgid "Upper levels for throttles"
+msgstr "Obere Schwellen für das Alter"
+
+#, fuzzy
+msgid "Upper levels for time to first byte"
 msgstr "Obere Schwellen für das Alter"
 
 msgid "Upper levels for total index size"
@@ -62389,6 +62464,10 @@ msgstr "Ihr %s wurde gelöscht."
 msgid "Your %s has been saved."
 msgstr "Ihr %s wurde gespeichert."
 
+#, fuzzy
+msgid "Your central site is incompatible with this remote site"
+msgstr "Sie sind an der entfernten Instanz nicht angemeldet."
+
 msgid "Your changes have been saved nevertheless."
 msgstr "Ihre Änderungen wurden dennoch gespeichert."
 
@@ -63839,6 +63918,10 @@ msgstr "offen"
 
 msgid "optional"
 msgstr "optional"
+
+#, fuzzy
+msgid "or "
+msgstr " oder "
 
 msgid "orderly stop"
 msgstr "ordnungsgemäß gestoppt"
@@ -65756,10 +65839,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #, fuzzy
 #~ msgid "Monitor single state (Deprecated)"
 #~ msgstr "Überwachungszustandsanforderung"
-
-#, fuzzy
-#~ msgid "Monitor state"
-#~ msgstr "Monitoring-Zustand"
 
 #~ msgid "Monitoring Agents"
 #~ msgstr "Monitoringagenten"

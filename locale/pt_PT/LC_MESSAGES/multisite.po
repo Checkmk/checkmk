@@ -2563,6 +2563,9 @@ msgstr "Limites AWS/RDS"
 msgid "AWS/RDS Replica lag"
 msgstr "AWS/RDS Rplica lag"
 
+msgid "AWS/Route53"
+msgstr ""
+
 msgid "AWS/S3 Bucket Objects"
 msgstr "AWS/S3 Objetos de balde"
 
@@ -9959,6 +9962,10 @@ msgstr "Cluster IP"
 
 msgid "Cluster Name"
 msgstr "Nome do Aglomerado"
+
+#, fuzzy
+msgid "Cluster agent connection"
+msgstr "Versão Checkmk Agent"
 
 #, python-format
 msgid ""
@@ -18046,6 +18053,10 @@ msgstr "Faixa explícita"
 msgid "Explicit renaming"
 msgstr "Renomeação explícita"
 
+#, fuzzy
+msgid "Explicit services"
+msgstr "Editar serviços"
+
 msgid "Explicit set"
 msgstr "Conjunto explícito"
 
@@ -20731,6 +20742,13 @@ msgstr "Rubricas"
 msgid "Health"
 msgstr "Saúde"
 
+#, fuzzy
+msgid "Health check healty count"
+msgstr "Contagem Checkmk Checker"
+
+msgid "Health check percentage healty"
+msgstr ""
+
 msgid "Heap and non-heap memory"
 msgstr "Memória amontoada e não amontoada"
 
@@ -22821,6 +22839,10 @@ msgstr "endereço IP"
 
 msgid "IP address family"
 msgstr "família de endereços IP"
+
+#, fuzzy
+msgid "IP address of Kubernetes node"
+msgstr "Nós de Kubernetes"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr "Endereço IP ou FQDN do servidor web da JVM"
@@ -28625,6 +28647,10 @@ msgstr "Níveis mais baixos para a idade do certificado"
 msgid "Lower levels for first output item"
 msgstr "Níveis inferiores para o primeiro item de saída"
 
+#, fuzzy
+msgid "Lower levels for health check percentage healty"
+msgstr "Níveis mais baixos para a vida saudável"
+
 msgid "Lower levels for health lifetime"
 msgstr "Níveis mais baixos para a vida saudável"
 
@@ -30728,6 +30754,10 @@ msgstr "Monitor & Pistas Gráficas"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "Monitor CloudFront WAFs"
+
+#, fuzzy
+msgid "Monitor Route53"
+msgstr "Monitorado no local"
 
 msgid "Monitor all files in folder"
 msgstr "Monitorar todos os arquivos na pasta"
@@ -36575,6 +36605,9 @@ msgstr "Número da porta:"
 msgid "Port numbers"
 msgstr "Números de portas"
 
+msgid "Port of Kubernetes' checkmk-external service"
+msgstr ""
+
 msgid "Port specification"
 msgstr "Especificação do porto"
 
@@ -39284,6 +39317,10 @@ msgstr "Tempo de viagem de ida e volta"
 msgid "Roundtrip"
 msgstr "Ida e Volta"
 
+#, fuzzy
+msgid "Route53"
+msgstr "Rotas"
+
 msgid "Router (FQDN, IP-Address)"
 msgstr "Roteador (FQDN, IP-Address)"
 
@@ -39986,6 +40023,9 @@ msgstr "verificação do certificado SSL"
 
 msgid "SSL connections"
 msgstr "conexões SSL"
+
+msgid "SSL handshake time"
+msgstr ""
 
 msgid "SSL/TLS"
 msgstr "SSL/TLS"
@@ -46162,6 +46202,13 @@ msgstr ""
 "configurar o agente para executar plugins de sua escolha usando os "
 "argumentos dados."
 
+msgid ""
+"The Checkmk Kubernetes monitoring setup should be deployed in your "
+"Kubernetes cluster. Checkmk needs some additional information in order to "
+"query the deployed agent. A guide on how to retrieve this information can be "
+"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+msgstr ""
+
 msgid "The Checkmk Micro Core"
 msgstr "O Micro Núcleo Checkmk"
 
@@ -46410,6 +46457,12 @@ msgstr ""
 "apenas uma por nome de vista. Se você criar uma vista que tenha o mesmo nome "
 "de vista que uma vista construída, então sua vista irá sobrepor-se a ela "
 "(sombreando-a)."
+
+msgid ""
+"The IP address of any Kubernetes cluster node where a kubelet is present. "
+"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
+"command."
+msgstr ""
 
 msgid ""
 "The IP of the other hostname needs to be the same IP as the host address"
@@ -48800,6 +48853,9 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr "A potência de transmissão operacional"
 
+msgid "The option should match the configured protocol of the cluster agent."
+msgstr ""
+
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -49429,6 +49485,9 @@ msgstr ""
 
 msgid "The service name"
 msgstr "O nome do serviço"
+
+msgid "The service port of the running checkmk-external service"
+msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -54410,6 +54469,10 @@ msgstr "Formato de carimbo de hora"
 msgid "Time to connect"
 msgstr "Tempo para conectar"
 
+#, fuzzy
+msgid "Time to first byte"
+msgstr "Compensação de tempo"
+
 msgid "Time to negotiate SSL"
 msgstr "Tempo para negociar SSL"
 
@@ -56584,6 +56647,10 @@ msgstr "Níveis superiores para utilização de IVE swap"
 msgid "Upper levels for Load Balancers"
 msgstr "Níveis superiores para Balanceadores de Carga"
 
+#, fuzzy
+msgid "Upper levels for SSL handshake time"
+msgstr "Níveis superiores para o tempo de CPU"
+
 msgid "Upper levels for Soap Service Errors"
 msgstr "Níveis superiores para erros de serviço de sabão"
 
@@ -56620,6 +56687,10 @@ msgstr "Níveis superiores para exceções encontradas"
 #, fuzzy
 msgid "Upper levels for concurrent executions in percent of the region limit"
 msgstr "Níveis superiores em percentagem do limite"
+
+#, fuzzy
+msgid "Upper levels for connection_time"
+msgstr "Níveis superiores para conexões em uso"
 
 msgid "Upper levels for connections in use"
 msgstr "Níveis superiores para conexões em uso"
@@ -56780,6 +56851,10 @@ msgstr "Níveis superiores para o tamanho do cofre"
 
 #, fuzzy
 msgid "Upper levels for throttles"
+msgstr "Níveis superiores para a idade"
+
+#, fuzzy
+msgid "Upper levels for time to first byte"
 msgstr "Níveis superiores para a idade"
 
 msgid "Upper levels for total index size"
@@ -62331,6 +62406,10 @@ msgstr "As suas %s foram eliminadas."
 msgid "Your %s has been saved."
 msgstr "As suas %s foram salvas."
 
+#, fuzzy
+msgid "Your central site is incompatible with this remote site"
+msgstr "Você não está logado no site remoto."
+
 msgid "Your changes have been saved nevertheless."
 msgstr "As suas alterações foram, no entanto, guardadas."
 
@@ -63776,6 +63855,10 @@ msgstr "aberto"
 
 msgid "optional"
 msgstr "opcional"
+
+#, fuzzy
+msgid "or "
+msgstr " ou "
 
 msgid "orderly stop"
 msgstr "paragem ordeira"

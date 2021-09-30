@@ -2563,6 +2563,9 @@ msgstr "AWS/RDS Grenzen"
 msgid "AWS/RDS Replica lag"
 msgstr "AWS/RDS Replica vertraging"
 
+msgid "AWS/Route53"
+msgstr ""
+
 msgid "AWS/S3 Bucket Objects"
 msgstr "AWS/S3 Bucket Objecten"
 
@@ -9948,6 +9951,10 @@ msgstr "Cluster IP"
 
 msgid "Cluster Name"
 msgstr "Cluster Naam"
+
+#, fuzzy
+msgid "Cluster agent connection"
+msgstr "Checkmk Agent Versie"
 
 #, python-format
 msgid ""
@@ -18040,6 +18047,10 @@ msgstr "Expliciet bereik"
 msgid "Explicit renaming"
 msgstr "Expliciet hernoemen"
 
+#, fuzzy
+msgid "Explicit services"
+msgstr "Diensten bewerken"
+
 msgid "Explicit set"
 msgstr "Expliciete set"
 
@@ -20725,6 +20736,13 @@ msgstr "Rubrieken"
 msgid "Health"
 msgstr "Gezondheid"
 
+#, fuzzy
+msgid "Health check healty count"
+msgstr "Checkmk checker count"
+
+msgid "Health check percentage healty"
+msgstr ""
+
 msgid "Heap and non-heap memory"
 msgstr "Heap en non-heap geheugen"
 
@@ -22809,6 +22827,10 @@ msgstr "IP-adres"
 
 msgid "IP address family"
 msgstr "IP-adresfamilie"
+
+#, fuzzy
+msgid "IP address of Kubernetes node"
+msgstr "Kubernetes knooppunten"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr "IP-adres of FQDN van JVM webserver"
@@ -28619,6 +28641,10 @@ msgstr "Lagere niveaus voor certificaatleeftijd"
 msgid "Lower levels for first output item"
 msgstr "Lagere niveaus voor eerste uitgangsitem"
 
+#, fuzzy
+msgid "Lower levels for health check percentage healty"
+msgstr "Lagere niveaus voor levenslange gezondheid"
+
 msgid "Lower levels for health lifetime"
 msgstr "Lagere niveaus voor levenslange gezondheid"
 
@@ -30711,6 +30737,10 @@ msgstr "Monitor & Grafiek Lanen"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAF's monitoren"
+
+#, fuzzy
+msgid "Monitor Route53"
+msgstr "Bewaakt ter plaatse"
 
 msgid "Monitor all files in folder"
 msgstr "Bewaak alle bestanden in de map"
@@ -36543,6 +36573,9 @@ msgstr "Poortnummer:"
 msgid "Port numbers"
 msgstr "Poort nummers"
 
+msgid "Port of Kubernetes' checkmk-external service"
+msgstr ""
+
 msgid "Port specification"
 msgstr "Havenspecificatie"
 
@@ -39247,6 +39280,10 @@ msgstr "Tijd voor rondreis"
 msgid "Roundtrip"
 msgstr "Rondreis"
 
+#, fuzzy
+msgid "Route53"
+msgstr "Routes"
+
 msgid "Router (FQDN, IP-Address)"
 msgstr "Router (FQDN, IP-Adres)"
 
@@ -39947,6 +39984,9 @@ msgstr "SSL-certificaat verificatie"
 
 msgid "SSL connections"
 msgstr "SSL-verbindingen"
+
+msgid "SSL handshake time"
+msgstr ""
 
 msgid "SSL/TLS"
 msgstr "SSL/TLS"
@@ -46130,6 +46170,13 @@ msgstr ""
 "gebruikt om de agent te configureren om plugins van uw keuze uit te voeren "
 "met de gegeven argumenten."
 
+msgid ""
+"The Checkmk Kubernetes monitoring setup should be deployed in your "
+"Kubernetes cluster. Checkmk needs some additional information in order to "
+"query the deployed agent. A guide on how to retrieve this information can be "
+"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+msgstr ""
+
 msgid "The Checkmk Micro Core"
 msgstr "De Checkmk Micro Kern"
 
@@ -46377,6 +46424,12 @@ msgstr ""
 "maar slechts één per view naam. Als je een view maakt die dezelfde view naam "
 "heeft als een ingebouwde view, dan zal jouw view deze overschrijven "
 "(shadowing)."
+
+msgid ""
+"The IP address of any Kubernetes cluster node where a kubelet is present. "
+"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
+"command."
+msgstr ""
 
 msgid ""
 "The IP of the other hostname needs to be the same IP as the host address"
@@ -48783,6 +48836,9 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr "Het operationele zendvermogen"
 
+msgid "The option should match the configured protocol of the cluster agent."
+msgstr ""
+
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -49423,6 +49479,9 @@ msgstr ""
 
 msgid "The service name"
 msgstr "De naam van de dienst"
+
+msgid "The service port of the running checkmk-external service"
+msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -54437,6 +54496,10 @@ msgstr "Tijdstempelformaat"
 msgid "Time to connect"
 msgstr "Tijd om aan te sluiten"
 
+#, fuzzy
+msgid "Time to first byte"
+msgstr "Tijd offset"
+
 msgid "Time to negotiate SSL"
 msgstr "Tijd om over SSL te onderhandelen"
 
@@ -56619,6 +56682,10 @@ msgstr "Bovenste niveaus voor IVE-swapgebruik"
 msgid "Upper levels for Load Balancers"
 msgstr "Hogere niveaus voor Load Balancers"
 
+#, fuzzy
+msgid "Upper levels for SSL handshake time"
+msgstr "Bovenste niveaus voor CPU-tijd"
+
 msgid "Upper levels for Soap Service Errors"
 msgstr "Bovenste niveaus voor Zeep Service Fouten"
 
@@ -56655,6 +56722,10 @@ msgstr "Bovenste niveaus voor aangetroffen uitzonderingen"
 #, fuzzy
 msgid "Upper levels for concurrent executions in percent of the region limit"
 msgstr "Bovengrens in percentage van grenswaarde"
+
+#, fuzzy
+msgid "Upper levels for connection_time"
+msgstr "Bovenste niveaus voor verbindingen in gebruik"
 
 msgid "Upper levels for connections in use"
 msgstr "Bovenste niveaus voor verbindingen in gebruik"
@@ -56812,6 +56883,10 @@ msgstr "Bovenste niveaus voor de kluisgrootte"
 
 #, fuzzy
 msgid "Upper levels for throttles"
+msgstr "Bovenste niveaus voor de leeftijd"
+
+#, fuzzy
+msgid "Upper levels for time to first byte"
 msgstr "Bovenste niveaus voor de leeftijd"
 
 msgid "Upper levels for total index size"
@@ -62382,6 +62457,10 @@ msgstr "Uw %s is verwijderd."
 msgid "Your %s has been saved."
 msgstr "Uw %s is opgeslagen."
 
+#, fuzzy
+msgid "Your central site is incompatible with this remote site"
+msgstr "U bent niet ingelogd op de externe site."
+
 msgid "Your changes have been saved nevertheless."
 msgstr "Uw wijzigingen zijn toch opgeslagen."
 
@@ -63826,6 +63905,10 @@ msgstr "open"
 
 msgid "optional"
 msgstr "optionele"
+
+#, fuzzy
+msgid "or "
+msgstr " of "
 
 msgid "orderly stop"
 msgstr "ordelijke stopzetting"

@@ -2441,6 +2441,9 @@ msgstr "AWS/RDSの制限"
 msgid "AWS/RDS Replica lag"
 msgstr "AWS/RDSレプリカラグ"
 
+msgid "AWS/Route53"
+msgstr ""
+
 msgid "AWS/S3 Bucket Objects"
 msgstr "AWS/S3バケットオブジェクト"
 
@@ -9564,6 +9567,10 @@ msgstr "クラスターIP"
 
 msgid "Cluster Name"
 msgstr "クラスター名"
+
+#, fuzzy
+msgid "Cluster agent connection"
+msgstr "Checkmkエージェントバージョン"
 
 #, python-format
 msgid ""
@@ -17476,6 +17483,10 @@ msgstr "明示的な範囲"
 msgid "Explicit renaming"
 msgstr "明示的な名前変更"
 
+#, fuzzy
+msgid "Explicit services"
+msgstr "サービスの編集"
+
 msgid "Explicit set"
 msgstr "明示的なセット"
 
@@ -20090,6 +20101,13 @@ msgstr "見出し"
 msgid "Health"
 msgstr "健康"
 
+#, fuzzy
+msgid "Health check healty count"
+msgstr "Checkmkチェッカーカウント"
+
+msgid "Health check percentage healty"
+msgstr ""
+
 msgid "Heap and non-heap memory"
 msgstr "ヒープおよび非ヒープメモリ"
 
@@ -22061,6 +22079,10 @@ msgstr "IPアドレス"
 
 msgid "IP address family"
 msgstr "IPアドレスファミリ"
+
+#, fuzzy
+msgid "IP address of Kubernetes node"
+msgstr "Kubernetesノード"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr "JVM WebサーバーのIPアドレスまたはFQDN"
@@ -27574,6 +27596,10 @@ msgstr "証明書の期間の下位レベル"
 msgid "Lower levels for first output item"
 msgstr "最初の出力項目の下位レベル"
 
+#, fuzzy
+msgid "Lower levels for health check percentage healty"
+msgstr "ヘルスライフタイムの低レベル"
+
 msgid "Lower levels for health lifetime"
 msgstr "ヘルスライフタイムの低レベル"
 
@@ -29634,6 +29660,10 @@ msgstr "レーンの監視とグラフ化"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAFを監視する"
+
+#, fuzzy
+msgid "Monitor Route53"
+msgstr "サイトで監視"
 
 msgid "Monitor all files in folder"
 msgstr "フォルダ内のすべてのファイルを監視します"
@@ -35299,6 +35329,9 @@ msgstr "ポート番号:"
 msgid "Port numbers"
 msgstr "ポート番号"
 
+msgid "Port of Kubernetes' checkmk-external service"
+msgstr ""
+
 msgid "Port specification"
 msgstr "ポート仕様"
 
@@ -37966,6 +37999,10 @@ msgstr "ラウンドトリップタイム"
 msgid "Roundtrip"
 msgstr "ラウンドトリップ"
 
+#, fuzzy
+msgid "Route53"
+msgstr "ルート"
+
 msgid "Router (FQDN, IP-Address)"
 msgstr "ルーター(FQDN、IPアドレス)"
 
@@ -38655,6 +38692,9 @@ msgstr "SSL証明書の検証"
 
 msgid "SSL connections"
 msgstr "SSL接続"
+
+msgid "SSL handshake time"
+msgstr ""
 
 msgid "SSL/TLS"
 msgstr "SSL/TLS"
@@ -44585,6 +44625,13 @@ msgstr ""
 "トプラグインエグゼキュータ)と呼ばれます。このルールを使用して、指定された引数"
 "を使用して選択したプラグインを実行するようにエージェントを構成できます。"
 
+msgid ""
+"The Checkmk Kubernetes monitoring setup should be deployed in your "
+"Kubernetes cluster. Checkmk needs some additional information in order to "
+"query the deployed agent. A guide on how to retrieve this information can be "
+"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+msgstr ""
+
 msgid "The Checkmk Micro Core"
 msgstr "Checkmk Micro Core"
 
@@ -44808,6 +44855,12 @@ msgstr ""
 "ビューを作成できますが、ビュー名ごとに1つだけです。組み込みビューと同じビュー"
 "名を持つビューを作成すると、ビューはそれをオーバーライドします(シャドウ処理し"
 "ます)。"
+
+msgid ""
+"The IP address of any Kubernetes cluster node where a kubelet is present. "
+"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
+"command."
+msgstr ""
 
 msgid ""
 "The IP of the other hostname needs to be the same IP as the host address"
@@ -46966,6 +47019,9 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr "動作送信電力"
 
+msgid "The option should match the configured protocol of the cluster agent."
+msgstr ""
+
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -47533,6 +47589,9 @@ msgstr ""
 
 msgid "The service name"
 msgstr "サービス名"
+
+msgid "The service port of the running checkmk-external service"
+msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -52026,6 +52085,10 @@ msgstr "タイムスタンプ形式"
 msgid "Time to connect"
 msgstr "接続する時間"
 
+#, fuzzy
+msgid "Time to first byte"
+msgstr "タイムオフセット"
+
 msgid "Time to negotiate SSL"
 msgstr "SSLを交渉する時間"
 
@@ -54160,6 +54223,10 @@ msgstr "IVEスワップ使用率の上位レベル"
 msgid "Upper levels for Load Balancers"
 msgstr "ロードバランサーの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for SSL handshake time"
+msgstr "CPU時間の上位レベル"
+
 msgid "Upper levels for Soap Service Errors"
 msgstr "SOAPサービスエラーの上位レベル"
 
@@ -54196,6 +54263,10 @@ msgstr "発生した例外の上位レベル"
 #, fuzzy
 msgid "Upper levels for concurrent executions in percent of the region limit"
 msgstr "更新期間の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for connection_time"
+msgstr "感染の上位レベル"
 
 msgid "Upper levels for connections in use"
 msgstr ""
@@ -54353,6 +54424,10 @@ msgstr "ボールトサイズの上位レベル"
 #, fuzzy
 msgid "Upper levels for throttles"
 msgstr "%s の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for time to first byte"
+msgstr "バックアップ経過日数の上位レベル"
 
 msgid "Upper levels for total index size"
 msgstr "合計インデックスサイズの上位レベル"
@@ -59472,6 +59547,10 @@ msgstr "%s が削除されました。"
 msgid "Your %s has been saved."
 msgstr "%s が保存されました。"
 
+#, fuzzy
+msgid "Your central site is incompatible with this remote site"
+msgstr "リモートサイトにログインしていません。"
+
 msgid "Your changes have been saved nevertheless."
 msgstr "それでも、変更は保存されています。"
 
@@ -60897,6 +60976,10 @@ msgstr "開いた"
 
 msgid "optional"
 msgstr "オプション"
+
+#, fuzzy
+msgid "or "
+msgstr " または "
 
 msgid "orderly stop"
 msgstr "整然と停止"

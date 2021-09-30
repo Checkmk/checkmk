@@ -264,7 +264,7 @@ modules:
 
     python: auto                          # allowed auto or system, system prevents module usage to execute *.py files
 
-    quick_reinstall: yes                  # use %temp% as temporary storage for modules when Windows agent is updated
+    quick_reinstall: no                   # use %temp% as temporary storage for modules when Windows agent is updated
 
     table:
         - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to

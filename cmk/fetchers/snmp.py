@@ -354,6 +354,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
                     ) for tree in self.plugin_store[section_name].trees
                 ]
 
+        snmp_table.save_walk_cache(self._backend.hostname, walk_cache)
+
         return SNMPRawData(fetched_data)
 
     @classmethod

@@ -523,7 +523,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "_get_snmp_table",
+            "get_snmp_table",
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
@@ -561,7 +561,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "_get_snmp_table",
+            "get_snmp_table",
             lambda tree, **__: table
             if tree.base == fetcher.plugin_store[section_name].trees[0].base else [],
         )
@@ -583,7 +583,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
     @pytest.fixture(name="set_sections")
     def _set_sections(self, monkeypatch):
         table = [['1']]
-        monkeypatch.setattr(snmp_table, "_get_snmp_table", lambda tree, **__: table)
+        monkeypatch.setattr(snmp_table, "get_snmp_table", lambda tree, **__: table)
         monkeypatch.setattr(SNMPFetcher, "disabled_sections",
                             property(lambda self: {SectionName("pam")}))
         monkeypatch.setattr(

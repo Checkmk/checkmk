@@ -27,13 +27,13 @@ from cmk.utils.type_defs import HostName, SectionName
 
 from .type_defs import (
     ABCSNMPBackend,
+    BackendSNMPTree,
     OID,
     SNMPDecodedValues,
     SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
-    BackendSNMPTree,
     SNMPValueEncoding,
     SpecialColumn,
 )
@@ -46,23 +46,6 @@ WalkCache = MutableMapping[str, Tuple[bool, SNMPRowInfo]]
 
 
 def get_snmp_table(
-    *,
-    section_name: Optional[SectionName],
-    tree: BackendSNMPTree,
-    walk_cache: WalkCache,
-    backend: ABCSNMPBackend,
-) -> SNMPTable:
-    table_data = _get_snmp_table(
-        section_name=section_name,
-        tree=tree,
-        walk_cache=walk_cache,
-        backend=backend,
-    )
-    save_walk_cache(backend.hostname, walk_cache)
-    return table_data
-
-
-def _get_snmp_table(
     *,
     section_name: Optional[SectionName],
     tree: BackendSNMPTree,
@@ -337,13 +320,19 @@ def load_walk_cache(
     trees: Iterable[BackendSNMPTree],
     host_name: HostName,
 ) -> WalkCache:
+    # Do not load the cached data if *any* plugin needs live data
+    do_not_load = {
+        f"{tree.base}.{oid.column}" for tree in trees for oid in tree.oids if not oid.save_to_cache
+    }
+
     cache = {}
     for tree in trees:
         for oid in tree.oids:
-            if not oid.save_to_cache:  # no point in reading
+            fetchoid: OID = f"{tree.base}.{oid.column}"
+
+            if fetchoid in do_not_load:
                 continue
 
-            fetchoid: OID = f"{tree.base}.{oid.column}"
             path = _snmpwalk_cache_path(host_name, fetchoid)
 
             console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")

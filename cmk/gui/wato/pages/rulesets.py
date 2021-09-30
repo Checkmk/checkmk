@@ -2193,8 +2193,12 @@ class VSExplicitConditions(Transform):
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()
-            for condition in renderer.render(self._rulespec, value):
-                html.li(condition, class_="condition")
+            conditions = list(renderer.render(self._rulespec, value))
+            if conditions:
+                for condition in conditions:
+                    html.li(condition, class_="condition")
+            else:
+                html.li(_("No conditions"), class_="no_conditions")
             html.close_ul()
             return HTML(output_funnel.drain())
 

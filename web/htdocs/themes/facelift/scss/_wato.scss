@@ -560,14 +560,15 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 
 .wato ul.conditions {
   padding: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  margin-left: 15px;
   list-style-type: square;
 
   li {
     padding: 0;
     margin: 0;
+
+    &.no_conditions {
+      color: $font-color-dimmed;
+    }
   }
 
   tags {

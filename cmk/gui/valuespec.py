@@ -3101,13 +3101,24 @@ class CascadingDropdown(ValueSpec):
     def _ident(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceIdent:
         return value[0] if isinstance(value, tuple) else value
 
-    def value_to_text(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
-        value_ident = self._ident(value)
-
+    def _choice_from_ident(
+        self, ident: CascadingDropdownChoiceIdent
+    ) -> _Optional[CascadingDropdownCleanChoice]:
         try:
-            ident, title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
+            return next(elem for elem in self.choices() if elem[0] == ident)
         except StopIteration:
+            return None
+
+    def _choice_from_value(
+        self, value: CascadingDropdownChoiceValue
+    ) -> _Optional[CascadingDropdownCleanChoice]:
+        return self._choice_from_ident(self._ident(value))
+
+    def value_to_text(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
+        choice = self._choice_from_value(value)
+        if not choice:
             return _("Could not render: %r") % (value,)
+        ident, title, vs = choice
 
         if vs is None and ident == value:
             return title
@@ -3136,12 +3147,10 @@ class CascadingDropdown(ValueSpec):
         )
 
     def value_to_json(self, value: CascadingDropdownChoiceValue):
-        value_ident = self._ident(value)
-        try:
-            ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
-        except StopIteration:
-            # just by passes should be considered a bug, value_to_json is not guarantied to return a value
-            return
+        choice = self._choice_from_value(value)
+        if not choice:
+            return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
+        ident, _title, vs = choice
 
         if vs is None and ident == value:
             return value
@@ -3156,11 +3165,10 @@ class CascadingDropdown(ValueSpec):
 
     def value_from_json(self, json_value) -> CascadingDropdownChoiceValue:
         value_ident = json_value[0] if isinstance(json_value, list) else json_value
-        try:
-            ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
-        except StopIteration:
-            # just by passes should be considered a bug, value_from_json is not guarantied to return a value
-            return None
+        choice = self._choice_from_ident(value_ident)
+        if not choice:
+            return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
+        ident, _title, vs = choice
 
         if vs is None and ident == json_value:
             return json_value
@@ -3222,11 +3230,10 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
     def transform_value(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceValue:
-        value_ident = self._ident(value)
-        try:
-            ident, _title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
-        except StopIteration:
+        choice = self._choice_from_value(value)
+        if not choice:
             raise ValueError(_("%s is not an allowed value") % value)
+        ident, _title, vs = choice
 
         if vs is None and ident == value:
             return value

@@ -21,7 +21,7 @@ OPTIONS:
   --host HOST            SFTP server address
   --user USER            Username for sftp login
   --secret SECRET        Secret/Password for sftp login
-  --private-key KEY      Path to private Key file for sftp login (Must be in openssh format!!)
+  --private-key KEY      Path to rsa private Key file for sftp login
   --port PORT            Alternative port number (default is 22 for the connection)
   --get-remote FILE      Path to the file which to pull from SFTP server (e.g.
                          /tmp/testfile.txt)

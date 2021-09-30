@@ -18,20 +18,20 @@ def usage():
 USAGE: check_sftp [OPTIONS] HOST
 
 OPTIONS:
-  --host HOST            SFTP server address
-  --user USER            Username for sftp login
-  --secret SECRET        Secret/Password for sftp login
-  --private-key-file KEY      Path to rsa private Key file for sftp login
-  --port PORT            Alternative port number (default is 22 for the connection)
-  --get-remote FILE      Path to the file which to pull from SFTP server (e.g.
-                         /tmp/testfile.txt)
-  --get-local PATH       Path to store the pulled file locally (e.g. $OMD_ROOT/tmp/)
-  --put-local FILE       Path to the file to push to the sftp server. See above for example
-  --put-remote PATH      Path to save the pushed file (e.g. /tmp/)
-  --get-timestamp PATH   Path to the file for getting the timestamp of this file
-  --timeout SECONDS      Set timeout for connection (default is 10 seconds)
-  --verbose              Output some more detailed information
-  -h, --help             Show this help message and exit
+  --host HOST                SFTP server address
+  --user USER                Username for sftp login
+  --secret SECRET            Secret/Password for sftp login
+  --private-key-file PATH    Path to rsa private Key file for sftp login
+  --port PORT                Alternative port number (default is 22 for the connection)
+  --get-remote FILE          Path to the file which to pull from SFTP server (e.g.
+                             /tmp/testfile.txt)
+  --get-local PATH           Path to store the pulled file locally (e.g. $OMD_ROOT/tmp/)
+  --put-local FILE           Path to the file to push to the sftp server. See above for example
+  --put-remote PATH          Path to save the pushed file (e.g. /tmp/)
+  --get-timestamp PATH       Path to the file for getting the timestamp of this file
+  --timeout SECONDS          Set timeout for connection (default is 10 seconds)
+  --verbose                  Output some more detailed information
+  -h, --help                 Show this help message and exit
     """
     )
     sys.exit(1)

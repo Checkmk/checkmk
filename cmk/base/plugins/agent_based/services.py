@@ -78,7 +78,7 @@ def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -
         svc, state, mode = entry
         # First match name or description (optional since rule based config option available)
         if svc:
-            if not svc.startswith("~") and svc not in (service.name, service.description):
+            if not svc.startswith("~") and not _matches_item(service, svc):
                 return
 
             r = regex(svc[1:])
@@ -127,11 +127,15 @@ def check_windows_services_single(
     # allow to match agains the internal name or agains the display name of the service
     additional_names = params.get("additional_servicenames", [])
     for service in section:
-        if item in (service.name, service.description) or service.name in additional_names:
+        if _matches_item(service, item) or service.name in additional_names:
             yield Result(
                 state=_match_service_against_params(params, service),
                 summary=f"{service.description}: {service.state} (start type is {service.start_type})",
             )
+
+
+def _matches_item(service: WinService, item: str) -> bool:
+    return item in (service.name, service.description)
 
 
 def _match_service_against_params(params: Mapping[str, Any], service: WinService) -> State:

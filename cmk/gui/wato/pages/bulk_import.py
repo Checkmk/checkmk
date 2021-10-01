@@ -265,6 +265,7 @@ class ModeBulkImport(WatoMode):
                     "bulkinventory",
                     _bulk_inventory="1",
                     show_checkboxes="1",
+                    folder=folder_path,
                     selection=weblib.selection_id(),
                 )
             )

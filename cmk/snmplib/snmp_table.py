@@ -58,7 +58,7 @@ def get_snmp_table(
         walk_cache=walk_cache,
         backend=backend,
     )
-    _save_walk_cache(backend.hostname, walk_cache)
+    save_walk_cache(backend.hostname, walk_cache)
     return table_data
 
 
@@ -101,7 +101,7 @@ def _get_snmp_table(
                 tree.base,
                 fetchoid,
                 walk_cache=walk_cache,
-                save_walk_cache=oid.save_to_cache,
+                save_oid_to_cache=oid.save_to_cache,
                 backend=backend,
             )
             if len(rowinfo) > max_len:
@@ -192,7 +192,7 @@ def _get_snmpwalk(
     fetchoid: OID,
     *,
     walk_cache: WalkCache,
-    save_walk_cache: bool,
+    save_oid_to_cache: bool,
     backend: ABCSNMPBackend,
 ) -> SNMPRowInfo:
     try:
@@ -203,7 +203,7 @@ def _get_snmpwalk(
         pass
 
     rowinfo = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    walk_cache[fetchoid] = (save_walk_cache, rowinfo)
+    walk_cache[fetchoid] = (save_oid_to_cache, rowinfo)
     return rowinfo
 
 
@@ -361,7 +361,7 @@ def load_walk_cache(
     return cache
 
 
-def _save_walk_cache(host_name: HostName, cache: WalkCache) -> None:
+def save_walk_cache(host_name: HostName, cache: WalkCache) -> None:
     cache_dir = _snmpwalk_cache_path(host_name)
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)

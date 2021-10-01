@@ -2034,8 +2034,10 @@ def _extract_check_plugins(
         if check_info_dict.get("service_description") is None:
             continue
         try:
-            if agent_based_register.is_registered_check_plugin(
-                    CheckPluginName(maincheckify(check_plugin_name))):
+            present_plugin = agent_based_register.get_check_plugin(
+                CheckPluginName(maincheckify(check_plugin_name)))
+            if present_plugin is not None and present_plugin.module is not None:
+                # module is not None => it's a new plugin.
                 # implemented here instead of the agent based register so that new API code does not
                 # need to include any handling of legacy cases
                 raise ValueError(

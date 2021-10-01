@@ -13,7 +13,7 @@ compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building comp
 docker = "==4.0.2"  # used by test_docker test and mk_docker agent plugin
 freezegun = "==0.3.12"  # used by various unit tests
 isort = "==4.3.21"  # used as a plugin for editors
-lxml = "==4.3.4"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
+lxml = "==4.6.3"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 mock = "==3.0.5"  # used in checktestlib in unit tests
 mockldap = "==0.3.0"  # used in test_userdb_ldap_connector unit test
 pylint = "==1.9.4"  # used by test/Makefile's test-pylint target
@@ -43,7 +43,7 @@ psycopg2 = "==2.7.6.1"  # This is actually a lie: We ship 2.6.2, but installatio
 dicttoxml = "==1.7.4"
 pycparser = "==2.19"
 enum34 = "==1.1.6"
-cffi = "==1.12"
+cffi = "==1.12.0"
 Pillow = "==6.2.2"
 reportlab = "==3.5.18"
 PyPDF2 = "==1.26.0"
@@ -55,7 +55,7 @@ netifaces = "==0.10.7"
 dnspython = "==1.15.0"
 # python-ad = "==0.9"  This seems to be dead and is not on PyPi!
 idna = "==2.7"
-requests = { version = "==2.20.1", extras = ["security"] }
+requests = { version = "==2.26.0", extras = ["security"] }
 pbr = "==5.1.0"
 asn1crypto = "==0.24.0"
 cryptography = "==3.3.2"
@@ -64,7 +64,7 @@ paramiko = "==2.4.2"
 pyghmi = "==1.2.14"
 certifi = "==2018.10.15"
 chardet = "==3.0.4"
-urllib3 = "==1.24.3"
+urllib3 = "==1.26.7"
 pykerberos = "==1.2.1"
 requests-kerberos = "==0.12.0"
 tinkerforge = "==2.1.19"
@@ -86,9 +86,9 @@ passlib = "==1.7.1"
 docutils = "==0.14"
 futures = "==3.2.0"
 jmespath = "==0.9.3"
-botocore = "==1.12.43"
-s3transfer = "==0.1.13"
-boto3 = "==1.9.42"
+botocore = "==1.20.112"
+s3transfer = "==0.4.2"
+boto3 = "==1.17.112"
 cachetools = "==3.0.0"
 rsa = "==4.0"
 google-auth = "==1.6.1"

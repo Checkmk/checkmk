@@ -109,7 +109,7 @@ PYTHON_MODULES_LIST += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detect
 
 PYTHON_MODULES_LIST += idna-2.7.tar.gz
 # Added for NetApp special agent, but may be used in other components too in future
-PYTHON_MODULES_LIST += requests-2.20.1.tar.gz
+PYTHON_MODULES_LIST += requests-2.26.0.tar.gz
 # Added for IPMI monitoring of management interface
 PYTHON_MODULES_LIST += pbr-5.1.0.tar.gz
 
@@ -132,7 +132,7 @@ PYTHON_MODULES_LIST += pyghmi-1.2.14.tar.gz
 
 PYTHON_MODULES_LIST += certifi-2018.10.15.tar.gz
 PYTHON_MODULES_LIST += chardet-3.0.4.tar.gz
-PYTHON_MODULES_LIST += urllib3-1.24.3.tar.gz
+PYTHON_MODULES_LIST += urllib3-1.26.7.tar.gz
 # Added for check_bi_aggr with kerberos support
 PYTHON_MODULES_LIST += pykerberos-1.2.1.tar.gz
 PYTHON_MODULES_LIST += requests-kerberos-0.12.0.tar.gz
@@ -161,9 +161,9 @@ PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 PYTHON_MODULES_LIST += docutils-0.14.tar.gz
 PYTHON_MODULES_LIST += futures-3.2.0.tar.gz
 PYTHON_MODULES_LIST += jmespath-0.9.3.tar.gz
-PYTHON_MODULES_LIST += botocore-1.12.43.tar.gz
-PYTHON_MODULES_LIST += s3transfer-0.1.13.tar.gz
-PYTHON_MODULES_LIST += boto3-1.9.42.tar.gz
+PYTHON_MODULES_LIST += botocore-1.20.112.tar.gz
+PYTHON_MODULES_LIST += s3transfer-0.4.2.tar.gz
+PYTHON_MODULES_LIST += boto3-1.17.112.tar.gz
 # Added for kubernetes monitoring
 PYTHON_MODULES_LIST += cachetools-3.0.0.tar.gz
 PYTHON_MODULES_LIST += rsa-4.0.tar.gz

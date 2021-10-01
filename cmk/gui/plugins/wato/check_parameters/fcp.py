@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
 
 def _parameter_valuespec_fcp():
     return Dictionary(
+        ignored_keys=["inv_speed", "inv_state"],
         elements=[
             (
                 "speed",

@@ -23,14 +23,16 @@ def test_diagnostics_serialize_wato_parameters_boolean():
                 },
             }
         )
-    ) == sorted(
-        [
-            diagnostics.OPT_LOCAL_FILES,
-            diagnostics.OPT_OMD_CONFIG,
-            diagnostics.OPT_PERFORMANCE_GRAPHS,
-            diagnostics.OPT_CHECKMK_OVERVIEW,
-        ]
-    )
+    ) == [
+        sorted(
+            [
+                diagnostics.OPT_LOCAL_FILES,
+                diagnostics.OPT_OMD_CONFIG,
+                diagnostics.OPT_PERFORMANCE_GRAPHS,
+                diagnostics.OPT_CHECKMK_OVERVIEW,
+            ]
+        )
+    ]
 
 
 @pytest.mark.parametrize(
@@ -41,14 +43,14 @@ def test_diagnostics_serialize_wato_parameters_boolean():
                 "opt_info": {},
                 "comp_specific": {},
             },
-            [],
+            [[]],
         ),
         (
             {
                 "opt_info": {},
                 "comp_specific": {diagnostics.OPT_COMP_NOTIFICATIONS: {}},
             },
-            [],
+            [[]],
         ),
         (
             {
@@ -63,10 +65,8 @@ def test_diagnostics_serialize_wato_parameters_boolean():
                 },
             },
             [
-                diagnostics.OPT_CHECKMK_CONFIG_FILES,
-                "a,b",
-                diagnostics.OPT_CHECKMK_LOG_FILES,
-                "a,b",
+                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a,b"],
+                [diagnostics.OPT_CHECKMK_LOG_FILES, "a,b"],
             ],
         ),
         (
@@ -82,15 +82,32 @@ def test_diagnostics_serialize_wato_parameters_boolean():
                 },
             },
             [
-                diagnostics.OPT_CHECKMK_CONFIG_FILES,
-                "a1,a2,b1,b2",
-                diagnostics.OPT_CHECKMK_LOG_FILES,
-                "c1,c2",
+                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a1,a2,b1,b2"],
+                [diagnostics.OPT_CHECKMK_LOG_FILES, "c1,c2"],
+            ],
+        ),
+        (
+            {
+                "opt_info": {
+                    diagnostics.OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2", "a3", "a4", "a5"]),
+                },
+                "comp_specific": {
+                    diagnostics.OPT_COMP_NOTIFICATIONS: {
+                        "config_files": ("_ty", ["b1", "b2"]),
+                        "log_files": ("_ty", ["c1", "c2"]),
+                    },
+                },
+            },
+            [
+                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a1,a2,a3,a4"],
+                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a5,b1,b2"],
+                [diagnostics.OPT_CHECKMK_LOG_FILES, "c1,c2"],
             ],
         ),
     ],
 )
-def test_diagnostics_serialize_wato_parameters_files(wato_parameters, expected_parameters):
+def test_diagnostics_serialize_wato_parameters_files(mocker, wato_parameters, expected_parameters):
+    mocker.patch("cmk.utils.diagnostics._get_max_args", return_value=5)
     assert diagnostics.serialize_wato_parameters(wato_parameters) == expected_parameters
 
 

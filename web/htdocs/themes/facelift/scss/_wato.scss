@@ -1486,3 +1486,16 @@ table.data.analyze_config td.buttons {
 div.wato div.matching_message {
   margin-left: $spacing;
 }
+
+a.create_rule {
+  @include button-mixin;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5 * $spacing $spacing;
+  cursor: pointer;
+  border-radius: $theme-border-radius;
+
+  img.icon {
+    margin-right: 0.5 * $spacing;
+  }
+}

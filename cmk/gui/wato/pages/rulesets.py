@@ -1188,7 +1188,14 @@ class ModeEditRuleset(WatoMode):
 
         html.open_tr()
         html.open_td()
-        html.button("_new_rule", _("Create rule in folder: "))
+        html.open_a(
+            href="",
+            class_="create_rule",
+            onclick='cmk.page_menu.form_submit("new_rule", "_new_rule")',
+        )
+        html.icon("new")
+        html.write_text(_("Create rule in folder"))
+        html.close_a()
         html.close_td()
         html.open_td()
 

@@ -803,25 +803,27 @@ class Table:
         # TODO cleanup
 
         reasons = []
+        retentions: TableRetentions = {}
+
         compared_idents = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
         self.add_key_columns(other.key_columns)
 
         for ident in compared_idents.only_old:
             old_row: SDRow = {}
             for key, value in other._rows[ident].items():
-                previous_intervals = other.retentions.get(ident, {}).get(key)
-                if not previous_intervals:
-                    continue
-
+                # If a key is part of the row ident then retention info is not added.
+                # These keys are mandatory and added later if non-ident-key-values are found.
                 if (
-                    key not in self.key_columns
+                    key not in other.key_columns
                     and filter_func(key)
+                    and (previous_intervals := other.retentions.get(ident, {}).get(key))
                     and now <= previous_intervals.keep_until
                 ):
-                    self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
+                    retentions.setdefault(ident, {})[key] = previous_intervals
                     old_row.setdefault(key, value)
 
             if old_row:
+                # Update row with ident-key-values.
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
                 reasons.append("added row below %r" % ident)
@@ -833,23 +835,23 @@ class Table:
 
             row: SDRow = {}
             for key in compared_keys.only_old:
-                previous_intervals = other.retentions.get(ident, {}).get(key)
-                if not previous_intervals:
-                    continue
-
+                # If a key is part of the row ident then retention info is not added.
+                # These keys are mandatory and added later if non-ident-key-values are found.
                 if (
                     key not in self.key_columns
                     and filter_func(key)
+                    and (previous_intervals := other.retentions.get(ident, {}).get(key))
                     and now <= previous_intervals.keep_until
                 ):
-                    self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
+                    retentions.setdefault(ident, {})[key] = previous_intervals
                     row.setdefault(key, other._rows[ident][key])
 
             for key in compared_keys.both.union(compared_keys.only_new):
                 if key not in self.key_columns and filter_func(key):
-                    self.retentions.setdefault(ident, {}).setdefault(key, inv_intervals)
+                    retentions.setdefault(ident, {})[key] = inv_intervals
 
             if row:
+                # Update row with ident-key-values.
                 row.update(
                     {
                         **{
@@ -870,10 +872,11 @@ class Table:
         for ident in compared_idents.only_new:
             for key in self._rows[ident]:
                 if key not in self.key_columns and filter_func(key):
-                    self.retentions.setdefault(ident, {}).setdefault(key, inv_intervals)
+                    retentions.setdefault(ident, {})[key] = inv_intervals
 
-        if self.retentions:
-            reasons.append("new retention intervals %r" % self.retentions)
+        if retentions:
+            self.set_retentions(retentions)
+            reasons.append("retention intervals %r" % retentions)
 
         return UpdateResult(
             save_tree=bool(reasons),
@@ -1085,28 +1088,30 @@ class Attributes:
     ) -> UpdateResult:
 
         reasons = []
+        retentions: RetentionIntervalsByKeys = {}
         compared_keys = _compare_dict_keys(old_dict=other.pairs, new_dict=self.pairs)
 
         pairs: SDPairs = {}
         for key in compared_keys.only_old:
-            previous_intervals = other.retentions.get(key)
-            if not previous_intervals:
-                continue
-
-            if filter_func(key) and now <= previous_intervals.keep_until:
-                self.retentions.setdefault(key, previous_intervals)
+            if (
+                filter_func(key)
+                and (previous_intervals := other.retentions.get(key))
+                and now <= previous_intervals.keep_until
+            ):
+                retentions[key] = previous_intervals
                 pairs.setdefault(key, other.pairs[key])
 
         for key in compared_keys.both.union(compared_keys.only_new):
             if filter_func(key):
-                self.retentions.setdefault(key, inv_intervals)
+                retentions[key] = inv_intervals
 
         if pairs:
             self.add_pairs(pairs)
             reasons.append("added pairs")
 
-        if self.retentions:
-            reasons.append("new retention intervals %r" % self.retentions)
+        if retentions:
+            self.set_retentions(retentions)
+            reasons.append("retention intervals %r" % retentions)
 
         return UpdateResult(
             save_tree=bool(reasons),

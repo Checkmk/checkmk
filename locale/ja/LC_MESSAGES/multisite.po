@@ -30872,6 +30872,10 @@ msgstr ""
 msgid "No commands are possible in this view"
 msgstr "このビューではコマンドは使用できません"
 
+#, fuzzy
+msgid "No conditions"
+msgstr "条件なし"
+
 msgid "No configured rules are affected"
 msgstr "構成されたルールは影響を受けません"
 

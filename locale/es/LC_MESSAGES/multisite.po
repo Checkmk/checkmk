@@ -32217,6 +32217,10 @@ msgstr ""
 msgid "No commands are possible in this view"
 msgstr "En esta vista no se pueden realizar comandos"
 
+#, fuzzy
+msgid "No conditions"
+msgstr "Sin condiciones"
+
 msgid "No configured rules are affected"
 msgstr "Ninguna regla configurada se ve afectada"
 

@@ -30805,6 +30805,10 @@ msgstr ""
 msgid "No commands are possible in this view"
 msgstr ""
 
+#, fuzzy
+msgid "No conditions"
+msgstr "(fără condiții)"
+
 msgid "No configured rules are affected"
 msgstr ""
 

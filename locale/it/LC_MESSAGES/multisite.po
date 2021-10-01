@@ -32029,6 +32029,10 @@ msgstr "Non sono ammessi due punti, slash o backslash nel nome del file."
 msgid "No commands are possible in this view"
 msgstr "Nessun comando è possibile in questa vista"
 
+#, fuzzy
+msgid "No conditions"
+msgstr "Nessuna condizione"
+
 msgid "No configured rules are affected"
 msgstr "Nessuna regola configurata è interessata"
 

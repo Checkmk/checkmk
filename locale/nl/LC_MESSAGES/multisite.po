@@ -31951,6 +31951,10 @@ msgstr ""
 msgid "No commands are possible in this view"
 msgstr "In deze weergave zijn geen commando's mogelijk"
 
+#, fuzzy
+msgid "No conditions"
+msgstr "Geen voorwaarden"
+
 msgid "No configured rules are affected"
 msgstr "Geen geconfigureerde regels worden beïnvloed"
 

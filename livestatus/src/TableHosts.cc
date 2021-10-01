@@ -32,7 +32,7 @@
 #include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
-#include "HostListColumn.h"
+#include "HostListRenderer.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
@@ -626,14 +626,22 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return ""s;
         }));
 
-    table->addColumn(std::make_unique<HostListColumn>(
-        prefix + "parents", "A list of all direct parents of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }),
-        HostListRenderer{HostListRenderer::verbosity::none}));
-    table->addColumn(std::make_unique<HostListColumn>(
-        prefix + "childs", "A list of all direct children of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }),
-        HostListRenderer{HostListRenderer::verbosity::none}));
+    table->addColumn(
+        std::make_unique<ListColumn::Callback<host, column::host_list::Entry>>(
+            prefix + "parents", "A list of all direct parents of the host",
+            offsets,
+            std::make_unique<HostListRenderer>(
+                HostListRenderer::verbosity::none),
+            column::host_list::HostListGetter<host>{
+                [](const host &r) { return r.parent_hosts; }}));
+    table->addColumn(
+        std::make_unique<ListColumn::Callback<host, column::host_list::Entry>>(
+            prefix + "childs", "A list of all direct children of the host",
+            offsets,
+            std::make_unique<HostListRenderer>(
+                HostListRenderer::verbosity::none),
+            column::host_list::HostListGetter<host>{
+                [](const host &r) { return r.child_hosts; }}));
     table->addDynamicColumn(std::make_unique<
                             DynamicRRDColumn<ListColumn::Callback<
                                 host, RRDDataMaker::value_type>>>(

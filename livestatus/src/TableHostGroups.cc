@@ -6,11 +6,13 @@
 #include "TableHostGroups.h"
 
 #include <memory>
+#include <vector>
 
 #include "Column.h"
-#include "HostListColumn.h"
+#include "HostListRenderer.h"
 #include "HostListState.h"
 #include "IntLambdaColumn.h"
+#include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
@@ -29,8 +31,6 @@ std::string TableHostGroups::namePrefix() const { return "hostgroup_"; }
 // static
 void TableHostGroups::addColumns(Table *table, const std::string &prefix,
                                  const ColumnOffsets &offsets) {
-    auto offsets_members{
-        offsets.add([](Row r) { return &r.rawData<hostgroup>()->members; })};
     table->addColumn(std::make_unique<StringColumn::Callback<hostgroup>>(
         prefix + "name", "Name of the hostgroup", offsets,
         [](const hostgroup &r) {
@@ -54,14 +54,21 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
         offsets, [](const hostgroup &r) {
             return r.action_url == nullptr ? "" : r.action_url;
         }));
-    table->addColumn(std::make_unique<HostListColumn>(
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<hostgroup, column::host_list::Entry>>(
         prefix + "members",
-        "A list of all host names that are members of the hostgroup",
-        offsets_members, HostListRenderer{HostListRenderer::verbosity::none}));
-    table->addColumn(std::make_unique<HostListColumn>(
+        "A list of all host names that are members of the hostgroup", offsets,
+        std::make_unique<HostListRenderer>(HostListRenderer::verbosity::none),
+        column::host_list::HostListGetter<hostgroup>{
+            [](const hostgroup &r) { return r.members; }}));
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<hostgroup, column::host_list::Entry>>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together with state and has_been_checked",
-        offsets_members, HostListRenderer{HostListRenderer::verbosity::full}));
+        offsets,
+        std::make_unique<HostListRenderer>(HostListRenderer::verbosity::full),
+        column::host_list::HostListGetter<hostgroup>{
+            [](const hostgroup &r) { return r.members; }}));
 
     auto *mc = table->core();
     auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };

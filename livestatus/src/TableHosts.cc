@@ -35,6 +35,7 @@
 #include "HostListRenderer.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
+#include "LogEntry.h"
 #include "Logger.h"
 #include "LogwatchList.h"
 #include "MacroExpander.h"
@@ -43,7 +44,7 @@
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "RRDColumn.h"
-#include "ServiceListColumn.h"
+#include "ServiceListRenderer.h"
 #include "ServiceListState.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
@@ -58,6 +59,50 @@ using namespace std::string_literals;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
 
+namespace {
+bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
+    auto attrs = mc->customAttributes(&svc->custom_variables,
+                                      AttributeKind::custom_variables);
+    auto it = attrs.find("SERVICE_PERIOD");
+    if (it != attrs.end()) {
+        return g_timeperiods_cache->inTimeperiod(it->second);
+    }
+    return true;  // assume 24X7
+}
+
+class ServiceListGetter {
+public:
+    explicit ServiceListGetter(MonitoringCore *mc) : mc_{mc} {}
+    std::vector<::column::service_list::Entry> operator()(
+        const host &hst, const contact *auth_user) const {
+        std::vector<::column::service_list::Entry> entries{};
+        for (servicesmember *mem = hst.services; mem != nullptr;
+             mem = mem->next) {
+            service *svc = mem->service_ptr;
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
+                                      svc)) {
+                entries.emplace_back(
+                    svc->description,
+                    static_cast<ServiceState>(svc->current_state),
+                    svc->has_been_checked != 0,
+                    svc->plugin_output == nullptr
+                        ? ""
+                        : std::string(svc->plugin_output),
+                    static_cast<ServiceState>(svc->last_hard_state),
+                    svc->current_attempt, svc->max_attempts,
+                    svc->scheduled_downtime_depth,
+                    svc->problem_has_been_acknowledged != 0,
+                    inCustomTimeperiod(mc_, svc));
+            }
+        }
+        return entries;
+    }
+
+private:
+    MonitoringCore *mc_;
+};
+}  // namespace
+
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }
@@ -71,8 +116,6 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                             const ColumnOffsets &offsets) {
     auto offsets_custom_variables{offsets.add(
         [](Row r) { return &r.rawData<host>()->custom_variables; })};
-    auto offsets_services{
-        offsets.add([](Row r) { return &r.rawData<host>()->services; })};
     auto *mc = table->core();
     table->addColumn(std::make_unique<StringColumn::Callback<host>>(
         prefix + "name", "Host name", offsets,
@@ -820,25 +863,36 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return names;
         }));
 
-    table->addColumn(std::make_unique<ServiceListColumn>(
-        prefix + "services", "A list of all services of the host",
-        offsets_services,
-        ServiceListRenderer{ServiceListRenderer::verbosity::none}, mc));
-    table->addColumn(std::make_unique<ServiceListColumn>(
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<host, ::column::service_list::Entry>>(
+        prefix + "services", "A list of all services of the host", offsets,
+        std::make_unique<ServiceListRenderer>(
+            ServiceListRenderer::verbosity::none),
+        ServiceListGetter{mc}));
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<host, ::column::service_list::Entry>>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        offsets_services,
-        ServiceListRenderer{ServiceListRenderer::verbosity::low}, mc));
-    table->addColumn(std::make_unique<ServiceListColumn>(
+        offsets,
+        std::make_unique<ServiceListRenderer>(
+            ServiceListRenderer::verbosity::low),
+        ServiceListGetter{mc}));
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<host, ::column::service_list::Entry>>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        offsets_services,
-        ServiceListRenderer{ServiceListRenderer::verbosity::medium}, mc));
-    table->addColumn(std::make_unique<ServiceListColumn>(
+        offsets,
+        std::make_unique<ServiceListRenderer>(
+            ServiceListRenderer::verbosity::medium),
+        ServiceListGetter{mc}));
+    table->addColumn(std::make_unique<
+                     ListColumn::Callback<host, ::column::service_list::Entry>>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        offsets_services,
-        ServiceListRenderer{ServiceListRenderer::verbosity::full}, mc));
+        offsets,
+        std::make_unique<ServiceListRenderer>(
+            ServiceListRenderer::verbosity::full),
+        ServiceListGetter{mc}));
 
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "metrics",

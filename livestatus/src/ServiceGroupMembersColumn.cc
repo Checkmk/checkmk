@@ -76,7 +76,6 @@ std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
 
 /// \sa Apart from the lambda, the code is the same in
 ///    * ServiceGroupMembersColumn::getValue()
-///    * ServiceListColumn::getValue()
 std::vector<std::string> ServiceGroupMembersColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {

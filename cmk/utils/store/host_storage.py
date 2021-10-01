@@ -316,7 +316,9 @@ def apply_hosts_file_to_object(
     global_dict: Dict[str, Any],
 ) -> None:
     for storage_loader in host_storage_loaders:
-        if storage_loader.file_exists(path_without_extension):
+        if storage_loader.file_exists(path_without_extension) and storage_loader.file_valid(
+            path_without_extension
+        ):
             storage_loader.read_and_apply(path_without_extension, global_dict)
             return
 
@@ -330,6 +332,9 @@ class ABCHostsStorageLoader(abc.ABC, Generic[THostsReadData]):
 
     def file_exists(self, file_path: Path) -> bool:
         return self._storage.exists(file_path)
+
+    def file_valid(self, file_path: Path) -> bool:
+        return True
 
     def read_and_apply(self, file_path: Path, global_dict: Dict[str, Any]) -> bool:
         return self.apply(self._storage.read(file_path), global_dict)
@@ -346,6 +351,18 @@ class StandardStorageLoader(ABCHostsStorageLoader[str]):
 
 
 class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
+    def file_valid(self, file_path: Path) -> bool:
+        # The experimental file must not be older than the corresponding hosts.mk
+        # The file is also invalid if no matching hosts.mk file exists
+        hosts_mk_path = file_path.with_suffix(StorageFormat.STANDARD.extension())
+        if not hosts_mk_path.exists():
+            return False
+
+        return (
+            hosts_mk_path.stat().st_mtime
+            <= self._storage.add_file_extension(file_path).stat().st_mtime
+        )
+
     def apply(self, data: HostsData, global_dict: Dict[str, Any]) -> bool:
         """Integrates HostsData from PickleHostsStorage/RawHostsStorage into the global_dict"""
 
@@ -388,7 +405,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
         # It is pretty much the same than the already existing explicit_host_conf
         # and has no dynamic components
         for key, values in data["attributes"].items():
-            global_dict["extra_host_conf"].setdefault(key, []).extend(values)
+            global_dict.setdefault(key, {}).update(values)
 
         # Custom macros are moved into extra_host_conf
         for key, values in data["custom_macros"].items():

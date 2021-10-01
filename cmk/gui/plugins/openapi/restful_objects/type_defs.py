@@ -25,6 +25,7 @@ URL = str
 DomainType = Literal[
     'acknowledge',
     'agent',
+    'agent_binary',
     'sign_key',
     'activation_run',
     'bi_rule',

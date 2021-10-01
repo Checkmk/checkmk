@@ -462,7 +462,7 @@ def get_aggregated_result(
         else plugin.check_function
     )
 
-    section_kws, error_result = _get_monitoring_data_kwargs(
+    section_kws, error_result = _get_monitoring_data_kwargs_handle_pre20_services(
         parsed_sections_broker,
         host_config,
         config_cache,
@@ -531,7 +531,7 @@ def get_aggregated_result(
     )
 
 
-def _get_monitoring_data_kwargs(
+def _get_monitoring_data_kwargs_handle_pre20_services(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
@@ -539,26 +539,24 @@ def _get_monitoring_data_kwargs(
     service: Service,
     sections: Sequence[ParsedSectionName],
 ) -> Tuple[Mapping[str, object], ServiceCheckResult]:
-    source_type = (
-        SourceType.MANAGEMENT if service.check_plugin_name.is_management_name() else SourceType.HOST
-    )
+    """Handle cases of missing data due to changed plugin names
 
-    kwargs, err_result = _get_monitoring_data_kwargs_by_source(
+    In 1.6 some plugins where discovered for management boards, but with
+    the regular host plugins name. In this case retry with the source type
+    forced to MANAGEMENT
+    """
+    kwargs, err_result = _get_monitoring_data_kwargs(
         parsed_sections_broker,
         host_config,
         config_cache,
         ipaddress,
         service,
         sections,
-        source_type,
     )
-    if kwargs or source_type is SourceType.MANAGEMENT:
+    if kwargs or service.check_plugin_name.is_management_name():
         return kwargs, err_result
 
-    # in 1.6 some plugins where discovered for management boards, but with
-    # the regular host plugins name. In this case retry with the source type
-    # forced to MANAGEMENT:
-    return _get_monitoring_data_kwargs_by_source(
+    return _get_monitoring_data_kwargs(
         parsed_sections_broker,
         host_config,
         config_cache,
@@ -569,15 +567,22 @@ def _get_monitoring_data_kwargs(
     )
 
 
-def _get_monitoring_data_kwargs_by_source(
+def _get_monitoring_data_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
     ipaddress: Optional[HostAddress],
     service: Service,
     sections: Sequence[ParsedSectionName],
-    source_type: SourceType,
+    source_type: Optional[SourceType] = None,
 ) -> Tuple[Mapping[str, object], ServiceCheckResult]:
+    if source_type is None:
+        source_type = (
+            SourceType.MANAGEMENT
+            if service.check_plugin_name.is_management_name()
+            else SourceType.HOST
+        )
+
     if host_config.is_cluster:
         nodes = config_cache.get_clustered_service_node_keys(
             host_config,

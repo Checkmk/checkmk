@@ -418,7 +418,7 @@ def set_autochecks_of_cluster(
 def _deduplicate_autochecks(autochecks: Sequence[Service]) -> Sequence[Service]:
     """Cleanup duplicates that versions pre 1.6.0p8 may have introduced in the autochecks file
 
-    The first service is keep:
+    The first service is kept:
 
     >>> _deduplicate_autochecks([
     ...    Service(CheckPluginName('a'), None, "desctiption 1", None),

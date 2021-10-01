@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import tarfile
+import uuid
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -366,13 +368,28 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
                    job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
+        chunks = serialize_wato_parameters(diagnostics_parameters)
+
         site = diagnostics_parameters["site"]
         timeout = html.request.request_timeout - 2
-        result = check_mk_automation(site,
-                                     "create-diagnostics-dump",
-                                     args=serialize_wato_parameters(diagnostics_parameters),
-                                     timeout=timeout,
-                                     non_blocking_http=True)
+        results = []
+        for chunk in chunks:
+            results.append(
+                check_mk_automation(
+                    site,
+                    "create-diagnostics-dump",
+                    args=chunk,
+                    timeout=timeout,
+                    non_blocking_http=True,
+                ))
+
+        if len(results) > 1:
+            result = _merge_results(results)
+        elif len(results) == 1:
+            result = results[0]
+        else:
+            job_interface.send_result_message(_("Got no result to create dump file"))
+            return
 
         job_interface.send_progress_update(result["output"])
 
@@ -390,6 +407,37 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         else:
             job_interface.send_result_message(_("Creating dump file failed"))
+
+
+def _merge_results(results):
+    output: str = ""
+    tarfile_created: bool = False
+    tarfile_paths: List[str] = []
+    for result in results:
+        output += result["output"]
+        if result["tarfile_created"]:
+            tarfile_created = True
+            tarfile_paths.append(result["tarfile_path"])
+
+    return {
+        "output": output,
+        "tarfile_created": tarfile_created,
+        "tarfile_path": _join_sub_tars(tarfile_paths),
+    }
+
+
+def _join_sub_tars(tarfile_paths: List[str]) -> str:
+    tarfile_path = str(
+        cmk.utils.paths.diagnostics_dir.joinpath(str(uuid.uuid4())).with_suffix(".tar.gz"))
+    with tarfile.open(name=tarfile_path, mode='w:gz') as dest:
+        for filepath in tarfile_paths:
+            with tarfile.open(name=filepath, mode='r:gz') as sub_tar:
+                sub_tar_members = [m for m in sub_tar.getmembers() if m.name != ""]
+                dest_members = [m.name for m in dest.getmembers() if m.name != ""]
+                for member in sub_tar_members:
+                    if member.name not in dest_members:
+                        dest.addfile(member, sub_tar.extractfile(member))
+    return tarfile_path
 
 
 @page_registry.register_page("download_diagnostics_dump")

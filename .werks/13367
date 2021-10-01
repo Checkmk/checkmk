@@ -1,0 +1,15 @@
+Title: Support Diagnostics: Fix "Argument list too long" exception
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1633077507
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p13
+
+When using support diagnostic options like, e.g. "Checkmk Configuration files",
+where files are packed to an archive, the error "OSError: [Errno 7] Argument
+list too long: 'check_mk'" could occur.
+
+The automation commands will now be splitted for such options.

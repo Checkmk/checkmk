@@ -52,7 +52,8 @@ _FILES_OPTS = [
 ]
 
 
-def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> DiagnosticsCLParameters:
+def serialize_wato_parameters(
+        wato_parameters: DiagnosticsParameters) -> List[DiagnosticsCLParameters]:
     parameters = {}
 
     opt_info_parameters = wato_parameters.get("opt_info")
@@ -65,10 +66,10 @@ def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> Diagnos
 
     config_files: Set[str] = set()
     log_files: Set[str] = set()
-    serialized_parameters = []
+    boolean_opts: List[str] = []
     for key, value in sorted(parameters.items()):
         if key in _BOOLEAN_CONFIG_OPTS and value:
-            serialized_parameters.append(key)
+            boolean_opts.append(key)
 
         elif key == OPT_CHECKMK_CONFIG_FILES:
             config_files |= _extract_list_of_files(value)
@@ -84,18 +85,37 @@ def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> Diagnos
             config_files |= _extract_list_of_files(value.get("config_files"))
             log_files |= _extract_list_of_files(value.get("log_files"))
 
-    if config_files:
-        serialized_parameters.extend([
-            OPT_CHECKMK_CONFIG_FILES,
-            ",".join(sorted(config_files)),
-        ])
+    chunks: List[List[str]] = []
+    if boolean_opts:
+        chunks.append(boolean_opts)
 
-    if log_files:
-        serialized_parameters.extend([
-            OPT_CHECKMK_LOG_FILES,
-            ",".join(sorted(log_files)),
-        ])
-    return serialized_parameters
+    max_args: int = _get_max_args() - 1  # OPT will be appended in for loop
+    for config_args in [
+            sorted(config_files)[i:i + max_args]
+            for i in range(0, len(sorted(config_files)), max_args)
+    ]:
+        chunks.append([OPT_CHECKMK_CONFIG_FILES, ','.join(config_args)])
+
+    for log_args in [
+            sorted(log_files)[i:i + max_args] for i in range(0, len(sorted(log_files)), max_args)
+    ]:
+        chunks.append([OPT_CHECKMK_LOG_FILES, ','.join(log_args)])
+
+    if not chunks:
+        chunks.append([])
+
+    return chunks
+
+
+def _get_max_args() -> int:
+    try:
+        # maybe there is a better way, but this seems a reliable source
+        # and a manageable result
+        max_args = int(os.sysconf("SC_PAGESIZES"))
+    except ValueError:
+        max_args = 4096
+
+    return max_args
 
 
 def _extract_list_of_files(value: Optional[Tuple[str, List[str]]]) -> Set[str]:

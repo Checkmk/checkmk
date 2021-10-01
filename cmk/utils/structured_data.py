@@ -826,7 +826,7 @@ class Table:
                 # Update row with ident-key-values.
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
-                reasons.append("added row below %r" % ident)
+                reasons.append("added row below %r" % (ident,))
 
         for ident in compared_idents.both:
             compared_keys = _compare_dict_keys(
@@ -867,7 +867,7 @@ class Table:
                     }
                 )
                 self.add_row(ident, row)
-                reasons.append("added row below %r" % ident)
+                reasons.append("added row below %r" % (ident,))
 
         for ident in compared_idents.only_new:
             for key in self._rows[ident]:

@@ -5,7 +5,7 @@ PYTHON3_MODULES := python3-modules
 PYTHON3_MODULES_VERS := 1.1
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := 2-$(md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
+PYTHON3_MODULES_BUILD_ID := 3-$(md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching

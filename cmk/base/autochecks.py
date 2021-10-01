@@ -8,19 +8,7 @@
 import logging
 from contextlib import suppress
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 from six import ensure_str
 
@@ -418,10 +406,8 @@ def set_autochecks_of_cluster(
                 continue
             new_autochecks.append(discovered_service)
 
-        new_autochecks = _remove_duplicate_autochecks(new_autochecks)
-
         # write new autochecks file for that host
-        save_autochecks_file(node, new_autochecks)
+        save_autochecks_file(node, _deduplicate_autochecks(new_autochecks))
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
@@ -429,15 +415,19 @@ def set_autochecks_of_cluster(
     remove_autochecks_file(hostname)
 
 
-def _remove_duplicate_autochecks(autochecks: Sequence[Service]) -> List[Service]:
-    """Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
-    seen: Set[Service] = set()
-    cleaned_autochecks = []
-    for service in autochecks:
-        if service not in seen:
-            seen.add(service)
-            cleaned_autochecks.append(service)
-    return cleaned_autochecks
+def _deduplicate_autochecks(autochecks: Sequence[Service]) -> Sequence[Service]:
+    """Cleanup duplicates that versions pre 1.6.0p8 may have introduced in the autochecks file
+
+    The first service is keep:
+
+    >>> _deduplicate_autochecks([
+    ...    Service(CheckPluginName('a'), None, "desctiption 1", None),
+    ...    Service(CheckPluginName('a'), None, "description 2", None),
+    ... ])[0].description
+    'desctiption 1'
+
+    """
+    return list({a.id(): a for a in reversed(autochecks)}.values())
 
 
 def save_autochecks_file(

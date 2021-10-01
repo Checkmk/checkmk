@@ -281,6 +281,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
 
     def _update_snmpwalk_cache(self, mode: Mode) -> bool:
+        """Decide whether to load data from the SNMP walk cache"""
         return mode is not Mode.CHECKING
 
     def _get_selection(self, mode: Mode) -> FrozenSet[SectionName]:
@@ -348,7 +349,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         walk_cache = snmp_table.WalkCache(self._backend.hostname)
         if self._update_snmpwalk_cache(mode):
-            walk_cache_msg = "SNMP walk cache is disabled"
+            walk_cache.clear()
+            walk_cache_msg = "SNMP walk cache cleared"
         else:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load(

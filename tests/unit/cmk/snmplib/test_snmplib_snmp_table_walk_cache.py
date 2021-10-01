@@ -36,7 +36,7 @@ class TestWalkCache:
     def test_cache_keeps_stored_data(self) -> None:
 
         fetchoid = ".1.2.3"
-        path = f"{fetchoid}"
+        path = f"OID{fetchoid}"
         cache = MockWalkCache({path: [("23", b"43")]})
 
         assert not cache
@@ -61,7 +61,7 @@ class TestWalkCache:
         """
 
         fetchoid = ".1.2.3"
-        path = f"{fetchoid}"
+        path = f"OID{fetchoid}"
         cache = MockWalkCache({path: [("23", b"42")]})
 
         assert not cache
@@ -79,4 +79,4 @@ class TestWalkCache:
             ]
         )
 
-        assert fetchoid in cache  # FIXME  this is wrong
+        assert fetchoid not in cache

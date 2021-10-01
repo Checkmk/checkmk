@@ -61,11 +61,11 @@ class WalkCache(
 
     @staticmethod
     def _oid2name(fetchoid: str) -> str:
-        return fetchoid
+        return f"OID{fetchoid}"
 
     @staticmethod
     def _name2oid(basename: str) -> str:
-        return basename
+        return basename[3:]
 
     def _iterfiles(self) -> Iterable[Path]:
         if not self._path.is_dir():
@@ -90,29 +90,41 @@ class WalkCache(
     def __len__(self) -> int:
         return self._store.__len__()
 
+    def clear(self) -> None:
+        for path in self._iterfiles():
+            path.unlink(missing_ok=True)
+
     def load(
         self,
         *,
         trees: Iterable[BackendSNMPTree],
     ) -> None:
         """Try to read the OIDs data from cache files"""
-        for tree in trees:
-            for oid in (o for o in tree.oids if o.save_to_cache):  # no point in reading otherwise
+        # Do not load the cached data if *any* plugin needs live data
+        do_not_load = {
+            f"{tree.base}.{oid.column}"
+            for tree in trees
+            for oid in tree.oids
+            if not oid.save_to_cache
+        }
 
-                fetchoid = f"{tree.base}.{oid.column}"
-                path = self._path / self._oid2name(fetchoid)
+        for path in self._iterfiles():
+            fetchoid = self._name2oid(path.name)
+            if fetchoid in do_not_load:
+                continue
 
-                console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
-                try:
-                    read_walk = self._read_row(path)
-                except Exception:
-                    console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
-                    if cmk.utils.debug.enabled():
-                        raise
-                    continue
+            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+            try:
+                read_walk = self._read_row(path)
+            except Exception:
+                console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                if cmk.utils.debug.enabled():
+                    raise
+                continue
 
-                if read_walk is not None:
-                    self._store[fetchoid] = (oid.save_to_cache, read_walk)  # (True, ...)
+            if read_walk is not None:
+                # 'False': no need to store this value: it is already stored!
+                self._store[fetchoid] = (False, read_walk)
 
     def save(self) -> None:
         self._path.mkdir(parents=True, exist_ok=True)

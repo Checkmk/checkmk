@@ -7,11 +7,11 @@
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING
 
 from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
-from cmk.base.check_utils import Service
+from cmk.base.check_utils import AutocheckService
 
 
-def _service(plugin_name: str, item: str) -> Service:
-    return Service(CheckPluginName(plugin_name), item, "", {})
+def _service(plugin_name: str, item: str) -> AutocheckService:
+    return AutocheckService(CheckPluginName(plugin_name), item, "", {})
 
 
 def test_discover_only_new():

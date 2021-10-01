@@ -40,7 +40,7 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
-from cmk.base.check_utils import Service
+from cmk.base.check_utils import AutocheckService, Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
@@ -143,8 +143,8 @@ def service_table() -> discovery.ServicesTable:
 def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
                     "Test Description New Item 1",
@@ -152,8 +152,8 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
                     "Test Description New Item 2",
@@ -163,8 +163,8 @@ def grouped_services() -> discovery.ServicesByTransition:
             ),
         ],
         "vanished": [
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
                     "Test Description Vanished Item 1",
@@ -172,8 +172,8 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",
                     "Test Description Vanished Item 2",
@@ -406,7 +406,7 @@ def test__get_post_discovery_services(
 
     new_item_names = [
         entry.service.item or ""
-        for entry in discovery._get_post_discovery_services(
+        for entry in discovery._get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
             service_filters,

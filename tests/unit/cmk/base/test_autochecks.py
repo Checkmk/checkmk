@@ -19,7 +19,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-from cmk.base.check_utils import Service
+from cmk.base.check_utils import AutocheckService
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
@@ -68,7 +68,7 @@ def test_manager_get_autochecks_of_raises(test_config: config.ConfigCache) -> No
   {'check_plugin_name': 'df', 'item': u'123', 'parameters': {}, 'service_labels': {}},
 ]""",
             [
-                Service(
+                discovery.Service(
                     CheckPluginName("df"),
                     "123",
                     "",
@@ -101,7 +101,7 @@ def test_manager_get_autochecks_of_raises(test_config: config.ConfigCache) -> No
   {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {}},
 ]""",
             [
-                Service(
+                discovery.Service(
                     CheckPluginName("df"),
                     "/",
                     "",
@@ -117,8 +117,8 @@ def test_manager_get_autochecks_of_raises(test_config: config.ConfigCache) -> No
                         "trend_range": 24,
                     },
                 ),
-                Service(CheckPluginName("cpu_loads"), None, "", (5.0, 10.0)),
-                Service(
+                discovery.Service(CheckPluginName("cpu_loads"), None, "", (5.0, 10.0)),
+                discovery.Service(
                     CheckPluginName("lnx_if"),
                     "2",
                     "",
@@ -131,7 +131,7 @@ def test_manager_get_autochecks_of_raises(test_config: config.ConfigCache) -> No
 def test_manager_get_autochecks_of(
     test_config: config.ConfigCache,
     autochecks_content: str,
-    expected_result: Sequence[Service],
+    expected_result: Sequence[discovery.Service],
 ) -> None:
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
@@ -299,21 +299,21 @@ def test_remove_autochecks_file():
         ([], "[\n]\n"),
         (
             [
-                discovery.Service(
+                AutocheckService(
                     CheckPluginName("df"),
                     "/xyz",
                     "Filesystem /xyz",
                     None,
                     DiscoveredServiceLabels(ServiceLabel("x", "y")),
                 ),
-                discovery.Service(
+                AutocheckService(
                     CheckPluginName("df"),
                     "/",
                     "Filesystem /",
                     {},
                     DiscoveredServiceLabels(ServiceLabel("x", "y")),
                 ),
-                discovery.Service(
+                AutocheckService(
                     CheckPluginName("cpu_loads"),
                     None,
                     "CPU load",
@@ -329,7 +329,7 @@ def test_remove_autochecks_file():
         ),
     ],
 )
-def test_save_autochecks_file(items, expected_content):
+def test_save_autochecks_file(items: Sequence[AutocheckService], expected_content: str) -> None:
     autochecks.save_autochecks_file(HostName("host"), items)
 
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
@@ -339,23 +339,23 @@ def test_save_autochecks_file(items, expected_content):
     assert expected_content == content
 
 
-def _service(name: str, params: Optional[Dict[str, str]] = None) -> Service:
-    return Service(CheckPluginName(name), None, "", params or {})
+def _service(name: str, params: Optional[Dict[str, str]] = None) -> AutocheckService:
+    return AutocheckService(CheckPluginName(name), None, "", params or {})
 
 
 def test_consolidate_autochecks_of_real_hosts() -> None:
 
     new_services_with_nodes = [
-        autochecks.ServiceWithNodes(  # found on node and new
+        autochecks.AutocheckServiceWithNodes(  # found on node and new
             _service("A"), [HostName("node"), HostName("othernode")]
         ),
-        autochecks.ServiceWithNodes(  # not found, not present (i.e. unrelated)
+        autochecks.AutocheckServiceWithNodes(  # not found, not present (i.e. unrelated)
             _service("B"), [HostName("othernode"), HostName("yetanothernode")]
         ),
-        autochecks.ServiceWithNodes(  # found and preexistting
+        autochecks.AutocheckServiceWithNodes(  # found and preexistting
             _service("C", {"params": "new"}), [HostName("node"), HostName("node2")]
         ),
-        autochecks.ServiceWithNodes(  # not found but present
+        autochecks.AutocheckServiceWithNodes(  # not found but present
             _service("D"), [HostName("othernode"), HostName("yetanothernode")]
         ),
     ]

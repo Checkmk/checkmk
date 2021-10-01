@@ -43,7 +43,6 @@ import cmk.base.autochecks
 import cmk.base.check_api
 import cmk.base.config
 from cmk.base.api.agent_based import register
-from cmk.base.check_utils import Service
 
 import cmk.gui.config
 import cmk.gui.groups
@@ -270,7 +269,7 @@ class UpdateConfig:
 
     def _rewrite_autochecks(self):
         check_variables = cmk.base.config.get_check_variables()
-        failed_hosts: List[str] = []
+        failed_hosts = []
 
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
@@ -368,10 +367,10 @@ class UpdateConfig:
 
     def _fix_service(
         self,
-        service: Service,
+        service: cmk.base.autochecks.AutocheckService,
         all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
         hostname: str,
-    ) -> Service:
+    ) -> cmk.base.autochecks.AutocheckService:
         """Change names of removed plugins to the new ones and transform parameters"""
         new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(service.check_plugin_name)
         new_params = self._transformed_params(
@@ -385,7 +384,7 @@ class UpdateConfig:
             # don't create a new service if nothing has changed
             return service
 
-        return Service(
+        return cmk.base.autochecks.AutocheckService(
             check_plugin_name=new_plugin_name or service.check_plugin_name,
             item=service.item,
             description=service.description,

@@ -68,6 +68,15 @@ class Service:
             self.service_labels,
         )
 
+
+class AutocheckService(Service):
+    """Just a little bit more specific than any service
+
+    Autocheck services do not compute the effectice parameters, but only contain the discovered
+    ones.
+    More importantly: an general 'Service' instance may not be dumped into the autochecks file.
+    """
+
     def dump_autocheck(self) -> str:
         return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (
             str(self.check_plugin_name),

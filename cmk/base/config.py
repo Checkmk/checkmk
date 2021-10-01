@@ -128,7 +128,7 @@ from cmk.base.api.agent_based.type_defs import (
     SectionPlugin,
     SNMPSectionPlugin,
 )
-from cmk.base.autochecks import ServiceWithNodes
+from cmk.base.autochecks import AutocheckServiceWithNodes
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
@@ -3263,7 +3263,7 @@ class HostConfig:
 
     def set_autochecks(
         self,
-        new_services: Sequence[ServiceWithNodes],
+        new_services: Sequence[AutocheckServiceWithNodes],
     ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:

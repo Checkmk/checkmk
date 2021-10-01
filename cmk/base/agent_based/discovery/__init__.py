@@ -17,6 +17,7 @@ from typing import (
     List,
     Literal,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -68,7 +69,7 @@ from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
+from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
 
@@ -83,11 +84,18 @@ _Transition = Union[
 ]
 _ServiceOrigin = Union[_Transition, Literal["active", "manual", "custom"]]
 
+
+class ServiceWithNodes(NamedTuple):
+    service: Service
+    nodes: Sequence[HostName]
+
+
 _L = TypeVar("_L", bound=str)
 
 ServicesTableEntry = Tuple[_L, Service, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
-ServicesByTransition = Dict[_ServiceOrigin, List[autochecks.ServiceWithNodes]]
+ServicesByTransition = Dict[_ServiceOrigin, List[ServiceWithNodes]]
+
 
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -367,7 +375,7 @@ def automation_discovery(
         old_services = services.get("old", [])
 
         # Create new list of checks
-        new_services = _get_post_discovery_services(
+        new_services = _get_post_discovery_autocheck_services(
             host_name, services, service_filters or _ServiceFilters.accept_all(), result, mode
         )
         host_config.set_autochecks(new_services)
@@ -392,13 +400,13 @@ def automation_discovery(
     return result
 
 
-def _get_post_discovery_services(
+def _get_post_discovery_autocheck_services(
     host_name: HostName,
     services: ServicesByTransition,
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
     mode: DiscoveryMode,
-) -> List[autochecks.ServiceWithNodes]:
+) -> List[autochecks.AutocheckServiceWithNodes]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
@@ -410,7 +418,7 @@ def _get_post_discovery_services(
         Discovered checks that are shadowed by manual checks will vanish that way.
 
     """
-    post_discovery_services: List[autochecks.ServiceWithNodes] = []
+    post_discovery_services = []
     for check_source, discovered_services_with_nodes in services.items():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
@@ -465,7 +473,16 @@ def _get_post_discovery_services(
 
         raise MKGeneralException("Unknown check source '%s'" % check_source)
 
-    return post_discovery_services
+    # Note: this final filtering step should in fact be unnecessary.
+    # We're about to write these into the autochecks file, so hopefully
+    # these are only autochecks (and, in fact we skipped active and manual
+    # checks in the loop above.
+    # Currently it is not feasable to teach mypy about that.
+    return [
+        autochecks.AutocheckServiceWithNodes(service, nodes)
+        for service, nodes in post_discovery_services
+        if isinstance(service, AutocheckService)
+    ]
 
 
 # .
@@ -1113,7 +1130,7 @@ def _group_by_transition(
         services_by_transition.setdefault(
             transition,
             [],
-        ).append(autochecks.ServiceWithNodes(service, found_on_nodes))
+        ).append(ServiceWithNodes(service, found_on_nodes))
     return services_by_transition
 
 

@@ -19,7 +19,7 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 ComputeCheckParameters = Callable[
@@ -30,8 +30,8 @@ GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
 
-class ServiceWithNodes(NamedTuple):
-    service: Service
+class AutocheckServiceWithNodes(NamedTuple):
+    service: AutocheckService
     nodes: Sequence[HostName]
 
 
@@ -255,7 +255,7 @@ def parse_autochecks_file(
     hostname: HostName,
     service_description: GetServiceDescription,
     check_variables: Optional[Dict[str, Any]] = None,
-) -> Sequence[Service]:
+) -> Sequence[AutocheckService]:
     """Read autochecks, but do not compute final check parameters"""
     path = _autochecks_path_for(hostname)
     try:
@@ -282,7 +282,7 @@ def _parse_autocheck_entry(
     hostname: HostName,
     entry: Union[Tuple, Dict],
     service_description: GetServiceDescription,
-) -> Optional[Service]:
+) -> Optional[AutocheckService]:
     if isinstance(entry, tuple):
         check_plugin_name, item, parameters = _parse_pre_16_tuple_autocheck_entry(entry)
         dict_service_labels: object = {}
@@ -317,7 +317,7 @@ def _parse_autocheck_entry(
     except Exception:
         return None  # ignore
 
-    return Service(
+    return AutocheckService(
         check_plugin_name=plugin_name,
         item=item,
         description=description,
@@ -361,7 +361,7 @@ def _parse_discovered_service_label_from_dict(
 
 def set_autochecks_of_real_hosts(
     hostname: HostName,
-    new_services_with_nodes: Sequence[ServiceWithNodes],
+    new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
     service_description: GetServiceDescription,
 ) -> None:
     # write new autochecks file for that host
@@ -377,9 +377,9 @@ def set_autochecks_of_real_hosts(
 
 def _consolidate_autochecks_of_real_hosts(
     hostname: HostName,
-    new_services_with_nodes: Sequence[ServiceWithNodes],
-    existing_autochecks: Sequence[Service],
-) -> Sequence[Service]:
+    new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
+    existing_autochecks: Sequence[AutocheckService],
+) -> Sequence[AutocheckService]:
     consolidated = {
         discovered.id(): discovered
         for discovered, found_on_nodes in new_services_with_nodes
@@ -395,7 +395,7 @@ def _consolidate_autochecks_of_real_hosts(
 def set_autochecks_of_cluster(
     nodes: Iterable[HostName],
     hostname: HostName,
-    new_services_with_nodes: Sequence[ServiceWithNodes],
+    new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
     host_of_clustered_service: HostOfClusteredService,
     service_description: GetServiceDescription,
 ) -> None:
@@ -422,14 +422,14 @@ def set_autochecks_of_cluster(
     remove_autochecks_file(hostname)
 
 
-def _deduplicate_autochecks(autochecks: Sequence[Service]) -> Sequence[Service]:
+def _deduplicate_autochecks(autochecks: Sequence[AutocheckService]) -> Sequence[AutocheckService]:
     """Cleanup duplicates that versions pre 1.6.0p8 may have introduced in the autochecks file
 
     The first service is kept:
 
     >>> _deduplicate_autochecks([
-    ...    Service(CheckPluginName('a'), None, "desctiption 1", None),
-    ...    Service(CheckPluginName('a'), None, "description 2", None),
+    ...    AutocheckService(CheckPluginName('a'), None, "desctiption 1", None),
+    ...    AutocheckService(CheckPluginName('a'), None, "description 2", None),
     ... ])[0].description
     'desctiption 1'
 
@@ -439,7 +439,7 @@ def _deduplicate_autochecks(autochecks: Sequence[Service]) -> Sequence[Service]:
 
 def save_autochecks_file(
     hostname: HostName,
-    services: Sequence[Service],
+    services: Sequence[AutocheckService],
 ) -> None:
     path = _autochecks_path_for(hostname)
     path.parent.mkdir(parents=True, exist_ok=True)

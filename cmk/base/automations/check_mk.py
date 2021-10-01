@@ -83,9 +83,9 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
-from cmk.base.autochecks import ServiceWithNodes
+from cmk.base.autochecks import AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.check_utils import Service
+from cmk.base.check_utils import AutocheckService
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -279,7 +279,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
         # Fix data from version <2.0
-        new_services: List[ServiceWithNodes] = []
+        new_services: List[AutocheckServiceWithNodes] = []
         for (raw_check_plugin_name, item), (
             descr,
             params,
@@ -293,8 +293,9 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 service_labels.add_label(ServiceLabel(label_id, label_value))
 
             new_services.append(
-                ServiceWithNodes(
-                    Service(check_plugin_name, item, descr, params, service_labels), found_on_nodes
+                AutocheckServiceWithNodes(
+                    AutocheckService(check_plugin_name, item, descr, params, service_labels),
+                    found_on_nodes,
                 )
             )
 

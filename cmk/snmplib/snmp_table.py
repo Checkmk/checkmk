@@ -51,6 +51,27 @@ class WalkCache(
         self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
         self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
 
+    @staticmethod
+    def _read_row(path: Path) -> SNMPRowInfo:
+        return store.load_object_from_file(path, default=None)
+
+    @staticmethod
+    def _write_row(path: Path, rowinfo: SNMPRowInfo) -> None:
+        return store.save_object_to_file(path, rowinfo, pretty=False)
+
+    @staticmethod
+    def _oid2name(fetchoid: str) -> str:
+        return fetchoid
+
+    @staticmethod
+    def _name2oid(basename: str) -> str:
+        return basename
+
+    def _iterfiles(self) -> Iterable[Path]:
+        if not self._path.is_dir():
+            return ()
+        return self._path.iterdir()
+
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._store)
 
@@ -79,11 +100,11 @@ class WalkCache(
             for oid in (o for o in tree.oids if o.save_to_cache):  # no point in reading otherwise
 
                 fetchoid = f"{tree.base}.{oid.column}"
-                path = self._path / fetchoid
+                path = self._path / self._oid2name(fetchoid)
 
                 console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
                 try:
-                    read_walk = store.load_object_from_file(path, default=None)
+                    read_walk = self._read_row(path)
                 except Exception:
                     console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
                     if cmk.utils.debug.enabled():
@@ -100,9 +121,9 @@ class WalkCache(
             if not save_flag:
                 continue
 
-            path = self._path / fetchoid
+            path = self._path / self._oid2name(fetchoid)
             console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
-            store.save_object_to_file(path, rowinfo, pretty=False)
+            self._write_row(path, rowinfo)
 
 
 def get_snmp_table(

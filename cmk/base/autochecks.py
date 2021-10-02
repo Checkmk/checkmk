@@ -379,22 +379,16 @@ def _consolidate_autochecks_of_real_hosts(
     new_services_with_nodes: Sequence[ServiceWithNodes],
     existing_autochecks: Sequence[Service],
 ) -> Sequence[Service]:
-    new_autochecks = []
+    consolidated = {
+        discovered.id(): discovered
+        for discovered, found_on_nodes in new_services_with_nodes
+        if hostname in found_on_nodes
+    }
+    # overwrite parameters from existing ones for those which are kept
+    new_services = {x.service.id() for x in new_services_with_nodes}
+    consolidated.update((ex.id(), ex) for ex in existing_autochecks if ex.id() in new_services)
 
-    # write new autochecks file, but take parameters from existing ones
-    # for those checks which are kept
-    new_services = [x.service.id() for x in new_services_with_nodes]
-    for existing_service in existing_autochecks:
-        if existing_service.id() in new_services:
-            new_autochecks.append(existing_service)
-
-    for discovered_service, found_on_nodes in new_services_with_nodes:
-        if hostname not in found_on_nodes:
-            continue
-        if discovered_service not in new_autochecks:
-            new_autochecks.append(discovered_service)
-
-    return new_autochecks
+    return list(consolidated.values())
 
 
 def set_autochecks_of_cluster(

@@ -363,12 +363,28 @@ def set_autochecks_of_real_hosts(
     new_services_with_nodes: Sequence[ServiceWithNodes],
     service_description: GetServiceDescription,
 ) -> None:
-    new_autochecks: List[Service] = []
+    # write new autochecks file for that host
+    save_autochecks_file(
+        hostname,
+        _consolidate_autochecks_of_real_hosts(
+            hostname,
+            new_services_with_nodes,
+            parse_autochecks_file(hostname, service_description),
+        ),
+    )
+
+
+def _consolidate_autochecks_of_real_hosts(
+    hostname: HostName,
+    new_services_with_nodes: Sequence[ServiceWithNodes],
+    existing_autochecks: Sequence[Service],
+) -> Sequence[Service]:
+    new_autochecks = []
 
     # write new autochecks file, but take parameters from existing ones
     # for those checks which are kept
     new_services = [x.service.id() for x in new_services_with_nodes]
-    for existing_service in parse_autochecks_file(hostname, service_description):
+    for existing_service in existing_autochecks:
         if existing_service.id() in new_services:
             new_autochecks.append(existing_service)
 
@@ -378,11 +394,7 @@ def set_autochecks_of_real_hosts(
         if discovered_service not in new_autochecks:
             new_autochecks.append(discovered_service)
 
-    # write new autochecks file for that host
-    save_autochecks_file(
-        hostname,
-        new_autochecks,
-    )
+    return new_autochecks
 
 
 def set_autochecks_of_cluster(

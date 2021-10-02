@@ -6,6 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 from pathlib import Path
+from typing import Dict, Optional
 
 import pytest
 
@@ -316,3 +317,44 @@ def test_save_autochecks_file(items, expected_content):
         content = f.read()
 
     assert expected_content == content
+
+
+def _service(name: str, params: Optional[Dict[str, str]] = None) -> Service:
+    return Service(CheckPluginName(name), None, "", params or {})
+
+
+def test_consolidate_autochecks_of_real_hosts() -> None:
+
+    new_services_with_nodes = [
+        autochecks.ServiceWithNodes(  # found on node and new
+            _service("A"), [HostName("node"), HostName("othernode")]
+        ),
+        autochecks.ServiceWithNodes(  # not found, not present (i.e. unrelated)
+            _service("B"), [HostName("othernode"), HostName("yetanothernode")]
+        ),
+        autochecks.ServiceWithNodes(  # found and preexistting
+            _service("C", {"params": "new"}), [HostName("node"), HostName("node2")]
+        ),
+        autochecks.ServiceWithNodes(  # not found but present
+            _service("D"), [HostName("othernode"), HostName("yetanothernode")]
+        ),
+    ]
+    preexisting_services = [
+        _service("C", {"params": "old"}),  # still there
+        _service("D"),  # no longer found on the node
+        _service("E"),  # not found at all
+    ]
+
+    consolidated = autochecks._consolidate_autochecks_of_real_hosts(
+        HostName("node"),
+        new_services_with_nodes,
+        preexisting_services,
+    )
+
+    # these are service we expect:
+    # Note: this is the status quo. I am not sure why we keep service D
+    assert sorted(str(s.check_plugin_name) for s in consolidated) == ["A", "C", "D"]
+
+    # and this one should have kept the old parameters
+    service_c = [s for s in consolidated if str(s.check_plugin_name) == "C"][0]
+    assert service_c.parameters == {"params": "old"}

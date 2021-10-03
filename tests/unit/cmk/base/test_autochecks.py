@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence, Tuple
 
 import pytest
 
@@ -14,7 +14,7 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
@@ -29,9 +29,29 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 
 @pytest.fixture()
-def test_config(monkeypatch):
+def test_config(monkeypatch) -> config.ConfigCache:
     ts = Scenario().add_host("host")
     return ts.apply(monkeypatch)
+
+
+@pytest.mark.usefixtures("fix_register")
+def test_manager_get_autochecks_of_raises(test_config: config.ConfigCache) -> None:
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
+    with autochecks_file.open("w", encoding="utf-8") as f:
+        f.write(
+            "[\n  {'check_plugin_name': 123, 'item': 'abc', 'parameters': {},"
+            " 'service_labels': {}},\n]"
+        )
+
+    manager = test_config._autochecks_manager
+
+    with pytest.raises(MKGeneralException):
+        manager.get_autochecks_of(
+            HostName("host"),
+            config.compute_check_parameters,
+            config.service_description,
+            lambda hostname, _descr: hostname,
+        )
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -65,13 +85,6 @@ def test_config(monkeypatch):
                     },
                 ),
             ],
-        ),
-        # Dict: Exception on invalid check type
-        (
-            """[
-  {'check_plugin_name': 123, 'item': 'abc', 'parameters': {}, 'service_labels': {}},
-]""",
-            MKGeneralException,
         ),
         # Dict: Exception on name reference behaves like SyntaxError
         (
@@ -115,22 +128,16 @@ def test_config(monkeypatch):
         ),
     ],
 )
-def test_manager_get_autochecks_of(test_config, autochecks_content, expected_result):
+def test_manager_get_autochecks_of(
+    test_config: config.ConfigCache,
+    autochecks_content: str,
+    expected_result: Sequence[Service],
+) -> None:
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
 
     manager = test_config._autochecks_manager
-
-    if expected_result is MKGeneralException:
-        with pytest.raises(MKGeneralException):
-            manager.get_autochecks_of(
-                HostName("host"),
-                config.compute_check_parameters,
-                config.service_description,
-                lambda hostname, _descr: hostname,
-            )
-        return
 
     result = manager.get_autochecks_of(
         HostName("host"),
@@ -154,13 +161,30 @@ def test_parse_autochecks_file_not_existing():
 
 
 @pytest.mark.usefixtures("fix_register")
+@pytest.mark.parametrize("autochecks_content", ["@", "[abc123]"])
+def test_parse_autochecks_file_raises(
+    fix_plugin_legacy,
+    test_config: config.ConfigCache,
+    autochecks_content: str,
+) -> None:
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
+    with autochecks_file.open("w", encoding="utf-8") as f:
+        f.write(autochecks_content)
+
+    with pytest.raises(MKGeneralException):
+        autochecks.parse_autochecks_file(
+            HostName("host"),
+            config.service_description,
+            fix_plugin_legacy.check_variables,
+        )
+
+
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
         ("[]", []),
         ("", []),
-        ("@", MKGeneralException),
-        ("[abc123]", MKGeneralException),
         # Tuple: Handle old format
         (
             """[
@@ -231,19 +255,15 @@ def test_parse_autochecks_file_not_existing():
         ),
     ],
 )
-def test_parse_autochecks_file(fix_plugin_legacy, test_config, autochecks_content, expected_result):
+def test_parse_autochecks_file(
+    fix_plugin_legacy,
+    test_config: config.ConfigCache,
+    autochecks_content: str,
+    expected_result: Sequence[Tuple[CheckPluginName, str, LegacyCheckParameters]],
+) -> None:
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
-
-    if expected_result is MKGeneralException:
-        with pytest.raises(MKGeneralException):
-            autochecks.parse_autochecks_file(
-                HostName("host"),
-                config.service_description,
-                fix_plugin_legacy.check_variables,
-            )
-        return
 
     parsed = autochecks.parse_autochecks_file(
         HostName("host"),

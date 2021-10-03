@@ -1269,7 +1269,7 @@ def _check_preview_table_row(
     service: Service,
     check_source: _ServiceOrigin,
     parsed_sections_broker: ParsedSectionsBroker,
-    found_on_nodes: List[HostName],
+    found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
@@ -1314,7 +1314,7 @@ def _check_preview_table_row(
         output,
         perfdata,
         service.service_labels.to_dict(),
-        found_on_nodes,
+        list(found_on_nodes),
     )
 
 

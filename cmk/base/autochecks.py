@@ -8,7 +8,7 @@
 import logging
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 
 from six import ensure_str
 
@@ -32,7 +32,7 @@ HostOfClusteredService = Callable[[HostName, str], str]
 
 class ServiceWithNodes(NamedTuple):
     service: Service
-    nodes: List[HostName]
+    nodes: Sequence[HostName]
 
 
 class _AutocheckEntry(NamedTuple):
@@ -53,7 +53,7 @@ class AutochecksManager:
 
     def __init__(self) -> None:
         super().__init__()
-        self._autochecks: Dict[HostName, List[Service]] = {}
+        self._autochecks: Dict[HostName, Sequence[Service]] = {}
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
         self._discovered_labels_of: Dict[HostName, Dict[ServiceName, DiscoveredServiceLabels]] = {}
@@ -65,7 +65,7 @@ class AutochecksManager:
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
         get_effective_hostname: HostOfClusteredService,
-    ) -> List[Service]:
+    ) -> Sequence[Service]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = list(
                 self._get_autochecks_of_uncached(
@@ -219,7 +219,7 @@ def _load_raw_autochecks(
     *,
     path: Path,
     check_variables: Optional[Dict[str, Any]],
-) -> Union[List[Dict[str, Any]], Tuple]:
+) -> Union[Iterable[Dict[str, Any]], Tuple]:
     """Read raw autochecks and resolve parameters"""
     if not path.exists():
         return []
@@ -255,7 +255,7 @@ def parse_autochecks_file(
     hostname: HostName,
     service_description: GetServiceDescription,
     check_variables: Optional[Dict[str, Any]] = None,
-) -> List[Service]:
+) -> Sequence[Service]:
     """Read autochecks, but do not compute final check parameters"""
     path = _autochecks_path_for(hostname)
     try:
@@ -270,16 +270,12 @@ def parse_autochecks_file(
             "Unable to parse autochecks of host %s (%s): %s" % (hostname, path, e)
         )
 
-    services: List[Service] = []
-    for entry in raw_autochecks:
-        if not isinstance(entry, (tuple, dict)):
-            continue
-
-        service = _parse_autocheck_entry(hostname, entry, service_description)
-        if service:
-            services.append(service)
-
-    return services
+    return [
+        service
+        for entry in raw_autochecks
+        if isinstance(entry, (tuple, dict))
+        and (service := _parse_autocheck_entry(hostname, entry, service_description)) is not None
+    ]
 
 
 def _parse_autocheck_entry(
@@ -289,13 +285,11 @@ def _parse_autocheck_entry(
 ) -> Optional[Service]:
     if isinstance(entry, tuple):
         check_plugin_name, item, parameters = _parse_pre_16_tuple_autocheck_entry(entry)
-        dict_service_labels = {}
-    elif isinstance(entry, dict):
+        dict_service_labels: object = {}
+    else:
         check_plugin_name, item, parameters, dict_service_labels = _parse_dict_autocheck_entry(
             entry
         )
-    else:
-        raise Exception("Invalid autocheck: Wrong type: %r" % entry)
 
     if not isinstance(check_plugin_name, str):
         raise Exception("Invalid autocheck: Wrong check plugin type: %r" % check_plugin_name)
@@ -313,6 +307,11 @@ def _parse_autocheck_entry(
     except Exception:
         raise Exception("Invalid autocheck: Wrong check plugin name: %r" % check_plugin_name)
 
+    if parameters is not None and not isinstance(parameters, (dict, tuple, list, str)):
+        # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy). No idea
+        # what else it could be (LegacyCheckParameters is quite pointless).
+        raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
+
     try:
         description = service_description(hostname, plugin_name, item)
     except Exception:
@@ -327,23 +326,25 @@ def _parse_autocheck_entry(
     )
 
 
-def _parse_pre_16_tuple_autocheck_entry(entry: Tuple) -> Union[List, Tuple]:
-    # drop hostname, legacy format with host in first column
-    parts = entry[1:] if len(entry) == 4 else entry
+def _parse_pre_16_tuple_autocheck_entry(entry: Tuple) -> Tuple[object, object, object]:
+    try:
+        # drop hostname, legacy format with host in first column
+        raw_name, raw_item, raw_params = entry[1:] if len(entry) == 4 else entry
+    except ValueError as exc:
+        raise ValueError(f"Invalid autocheck: {entry!r}") from exc
+    return raw_name, raw_item, raw_params
 
-    if len(parts) != 3:
-        raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(parts))
-    return parts
 
-
-def _parse_dict_autocheck_entry(entry: Dict) -> Tuple:
+def _parse_dict_autocheck_entry(entry: Dict) -> Tuple[object, object, object, object]:
     if set(entry) != {"check_plugin_name", "item", "parameters", "service_labels"}:
         raise MKGeneralException("Invalid autocheck: Wrong keys found: %r" % list(entry))
 
     return entry["check_plugin_name"], entry["item"], entry["parameters"], entry["service_labels"]
 
 
-def _parse_discovered_service_label_from_dict(dict_service_labels: Dict) -> DiscoveredServiceLabels:
+def _parse_discovered_service_label_from_dict(
+    dict_service_labels: object,
+) -> DiscoveredServiceLabels:
     labels = DiscoveredServiceLabels()
     if not isinstance(dict_service_labels, dict):
         return labels
@@ -392,7 +393,7 @@ def _consolidate_autochecks_of_real_hosts(
 
 
 def set_autochecks_of_cluster(
-    nodes: List[HostName],
+    nodes: Iterable[HostName],
     hostname: HostName,
     new_services_with_nodes: Sequence[ServiceWithNodes],
     host_of_clustered_service: HostOfClusteredService,
@@ -402,15 +403,15 @@ def set_autochecks_of_cluster(
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
     for node in nodes:
-        new_autochecks: List[Service] = []
-        for existing_service in parse_autochecks_file(node, service_description):
-            if hostname != host_of_clustered_service(node, existing_service.description):
-                new_autochecks.append(existing_service)
-
-        for discovered_service, found_on_nodes in new_services_with_nodes:
-            if node not in found_on_nodes:
-                continue
-            new_autochecks.append(discovered_service)
+        new_autochecks = [
+            existing
+            for existing in parse_autochecks_file(node, service_description)
+            if hostname != host_of_clustered_service(node, existing.description)
+        ] + [
+            discovered
+            for discovered, found_on_nodes in new_services_with_nodes
+            if node in found_on_nodes
+        ]
 
         # write new autochecks file for that host
         save_autochecks_file(node, _deduplicate_autochecks(new_autochecks))
@@ -463,17 +464,16 @@ def remove_autochecks_of_host(
     host_of_clustered_service: HostOfClusteredService,
     service_description: GetServiceDescription,
 ) -> int:
-    removed = 0
-    new_items: List[Service] = []
-    for existing_service in parse_autochecks_file(hostname, service_description):
-        target_host = host_of_clustered_service(
+    existing_services = parse_autochecks_file(hostname, service_description)
+    new_services = [
+        existing
+        for existing in existing_services
+        if remove_hostname
+        != host_of_clustered_service(
             hostname,
-            existing_service.description,
+            existing.description,
         )
-        if target_host == remove_hostname:
-            removed += 1
-        else:
-            new_items.append(existing_service)
+    ]
 
-    save_autochecks_file(hostname, new_items)
-    return removed
+    save_autochecks_file(hostname, new_services)
+    return len(existing_services) - len(new_services)

@@ -6,5 +6,13 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 REPO_PATH=$(dirname $(dirname $(realpath "$0")))
 "$REPO_PATH/scripts/run-pipenv" run python3 setup.py bdist_wheel
 
+if [ -z $ONLY_COPY ]; then
+    sudo omd stop $SITE marcv
+fi
+
 sudo su - $SITE -c "python3 -m pip uninstall -y marcv"
 sudo su - $SITE -c "python3 -m pip install "$PWD/dist/marcv-0.0.0-py3-none-any.whl""
+
+if [ -z $ONLY_COPY ]; then
+    sudo omd start $SITE marcv
+fi

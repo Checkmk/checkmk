@@ -8,7 +8,12 @@ withFolderProperties{
     if(JOB_BASE_NAME == 'trigger-cre') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
         EDITION_DEFAULT = 'raw'
-    } else {
+    }
+    else if(JOB_BASE_NAME == 'trigger-cfe') {
+        DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
+        EDITION_DEFAULT = 'free'
+    }
+    else {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
         EDITION_DEFAULT = 'enterprise'
     }

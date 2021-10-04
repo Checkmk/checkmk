@@ -573,7 +573,7 @@ def _vs_packet_levels(
 
 
 def _item_spec_if():
-    return TextAscii(title=_("port specification"), allow_empty=False)
+    return TextAscii(title=_("Port"), allow_empty=False)
 
 
 def _transform_if_check_parameters(v):
@@ -1211,7 +1211,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="k8s_if",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("port specification"), allow_empty=False),
+        item_spec=lambda: TextAscii(title=_("Port"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_if,
         title=lambda: _("Kubernetes Network interfaces"),

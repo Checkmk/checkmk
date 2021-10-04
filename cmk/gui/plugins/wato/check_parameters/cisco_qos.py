@@ -107,7 +107,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cisco_qos",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("port specification"), allow_empty=False),
+        item_spec=lambda: TextAscii(title=_("Port"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_qos,
         title=lambda: _("Cisco quality of service"),

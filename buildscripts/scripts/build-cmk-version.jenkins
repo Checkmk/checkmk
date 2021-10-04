@@ -5,16 +5,13 @@ def EDITION_DEFAULT = 'enterprise'
 def NODE = ''
 def DOCKER_TAG_DEFAULT
 def USE_OMD_PACKAGE_CACHE_DEFAULT
-def DEPLOY_TO_WEBSITE_DEFAULT
 withFolderProperties{
     if(JOB_BASE_NAME == 'nightly_build_containerized') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
         USE_OMD_PACKAGE_CACHE_DEFAULT = true
-        DEPLOY_TO_WEBSITE_DEFAULT = true
     } else {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
         USE_OMD_PACKAGE_CACHE_DEFAULT = false
-        DEPLOY_TO_WEBSITE_DEFAULT = false
     }
 
     if(JOB_BASE_NAME == 'testbuild-cre') {
@@ -36,7 +33,7 @@ properties([
     string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' ),
     booleanParam(name: 'FAKE_WINDOWS_ARTIFACTS', defaultValue: false, description: 'Use faked windows agent artifacts instead of building them'),
     booleanParam(name: 'USE_OMD_PACKAGE_CACHE', defaultValue: USE_OMD_PACKAGE_CACHE_DEFAULT, description: 'Use OMD package cache (NEXUS_ environment variables needed)'),
-    booleanParam(name: 'DEPLOY_TO_WEBSITE', defaultValue: DEPLOY_TO_WEBSITE_DEFAULT, description: 'Upload and deploy the packages to the website')
+    booleanParam(name: 'DEPLOY_TO_WEBSITE', defaultValue: false, description: 'Upload and deploy the packages to the website')
   ])
 ])
 
@@ -243,16 +240,14 @@ timeout(time: 12, unit: 'HOURS') {
         } catch(Exception e) {
             notify.notify_error(e)
         }finally {
-    
             currentBuild.description = currentBuild.description + "<p><a href='${INTERNAL_DEPLOY_URL}/${CMK_VERS}'>Download Artifacts</a></p>"
-    
-            if (DEPLOY_TO_WEBSITE) {
-                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
-                    BUILD_IMAGE.inside(DOCKER_ARGS) {
-                        upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, get_versions_dir(WORKSPACE, CMK_VERS))
-                        upload_artifacts.create_hashes(get_versions_dir(WORKSPACE, CMK_VERS))
-                        upload_artifacts.upload_version_dir(get_versions_dir(WORKSPACE, CMK_VERS), WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside(DOCKER_ARGS) {
+                    upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, get_versions_dir(WORKSPACE, CMK_VERS))
+                    upload_artifacts.create_hashes(get_versions_dir(WORKSPACE, CMK_VERS))
+                    upload_artifacts.upload_version_dir(get_versions_dir(WORKSPACE, CMK_VERS), WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
+                    if(params.DEPLOY_TO_WEBSITE) {
                         upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS)
                     }
                 }

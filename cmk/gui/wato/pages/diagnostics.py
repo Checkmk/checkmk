@@ -5,72 +5,59 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
-    OPT_LOCAL_FILES,
-    OPT_OMD_CONFIG,
-    OPT_PERFORMANCE_GRAPHS,
-    OPT_CHECKMK_OVERVIEW,
+    CheckmkFileInfo,
+    CheckmkFileSensitivity,
+    DiagnosticsParameters,
+    get_checkmk_config_files_map,
+    get_checkmk_file_info,
+    get_checkmk_file_sensitivity_for_humans,
+    get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_OVERVIEW,
     OPT_COMP_GLOBAL_SETTINGS,
     OPT_COMP_HOSTS_AND_FOLDERS,
     OPT_COMP_NOTIFICATIONS,
-    DiagnosticsParameters,
+    OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
     serialize_wato_parameters,
-    get_checkmk_config_files_map,
-    get_checkmk_log_files_map,
-    CheckmkFileInfo,
-    CheckmkFileSensitivity,
-    get_checkmk_file_sensitivity_for_humans,
-    get_checkmk_file_info,
 )
-import cmk.utils.version as cmk_version
 
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request as global_request
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKUserError,
-    MKAuthException,
-)
 import cmk.gui.config as config
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    ValueSpec,
-    DualListChoice,
-    CascadingDropdown,
-)
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
-from cmk.gui.watolib import (
-    AutomationCommand,
-    automation_command_registry,
-    do_remote_automation,
+from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
+from cmk.gui.globals import html
+from cmk.gui.globals import request as global_request
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
 )
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-from cmk.gui.watolib.automations import check_mk_automation
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    redirect,
-)
+from cmk.gui.pages import Page, page_registry
+from cmk.gui.plugins.wato import mode_registry, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.pages import page_registry, Page
-
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    DropdownChoice,
+    DualListChoice,
+    FixedValue,
+    ValueSpec,
+)
+from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_remote_automation
+from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 _CHECKMK_FILES_NOTE = _("<br>Note: Some files may contain highly sensitive data like"
                         " passwords. These files are marked with 'H'."

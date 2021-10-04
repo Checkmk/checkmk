@@ -105,15 +105,10 @@ TEST(ModulesTest, QuickInstallEnabled) {
 
     {
         auto temp_fs{tst::TempCfgFs::CreateNoIo()};
-        ASSERT_TRUE(temp_fs->loadFactoryConfig());
         LoadContentWithoutQuickReinstall();
         EXPECT_FALSE(ModuleCommander::IsQuickReinstallAllowed());
     }
-    {
-        auto temp_fs{tst::TempCfgFs::CreateNoIo()};
-        ASSERT_TRUE(temp_fs->loadFactoryConfig());
-        EXPECT_FALSE(ModuleCommander::IsQuickReinstallAllowed());
-    }
+    EXPECT_TRUE(ModuleCommander::IsQuickReinstallAllowed());
 }
 
 TEST(ModulesTest, Internal) {

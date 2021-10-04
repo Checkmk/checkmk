@@ -867,7 +867,7 @@ TEST(AgentConfig, WorkConfig) {
 
     // modules values
     {
-        EXPECT_FALSE(
+        EXPECT_TRUE(
             cfg[groups::kModules][vars::kModulesQuickReinstall].as<bool>());
     }
 

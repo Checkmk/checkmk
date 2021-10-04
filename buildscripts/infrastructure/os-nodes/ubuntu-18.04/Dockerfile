@@ -7,6 +7,7 @@ ENV LANG=C.UTF-8
 
 ARG PACKAGES
 
+
 RUN apt-get update \
     && apt-get install -y \
     gdebi \
@@ -27,6 +28,7 @@ RUN apt-get update \
     strace \
     sudo \
     vim \
+    && sed -i '/^mozilla\/DST_Root_CA_X3/s/^/!/' /etc/ca-certificates.conf && update-ca-certificates -f \
     && pip3 install --upgrade setuptools \
     && pip3 install git+https://github.com/pypa/pipenv.git@v2020.6.2 \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \

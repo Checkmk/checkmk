@@ -198,6 +198,7 @@ public:
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
 
     [[nodiscard]] bool loadContent(std::string_view config);
+    [[nodiscard]] bool loadFactoryConfig();
 
     [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
                                       const std::string& content) const;

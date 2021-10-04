@@ -331,6 +331,8 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
     return ret;
 }
 
+bool TempCfgFs::loadFactoryConfig() { return loadConfig(tst::GetFabricYml()); }
+
 bool TempCfgFs::loadContent(std::string_view content) {
     auto ret = cma::cfg::GetCfg().loadDirect(content);
     if (ret) {

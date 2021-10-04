@@ -266,7 +266,7 @@ def make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> 
 
 
 # .
-#   .--Structured DataNode-------------------------------------------------.
+#   .--StructuredDataNode--------------------------------------------------.
 #   |         ____  _                   _                      _           |
 #   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
 #   |        \___ \| __| '__| | | |/ __| __| | | | '__/ _ \/ _` |          |
@@ -629,7 +629,7 @@ class StructuredDataNode:
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer):
-        # TODO
+        # TODO: type hints
         if not self.attributes.is_empty():
             renderer.show_attributes(self.attributes)
 
@@ -649,6 +649,8 @@ class StructuredDataNode:
 #   |                        |_|\__,_|_.__/|_|\___|                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+# TODO Table: {IDENT: Attributes}?
 
 TableRetentions = Dict[SDRowIdent, RetentionIntervalsByKeys]
 
@@ -795,10 +797,12 @@ class Table:
     def update_from_previous(
         self,
         now: int,
-        other: Table,
+        other: object,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
+        if not isinstance(other, Table):
+            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         # TODO cleanup
 
@@ -1005,7 +1009,7 @@ class Table:
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer):
-        # TODO
+        # TODO: type hints
         renderer.show_table(self)
 
 
@@ -1082,10 +1086,12 @@ class Attributes:
     def update_from_previous(
         self,
         now: int,
-        other: Attributes,
+        other: object,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
+        if not isinstance(other, Attributes):
+            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         reasons = []
         retentions: RetentionIntervalsByKeys = {}
@@ -1200,7 +1206,7 @@ class Attributes:
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer):
-        # TODO
+        # TODO: type hints
         renderer.show_attributes(self)
 
 

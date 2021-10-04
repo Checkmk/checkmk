@@ -9,14 +9,17 @@ withFolderProperties{
         case 'trigger-cre':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
             EDITION_DEFAULT = 'raw'
+            START_HOUR = '2'
             break
         case 'trigger-cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
             EDITION_DEFAULT = 'free'
+            START_HOUR = '4'
             break
         default:
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST
             EDITION_DEFAULT = 'enterprise'
+            START_HOUR = '0'
     }
     NODE = env.BUILD_NODE
 }
@@ -28,7 +31,7 @@ properties([
         string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise or managed' )
     ]),
     pipelineTriggers([
-        cron('H 3 * * *')
+        cron("0 ${START_HOUR} * * *")
     ])
 ])
 

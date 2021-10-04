@@ -6,9 +6,11 @@
 #include "TableServiceGroups.h"
 
 #include <memory>
+#include <vector>
 
 #include "Column.h"
 #include "IntLambdaColumn.h"
+#include "LogEntry.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
@@ -17,6 +19,32 @@
 #include "StringColumn.h"
 #include "auth.h"
 #include "nagios.h"
+
+namespace {
+class ServiceGroupMembersGetter {
+public:
+    explicit ServiceGroupMembersGetter(MonitoringCore *mc) : mc_{mc} {};
+    std::vector<::column::service_group_members::Entry> operator()(
+        const servicegroup &sm, const contact *auth_user) const {
+        std::vector<::column::service_group_members::Entry> entries;
+        for (servicesmember *mem = sm.members; mem != nullptr;
+             mem = mem->next) {
+            service *svc = mem->service_ptr;
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
+                                      svc)) {
+                entries.emplace_back(
+                    svc->host_name, svc->description,
+                    static_cast<ServiceState>(svc->current_state),
+                    svc->has_been_checked != 0);
+            }
+        }
+        return entries;
+    }
+
+private:
+    MonitoringCore *mc_;
+};
+}  // namespace
 
 TableServiceGroups::TableServiceGroups(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
@@ -29,8 +57,6 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 // static
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                                     const ColumnOffsets &offsets) {
-    auto offsets_members{
-        offsets.add([](Row r) { return &r.rawData<servicegroup>()->members; })};
     table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
         prefix + "name", "The name of the service group", offsets,
         [](const servicegroup &r) {
@@ -59,20 +85,22 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
             return r.action_url == nullptr ? "" : r.action_url;
         }));
     auto *mc = table->core();
-    table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
+    table->addColumn(std::make_unique<ServiceGroupMembersColumn<
+                         servicegroup, ::column::service_group_members::Entry>>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        offsets_members,
-        ServiceGroupMembersRenderer{
-            ServiceGroupMembersRenderer::verbosity::none},
-        mc));
-    table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
+        offsets,
+        std::make_unique<ServiceGroupMembersRenderer>(
+            ServiceGroupMembersRenderer::verbosity::none),
+        ServiceGroupMembersGetter{table->core()}));
+    table->addColumn(std::make_unique<ServiceGroupMembersColumn<
+                         servicegroup, ::column::service_group_members::Entry>>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
-        offsets_members,
-        ServiceGroupMembersRenderer{
-            ServiceGroupMembersRenderer::verbosity::full},
-        mc));
+        offsets,
+        std::make_unique<ServiceGroupMembersRenderer>(
+            ServiceGroupMembersRenderer::verbosity::full),
+        ServiceGroupMembersGetter{table->core()}));
 
     auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };
     table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(

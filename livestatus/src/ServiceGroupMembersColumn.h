@@ -12,24 +12,23 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "Filter.h"
-#include "ListColumn.h"
-#include "Renderer.h"
+#include "ListFilter.h"  // IWYU pragma: keep
+#include "ListLambdaColumn.h"
 #include "Row.h"
 #include "opids.h"
-class ColumnOffsets;
-class MonitoringCore;
-enum class ServiceState;
-
-#ifdef CMC
+#ifndef CMC
 #include "contact_fwd.h"
-#else
-#include "nagios.h"
 #endif
+enum class ServiceState;
+class Logger;
+class ListRenderer;
 
-namespace detail::service_group_members {
+namespace column::service_group_members {
+
+inline std::string separator() { return ""; }
+
 struct Entry {
     Entry(std::string hn, std::string d, ServiceState cs, bool hbc)
         : host_name(std::move(hn))
@@ -42,56 +41,56 @@ struct Entry {
     ServiceState current_state;
     bool has_been_checked;
 };
-}  // namespace detail::service_group_members
 
-class ServiceGroupMembersRenderer {
+namespace detail {
+std::string checkValue(Logger *logger, RelationalOperator relOp,
+                       const std::string &value);
+}
+}  // namespace column::service_group_members
+
+class ServiceGroupMembersRenderer
+    : public ListColumnRenderer<::column::service_group_members::Entry> {
 public:
     enum class verbosity { none, full };
     explicit ServiceGroupMembersRenderer(verbosity v) : verbosity_{v} {}
     void output(ListRenderer &l,
-                const detail::service_group_members::Entry &entry) const;
+                const column::service_group_members::Entry &entry) const;
 
 private:
     verbosity verbosity_;
 };
 
-class ServiceGroupMembersColumn : public deprecated::ListColumn {
-    using Entry = detail::service_group_members::Entry;
-
-public:
-    ServiceGroupMembersColumn(const std::string &name,
-                              const std::string &description,
-                              const ColumnOffsets &offsets,
-                              const ServiceGroupMembersRenderer &renderer,
-                              MonitoringCore *mc)
-        : deprecated::ListColumn(name, description, offsets)
-        , renderer_{renderer}
-        , mc_{mc} {}
-
-    // Remove once we inherit ListColumn::Callback<T, U>
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds /*timezone_offset*/) const override {
-        ListRenderer l(r);
-        for (const auto &entry : this->getRawValue(row, auth_user)) {
-            renderer_.output(l, entry);
-        }
-    }
-
+template <class T, class U>
+struct ServiceGroupMembersColumn : ListColumn::Callback<T, U> {
+    using ListColumn::Callback<T, U>::Callback;
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
-
-    std::vector<std::string> getValue(
-        Row row, const contact *auth_user,
-        std::chrono::seconds timezone_offset) const override;
-
-    static std::string separator() { return ""; }
-
-private:
-    ServiceGroupMembersRenderer renderer_;
-    MonitoringCore *mc_;
-
-    std::vector<Entry> getRawValue(Row row, const contact *auth_user) const;
 };
 
+namespace column::detail {
+template <>
+inline std::string serialize<::column::service_group_members::Entry>(
+    const ::column::service_group_members::Entry &entry) {
+    return entry.host_name + column::service_group_members::separator() +
+           entry.description;
+}
+}  // namespace column::detail
+
+template <class T, class U>
+std::unique_ptr<Filter> ServiceGroupMembersColumn<T, U>::createFilter(
+    Filter::Kind kind, RelationalOperator relOp,
+    const std::string &value) const {
+    return std::make_unique<ListFilter>(
+        kind, this->name(),
+        // `timezone_offset` is unused
+        [this](Row row, const contact *auth_user,
+               std::chrono::seconds timezone_offset) {
+            return this->getValue(row, auth_user, timezone_offset);
+        },
+        relOp,
+        column::service_group_members::detail::checkValue(this->logger(), relOp,
+                                                          value),
+        this->logger());
+}
 #endif  // ServiceGroupMembersColumn_h

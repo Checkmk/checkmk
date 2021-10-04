@@ -384,7 +384,7 @@ class LDAPUserConnector(UserConnector):
 
     def _get_nearest_dc_from_cache(self) -> Optional[str]:
         try:
-            return ensure_str(self._nearest_dc_cache_filepath().open(encoding="utf-8").read())
+            return self._nearest_dc_cache_filepath().open(encoding="utf-8").read()
         except IOError:
             pass
         return None

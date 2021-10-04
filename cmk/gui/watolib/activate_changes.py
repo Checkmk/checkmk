@@ -33,7 +33,6 @@ from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple, 
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
-from six import ensure_binary, ensure_str
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -2266,11 +2265,11 @@ def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
 
     # Since we don't stream the archive to the remote site (we could probably do this) it should be
     # no problem to buffer it in memory for the moment
-    archive, stderr = p.communicate(b"\0".join(ensure_binary(f) for f in to_sync))
+    archive, stderr = p.communicate(b"\0".join(f.encode() for f in to_sync))
 
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr.decode())
         )
 
     return archive
@@ -2302,7 +2301,7 @@ def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
     stderr = p.communicate(sync_archive)[1]
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr.decode())
         )
 
 

@@ -21,8 +21,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
@@ -381,7 +379,7 @@ class Table:
 
     def _evaluate_user_opts(self) -> Tuple[TableRows, bool, Optional[str]]:
         assert self.id is not None
-        table_id = ensure_str(self.id)
+        table_id = self.id
         rows = self.rows
 
         search_term = None

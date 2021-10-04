@@ -265,18 +265,6 @@ def get_short_inventory_history_filepath(hostname: HostName, timestamp: str) -> 
     )
 
 
-def parent_path(invpath: SDRawPath) -> Optional[SDRawPath]:
-    """Gets the parent path by dropping the last component"""
-    if invpath == ".":
-        return None  # No parent
-
-    if invpath[-1] in ".:":  # drop trailing type specifyer
-        invpath = invpath[:-1]
-
-    last_sep = max(invpath.rfind(":"), invpath.rfind("."))
-    return invpath[: last_sep + 1]
-
-
 def vs_element_inventory_visible_raw_path() -> Tuple[str, ValueSpec]:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to

@@ -787,11 +787,23 @@ def _inv_titleinfo(
 def _inv_titleinfo_long(invpath: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
     _icon, last_title = _inv_titleinfo(invpath)
-    parent = inventory.parent_path(invpath)
+    parent = _get_parent_from_invpath(invpath)
     if parent:
         _icon, parent_title = _inv_titleinfo(parent)
         return parent_title + " ➤ " + last_title
     return last_title
+
+
+def _get_parent_from_invpath(invpath: SDRawPath) -> Optional[SDRawPath]:
+    """Gets the parent path by dropping the last component"""
+    if invpath == ".":
+        return None  # No parent
+
+    if invpath[-1] in ".:":  # drop trailing type specifyer
+        invpath = invpath[:-1]
+
+    last_sep = max(invpath.rfind(":"), invpath.rfind("."))
+    return invpath[: last_sep + 1]
 
 
 def declare_inventory_columns() -> None:

@@ -316,7 +316,12 @@ def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> 
 
     if local_result.cached is not None:
         value_store = get_value_store()
-        if local_result.cached.elapsed_lifetime_percent > 100:
+        if local_result.cached.elapsed_lifetime_percent > 200:
+            # when cache_interval is less than the check interval we always get an expired cache
+            # and effectively no status change (= no notification).
+            # Assuming that the cache interval is always greater than half of the check interval
+            # a 200 percent threshold is sufficient here
+        
             # normally we include the time-relative cache info in the check
             # output but now the service should go stale, but we can not change
             # the summary of a stale service. The last summary (before going

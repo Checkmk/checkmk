@@ -3,8 +3,32 @@ FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
 
 def DISTRO_LIST_DEFAULT = ''
 def NODE = ''
+def EDITION_DEFAULT = ''
+def DEPLOY_TO_WEBSITE = false
+
 withFolderProperties{
-    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    switch (JOB_BASE_NAME) {
+        case 'trigger-cre':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
+            EDITION_DEFAULT = 'raw'
+            START_HOUR = '2'
+            RUN_TESTS = true
+            DEPLOY_TO_WEBSITE = false
+            break
+        case 'trigger-cfe':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
+            EDITION_DEFAULT = 'free'
+            START_HOUR = '4'
+            RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
+            DEPLOY_TO_WEBSITE = false
+            break
+        default:
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+            EDITION_DEFAULT = 'enterprise'
+            START_HOUR = '0'
+            RUN_TESTS = true
+            DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
+    }
     NODE = env.BUILD_NODE
 }
 
@@ -25,7 +49,8 @@ node: {
         build(job: "${FOLDER_ID}/nightly_build_containerized",
               parameters: [
                 [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
+                [$class: 'BooleanParameterValue', name: 'DEPLOY_TO_WEBSITE', value: DEPLOY_TO_WEBSITE],
             ]
         )
     }

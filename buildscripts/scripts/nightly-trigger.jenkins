@@ -5,17 +5,18 @@ def DISTRO_LIST_DEFAULT = ''
 def NODE = ''
 def EDITION_DEFAULT = ''
 withFolderProperties{
-    if(JOB_BASE_NAME == 'trigger-cre') {
-        DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
-        EDITION_DEFAULT = 'raw'
-    }
-    else if(JOB_BASE_NAME == 'trigger-cfe') {
-        DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
-        EDITION_DEFAULT = 'free'
-    }
-    else {
-        DISTRO_LIST_DEFAULT = env.DISTRO_LIST
-        EDITION_DEFAULT = 'enterprise'
+    switch (JOB_BASE_NAME) {
+        case 'trigger-cre':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
+            EDITION_DEFAULT = 'raw'
+            break
+        case 'trigger-cfe':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
+            EDITION_DEFAULT = 'free'
+            break
+        default:
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+            EDITION_DEFAULT = 'enterprise'
     }
     NODE = env.BUILD_NODE
 }

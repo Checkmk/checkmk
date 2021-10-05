@@ -28,7 +28,7 @@ const std::map<std::string, unsigned long> known_attributes = {
     {"check_timeperiod", 14},        {"custom_variable", 15},
     {"notification_timeperiod", 16}};
 
-using modified_atttibutes = std::bitset<32>;
+using modified_attributes = std::bitset<32>;
 
 std::string refValueFor(const std::string &value, Logger *logger) {
     if (isdigit(value[0]) != 0) {
@@ -39,7 +39,7 @@ std::string refValueFor(const std::string &value, Logger *logger) {
     value_vec.push_back('\0');
     char *scan = &value_vec[0];
 
-    modified_atttibutes values;
+    modified_attributes values;
     for (const char *t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
         auto it = known_attributes.find(t);
         if (it == known_attributes.end()) {
@@ -75,7 +75,7 @@ int32_t AttributeListAsIntColumn::getValue(
 // static
 std::vector<std::string> AttributeListAsIntColumn::decode(unsigned long mask) {
     std::vector<std::string> attributes;
-    modified_atttibutes values(mask);
+    modified_attributes values(mask);
     for (const auto &entry : known_attributes) {
         if (values[entry.second]) {
             attributes.push_back(entry.first);

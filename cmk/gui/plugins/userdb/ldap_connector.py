@@ -51,6 +51,7 @@ from six import ensure_str
 import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -90,6 +91,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
+if cmk_version.is_managed_edition():
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+else:
+    managed = None  # type: ignore[assignment]
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -1188,6 +1194,10 @@ class LDAPUserConnector(UserConnector):
             else:
                 user = new_user_template(self.id())
                 mode_create = True
+
+            if cmk_version.is_managed_edition():
+                user["customer"] = self._config.get("customer", managed.default_customer_id())
+
             return mode_create, user
 
         # Remove users which are controlled by this connector but can not be found in

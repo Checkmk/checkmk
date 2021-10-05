@@ -48,7 +48,12 @@ from cmk.utils.aws_constants import (
 from cmk.utils.exceptions import MKException
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, datetime_serializer, get_seconds_since_midnight
+from cmk.special_agents.utils import (
+    DataCache,
+    datetime_serializer,
+    get_seconds_since_midnight,
+    vcrtrace,
+)
 
 NOW = datetime.now()
 
@@ -5219,6 +5224,10 @@ def parse_arguments(argv):
         "--verbose",
         action="store_true",
         help="Log messages from AWS library 'boto3' and 'botocore'.",
+    )
+    parser.add_argument(
+        "--vcrtrace",
+        action=vcrtrace(filter_post_data_parameters=[("client_secret", "****")]),
     )
     parser.add_argument(
         "--no-cache",

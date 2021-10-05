@@ -14,7 +14,6 @@ from tests.testlib import Check, MissingCheckInfoError
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.api.agent_based import value_store
 from cmk.base.check_utils import Service
 from cmk.base.plugin_contexts import current_host, current_service
 

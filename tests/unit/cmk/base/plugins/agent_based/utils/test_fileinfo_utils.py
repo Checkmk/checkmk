@@ -4,19 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 
 import pytest
 from freezegun import freeze_time
-
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.fileinfo import (
     _cast_value,
-    _define_fileinfo_group_check,
     _fileinfo_check_conjunctions,
     _fileinfo_check_function,
     _filename_matches,

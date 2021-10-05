@@ -6,7 +6,6 @@
 
 # pylint: disable=protected-access
 
-import itertools
 
 import pytest
 

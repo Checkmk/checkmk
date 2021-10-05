@@ -12,7 +12,6 @@ import json
 import threading
 import urllib.parse
 from contextlib import contextmanager
-from functools import lru_cache
 from http.cookiejar import CookieJar
 from typing import Any, Dict, Generator, Iterator, Literal, NamedTuple, Optional
 

@@ -7,17 +7,9 @@
 import abc
 import typing as t
 
-import pytest
-
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
-
-# those imports should not be here, but you need them if you want to run
-# this test via `pytest -T unit tests/unit/test_plugin_vs_wato.py`
-# `cd tests; make test-unit` works fine without them, because the files
-# are imported implicitly by running the doctests
-from cmk.base.check_legacy_includes import df, hwg
 
 from cmk.gui.plugins.wato.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -27,6 +19,12 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
     rulespec_registry,
 )
+
+# those imports should not be here, but you need them if you want to run
+# this test via `pytest -T unit tests/unit/test_plugin_vs_wato.py`
+# `cd tests; make test-unit` works fine without them, because the files
+# are imported implicitly by running the doctests
+
 
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)

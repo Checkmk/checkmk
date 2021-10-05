@@ -13,6 +13,7 @@ withFolderProperties{
             START_HOUR = '2'
             RUN_TESTS = true
             DEPLOY_TO_WEBSITE = false
+            BUILD_CONTAINER = true
             break
         case 'trigger-cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
@@ -20,6 +21,7 @@ withFolderProperties{
             START_HOUR = '4'
             RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
             DEPLOY_TO_WEBSITE = false
+            BUILD_CONTAINER = false
             break
         default:
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST
@@ -27,6 +29,8 @@ withFolderProperties{
             START_HOUR = '0'
             RUN_TESTS = true
             DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
+            BUILD_CONTAINER = true
+            break
     }
     NODE = env.BUILD_NODE
 }
@@ -53,12 +57,14 @@ node: {
             ]
         )
     }
-    stage('Build CMK Container') {
-        build(job: "${FOLDER_ID}/nightly_cmk_container",
-              parameters: [
-                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-            ]
-        )
+    if (BUILD_CONTAINER) {
+        stage('Build CMK Container') {
+            build(job: "${FOLDER_ID}/nightly_cmk_container",
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                ]
+            )
+        }
     }
     if (RUN_TESTS) {
         parallel([

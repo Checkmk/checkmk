@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
+from cmk.gui.plugins.openapi.restful_objects.type_defs import StatusCodeInt, StatusCode
 
 
 def test_domain_object():
@@ -69,3 +70,7 @@ def test_domain_object():
 
     if errors:
         raise Exception(errors)
+
+
+def test_status_codes_match():
+    assert StatusCodeInt.__args__ == tuple(int(sc) for sc in StatusCode.__args__)  # type: ignore

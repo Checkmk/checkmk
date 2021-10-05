@@ -20,12 +20,14 @@ def test_openapi_etag_disabled(etags_off, wsgi_app, with_automation_user, with_h
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
     wsgi_app.follow_link(
         resp,
         ".../update",
+        headers={"Accept": "application/json"},
         status=200,
         params='{"attributes": {"ipaddress": "127.0.0.1"}}',
         content_type="application/json",
@@ -40,6 +42,7 @@ def test_openapi_etag_enabled(wsgi_app, with_automation_user, with_host):
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_config/example.com",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
@@ -47,6 +50,7 @@ def test_openapi_etag_enabled(wsgi_app, with_automation_user, with_host):
         resp,
         ".../update",
         status=428,
+        headers={"Accept": "application/json"},
         params='{"attributes": {"ipaddress": "127.0.0.1"}}',
         content_type="application/json",
     )
@@ -54,7 +58,7 @@ def test_openapi_etag_enabled(wsgi_app, with_automation_user, with_host):
         resp,
         ".../update",
         status=412,
-        headers={"If-Match": "foo"},
+        headers={"If-Match": "foo", "Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -63,7 +67,7 @@ def test_openapi_etag_enabled(wsgi_app, with_automation_user, with_host):
         ".../update",
         status=200,
         params='{"attributes": {"ipaddress": "127.0.0.1"}}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
     assert {"ipaddress": "127.0.0.1"}.items() <= resp.json["extensions"][

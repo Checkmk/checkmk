@@ -34,6 +34,7 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -51,7 +52,7 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
                 ]
             }
         ),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -59,6 +60,7 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/foo",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json["extensions"] == {
@@ -79,6 +81,7 @@ def test_openapi_host_tag_group_get_collection(wsgi_app, with_automation_user):
     col_resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/host_tag_group/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(col_resp.json_body["value"]) == builtin_groups_count
@@ -107,6 +110,7 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -115,7 +119,7 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
         "delete",
         base + "/objects/host_tag_group/foo",
         params=json.dumps({}),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -123,6 +127,7 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
     _resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/foo",
+        headers={"Accept": "application/json"},
         status=404,
     )
 
@@ -145,6 +150,7 @@ def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user):
                 "tags": [{"ident": "pod", "title": "Pod"}],
             }
         ),
+        headers={"Accept": "application/json"},
         status=400,
         content_type="application/json",
     )
@@ -160,6 +166,7 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/host_tag_group/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     built_in_tags = [tag_group.title for tag_group in BuiltinTagConfig().tag_groups]
@@ -170,6 +177,7 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/agent",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
@@ -186,7 +194,7 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
                 ]
             }
         ),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=405,
         content_type="application/json",
     )
@@ -195,6 +203,7 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
         "delete",
         base + "/objects/host_tag_group/agent",
         params=json.dumps({}),
+        headers={"Accept": "application/json"},
         status=405,
         content_type="application/json",
     )
@@ -218,6 +227,7 @@ def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user):
                 "tags": [{"ident": "pod", "title": "Pod"}],
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -233,7 +243,7 @@ def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user):
                 "tags": [{"ident": "pod", "title": "Pod"}],
             }
         ),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -241,5 +251,6 @@ def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user):
     _ = wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/group_id999",
+        headers={"Accept": "application/json"},
         status=200,
     )

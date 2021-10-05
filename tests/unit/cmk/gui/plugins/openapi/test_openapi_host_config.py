@@ -26,6 +26,7 @@ def test_openapi_cluster_host(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
 
@@ -34,6 +35,7 @@ def test_openapi_cluster_host(
         base + "/domain-types/host_config/collections/clusters",
         params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type='application/json; charset="utf-8"',
     )
 
@@ -41,12 +43,14 @@ def test_openapi_cluster_host(
         "get",
         base + "/objects/host_config/bazfoozle",
         status=404,
+        headers={"Accept": "application/json"},
     )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_config/bazfoo",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     wsgi_app.call_method(
@@ -54,7 +58,7 @@ def test_openapi_cluster_host(
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["not_existing"]}',
         status=400,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -63,7 +67,7 @@ def test_openapi_cluster_host(
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["example.com", "bazfoo"]}',
         status=400,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -72,7 +76,7 @@ def test_openapi_cluster_host(
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["example.com"]}',
         status=200,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -80,6 +84,7 @@ def test_openapi_cluster_host(
         "get",
         base + "/objects/host_config/bazfoo",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
@@ -100,6 +105,7 @@ def test_openapi_hosts(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
@@ -109,6 +115,7 @@ def test_openapi_hosts(
         resp,
         "self",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     attributes = {
@@ -123,7 +130,7 @@ def test_openapi_hosts(
         ".../update",
         status=200,
         params=json.dumps({"attributes": attributes}),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
     got_attributes = resp.json["extensions"]["attributes"]
@@ -134,7 +141,7 @@ def test_openapi_hosts(
         ".../update",
         status=200,
         params='{"update_attributes": {"alias": "bar"}}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
     assert resp.json["extensions"]["attributes"]["alias"] == "bar"
@@ -144,7 +151,7 @@ def test_openapi_hosts(
         ".../update",
         status=200,
         params='{"remove_attributes": ["alias"]}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
@@ -152,7 +159,12 @@ def test_openapi_hosts(
     )
 
     # make sure changes are written to disk:
-    resp = wsgi_app.follow_link(resp, "self", status=200)
+    resp = wsgi_app.follow_link(
+        resp,
+        "self",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
         {"ipaddress": "127.0.0.1"}.items()
     )
@@ -163,7 +175,7 @@ def test_openapi_hosts(
         ".../update",
         status=400,
         params='{"attributes": {"foobaz": "bar"}}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -175,6 +187,7 @@ def test_openapi_hosts(
         resp,
         ".../delete",
         status=204,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -217,6 +230,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
     assert len(resp.json["value"]) == 2
@@ -238,6 +252,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -246,6 +261,7 @@ def test_openapi_bulk_hosts(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["attributes"]["ipaddress"] == "192.168.1.1"
 
@@ -259,6 +275,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -267,6 +284,7 @@ def test_openapi_bulk_hosts(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert "ipaddress" not in resp.json["extensions"]["attributes"]
 
@@ -280,6 +298,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=400,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -288,6 +307,7 @@ def test_openapi_bulk_hosts(
         base + "/domain-types/host_config/actions/bulk-delete/invoke",
         params=json.dumps({"entries": ["foobar", "sample"]}),
         status=204,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -306,6 +326,7 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user):
             {"entries": [{"host_name": "example.com", "folder": "/", "attributes": {}}]}
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -324,6 +345,7 @@ def test_openapi_host_collection(
         "get",
         base + "/domain-types/host_config/collections/all",
         status=200,
+        headers={"Accept": "application/json"},
     )
     for host in resp.json["value"]:
         # Check that all entries are domain objects
@@ -355,6 +377,7 @@ def test_openapi_host_rename(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -362,6 +385,7 @@ def test_openapi_host_rename(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -369,14 +393,15 @@ def test_openapi_host_rename(
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
         status=200,
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
     )
 
     _resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobaz",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
 
@@ -397,6 +422,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -404,6 +430,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -411,7 +438,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
         base + "/objects/host_config/fooba/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=404,
     )
 
@@ -433,6 +460,7 @@ def test_openapi_host_rename_on_invalid_hostname(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -440,6 +468,7 @@ def test_openapi_host_rename_on_invalid_hostname(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -447,7 +476,7 @@ def test_openapi_host_rename_on_invalid_hostname(
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobar"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=400,
     )
 
@@ -467,6 +496,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -474,6 +504,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -481,7 +512,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=409,
     )
 
@@ -501,6 +532,7 @@ def test_openapi_host_move(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -510,13 +542,14 @@ def test_openapi_host_move(
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
         content_type="application/json",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobar/actions/move/invoke",
         params='{"target_folder": "/new_folder"}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
         status=200,
     )
@@ -537,6 +570,7 @@ def test_openapi_host_move_to_non_valid_folder(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -546,13 +580,14 @@ def test_openapi_host_move_to_non_valid_folder(
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
         content_type="application/json",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobar/actions/move/invoke",
         params='{"target_folder": "/"}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
         status=400,
     )
@@ -574,6 +609,7 @@ def test_openapi_host_move_of_non_existing_host(
         params='{"target_folder": "/"}',
         content_type="application/json",
         status=404,
+        headers={"Accept": "application/json"},
     )
 
 
@@ -592,6 +628,7 @@ def test_openapi_host_update_invalid(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "example.com", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -606,6 +643,6 @@ def test_openapi_host_update_invalid(
                 "remove_attributes": ["tag_foobar"],
             }
         ),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )

@@ -75,6 +75,7 @@ def test_openapi_acknowledge_all_services(
                     "comment": "Hello world!",
                 }
             ),
+            headers={"Accept": "application/json"},
             content_type="application/json",
             status=(204 if acknowledgement_sent else 422),
         )
@@ -160,6 +161,7 @@ def test_openapi_acknowledge_specific_service(
                     "comment": "Hello world!",
                 }
             ),
+            headers={"Accept": "application/json"},
             content_type="application/json",
             status=204,
         )
@@ -225,6 +227,7 @@ def test_openapi_acknowledge_host(
                     "comment": "Hello world!",
                 }
             ),
+            headers={"Accept": "application/json"},
             content_type="application/json",
             status=204 if acknowledgement_sent else 422,
         )
@@ -292,6 +295,7 @@ def test_openapi_bulk_acknowledge(
                     "comment": "Hello world!",
                 }
             ),
+            headers={"Accept": "application/json"},
             content_type="application/json",
             status=204,
         )
@@ -343,6 +347,7 @@ def test_openapi_acknowledge_servicegroup(
                     "comment": "Acknowledged",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -392,6 +397,7 @@ def test_openapi_acknowledge_hostgroup(
                     "comment": "Acknowledged",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -409,6 +415,7 @@ def test_openapi_acknowledge_hostgroup(
                     "comment": "Acknowledged",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=400,
         )
 
@@ -429,6 +436,7 @@ def test_openapi_acknowledge_hostgroup(
                     "comment": "Acknowledged",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=400,
         )
 
@@ -478,6 +486,7 @@ def test_openapi_acknowledge_host_with_query(
                     "comment": "Acknowledged",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -522,5 +531,6 @@ def test_openapi_acknowledge_host_with_non_matching_query(
                     "comment": "Acknowledged",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=422,
         )

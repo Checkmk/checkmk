@@ -32,7 +32,10 @@ def test_openapi_list_all_downtimes(
 
     with live:
         resp = wsgi_app.call_method(
-            "get", base + "/domain-types/downtime/collections/all", status=200
+            "get",
+            base + "/domain-types/downtime/collections/all",
+            headers={"Accept": "application/json"},
+            status=200,
         )
         assert len(resp.json["value"]) == 1
 
@@ -81,6 +84,7 @@ def test_openapi_schedule_hostgroup_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -114,6 +118,7 @@ def test_openapi_schedule_host_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -167,6 +172,7 @@ def test_openapi_schedule_servicegroup_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -205,6 +211,7 @@ def test_openapi_schedule_service_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -233,6 +240,7 @@ def test_openapi_schedule_service_downtime_with_non_matching_query(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=422,
         )
 
@@ -262,6 +270,7 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=422,
         )
 
@@ -316,6 +325,7 @@ def test_openapi_show_downtimes_with_query(
             "get",
             base
             + '/domain-types/downtime/collections/all?query={"op": "~", "left": "downtimes.host_name", "right": "heute"}',
+            headers={"Accept": "application/json"},
             status=200,
         )
     assert len(resp.json["value"]) == 1
@@ -373,6 +383,7 @@ def test_openapi_show_downtime_with_params(
         resp = wsgi_app.call_method(
             "get",
             base + "/domain-types/downtime/collections/all?host_name=example.com",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert resp.json_body["value"][0]["id"] == "124"
@@ -430,6 +441,7 @@ def test_openapi_show_downtime_of_non_existing_host(
         _ = wsgi_app.call_method(
             "get",
             base + "/domain-types/downtime/collections/all?host_name=nothing",
+            headers={"Accept": "application/json"},
             status=200,
         )
 
@@ -511,6 +523,7 @@ def test_openapi_create_host_downtime_with_query(
                     "query": {"op": "~", "left": "hosts.name", "right": "heute"},
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -570,6 +583,7 @@ def test_openapi_create_service_downtime_with_query(
                     "query": {"op": "~", "left": "services.host_name", "right": "heute"},
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -620,6 +634,7 @@ def test_openapi_create_service_downtime_with_non_matching_query(
                     },
                 }
             ),
+            headers={"Accept": "application/json"},
             status=422,
         )
 
@@ -681,6 +696,7 @@ def test_openapi_delete_downtime_with_query(
                     "query": {"op": "~", "left": "downtimes.host_name", "right": "heute"},
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -742,6 +758,7 @@ def test_openapi_delete_downtime_by_id(
                     "downtime_id": "123",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -810,6 +827,7 @@ def test_openapi_delete_downtime_with_params(
                     "service_descriptions": ["CPU load", "Memory"],
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -834,6 +852,7 @@ def test_openapi_downtime_non_existing_instance(
                 "end_time": "2020-01-02T00:00:00Z",
             }
         ),
+        headers={"Accept": "application/json"},
         status=400,
     )
 
@@ -858,6 +877,7 @@ def test_openapi_downtime_non_existing_groups(
                 "end_time": "2020-01-02T00:00:00Z",
             }
         ),
+        headers={"Accept": "application/json"},
         status=400,
     )
 
@@ -913,6 +933,7 @@ def test_openapi_downtime_get_single(
         resp = wsgi_app.call_method(
             "get",
             base + "/objects/downtime/123",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert resp.json_body["title"] == "Downtime for service: CPU load"
@@ -941,5 +962,6 @@ def test_openapi_downtime_invalid_single(
         _ = wsgi_app.call_method(
             "get",
             base + "/objects/downtime/123",
+            headers={"Accept": "application/json"},
             status=404,
         )

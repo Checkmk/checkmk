@@ -533,6 +533,19 @@ class Endpoint:
             except ValidationError as exc:
                 return _problem(exc, status_code=400)
 
+            if not request.accept_mimetypes:
+                return problem(
+                    status=406, title="Not Acceptable", detail="Please specify an Accept Header."
+                )
+            if not request.accept_mimetypes.best_match([self.content_type]):
+                return problem(
+                    status=406,
+                    title="Not Acceptable",
+                    detail="Can not send a response with the content type specified in the 'Accept' Header."
+                    f" Accept Header: {request.accept_mimetypes}."
+                    f" Supported content types: [{self.content_type}]",
+                )
+
             # make pylint happy
             assert callable(self.func)
 
@@ -702,13 +715,15 @@ class Endpoint:
 
         responses: ResponseType = {}
 
+        responses["406"] = self._path_item(406, "The requests accept headers can not be satisfied.")
+
         if 401 in self._expected_status_codes:
             responses["401"] = self._path_item(
                 401, "The user is not authorized to do this request."
             )
 
         if self.tag_group == "Setup":
-            responses["403"] = self._path_item(403, "Configuration via WATO is disabled")
+            responses["403"] = self._path_item(403, "Configuration via WATO is disabled.")
 
         if 404 in self._expected_status_codes:
             responses["404"] = self._path_item(404, "The requested object has not been found.")

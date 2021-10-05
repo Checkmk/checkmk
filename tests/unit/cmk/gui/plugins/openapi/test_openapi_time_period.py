@@ -33,6 +33,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user):
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -48,6 +49,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user):
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -55,6 +57,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/foo",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json == {
@@ -89,6 +92,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -96,6 +100,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
     resp_col = wsgi_app.call_method(
         "get",
         base + "/domain-types/time_period/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp_col.json_body["value"]) == 2
@@ -103,7 +108,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
     _ = wsgi_app.call_method(
         "delete",
         base + "/objects/time_period/foo",
-        headers={"If-Match": resp.headers["Etag"]},
+        headers={"If-Match": resp.headers["Etag"], "Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -111,6 +116,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
     resp_col = wsgi_app.call_method(
         "get",
         base + "/domain-types/time_period/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp_col.json_body["value"]) == 1
@@ -123,9 +129,19 @@ def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user):
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method("get", base + "/objects/time_period/24X7", status=200)
+    _resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/time_period/24X7",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
 
-    _ = wsgi_app.call_method("put", base + "/objects/time_period/24X7", status=405)
+    _ = wsgi_app.call_method(
+        "put",
+        base + "/objects/time_period/24X7",
+        headers={"Accept": "application/json"},
+        status=405,
+    )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -156,6 +172,7 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
                 "name": "test_all_8x5",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -163,6 +180,7 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json == {
@@ -226,6 +244,7 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
         "put",
         base + "/objects/time_period/test_all_8x5",
         params=json.dumps({}),
+        headers={"Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -233,6 +252,7 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json == {
@@ -321,6 +341,7 @@ def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user):
                 "name": "test_all_8x5",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -345,6 +366,7 @@ def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user):
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -390,6 +412,7 @@ def test_openapi_timeperiod_excluding_exclude(wsgi_app, with_automation_user):
                 "name": "test_all_8x5",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -397,6 +420,7 @@ def test_openapi_timeperiod_excluding_exclude(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json_body == {

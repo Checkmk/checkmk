@@ -59,6 +59,7 @@ def test_openapi_livestatus_service(
         resp = wsgi_app.call_method(
             "get",
             base + "/domain-types/service/collections/all",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert len(resp.json["value"]) == 2
@@ -76,6 +77,7 @@ def test_openapi_livestatus_service(
             "get",
             base
             + '/domain-types/service/collections/all?query={"op": "~", "left": "host_alias", "right": "heute"}',
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert len(resp.json["value"]) == 1
@@ -91,6 +93,7 @@ def test_openapi_livestatus_service(
         resp = wsgi_app.call_method(
             "get",
             base + "/objects/host/example.com/collections/services",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert len(resp.json["value"]) == 1
@@ -144,6 +147,7 @@ def test_openapi_livestatus_collection_link(
         resp = wsgi_app.call_method(
             "get",
             base + "/domain-types/service/collections/all",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert (
@@ -202,6 +206,7 @@ def test_openapi_specific_service(
         resp = wsgi_app.call_method(
             "get",
             base + "/objects/host/heute/actions/show_service/invoke?service_description=Filesystem",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert resp.json_body["extensions"] == {
@@ -265,6 +270,7 @@ def test_openapi_service_with_slash_character(
             "get",
             base
             + f"/objects/host/example.com/actions/show_service/invoke?service_description={service_description}",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert resp.json_body["extensions"] == {
@@ -327,5 +333,6 @@ def test_openapi_non_existing_service(
         _ = wsgi_app.call_method(
             "get",
             base + "/objects/host/heute/actions/show_service/invoke?service_description=CPU",
+            headers={"Accept": "application/json"},
             status=404,
         )

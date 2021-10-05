@@ -44,6 +44,7 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
@@ -64,6 +65,7 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
         "put",
         base + "/objects/user_config/user",
         params=json.dumps({"customer": "provider"}),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -153,6 +155,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
@@ -189,7 +192,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
             base + "/objects/user_config/user",
             params=json.dumps(edit_details),
             status=200,
-            headers={"If-Match": resp.headers["ETag"]},
+            headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
             content_type="application/json",
         )
     assert resp.json_body["extensions"]["attributes"] == {
@@ -245,11 +248,17 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
 
-    resp = wsgi_app.call_method("get", base + f"/objects/user_config/{name}", status=200)
+    resp = wsgi_app.call_method(
+        "get",
+        base + f"/objects/user_config/{name}",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
 
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
@@ -272,6 +281,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
     collection_resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/user_config/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(collection_resp.json_body["value"]) == 2
@@ -280,14 +290,20 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         "delete",
         base + f"/objects/user_config/{name}",
         status=204,
-        headers={"If-Match": resp.headers["Etag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["Etag"]},
     )
 
-    _resp = wsgi_app.call_method("get", base + f"/objects/user_config/{name}", status=404)
+    _resp = wsgi_app.call_method(
+        "get",
+        base + f"/objects/user_config/{name}",
+        headers={"Accept": "application/json"},
+        status=404,
+    )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/user_config/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp.json_body["value"]) == 1
@@ -384,6 +400,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
@@ -413,7 +430,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             base + "/objects/user_config/foo",
             params=json.dumps(edit_details),
             status=200,
-            headers={"If-Match": resp.headers["ETag"]},
+            headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
             content_type="application/json",
         )
     assert resp.json_body["extensions"]["attributes"] == {
@@ -443,7 +460,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             base + "/objects/user_config/foo",
             params=json.dumps(remove_details),
             status=200,
-            headers={"If-Match": resp.headers["ETag"]},
+            headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
             content_type="application/json",
         )
     assert resp.json_body["extensions"]["attributes"] == {
@@ -604,6 +621,7 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
@@ -695,11 +713,17 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
 
-    resp = wsgi_app.call_method("get", base + "/objects/user_config/cmkuser", status=200)
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/user_config/cmkuser",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
 
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
@@ -792,6 +816,7 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
@@ -801,11 +826,16 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
         base + "/objects/user_config/cmkuser",
         params=json.dumps({"contact_options": {"fallback_contact": True}}),
         status=400,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method("get", base + "/objects/user_config/cmkuser", status=200)
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/user_config/cmkuser",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {
             "auth_type": "password",
@@ -851,10 +881,16 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
             status=200,
             content_type="application/json",
         )
-    resp = wsgi_app.call_method("get", base + "/objects/user_config/cmkuser", status=200)
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/user_config/cmkuser",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
     assert resp.json_body["extensions"]["attributes"] == {
         "auth_option": {},
         "contact_options": {"email": "", "fallback_contact": False},
@@ -875,7 +911,7 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
         base + "/objects/user_config/cmkuser",
         params=json.dumps({"disable_notifications": {"disable": False}}),
         status=200,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
     assert resp.json_body["extensions"]["attributes"] == {

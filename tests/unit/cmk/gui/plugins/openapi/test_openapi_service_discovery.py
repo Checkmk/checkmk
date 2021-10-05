@@ -803,6 +803,7 @@ def test_openapi_discovery(
         "post",
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
+        headers={"Accept": "application/json"},
         status=415,
     )
 
@@ -811,6 +812,7 @@ def test_openapi_discovery(
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
         content_type="application/json",
+        headers={"Accept": "application/json"},
         status=400,
     )
 
@@ -819,6 +821,7 @@ def test_openapi_discovery(
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "refresh"}',
         content_type="application/json",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
@@ -827,6 +830,7 @@ def test_openapi_discovery(
             _resp,
             "cmk/service.move-ignored",
             json_data=_resp.json["members"]["df-/boot"],
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -835,5 +839,6 @@ def test_openapi_discovery(
             _resp,
             "cmk/service.move-monitored",
             json_data=_resp.json["members"]["df-/boot"],
+            headers={"Accept": "application/json"},
             status=204,
         )

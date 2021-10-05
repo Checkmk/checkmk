@@ -43,6 +43,7 @@ def test_openapi_livestatus_hosts_generic_filter(
         resp = wsgi_app.call_method(
             "get",
             base + "/domain-types/host/collections/all",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert len(resp.json["value"]) == 1
@@ -59,6 +60,7 @@ def test_openapi_livestatus_hosts_generic_filter(
             "get",
             base
             + '/domain-types/host/collections/all?query={"op": "~", "left": "alias", "right": "heute"}&columns=name&columns=alias',
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert len(resp.json["value"]) == 1
@@ -97,6 +99,7 @@ def test_openapi_livestatus_hosts_empty_query(
         resp = wsgi_app.call_method(
             "get",
             base + "/domain-types/host/collections/all?query={}&columns=name&columns=alias",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert resp.json["value"][0]["id"] == "heute"

@@ -33,6 +33,7 @@ def test_openapi_password(wsgi_app, with_automation_user):
                 "customer": "global",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -42,7 +43,7 @@ def test_openapi_password(wsgi_app, with_automation_user):
         base + "/objects/password/fooz",
         params=json.dumps({"title": "foobu", "comment": "Something but nothing random"}),
         status=404,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -51,13 +52,14 @@ def test_openapi_password(wsgi_app, with_automation_user):
         base + "/objects/password/foo",
         params=json.dumps({"title": "foobu", "comment": "Something but nothing random"}),
         status=200,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/password/foo",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json["extensions"] == {
@@ -91,6 +93,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user):
                 "customer": "provider",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -98,6 +101,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user):
     _resp = wsgi_app.call_method(
         "get",
         base + "/objects/password/test",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
@@ -123,6 +127,7 @@ def test_openapi_password_customer(wsgi_app, with_automation_user):
                 "customer": "provider",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -136,12 +141,14 @@ def test_openapi_password_customer(wsgi_app, with_automation_user):
                 "customer": "global",
             }
         ),
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/password/test",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json_body["extensions"]["customer"] == "global"
@@ -168,6 +175,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user):
                 "customer": "global",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -175,6 +183,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/password/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp.json_body["value"]) == 1
@@ -182,20 +191,25 @@ def test_openapi_password_delete(wsgi_app, with_automation_user):
     _resp = wsgi_app.call_method(
         "delete",
         base + "/objects/password/nothing",
+        headers={"Accept": "application/json"},
         status=404,
     )
 
     _resp = wsgi_app.call_method(
         "delete",
         base + "/objects/password/foo",
+        headers={"Accept": "application/json"},
         status=204,
     )
 
-    _resp = wsgi_app.call_method("get", base + "/objects/password/foo", status=404)
+    _resp = wsgi_app.call_method(
+        "get", base + "/objects/password/foo", headers={"Accept": "application/json"}, status=404
+    )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/password/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp.json_body["value"]) == 0

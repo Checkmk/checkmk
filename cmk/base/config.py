@@ -2257,19 +2257,21 @@ def compute_check_parameters(
     if plugin is None:  # handle vanished check plugin
         return None
 
-    if plugin.check_default_parameters is not None:
-        params = _update_with_default_check_parameters(plugin.check_default_parameters, params)
-
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(host, plugin, item)
 
-    return _update_with_configured_check_parameters(params, configured_parameters)
+    return _update_with_configured_check_parameters(
+        _update_with_default_check_parameters(plugin.check_default_parameters, params),
+        configured_parameters,
+    )
 
 
 def _update_with_default_check_parameters(
-    check_default_parameters: ParametersTypeAlias,
+    check_default_parameters: Optional[ParametersTypeAlias],
     params: LegacyCheckParameters,
 ) -> LegacyCheckParameters:
+    if check_default_parameters is None:
+        return params
 
     # Handle case where parameter is None but the type of the
     # default value is a dictionary. This is for example the

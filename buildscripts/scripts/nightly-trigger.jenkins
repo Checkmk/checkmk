@@ -7,6 +7,14 @@ def EDITION_DEFAULT = ''
 def DEPLOY_TO_WEBSITE = false
 withFolderProperties{
     switch (JOB_BASE_NAME) {
+        case 'trigger':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+            EDITION_DEFAULT = 'enterprise'
+            START_HOUR = '0'
+            RUN_TESTS = true
+            DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
+            BUILD_CONTAINER = true
+            break
         case 'trigger-cre':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
             EDITION_DEFAULT = 'raw'
@@ -24,13 +32,7 @@ withFolderProperties{
             BUILD_CONTAINER = false
             break
         default:
-            DISTRO_LIST_DEFAULT = env.DISTRO_LIST
-            EDITION_DEFAULT = 'enterprise'
-            START_HOUR = '0'
-            RUN_TESTS = true
-            DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
-            BUILD_CONTAINER = true
-            break
+            throw new Exception('unknown trigger job')
     }
     NODE = env.BUILD_NODE
 }

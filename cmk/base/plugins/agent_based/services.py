@@ -4,7 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import Any, Dict, Generator, List, Mapping, NamedTuple
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -71,44 +82,44 @@ register.agent_section(
 )
 
 
-def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -> DiscoveryResult:
-    # Handle single entries (type str)
-    def add_matching_services(service: WinService, entry):
-        # New wato rule handling
-        svc, state, mode = entry
-        # First match name or description (optional since rule based config option available)
-        if svc:
-            if not svc.startswith("~") and not _matches_item(service, svc):
-                return
+def _extract_wato_compatible_rules(
+    params: Sequence[Mapping],
+) -> Iterable[Tuple[Optional[str], Optional[str], Optional[str]]]:
 
-            r = regex(svc[1:])
-            if not r.match(service.name) and not r.match(service.description):
-                return
+    # If no rule is set by user, *no* windows services should be discovered.
+    # Skip the default settings which are the last element of the list:
+    for rule in params[:-1]:
+        state = rule.get("state", None)
+        start_mode = rule.get("start_mode", None)
+        for pattern in rule.get("services") or [None]:
+            yield (None if pattern is None else f"~{pattern}", state, start_mode)
 
-        if (state and state != service.state) or (mode and mode != service.start_type):
+
+def _add_matching_services(service: WinService, entry) -> DiscoveryResult:
+    # New wato rule handling
+    svc, state, mode = entry
+    # First match name or description (optional since rule based config option available)
+    if svc:
+        if not svc.startswith("~") and not _matches_item(service, svc):
             return
 
-        yield Service(item=service.name)
+        r = regex(svc[1:])
+        if not r.match(service.name) and not r.match(service.description):
+            return
 
+    if (state and state != service.state) or (mode and mode != service.start_type):
+        return
+
+    yield Service(item=service.name)
+
+
+def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -> DiscoveryResult:
     # Extract the WATO compatible rules for the current host
-    rules = []
-
-    # In case no rule is set by user, *no* windows services should be discovered.
-    # Therefore always skip the default settings which are the last element of the list.
-    for value in params[:-1]:
-        # Now extract the list of service regexes
-        svcs = value.get("services", [])
-        service_state = value.get("state", None)
-        start_mode = value.get("start_mode", None)
-        if svcs:
-            for svc in svcs:
-                rules.append(("~" + svc, service_state, start_mode))
-        else:
-            rules.append((None, service_state, start_mode))
+    rules = list(_extract_wato_compatible_rules(params))
 
     for service in section:
         for rule in rules:
-            yield from add_matching_services(service, rule)
+            yield from _add_matching_services(service, rule)
 
 
 def check_windows_services_single(

@@ -21361,6 +21361,22 @@ msgstr ""
 "cambiamento in questa regola richiede una riscoperta dei servizi."
 
 msgid ""
+"Here you can select more metrics for InfluxDB. We will save this metrics as "
+"_fields in InfluxDB."
+msgstr ""
+
+msgid ""
+"Here you can select the different tags and labels for InfluxDB. We will save "
+"these values as tags in InfluxDB."
+msgstr ""
+
+msgid ""
+"Here you can select which metrics should be send to InfluxDB. You need to "
+"select at least one entry. Otherwise, Checkmk will not send anything to "
+"InfluxDB."
+msgstr ""
+
+msgid ""
 "Here you can set a custom label for new issues. If not set, 'monitoring' "
 "will be used."
 msgstr ""
@@ -36685,9 +36701,6 @@ msgstr "Numeri di porta"
 
 msgid "Port of Kubernetes' checkmk-external service"
 msgstr ""
-
-msgid "Port specification"
-msgstr "Specifica della porta"
 
 msgid "Port types to include in usage statistics"
 msgstr "Tipi di porta da includere nelle statistiche di utilizzo"
@@ -64156,9 +64169,6 @@ msgstr "pkts/s"
 msgid "port name"
 msgstr "nome della porta"
 
-msgid "port specification"
-msgstr "specifica del porto"
-
 msgid "portFault"
 msgstr "portFault"
 
@@ -64704,6 +64714,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Port specification"
+#~ msgstr "Specifica della porta"
+
+#~ msgid "port specification"
+#~ msgstr "specifica del porto"
 
 #~ msgid "Notification Spooler insecure messages"
 #~ msgstr "Messaggi insicuri dello spooler di notifica"

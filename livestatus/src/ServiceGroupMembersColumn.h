@@ -17,10 +17,8 @@
 #include "ListFilter.h"  // IWYU pragma: keep
 #include "ListLambdaColumn.h"
 #include "Row.h"
-#include "opids.h"
-#ifndef CMC
 #include "contact_fwd.h"
-#endif
+#include "opids.h"
 enum class ServiceState;
 class Logger;
 class ListRenderer;

@@ -11,7 +11,8 @@ def build(Map args) {
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
             upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
-            upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERSION, "${WORKSPACE}/packages/${CMK_VERSION}")
+            def IMAGE_VERSION = args.VERSION == "git" ? versioning.get_date() : CMK_VERSION
+            upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${WORKSPACE}/packages/${IMAGE_VERSION}")
 
             // Cleanup test results directory before starting the test to prevent previous
             // runs somehow affecting the current run.

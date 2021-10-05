@@ -92,16 +92,17 @@ def _extract_wato_compatible_rules(
         state = rule.get("state", None)
         start_mode = rule.get("start_mode", None)
         for pattern in rule.get("services") or [None]:
-            yield (None if pattern is None else f"~{pattern}", state, start_mode)
+            yield (pattern, state, start_mode)
 
 
 def _add_matching_services(service: WinService, entry) -> DiscoveryResult:
     # New wato rule handling
     svc, state, mode = entry
-    # First match name or description (optional since rule based config option available)
+
     if svc:
-        r = regex(svc[1:])
-        if not r.match(service.name) and not r.match(service.description):
+        # First match name or description (optional since rule based config option available)
+        pattern = regex(svc)
+        if not (pattern.match(service.name) or pattern.match(service.description)):
             return
 
     if (state and state != service.state) or (mode and mode != service.start_type):

@@ -4,18 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from typing import (
-    Any,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 
 from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -84,15 +73,14 @@ register.agent_section(
 
 def _extract_wato_compatible_rules(
     params: Sequence[Mapping],
-) -> Iterable[Tuple[Optional[str], Optional[str], Optional[str]]]:
-
-    # If no rule is set by user, *no* windows services should be discovered.
-    # Skip the default settings which are the last element of the list:
-    for rule in params[:-1]:
-        state = rule.get("state", None)
-        start_mode = rule.get("start_mode", None)
-        for pattern in rule.get("services") or [None]:
-            yield (pattern, state, start_mode)
+) -> Sequence[Tuple[Optional[str], Optional[str], Optional[str]]]:
+    return [
+        (pattern, rule.get("state"), rule.get("start_mode"))
+        # If no rule is set by user, *no* windows services should be discovered.
+        # Skip the default settings which are the last element of the list:
+        for rule in params[:-1]
+        for pattern in rule.get("services") or [None]
+    ]
 
 
 def _add_matching_services(service: WinService, entry) -> DiscoveryResult:
@@ -113,7 +101,7 @@ def _add_matching_services(service: WinService, entry) -> DiscoveryResult:
 
 def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -> DiscoveryResult:
     # Extract the WATO compatible rules for the current host
-    rules = list(_extract_wato_compatible_rules(params))
+    rules = _extract_wato_compatible_rules(params)
 
     for service in section:
         for rule in rules:

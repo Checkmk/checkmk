@@ -1185,6 +1185,10 @@ class LDAPUserConnector(UserConnector):
             else:
                 user = userdb.new_user_template(self.id())
                 mode_create = True
+
+            if cmk.is_managed_edition():
+                user["customer"] = self._config.get("customer", managed.default_customer_id())
+
             return mode_create, user
 
         # Remove users which are controlled by this connector but can not be found in

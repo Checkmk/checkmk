@@ -1,0 +1,17 @@
+Title: Fix LDAP synchronisation of customer attribute
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: fix
+Compatible: incomp
+Edition: cme
+State: unknown
+Version: 1.6.0p28
+Date: 1633446646
+
+The customer attribute of users synchronized by a LDAP connection were always
+set to the sites default customer. Now all users will get the customer of the
+LDAP connection they are synchronized with.
+
+Please keep in mind that there could be changes on the next synchronization.
+

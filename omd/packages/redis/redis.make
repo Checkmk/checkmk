@@ -1,5 +1,5 @@
 REDIS := redis
-REDIS_VERS := 6.2-rc1
+REDIS_VERS := 6.2.6
 REDIS_DIR := $(REDIS)-$(REDIS_VERS)
 # Increase this to enforce a recreation of the build cache
 REDIS_BUILD_ID := 1

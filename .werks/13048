@@ -1,0 +1,16 @@
+Title: RESTAPI: evaluate accept header
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1633434450
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p13
+
+In previous version the accept header of the HTTP-request was completely
+ignored.
+
+With this werk the accept header can still be omitted, but if it is set to a
+value that can not be satisfied by the REST-API it will return an error with an
+406 status code.

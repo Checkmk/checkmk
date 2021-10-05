@@ -100,9 +100,6 @@ def _add_matching_services(service: WinService, entry) -> DiscoveryResult:
     svc, state, mode = entry
     # First match name or description (optional since rule based config option available)
     if svc:
-        if not svc.startswith("~") and not _matches_item(service, svc):
-            return
-
         r = regex(svc[1:])
         if not r.match(service.name) and not r.match(service.description):
             return

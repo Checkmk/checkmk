@@ -44,10 +44,8 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     # a rule for the node:
     monkeypatch.setattr(
         config,
-        "_update_with_configured_check_parameters",
-        lambda host, plugin, item, params, configured_params: {"levels_for_node": (1, 2), **params}
-        if host == node
-        else params,
+        "_get_configured_parameters",
+        lambda host, plugin, item: {"levels_for_node": (1, 2)} if host == node else {},
     )
 
     clustered_service = check_table.get_check_table(cluster)[service_id]

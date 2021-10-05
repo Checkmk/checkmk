@@ -2263,9 +2263,7 @@ def compute_check_parameters(
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(host, plugin, item)
 
-    return _update_with_configured_check_parameters(
-        host, plugin, item, params, configured_parameters
-    )
+    return _update_with_configured_check_parameters(params, configured_parameters)
 
 
 def _update_with_default_check_parameters(
@@ -2298,9 +2296,6 @@ def _update_with_default_check_parameters(
 
 
 def _update_with_configured_check_parameters(
-    host: HostName,
-    plugin: CheckPlugin,
-    item: Item,
     params: LegacyCheckParameters,
     configured_parameters: Sequence[LegacyCheckParameters],
 ) -> LegacyCheckParameters:

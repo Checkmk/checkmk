@@ -72,7 +72,7 @@ register.agent_section(
 
 
 def _extract_wato_compatible_rules(
-    params: Sequence[Mapping],
+    params: Sequence[Mapping[str, Any]],
 ) -> Sequence[Tuple[Optional[str], Optional[str], Optional[str]]]:
     return [
         (pattern, rule.get("state"), rule.get("start_mode"))
@@ -83,14 +83,16 @@ def _extract_wato_compatible_rules(
     ]
 
 
-def _add_matching_services(service: WinService, entry) -> DiscoveryResult:
-    # New wato rule handling
-    svc, state, mode = entry
-
-    if svc:
+def _add_matching_services(
+    service: WinService,
+    pattern: Optional[str],
+    state: Optional[str],
+    mode: Optional[str],
+) -> DiscoveryResult:
+    if pattern:
         # First match name or description (optional since rule based config option available)
-        pattern = regex(svc)
-        if not (pattern.match(service.name) or pattern.match(service.description)):
+        expr = regex(pattern)
+        if not (expr.match(service.name) or expr.match(service.description)):
             return
 
     if (state and state != service.state) or (mode and mode != service.start_type):
@@ -99,13 +101,15 @@ def _add_matching_services(service: WinService, entry) -> DiscoveryResult:
     yield Service(item=service.name)
 
 
-def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -> DiscoveryResult:
+def discovery_windows_services(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
     # Extract the WATO compatible rules for the current host
     rules = _extract_wato_compatible_rules(params)
 
     for service in section:
         for rule in rules:
-            yield from _add_matching_services(service, rule)
+            yield from _add_matching_services(service, *rule)
 
 
 def check_windows_services_single(

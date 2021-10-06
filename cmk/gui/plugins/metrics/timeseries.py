@@ -7,7 +7,7 @@
 import functools
 import operator
 from itertools import chain
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Sequence, Tuple
 
 import cmk.utils.version as cmk_version
 from cmk.utils.prediction import TimeSeries
@@ -15,7 +15,14 @@ from cmk.utils.prediction import TimeSeries
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import fade_color, parse_color, render_color
+from cmk.gui.plugins.metrics.utils import (
+    ExpressionParams,
+    fade_color,
+    parse_color,
+    render_color,
+    RRDData,
+    time_series_expression_registry,
+)
 
 if cmk_version.is_raw_edition():
 
@@ -54,7 +61,7 @@ else:
 #   '----------------------------------------------------------------------'
 
 
-def compute_graph_curves(metrics, rrd_data):
+def compute_graph_curves(metrics, rrd_data: RRDData):
     curves = []
     for metric_definition in metrics:
         expression = metric_definition["expression"]
@@ -89,50 +96,64 @@ def compute_graph_curves(metrics, rrd_data):
     return curves
 
 
-def evaluate_time_series_expression(expression, rrd_data) -> List[TimeSeries]:
+def evaluate_time_series_expression(expression, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    expression_func = time_series_expression_registry[expression[0]]
+    return expression_func(expression[1:], rrd_data)
+
+
+@time_series_expression_registry.register_expression("operator")
+def expression_operator(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    operator_id, operands = parameters
+    operands_evaluated = list(
+        chain.from_iterable(evaluate_time_series_expression(a, rrd_data) for a in operands)
+    )
+    if result := time_series_math(operator_id, operands_evaluated):
+        return [result]
+    return []
+
+
+@time_series_expression_registry.register_expression("transformation")
+def expression_transformation(
+    parameters: ExpressionParams, rrd_data: RRDData
+) -> Sequence[TimeSeries]:
+    (transform, conf), operands = parameters
+    operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
+    return evaluate_timeseries_transformation(transform, conf, operands_evaluated)
+
+
+@time_series_expression_registry.register_expression("rrd")
+def expression_rrd(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    key = (parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5])
+    if key in rrd_data:
+        return [rrd_data[key]]
+    num_points, twindow = _derive_num_points_twindow(rrd_data)
+    return [TimeSeries([None] * num_points, twindow)]
+
+
+@time_series_expression_registry.register_expression("constant")
+def expression_constant(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    num_points, twindow = _derive_num_points_twindow(rrd_data)
+    return [TimeSeries([parameters[0]] * num_points, twindow)]
+
+
+@time_series_expression_registry.register_expression("combined")
+def expression_combined(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    metrics = resolve_combined_single_metric_spec(parameters[0])
+    curves = []
+    for m in metrics:
+        for curve in evaluate_time_series_expression(m["expression"], rrd_data):
+            curve.metadata = {k: m[k] for k in m if k in ["line_type", "title"]}
+            curves.append(curve)
+
+    return curves
+
+
+def _derive_num_points_twindow(rrd_data: RRDData) -> Tuple[int, Tuple[int, int, int]]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
-        num_points = len(sample_data)
-        twindow = sample_data.twindow
-    else:
-        # no data, default clean graph, use for pure scalars on custom graphs
-        num_points = 1
-        twindow = (0, 60, 60)
-
-    if expression[0] == "operator":
-        operator_id, operands = expression[1:]
-        operands_evaluated = list(
-            chain.from_iterable(evaluate_time_series_expression(a, rrd_data) for a in operands)
-        )
-        if result := time_series_math(operator_id, operands_evaluated):
-            return [result]
-        return []
-
-    if expression[0] == "transformation":
-        (transform, conf), operands = expression[1:]
-        operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
-        return evaluate_timeseries_transformation(transform, conf, operands_evaluated)
-
-    if expression[0] == "rrd":
-        key = tuple(expression[1:])
-        if key in rrd_data:
-            return [rrd_data[key]]
-        return [TimeSeries([None] * num_points, twindow)]
-
-    if expression[0] == "constant":
-        return [TimeSeries([expression[1]] * num_points, twindow)]
-
-    if expression[0] == "combined":
-        metrics = resolve_combined_single_metric_spec(expression[1])
-        curves = []
-        for m in metrics:
-            for curve in evaluate_time_series_expression(m["expression"], rrd_data):
-                curve.metadata = {k: m[k] for k in m if k in ["line_type", "title"]}
-                curves.append(curve)
-
-        return curves
-
-    raise NotImplementedError()
+        return len(sample_data), sample_data.twindow
+    # no data, default clean graph, use for pure scalars on custom graphs
+    return 1, (0, 60, 60)
 
 
 def time_series_math(

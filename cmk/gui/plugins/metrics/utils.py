@@ -22,6 +22,7 @@ from typing import (
     Mapping,
     Optional,
     overload,
+    Sequence,
     Set,
     Tuple,
     TypedDict,
@@ -36,7 +37,8 @@ import livestatus
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
-from cmk.utils.prediction import livestatus_lql
+from cmk.utils.plugin_registry import Registry
+from cmk.utils.prediction import livestatus_lql, TimeSeries
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
 from cmk.utils.type_defs import ServiceName
@@ -70,6 +72,7 @@ TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 GraphTemplate = Dict[str, Any]
 GraphRecipe = Dict[str, Any]
+RRDData = Dict[Tuple[str, str, str, str, str, str], TimeSeries]
 
 
 class CheckMetricEntry(TypedDict, total=False):
@@ -721,6 +724,30 @@ def _evaluate_literal(
 
     return value, unit, color
 
+
+ExpressionParams = Sequence[Any]
+ExpressionFunc = Callable[[ExpressionParams, RRDData], Sequence[TimeSeries]]
+
+
+class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
+    def plugin_name(self, instance):
+        return instance._ident
+
+    def register_expression(self, ident: str) -> Callable[[ExpressionFunc], ExpressionFunc]:
+        def wrap(plugin_func: ExpressionFunc) -> ExpressionFunc:
+            if not callable(plugin_func):
+                raise TypeError()
+
+            # We define the attribute here. for the `plugin_name` method.
+            plugin_func._ident = ident  # type: ignore[attr-defined]
+
+            self.register(plugin_func)
+            return plugin_func
+
+        return wrap
+
+
+time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 # .
 #   .--Graphs--------------------------------------------------------------.

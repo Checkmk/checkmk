@@ -390,7 +390,12 @@ def _valuespec_datasource_programs():
             "via SSH."
         )
         + monitoring_macro_help()
-        + _('This option can only be used with the permission "Can add or modify executables".'),
+        + _('This option can only be used with the permission "Can add or modify executables".')
+        + _(
+            "<br> HINT: The individual program is called from the current working directory. "
+            "You should therefore specify absolute path names in scripts (by using environment variables like OMD_SITE) "
+            "to make the individual program call run correctly in all execution contexts (UI and console)."
+        ),
         label=_("Command line to execute"),
         empty_text=_("Access Checkmk Agent via TCP"),
         size=80,

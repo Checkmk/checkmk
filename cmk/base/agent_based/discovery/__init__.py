@@ -1289,8 +1289,16 @@ def _check_preview_table_row(
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
-    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
-    params = _preview_params(host_config.hostname, service, plugin, check_source)
+    preview_params = (
+        config.compute_check_parameters(
+            host_config.hostname,
+            service.check_plugin_name,
+            service.item,
+            service.parameters,
+        )
+        if isinstance(service, AutocheckService)
+        else service.parameters
+    )
 
     if check_source in {"active", "custom"}:
         exitcode = None
@@ -1298,6 +1306,7 @@ def _check_preview_table_row(
         ruleset_name: Optional[RulesetName] = None
     else:
 
+        plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
         ruleset_name = (
             str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
         )
@@ -1308,7 +1317,7 @@ def _check_preview_table_row(
             ip_address,
             service,
             plugin,
-            params,
+            preview_params,
             value_store_manager=value_store_manager,
             persist_value_store_changes=False,  # never during discovery
         ).result
@@ -1325,7 +1334,7 @@ def _check_preview_table_row(
         ruleset_name,
         service.item,
         _wrap_timespecific_for_preview(service.parameters),
-        _wrap_timespecific_for_preview(params),
+        _wrap_timespecific_for_preview(preview_params),
         service.description,
         exitcode,
         output,
@@ -1345,24 +1354,6 @@ def _preview_check_source(
     ):
         return "%s_ignored" % check_source
     return check_source
-
-
-def _preview_params(
-    host_name: HostName,
-    service: Service,
-    plugin: Optional[checking_classes.CheckPlugin],
-    check_source: _ServiceOrigin,
-) -> Optional[LegacyCheckParameters]:
-
-    if check_source in {"active", "manual", "custom"}:
-        return service.parameters
-
-    return config.compute_check_parameters(
-        host_name,
-        service.check_plugin_name,
-        service.item,
-        service.parameters,
-    )
 
 
 def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheckParameters:

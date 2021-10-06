@@ -326,7 +326,7 @@ class SetFolderPathAbstract:
     def set_current_path(self, current_path: Optional[str]) -> None:
         self._current_path = current_path
 
-    def _set_folder_paths(self, new_hosts: List[str]) -> None:
+    def _set_folder_paths(self, new_hosts: Iterable[str]) -> None:
         if self._current_path is None:
             return
         for hostname in strip_tags(list(new_hosts)):
@@ -338,6 +338,11 @@ class SetFolderPathList(SetFolderPathAbstract, list):
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         return super().__iadd__(new_hosts)
+
+    # Extend
+    def extend(self, new_hosts: Iterable[Any]) -> None:
+        self._set_folder_paths(new_hosts)
+        super().extend(new_hosts)
 
     # Probably unused
     def __add__(self, new_hosts: Iterable[Any]) -> "SetFolderPathList":

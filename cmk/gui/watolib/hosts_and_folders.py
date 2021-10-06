@@ -382,7 +382,13 @@ class BaseFolder:
     def host_names(self):
         return self.hosts().keys()
 
-    def host(self, host_name: str) -> CREHost:
+    def load_host(self, host_name: str) -> CREHost:
+        try:
+            return self.hosts()[host_name]
+        except KeyError:
+            raise MKUserError(None, f"The host {host_name} could not be found.")
+
+    def host(self, host_name: str) -> Optional[CREHost]:
         return self.hosts().get(host_name)
 
     def has_host(self, host_name):
@@ -1471,7 +1477,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
 
     @staticmethod
-    def find_host_by_lookup_cache(host_name):
+    def find_host_by_lookup_cache(host_name) -> Optional["CREHost"]:
         """This function tries to create a host object using its name from a lookup cache.
         If this does not work (cache miss), the regular search for the host is started.
         If the host was found by the regular search, the lookup cache is updated accordingly."""
@@ -2065,7 +2071,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # 2. Actual modification
         for host_name in host_names:
-            host = self.host(host_name)
+            host = self.load_host(host_name)
 
             affected_sites = [host.site_id()]
 
@@ -2375,7 +2381,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     def _group_hostnames_by_folder(self, host_names):
         by_folder: Dict[str, List[CREHost]] = {}
         for host_name in host_names:
-            host = self.host(host_name)
+            host = self.load_host(host_name)
             by_folder.setdefault(host.folder().path(), []).append(host)
 
         return [
@@ -2429,15 +2435,22 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     @staticmethod
-    def host(host_name):
+    def load_host(host_name: str) -> "CREHost":
+        host = Host.host(host_name)
+        if host is None:
+            raise MKUserError(None, "Host could not be found.", status=404)
+        return host
+
+    @staticmethod
+    def host(host_name) -> Optional["CREHost"]:
         return Folder.find_host_by_lookup_cache(host_name)
 
     @staticmethod
-    def all():
+    def all() -> Dict[str, "CREHost"]:
         return Folder.root_folder().all_hosts_recursively()
 
     @staticmethod
-    def host_exists(host_name):
+    def host_exists(host_name) -> bool:
         return Host.host(host_name) is not None
 
     # .--------------------------------------------------------------------.
@@ -3062,7 +3075,7 @@ class CMEFolder(CREFolder):
         if target_customer_id != managed.default_customer_id():
             allowed_sites = managed.get_sites_of_customer(target_customer_id)
             for hostname in host_names:
-                host = self.host(hostname)
+                host = self.load_host(hostname)
                 host_site = host.attributes().get("site")
                 if not host_site:
                     continue

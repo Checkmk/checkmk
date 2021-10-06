@@ -77,7 +77,7 @@ def create_host(params):
     # is_cluster is defined as "cluster_hosts is not None"
     body["folder"].create_hosts([(host_name, body["attributes"], None)])
 
-    host = watolib.Host.host(host_name)
+    host = watolib.Host.load_host(host_name)
     return _serve_host(host, False)
 
 
@@ -99,7 +99,7 @@ def create_cluster_host(params):
 
     body["folder"].create_hosts([(host_name, body["attributes"], body["nodes"])])
 
-    host = watolib.Host.host(host_name)
+    host = watolib.Host.load_host(host_name)
     return _serve_host(host, False)
 
 
@@ -140,7 +140,7 @@ def bulk_create_hosts(params):
             detail=f"Validated hosts were saved. The configurations for following hosts are faulty and "
             f"were skipped: {' ,'.join(failed_hosts)}.",
         )
-    hosts = [watolib.Host.host(entry["host_name"]) for entry in entries]
+    hosts = [watolib.Host.load_host(entry["host_name"]) for entry in entries]
     return host_collection(hosts)
 
 
@@ -186,7 +186,7 @@ def update_nodes(params):
     host_name = params["host_name"]
     body = params["body"]
     nodes = body["nodes"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
     _require_host_etag(host)
     host.edit(host.attributes(), nodes)
 
@@ -217,7 +217,7 @@ def update_host(params):
     update_attributes = body["update_attributes"]
     remove_attributes = body["remove_attributes"]
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.host(host_name)
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
     _require_host_etag(host)
 
     if new_attributes:
@@ -269,7 +269,7 @@ def bulk_update_hosts(params):
         update_attributes = update_detail["update_attributes"]
         remove_attributes = update_detail["remove_attributes"]
         check_hostname(host_name)
-        host: watolib.CREHost = watolib.Host.host(host_name)
+        host: watolib.CREHost = watolib.Host.load_host(host_name)
         if new_attributes:
             host.edit(new_attributes, None)
 
@@ -323,10 +323,7 @@ def rename_host(params):
             detail="Please activate all pending changes before executing a host rename process",
         )
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    if host is None:
-        return _missing_host_problem(host_name)
-
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
     new_name = params["body"]["new_name"]
     _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
     if auth_problems:
@@ -350,10 +347,8 @@ def rename_host(params):
 def move(params):
     """Move a host to another folder"""
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    if host is None:
-        return _missing_host_problem(host_name)
-
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    _require_host_etag(host)
     current_folder = host.folder()
     target_folder: watolib.CREFolder = params["body"]["target_folder"]
     if target_folder is current_folder:
@@ -386,7 +381,7 @@ def delete(params):
     host_name = params["host_name"]
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.host(host_name)
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
     host.folder().delete_hosts([host.name()])
     return Response(status=204)
 
@@ -402,7 +397,7 @@ def bulk_delete(params):
     """Bulk delete hosts"""
     body = params["body"]
     for host_name in body["entries"]:
-        host = watolib.Host.host(host_name)
+        host = watolib.Host.load_host(host_name)
         host.folder().delete_hosts([host.name()])
     return Response(status=204)
 
@@ -432,13 +427,7 @@ def bulk_delete(params):
 def show_host(params):
     """Show a host"""
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    if host is None:
-        return problem(
-            404,
-            f'Host "{host_name}" is not known.',
-            "The host you asked for is not known. Please check for eventual misspellings.",
-        )
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
     return _serve_host(host, params["effective_attributes"])
 
 
@@ -473,14 +462,6 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
             ),
         ],
         extensions=extensions,
-    )
-
-
-def _missing_host_problem(host_name):
-    return problem(
-        404,
-        f'Host "{host_name}" is not known.',
-        "The host you asked for is not known. Please check for eventual misspellings.",
     )
 
 

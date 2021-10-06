@@ -914,8 +914,7 @@ class HostField(String):
             if not self._should_exist and host:
                 raise self.make_error("should_not_exist", host_name=value)
 
-        if self._should_be_cluster is not None:
-            host = watolib.Host.host(value)
+        if self._should_be_cluster is not None and (host := watolib.Host.host(value)) is not None:
             if self._should_be_cluster and not host.is_cluster():
                 raise self.make_error("should_be_cluster", host_name=value)
 

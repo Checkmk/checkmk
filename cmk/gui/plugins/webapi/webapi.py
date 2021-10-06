@@ -297,8 +297,7 @@ class APICallHosts(APICallCollection):
         cluster_nodes = request.get("nodes")
 
         check_hostname(hostname, should_exist=True)
-
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
 
         # Deprecated, but still supported
         # Nodes are now specified in an extra key
@@ -330,7 +329,7 @@ class APICallHosts(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
         host.need_permission("read")
         if bool(int(request.get("effective_attributes", "0"))):
             attributes = host.effective_attributes()
@@ -368,7 +367,7 @@ class APICallHosts(APICallCollection):
         hostname = request["hostname"]
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
         host.folder().delete_hosts([host.name()])
 
     def _delete_hosts(self, request):
@@ -1130,7 +1129,7 @@ class APICallOther(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
 
         host_attributes = host.effective_attributes()
 

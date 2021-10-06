@@ -80,9 +80,9 @@ host_attributes.update(
 """
     )
 
-    assert Folder.root_folder().host("ag").attribute("site") == "stable"
+    assert Folder.root_folder().load_host("ag").attribute("site") == "stable"
     update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"))
-    assert Folder.root_folder().host("ag").attribute("site") == "dingdong"
+    assert Folder.root_folder().load_host("ag").attribute("site") == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
     hosts_config = Folder.root_folder()._load_hosts_file()
@@ -128,8 +128,8 @@ host_attributes.update(
     )
 
     assert Folder.root_folder().attribute("site") is None
-    assert Folder.root_folder().host("ag").attribute("site") is None
-    assert Folder.root_folder().host("ag").site_id() == "NO_SITE"
+    assert Folder.root_folder().load_host("ag").attribute("site") is None
+    assert Folder.root_folder().load_host("ag").site_id() == "NO_SITE"
 
     # Simulate changed omd_site that we would have in application code in the moment the rename
     # action is executed.
@@ -141,9 +141,9 @@ host_attributes.update(
     Folder.invalidate_caches()
 
     assert Folder.root_folder().attribute("site") is None
-    assert Folder.root_folder().host("ag").attribute("site") is None
-    assert Folder.root_folder().host("ag").site_id() == "dingdong"
-    assert Folder.root_folder().host("ag").tag_groups()["site"] == "dingdong"
+    assert Folder.root_folder().load_host("ag").attribute("site") is None
+    assert Folder.root_folder().load_host("ag").site_id() == "dingdong"
+    assert Folder.root_folder().load_host("ag").tag_groups()["site"] == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
     hosts_config = Folder.root_folder()._load_hosts_file()

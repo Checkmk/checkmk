@@ -98,7 +98,9 @@ class ModeDiscovery(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._host = watolib.Folder.current().host(request.get_ascii_input_mandatory("host"))
+        self._host = watolib.Folder.current().load_host(
+            html.request.get_ascii_input_mandatory("host")
+        )
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 

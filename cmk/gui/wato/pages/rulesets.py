@@ -1072,6 +1072,8 @@ class ModeEditRuleset(WatoMode):
             return
 
         host = watolib.Host.host(self._hostname)
+        if host is None:
+            return
         site_id = host.site_id()
 
         if site_id not in remote_sites:
@@ -2393,8 +2395,10 @@ class RuleConditionRenderer:
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
-                    if folder_hint is not None:
-                        host = watolib.Host.host(host_spec)
+                    if (
+                        folder_hint is not None
+                        and (host := watolib.Host.host(host_spec)) is not None
+                    ):
                         text_list.append(html.render_b(html.render_a(host_spec, host.edit_url())))
                     else:
                         text_list.append(html.render_b(host_spec))
@@ -2415,8 +2419,10 @@ class RuleConditionRenderer:
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
                     folder_hint = folder_lookup_cache.get(host_spec)
-                    if folder_hint is not None:
-                        host = watolib.Host.host(host_spec)
+                    if (
+                        folder_hint is not None
+                        and (host := watolib.Host.host(host_spec)) is not None
+                    ):
                         text_list.append(
                             escape_html_permissive(expression + " ")
                             + html.render_b(html.render_a(host_spec, host.edit_url()))

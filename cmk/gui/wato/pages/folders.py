@@ -47,7 +47,7 @@ from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import init_rowselect, table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax
@@ -306,7 +306,7 @@ class ModeFolder(WatoMode):
             if search_text and (search_text.lower() not in hostname.lower()):
                 continue
 
-            host = self._folder.host(hostname)
+            host = self._folder.load_host(hostname)
             effective = host.effective_attributes()
 
             if effective.get("imported_folder"):
@@ -852,7 +852,7 @@ class ModeFolder(WatoMode):
     def _show_host_row(
         self, rendered_hosts, table, hostname, colspan, host_errors, contact_group_names
     ):
-        host = self._folder.host(hostname)
+        host = self._folder.load_host(hostname)
         rendered_hosts.append(hostname)
         effective = host.effective_attributes()
 
@@ -1048,7 +1048,7 @@ class ModeFolder(WatoMode):
         # Create groups of hosts with the same target folder
         target_folder_names: Dict[str, List[HostName]] = {}
         for host_name in host_names_to_move:
-            host = self._folder.host(host_name)
+            host = self._folder.load_host(host_name)
             imported_folder_name = host.attribute("imported_folder")
             if imported_folder_name is None:
                 continue
@@ -1134,17 +1134,18 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         return _("Move this folder to:")
 
     def _get_choices(self):
-        choices = [
+        choices: Choices = [
             ("@", _("(select target folder)")),
         ]
 
-        if self._what == "host":
-            obj = watolib.Host.host(self._ident)
-            choices += obj.folder().choices_for_moving_host()
+        if self._what == "host" and self._ident is not None:
+            host = watolib.Host.host(self._ident)
+            if host is not None:
+                choices += host.folder().choices_for_moving_host()
 
-        elif self._what == "folder":
-            obj = watolib.Folder.folder(self._ident)
-            choices += obj.choices_for_moving_folder()
+        elif self._what == "folder" and self._ident is not None:
+            folder = watolib.Folder.folder(self._ident)
+            choices += folder.choices_for_moving_folder()
 
         else:
             raise NotImplementedError()

@@ -24,30 +24,6 @@ from cmk.gui.plugins.metrics.utils import (
     time_series_expression_registry,
 )
 
-if cmk_version.is_raw_edition():
-
-    def evaluate_timeseries_transformation(transform, conf, operands_evaluated):
-        raise MKGeneralException(
-            _(
-                "Metric transformations and combinations like Forecasts calculations, "
-                "aggregations and filtering are only available with the "
-                "Checkmk Enterprise Editions"
-            )
-        )
-
-    def resolve_combined_single_metric_spec(expression):
-        return evaluate_timeseries_transformation(None, None, None)
-
-
-else:
-    # Suppression is needed to silence pylint in CRE environment
-    from cmk.gui.cee.plugins.metrics.graphs import (  # type: ignore[no-redef,import] # pylint: disable=no-name-in-module
-        resolve_combined_single_metric_spec,
-    )
-    from cmk.gui.cee.plugins.metrics.timeseries import (  # type: ignore[no-redef,import] # pylint: disable=no-name-in-module
-        evaluate_timeseries_transformation,
-    )
-
 # .
 #   .--Curves--------------------------------------------------------------.
 #   |                    ____                                              |
@@ -97,8 +73,23 @@ def compute_graph_curves(metrics, rrd_data: RRDData):
 
 
 def evaluate_time_series_expression(expression, rrd_data: RRDData) -> Sequence[TimeSeries]:
-    expression_func = time_series_expression_registry[expression[0]]
-    return expression_func(expression[1:], rrd_data)
+    ident, parameters = expression[0], expression[1:]
+
+    try:
+        expression_func = time_series_expression_registry[ident]
+    except KeyError:
+        if cmk_version.is_raw_edition() and ident in ["combined", "transformation"]:
+            raise MKGeneralException(
+                _(
+                    "Metric transformations and combinations like Forecasts calculations, "
+                    "aggregations and filtering are only available with the "
+                    "Checkmk Enterprise Editions"
+                )
+            )
+
+        raise MKGeneralException("Unrecognized expressions type %s" % ident)
+
+    return expression_func(parameters, rrd_data)
 
 
 @time_series_expression_registry.register_expression("operator")
@@ -110,15 +101,6 @@ def expression_operator(parameters: ExpressionParams, rrd_data: RRDData) -> Sequ
     if result := time_series_math(operator_id, operands_evaluated):
         return [result]
     return []
-
-
-@time_series_expression_registry.register_expression("transformation")
-def expression_transformation(
-    parameters: ExpressionParams, rrd_data: RRDData
-) -> Sequence[TimeSeries]:
-    (transform, conf), operands = parameters
-    operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
-    return evaluate_timeseries_transformation(transform, conf, operands_evaluated)
 
 
 @time_series_expression_registry.register_expression("rrd")
@@ -134,18 +116,6 @@ def expression_rrd(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[
 def expression_constant(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
     num_points, twindow = _derive_num_points_twindow(rrd_data)
     return [TimeSeries([parameters[0]] * num_points, twindow)]
-
-
-@time_series_expression_registry.register_expression("combined")
-def expression_combined(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
-    metrics = resolve_combined_single_metric_spec(parameters[0])
-    curves = []
-    for m in metrics:
-        for curve in evaluate_time_series_expression(m["expression"], rrd_data):
-            curve.metadata = {k: m[k] for k in m if k in ["line_type", "title"]}
-            curves.append(curve)
-
-    return curves
 
 
 def _derive_num_points_twindow(rrd_data: RRDData) -> Tuple[int, Tuple[int, int, int]]:

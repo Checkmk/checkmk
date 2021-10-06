@@ -40,7 +40,7 @@ class APICallCollectionRegistry(cmk.utils.plugin_registry.Registry[Type[APICallC
 api_call_collection_registry = APICallCollectionRegistry()
 
 #.
-#   .--API Helpers-------------------------------------------------------------.
+#   .--API Helpers---------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
 #   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
@@ -61,11 +61,10 @@ def check_hostname(hostname, should_exist=True):
         if not host:
             raise MKUserError(None, _("No such host"))
     else:
-        if watolib.Host.host_exists(hostname):
+        if (host := watolib.Host.host(hostname)) is not None:
             raise MKUserError(
                 None,
-                _("Host %s already exists in the folder %s") %
-                (hostname, watolib.Host.host(hostname).folder().path()))
+                _("Host %s already exists in the folder %s") % (hostname, host.folder().path()))
 
 
 def validate_config_hash(hash_value, entity):

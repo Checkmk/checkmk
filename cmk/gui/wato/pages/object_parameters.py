@@ -60,9 +60,10 @@ class ModeObjectParameters(WatoMode):
 
     def _from_vars(self):
         self._hostname = html.request.get_ascii_input_mandatory("host")
-        self._host = watolib.Folder.current().host(self._hostname)
-        if self._host is None:
+        host = watolib.Folder.current().host(self._hostname)
+        if host is None:
             raise MKUserError("host", _('The given host does not exist.'))
+        self._host: watolib.CREHost = host
         self._host.need_permission("read")
 
         # TODO: Validate?

@@ -65,7 +65,7 @@ class ModeBulkEdit(WatoMode):
         changed_attributes = watolib.collect_attributes("bulk", new=False)
         host_names = get_hostnames_from_checkboxes()
         for host_name in host_names:
-            host = watolib.Folder.current().host(host_name)
+            host = watolib.Folder.current().load_host(host_name)
             host.update_attributes(changed_attributes)
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or

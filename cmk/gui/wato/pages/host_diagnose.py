@@ -75,7 +75,7 @@ class ModeDiagHost(WatoMode):
 
     def _from_vars(self):
         self._hostname = html.request.get_ascii_input_mandatory("host")
-        self._host = watolib.Folder.current().host(self._hostname)
+        self._host = watolib.Folder.current().load_host(self._hostname)
         self._host.need_permission("read")
 
         if self._host.is_cluster():

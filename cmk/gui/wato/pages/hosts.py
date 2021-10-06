@@ -133,10 +133,11 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
                     _("The node <b>%s</b> does not exist "
                       " (must be a host that is configured with WATO)") % cluster_node)
 
-            node_agent_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
-                "agent")
-            node_snmp_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
-                "snmp_ds")
+            cluster_host = watolib.Host.host(cluster_node)
+            assert cluster_host is not None  # for mypy
+
+            node_agent_ds_type = cluster_host.tag_groups().get("agent")
+            node_snmp_ds_type = cluster_host.tag_groups().get("snmp_ds")
 
             if node_agent_ds_type != cluster_agent_ds_type or \
                     node_snmp_ds_type != cluster_snmp_ds_type:
@@ -289,7 +290,7 @@ class ModeEditHost(ABCHostMode):
         folder = watolib.Folder.current()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        host = folder.host(hostname)
+        host = folder.load_host(hostname)
         host.need_permission("read")
         return host
 
@@ -340,8 +341,13 @@ class ModeEditHost(ABCHostMode):
 
         attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster",
                                                 new=False)
-        watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
-        self._host = folder.host(self._host.name())
+        host = watolib.Host.host(self._host.name())
+        if host is None:
+            flash(f"Host {self._host.name()} could not be found.")
+            return None
+
+        host.edit(attributes, self._get_cluster_nodes())
+        self._host = folder.load_host(self._host.name())
 
         if html.request.var("services"):
             return redirect(mode_url("inventory", folder=folder.path(), host=self._host.name()))
@@ -517,7 +523,7 @@ class CreateHostMode(ABCHostMode):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         if not config.user.may("wato.clone_hosts"):
             raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
-        host = watolib.Folder.current().host(clonename)
+        host = watolib.Folder.current().load_host(clonename)
         self._verify_host_type(host)
         return host
 
@@ -536,7 +542,7 @@ class CreateHostMode(ABCHostMode):
         if html.check_transaction():
             folder.create_hosts([(hostname, attributes, cluster_nodes)])
 
-        self._host = folder.host(hostname)
+        self._host = folder.load_host(hostname)
 
         inventory_url = watolib.folder_preserving_link([
             ("mode", "inventory"),

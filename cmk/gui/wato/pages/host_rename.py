@@ -389,7 +389,7 @@ class ModeRenameHost(WatoMode):
         if not config.user.may("wato.rename_hosts"):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
-        self._host = watolib.Folder.current().host(host_name)
+        self._host = watolib.Folder.current().load_host(host_name)
         self._host.need_permission("write")
 
     def title(self):

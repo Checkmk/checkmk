@@ -1,0 +1,13 @@
+Title: Remove ad hoc restrictions in the generic check helper protocol.
+Knowledge: doc
+Level: 3
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p28
+Date: 1633513774
+
+This enables, among other things, the use of very long command lines
+for active checks.

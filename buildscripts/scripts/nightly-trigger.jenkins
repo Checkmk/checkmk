@@ -14,6 +14,7 @@ withFolderProperties{
             RUN_TESTS = true
             DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
             BUILD_CONTAINER = true
+            BUILD_AMI_IMAGE = false
             break
         case 'trigger-cre':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
@@ -22,6 +23,7 @@ withFolderProperties{
             RUN_TESTS = true
             DEPLOY_TO_WEBSITE = false
             BUILD_CONTAINER = true
+            BUILD_AMI_IMAGE = false
             break
         case 'trigger-cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
@@ -30,6 +32,7 @@ withFolderProperties{
             RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
             DEPLOY_TO_WEBSITE = false
             BUILD_CONTAINER = false
+            BUILD_AMI_IMAGE = true
             break
         default:
             throw new Exception('unknown trigger job')
@@ -62,6 +65,15 @@ node: {
     if (BUILD_CONTAINER) {
         stage('Build CMK Container') {
             build(job: "${FOLDER_ID}/nightly_cmk_container",
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                ]
+            )
+        }
+    }
+    if (BUILD_AMI_IMAGE) {
+        stage('Build AMI Image') {
+            build(job: "${FOLDER_ID}/nightly_cmk_aws",
                 parameters: [
                     [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
                 ]

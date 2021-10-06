@@ -701,11 +701,15 @@ class SNMPCredentials(OneOfSchema):
 
 
 class IPMIParameters(BaseSchema):
+    cast_to_dict = True
+
     username = _fields.String(required=True)
     password = _fields.String(required=True)
 
 
 class MetaData(BaseSchema):
+    cast_to_dict = True
+
     created_at = fields.Timestamp(description="When has this object been created.",)
     updated_at = fields.Timestamp(description="When this object was last changed.",)
     created_by = fields.String(description="The user id under which this object has been created.",)
@@ -738,6 +742,8 @@ class HostAttributeManagementBoardField(_fields.String):
 
 
 class HostContactGroup(BaseSchema):
+    cast_to_dict = True
+
     groups = fields.List(
         fields.GroupField(
             group_type='contact',

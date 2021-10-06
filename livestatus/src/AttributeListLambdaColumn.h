@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "AttributeListAsIntColumn.h"
+#include "AttributeListColumnUtils.h"
 #include "ListColumn.h"
 
 // TODO(ml): This could likely be simplified with a dict column.
@@ -67,7 +68,7 @@ public:
         return getValue(row);
     }
     [[nodiscard]] std::vector<std::string> getValue(Row row) const {
-        return AttributeListAsIntColumn::decode(bitmask_col_.getValue(row));
+        return column::attribute_list::decode(bitmask_col_.getValue(row));
     }
 
 private:

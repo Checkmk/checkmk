@@ -17,7 +17,25 @@
 #include "AttributeListColumnUtils.h"
 #include "IntColumn.h"
 #include "IntFilter.h"
+#include "IntLambdaColumn.h"
 #include "ListColumn.h"
+
+template <class T, int32_t Default = 0>
+struct AttributeBitmaskLambdaColumn : IntColumn::Callback<T, Default> {
+    using IntColumn::Callback<T, Default>::Callback;
+    ~AttributeBitmaskLambdaColumn() override = default;
+
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string& value) const override {
+        return std::make_unique<IntFilter>(
+            kind, this->name(),
+            [this](Row row, const contact* auth_user) {
+                return this->getValue(row, auth_user);
+            },
+            relOp, column::attribute_list::refValueFor(value, this->logger()));
+    }
+};
 
 // TODO(ml): This could likely be simplified with a dict column.
 //
@@ -25,42 +43,6 @@
 //             - `TableContacts::GetCustomAttribute` and
 //             - `TableContacts::GetCustomAttributeElem`
 //           for an example of a dict column without pointer arithmetic.
-template <class T, int32_t Default = 0>
-class AttributeBitmaskLambdaColumn : public deprecated::IntColumn {
-public:
-    AttributeBitmaskLambdaColumn(const std::string& name,
-                                 const std::string& description,
-                                 const ColumnOffsets& offsets,
-                                 std::function<int(const T&)> f)
-        : deprecated::IntColumn{name, description, offsets}
-        , get_value_{std::move(f)} {}
-    ~AttributeBitmaskLambdaColumn() override = default;
-
-    [[nodiscard]] std::unique_ptr<Filter> createFilter(
-        Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
-        return std::make_unique<IntFilter>(
-            kind, name(),
-            [this](Row row, const contact* auth_user) {
-                return this->getValue(row, auth_user);
-            },
-            relOp, column::attribute_list::refValueFor(value, logger()));
-    }
-
-    std::int32_t getValue(Row row,
-                          const contact* /*auth_user*/) const override {
-        return getValue(row);
-    }
-
-    [[nodiscard]] std::int32_t getValue(Row row) const {
-        const T* data = columnData<T>(row);
-        return data == nullptr ? Default : get_value_(*data);
-    }
-
-private:
-    std::function<int(const T&)> get_value_;
-};
-
 template <class T>
 class AttributeListColumn2 : public deprecated::ListColumn {
 public:
@@ -76,13 +58,11 @@ public:
         const std::string& value) const override {
         return bitmask_col_.createFilter(kind, relOp, value);
     }
-    std::vector<std::string> getValue(
+    [[nodiscard]] std::vector<std::string> getValue(
         Row row, const contact* /*auth_user*/,
         std::chrono::seconds /*timezone_offset*/) const override {
-        return getValue(row);
-    }
-    [[nodiscard]] std::vector<std::string> getValue(Row row) const {
-        return column::attribute_list::decode(bitmask_col_.getValue(row));
+        return column::attribute_list::decode(
+            bitmask_col_.getValue(row, nullptr));
     }
 
 private:

@@ -291,7 +291,7 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
         (
             (3, 2, 0),
             {
-                "host": "mongodb://username:%2F%3F%21%2F@example.com",
+                "host": "mongodb://username:%2F%3F%21%2F@example.com:27017",
                 "ssl": True,
             },
         ),
@@ -305,6 +305,7 @@ def test_transform_config(pymongo_version, pymongo_config, mk_mongodb):
             self.tls_ca_file = None
             self.auth_mechanism = None
             self.auth_source = None
+            self.port = None
             self.host = "example.com"
             self.password = "/?!/"
             self.username = "username"

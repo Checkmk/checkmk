@@ -760,7 +760,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
     def read_from_filename(self, filename):
         LOGGER.debug("trying to read %r", filename)
         if not os.path.exists(filename):
-            LOGGER.warning("config file does not exist!")
+            LOGGER.warning("config file %s does not exist!", filename)
         else:
             with open(filename, "r") as cfg:
                 if PY2:
@@ -779,6 +779,11 @@ class MongoDBConfigParser(configparser.ConfigParser):
             return default
         return self.get(self.mongo_section, option)
 
+    def get_mongodb_int(self, option, *, default=None):
+        if not self.has_option(self.mongo_section, option):
+            return default
+        return self.getint(self.mongo_section, option)
+
 
 class Config:
     def __init__(self, config):
@@ -790,6 +795,7 @@ class Config:
         self.auth_source = config.get_mongodb_str("auth_source")
 
         self.host = config.get_mongodb_str("host")
+        self.port = config.get_mongodb_int("port")
         self.username = config.get_mongodb_str("username")
         self.password = config.get_mongodb_str("password")
 
@@ -818,6 +824,8 @@ class Config:
             pymongo_config["authSource"] = self.auth_source
         if self.host is not None:
             pymongo_config["host"] = self.host
+        if self.port is not None:
+            pymongo_config["port"] = self.port
 
         return pymongo_config
 
@@ -869,17 +877,16 @@ class PyMongoConfigTransformer:
         username = pymongo_config.pop("username", None)
         password = pymongo_config.pop("password", None)
         host = pymongo_config.pop("host", "localhost")
+        port = pymongo_config.pop("port", 27017)
         if username is not None:
             password_element = ""
             if password is not None:
                 password_element = ":{}".format(quote_plus(self._config.password))
-            uri = "mongodb://{}{}@{}".format(
-                quote_plus(self._config.username),
-                password_element,
-                host,
+            uri = "mongodb://{}{}@{}:{}".format(
+                quote_plus(self._config.username), password_element, host, port
             )
         else:
-            uri = "mongodb://{}".format(host)
+            uri = "mongodb://{}:{}".format(host, port)
         pymongo_config["host"] = uri
         return pymongo_config
 

@@ -85,6 +85,11 @@
             volume_type: gp2
             volume_size: "{{ item.value.disk_volume }}"
             delete_on_termination: true
+          - device_name: /dev/sdb
+            volume_type: gp2
+            volume_size: 5
+            delete_on_termination: false
+
         exact_count: "{{ item.value.count }}"
         vpc_subnet_id: "{{ item.value.vpc_subnet_id }}"
         count_tag:
@@ -137,6 +142,31 @@
   vars_files:
     - group_vars/vars.yml
   become: true
+  tasks:
+    - name: Format data partition with ext4
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/xvdb
+
+    - name: create directory /opt/omd/sites
+      ansible.builtin.file:
+        path: /opt/omd/sites
+        state: directory
+        mode: '0755'
+
+    - name: mount data partition
+      ansible.posix.mount:
+        path: /opt/omd/sites
+        src: /dev/xvdb
+        fstype: ext4
+        opts: defaults
+        state: mounted
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
   roles:
     - install-cmk
 
@@ -175,7 +205,7 @@
         path: /etc/ssh/sshd_config
         line: 'PermitRootLogin no'
 
-    - name: re
+    - name: restart ssh service
       service:
         name: ssh
         state: restarted

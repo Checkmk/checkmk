@@ -17,7 +17,7 @@ import time
 from contextlib import redirect_stderr, redirect_stdout
 from itertools import islice
 from pathlib import Path
-from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, cast, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -688,14 +688,16 @@ class AutomationAnalyseServices(Automation):
         host_config = config_cache.get_host_config(hostname)
 
         service_info = self._get_service_info(config_cache, host_config, servicedesc)
-        if service_info:
-            service_info.update(
-                {
-                    "labels": config_cache.labels_of_service(hostname, servicedesc),
-                    "label_sources": config_cache.label_sources_of_service(hostname, servicedesc),
-                }
-            )
-        return automation_results.AnalyseServiceResult(service_info)
+        if not service_info:
+            return automation_results.AnalyseServiceResult({})
+
+        return automation_results.AnalyseServiceResult(
+            {
+                **service_info,
+                "labels": config_cache.labels_of_service(hostname, servicedesc),
+                "label_sources": config_cache.label_sources_of_service(hostname, servicedesc),
+            }
+        )
 
     # Determine the type of the check, and how the parameters are being
     # constructed
@@ -703,7 +705,7 @@ class AutomationAnalyseServices(Automation):
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(
         self, config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
-    ) -> Dict:
+    ) -> Mapping[str, object]:
         hostname = host_config.hostname
 
         # We just consider types of checks that are managed via WATO.
@@ -729,22 +731,61 @@ class AutomationAnalyseServices(Automation):
                     "parameters": params,
                 }
 
+        # 2. Load all autochecks of the host in question and try to find
+        # our service there
+        if (
+            autocheck_service := self._get_service_info_from_autochecks(
+                config_cache, host_config, servicedesc
+            )
+        ) is not None:
+            return autocheck_service
+
+        # 3. Classical checks
+        for entry in host_config.custom_checks:
+            desc = entry["service_description"]
+            if desc == servicedesc:
+                result = {
+                    "origin": "classic",
+                }
+                if "command_line" in entry:  # Only active checks have a command line
+                    result["command_line"] = entry["command_line"]
+                return result
+
+        # 4. Active checks
+        with plugin_contexts.current_host(hostname):
+            for plugin_name, entries in host_config.active_checks:
+                for active_check_params in entries:
+                    description = config.active_check_service_description(
+                        hostname, plugin_name, active_check_params
+                    )
+                    if description == servicedesc:
+                        return {
+                            "origin": "active",
+                            "checktype": plugin_name,
+                            "parameters": active_check_params,
+                        }
+
+        return {}  # not found
+
+    @staticmethod
+    def _get_service_info_from_autochecks(
+        config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
+    ) -> Optional[Mapping[str, object]]:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
-        # differen information. Also:  check table forgets wether it's an *auto*check.
-        table = check_table.get_check_table(hostname)
-        # 2. Load all autochecks of the host in question and try to find
-        # our service there
+        # differen information. Also: check table forgets wether it's an *auto*check.
+        table = check_table.get_check_table(host_config.hostname)
         services = (
             [
                 service
                 for node in host_config.nodes or []
                 for service in config_cache.get_autochecks_of(node)
-                if hostname == config_cache.host_of_clustered_service(node, service.description)
+                if host_config.hostname
+                == config_cache.host_of_clustered_service(node, service.description)
             ]
             if host_config.is_cluster
-            else config_cache.get_autochecks_of(hostname)
+            else config_cache.get_autochecks_of(host_config.hostname)
         )
 
         for service in services:
@@ -783,32 +824,7 @@ class AutomationAnalyseServices(Automation):
                 "parameters": effective_parameters,
             }
 
-        # 3. Classical checks
-        for entry in host_config.custom_checks:
-            desc = entry["service_description"]
-            if desc == servicedesc:
-                result = {
-                    "origin": "classic",
-                }
-                if "command_line" in entry:  # Only active checks have a command line
-                    result["command_line"] = entry["command_line"]
-                return result
-
-        # 4. Active checks
-        with plugin_contexts.current_host(hostname):
-            for plugin_name, entries in host_config.active_checks:
-                for active_check_params in entries:
-                    description = config.active_check_service_description(
-                        hostname, plugin_name, active_check_params
-                    )
-                    if description == servicedesc:
-                        return {
-                            "origin": "active",
-                            "checktype": plugin_name,
-                            "parameters": active_check_params,
-                        }
-
-        return {}  # not found
+        return None
 
 
 automations.register(AutomationAnalyseServices())

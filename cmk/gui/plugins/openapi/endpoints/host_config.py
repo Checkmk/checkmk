@@ -100,7 +100,7 @@ def create_cluster_host(params):
     body["folder"].create_hosts([(host_name, body["attributes"], body["nodes"])])
 
     host = watolib.Host.load_host(host_name)
-    return _serve_host(host, False)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -241,7 +241,7 @@ def update_host(params):
             detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
         )
 
-    return _serve_host(host, False)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -332,7 +332,7 @@ def rename_host(params):
             title="Rename process failed",
             detail=f"It was not possible to rename the host {host_name} to {new_name}",
         )
-    return _serve_host(host, False)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -366,7 +366,7 @@ def move(params):
             title="Problem moving host",
             detail=exc.message,
         )
-    return _serve_host(host, False)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -428,7 +428,7 @@ def show_host(params):
     """Show a host"""
     host_name = params["host_name"]
     host: watolib.CREHost = watolib.Host.load_host(host_name)
-    return _serve_host(host, params["effective_attributes"])
+    return _serve_host(host, effective_attributes=params["effective_attributes"])
 
 
 def _serve_host(host, effective_attributes=False):

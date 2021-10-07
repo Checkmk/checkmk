@@ -17,7 +17,6 @@ freezegun = "==1.1.0"  # used by various unit tests
 isort = "==5.7.0"  # used as a plugin for editors
 lxml = "==4.6.3"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 mock = "==4.0.3"  # used in checktestlib in unit tests
-mockldap = "==0.3.0.post1"  # used in test_userdb_ldap_connector unit test
 pylint = "==2.6.2"  # used by test/Makefile's test-pylint target
 mypy = "==0.800"  # used by test/static/Makefile's test-mypy target
 pymongo = "==3.11.3"  # used by mk_mongodb agent plugin

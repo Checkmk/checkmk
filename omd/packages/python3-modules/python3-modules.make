@@ -40,7 +40,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 	    `: fixup git local dependencies` \
-		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' | sed 's/-e \.\/\(.*\)/-e $(REPO_PATH)\/\1/g' > requirements-dist.txt ; \
+		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' | sed 's@-e \.\/\(.*\)@-e $(REPO_PATH)\/\1@g' > requirements-dist.txt ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

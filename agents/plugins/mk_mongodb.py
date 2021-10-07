@@ -104,7 +104,7 @@ def section_instance(server_status):
         sys.stdout.write("mode\tSingle Instance\n")
         return
 
-    if repl_info.get("ismaster"):
+    if repl_info.get("isWritablePrimary") or repl_info.get("ismaster"):
         sys.stdout.write("mode\tPrimary\n")
         return
 
@@ -228,7 +228,7 @@ def section_cluster(client, databases):
     # check if we run on mongos (router) node
     master_dict = client.admin.command("isMaster")
     if (
-        not master_dict.get("ismaster")
+        not (master_dict.get("isWritablePrimary") or master_dict.get("ismaster"))
         or "msg" not in master_dict
         or master_dict.get("msg") != "isdbgrid"
     ):
@@ -931,7 +931,7 @@ def main(argv=None):
 
     section_instance(server_status)
     repl_info = server_status.get("repl")
-    if repl_info and not repl_info.get("ismaster"):
+    if repl_info and not (repl_info.get("isWritablePrimary") or repl_info.get("ismaster")):
         # this is a special case: replica set without master
         # this is detected here
         if "primary" in repl_info and not repl_info.get("primary"):

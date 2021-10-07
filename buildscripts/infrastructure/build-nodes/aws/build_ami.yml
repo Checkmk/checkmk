@@ -179,8 +179,17 @@
       service:
         name: ssh
         state: restarted
+
     - name: Reboot ec2 instance
       reboot:
+
+    # This must be the last step for configuring the EC2 instance directly.
+    # After this step has been executed, ansible can not connect to the EC2 instance any more.
+    # correct behaviour => "Failed to connect to the host via ssh: ubuntu@1.2.3.4: Permission denied (publickey)."}"
+    - name: Delete ansible ssh key
+      file:
+        state: absent
+        path: /home/{{ ansible_ssh_user }}/.ssh
 
 - name: debug var
   gather_facts: False

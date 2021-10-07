@@ -39,7 +39,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
-		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' > requirements-dist.txt ; \
+	    `: fixup git local dependencies` \
+		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' | sed 's/-e \.\/\(.*\)/-e $(REPO_PATH)\/\1/g' > requirements-dist.txt ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

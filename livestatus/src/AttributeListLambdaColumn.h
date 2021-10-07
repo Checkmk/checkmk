@@ -9,11 +9,14 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <utility>
 
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumnUtils.h"
+#include "IntColumn.h"
+#include "IntFilter.h"
 #include "ListColumn.h"
 
 // TODO(ml): This could likely be simplified with a dict column.
@@ -23,15 +26,26 @@
 //             - `TableContacts::GetCustomAttributeElem`
 //           for an example of a dict column without pointer arithmetic.
 template <class T, int32_t Default = 0>
-class AttributeBitmaskLambdaColumn : public AttributeListAsIntColumn {
+class AttributeBitmaskLambdaColumn : public deprecated::IntColumn {
 public:
     AttributeBitmaskLambdaColumn(const std::string& name,
                                  const std::string& description,
                                  const ColumnOffsets& offsets,
                                  std::function<int(const T&)> f)
-        : AttributeListAsIntColumn(name, description, offsets)
+        : deprecated::IntColumn{name, description, offsets}
         , get_value_{std::move(f)} {}
     ~AttributeBitmaskLambdaColumn() override = default;
+
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string& value) const override {
+        return std::make_unique<IntFilter>(
+            kind, name(),
+            [this](Row row, const contact* auth_user) {
+                return this->getValue(row, auth_user);
+            },
+            relOp, column::attribute_list::refValueFor(value, logger()));
+    }
 
     std::int32_t getValue(Row row,
                           const contact* /*auth_user*/) const override {

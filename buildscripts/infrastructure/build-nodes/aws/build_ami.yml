@@ -170,6 +170,15 @@
     - group_vars/vars.yml
   become: true
   tasks:
+    - name: Disable remote root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: 'PermitRootLogin no'
+
+    - name: re
+      service:
+        name: ssh
+        state: restarted
     - name: Reboot ec2 instance
       reboot:
 

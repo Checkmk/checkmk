@@ -15627,6 +15627,10 @@ msgstr "Ne pas envoyer à l'hôte distant"
 msgid "Do not show a summary line"
 msgstr "Ne pas montrer une ligne de résumé"
 
+#, fuzzy
+msgid "Do not show the service status"
+msgstr "Afficher l'état du service"
+
 msgid "Do not show title"
 msgstr "Ne pas montrer le titre"
 
@@ -27033,9 +27037,6 @@ msgstr "LVM, groupes de volumes logiques (Linux)"
 
 msgid "Label"
 msgstr "Étiquette"
-
-msgid "Label with status color"
-msgstr "Étiquette avec couleur d'état"
 
 msgid "Labelling Options"
 msgstr "Options d'étiquetage"
@@ -42501,6 +42502,13 @@ msgstr "Afficher la page d'accueil"
 msgid "Show WATO icon"
 msgstr "Afficher l'icône WATO"
 
+#, fuzzy
+msgid "Show a colored status label"
+msgstr "Afficher les étiquettes de service découvertes"
+
+msgid "Show a colored status label and color the metric background"
+msgstr ""
+
 msgid "Show a login message"
 msgstr "Afficher un message de connexion"
 
@@ -42648,6 +42656,10 @@ msgstr "Afficher uniquement les notifications de l'utilisateur final"
 
 msgid "Show just preliminary notifications"
 msgstr "Afficher uniquement les notifications préliminaires"
+
+#, fuzzy
+msgid "Show label for"
+msgstr "Spectacle par heure"
 
 msgid "Show last rename result"
 msgstr "Afficher le résultat du dernier renommage"
@@ -65429,6 +65441,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Label with status color"
+#~ msgstr "Étiquette avec couleur d'état"
 
 #~ msgid "Port specification"
 #~ msgstr "Spécifications du port"

@@ -15444,6 +15444,10 @@ msgstr "Sende nicht an entfernten Host"
 msgid "Do not show a summary line"
 msgstr "Keine Zusammenfassung anzeigen"
 
+#, fuzzy
+msgid "Do not show the service status"
+msgstr "Service-Status anzeigen"
+
 msgid "Do not show title"
 msgstr "Titel nicht anzeigen"
 
@@ -26714,9 +26718,6 @@ msgstr "LVM, Logical Volume Groups (Linux)"
 
 msgid "Label"
 msgstr "Label"
-
-msgid "Label with status color"
-msgstr "Label mit Statusfarbe"
 
 msgid "Labelling Options"
 msgstr "Beschriftungsoptionen"
@@ -42033,6 +42034,14 @@ msgstr "Zeige Manpage"
 msgid "Show WATO icon"
 msgstr "Zeige WATO Icon"
 
+#, fuzzy
+msgid "Show a colored status label"
+msgstr "Erkannte Servicelabels anzeigen"
+
+#, fuzzy
+msgid "Show a colored status label and color the metric background"
+msgstr "Der Metrikstatus wird auf dem Dashlet-Hintergrund farbig dargestellt"
+
 msgid "Show a login message"
 msgstr "Eine Login-Nachricht anzeigen"
 
@@ -42179,6 +42188,10 @@ msgstr "Nur Enduser-Alarme anzeigen"
 
 msgid "Show just preliminary notifications"
 msgstr "Nur vorläufige Alarme anzeigen"
+
+#, fuzzy
+msgid "Show label for"
+msgstr "Pro Stunde anzeigen"
 
 msgid "Show last rename result"
 msgstr "Letztes Umbenennungsergebnis anzeigen"
@@ -64591,6 +64604,9 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Label with status color"
+#~ msgstr "Label mit Statusfarbe"
+
 #~ msgid "Port specification"
 #~ msgstr "Portspezifikation"
 
@@ -65511,10 +65527,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #, fuzzy
 #~ msgid "Metric state is colored in its value"
 #~ msgstr "Services nach Status eingefärbt"
-
-#~ msgid "Metric status is colored on the dashlet background"
-#~ msgstr ""
-#~ "Der Metrikstatus wird auf dem Dashlet-Hintergrund farbig dargestellt"
 
 #~ msgid "Metric value is displayed in neutral color"
 #~ msgstr "Der Metrikwert wird in neutraler Farbe angezeigt."

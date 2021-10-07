@@ -14922,6 +14922,10 @@ msgid "Do not show a summary line"
 msgstr ""
 
 #, fuzzy
+msgid "Do not show the service status"
+msgstr "Statusul Serverului"
+
+#, fuzzy
 msgid "Do not show title"
 msgstr "Atribute personalizate"
 
@@ -25248,10 +25252,6 @@ msgstr ""
 
 msgid "Label"
 msgstr ""
-
-#, fuzzy
-msgid "Label with status color"
-msgstr " pe siteul de monitorizare: "
 
 msgid "Labelling Options"
 msgstr ""
@@ -40829,6 +40829,13 @@ msgstr ""
 msgid "Show WATO icon"
 msgstr ""
 
+#, fuzzy
+msgid "Show a colored status label"
+msgstr "spatiu utilizat"
+
+msgid "Show a colored status label and color the metric background"
+msgstr ""
+
 msgid "Show a login message"
 msgstr ""
 
@@ -41000,6 +41007,10 @@ msgstr "trimite notificare"
 #, fuzzy
 msgid "Show just preliminary notifications"
 msgstr "(Nu primi notificări)"
+
+#, fuzzy
+msgid "Show label for"
+msgstr "afiseaza erori"
 
 msgid "Show last rename result"
 msgstr ""
@@ -60170,6 +60181,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Label with status color"
+#~ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 #~ msgid "Port specification"

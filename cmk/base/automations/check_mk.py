@@ -802,24 +802,28 @@ class AutomationAnalyseServices(Automation):
                 # In this case we can run into the 'not found' case below.
                 continue
 
-            parameters = service.parameters
-            if isinstance(parameters, cmk.base.config.TimespecificParamList):
-                effective_parameters: LegacyCheckParameters = {
+            effective_parameters: LegacyCheckParameters = (
+                {
                     "tp_computed_params": {
-                        "params": checking.time_resolved_check_parameters(parameters),
+                        "params": checking.time_resolved_check_parameters(service.parameters),
                         "computed_at": time.time(),
                     }
                 }
-                parameters = list(parameters)
-            else:
-                effective_parameters = parameters
+                if isinstance(service.parameters, cmk.base.config.TimespecificParamList)
+                else service.parameters
+            )
 
             return {
                 "origin": "auto",
                 "checktype": str(plugin.name),
                 "checkgroup": str(plugin.check_ruleset_name),
                 "item": service.item,
-                "inv_parameters": parameters,
+                # Putting service.parameters here is wrong.
+                # servce.parameters here contains the computed check parameters.
+                # Those may be timespecific, but not yet resolved.
+                # In order to show the "discovered" parameters here, we must have a
+                # *Autocheck*Service (not a general Service) instance.
+                "inv_parameters": "not available in this view",
                 "factory_settings": plugin.check_default_parameters,
                 "parameters": effective_parameters,
             }

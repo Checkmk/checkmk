@@ -28,7 +28,7 @@ RUN apt-get update \
     vim \
     && pip3 install  --upgrade 'setuptools<51' \
     && pip3 install \
-        filelock=3.2.1 \
+        filelock==3.2.1 \
         platformdirs==2.0.2 \
         importlib_resources==1.5.0 \
         importlib_metadata==1.6.0 \

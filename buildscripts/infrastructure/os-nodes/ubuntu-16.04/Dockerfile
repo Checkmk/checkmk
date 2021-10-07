@@ -27,7 +27,7 @@ RUN apt-get update \
     strace \
     vim \
     && pip3 install  --upgrade 'setuptools<51' \
-    && pip3 install platformdirs==2.1.0 importlib_resources==1.5.0 importlib_metadata==1.6.0 git+https://github.com/pypa/pipenv.git@v2020.6.2 \
+    && pip3 install platformdirs==2.0.2 importlib_resources==1.5.0 importlib_metadata==1.6.0 git+https://github.com/pypa/pipenv.git@v2020.6.2 \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \
     && apt-get install -y \

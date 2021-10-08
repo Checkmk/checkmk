@@ -14,8 +14,6 @@ jobs:
   testing:
     runs-on: ubuntu-20.04
     env:
-      PIP_CACHE_DIR: "$HOME/.cache/pip"
-      PIPENV_CACHE_DIR: "$HOME/.cache/pipenv"
       PIPENV_IGNORE_VIRTUALENVS: 1
       PYTHONWARNINGS: ignore:DeprecationWarning
     strategy:
@@ -32,6 +30,12 @@ jobs:
         - name: mypy tests
           target: test-mypy-raw
     steps:
+    - name: Set Environment Variables
+      run: |
+        # Using existing environment variables within another variables is not working in the jobs.*.env section
+        #  more infos see: https://brandur.org/fragments/github-actions-env-vars-in-env-vars
+        echo "PIP_CACHE_DIR=$HOME/.cache/pip" >> $GITHUB_ENV
+        echo "PIPENV_CACHE_DIR=$HOME/.cache/pipenv" >> $GITHUB_ENV
     - name: Checkout Repository
       uses: actions/checkout@v2
     - name: Setup Python

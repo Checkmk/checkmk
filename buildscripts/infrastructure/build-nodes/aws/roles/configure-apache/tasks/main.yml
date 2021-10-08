@@ -30,30 +30,61 @@
   template:
     src: files/set_default_site.sh.j2
     dest: set_default_site.sh
-    owner: "root"
-    group: "root"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
     mode: "0750"
 
 - name: Copy create certificate script
   template:
     src: files/create_certificate.sh.j2
     dest: create_certificate.sh
-    owner: "root"
-    group: "root"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
     mode: "0750"
+
+- name: Ensures dir exists
+  file:
+    path: /root/ami-entrypoint.d
+    state: directory
+    mode: "0770"
 
 - name: Copy systemd service script
   template:
-    src: files/certificate.service.j2
-    dest: /etc/systemd/system/certificate.service
+    src: files/entrypoint.service.j2
+    dest: /etc/systemd/system/entrypoint.service
     owner: "root"
     group: "root"
     mode: "0644"
 
-- name: create certificate with IP address
+- name: Copy ami-entrypoint.sh
+  template:
+    src: files/ami-entrypoint.sh.j2
+    dest: /root/ami-entrypoint.sh
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: "0750"
+
+- name: run entrypoint script
   ansible.builtin.systemd:
     state: started
-    name: certificate
+    enabled: yes
+    name: entrypoint
+
+- name: disable rpcbind (service not required)
+  ansible.builtin.systemd:
+    state: stopped
+    enabled: no
+    name: rpcbind
+
+- name: disable rpcbind.socket (service not required)
+  ansible.builtin.systemd:
+    state: stopped
+    enabled: no
+    name: rpcbind.socket
+
+- name: Just force systemd to reread configs
+  ansible.builtin.systemd:
+    daemon_reload: yes
 
 - name: ensure apache is running
   service:

@@ -1,9 +1,0 @@
-[Unit]
-Description=Creates a self signed certificate on every start, because the IP address of the EC2 instance could have been changed.
-After=network.target
-
-[Service]
-ExecStart=sudo /home/{{ ansible_ssh_user }}/create_certificate.sh
-
-[Install]
-WantedBy=multi-user.target

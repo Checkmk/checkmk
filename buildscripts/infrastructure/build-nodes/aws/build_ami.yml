@@ -148,18 +148,41 @@
         fstype: ext4
         dev: /dev/xvdb
 
-    - name: create directory /opt/omd/sites
+    - name: create directory /opt/omd
       ansible.builtin.file:
-        path: /opt/omd/sites
+        path: /opt/omd
         state: directory
         mode: '0755'
 
+    - name: create directory as mount point for data partition
+      ansible.builtin.file:
+        path: /mnt/data_partition
+        state: directory
+        mode: '0755'
+
+    # If the data parttion would be mounted as /opt/omd/sites there would be a "lost+found" directory.
+    # Therefore a mount bind is used.
+    # (A symlink does not work as the tmpfs mount point cannot be created)
     - name: mount data partition
       ansible.posix.mount:
-        path: /opt/omd/sites
+        path: /mnt/data_partition
         src: /dev/xvdb
         fstype: ext4
         opts: defaults
+        state: mounted
+
+    - name: create directory as mount point for data partition
+      ansible.builtin.file:
+        path: /mnt/data_partition/sites
+        state: directory
+        mode: '0755'
+
+    - name: mount bind as replacement for symlink in order to support mount tmpfs
+      ansible.posix.mount:
+        path: /opt/omd/sites
+        src: /mnt/data_partition/sites
+        fstype: none
+        opts: bind
         state: mounted
 
 - hosts: checkmk
@@ -227,6 +250,19 @@
   tasks:
     - debug: msg="content of ec2_instance {{ ec2_instance[0][0] }}"
 
+    # the ports are already configured as open in the security group used by this script
+    # when the AMI is cloned the customer has to configure the ports in a security group
+    - name: Check all port numbers are accessible from the current host
+      wait_for:
+        host: '{{ ec2_instance[0][0]["public_ip"] }}'
+        port: "{{ item }}"
+        state: started         # Port should be open
+        delay: 0               # No wait before first check (sec)
+        timeout: 3             # Stop checking after timeout (sec)
+      with_items:
+        - 443
+        - 80
+
 - name: create AMI from EC2 instance
   gather_facts: False
   vars_files:
@@ -247,10 +283,12 @@
         delete_snapshot: True
         state: absent
       when: ami_image_ids["images"]|length>0
-    - ec2_ami:
+    - name: Create AMI
+      ec2_ami:
         instance_id: "{{ ec2_instance[0][0].id }}"
         region: "{{ ec2_region }}"
         wait: yes
+        wait_timeout: 900     # Prevent "botocore.exceptions.WaiterError: Waiter image_available failed: Max attempts exceeded"
         name: "checkmk {{ cmk_edition }} {{ cmk_version }}"
         description: "This EC2 instance contains a running checkmk installation."
         tags:

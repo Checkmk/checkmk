@@ -3,18 +3,17 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "AttributeListColumnUtils.h"
+#include "AttributeListLambdaColumn.h"
 
 #include <bitset>
 #include <cctype>
 #include <map>
 #include <utility>
-#include <vector>
 
 #include "Logger.h"
 #include "strutil.h"
 
-namespace column::attribute_list {
+namespace column::attribute_list::detail {
 
 namespace {
 
@@ -66,4 +65,4 @@ std::vector<std::string> decode(unsigned long mask) {
     return attributes;
 }
 
-}  // namespace column::attribute_list
+}  // namespace column::attribute_list::detail

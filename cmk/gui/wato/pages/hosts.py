@@ -85,15 +85,16 @@ class ABCHostMode(WatoMode, abc.ABC):
             title=_("Save & go to service configuration"),
             shortcut_title=_("Save & go to service configuration"),
             icon_name="save_to_services",
-            item=make_form_submit_link(form_name="edit_host", button_name="services"),
+            item=make_form_submit_link(form_name="edit_host", button_name="_save"),
             is_shortcut=True,
             is_suggested=True,
+            css_classes=["submit"],
         )
 
         yield PageMenuEntry(
             title=_("Save & go to folder"),
             icon_name="save_to_folder",
-            item=make_form_submit_link(form_name="edit_host", button_name="save"),
+            item=make_form_submit_link(form_name="edit_host", button_name="go_to_folder"),
             is_shortcut=True,
             is_suggested=True,
         )
@@ -363,7 +364,7 @@ class ModeEditHost(ABCHostMode):
         watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
         self._host = folder.host(self._host.name())
 
-        if request.var("services"):
+        if request.var("_save"):
             return redirect(mode_url("inventory", folder=folder.path(), host=self._host.name()))
         if request.var("diag_host"):
             return redirect(
@@ -590,18 +591,17 @@ class CreateHostMode(ABCHostMode):
             )
         )
 
-        if request.var("services"):
-            raise redirect(inventory_url)
+        if request.var("_save"):
+            return redirect(inventory_url)
+
+        if create_msg:
+            flash(create_msg)
 
         if request.var("diag_host"):
-            if create_msg:
-                flash(create_msg)
             return redirect(
                 mode_url("diag_host", folder=folder.path(), host=self._host.name(), _try="1")
             )
 
-        if create_msg:
-            flash(create_msg)
         return redirect(mode_url("folder", folder=folder.path()))
 
     def _vs_host_name(self):

@@ -268,7 +268,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Setting"), breadcrumb, form_name="value_editor", button_name="save"
+            _("Setting"), breadcrumb, form_name="value_editor", button_name="_save"
         )
 
         reset_possible = self._config_variable.allow_reset() and self._is_configured()

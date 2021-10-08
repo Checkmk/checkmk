@@ -1184,7 +1184,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             _("Folder"),
             breadcrumb,
             form_name="edit_host",
-            button_name="save",
+            button_name="_save",
             save_is_enabled=is_enabled,
         )
 

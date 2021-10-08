@@ -657,7 +657,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Tag"), breadcrumb, form_name="aux_tag", button_name="save"
+            _("Tag"), breadcrumb, form_name="aux_tag", button_name="_save"
         )
 
     def action(self) -> ActionResult:
@@ -736,7 +736,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Tag group"), breadcrumb, form_name="tag_group", button_name="save"
+            _("Tag group"), breadcrumb, form_name="tag_group", button_name="_save"
         )
 
     def action(self) -> ActionResult:

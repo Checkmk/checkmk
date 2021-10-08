@@ -1609,7 +1609,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Notification rule"), breadcrumb, form_name="rule", button_name="save"
+            _("Notification rule"), breadcrumb, form_name="rule", button_name="_save"
         )
 
     def action(self) -> ActionResult:

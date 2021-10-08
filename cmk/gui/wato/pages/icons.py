@@ -47,7 +47,7 @@ class ModeIcons(WatoMode):
             _("Icon"),
             breadcrumb,
             form_name="upload_form",
-            button_name="_do_upload",
+            button_name="_save",
             save_title=_("Upload"),
         )
 
@@ -108,7 +108,7 @@ class ModeIcons(WatoMode):
                     % (cmk.utils.paths.omd_root, icon_name)
                 )
 
-        elif request.has_var("_do_upload"):
+        elif request.has_var("_save"):
             vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars("_upload_icon")
             vs_upload.validate_value(icon_info, "_upload_icon")

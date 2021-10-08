@@ -1558,7 +1558,7 @@ class ABCEditRuleMode(WatoMode):
             _("Rule"),
             breadcrumb,
             form_name="rule_editor",
-            button_name="save",
+            button_name="_save",
             add_abort_link=True,
             abort_url=self._back_url(),
         )

@@ -153,7 +153,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
         _("Users"),
         breadcrumb,
         form_name="notify",
-        button_name="save",
+        button_name="_save",
         save_title=_("Send notification"),
     )
 

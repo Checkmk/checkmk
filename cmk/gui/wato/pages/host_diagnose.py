@@ -85,11 +85,11 @@ class ModeDiagHost(WatoMode):
                     title=_("Test"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Host properties"),
+                            title=_("Options"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Save & go to host properties"),
-                                    icon_name="save",
+                                    title=_("Run tests"),
+                                    icon_name="connection_tests",
                                     item=make_form_submit_link("diag_host", "_save"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -97,12 +97,12 @@ class ModeDiagHost(WatoMode):
                             ],
                         ),
                         PageMenuTopic(
-                            title=_("Options"),
+                            title=_("Host properties"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Run tests"),
-                                    icon_name="connection_tests",
-                                    item=make_form_submit_link("diag_host", "_try"),
+                                    title=_("Save & go to host properties"),
+                                    icon_name="save",
+                                    item=make_form_submit_link("diag_host", "go_to_properties"),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -128,14 +128,14 @@ class ModeDiagHost(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        if request.var("_try"):
+        if request.var("_save"):
             try:
                 self._validate_diag_html_vars()
             except MKUserError as e:
                 user_errors.add(e)
             return None
 
-        if request.var("_save"):
+        if request.var("go_to_properties"):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
             new = vs_host.from_html_vars("vs_host")
@@ -218,7 +218,7 @@ class ModeDiagHost(WatoMode):
         # When clicking "Save & Test" on the "Edit host" page, this will be set
         # to immediately execute the tests using the just saved settings
         if request.has_var("_start_on_load"):
-            html.final_javascript("cmk.page_menu.form_submit('diag_host', '_try');")
+            html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
 
         html.hidden_fields()
         html.end_form()
@@ -229,7 +229,7 @@ class ModeDiagHost(WatoMode):
         self._show_diagnose_output()
 
     def _show_diagnose_output(self):
-        if not request.var("_try"):
+        if not request.var("_save"):
             html.show_message(
                 _(
                     "You can diagnose the connection to a specific host using this dialog. "

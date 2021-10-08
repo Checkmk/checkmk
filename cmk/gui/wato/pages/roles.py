@@ -292,7 +292,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Role"), breadcrumb, form_name="role", button_name="save"
+            _("Role"), breadcrumb, form_name="role", button_name="_save"
         )
         menu.inpage_search = PageMenuSearch()
         return menu

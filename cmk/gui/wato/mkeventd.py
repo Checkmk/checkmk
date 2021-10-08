@@ -2387,7 +2387,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Rule pack"), breadcrumb, form_name="rule_pack", button_name="save"
+            _("Rule pack"), breadcrumb, form_name="rule_pack", button_name="_save"
         )
         menu.dropdowns.insert(
             1,
@@ -2524,7 +2524,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Rule"), breadcrumb, form_name="rule", button_name="save"
+            _("Rule"), breadcrumb, form_name="rule", button_name="_save"
         )
         menu.dropdowns.insert(
             1,
@@ -3158,7 +3158,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             _("MIBs"),
             breadcrumb,
             form_name="upload_form",
-            button_name="upload_button",
+            button_name="_save",
             save_title=_("Upload"),
         )
         menu.dropdowns.insert(

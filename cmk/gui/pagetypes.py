@@ -1494,7 +1494,6 @@ def make_edit_form_page_menu(
                                 type_title,
                                 type_title_plural,
                                 form_name=form_name,
-                                button_name="save",
                             )
                         ),
                     ),
@@ -1539,17 +1538,17 @@ def _page_menu_entries_save(
     type_title: str,
     type_title_plural: str,
     form_name: str,
-    button_name: str,
 ) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
     yield PageMenuEntry(
         title=_("List of %s") % type_title_plural,
         icon_name="save",
-        item=make_form_submit_link(form_name, button_name),
+        item=make_form_submit_link(form_name, "_save"),
         is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
         shortcut_title=_("Save & go to list"),
+        css_classes=["submit"],
     )
 
     if dropdown_name in _save_pagetype_icons:

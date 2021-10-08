@@ -1451,3 +1451,7 @@ div#row_info {
 div.foldable div.success {
   background-color: $base-color;
 }
+
+input.hidden_submit {
+  display: none;
+}

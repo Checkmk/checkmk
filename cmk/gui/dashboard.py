@@ -1837,7 +1837,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))
 
-    if request.var("save") and transactions.check_transaction():
+    if request.var("_save") and transactions.check_transaction():
         try:
             view_name = vs_view.from_html_vars("view")
             vs_view.validate_value(view_name, "view")
@@ -1874,7 +1874,11 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
 
 def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return make_simple_form_page_menu(
-        _("View"), breadcrumb, form_name="choose_view", button_name="save", save_title=_("Continue")
+        _("View"),
+        breadcrumb,
+        form_name="choose_view",
+        button_name="_save",
+        save_title=_("Continue"),
     )
 
 
@@ -1986,7 +1990,7 @@ class EditDashletPage(Page):
                 properties_elements
             ), "Dashboard element settings and properties have a shared option name"
 
-        if request.var("save") and transactions.transaction_valid():
+        if request.var("_save") and transactions.transaction_valid():
             try:
                 general_properties = vs_general.from_html_vars("general")
                 vs_general.validate_value(general_properties, "general")
@@ -2042,7 +2046,7 @@ class EditDashletPage(Page):
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return make_simple_form_page_menu(
-        _("Element"), breadcrumb, form_name="dashlet", button_name="save"
+        _("Element"), breadcrumb, form_name="dashlet", button_name="_save"
     )
 
 

@@ -626,7 +626,7 @@ class ModeEditUser(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("User"), breadcrumb, form_name="user", button_name="save"
+            _("User"), breadcrumb, form_name="user", button_name="_save"
         )
 
         action_dropdown = menu.dropdowns[0]

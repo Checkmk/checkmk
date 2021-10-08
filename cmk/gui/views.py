@@ -1439,12 +1439,12 @@ def show_create_view_dialog(next_url=None):
             _("View"),
             breadcrumb,
             form_name="create_view",
-            button_name="save",
+            button_name="_save",
             save_title=_("Continue"),
         ),
     )
 
-    if request.var("save") and transactions.check_transaction():
+    if request.var("_save") and transactions.check_transaction():
         try:
             ds = vs_ds.from_html_vars("ds")
             vs_ds.validate_value(ds, "ds")

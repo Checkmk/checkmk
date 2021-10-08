@@ -350,7 +350,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Actions"), breadcrumb, form_name="edit", button_name="save"
+            _("Actions"), breadcrumb, form_name="edit", button_name="_save"
         )
 
     def valuespec(self):

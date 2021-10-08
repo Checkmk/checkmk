@@ -1371,12 +1371,7 @@ def _wrap_timespecific_for_preview(
     params: Union[LegacyCheckParameters, TimespecificParameters]
 ) -> LegacyCheckParameters:
     return (
-        {
-            "tp_computed_params": {
-                "params": params.evaluate(cmk.base.core.timeperiod_active),
-                "computed_at": time.time(),
-            }
-        }
+        dict(params.preview(cmk.base.core.timeperiod_active))
         if isinstance(params, TimespecificParameters)
         else params
     )

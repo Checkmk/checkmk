@@ -6,12 +6,22 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Final, Iterable, Optional, Sequence, Tuple
+import time
+from typing import Any, Callable, Dict, Final, Iterable, Optional, Sequence, Tuple, TypedDict
 
 import cmk.utils.debug
 from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
 
 _IsTimeperiodActiveCallback = Callable[[TimeperiodName], Optional[bool]]
+
+
+class _InnerTimespecificParametersPreview(TypedDict):
+    params: LegacyCheckParameters
+    computed_at: float
+
+
+class TimespecificParametersPreview(TypedDict):
+    tp_computed_params: _InnerTimespecificParametersPreview
 
 
 # this is not particularly clever, but an easy way to allow for
@@ -41,6 +51,14 @@ class TimespecificParameters:
             ),
             {},
         )
+
+    def preview(self, is_active: _IsTimeperiodActiveCallback) -> TimespecificParametersPreview:
+        return {
+            "tp_computed_params": {
+                "params": self.evaluate(is_active),
+                "computed_at": time.time(),
+            }
+        }
 
 
 # see how much logic of the time period evaluation has to end up here,

@@ -14,7 +14,6 @@ import os
 import shutil
 import subprocess
 import sys
-import time
 from contextlib import redirect_stderr, redirect_stdout
 from itertools import islice
 from pathlib import Path
@@ -801,12 +800,7 @@ class AutomationAnalyseServices(Automation):
                 continue
 
             effective_parameters: LegacyCheckParameters = (
-                {
-                    "tp_computed_params": {
-                        "params": service.parameters.evaluate(cmk.base.core.timeperiod_active),
-                        "computed_at": time.time(),
-                    }
-                }
+                dict(service.parameters.preview(cmk.base.core.timeperiod_active))
                 if isinstance(service.parameters, TimespecificParameters)
                 else service.parameters
             )

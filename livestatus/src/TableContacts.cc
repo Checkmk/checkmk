@@ -7,7 +7,6 @@
 
 // We need it for std::transform, but IWYU "oscillates" a bit here... :-/
 #include <algorithm>  // IWYU pragma: keep
-#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <string_view>
@@ -33,10 +32,31 @@ extern TimeperiodsCache *g_timeperiods_cache;
 using namespace std::literals;
 
 namespace {
+template <typename T>
+std::vector<typename T::key_type> map_keys(const T &map) {
+    std::vector<typename T::key_type> out;
+    out.reserve(map.size());
+    std::transform(
+        std::begin(map), std::end(map), std::back_inserter(out),
+        [](const typename T::value_type &pair) { return pair.first; });
+    return out;
+}
 
-class GetCustomAttribute {
+template <typename T>
+std::vector<typename T::mapped_type> map_values(const T &map) {
+    std::vector<typename T::mapped_type> out;
+    out.reserve(map.size());
+    std::transform(
+        std::begin(map), std::end(map), std::back_inserter(out),
+        [](const typename T::value_type &pair) { return pair.second; });
+    return out;
+}
+
+class CustomAttributeMap {
 public:
-    GetCustomAttribute(const MonitoringCore *const mc, const AttributeKind kind)
+    class Keys;
+    class Values;
+    CustomAttributeMap(const MonitoringCore *const mc, const AttributeKind kind)
         : mc_{mc}, kind_{kind} {}
     Attributes operator()(const contact &ct) {
         if (const auto *p = ct.custom_variables) {
@@ -50,24 +70,30 @@ private:
     const AttributeKind kind_;
 };
 
-template <std::size_t Index>
-class GetCustomAttributeElem {
+class CustomAttributeMap::Keys {
 public:
-    GetCustomAttributeElem(const MonitoringCore *const mc,
-                           const AttributeKind kind)
-        : get_attrs_{mc, kind} {}
-    std::vector<std::string> operator()(const contact &ct) {
-        auto attrs = get_attrs_(ct);
-        std::vector<std::string> v(attrs.size());
-        std::transform(
-            std::cbegin(attrs), std::cend(attrs), std::begin(v),
-            [](const auto &entry) { return std::get<Index>(entry); });
-        return v;
+    Keys(const MonitoringCore *const mc, const AttributeKind kind)
+        : m_{mc, kind} {}
+    std::vector<Attributes::key_type> operator()(const contact &ct) {
+        return map_keys(m_(ct));
     }
 
 private:
-    GetCustomAttribute get_attrs_;
+    CustomAttributeMap m_;
 };
+
+class CustomAttributeMap::Values {
+public:
+    Values(const MonitoringCore *const mc, const AttributeKind kind)
+        : m_{mc, kind} {}
+    std::vector<Attributes::mapped_type> operator()(const contact &ct) {
+        return map_values(m_(ct));
+    }
+
+private:
+    CustomAttributeMap m_;
+};
+
 }  // namespace
 
 TableContacts::TableContacts(MonitoringCore *mc) : Table(mc) {
@@ -81,6 +107,7 @@ std::string TableContacts::namePrefix() const { return "contact_"; }
 // static
 void TableContacts::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets) {
+    auto* mc = table->core();
     table->addColumn(std::make_unique<StringColumn::Callback<contact>>(
         prefix + "name", "The login name of the contact person", offsets,
         [](const contact &ct) { return ct.name == nullptr ? ""s : ct.name; }));
@@ -155,53 +182,48 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact", offsets,
-        GetCustomAttributeElem<0>{table->core(),
-                                  AttributeKind::custom_variables}));
+        CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact", offsets,
-        GetCustomAttributeElem<1>{table->core(),
-                                  AttributeKind::custom_variables}));
+        CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets,
-        GetCustomAttribute{table->core(), AttributeKind::custom_variables}));
+        CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
 
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "tag_names", "A list of all tags of the contact", offsets,
-        GetCustomAttributeElem<0>{table->core(), AttributeKind::tags}));
+        CustomAttributeMap::Keys{mc, AttributeKind::tags}));
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "tag_values",
         "A list of the values of all tags of the contact", offsets,
-        GetCustomAttributeElem<1>{table->core(), AttributeKind::tags}));
+        CustomAttributeMap::Values{mc, AttributeKind::tags}));
     table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
         prefix + "tags", "A dictionary of the tags", offsets,
-        GetCustomAttribute{table->core(), AttributeKind::tags}));
+        CustomAttributeMap{table->core(), AttributeKind::tags}));
 
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_names", "A list of all labels of the contact", offsets,
-        GetCustomAttributeElem<0>{table->core(), AttributeKind::labels}));
+        CustomAttributeMap::Keys{mc, AttributeKind::labels}));
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_values",
         "A list of the values of all labels of the contact", offsets,
-        GetCustomAttributeElem<1>{table->core(), AttributeKind::labels}));
+        CustomAttributeMap::Values{mc, AttributeKind::labels}));
     table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
         prefix + "labels", "A dictionary of the labels", offsets,
-        GetCustomAttribute{table->core(), AttributeKind::labels}));
+        CustomAttributeMap{table->core(), AttributeKind::labels}));
 
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_source_names", "A list of all sources of the contact",
-        offsets,
-        GetCustomAttributeElem<0>{table->core(),
-                                  AttributeKind::label_sources}));
+        offsets, CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
     table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_source_values",
         "A list of the values of all sources of the contact", offsets,
-        GetCustomAttributeElem<1>{table->core(),
-                                  AttributeKind::label_sources}));
+        CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
     table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
-        GetCustomAttribute{table->core(), AttributeKind::label_sources}));
+        CustomAttributeMap{table->core(), AttributeKind::label_sources}));
 
     table->addColumn(std::make_unique<AttributeBitmaskLambdaColumn<contact>>(
         prefix + "modified_attributes",

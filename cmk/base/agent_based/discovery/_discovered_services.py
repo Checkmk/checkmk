@@ -45,6 +45,7 @@ def analyse_discovered_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
+    forget_existing: bool,
     keep_vanished: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[AutocheckService]:
@@ -59,6 +60,7 @@ def analyse_discovered_services(
             on_error=on_error,
         ),
         run_plugin_names=run_plugin_names,
+        forget_existing=forget_existing,
         keep_vanished=keep_vanished,
     )
 
@@ -68,11 +70,16 @@ def _analyse_discovered_services(
     existing_services: Sequence[AutocheckService],
     discovered_services: List[AutocheckService],
     run_plugin_names: Container[CheckPluginName],
+    forget_existing: bool,
     keep_vanished: bool,
 ) -> QualifiedDiscovery[AutocheckService]:
 
     return QualifiedDiscovery(
-        preexisting=existing_services,
+        preexisting=_services_to_remember(
+            choose_from=existing_services,
+            run_plugin_names=run_plugin_names,
+            forget_existing=forget_existing,
+        ),
         current=discovered_services
         + _services_to_keep(
             choose_from=existing_services,
@@ -83,13 +90,28 @@ def _analyse_discovered_services(
     )
 
 
+def _services_to_remember(
+    *,
+    choose_from: Sequence[AutocheckService],
+    run_plugin_names: Container[CheckPluginName],
+    forget_existing: bool,
+) -> Sequence[AutocheckService]:
+    """Compile a list of services to regard as being the last known state
+
+    This list is used to classify services into new/old/vanished.
+    Remembering is not the same as keeping!
+    Always remember the services of plugins that are not being run.
+    """
+    return _drop_plugins_services(choose_from, run_plugin_names) if forget_existing else choose_from
+
+
 def _services_to_keep(
     *,
     choose_from: Sequence[AutocheckService],
     run_plugin_names: Container[CheckPluginName],
     keep_vanished: bool,
 ) -> List[AutocheckService]:
-    """Compile a list if services to keep in addition to the discovered ones
+    """Compile a list of services to keep in addition to the discovered ones
 
     These services are considered to be currently present (even if they are not discovered).
     Always keep the services of plugins that are not being run.

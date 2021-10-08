@@ -270,6 +270,7 @@ def _commandline_discovery_on_host(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
+        forget_existing=not only_new,
         keep_vanished=only_new,
         on_error=on_error,
     )
@@ -1014,6 +1015,7 @@ def _get_node_services(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
+        forget_existing=False,
         keep_vanished=False,
         on_error=on_error,
     )
@@ -1157,6 +1159,7 @@ def _get_cluster_services(
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
+            forget_existing=False,
             keep_vanished=True,
             on_error=on_error,
         )

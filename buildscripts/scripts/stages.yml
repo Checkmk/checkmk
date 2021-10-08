@@ -28,6 +28,12 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_ABS}' | sed 's/^\\(.\\)/-e \\1/g'"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_MAKEFILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Makefile' - || true"
+
+    - NAME: CHANGED_TESTS_MAKEFILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/tests/Makefile' - || true"
+
     - NAME: CHANGED_PYTHON_FILES
       # filter list of all python files to contain only changed files. Make sure an empty list
       # of grep expressions won't just grep for '-'
@@ -36,8 +42,23 @@ VARIABLES:
     - NAME: CHANGED_PYLINT_RC_FILE
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/.pylintrc' - || true"
 
+    - NAME: CHANGED_PYTEST_INI_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/pytest.ini' - || true"
+
+    - NAME: CHANGED_PYPROJECT_TOML_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/pyproject.toml' - || true"
+
     - NAME: CHANGED_PIPFILE
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Pipfile' - || true"
+
+    - NAME: CHANGED_RUN_BLACK_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-black' - || true"
+
+    - NAME: CHANGED_RUN_MYPY_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-mypy' - || true"
+
+    - NAME: CHANGED_RUN_PIPENV_SCRIPT
+      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-pipenv' - || true"
 
       # Gather the list of changed agent plugins
     - NAME: CHANGED_AGENT_PLUGINS
@@ -72,7 +93,7 @@ VARIABLES:
 
 STAGES:
     - NAME: 'Python Typing'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT
       DIR: 'tests'
       ENV_VARS:
         JUNIT_XML: "--junit-xml ${RESULTS}/mypy.xml"
@@ -83,7 +104,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/mypy.xml"
 
     - NAME: 'Python Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_BLACK_SCRIPT
       DIR: 'tests'
       ENV_VARS:
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
@@ -93,7 +114,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
     - NAME: 'Python Unit Test'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
@@ -102,7 +123,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
     - NAME: 'Python Linting'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'
       ENV_VARS:
         # this variable is needed as long as we have base plugins that are
@@ -125,21 +146,21 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: 'JavaScript Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt"
       TEXT_ON_SKIP: 'No JavaScript files changed'
       RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
 
     - NAME: 'CSS Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt"
       TEXT_ON_SKIP: 'No CSS files changed'
       RESULT_CHECK_FILE_PATTERN: "results/css-prettier.txt"
 
     - NAME: 'Agent Plugin Unit Tests'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS
+      ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       COMMAND: "make test-agent-plugin-docker > ${RESULTS}/agent-plugin-unit-junit.txt"
       TEXT_ON_SKIP: 'No agent files changed'
@@ -151,7 +172,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"
 
     - NAME: 'Clang Tidy Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -162,7 +183,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/livestatus-tidy.txt"
 
     - NAME: 'Clang Tidy core'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -173,7 +194,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/core-tidy.txt"
 
     - NAME: 'IWYU Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -184,7 +205,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/livestatus-iwyu.txt"
 
     - NAME: 'IWYU core'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -215,7 +236,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/core-neb-cmc.txt"
 
     - NAME: 'Software Documentation Generation'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_SW_DOC_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE
       COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt"
       TEXT_ON_SKIP: 'No SW Documentation files changed'
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"

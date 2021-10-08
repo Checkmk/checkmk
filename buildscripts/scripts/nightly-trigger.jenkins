@@ -5,33 +5,35 @@ def DISTRO_LIST_DEFAULT = ''
 def NODE = ''
 def EDITION_DEFAULT = ''
 def DEPLOY_TO_WEBSITE = false
+def JOB_EDITION = JOB_BASE_NAME.split("-")[-1]
+
 withFolderProperties{
-    switch (JOB_BASE_NAME) {
-        case 'trigger':
+    switch (JOB_EDITION) {
+        case 'cee':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST
             EDITION_DEFAULT = 'enterprise'
             START_HOUR = '0'
             RUN_TESTS = true
             DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
-            BUILD_CONTAINER = true
+            BUILD_IMAGE = true
             BUILD_AMI_IMAGE = false
             break
-        case 'trigger-cre':
+        case 'cre':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
             EDITION_DEFAULT = 'raw'
             START_HOUR = '2'
             RUN_TESTS = true
             DEPLOY_TO_WEBSITE = false
-            BUILD_CONTAINER = true
+            BUILD_IMAGE = true
             BUILD_AMI_IMAGE = false
             break
-        case 'trigger-cfe':
+        case 'cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
             EDITION_DEFAULT = 'free'
             START_HOUR = '4'
             RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
             DEPLOY_TO_WEBSITE = false
-            BUILD_CONTAINER = false
+            BUILD_IMAGE = false
             BUILD_AMI_IMAGE = true
             break
         default:
@@ -54,7 +56,7 @@ properties([
 node: {
     label 'NODE'
     stage('Build Packages') {
-        build(job: "${FOLDER_ID}/nightly_build_containerized",
+        build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-packages",
               parameters: [
                 [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                 [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
@@ -62,9 +64,9 @@ node: {
             ]
         )
     }
-    if (BUILD_CONTAINER) {
-        stage('Build CMK Container') {
-            build(job: "${FOLDER_ID}/nightly_cmk_container",
+    if (BUILD_IMAGE) {
+        stage('Build CMK IMAGE') {
+            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-image",
                 parameters: [
                     [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
                 ]
@@ -73,7 +75,7 @@ node: {
     }
     if (BUILD_AMI_IMAGE) {
         stage('Build AMI Image') {
-            build(job: "${FOLDER_ID}/nightly_cmk_aws",
+            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-aws",
                 parameters: [
                     [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
                 ]
@@ -84,7 +86,7 @@ node: {
         parallel([
             'Integration Test for Packages': {
                 stage('Integration Test for Packages') {
-                    build(job: "${FOLDER_ID}/nightly_test_integration-pipeline",
+                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
                         parameters: [
                             [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                             [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
@@ -94,7 +96,7 @@ node: {
             },
             'Integration Test for Docker Container': {
                 stage('Integration Test for Docker Container') {
-                    build(job: "${FOLDER_ID}/docker_integration",
+                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
                         parameters: [
                             [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
                         ]
@@ -104,7 +106,7 @@ node: {
 
             'Composition Test for Packages': {
                 stage('Composition Test for Packages') {
-                    build(job: "${FOLDER_ID}/test-composition",
+                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-composition",
                         parameters: [
                             [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                             [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]

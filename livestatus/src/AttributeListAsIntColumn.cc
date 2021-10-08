@@ -27,11 +27,3 @@ int32_t AttributeListAsIntColumn::getValue(
     }
     return 0;
 }
-
-std::vector<std::string> AttributeListAsIntColumn::getAttributes(
-    Row row) const {
-    if (const auto *p = columnData<unsigned long>(row)) {
-        return column::attribute_list::decode(*p);
-    }
-    return {};
-}

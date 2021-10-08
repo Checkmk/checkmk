@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "Filter.h"
 #include "IntColumn.h"
@@ -28,8 +27,6 @@ public:
         const std::string &value) const override;
 
     int32_t getValue(Row row, const contact *auth_user) const override;
-
-    [[nodiscard]] std::vector<std::string> getAttributes(Row row) const;
 };
 
 #endif  // AttributeListAsIntColumn_h

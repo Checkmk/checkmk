@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "AttributeListAsIntColumn.h"
+#include "AttributeListColumnUtils.h"
 #include "Filter.h"
 #include "ListColumn.h"
 #include "Row.h"
@@ -35,9 +36,10 @@ public:
     }
 
     std::vector<std::string> getValue(
-        Row row, const contact * /*auth_user*/,
+        Row row, const contact *auth_user,
         std::chrono::seconds /*timezone_offset*/) const override {
-        return _int_view_column.getAttributes(row);
+        return column::attribute_list::decode(
+            _int_view_column.getValue(row, auth_user));
     }
 
 private:

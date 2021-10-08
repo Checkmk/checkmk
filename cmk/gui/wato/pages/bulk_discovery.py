@@ -44,7 +44,7 @@ class ModeBulkDiscovery(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._start = bool(request.var("save"))
+        self._start = bool(request.var("_start"))
         self._all = bool(request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
@@ -91,7 +91,7 @@ class ModeBulkDiscovery(WatoMode):
             _("Discovery"),
             breadcrumb,
             form_name="bulkinventory",
-            button_name="save",
+            button_name="_start",
             save_title=_("Start"),
         )
 

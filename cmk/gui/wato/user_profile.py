@@ -317,7 +317,7 @@ class ABCUserProfilePage(Page):
 
     def _page_menu(self, breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Profile"), breadcrumb, form_name="profile", button_name="save"
+            _("Profile"), breadcrumb, form_name="profile", button_name="_save"
         )
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu
@@ -327,7 +327,7 @@ class ABCUserProfilePage(Page):
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
 
-        if request.has_var("save") and transactions.check_transaction():
+        if request.has_var("_save") and transactions.check_transaction():
             try:
                 self._action()
             except MKUserError as e:
@@ -357,7 +357,7 @@ class UserProfileReplicate(Page):
 
     def _page_menu(self, breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Profile"), breadcrumb, form_name="profile", button_name="save"
+            _("Profile"), breadcrumb, form_name="profile", button_name="_save"
         )
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu

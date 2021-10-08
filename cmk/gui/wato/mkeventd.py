@@ -3158,7 +3158,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             _("MIBs"),
             breadcrumb,
             form_name="upload_form",
-            button_name="save",
+            button_name="upload_button",
             save_title=_("Upload"),
         )
         menu.dropdowns.insert(

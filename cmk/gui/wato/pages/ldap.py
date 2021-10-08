@@ -887,7 +887,7 @@ class ModeEditLDAPConnection(LDAPMode):
             _("Connection"),
             breadcrumb,
             form_name="connection",
-            button_name="save",
+            button_name="_save",
             save_title=_("Save"),
         )
         menu.dropdowns[0].topics[0].entries.insert(
@@ -932,7 +932,7 @@ class ModeEditLDAPConnection(LDAPMode):
 
         save_connection_config(self._connections)
         config.user_connections = self._connections  # make directly available on current page
-        if request.var("save"):
+        if request.var("_save"):
             return redirect(mode_url("ldap_config"))
         # Handle the case where a user hit "Save & Test" during creation
         return redirect(self.mode_url(_test="1", id=self._connection_id))

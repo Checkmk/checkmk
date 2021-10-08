@@ -304,7 +304,7 @@ class ModeBIEditPack(ABCBIMode):
             _("BI pack"),
             breadcrumb,
             form_name="bi_pack",
-            button_name="save",
+            button_name="_save",
             save_title=_("Save") if self._bi_pack else _("Create"),
         )
 
@@ -1066,7 +1066,7 @@ class ModeBIEditRule(ABCBIMode):
             _("Rule"),
             breadcrumb,
             form_name="birule",
-            button_name="save",
+            button_name="_save",
             save_title=_("Create") if self._new else _("Save"),
             save_is_enabled=bi_valuespecs.is_contact_for_pack(self.bi_pack),
         )
@@ -1593,7 +1593,7 @@ class BIModeEditAggregation(ABCBIMode):
             _("Aggregation"),
             breadcrumb,
             form_name="biaggr",
-            button_name="save",
+            button_name="_save",
             save_is_enabled=bi_valuespecs.is_contact_for_pack(self.bi_pack),
         )
 

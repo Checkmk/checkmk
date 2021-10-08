@@ -390,7 +390,7 @@ class ModeTimeperiodImportICal(WatoMode):
             _("iCalendar"),
             breadcrumb,
             form_name="import_ical",
-            button_name="save",
+            button_name="upload",
             save_title=_("Import"),
         )
 

@@ -112,7 +112,7 @@ class ModeBulkRenameHost(WatoMode):
             _("Hosts"),
             breadcrumb,
             form_name="bulk_rename_host",
-            button_name="save",
+            button_name="_start",
             save_title=_("Bulk rename"),
         )
 
@@ -429,7 +429,7 @@ class ModeRenameHost(WatoMode):
             _("Host"),
             breadcrumb,
             form_name="rename_host",
-            button_name="save",
+            button_name="rename",
             save_title=_("Rename"),
         )
 

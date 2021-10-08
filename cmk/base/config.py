@@ -2380,13 +2380,6 @@ def _get_checkgroup_parameters(
         if item is None and checkgroup not in service_rule_groups:
             return config_cache.host_extra_conf(host, rules)
 
-        # At the moment the items are not validated strictly, this means we can have
-        # integers or something else here. Convert them to unicode for easier handling
-        # in the following code.
-        # TODO: This should be strictly validated by the check API in 1.7.
-        if item is not None and not isinstance(item, str):
-            item = str(item)
-
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
             host, item, descr

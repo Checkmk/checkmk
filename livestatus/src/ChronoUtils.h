@@ -20,8 +20,10 @@ using minutes_d = std::chrono::duration<double, std::ratio<60>>;
 namespace mk {
 #if __cplusplus > 201703L
 using days = std::chrono::days;
+using weeks = std::chrono::weeks;
 #else
 using days = std::chrono::duration<int64_t, std::ratio<86400>>;
+using weeks = std::chrono::duration<int64_t, std::ratio<604800>>;
 #endif
 }  // namespace mk
 

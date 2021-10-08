@@ -13,6 +13,7 @@
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 
 #include "Aggregator.h"
 #include "AndingFilter.h"
@@ -555,7 +556,7 @@ void Query::parseLocaltimeLine(char *line) {
     auto hah = std::chrono::duration_cast<half_an_hour>(diff);
     auto rounded = half_an_hour(round(hah.count()));
     auto offset = std::chrono::duration_cast<std::chrono::seconds>(rounded);
-    if (offset <= std::chrono::hours(-24) || offset >= std::chrono::hours(24)) {
+    if (std::chrono::abs(offset) >= 24h) {
         throw std::runtime_error(
             "timezone difference greater than or equal to 24 hours");
     }

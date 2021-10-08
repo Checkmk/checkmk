@@ -1284,6 +1284,13 @@ msgstr "<b>Plane Wartungszeit von %s bis %s</b>"
 msgid "<b>send a custom notification</b> regarding"
 msgstr "<b>manueller Alarm versendet</b> bezüglich"
 
+msgid ""
+"<br> HINT: The individual program is called from the current working "
+"directory. You should therefore specify absolute path names in scripts (by "
+"using environment variables like OMD_SITE) to make the individual program "
+"call run correctly in all execution contexts (UI and console)."
+msgstr ""
+
 #, python-format
 msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
 msgstr "<br><b>Hinweis</b>: Dieser Schlüssel wurde von Benutzer <b>%s</b>"

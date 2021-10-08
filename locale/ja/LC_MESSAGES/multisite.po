@@ -1255,6 +1255,13 @@ msgstr "<b>ダウンタイムを %s から %s にスケジュールする</b>"
 msgid "<b>send a custom notification</b> regarding"
 msgstr "<b>カスタム通知を送信</b>"
 
+msgid ""
+"<br> HINT: The individual program is called from the current working "
+"directory. You should therefore specify absolute path names in scripts (by "
+"using environment variables like OMD_SITE) to make the individual program "
+"call run correctly in all execution contexts (UI and console)."
+msgstr ""
+
 #, python-format
 msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
 msgstr "<br><b>注</ b>: このキーはユーザー<b>%s</b>によって作成されました。"

@@ -1296,6 +1296,13 @@ msgstr "<b>plan een downtime van %s tot %s</b>"
 msgid "<b>send a custom notification</b> regarding"
 msgstr "<b>een aangepaste kennisgeving</b> verzenden betreffende"
 
+msgid ""
+"<br> HINT: The individual program is called from the current working "
+"directory. You should therefore specify absolute path names in scripts (by "
+"using environment variables like OMD_SITE) to make the individual program "
+"call run correctly in all execution contexts (UI and console)."
+msgstr ""
+
 #, python-format
 msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
 msgstr "<br><b>Note</b>: deze sleutel is gemaakt door gebruiker <b>%s</b>"

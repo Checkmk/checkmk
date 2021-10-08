@@ -64,11 +64,7 @@ from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_paramete
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
-from cmk.utils.parameters import (
-    boil_down_parameters,
-    TimespecificParameters,
-    TimespecificParameterSet,
-)
+from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.site import omd_site
@@ -2259,17 +2255,14 @@ def compute_check_parameters(
     plugin_name: CheckPluginName,
     item: Item,
     params: LegacyCheckParameters,
-    # the Union[..., Sequence[LegacyCheckParameters]] is just for the fallback below. clean this up.
-    configured_parameters: Optional[
-        Union[TimespecificParameters, Sequence[LegacyCheckParameters]]
-    ] = None,
-) -> Union[None, LegacyCheckParameters, TimespecificParameters]:
+    configured_parameters: Optional[TimespecificParameters] = None,
+) -> TimespecificParameters:
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
     plugin = agent_based_register.get_check_plugin(plugin_name)
     if plugin is None:  # handle vanished check plugin
-        return None
+        return TimespecificParameters()
 
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(host, plugin, item)
@@ -2313,43 +2306,47 @@ def _update_with_default_check_parameters(
 
 def _update_with_configured_check_parameters(
     params: LegacyCheckParameters,
-    configured_parameters: Union[TimespecificParameters, Sequence[LegacyCheckParameters]],
-) -> Union[LegacyCheckParameters, TimespecificParameters]:
-    if configured_parameters:
-        if isinstance(configured_parameters, TimespecificParameters):
-            # some parameters include timespecific settings
-            # these will be resolved just before the check execution
-            return TimespecificParameters(
-                list(configured_parameters.entries)
-                + [TimespecificParameterSet.from_parameters(params)]
-            )
-
-        return boil_down_parameters(configured_parameters, params)
-
-    return params
+    configured_parameters: TimespecificParameters,
+) -> TimespecificParameters:
+    return TimespecificParameters(
+        [
+            *configured_parameters.entries,
+            TimespecificParameterSet.from_parameters(params),
+        ]
+    )
 
 
 def _get_configured_parameters(
     host: HostName,
     plugin: CheckPlugin,
     item: Item,
-) -> Sequence[LegacyCheckParameters]:
+) -> TimespecificParameters:
     config_cache = get_config_cache()
     descr = service_description(host, plugin.name, item)
 
-    return (
-        # Get parameters configured via checkgroup_parameters
-        _get_checkgroup_parameters(
-            config_cache,
-            host,
-            str(plugin.check_ruleset_name),
-            item,
-            descr,
-        )
-        if plugin.check_ruleset_name is not None
-        else []
-        # Get parameters configured via check_parameters
-    ) + config_cache.service_extra_conf(host, descr, check_parameters)
+    # parameters configured via check_parameters
+    extra = [
+        TimespecificParameterSet.from_parameters(p)
+        for p in config_cache.service_extra_conf(host, descr, check_parameters)
+    ]
+
+    if plugin.check_ruleset_name is None:
+        return TimespecificParameters(extra)
+
+    return TimespecificParameters(
+        [
+            # parameters configured via checkgroup_parameters
+            TimespecificParameterSet.from_parameters(p)
+            for p in _get_checkgroup_parameters(
+                config_cache,
+                host,
+                str(plugin.check_ruleset_name),
+                item,
+                descr,
+            )
+        ]
+        + extra
+    )
 
 
 def _get_checkgroup_parameters(

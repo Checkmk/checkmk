@@ -46,11 +46,19 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         config,
         "_get_configured_parameters",
-        lambda host, plugin, item: {"levels_for_node": (1, 2)} if host == node else {},
+        lambda host, plugin, item: (
+            TimespecificParameters(
+                (TimespecificParameterSet.from_parameters({"levels_for_node": (1, 2)}),)
+            )
+            if host == node
+            else TimespecificParameters()
+        ),
     )
 
     clustered_service = check_table.get_check_table(cluster)[service_id]
-    assert clustered_service.parameters == {"levels": (35, 40)}
+    assert clustered_service.parameters.entries == (
+        TimespecificParameterSet.from_parameters({"levels": (35, 40)}),
+    )
 
 
 # TODO: This misses a lot of cases

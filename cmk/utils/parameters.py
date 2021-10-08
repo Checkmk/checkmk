@@ -17,7 +17,7 @@ _IsTimeperiodActiveCallback = Callable[[TimeperiodName], Optional[bool]]
 # this is not particularly clever, but an easy way to allow for
 # an instance check (for the transitioning phase)
 class TimespecificParameters:
-    def __init__(self, entries: Sequence[TimespecificParameterSet]) -> None:
+    def __init__(self, entries: Sequence[TimespecificParameterSet] = ()) -> None:
         self.entries: Final = tuple(entries)
 
     def __eq__(self, other: object) -> bool:

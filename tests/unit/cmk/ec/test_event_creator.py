@@ -37,7 +37,7 @@ def event_creator():
                 'priority': 5,
                 'facility': 1,
                 'text': 'message',
-                'pid': '8046',
+                'pid': 8046,
                 'core_host': '',
                 'host_in_downtime': False,
                 'application': 'CRON',
@@ -71,7 +71,7 @@ def event_creator():
                 'host': 'Klapprechner',
                 'host_in_downtime': False,
                 'ipaddress': '127.0.0.1',
-                'pid': '8046',
+                'pid': 8046,
                 'priority': 6,
                 'text': 'message',
                 'time': 1558871101.0
@@ -219,7 +219,7 @@ def event_creator():
                 'host': 'gw',
                 'host_in_downtime': False,
                 'ipaddress': '127.0.0.1',
-                'pid': '7122',
+                'pid': 7122,
                 'priority': 4,
                 'text': 'listening for IKE messages',
                 'time': 1427281326.0
@@ -310,6 +310,51 @@ def test_create_event_from_line(event_creator, monkeypatch, line, expected):
     address = ("127.0.0.1", 1234)
     with on_time(1550000000.0, "CET"):
         assert event_creator.create_event_from_line(line, address) == expected
+
+
+@pytest.mark.parametrize(
+    "line, expected_result",
+    [
+        pytest.param(
+            "App42Blah[4711]: a message",
+            {
+                "application": "App42Blah",
+                "pid": 4711,
+                "text": "a message",
+            },
+            id="content with both application and pid",
+        ),
+        pytest.param(
+            "App42Blah: a message",
+            {
+                "application": "App42Blah",
+                "pid": 0,
+                "text": "a message",
+            },
+            id="content with application and without pid",
+        ),
+        pytest.param(
+            "App42Blah a message",
+            {
+                "application": "",
+                "pid": 0,
+                "text": "App42Blah a message",
+            },
+            id="content with neither application nor pid",
+        ),
+        pytest.param(
+            "C:/this/is/no/tag a message",
+            {
+                "application": "",
+                "pid": 0,
+                "text": "C:/this/is/no/tag a message",
+            },
+            id="content with Windows path at the beginning",
+        ),
+    ],
+)
+def test_parse_syslog_info(event_creator, line: str, expected_result: Mapping[str, Any]) -> None:
+    assert event_creator._parse_syslog_info(line) == expected_result
 
 
 class TestEventCreator:

@@ -670,6 +670,7 @@ export class FigureTooltip {
  * @param {string} options.label - Text to draw in the label
  * @param {string} options.css_class - Css classes to append to the label
  * @param {boolean} options.visible - Whether to draw the label at all
+ * @param {string} options.font_size - Optional font size
  */
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(figurebase, options) {
@@ -679,7 +680,7 @@ export function state_component(figurebase, options) {
         return;
     }
     //hard fix for the moment
-    let font_size = 14;
+    let font_size = options.font_size ? options.font_size : 14;
     let state_component = figurebase.svg
         .selectAll(".state_component")
         .data([options])
@@ -711,7 +712,7 @@ export function state_component(figurebase, options) {
         .join("text")
         .attr("text-anchor", "middle")
         .attr("dx", font_size * 4)
-        .attr("dy", font_size * 1.2)
+        .attr("dy", font_size * 1.1)
         .style("font-size", font_size + "px")
         .style("fill", "black")
         .style("font-weight", "bold")
@@ -841,5 +842,7 @@ export function metric_value_component(selection, options) {
         .style("font-size", font_size / 2 + "px")
         .style("font-weight", "lighter")
         .text(d => d.unit);
-    if (options.value.unit !== "%") unit.attr("x", options.position.x).attr("dy", "1em");
+    if (options.value.unit !== "%") {
+        unit.attr("dx", font_size / 6 + "px").attr("dy", font_size / 8 + "px");
+    }
 }

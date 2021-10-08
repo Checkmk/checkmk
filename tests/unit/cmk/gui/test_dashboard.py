@@ -306,7 +306,7 @@ def test_old_dashlet_position(mocker, registry_reset, reset_dashlet_types):
 @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
 def test_old_dashlet_size(mocker, registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_size() == (12, 10)
+    assert dashlet_type.initial_size() == (12, 12)
 
     dashlet_type = _legacy_dashlet_type({"size": (25, 10)})
     assert dashlet_type.initial_size() == (25, 10)

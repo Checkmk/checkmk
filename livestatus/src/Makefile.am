@@ -99,7 +99,6 @@ liblivestatus_a_LD_FLAGS = \
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
         AttributeListAsIntColumn.cc \
-        AttributeListColumn.cc \
         AttributeListColumnUtils.cc \
         Average.cc \
         BlobColumn.cc \

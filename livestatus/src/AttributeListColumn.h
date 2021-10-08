@@ -16,10 +16,10 @@
 #include "AttributeListAsIntColumn.h"
 #include "Filter.h"
 #include "ListColumn.h"
+#include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class ColumnOffsets;
-class Row;
 
 class AttributeListColumn : public deprecated::ListColumn {
 public:
@@ -30,11 +30,15 @@ public:
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string &value) const override;
+        const std::string &value) const override {
+        return _int_view_column.createFilter(kind, relOp, value);
+    }
 
     std::vector<std::string> getValue(
-        Row row, const contact *auth_user,
-        std::chrono::seconds timezone_offset) const override;
+        Row row, const contact * /*auth_user*/,
+        std::chrono::seconds /*timezone_offset*/) const override {
+        return _int_view_column.getAttributes(row);
+    }
 
 private:
     AttributeListAsIntColumn _int_view_column;

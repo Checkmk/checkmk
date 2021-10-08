@@ -46,12 +46,12 @@ struct AttributeBitmaskLambdaColumn : IntColumn::Callback<T, Default> {
 template <class T>
 class AttributeListColumn2 : public deprecated::ListColumn {
 public:
-    AttributeListColumn2(const std::string& name,
-                         const std::string& description,
-                         const ColumnOffsets& offsets,
-                         const AttributeBitmaskLambdaColumn<T>& bitmask_col)
+    AttributeListColumn2(
+        const std::string& name, const std::string& description,
+        const ColumnOffsets& offsets,
+        const typename AttributeBitmaskLambdaColumn<T>::function_type& f)
         : deprecated::ListColumn(name, description, offsets)
-        , bitmask_col_{bitmask_col} {}
+        , bitmask_col_{name, description, offsets, f} {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

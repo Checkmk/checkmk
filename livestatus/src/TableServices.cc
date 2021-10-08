@@ -18,7 +18,6 @@
 #include <utility>
 #include <vector>
 
-#include "AttributeListColumn.h"
 #include "AttributeListLambdaColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
@@ -421,11 +420,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified", offsets,
         [](const service &r) { return r.modified_attributes; }));
-    table->addColumn(std::make_unique<AttributeListColumn>(
+    table->addColumn(std::make_unique<AttributeListColumn2<service>>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes", offsets.add([](Row r) {
-            return &r.rawData<service>()->modified_attributes;
-        })));
+        "A list of all modified attributes", offsets,
+        [](const service &r) { return r.modified_attributes; }));
     table->addColumn(std::make_unique<IntColumn::Callback<service>>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",

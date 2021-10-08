@@ -107,7 +107,7 @@ std::string TableContacts::namePrefix() const { return "contact_"; }
 // static
 void TableContacts::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets) {
-    auto* mc = table->core();
+    auto *mc = table->core();
     table->addColumn(std::make_unique<StringColumn::Callback<contact>>(
         prefix + "name", "The login name of the contact person", offsets,
         [](const contact &ct) { return ct.name == nullptr ? ""s : ct.name; }));
@@ -232,9 +232,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<AttributeListColumn2<contact>>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes", offsets,
-        AttributeBitmaskLambdaColumn<contact>{
-            ""s, ""s, offsets,
-            [](const contact &ct) { return ct.modified_attributes; }}));
+        [](const contact &ct) { return ct.modified_attributes; }));
 }
 
 void TableContacts::answerQuery(Query *query) {

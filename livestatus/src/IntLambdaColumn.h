@@ -31,9 +31,9 @@ template <class T, IntColumn::value_type Default>
 class IntColumn::Callback : public IntColumn {
     using f0_t = std::function<value_type(const T&)>;
     using f1_t = std::function<value_type(const T&, const contact*)>;
-    using function_type = std::variant<f0_t, f1_t>;
 
 public:
+    using function_type = std::variant<f0_t, f1_t>;
     Callback(const std::string& name, const std::string& description,
              const ColumnOffsets& offsets, const function_type& f)
         : IntColumn{name, description, offsets}, f_{f} {}

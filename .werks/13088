@@ -5,7 +5,7 @@ Component: ec
 Date: 1633686115
 Edition: cre
 Knowledge: doc
-Level: 3
+Level: 1
 Version: 2.1.0i1
 
 The event console could not parse a RFC-3164-style message where

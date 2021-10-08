@@ -67,7 +67,6 @@ import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
-from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
@@ -271,7 +270,7 @@ def _commandline_discovery_on_host(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
-        only_new=only_new,
+        keep_vanished=only_new,
         on_error=on_error,
     )
 
@@ -1015,7 +1014,7 @@ def _get_node_services(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
-        only_new=False,
+        keep_vanished=False,
         on_error=on_error,
     )
 
@@ -1158,7 +1157,7 @@ def _get_cluster_services(
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
-            only_new=True,
+            keep_vanished=True,
             on_error=on_error,
         )
 

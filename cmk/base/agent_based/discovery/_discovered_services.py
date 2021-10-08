@@ -45,7 +45,7 @@ def analyse_discovered_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
-    only_new: bool,  # TODO: find a better name downwards in the callstack
+    keep_vanished: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[AutocheckService]:
 
@@ -59,7 +59,7 @@ def analyse_discovered_services(
             on_error=on_error,
         ),
         run_plugin_names=run_plugin_names,
-        only_new=only_new,
+        keep_vanished=keep_vanished,
     )
 
 
@@ -68,7 +68,7 @@ def _analyse_discovered_services(
     existing_services: Sequence[AutocheckService],
     discovered_services: List[AutocheckService],
     run_plugin_names: Container[CheckPluginName],
-    only_new: bool,
+    keep_vanished: bool,
 ) -> QualifiedDiscovery[AutocheckService]:
 
     return QualifiedDiscovery(
@@ -77,7 +77,7 @@ def _analyse_discovered_services(
         + _services_to_keep(
             choose_from=existing_services,
             run_plugin_names=run_plugin_names,
-            only_new=only_new,
+            keep_vanished=keep_vanished,
         ),
         key=lambda s: s.id(),
     )
@@ -86,24 +86,30 @@ def _analyse_discovered_services(
 def _services_to_keep(
     *,
     choose_from: Sequence[AutocheckService],
-    only_new: bool,
     run_plugin_names: Container[CheckPluginName],
+    keep_vanished: bool,
 ) -> List[AutocheckService]:
-    # There are tree ways of how to merge existing and new discovered checks:
-    # 1. -II without --plugins=
-    #        run_plugin_names is EVERYTHING, only_new is False
-    #    --> completely drop old services, only use new ones
-    if not only_new:
-        if run_plugin_names is EVERYTHING:
-            return []
-        # 2. -II with --plugins=
-        #        check_plugin_names is not empty, only_new is False
-        #    --> keep all services of other plugins
-        return [s for s in choose_from if s.check_plugin_name not in run_plugin_names]
-    # 3. -I
-    #    --> just add new services
-    #        only_new is True
-    return list(choose_from)
+    """Compile a list if services to keep in addition to the discovered ones
+
+    These services are considered to be currently present (even if they are not discovered).
+    Always keep the services of plugins that are not being run.
+    """
+    return (
+        list(choose_from)
+        if keep_vanished
+        else _drop_plugins_services(choose_from, run_plugin_names)
+    )
+
+
+def _drop_plugins_services(
+    services: Sequence[AutocheckService],
+    plugin_names: Container[CheckPluginName],
+) -> List[AutocheckService]:
+    return (
+        []
+        if plugin_names is EVERYTHING
+        else [s for s in services if s.check_plugin_name not in plugin_names]
+    )
 
 
 def _load_existing_services(

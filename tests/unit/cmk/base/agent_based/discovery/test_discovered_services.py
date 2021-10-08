@@ -20,7 +20,7 @@ def test_discover_only_new():
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
-        only_new=True,
+        keep_vanished=True,
     )
 
     assert not result.vanished
@@ -28,13 +28,13 @@ def test_discover_only_new():
     assert result.new == [_service("B", "1")]
 
 
-def test_discover_not_only_new():
+def test_discover_not_keep_vanished():
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
-        only_new=False,
+        keep_vanished=False,
     )
 
     assert result.vanished == [_service("A", "1")]
@@ -48,7 +48,7 @@ def test_discover_run_plugin_names():
         existing_services=[_service("A", "1"), _service("B", "1")],
         discovered_services=[_service("B", "2")],
         run_plugin_names={CheckPluginName("B")},
-        only_new=False,
+        keep_vanished=False,
     )
 
     assert result.vanished == [_service("B", "1")]

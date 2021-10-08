@@ -13,7 +13,6 @@
 #include <string>
 #include <utility>
 
-#include "AttributeListAsIntColumn.h"
 #include "AttributeListColumnUtils.h"
 #include "IntColumn.h"
 #include "IntFilter.h"

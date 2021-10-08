@@ -13,7 +13,7 @@
 #include "BoolColumn.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
 #include "Query.h"

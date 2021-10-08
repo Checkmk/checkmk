@@ -29,7 +29,7 @@
 #include "DowntimeRenderer.h"
 #include "DynamicColumn.h"
 #include "DynamicRRDColumn.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
 #include "MacroExpander.h"

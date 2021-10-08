@@ -15,7 +15,7 @@
 #include <utility>
 
 #include "Column.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logfile.h"

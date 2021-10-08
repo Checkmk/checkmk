@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "DoubleColumn.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "StringColumn.h"

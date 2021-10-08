@@ -6,7 +6,7 @@
 #include "TableEventConsoleRules.h"
 
 #include "Column.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "StringColumn.h"
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)

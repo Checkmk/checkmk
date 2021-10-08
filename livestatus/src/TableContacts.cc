@@ -17,7 +17,7 @@
 #include "AttributesLambdaColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"

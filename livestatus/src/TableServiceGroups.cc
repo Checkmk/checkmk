@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "Column.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "LogEntry.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"

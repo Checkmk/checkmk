@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "Column.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "ListLambdaColumn.h"
 #include "Row.h"
 #include "StringColumn.h"

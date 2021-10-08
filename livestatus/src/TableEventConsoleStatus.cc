@@ -9,7 +9,7 @@
 
 #include "Column.h"
 #include "DoubleColumn.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "ListLambdaColumn.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"

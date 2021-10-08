@@ -17,7 +17,7 @@
 #include "BoolColumn.h"
 #include "Column.h"
 #include "DoubleColumn.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"

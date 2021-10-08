@@ -11,7 +11,7 @@
 #include "Column.h"
 #include "HostListRenderer.h"
 #include "HostListState.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"

@@ -16,7 +16,6 @@
 #include "AttributeListColumnUtils.h"
 #include "IntColumn.h"
 #include "IntFilter.h"
-#include "IntLambdaColumn.h"
 #include "ListColumn.h"
 
 template <class T, int32_t Default = 0>

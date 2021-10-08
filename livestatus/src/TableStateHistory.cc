@@ -17,7 +17,7 @@
 #include "DoubleColumn.h"
 #include "Filter.h"
 #include "HostServiceState.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "LogEntry.h"
 #include "Logger.h"
 #include "MonitoringCore.h"

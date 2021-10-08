@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "Row.h"
 #include "gtest/gtest.h"
 

@@ -18,8 +18,8 @@
 #include <utility>
 #include <vector>
 
-#include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "AttributeListLambdaColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
 #include "CommentRenderer.h"
@@ -417,11 +417,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
         offsets, [](const service &r) { return r.obsess; }));
 #endif  // NAGIOS4
-    table->addColumn(std::make_unique<AttributeListAsIntColumn>(
+    table->addColumn(std::make_unique<AttributeBitmaskLambdaColumn<service>>(
         prefix + "modified_attributes",
-        "A bitmask specifying which attributes have been modified",
-        offsets.add(
-            [](Row r) { return &r.rawData<service>()->modified_attributes; })));
+        "A bitmask specifying which attributes have been modified", offsets,
+        [](const service &r) { return r.modified_attributes; }));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes", offsets.add([](Row r) {

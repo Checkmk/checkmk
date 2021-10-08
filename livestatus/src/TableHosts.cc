@@ -18,8 +18,8 @@
 #include <utility>
 #include <vector>
 
-#include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "AttributeListLambdaColumn.h"
 #include "BlobColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
@@ -462,11 +462,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "The current obsess_over_host setting... (0/1)", offsets,
         [](const host &r) { return r.obsess; }));
 #endif  // NAGIOS4
-    table->addColumn(std::make_unique<AttributeListAsIntColumn>(
+    table->addColumn(std::make_unique<AttributeBitmaskLambdaColumn<host>>(
         prefix + "modified_attributes",
-        "A bitmask specifying which attributes have been modified",
-        offsets.add(
-            [](Row r) { return &r.rawData<host>()->modified_attributes; })));
+        "A bitmask specifying which attributes have been modified", offsets,
+        [](const host &r) { return r.modified_attributes; }));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes", offsets.add([](Row r) {

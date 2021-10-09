@@ -20,7 +20,7 @@ import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 from cmk.base.check_utils import AutocheckService
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import ServiceLabel
 
 
 @pytest.fixture(autouse=True)

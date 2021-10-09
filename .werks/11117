@@ -17,5 +17,5 @@ The afore mentioned feature is no longer supported.
 Creation of host labels can now only be implemented using the
 new check API. It is done by passing a `host_label_function`
 to the `register.agent_section` function. For details please
-refer to the dokumentation.
+refer to the documentation.
 

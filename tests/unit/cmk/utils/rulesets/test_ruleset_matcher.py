@@ -24,7 +24,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import ServiceLabel
 
 
 def test_ruleset_match_object_no_conditions() -> None:

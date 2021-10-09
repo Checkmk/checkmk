@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import MutableMapping
 from typing import Dict
 
 import pytest
@@ -15,7 +14,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import HostLabelValueDict, HostName, SectionName
 
 import cmk.base.config as config
-from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
+from cmk.base.discovered_labels import HostLabel, ServiceLabel
 
 
 class TestServiceLabel:
@@ -29,84 +28,6 @@ class TestServiceLabel:
         assert ServiceLabel("a", "b") == ServiceLabel("a", "b")
         assert ServiceLabel("a", "b") != ServiceLabel("a", "c")
         assert ServiceLabel("a", "b") != ServiceLabel("c", "b")
-
-
-@pytest.fixture(name="labels")
-def labels_fixture():
-    return DiscoveredServiceLabels()
-
-
-def test_discovered_labels_type(labels):
-    assert isinstance(labels, MutableMapping)
-
-
-def test_discovered_labels_is_empty(labels):
-    assert labels.is_empty()
-    labels["abc"] = "123"
-    assert not labels.is_empty()
-
-
-def test_discovered_labels_getitem(labels):
-    labels["abc"] = "123"
-    assert labels["abc"] == "123"
-
-
-def test_discovered_labels_delitem(labels):
-    labels["abc"] = "123"
-    assert "abc" in labels
-
-    del labels["abc"]
-    assert "abc" not in labels
-
-
-def test_discovered_labels_iter(labels):
-    labels["abc"] = "123"
-    labels["xyz"] = "bla"
-    assert sorted(labels.keys()) == ["abc", "xyz"]
-
-
-def test_discovered_labels_len(labels):
-    assert len(labels) == 0
-
-    labels["abc"] = "123"
-    labels["xyz"] = "bla"
-
-    assert len(labels) == 2
-
-
-def test_discovered_labels_merge(labels):
-    labels["äbc"] = "123"
-    labels["xyz"] = "blä"
-
-    merge_labels = labels.__class__()
-    merge_labels["xyz"] = "blüb"
-
-    labels.update(merge_labels)
-    assert labels["äbc"] == "123"
-    assert labels["xyz"] == "blüb"
-
-
-def test_discovered_service_labels_to_dict():
-    labels = DiscoveredServiceLabels()
-    assert labels.to_dict() == {}
-
-    labels["äbc"] = "123"
-    labels["xyz"] = "blä"
-
-    assert labels.to_dict() == {
-        "äbc": "123",
-        "xyz": "blä",
-    }
-
-
-def test_discovered_service_labels_repr():
-    labels = DiscoveredServiceLabels()
-    labels.add_label(ServiceLabel("äbc", "123"))
-    labels.add_label(ServiceLabel("ccc", "ddd"))
-    assert (
-        repr(labels)
-        == "DiscoveredServiceLabels(ServiceLabel('ccc', 'ddd'), ServiceLabel('äbc', '123'))"
-    )
 
 
 def test_host_labels_to_dict():

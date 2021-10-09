@@ -41,7 +41,7 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.check_utils import AutocheckService, Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
+from cmk.base.discovered_labels import HostLabel, ServiceLabel
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
 

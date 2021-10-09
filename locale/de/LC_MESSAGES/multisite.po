@@ -11742,7 +11742,8 @@ msgstr "Führe Echtzeit-Checks für die folgenden Plugins aus"
 msgid "Create regular time-schedule for this report"
 msgstr "Für diesen Bericht einen Eintrag im Berichtsplaner erstellen"
 
-msgid "Create rule in folder: "
+#, fuzzy
+msgid "Create rule in folder"
 msgstr "Erzeuge Regel in Ordner: "
 
 msgid "Create separate Service for DB-Time"
@@ -29007,14 +29008,14 @@ msgstr "Mail in ausgehender / deferred Mailschlange"
 msgid "Mails received rate"
 msgstr "Rate der empfangenen Mails"
 
+msgid "Main"
+msgstr "Hauptmenü"
+
 msgid "Main Overview"
 msgstr "Hauptübersicht"
 
 msgid "Main dashboard"
 msgstr "Haupt-Dashboard"
-
-msgid "Main directory"
-msgstr "Hauptverzeichnis"
 
 msgid "Main folder"
 msgstr "Hauptverzeichnis"
@@ -64611,6 +64612,9 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Main directory"
+#~ msgstr "Hauptverzeichnis"
+
 #~ msgid "Label with status color"
 #~ msgstr "Label mit Statusfarbe"
 
@@ -65389,9 +65393,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Event Console Performance"
 #~ msgstr "Event Console: Leistung"
-
-#~ msgid "Main"
-#~ msgstr "Hauptmenü"
 
 #~ msgid "Micro Core Statistics"
 #~ msgstr "Micro Core Statistik"

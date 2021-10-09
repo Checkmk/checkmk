@@ -11782,7 +11782,8 @@ msgstr "Crea dati in tempo reale eseguendo i seguenti plugin dell'agente"
 msgid "Create regular time-schedule for this report"
 msgstr "Creare un orario regolare per questo rapporto"
 
-msgid "Create rule in folder: "
+#, fuzzy
+msgid "Create rule in folder"
 msgstr "Creare una regola nella cartella: "
 
 msgid "Create separate Service for DB-Time"
@@ -29049,14 +29050,14 @@ msgstr "Posta in coda di posta in uscita/posta differita"
 msgid "Mails received rate"
 msgstr "Tasso di posta ricevuta"
 
+msgid "Main"
+msgstr ""
+
 msgid "Main Overview"
 msgstr "Panoramica principale"
 
 msgid "Main dashboard"
 msgstr "Cruscotto principale"
-
-msgid "Main directory"
-msgstr "Elenco principale"
 
 msgid "Main folder"
 msgstr "Cartella principale"
@@ -64733,6 +64734,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Main directory"
+#~ msgstr "Elenco principale"
 
 #~ msgid "Label with status color"
 #~ msgstr "Etichetta con colore di stato"

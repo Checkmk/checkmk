@@ -11898,7 +11898,8 @@ msgstr ""
 msgid "Create regular time-schedule for this report"
 msgstr "Créez un calendrier régulier pour ce rapport"
 
-msgid "Create rule in folder: "
+#, fuzzy
+msgid "Create rule in folder"
 msgstr "Créer une règle dans le dossier : "
 
 msgid "Create separate Service for DB-Time"
@@ -29343,14 +29344,14 @@ msgstr ""
 msgid "Mails received rate"
 msgstr "Taux de courriers reçus"
 
+msgid "Main"
+msgstr ""
+
 msgid "Main Overview"
 msgstr "Aperçu général"
 
 msgid "Main dashboard"
 msgstr "Tableau de bord principal"
-
-msgid "Main directory"
-msgstr "Répertoire principal"
 
 msgid "Main folder"
 msgstr "Dossier principal"
@@ -65448,6 +65449,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Main directory"
+#~ msgstr "Répertoire principal"
 
 #~ msgid "Label with status color"
 #~ msgstr "Étiquette avec couleur d'état"

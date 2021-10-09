@@ -11304,8 +11304,9 @@ msgstr ""
 msgid "Create regular time-schedule for this report"
 msgstr "このレポートの定期的なタイムスケジュールを作成します"
 
-msgid "Create rule in folder: "
-msgstr ""
+#, fuzzy
+msgid "Create rule in folder"
+msgstr "フォルダ内のルール"
 
 msgid "Create separate Service for DB-Time"
 msgstr "DB-Time用に個別のサービスを作成する"
@@ -27938,14 +27939,14 @@ msgstr "送信メールキュー内のメール/遅延メール"
 msgid "Mails received rate"
 msgstr "メール受信率"
 
+msgid "Main"
+msgstr ""
+
 msgid "Main Overview"
 msgstr "主な概要"
 
 msgid "Main dashboard"
 msgstr "メインダッシュボード"
-
-msgid "Main directory"
-msgstr "メインディレクトリ"
 
 msgid "Main folder"
 msgstr "メインフォルダ"
@@ -61662,6 +61663,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Main directory"
+#~ msgstr "メインディレクトリ"
 
 #~ msgid "Label with status color"
 #~ msgstr "ステータスカラーのラベル"

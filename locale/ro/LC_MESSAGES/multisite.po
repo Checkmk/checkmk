@@ -11160,8 +11160,9 @@ msgstr ""
 msgid "Create regular time-schedule for this report"
 msgstr ""
 
-msgid "Create rule in folder: "
-msgstr ""
+#, fuzzy
+msgid "Create rule in folder"
+msgstr "Agregare noua"
 
 msgid "Create separate Service for DB-Time"
 msgstr ""
@@ -27656,15 +27657,15 @@ msgstr ""
 msgid "Mails received rate"
 msgstr ""
 
+msgid "Main"
+msgstr ""
+
 msgid "Main Overview"
 msgstr ""
 
 #, fuzzy
 msgid "Main dashboard"
 msgstr "Adaugă element"
-
-msgid "Main directory"
-msgstr ""
 
 #, fuzzy
 msgid "Main folder"
@@ -60976,10 +60977,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Create Random Hosts"
 #~ msgstr "Verificări active"
-
-#, fuzzy
-#~ msgid "Create aggregation rule"
-#~ msgstr "Agregare noua"
 
 #, fuzzy
 #~ msgid "Create new LDAP Connection"

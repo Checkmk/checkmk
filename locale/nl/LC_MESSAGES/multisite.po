@@ -11753,7 +11753,8 @@ msgstr ""
 msgid "Create regular time-schedule for this report"
 msgstr "Maak een tijdschema voor dit rapport"
 
-msgid "Create rule in folder: "
+#, fuzzy
+msgid "Create rule in folder"
 msgstr "Maak een regel in de map: "
 
 msgid "Create separate Service for DB-Time"
@@ -28990,14 +28991,14 @@ msgstr "Mails in de wachtrij voor uitgaande mail/uitgestelde mails"
 msgid "Mails received rate"
 msgstr "Ontvangen post"
 
+msgid "Main"
+msgstr ""
+
 msgid "Main Overview"
 msgstr "Hoofd Overzicht"
 
 msgid "Main dashboard"
 msgstr "Hoofd dashboard"
-
-msgid "Main directory"
-msgstr "Hoofdmap"
 
 msgid "Main folder"
 msgstr "Hoofdmap"
@@ -64596,6 +64597,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Main directory"
+#~ msgstr "Hoofdmap"
 
 #~ msgid "Label with status color"
 #~ msgstr "Label met status kleur"

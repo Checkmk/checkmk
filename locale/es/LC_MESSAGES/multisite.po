@@ -11847,7 +11847,8 @@ msgstr "Crear datos en tiempo real ejecutando los siguientes plugins de agente"
 msgid "Create regular time-schedule for this report"
 msgstr "Crear un calendario regular para este informe"
 
-msgid "Create rule in folder: "
+#, fuzzy
+msgid "Create rule in folder"
 msgstr "Crear regla en la carpeta: "
 
 msgid "Create separate Service for DB-Time"
@@ -29221,14 +29222,14 @@ msgstr "Correos en la cola de salida/correos diferidos"
 msgid "Mails received rate"
 msgstr "Tasa de correos recibidos"
 
+msgid "Main"
+msgstr ""
+
 msgid "Main Overview"
 msgstr "Resumen principal"
 
 msgid "Main dashboard"
 msgstr "Cuadro de mandos principal"
-
-msgid "Main directory"
-msgstr "Directorio principal"
 
 msgid "Main folder"
 msgstr "Carpeta principal"
@@ -65128,6 +65129,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Main directory"
+#~ msgstr "Directorio principal"
 
 #~ msgid "Label with status color"
 #~ msgstr "Etiqueta con color de estado"

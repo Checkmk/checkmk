@@ -23,6 +23,19 @@ from cmk.base.discovered_labels import (
 )
 
 
+class TestServiceLabel:
+    def test_label(self):
+        assert ServiceLabel("foo", "bar").label == "foo:bar"
+
+    def test_repr(self):
+        assert repr(ServiceLabel("foo", "bar")) == "ServiceLabel('foo', 'bar')"
+
+    def test_equality(self):
+        assert ServiceLabel("a", "b") == ServiceLabel("a", "b")
+        assert ServiceLabel("a", "b") != ServiceLabel("a", "c")
+        assert ServiceLabel("a", "b") != ServiceLabel("c", "b")
+
+
 @pytest.fixture(name="labels", params=["host", "service"])
 def labels_fixture(request):
     if request.param == "host":

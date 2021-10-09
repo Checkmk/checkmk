@@ -6,21 +6,21 @@
 
 import abc
 from collections.abc import MutableMapping
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Final, Iterator, List, Optional
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import DiscoveredHostLabelsDict, HostLabelValueDict, Labels, SectionName
 
 
 class ABCDiscoveredLabels(MutableMapping, abc.ABC):
-    def __init__(self, *args: "ABCLabel") -> None:
+    def __init__(self, *args: "_Label") -> None:
         super().__init__()
         self._labels: Dict[str, Any] = {}
         for entry in args:
             self.add_label(entry)
 
     @abc.abstractmethod
-    def add_label(self, label: "ABCLabel") -> None:
+    def add_label(self, label: "_Label") -> None:
         raise NotImplementedError()
 
     def is_empty(self) -> bool:
@@ -65,7 +65,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         self._labels: Dict[str, HostLabel] = {}
         super().__init__(*args)
 
-    def add_label(self, label: "ABCLabel") -> None:
+    def add_label(self, label: "_Label") -> None:
         assert isinstance(label, HostLabel)
         self._labels[label.name] = label
 
@@ -96,53 +96,45 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         )
 
 
-class ABCLabel:
+class _Label:
     """Representing a label in Checkmk"""
 
-    __slots__ = ["_name", "_value"]
+    __slots__ = "name", "value"
 
     def __init__(self, name: str, value: str) -> None:
 
         if not isinstance(name, str):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
-        self._name = name
+        self.name: Final = str(name)
 
         if not isinstance(value, str):
             raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
-        self._value = value
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def value(self) -> str:
-        return self._value
+        self.value: Final = str(value)
 
     @property
     def label(self) -> str:
-        return "%s:%s" % (self._name, self._value)
+        return f"{self.name}:{self.value}"
 
     def __repr__(self):
-        return "%s(%r, %r)" % (self.__class__.__name__, self._name, self._value)
+        return f"{self.__class__.__name__}({self.name!r}, {self.value!r})"
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             raise TypeError("cannot compare %s to %s" % (type(self), type(other)))
-        return self.__dict__ == other.__dict__
+        return self.name == other.name and self.value == other.value
 
 
-class ServiceLabel(ABCLabel):
-    pass
+class ServiceLabel(_Label):
+    __slots__ = ()
 
 
-class HostLabel(ABCLabel):
+class HostLabel(_Label):
     """Representing a host label in Checkmk during runtime
 
     Besides the label itself it keeps the information which plugin discovered the host label
     """
 
-    __slots__ = ["_plugin_name"]
+    __slots__ = ("plugin_name",)
 
     @classmethod
     def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> "HostLabel":
@@ -161,20 +153,16 @@ class HostLabel(ABCLabel):
         plugin_name: Optional[SectionName] = None,
     ) -> None:
         super().__init__(name, value)
-        self._plugin_name = plugin_name
-
-    @property
-    def plugin_name(self) -> Optional[SectionName]:
-        return self._plugin_name
+        self.plugin_name: Final = plugin_name
 
     def to_dict(self) -> HostLabelValueDict:
         return {
             "value": self.value,
-            "plugin_name": None if self._plugin_name is None else str(self._plugin_name),
+            "plugin_name": None if self.plugin_name is None else str(self.plugin_name),
         }
 
     def __repr__(self) -> str:
-        return f"HostLabel({self.name!r}, {self.value!r}, plugin_name={self._plugin_name!r})"
+        return f"HostLabel({self.name!r}, {self.value!r}, plugin_name={self.plugin_name!r})"
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HostLabel):
@@ -197,7 +185,7 @@ class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-
         self._labels: Labels = {}
         super().__init__(*args)
 
-    def add_label(self, label: ABCLabel) -> None:
+    def add_label(self, label: _Label) -> None:
         assert isinstance(label, ServiceLabel)
         self._labels[label.name] = label.value
 

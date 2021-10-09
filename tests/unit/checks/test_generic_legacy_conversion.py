@@ -771,7 +771,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "pulse_secure_disk_util_def_levels",
         "pulse_secure_mem_util_def_levels",
         "pulse_secure_temp_def_levels",
-        "qlogic_fcport_default_levels",
         "qlogic_fcport_inventory_admstates",
         "qlogic_fcport_inventory_opstates",
         "qlogic_sanbox_status_map",

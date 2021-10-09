@@ -91,7 +91,7 @@ from cmk.base.check_utils import AutocheckService
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
+from cmk.base.discovered_labels import HostLabel, ServiceLabel
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -286,9 +286,9 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         ) in _transform_pre_20_items(new_items).items():
             check_plugin_name = CheckPluginName(raw_check_plugin_name)
 
-            service_labels = DiscoveredServiceLabels()
-            for label_id, label_value in raw_service_labels.items():
-                service_labels.add_label(ServiceLabel(label_id, label_value))
+            service_labels = {
+                name: ServiceLabel(name, value) for name, value in raw_service_labels.items()
+            }
 
             new_services.append(
                 AutocheckServiceWithNodes(

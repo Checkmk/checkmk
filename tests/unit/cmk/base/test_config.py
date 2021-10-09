@@ -2327,9 +2327,9 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
                 None,
                 "CPU load",
                 "{}",
-                service_labels=DiscoveredServiceLabels(
-                    ServiceLabel("abc", "xä"),
-                ),
+                service_labels={
+                    "abc": ServiceLabel("abc", "xä"),
+                },
             )
         ],
     )

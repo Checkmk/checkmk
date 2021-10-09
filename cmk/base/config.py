@@ -3460,11 +3460,14 @@ class ConfigCache:
         hostname: HostName,
         service_desc: ServiceName,
     ) -> Labels:
-        return self._autochecks_manager.discovered_labels_of(
-            hostname,
-            service_desc,
-            service_description,  # this is the global function!
-        ).to_dict()
+        return {
+            label.name: label.value
+            for label in self._autochecks_manager.discovered_labels_of(
+                hostname,
+                service_desc,
+                service_description,  # this is the global function!
+            ).values()
+        }
 
     def get_tag_to_group_map(self) -> TagIDToTaggroupID:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)

@@ -34,7 +34,7 @@ from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.check_utils import AutocheckService, ServiceID
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import ServiceLabel
 
 from .utils import QualifiedDiscovery
 
@@ -354,5 +354,5 @@ def _enriched_discovered_services(
             description=description,
             parameters=unwrap_parameters(service.parameters),
             # Convert from APIs ServiceLabel to internal ServiceLabel
-            service_labels=DiscoveredServiceLabels(*(ServiceLabel(*l) for l in service.labels)),
+            service_labels={name: ServiceLabel(name, value) for name, value in service.labels},
         )

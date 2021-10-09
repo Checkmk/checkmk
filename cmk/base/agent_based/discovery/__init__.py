@@ -1341,7 +1341,7 @@ def _check_preview_table_row(
         exitcode,
         output,
         perfdata,
-        service.service_labels.to_dict(),
+        {label.name: label.value for label in service.service_labels.values()},
         list(found_on_nodes),
     )
 

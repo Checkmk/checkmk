@@ -29,7 +29,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
 from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import ServiceLabel
 
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters], Optional[LegacyCheckParameters]
@@ -65,7 +65,9 @@ class AutochecksManager:
         self._autochecks: Dict[HostName, Sequence[Service]] = {}
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of: Dict[HostName, Dict[ServiceName, DiscoveredServiceLabels]] = {}
+        self._discovered_labels_of: Dict[
+            HostName, Dict[ServiceName, Mapping[str, ServiceLabel]]
+        ] = {}
         self._raw_autochecks_cache: Dict[HostName, Sequence[_AutocheckEntry]] = {}
 
     def get_autochecks_of(
@@ -112,7 +114,7 @@ class AutochecksManager:
                     autocheck_entry.item,
                     autocheck_entry.discovered_parameters,
                 ),
-                service_labels=DiscoveredServiceLabels(*autocheck_entry.service_labels.values()),
+                service_labels=autocheck_entry.service_labels,
             )
 
     def discovered_labels_of(
@@ -120,7 +122,7 @@ class AutochecksManager:
         hostname: HostName,
         service_desc: ServiceName,
         get_service_description: GetServiceDescription,
-    ) -> DiscoveredServiceLabels:
+    ) -> Mapping[str, ServiceLabel]:
         # NOTE: this returns an empty labels object for non-existing services
         with suppress(KeyError):
             return self._discovered_labels_of[hostname][service_desc]
@@ -135,13 +137,13 @@ class AutochecksManager:
                     get_service_description(
                         hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
                     )
-                ] = DiscoveredServiceLabels(*autocheck_entry.service_labels.values())
+                ] = autocheck_entry.service_labels
             except Exception:
                 continue  # ignore
 
         if (labels := hosts_labels.get(service_desc)) is not None:
             return labels
-        return DiscoveredServiceLabels()
+        return {}
 
     def _read_raw_autochecks(
         self,
@@ -330,9 +332,9 @@ def _parse_autocheck_entry(
         item=item,
         description=description,
         parameters=parameters,
-        service_labels=DiscoveredServiceLabels(
-            *_parse_discovered_service_label_from_dict(dict_service_labels),
-        ),
+        service_labels={
+            l.name: l for l in _parse_discovered_service_label_from_dict(dict_service_labels)
+        },
     )
 
 

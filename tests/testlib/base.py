@@ -45,7 +45,7 @@ class _AutochecksMocker:
                 for service in self.autochecks.get(hostname, ())
             }[service_descr]
         except KeyError:
-            return autochecks.DiscoveredServiceLabels()
+            return {}
 
 
 class Scenario:

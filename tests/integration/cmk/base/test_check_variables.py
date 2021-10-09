@@ -77,7 +77,7 @@ check_info["test_check_1"] = {
     assert str(services[0].check_plugin_name) == "test_check_1"
     assert services[0].item is None
     assert services[0].parameters == (10.0, 20.0)
-    assert services[0].service_labels.to_dict() == {}
+    assert services[0].service_labels == {}
 
     # Now execute the check function to verify the variable is available
     p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -172,7 +172,7 @@ check_info["test_check_2"] = {
     assert str(services[0].check_plugin_name) == "test_check_2"
     assert services[0].item is None
     assert services[0].parameters == {}
-    assert services[0].service_labels.to_dict() == {}
+    assert services[0].service_labels == {}
 
 
 # Test whether or not factory settings and checkgroup parameters work
@@ -237,7 +237,7 @@ check_info["test_check_3"] = {
     assert str(services[0].check_plugin_name) == "test_check_3"
     assert services[0].item is None
     assert services[0].parameters == {}
-    assert services[0].service_labels.to_dict() == {}
+    assert services[0].service_labels == {}
 
     # Now execute the check function to verify the variable is available
     p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

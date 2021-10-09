@@ -52,16 +52,17 @@ def test_discovered_service_init() -> None:
     assert ser.item == "Item"
     assert ser.description == "ABC Item"
     assert ser.parameters is None
-    assert ser.service_labels.to_dict() == {}
+    assert ser.service_labels == {}
 
     ser = discovery.Service(
         CheckPluginName("abc"),
         "Item",
         "ABC Item",
         None,
-        DiscoveredServiceLabels(ServiceLabel("läbel", "lübel")),
+        {"läbel": ServiceLabel("läbel", "lübel")},
     )
-    assert ser.service_labels.to_dict() == {"läbel": "lübel"}
+
+    assert ser.service_labels == {"läbel": ServiceLabel("läbel", "lübel")}
 
     with pytest.raises(AttributeError):
         ser.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
@@ -893,7 +894,12 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         )
 
     services = autochecks.parse_autochecks_file(testhost, config.service_description)
-    found = {(s.check_plugin_name, s.item): s.service_labels.to_dict() for s in services}
+    found = {
+        (s.check_plugin_name, s.item): {
+            label.name: label.value for label in s.service_labels.values()
+        }
+        for s in services
+    }
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)

@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Final, Optional, Tuple
+from typing import Any, Dict, Final, Mapping, Optional, Tuple
 
 from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
-from cmk.base.discovered_labels import DiscoveredServiceLabels
+from cmk.base.discovered_labels import ServiceLabel
 
 ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, "Service"]
@@ -23,13 +23,13 @@ class Service:
         item: Item,
         description: str,
         parameters: LegacyCheckParameters,
-        service_labels: Optional[DiscoveredServiceLabels] = None,
+        service_labels: Optional[Mapping[str, ServiceLabel]] = None,
     ) -> None:
         self.check_plugin_name: Final = check_plugin_name
         self.item: Final = item
         self.description: Final = description
-        self.service_labels: Final = service_labels or DiscoveredServiceLabels()
         self.parameters: Final = parameters
+        self.service_labels: Final = service_labels or {}
 
     def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
@@ -82,5 +82,5 @@ class AutocheckService(Service):
             str(self.check_plugin_name),
             self.item,
             self.parameters,
-            self.service_labels.to_dict(),
+            {l.name: l.value for l in self.service_labels.values()},
         )

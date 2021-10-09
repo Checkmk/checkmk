@@ -691,11 +691,11 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
                 None,
                 "CPU load",
                 "{}",
-                service_labels=DiscoveredServiceLabels(
-                    ServiceLabel("os", "linux"),
-                    ServiceLabel("abc", "xä"),
-                    ServiceLabel("hu", "ha"),
-                ),
+                service_labels={
+                    "os": ServiceLabel("os", "linux"),
+                    "abc": ServiceLabel("abc", "xä"),
+                    "hu": ServiceLabel("hu", "ha"),
+                },
             )
         ],
     )
@@ -709,7 +709,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
                 None,
                 "CPU load",
                 "{}",
-                service_labels=DiscoveredServiceLabels(),
+                service_labels={},
             ),
         ],
     )

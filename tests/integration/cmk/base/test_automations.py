@@ -286,7 +286,11 @@ def test_automation_set_autochecks(test_cfg, site):
 
         data = autochecks.parse_autochecks_file(hostname, config.service_description)
         services = [
-            ((str(s.check_plugin_name), s.item), s.parameters, s.service_labels.to_dict())
+            (
+                (str(s.check_plugin_name), s.item),
+                s.parameters,
+                {label.name: label.value for label in s.service_labels.values()},
+            )
             for s in data
         ]
         assert sorted(services) == [

@@ -50,6 +50,9 @@ def check_emc_director_stats(item, params, parsed):
     return check_diskstat_dict(item, params, parsed)
 
 
+factory_settings["emc_vplex_director_stats_default_levels"] = diskstat_default_levels
+
+
 check_info["emc_vplex_director_stats"] = {
     "parse_function": parse_emc_director_stats,
     "check_function": check_emc_director_stats,
@@ -80,5 +83,5 @@ check_info["emc_vplex_director_stats"] = {
     ),
     "has_perfdata": True,
     "group": "diskstat",
-    "default_levels_variable": "diskstat_default_levels",
+    "default_levels_variable": "emc_vplex_director_stats_default_levels",
 }

@@ -29,7 +29,7 @@ check_info["avaya_45xx_temp"] = {
     "check_function": check_avaya_45xx_temp,
     "inventory_function": inventory_avaya_45xx_temp,
     "service_description": "Temperature Chassis %s",
-    "default_levels_variable": "avaya_45xx_temp_temp_default_levels",
+    "default_levels_variable": "avaya_45xx_temp_default_levels",
     "has_perfdata": True,
     "group": "temperature",
     # S5-CHASSIS-MIB::s5ChasTmpSnrTmpValue

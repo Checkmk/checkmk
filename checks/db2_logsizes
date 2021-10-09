@@ -112,5 +112,5 @@ check_info['db2_logsizes'] = {
     "inventory_function": inventory_db2_logsizes,
     "group": "db2_logsize",
     "has_perfdata": True,
-    "default_levels_variable": "db2_logsize_default_levels",
+    "default_levels_variable": "db2_logsizes_default_levels",
 }

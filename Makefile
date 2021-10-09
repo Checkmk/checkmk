@@ -423,6 +423,7 @@ setup:
 	    clang-tidy-$(CLANG_VERSION) \
 	    clang-tools-$(CLANG_VERSION) \
 	    clangd-$(CLANG_VERSION) \
+	    cmake \
 	    lld-$(CLANG_VERSION) \
 	    lldb-$(CLANG_VERSION) \
 	    libclang-$(CLANG_VERSION)-dev \

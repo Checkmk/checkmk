@@ -9,6 +9,7 @@ import ast
 import errno
 import glob
 import io
+import operator
 import os
 import shutil
 import subprocess
@@ -48,6 +49,7 @@ from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginName,
     CheckPluginNameStr,
+    DiscoveredHostLabelsDict,
     DiscoveryResult,
     HostAddress,
     HostName,
@@ -89,13 +91,7 @@ from cmk.base.check_utils import AutocheckService
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import (
-    DiscoveredHostLabels,
-    DiscoveredHostLabelsDict,
-    DiscoveredServiceLabels,
-    HostLabel,
-    ServiceLabel,
-)
+from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -197,8 +193,10 @@ class AutomationTryDiscovery(Automation):
             def make_discovered_host_labels(
                 labels: Sequence[HostLabel],
             ) -> DiscoveredHostLabelsDict:
-                # this dict deduplicates label names!
-                return DiscoveredHostLabels(*{l.name: l for l in labels}.values()).to_dict()
+                # this dict deduplicates label names! TODO: sort only if and where needed!
+                return {
+                    l.name: l.to_dict() for l in sorted(labels, key=operator.attrgetter("name"))
+                }
 
             changed_labels = make_discovered_host_labels(
                 [

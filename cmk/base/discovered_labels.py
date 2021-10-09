@@ -9,7 +9,7 @@ from collections.abc import MutableMapping
 from typing import Any, Dict, Final, Iterator, List, Optional
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import DiscoveredHostLabelsDict, HostLabelValueDict, Labels, SectionName
+from cmk.utils.type_defs import HostLabelValueDict, Labels, SectionName
 
 
 class _Label:
@@ -132,56 +132,11 @@ class ABCDiscoveredLabels(MutableMapping, abc.ABC):
         return "%s(%s)" % (self.__class__.__name__, ", ".join(repr(arg) for arg in self.to_list()))
 
 
-class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
-    """Encapsulates the discovered labels of a single host during runtime"""
-
-    @classmethod
-    def from_dict(cls, dict_labels: DiscoveredHostLabelsDict) -> "DiscoveredHostLabels":
-        labels = cls()
-        for k, v in dict_labels.items():
-            labels.add_label(HostLabel.from_dict(k, v))
-        return labels
-
-    def __init__(self, *args: "HostLabel") -> None:
-        self._labels: Dict[str, HostLabel] = {}
-        super().__init__(*args)
-
-    def add_label(self, label: "_Label") -> None:
-        assert isinstance(label, HostLabel)
-        self._labels[label.name] = label
-
-    def to_dict(self) -> DiscoveredHostLabelsDict:
-        return {
-            label.name: label.to_dict()
-            for label in sorted(self._labels.values(), key=lambda x: x.name)
-        }
-
-    def to_list(self) -> List["HostLabel"]:
-        return sorted(self._labels.values(), key=lambda x: x.name)
-
-    def __add__(self, other: "DiscoveredHostLabels") -> "DiscoveredHostLabels":
-        """Adding [foo:bar2] to [foo:bar1] results in [foo:bar2]. The label value is updated"""
-        if not isinstance(other, DiscoveredHostLabels):
-            raise TypeError("%s not type DiscoveredHostLabels" % other)
-        data = self.to_dict().copy()
-        data.update(other.to_dict())
-        return DiscoveredHostLabels.from_dict(data)
-
-    def __sub__(self, other: "DiscoveredHostLabels") -> "DiscoveredHostLabels":
-        """Removing [foo:bar2] from [foo:bar1] results in []. The label key is removed"""
-        if not isinstance(other, DiscoveredHostLabels):
-            raise TypeError("%s not type DiscoveredHostLabels" % other)
-        data = self.to_dict()
-        return DiscoveredHostLabels.from_dict(
-            {k: data[k] for k in data.keys() - other.to_dict().keys()}
-        )
-
-
 class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single service during runtime"""
 
     def __init__(self, *args: ServiceLabel) -> None:
-        # TODO: Make self._labels also store ServiceLabel objects just like DiscoveredHostLabels
+        # TODO: Make self._labels store ServiceLabel objects
         self._labels: Labels = {}
         super().__init__(*args)
 

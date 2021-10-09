@@ -8,9 +8,18 @@
 import logging
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
-
-from six import ensure_str
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -39,7 +48,7 @@ class _AutocheckEntry(NamedTuple):
     check_plugin_name: CheckPluginName
     item: Item
     discovered_parameters: LegacyCheckParameters
-    service_labels: DiscoveredServiceLabels
+    service_labels: Mapping[str, ServiceLabel]
 
 
 logger = logging.getLogger("cmk.base.autochecks")
@@ -103,7 +112,7 @@ class AutochecksManager:
                     autocheck_entry.item,
                     autocheck_entry.discovered_parameters,
                 ),
-                service_labels=autocheck_entry.service_labels,
+                service_labels=DiscoveredServiceLabels(*autocheck_entry.service_labels.values()),
             )
 
     def discovered_labels_of(
@@ -126,7 +135,7 @@ class AutochecksManager:
                     get_service_description(
                         hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
                     )
-                ] = autocheck_entry.service_labels
+                ] = DiscoveredServiceLabels(*autocheck_entry.service_labels.values())
             except Exception:
                 continue  # ignore
 
@@ -191,16 +200,15 @@ class AutochecksManager:
                     % (entry, hostname, path)
                 )
 
-            labels = DiscoveredServiceLabels()
-            for label_id, label_value in entry["service_labels"].items():
-                labels.add_label(ServiceLabel(label_id, label_value))
-
             autocheck_entries.append(
                 _AutocheckEntry(
                     check_plugin_name=plugin_name,
                     item=item,
                     discovered_parameters=entry["parameters"],
-                    service_labels=labels,
+                    service_labels={
+                        name: ServiceLabel(name, value)
+                        for name, value in entry["service_labels"].items()
+                    },
                 )
             )
 
@@ -322,7 +330,9 @@ def _parse_autocheck_entry(
         item=item,
         description=description,
         parameters=parameters,
-        service_labels=_parse_discovered_service_label_from_dict(dict_service_labels),
+        service_labels=DiscoveredServiceLabels(
+            *_parse_discovered_service_label_from_dict(dict_service_labels),
+        ),
     )
 
 
@@ -344,19 +354,14 @@ def _parse_dict_autocheck_entry(entry: Dict) -> Tuple[object, object, object, ob
 
 def _parse_discovered_service_label_from_dict(
     dict_service_labels: object,
-) -> DiscoveredServiceLabels:
-    labels = DiscoveredServiceLabels()
+) -> Iterable[ServiceLabel]:
     if not isinstance(dict_service_labels, dict):
-        return labels
-    for key, value in dict_service_labels.items():
-        if key is not None:
-            labels.add_label(
-                ServiceLabel(
-                    ensure_str(key),
-                    ensure_str(value),
-                )
-            )
-    return labels
+        return
+    yield from (
+        ServiceLabel(str(key), str(value))
+        for key, value in dict_service_labels.items()
+        if key is not None
+    )
 
 
 def set_autochecks_of_real_hosts(

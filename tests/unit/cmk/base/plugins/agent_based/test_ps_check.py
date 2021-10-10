@@ -12,7 +12,6 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
@@ -144,7 +143,7 @@ PS_DISCOVERY_WATO_RULES = [
         "match": "~.*(fire)fox",
         "descr": "firefox is on %s",
         "user": None,
-        "label": DiscoveredHostLabels(HostLabel("marco", "polo"), HostLabel("peter", "pan")),
+        "label": {"marco": "polo", "peter": "pan"},
     },
     {
         "default_params": {

@@ -13,6 +13,7 @@ from typing import (
     Generator,
     Iterator,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     Optional,
@@ -93,8 +94,17 @@ class PsInfo:
 
 Section = Tuple[int, List[Tuple[PsInfo, List[str]]]]
 
+_InventorySpec = Tuple[
+    str,
+    Optional[str],
+    Optional[Union[str, Literal[False]]],
+    Tuple[Optional[str], bool],
+    Mapping[str, str],
+    Mapping[str, Any],
+]
 
-def get_discovery_specs(params: Sequence[Mapping[str, Any]]):
+
+def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_InventorySpec]:
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
         inventory_specs.append(
@@ -512,7 +522,7 @@ def discover_ps(
 
             # User capturing on rule
             if userspec is False:
-                i_userspec = process_info.user
+                i_userspec: Union[None, str] = process_info.user
             else:
                 i_userspec = userspec
 

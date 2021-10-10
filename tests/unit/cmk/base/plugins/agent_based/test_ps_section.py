@@ -18,7 +18,6 @@ import pytest
 # from cmk.utils.type_defs import CheckPluginName
 #
 # from cmk.base.api.agent_based import value_store
-# from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps
 

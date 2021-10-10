@@ -12,12 +12,10 @@ from cmk.base.plugins.agent_based.utils import ps
 
 pytestmark = pytest.mark.checks
 
-TEST_LABELS = DiscoveredHostLabels.from_dict(
-    {
-        "marco": {"value": "polo", "plugin_name": None},
-        "peter": {"value": "pan", "plugin_name": None},
-    }
-)
+TEST_LABELS = {
+    "marco": "polo",
+    "peter": "pan",
+}
 
 
 def test_get_discovery_specs():

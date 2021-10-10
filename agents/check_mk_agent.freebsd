@@ -92,6 +92,7 @@ set_variable_defaults() {
     : "${MK_CONFDIR:=/etc/check_mk}"
     : "${MK_TMPDIR:=/var/lib/check_mk_agent}"  # TODO: rename to VARDIR
     : "${MK_LOGDIR:=/var/log/check_mk_agent}"
+    : "${SPOOLDIR:=/var/spool/check_mk_agent}"
 
     # some 'booleans'
     [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true

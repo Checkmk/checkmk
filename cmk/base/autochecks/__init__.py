@@ -31,6 +31,8 @@ from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item,
 from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
 from cmk.base.discovered_labels import ServiceLabel
 
+from .utils import AutocheckEntry
+
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters], Optional[LegacyCheckParameters]
 ]
@@ -42,13 +44,6 @@ HostOfClusteredService = Callable[[HostName, str], str]
 class AutocheckServiceWithNodes(NamedTuple):
     service: AutocheckService
     nodes: Sequence[HostName]
-
-
-class _AutocheckEntry(NamedTuple):
-    check_plugin_name: CheckPluginName
-    item: Item
-    discovered_parameters: LegacyCheckParameters
-    service_labels: Mapping[str, ServiceLabel]
 
 
 logger = logging.getLogger("cmk.base.autochecks")
@@ -68,7 +63,7 @@ class AutochecksManager:
         self._discovered_labels_of: Dict[
             HostName, Dict[ServiceName, Mapping[str, ServiceLabel]]
         ] = {}
-        self._raw_autochecks_cache: Dict[HostName, Sequence[_AutocheckEntry]] = {}
+        self._raw_autochecks_cache: Dict[HostName, Sequence[AutocheckEntry]] = {}
 
     def get_autochecks_of(
         self,
@@ -148,7 +143,7 @@ class AutochecksManager:
     def _read_raw_autochecks(
         self,
         hostname: HostName,
-    ) -> Sequence[_AutocheckEntry]:
+    ) -> Sequence[AutocheckEntry]:
         if hostname not in self._raw_autochecks_cache:
             self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(hostname)
         return self._raw_autochecks_cache[hostname]
@@ -158,7 +153,7 @@ class AutochecksManager:
     def _read_raw_autochecks_uncached(
         self,
         hostname: HostName,
-    ) -> Sequence[_AutocheckEntry]:
+    ) -> Sequence[AutocheckEntry]:
         """Read automatically discovered checks of one host"""
         path = _autochecks_path_for(hostname)
         try:
@@ -203,7 +198,7 @@ class AutochecksManager:
                 )
 
             autocheck_entries.append(
-                _AutocheckEntry(
+                AutocheckEntry(
                     check_plugin_name=plugin_name,
                     item=item,
                     discovered_parameters=entry["parameters"],

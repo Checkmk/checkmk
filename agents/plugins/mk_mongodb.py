@@ -102,18 +102,17 @@ def section_instance(server_status):
     repl_info = server_status.get("repl")
     if not repl_info:
         sys.stdout.write("mode\tSingle Instance\n")
-        return
 
-    if repl_info.get("isWritablePrimary") or repl_info.get("ismaster"):
+    elif repl_info.get("isWritablePrimary") or repl_info.get("ismaster"):
         sys.stdout.write("mode\tPrimary\n")
-        return
 
-    if repl_info.get("secondary"):
+    elif repl_info.get("secondary"):
         sys.stdout.write("mode\tSecondary\n")
-        return
 
-    sys.stdout.write("mode\tArbiter\n")
-    if repl_info.get("me"):
+    else:
+        sys.stdout.write("mode\tArbiter\n")
+
+    if repl_info and repl_info.get("me"):
         sys.stdout.write("address\t%s\n" % repl_info.get("me", "n/a"))
 
 

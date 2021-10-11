@@ -30,7 +30,7 @@ def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
     with open("%s/%s" % (metadata_dir, "top_level.txt")) as top_level:
         import_names = top_level.read().rstrip().split("\n")
         # Skip the private modules (starting with an underscore)
-        return [name for name in import_names if not name.startswith("_")]
+        return [name.replace("/", ".") for name in import_names if not name.startswith("_")]
 
 
 def _get_import_names_from_pipfile() -> List[str]:

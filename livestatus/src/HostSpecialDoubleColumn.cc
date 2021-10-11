@@ -111,18 +111,16 @@ double HostSpecialDoubleColumn::staleness(const Object *object) {
 
     // Is the checks' result based on cached agent data? Then use the age of
     // that data as check result age
-    std::chrono::duration<double> interval;
+    std::chrono::duration<double> interval{object->staleness_check_interval()};
     if (state->_cached_at != std::chrono::system_clock::time_point()) {
         // Cache interval and check interval can add up in the worst case.
-        interval = state->_cache_interval + object->_check_interval;
+        interval += state->_cache_interval;
 
         std::chrono::system_clock::duration cached_age =
             m_now - state->_cached_at;
         if (cached_age > check_result_age) {
             check_result_age = cached_age;
         }
-    } else {
-        interval = object->_check_interval;
     }
 
     // Check_MK configures the interval for its passive checks correctly. Just

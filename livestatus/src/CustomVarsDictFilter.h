@@ -36,10 +36,10 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
-    const CustomVarsDictColumn &_column;
-    std::shared_ptr<RegExp> _regExp;
-    std::string _ref_string;
-    std::string _ref_varname;
+    const CustomVarsDictColumn &column_;
+    std::shared_ptr<RegExp> regExp_;
+    std::string ref_string_;
+    std::string ref_varname_;
 };
 
 #endif  // CustomVarsDictFilter_h

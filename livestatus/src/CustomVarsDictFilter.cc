@@ -62,46 +62,46 @@ CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
                                            const CustomVarsDictColumn &column,
                                            RelationalOperator relOp,
                                            const std::string &value)
-    : ColumnFilter(kind, column.name(), relOp, value), _column(column) {
+    : ColumnFilter(kind, column.name(), relOp, value), column_(column) {
     std::string rest;
     auto [starts_with_quote1, pos1] = skip_whitespace(value);
-    std::tie(_ref_varname, rest) = starts_with_quote1
+    std::tie(ref_varname_, rest) = starts_with_quote1
                                        ? parse_quoted(value, pos1 + 1)
                                        : parse_unquoted(value, pos1);
     auto [starts_with_quote2, pos2] = skip_whitespace(rest);
-    _ref_string = starts_with_quote2 ? parse_quoted(rest, pos2 + 1).first
+    ref_string_ = starts_with_quote2 ? parse_quoted(rest, pos2 + 1).first
                                      : rest.substr(pos2);
-    _regExp = makeRegExpFor(oper(), _ref_string);
+    regExp_ = makeRegExpFor(oper(), ref_string_);
 }
 
 bool CustomVarsDictFilter::accepts(
     Row row, const contact * /* auth_user */,
     std::chrono::seconds /* timezone_offset */) const {
-    auto cvm = _column.getValue(row);
-    auto it = cvm.find(_ref_varname);
+    auto cvm = column_.getValue(row);
+    auto it = cvm.find(ref_varname_);
     auto act_string = it == cvm.end() ? "" : it->second;
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::equal_icase:
-            return _regExp->match(act_string);
+            return regExp_->match(act_string);
         case RelationalOperator::not_equal:
         case RelationalOperator::not_equal_icase:
-            return !_regExp->match(act_string);
+            return !regExp_->match(act_string);
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
-            return _regExp->search(act_string);
+            return regExp_->search(act_string);
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
-            return !_regExp->search(act_string);
+            return !regExp_->search(act_string);
             // FIXME: The cases below are nonsense for UTF-8...
         case RelationalOperator::less:
-            return act_string < _ref_string;
+            return act_string < ref_string_;
         case RelationalOperator::greater_or_equal:
-            return act_string >= _ref_string;
+            return act_string >= ref_string_;
         case RelationalOperator::greater:
-            return act_string > _ref_string;
+            return act_string > ref_string_;
         case RelationalOperator::less_or_equal:
-            return act_string <= _ref_string;
+            return act_string <= ref_string_;
     }
     return false;  // unreachable
 }
@@ -112,5 +112,5 @@ std::unique_ptr<Filter> CustomVarsDictFilter::copy() const {
 
 std::unique_ptr<Filter> CustomVarsDictFilter::negate() const {
     return std::make_unique<CustomVarsDictFilter>(
-        kind(), _column, negateRelationalOperator(oper()), value());
+        kind(), column_, negateRelationalOperator(oper()), value());
 }

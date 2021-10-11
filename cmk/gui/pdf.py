@@ -176,6 +176,7 @@ class Document:
 
     @classmethod
     def send(cls, pdf_source, sendas):
+        # ? sendas seems to be used with type str
         response.set_content_type("application/pdf")
         response.headers["Content-Disposition"] = "inline; filename=" + ensure_str(sendas)
         response.set_data(pdf_source)

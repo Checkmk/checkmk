@@ -453,6 +453,7 @@ class LDAPUserConnector(UserConnector):
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
         try:
+            # ? user_dn seems to have the type str
             conn.simple_bind_s(ensure_str(user_dn), password_store.extract(password))
             self._logger.info("  SUCCESS")
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
@@ -572,7 +573,7 @@ class LDAPUserConnector(UserConnector):
         page_size = self._config.get("page_size", 1000)
 
         lc = SimplePagedResultsControl(size=page_size, cookie="")
-
+        # ? base and filt seem to have type str
         base = ensure_str(base)
         filt = ensure_str(filt)
 
@@ -583,7 +584,7 @@ class LDAPUserConnector(UserConnector):
             msgid = self._ldap_obj.search_ext(
                 _escape_dn(base), scope, filt, columns, serverctrls=[lc]
             )
-
+            # ? what is the type of python LDAPObject.result function
             unused_code, response, unused_msgid, serverctrls = self._ldap_obj.result3(
                 msgid=msgid, timeout=self._config.get("response_timeout", 5)
             )

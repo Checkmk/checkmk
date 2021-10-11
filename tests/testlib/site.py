@@ -378,6 +378,7 @@ class Site:
             p = self.execute(
                 ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
             )
+            # ? content seems to have the type str
             p.communicate(ensure_str(content))
             p.stdin.close()
             if p.wait() != 0:

@@ -79,7 +79,9 @@ def get_single_oid(
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value: Optional[SNMPDecodedString] = backend.config.ensure_str(value)
+        decoded_value: Optional[SNMPDecodedString] = backend.config.ensure_str(
+            value
+        )  # used ensure_str function with different possible encoding arguments
     else:
         decoded_value = value
 

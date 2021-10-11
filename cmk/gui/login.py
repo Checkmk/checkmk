@@ -381,6 +381,7 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     The user may have configured (basic) authentication by the web server. In
     case a user is provided, we trust that user.
     """
+    # ? type of Request.remote_user attribute is unclear
     user_id = req.remote_user
     if user_id is not None:
         set_auth_type("web_server")

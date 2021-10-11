@@ -24,8 +24,6 @@ from typing import Any, Dict, Iterator, List
 from typing import Optional as _Optional
 from typing import Tuple
 
-from six import ensure_str
-
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
@@ -953,7 +951,7 @@ class Overridable(Base):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for profile_path in cmk.utils.paths.profile_dir.iterdir():
-            user_id = UserId(ensure_str(profile_path.name))
+            user_id = UserId(profile_path.name)
             try:
                 path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
                 if not path.exists():

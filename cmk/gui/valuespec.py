@@ -686,6 +686,7 @@ class TextInput(ValueSpec):
                 self._empty_text or _("An empty value is not allowed here."),
             )
         if value and self._regex:
+            # ? removing ensure_str causes an error in unit tests despite the type of value being str in the function typization
             if not self._regex.match(ensure_str(value)):
                 raise MKUserError(varprefix, self._regex_error)
 
@@ -2245,6 +2246,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
         raise NotImplementedError()
 
     def page(self) -> Dict:
+        # ? get_request() is typed as returning Dict[str,Any], the type of ensure_str argument seems to be Any
         api_request = request.get_request()
         vs = ListOfMultiple(self._get_choices(api_request), "unused_dummy_page")
         with output_funnel.plugged():
@@ -6723,6 +6725,7 @@ class CAorCAChain(UploadOrPasteTextFile):
             raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
 
     def analyse_cert(self, value):
+        # ? type of the value argument is unclear
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, ensure_binary(value))
         titles = {
             "C": _("Country"),

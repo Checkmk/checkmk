@@ -127,6 +127,7 @@ class ModeCheckPluginSearch(WatoMode):
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
             if isinstance(entry, dict):
+                # ? type of entry argument seems to be unclear.
                 name = ensure_str(entry.get("name", ""))
                 title = ensure_str(entry.get("title", ""))
                 if self._search in name.lower() or self._search in title.lower():

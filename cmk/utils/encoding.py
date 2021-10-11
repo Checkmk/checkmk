@@ -10,6 +10,7 @@ from typing import AnyStr
 from six import ensure_str
 
 
+# ? function definition using ensure_str
 def ensure_str_with_fallback(value: AnyStr, *, encoding: str, fallback: str) -> str:
     try:
         return ensure_str(value, encoding)

@@ -164,6 +164,7 @@ class SNMPHostConfig(
         cfg.update(**kwargs)
         return SNMPHostConfig(**cfg)
 
+    # ? ensure_str is used in function definition
     def ensure_str(self, value: AnyStr) -> str:
         if self.character_encoding:
             return ensure_str(value, self.character_encoding)

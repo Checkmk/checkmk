@@ -700,9 +700,11 @@ def load_users(lock: bool = False) -> Users:
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
+    # ? exact type of keys and items returned from load_mk_file seems to be unclear
     contacts = load_contacts()
 
     # Now load information about users from the GUI config world
+    # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
     users = store.load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite

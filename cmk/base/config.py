@@ -1135,7 +1135,7 @@ def service_description(
 
         else:
             descr_format = plugin.service_name
-
+    # descr_format has type str? Exact type of service_descriptions seems unclear
     descr_format = ensure_str(descr_format)
 
     if add_item and isinstance(item, (str, numbers.Integral)):

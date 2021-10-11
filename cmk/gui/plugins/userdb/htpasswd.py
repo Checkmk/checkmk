@@ -120,6 +120,7 @@ class HtpasswdUserConnector(UserConnector):
             return user_id
         return False
 
+    # ? the exact type of user_id is unclear, str, maybe, based on the line "if user_id not in users" ?
     def _is_automation_user(self, user_id):
         return os.path.isfile(
             cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id) + "/automation.secret"

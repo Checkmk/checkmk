@@ -632,14 +632,14 @@ class ModeAjaxStartActivation(AjaxPage):
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
-
+        # ? type of activate_until is unclear
         activate_until = api_request.get("activate_until")
         if not activate_until:
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = watolib.ActivateChangesManager()
         manager.load()
-
+        # ? type of api_request is unclear
         affected_sites_request = ensure_str(api_request.get("sites", "").strip())
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()

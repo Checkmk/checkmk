@@ -666,6 +666,7 @@ class APICallRules(APICallCollection):
         return ruleset_dict
 
     def _get(self, request):
+        # ? type of request argument in both _get and _set functions is unclear
         ruleset_name = ensure_str(request["ruleset_name"])
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         response = {"ruleset": ruleset_dict}

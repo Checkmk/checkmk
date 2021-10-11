@@ -336,6 +336,7 @@ def _decode_column(
     column: List[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
 ) -> List[SNMPDecodedValues]:
     if value_encoding == "string":
+        # ? ensure_str is used with potentially different encodings
         decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
     else:
         decode = lambda v: list(bytearray(v))

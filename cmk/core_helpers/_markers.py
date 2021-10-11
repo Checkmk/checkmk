@@ -37,6 +37,7 @@ class PiggybackMarker(NamedTuple):
         *,
         encoding_fallback: str,
     ) -> "PiggybackMarker":
+        # ? ensure_str called on a bytes object with different possible encodings
         raw_host_name = ensure_str_with_fallback(
             line.strip()[4:-4],
             encoding="utf-8",
@@ -151,6 +152,7 @@ class SectionMarker(NamedTuple):
         return None
 
     def parse_line(self, line: bytes) -> Sequence[str]:
+        # ? ensure_str called on a bytes object with different possible encodings
         line_str = ensure_str_with_fallback(
             line,
             encoding=self.encoding,

@@ -60,8 +60,16 @@ def parse_memory(value: str) -> float:
 
 
 def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> MetaData:
-    def convert_to_timestamp(date_time) -> float:
-        return time.mktime(datetime.datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%SZ").timetuple())
+    def convert_to_timestamp(k8s_date_time) -> float:
+        if isinstance(k8s_date_time, str):
+            date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ")
+        elif isinstance(k8s_date_time, datetime.datetime):
+            date_time = k8s_date_time
+        else:
+            raise TypeError(
+                f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
+            )
+        return time.mktime(date_time.timetuple())
 
     if not labels:
         labels = metadata.labels if metadata.labels else {}

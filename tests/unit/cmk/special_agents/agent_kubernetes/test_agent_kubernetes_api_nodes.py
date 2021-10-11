@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import pytest
@@ -7,10 +8,10 @@ from mocket import Mocketizer
 from mocket.mockhttp import Entry
 
 from cmk.special_agents.utils_kubernetes.schemas import (
-    parse_metadata,
-    node_labels,
     Labels,
     node_conditions,
+    node_labels,
+    parse_metadata,
 )
 
 
@@ -52,6 +53,17 @@ class TestAPINode:
         assert metadata.name == "k8"
         assert metadata.namespace is None
         assert metadata.labels["cmk/kubernetes"] == "yes"
+
+    def test_parse_metadata_datetime(self):
+        now = datetime.datetime(2021, 10, 11, 13, 53, 10)
+        node_raw_metadata = {
+            "name": "unittest",
+            "creation_timestamp": now,
+            "uid": "f57f3e64-2a89-11ec-bb97-3f4358ab72b2",
+        }
+        metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
+        metadata = parse_metadata(metadata_obj)
+        assert metadata.creation_timestamp == now.timestamp()
 
     def test_parse_conditions(self, core_client, dummy_host):
         node_with_conditions = {

@@ -6,5 +6,3 @@ If you want to run marcv server in your dev environment:
 If you want to run marcv server in your site:
     position yourself in marcv directory
     f12
-    python3 -m gunicorn -k uvicorn.workers.UvicornWorker marcv.server:app (run with a site user)
-

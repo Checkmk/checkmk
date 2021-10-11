@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef AttributeListLambdaColumn_h
-#define AttributeListLambdaColumn_h
+#ifndef AttributeListColumn_h
+#define AttributeListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "AttributeBitmaskColumn.h"
 #include "Filter.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
@@ -24,29 +25,6 @@ class Logger;
 class ColumnOffsets;
 class IntFilter;
 
-namespace column::attribute_list::detail {
-std::string refValueFor(const std::string& value, Logger* logger);
-std::vector<std::string> decode(unsigned long mask);
-}  // namespace column::attribute_list::detail
-
-template <class T, int32_t Default = 0>
-struct AttributeBitmaskLambdaColumn : IntColumn::Callback<T, Default> {
-    using IntColumn::Callback<T, Default>::Callback;
-    ~AttributeBitmaskLambdaColumn() override = default;
-
-    [[nodiscard]] std::unique_ptr<Filter> createFilter(
-        Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
-        return std::make_unique<IntFilter>(
-            kind, this->name(),
-            [this](Row row, const contact* auth_user) {
-                return this->getValue(row, auth_user);
-            },
-            relOp,
-            column::attribute_list::detail::refValueFor(value, this->logger()));
-    }
-};
-
 // TODO(ml): This could likely be simplified with a dict column.
 //
 //           See also
@@ -54,12 +32,12 @@ struct AttributeBitmaskLambdaColumn : IntColumn::Callback<T, Default> {
 //             - `TableContacts::GetCustomAttributeElem`
 //           for an example of a dict column without pointer arithmetic.
 template <class T>
-class AttributeListColumn2 : public deprecated::ListColumn {
+class AttributeListColumn : public deprecated::ListColumn {
 public:
-    AttributeListColumn2(
+    AttributeListColumn(
         const std::string& name, const std::string& description,
         const ColumnOffsets& offsets,
-        const typename AttributeBitmaskLambdaColumn<T>::function_type& f)
+        const typename AttributeBitmaskColumn<T>::function_type& f)
         : deprecated::ListColumn(name, description, offsets)
         , bitmask_col_{name, description, offsets, f} {}
 
@@ -76,7 +54,7 @@ public:
     }
 
 private:
-    AttributeBitmaskLambdaColumn<T> bitmask_col_;
+    AttributeBitmaskColumn<T> bitmask_col_;
 };
 
 #endif

@@ -13,7 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "AttributeListLambdaColumn.h"
+#include "AttributeBitmaskColumn.h"
+#include "AttributeListColumn.h"
 #include "AttributesLambdaColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
@@ -225,11 +226,11 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "label_sources", "A dictionary of the label sources", offsets,
         CustomAttributeMap{table->core(), AttributeKind::label_sources}));
 
-    table->addColumn(std::make_unique<AttributeBitmaskLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<AttributeBitmaskColumn<contact>>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified", offsets,
         [](const contact &ct) { return ct.modified_attributes; }));
-    table->addColumn(std::make_unique<AttributeListColumn2<contact>>(
+    table->addColumn(std::make_unique<AttributeListColumn<contact>>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes", offsets,
         [](const contact &ct) { return ct.modified_attributes; }));

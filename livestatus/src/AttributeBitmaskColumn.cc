@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "AttributeListLambdaColumn.h"
+#include "AttributeBitmaskColumn.h"
 
 #include <bitset>
 #include <cctype>

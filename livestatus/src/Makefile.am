@@ -98,7 +98,7 @@ liblivestatus_a_LD_FLAGS = \
     $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
-        AttributeListLambdaColumn.cc \
+        AttributeBitmaskColumn.cc \
         Average.cc \
         BlobColumn.cc \
         BoolColumn.cc \

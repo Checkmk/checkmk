@@ -1,0 +1,18 @@
+#!/bin/bash
+set -e
+
+COMMAND=$1
+shift
+COMMAND_OPTIONS=$*
+REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+CARGO_PROJECTS=$(find ${REPO_PATH} -name Cargo.toml | xargs dirname)
+
+result=0
+
+for project in ${CARGO_PROJECTS}; do
+    cd ${project}
+    cargo ${COMMAND} ${COMMAND_OPTIONS} || result=1
+    cd -
+done
+
+exit ${result}

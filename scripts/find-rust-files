@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+
+CARGO_PROJECTS=$(find $REPO_PATH -name Cargo.toml | xargs dirname)
+
+for project in ${CARGO_PROJECTS}; do
+    find ${project}/src -type f -name *.rs
+done

@@ -42,7 +42,8 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-sh test-unit-sh-docker \
 	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
-	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
+	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker \
+	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -92,7 +93,10 @@ help:
 	@echo "test-unit-livestatus                - Run unit tests for livestatus"
 	@echo "test-unit-core                      - Run unit tests for core"
 	@echo "*-livestatus-docker                 - Run any of the livestatus tests in docker"
-	@echo "*-core-docker                       - Run any of the core tests in docker"
+	@echo "test-cargo-check                    - Run 'cargo check' for all cargo projects"
+	@echo "test-cargo-check-docker             - Run 'cargo check' for all cargo projects in docker"
+	@echo "test-cargo-test                     - Run test cases of all cargo projects"
+	@echo "test-cargo-test-docker              - Run test cases of all cargo projects in docker"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -336,6 +340,18 @@ test-unit-livestatus:
 
 test-unit-core:
 	cd ../enterprise/core/src && ./.f12
+
+test-cargo-check:
+	$(SCRIPTS)/run-cargo-command check
+
+test-cargo-check-docker:
+	../scripts/run-in-docker.sh make test-cargo-check
+
+test-cargo-test:
+	$(SCRIPTS)/run-cargo-command check
+
+test-cargo-test-docker:
+	../scripts/run-in-docker.sh make test-cargo-test
 
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running

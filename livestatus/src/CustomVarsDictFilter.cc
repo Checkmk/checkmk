@@ -11,7 +11,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "CustomVarsDictColumn.h"
 #include "RegExp.h"
 #include "Row.h"
 
@@ -58,11 +57,12 @@ parse_result parse_unquoted(const std::string &str, size_t start) {
 }
 }  // namespace
 
-CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
-                                           const CustomVarsDictColumn &column,
+CustomVarsDictFilter::CustomVarsDictFilter(Kind kind, std::string columnName,
+                                           function_type f,
                                            RelationalOperator relOp,
                                            const std::string &value)
-    : ColumnFilter(kind, column.name(), relOp, value), column_(column) {
+    : ColumnFilter{kind, std::move(columnName), relOp, value}
+    , f_{std::move(f)} {
     std::string rest;
     auto [starts_with_quote1, pos1] = skip_whitespace(value);
     std::tie(ref_varname_, rest) = starts_with_quote1
@@ -77,7 +77,7 @@ CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
 bool CustomVarsDictFilter::accepts(
     Row row, const contact * /* auth_user */,
     std::chrono::seconds /* timezone_offset */) const {
-    auto cvm = column_.getValue(row);
+    auto cvm = f_(row);
     auto it = cvm.find(ref_varname_);
     auto act_string = it == cvm.end() ? "" : it->second;
     switch (oper()) {
@@ -112,5 +112,5 @@ std::unique_ptr<Filter> CustomVarsDictFilter::copy() const {
 
 std::unique_ptr<Filter> CustomVarsDictFilter::negate() const {
     return std::make_unique<CustomVarsDictFilter>(
-        kind(), column_, negateRelationalOperator(oper()), value());
+        kind(), columnName(), f_, negateRelationalOperator(oper()), value());
 }

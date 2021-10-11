@@ -25,7 +25,9 @@ void CustomVarsDictColumn::output(
 std::unique_ptr<Filter> CustomVarsDictColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<CustomVarsDictFilter>(kind, *this, relOp, value);
+    return std::make_unique<CustomVarsDictFilter>(
+        kind, name(), [this](Row row) { return this->getValue(row); }, relOp,
+        value);
 }
 
 std::unique_ptr<Aggregator> CustomVarsDictColumn::createAggregator(

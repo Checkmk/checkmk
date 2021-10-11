@@ -42,8 +42,10 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
                 return &r.rawData<host>()->custom_variables;
             }),
             &core, kind};
-        CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
-                                    RelationalOperator::equal, value};
+        CustomVarsDictFilter filter{
+            Filter::Kind::row, "name",
+            [&cvdc](Row row) { return cvdc.getValue(row); },
+            RelationalOperator::equal, value};
         return filter.accepts(Row{&test_host}, {}, {});
     }
 

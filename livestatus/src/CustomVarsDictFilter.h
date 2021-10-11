@@ -9,13 +9,14 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
 
 #include "ColumnFilter.h"
 #include "Filter.h"
+#include "MonitoringCore.h"
 #include "opids.h"
-class CustomVarsDictColumn;
 class RegExp;
 class Row;
 
@@ -27,8 +28,12 @@ class Row;
 #endif
 
 class CustomVarsDictFilter : public ColumnFilter {
+    // Elsewhere, `function_type` is a std::variant of functions but we
+    // currently have a single element, so we skip that entirely.
+    using function_type = std::function<Attributes(Row)>;
+
 public:
-    CustomVarsDictFilter(Kind kind, const CustomVarsDictColumn &column,
+    CustomVarsDictFilter(Kind kind, std::string columnName, function_type f,
                          RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
@@ -36,7 +41,7 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
-    const CustomVarsDictColumn &column_;
+    function_type f_;
     std::shared_ptr<RegExp> regExp_;
     std::string ref_string_;
     std::string ref_varname_;

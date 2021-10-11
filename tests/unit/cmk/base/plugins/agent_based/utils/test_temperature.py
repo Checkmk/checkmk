@@ -408,7 +408,7 @@ def test_check_temperature_user_levels_crit_upper():
             value_store=mock_value_store(),
         )
     )
-    results == [
+    assert results == [
         Metric("temp", 30.0, levels=(23.0, 30.0)),
         Result(state=state.CRIT, summary="Temperature: 30.0°C (warn/crit at 23.0°C/30.0°C)"),
         Result(

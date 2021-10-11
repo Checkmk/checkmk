@@ -9,7 +9,6 @@ import pytest
 from cmk.base.plugins.agent_based import ipmi
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 SECTION_IPMI = ipmi.parse_ipmi(
     [

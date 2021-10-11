@@ -134,8 +134,8 @@ def test_dashlet_refresh_intervals(
     assert dashlet.refresh_interval() == expected_refresh_interval
 
 
-@pytest.fixture
-def reset_dashlet_types():
+@pytest.fixture(name="reset_dashlet_types")
+def _reset_dashlet_types():
     default_entries = list(dashboard.dashlet_types)
     try:
         yield

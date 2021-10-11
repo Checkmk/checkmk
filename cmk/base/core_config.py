@@ -362,7 +362,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
     backup_path = None
     if os.path.exists(objects_file):
         backup_path = objects_file + ".save"
-        os.rename(objects_file, backup_path)
+        shutil.copy2(objects_file, backup_path)
 
     try:
         try:

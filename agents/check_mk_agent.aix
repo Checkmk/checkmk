@@ -701,7 +701,9 @@ run_plugins() {
         for script in ./*; do
             if is_valid_plugin "${script}"; then
                 if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                    _log_section_time "${plugin_interpreter} ${script}"
+                    # SC2086: We don't want to quote, interpreter is "nothing" if empty, not "''"
+                    # shellcheck disable=SC2086
+                    _log_section_time ${plugin_interpreter} "${script}"
                 fi
             fi
         done
@@ -711,7 +713,8 @@ run_plugins() {
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
             if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time "${plugin_interpreter}" "${script}"
+                # shellcheck disable=SC2086
+                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time ${plugin_interpreter} "${script}"
             fi
         fi
     done

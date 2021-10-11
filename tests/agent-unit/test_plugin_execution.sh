@@ -14,10 +14,21 @@ oneTimeSetUp() {
     chmod +x "${SHUNIT_TMPDIR}/existing_py2_plugin_2.py"
     touch "${SHUNIT_TMPDIR}/existing_py3_plugin.py"
     chmod +x "${SHUNIT_TMPDIR}/existing_py3_plugin.py"
+
+    mkdir "${SHUNIT_TMPDIR}/execute"
+    printf "#!/bin/sh\necho '<<<foobar>>>'\n" > "${SHUNIT_TMPDIR}/execute/foobar.sh"
+    chmod +x "${SHUNIT_TMPDIR}/execute/foobar.sh"
 }
 
 test_get_plugin_interpreter_non_python_plugin() {
     assertEquals "$(get_plugin_interpreter './foobar.sh')" ""
+}
+
+test_plugin_execution() {
+    PLUGINSDIR="${SHUNIT_TMPDIR}/execute"
+    set_up_profiling
+
+    assertEquals "<<<foobar>>>" "$(run_plugins)"
 }
 
 test_get_plugin_interpreter_no_py_present() {

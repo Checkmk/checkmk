@@ -1543,6 +1543,18 @@ metric_info["fortigate_blocking_rate"] = {
     "color": "42/a",
 }
 
+metric_info["ap_count"] = {
+    "title": _("Number of access points"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["clients_count"] = {
+    "title": _("Number of clients"),
+    "unit": "count",
+    "color": "22/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

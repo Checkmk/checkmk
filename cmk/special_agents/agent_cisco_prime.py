@@ -24,6 +24,7 @@ API_PATH = "webacs/api/v1/data/"
 REQUESTS = {
     "wifi_access_points": "AccessPoints.json?.full=true&.nocount=true&.maxResults=10000",
     "wifi_connections": "ClientCounts.json?.full=true&subkey=ROOT-DOMAIN&type=SSID",
+    "wlan_controller": "WlanControllers.json?.full=true",
 }
 
 

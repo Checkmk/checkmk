@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# immediately require sodo rights (because I will go get a coffee)
+sudo --validate
+
 SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
     cat .site
     break

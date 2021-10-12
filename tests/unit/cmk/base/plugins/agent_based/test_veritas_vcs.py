@@ -9,7 +9,6 @@ import pytest
 from cmk.base.plugins.agent_based import veritas_vcs
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.veritas_vcs import Vcs
 
 STRING_TABLE = [

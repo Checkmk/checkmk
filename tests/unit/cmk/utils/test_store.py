@@ -350,7 +350,7 @@ def test_release_lock_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._locks._get_lock(str(path)))
+    os.close(store._locks._get_lock(str(path)))  # pylint:disable=no-value-for-parameter
 
     store.release_lock(path)
     assert store.have_lock(path) is False
@@ -387,7 +387,7 @@ def test_release_all_locks_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._locks._get_lock(str(path)))
+    os.close(store._locks._get_lock(str(path)))  # pylint:disable=no-value-for-parameter
 
     store.release_all_locks()
     assert store.have_lock(path) is False
@@ -516,7 +516,7 @@ def test_blocking_context_manager_from_multiple_threads(locked_file, path_type):
             acquired.pop()
 
     pool = ThreadPool(20)
-    pool.map(acquire, range(100))
+    pool.map(acquire, iter(range(100)))
     pool.close()
     pool.join()
 
@@ -558,7 +558,7 @@ def test_blocking_lock_from_multiple_threads(locked_file, path_type):
     # We try to append 100 ints to `acquired` in 20 threads simultaneously. As it is guarded by
     # the lock, we only ever can have one entry in the list at the same time.
     pool = ThreadPool(20)
-    pool.map(acquire, range(100))
+    pool.map(acquire, iter(range(100)))
     pool.close()
     pool.join()
 
@@ -584,7 +584,7 @@ def test_non_blocking_lock_from_multiple_threads(locked_file, path_type):
             assert not store.have_lock(path)
 
     pool = ThreadPool(2)
-    pool.map(acquire, range(20))
+    pool.map(acquire, iter(range(20)))
     pool.close()
     pool.join()
 

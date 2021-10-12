@@ -190,9 +190,9 @@ def test_discover_decorator_key_match():
         return key == "hello"
 
     # Pylint does not understand our decorator magic here. Investigate
-    assert list(selector({"hola": "es", "hello": "en"})) == [
-        ("hello", {})
-    ]  # pylint: disable=no-value-for-parameter
+    assert list(
+        selector({"hola": "es", "hello": "en"})  # pylint:disable=no-value-for-parameter
+    ) == [("hello", {})]
 
 
 def test_discover_decorator_with_params():

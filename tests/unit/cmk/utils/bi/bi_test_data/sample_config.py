@@ -397,7 +397,7 @@ bi_status_rows = [
                 "Check_MK HW/SW Inventory",
                 0,
                 1,
-                "OK - Found 187 inventory entries, software changes, Found 157 status " "entries",
+                "OK - Found 187 inventory entries, software changes, Found 157 status entries",
                 0,
                 1,
                 1,

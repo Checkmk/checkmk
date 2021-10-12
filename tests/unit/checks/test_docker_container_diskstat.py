@@ -6,7 +6,7 @@
 
 # yapf: disable
 import os
-from typing import Callable, Tuple
+from typing import Tuple
 
 import pytest
 

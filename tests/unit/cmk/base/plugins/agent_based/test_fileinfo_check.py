@@ -23,7 +23,7 @@ def test_fileinfo_min_max_age_levels():
         ]
     )
 
-    size_result = [Result(state=State.OK, summary="Size: 7 B"), Metric("size", 7)]
+    size_result = [Result(state=State.OK, summary="Size: 7 B"), Metric("size", 7.0)]
 
     # minage matches
     output_minage = fileinfo_plugin.check_fileinfo(
@@ -36,9 +36,10 @@ def test_fileinfo_min_max_age_levels():
 
     # In 1.6.0 warn, crit of minage was added, but now we use the
     # generic check_levels function.
-    output_minage == size_result + [
-        Result(state=State.WARN, summary="Age: 3.00 s (warn/crit below 5.00 s/1.00 s)"),
-        Metric("age", 3),
+
+    assert list(output_minage) == size_result + [
+        Result(state=State.WARN, summary="Age: 3 seconds (warn/crit below 5 seconds/1 second)"),
+        Metric("age", 3.0),
     ]
 
     # maxage matches
@@ -50,9 +51,9 @@ def test_fileinfo_min_max_age_levels():
         parsed,
     )
 
-    output_maxage == size_result + [
-        Result(state=State.CRIT, summary="Age: 3.00 s (warn/crit at 1.00 s/2.00 s)"),
-        Metric("age", 3),
+    assert list(output_maxage) == size_result + [
+        Result(state=State.CRIT, summary="Age: 3 seconds (warn/crit at 1 second/2 seconds)"),
+        Metric("age", 3.0, levels=(1.0, 2.0)),
     ]
 
     # both match
@@ -69,9 +70,9 @@ def test_fileinfo_min_max_age_levels():
         parsed,
     )
 
-    output_both == size_result + [
-        Result(state=State.CRIT, summary="Age: 3.00 s (warn/crit at 1.00 s/2.00 s)"),
-        Metric("age", 3),
+    assert list(output_both) == size_result + [
+        Result(state=State.CRIT, summary="Age: 3 seconds (warn/crit at 1 second/2 seconds)"),
+        Metric("age", 3.0, levels=(1.0, 2.0)),
     ]
 
 

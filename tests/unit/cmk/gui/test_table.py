@@ -116,13 +116,12 @@ def test_context(request_context):
     table_id = 0
     rows = [(i, i ** 3) for i in range(10)]
     header = ["Number", "Cubical"]
-
     with output_funnel.plugged():
         with table_element(table_id="%d" % table_id, searchable=False, sortable=False) as table:
             for row in rows:
                 table.row()
                 for h, r in zip(header, row):
-                    table.cell(_(h), r)
+                    table.cell(h, r)
 
         written_text = "".join(output_funnel.drain())
     data = read_out_simple_table(written_text)
@@ -233,7 +232,7 @@ def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit
             for row in rows:
                 table.row()
                 for h, r in zip(header, row):
-                    table.cell(_(h), r)
+                    table.cell(h, r)
 
     # Data assertions
     assert output_format in ["html", "csv"], "Fetch is not yet implemented"

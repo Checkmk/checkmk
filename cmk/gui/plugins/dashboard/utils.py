@@ -122,7 +122,7 @@ class Dashlet(metaclass=abc.ABCMeta):
     """Base class for all dashboard dashlet implementations"""
 
     # Minimum width and height of dashlets in raster units
-    minimum_size: DashletSize = (12, 10)
+    minimum_size: DashletSize = (12, 12)
 
     @classmethod
     @abc.abstractmethod

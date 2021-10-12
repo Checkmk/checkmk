@@ -638,7 +638,7 @@ export class FigureTooltip {
 }
 
 // Figure which inherited from FigureBase. Needs access to svg and size
-export function state_component(figurebase, params) {
+export function state_component(figurebase, params, font_size = 14) {
     const paint_style = getIn(params, "paint");
     let status_cls = svc_status_css(paint_style, params);
     if (!(paint_style && status_cls)) {
@@ -646,7 +646,6 @@ export function state_component(figurebase, params) {
         return;
     }
     //hard fix for the moment
-    let font_size = 14;
     let state_component = figurebase.svg
         .selectAll(".state_component")
         .data([params])
@@ -678,7 +677,7 @@ export function state_component(figurebase, params) {
         .join("text")
         .attr("text-anchor", "middle")
         .attr("dx", font_size * 4)
-        .attr("dy", font_size * 1.2)
+        .attr("dy", font_size * 1.1)
         .style("font-size", font_size + "px")
         .style("fill", "black")
         .style("font-weight", "bold")
@@ -765,6 +764,7 @@ export function metric_value_component(selection, value, attr, style) {
         .attr("x", attr.x)
         .attr("y", attr.y)
         .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
         //.attr("class", css_class)
         .style("font-weight", "bold")
         .style("font-size", font_size + "px");
@@ -776,5 +776,7 @@ export function metric_value_component(selection, value, attr, style) {
         .style("font-size", font_size / 2 + "px")
         .style("font-weight", "lighter")
         .text(d => d.unit);
-    if (value.unit !== "%") unit.attr("x", attr.x).attr("dy", "1em");
+    if (value.unit !== "%") {
+        unit.attr("dx", font_size / 6 + "px").attr("dy", font_size / 8 + "px");
+    }
 }

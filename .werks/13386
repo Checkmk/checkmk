@@ -1,0 +1,11 @@
+Title: Positioning of single metric dashlet content
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 2.0.0p13
+Date: 1633680644
+
+In single metric dashlets the unit was shown in a new line beneath the metric value. This is fixed and the dashlet's content centered vertically.

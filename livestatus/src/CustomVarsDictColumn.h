@@ -8,49 +8,32 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "Column.h"
+#include "DictColumn.h"
 #include "Filter.h"
-#include "MonitoringCore.h"
 #include "opids.h"
-class Aggregator;
 enum class AttributeKind;
 class Row;
-class RowRenderer;
+class ColumnOffsets;
+class MonitoringCore;
 
-#ifdef CMC
-#include "contact_fwd.h"
-#else
-// TODO(sp) Why on earth is "contact_fwd.h" not enough???
-#include "nagios.h"
-#endif
-
-class CustomVarsDictColumn : public Column {
+class CustomVarsDictColumn : public DictColumn {
 public:
     CustomVarsDictColumn(std::string name, std::string description,
                          const ColumnOffsets &offsets, const MonitoringCore *mc,
                          AttributeKind kind)
-        : Column(std::move(name), std::move(description), offsets)
+        : DictColumn{std::move(name), std::move(description), offsets}
         , _mc(mc)
         , _kind(kind) {}
-
-    [[nodiscard]] ColumnType type() const override { return ColumnType::dict; };
-
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 
-    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
-        AggregationFactory factory) const override;
-
-    [[nodiscard]] virtual Attributes getValue(Row row) const;
+    [[nodiscard]] value_type getValue(Row row) const override;
 
 private:
     const MonitoringCore *const _mc;

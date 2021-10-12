@@ -111,6 +111,7 @@ liblivestatus_a_SOURCES = \
         CustomVarsDictFilter.cc \
         CustomVarsNamesColumn.cc \
         CustomVarsValuesColumn.cc \
+        DictColumn.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
         DowntimeOrComment.cc \

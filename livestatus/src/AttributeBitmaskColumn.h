@@ -8,11 +8,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <bitset>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
-#include <vector>
 
+#include "AttributeListColumn.h"
 #include "Filter.h"
 #include "IntColumn.h"
 #include "Row.h"
@@ -20,11 +22,6 @@
 #include "opids.h"
 class Logger;
 class IntFilter;
-
-namespace column::attribute_list::detail {
-std::string refValueFor(const std::string& value, Logger* logger);
-std::vector<std::string> decode(unsigned long mask);
-}  // namespace column::attribute_list::detail
 
 template <class T, int32_t Default = 0>
 struct AttributeBitmaskColumn : IntColumn::Callback<T, Default> {
@@ -39,8 +36,7 @@ struct AttributeBitmaskColumn : IntColumn::Callback<T, Default> {
             [this](Row row, const contact* auth_user) {
                 return this->getValue(row, auth_user);
             },
-            relOp,
-            column::attribute_list::detail::refValueFor(value, this->logger()));
+            relOp, column::attribute_list::refValueFor(value, this->logger()));
     }
 };
 

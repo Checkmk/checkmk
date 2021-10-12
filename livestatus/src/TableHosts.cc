@@ -465,10 +465,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified", offsets,
         [](const host &r) { return r.modified_attributes; }));
-    table->addColumn(std::make_unique<AttributeListColumn<host>>(
-        prefix + "modified_attributes_list",
-        "A list of all modified attributes", offsets,
-        [](const host &r) { return r.modified_attributes; }));
+    table->addColumn(
+        std::make_unique<
+            AttributeListColumn<host, column::attribute_list::AttributeBit>>(
+            prefix + "modified_attributes_list",
+            "A list of all modified attributes", offsets, [](const host &r) {
+                return column::attribute_list::encode(r.modified_attributes);
+            }));
 
     // columns of type double
     table->addColumn(std::make_unique<DoubleColumn::Callback<host>>(

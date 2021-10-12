@@ -164,10 +164,14 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified", offsets,
         [](const contact &ct) { return ct.modified_attributes; }));
-    table->addColumn(std::make_unique<AttributeListColumn<contact>>(
-        prefix + "modified_attributes_list",
-        "A list of all modified attributes", offsets,
-        [](const contact &ct) { return ct.modified_attributes; }));
+    table->addColumn(
+        std::make_unique<
+            AttributeListColumn<contact, column::attribute_list::AttributeBit>>(
+            prefix + "modified_attributes_list",
+            "A list of all modified attributes", offsets,
+            [](const contact &ct) {
+                return column::attribute_list::encode(ct.modified_attributes);
+            }));
 }
 
 void TableContacts::answerQuery(Query *query) {

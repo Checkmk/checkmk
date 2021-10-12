@@ -51,6 +51,7 @@ unixcat_LDADD = -lpthread
 test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/TableQueryHelper.cc \
+    test/test_AttributeListColumn.cc \
     test/test_BlobColumn.cc \
     test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
@@ -98,7 +99,7 @@ liblivestatus_a_LD_FLAGS = \
     $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
-        AttributeBitmaskColumn.cc \
+        AttributeListColumn.cc \
         Average.cc \
         BlobColumn.cc \
         BoolColumn.cc \

@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "AttributeBitmaskColumn.h"
+#include "AttributeListColumn.h"
 
 #include <bitset>
 #include <cctype>
@@ -13,9 +13,7 @@
 #include "Logger.h"
 #include "strutil.h"
 
-namespace column::attribute_list::detail {
-
-namespace {
+namespace column::attribute_list {
 
 // see MODATTR_FOO in nagios/common.h
 const std::map<std::string, unsigned long> known_attributes = {
@@ -30,19 +28,18 @@ const std::map<std::string, unsigned long> known_attributes = {
     {"notification_timeperiod", 16}};
 
 using modified_attributes = std::bitset<32>;
-}  // namespace
 
-std::string refValueFor(const std::string &value, Logger *logger) {
+std::string refValueFor(const std::string& value, Logger* logger) {
     if (isdigit(value[0]) != 0) {
         return value;
     }
 
     std::vector<char> value_vec(value.begin(), value.end());
     value_vec.push_back('\0');
-    char *scan = &value_vec[0];
+    char* scan = &value_vec[0];
 
     modified_attributes values;
-    for (const char *t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
+    for (const char* t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
         auto it = known_attributes.find(t);
         if (it == known_attributes.end()) {
             Informational(logger)
@@ -54,15 +51,47 @@ std::string refValueFor(const std::string &value, Logger *logger) {
     return std::to_string(values.to_ulong());
 }
 
-std::vector<std::string> decode(unsigned long mask) {
-    std::vector<std::string> attributes;
-    modified_attributes values(mask);
-    for (const auto &entry : known_attributes) {
-        if (values[entry.second]) {
-            attributes.push_back(entry.first);
-        }
+unsigned long decode(const std::vector<AttributeBit>& mask) {
+    unsigned long out = 0;
+    for (const auto& bit : mask) {
+        out |= static_cast<int>(bit.value) << bit.index;
     }
-    return attributes;
+    return out;
 }
 
-}  // namespace column::attribute_list::detail
+std::vector<AttributeBit> encode(unsigned long mask) {
+    std::vector<AttributeBit> out;
+    modified_attributes values{mask};
+    for (std::size_t ii = 0; ii < values.size(); ++ii) {
+        out.emplace_back(ii, values[ii]);
+    }
+    return out;
+}
+
+std::vector<AttributeBit> encode(const std::vector<std::string>& strs) {
+    std::vector<AttributeBit> out;
+    for (std::size_t ii = 0; ii < modified_attributes().size(); ++ii) {
+        out.emplace_back(ii, false);
+    }
+    for (const auto& str : strs) {
+        auto it = known_attributes.find(str);
+        if (it != known_attributes.end()) {
+            out[it->second].value = true;
+        }
+    }
+    return out;
+}
+
+}  // namespace column::attribute_list
+
+namespace column::detail {
+template <>
+std::string serialize(const column::attribute_list::AttributeBit& bit) {
+    for (const auto& [k, v] : column::attribute_list::known_attributes) {
+        if (v == bit.index && bit.value) {
+            return k;
+        }
+    }
+    return {};
+}
+}  // namespace column::detail

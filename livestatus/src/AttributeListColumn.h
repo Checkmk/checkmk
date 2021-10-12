@@ -8,53 +8,54 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <chrono>
-#include <cstdint>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "AttributeBitmaskColumn.h"
 #include "Filter.h"
-#include "IntColumn.h"
-#include "ListColumn.h"
+#include "ListLambdaColumn.h"
 #include "Row.h"
-#include "contact_fwd.h"
 #include "opids.h"
-class Logger;
-class ColumnOffsets;
 class IntFilter;
+class Logger;
 
-// TODO(ml): This could likely be simplified with a dict column.
-//
-//           See also
-//             - `TableContacts::GetCustomAttribute` and
-//             - `TableContacts::GetCustomAttributeElem`
-//           for an example of a dict column without pointer arithmetic.
-template <class T>
-class AttributeListColumn : public deprecated::ListColumn {
+namespace column::attribute_list {
+struct AttributeBit {
+    AttributeBit(std::size_t i, bool v) : index{i}, value{v} {}
+    std::size_t index;
+    bool value;
+};
+inline bool operator==(const AttributeBit& x, const AttributeBit& y) {
+    return x.index == y.index && x.value == y.value;
+}
+std::string refValueFor(const std::string& value, Logger* logger);
+unsigned long decode(const std::vector<AttributeBit>& mask);
+std::vector<AttributeBit> encode(unsigned long mask);
+std::vector<AttributeBit> encode(const std::vector<std::string>& strs);
+}  // namespace column::attribute_list
+
+namespace column::detail {
+template <>
+std::string serialize(const column::attribute_list::AttributeBit& bit);
+}  // namespace column::detail
+
+template <class T, class U>
+class AttributeListColumn : public ListColumn::Callback<T, U> {
 public:
-    AttributeListColumn(
-        const std::string& name, const std::string& description,
-        const ColumnOffsets& offsets,
-        const typename AttributeBitmaskColumn<T>::function_type& f)
-        : deprecated::ListColumn(name, description, offsets)
-        , bitmask_col_{name, description, offsets, f} {}
-
+    using ListColumn::Callback<T, U>::Callback;
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string& value) const override {
-        return bitmask_col_.createFilter(kind, relOp, value);
+        return std::make_unique<IntFilter>(
+            kind, this->name(),
+            [this](Row row) {
+                return column::attribute_list::decode(
+                    column::attribute_list::encode(
+                        this->getValue(row, nullptr, {})));
+            },
+            relOp, column::attribute_list::refValueFor(value, this->logger()));
     }
-    [[nodiscard]] std::vector<std::string> getValue(
-        Row row, const contact* /*auth_user*/,
-        std::chrono::seconds /*timezone_offset*/) const override {
-        return column::attribute_list::detail::decode(
-            bitmask_col_.getValue(row, nullptr));
-    }
-
-private:
-    AttributeBitmaskColumn<T> bitmask_col_;
 };
 
 #endif

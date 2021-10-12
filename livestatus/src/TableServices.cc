@@ -420,10 +420,13 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified", offsets,
         [](const service &r) { return r.modified_attributes; }));
-    table->addColumn(std::make_unique<AttributeListColumn<service>>(
-        prefix + "modified_attributes_list",
-        "A list of all modified attributes", offsets,
-        [](const service &r) { return r.modified_attributes; }));
+    table->addColumn(
+        std::make_unique<
+            AttributeListColumn<service, column::attribute_list::AttributeBit>>(
+            prefix + "modified_attributes_list",
+            "A list of all modified attributes", offsets, [](const service &r) {
+                return column::attribute_list::encode(r.modified_attributes);
+            }));
     table->addColumn(std::make_unique<IntColumn::Callback<service>>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",

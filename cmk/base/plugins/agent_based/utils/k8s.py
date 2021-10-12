@@ -8,6 +8,8 @@ import json
 from dataclasses import dataclass
 from typing import Dict, List, TypedDict
 
+from pydantic import BaseModel
+
 from ..agent_based_api.v1.type_defs import StringTable
 
 
@@ -86,3 +88,11 @@ class Subset:
     addresses: List[Address]
     not_ready_addresses: List[Address]
     ports: List[Port]
+
+
+# agent_kube section schemas --------------------------------- #
+
+
+class NodeCount(BaseModel):
+    worker: int = 0
+    control_plane: int = 0

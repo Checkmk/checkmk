@@ -22,10 +22,22 @@ from cmk.gui.plugins.metrics import graph_info, metric_info
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["k8s_nodes"] = {
+metric_info["k8s_nodes"] = {  # legacy kubernetes checks
     "title": _("Nodes"),
     "unit": "count",
     "color": "11/a",
+}
+
+metric_info["k8s_node_count_worker"] = {
+    "title": _("Worker nodes"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["k8s_node_count_control_plane"] = {
+    "title": _("Control plane nodes"),
+    "unit": "count",
+    "color": "42/a",
 }
 
 metric_info["k8s_pods_request"] = {
@@ -232,5 +244,13 @@ graph_info["k8s_pod_container"] = {
     "metrics": [
         ("docker_all_containers", "line"),
         ("ready_containers", "area"),
+    ],
+}
+
+graph_info["k8s_node_count"] = {
+    "title": _("Nodes"),
+    "metrics": [
+        ("k8s_node_count_control_plane", "stack"),
+        ("k8s_node_count_worker", "stack"),
     ],
 }

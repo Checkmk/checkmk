@@ -10,7 +10,7 @@ from mocket.mockhttp import Entry
 from cmk.special_agents.utils_kubernetes.schemas import (
     Labels,
     node_conditions,
-    node_labels,
+    NodeLabels,
     parse_metadata,
 )
 
@@ -45,11 +45,15 @@ class TestAPINode:
 
         node_raw_metadata = {
             "name": "k8",
-            "creation_timestamp": datetime.datetime.strptime("2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"),
+            "creation_timestamp": datetime.datetime.strptime(
+                "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
+            ),
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata(metadata_obj, node_labels(Labels(labels)))
+        labels = Labels(labels)
+        node_labels = NodeLabels(labels)
+        metadata = parse_metadata(metadata_obj, node_labels.to_cmk_labels())
         assert metadata.name == "k8"
         assert metadata.namespace is None
         assert metadata.labels["cmk/kubernetes"] == "yes"

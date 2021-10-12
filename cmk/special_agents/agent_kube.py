@@ -46,6 +46,7 @@ from cmk.special_agents.utils_kubernetes.schemas import (
     PodInfo,
     PodUsageResources,
 )
+from cmk.special_agents.utils_kubernetes.section_schemas import NodeCount
 
 MetricName = NewType("MetricName", str)
 MetricValue = NewType("MetricValue", float)
@@ -164,9 +165,12 @@ class Pod:
 
 
 class Node:
-    def __init__(self, metadata: MetaData, resources: Dict[str, NodeResources]) -> None:
+    def __init__(
+        self, metadata: MetaData, resources: Dict[str, NodeResources], control_plane: bool
+    ) -> None:
         self.metadata = metadata
         self.resources = resources
+        self.control_plane = control_plane
         self._pods: List[Pod] = []
 
     @property
@@ -190,7 +194,7 @@ class Cluster:
     def from_api_server(cls, api_server: APIServer) -> Cluster:
         cluster = cls()
         for node_api in api_server.nodes():
-            node = Node(node_api.metadata, node_api.resources)
+            node = Node(node_api.metadata, node_api.resources, node_api.control_plane)
             cluster.add_node(node)
 
         for pod in api_server.pods():
@@ -223,9 +227,22 @@ class Cluster:
     def pods(self) -> Sequence[Pod]:
         return list(self._pods.values())
 
+    def node_count(self) -> NodeCount:
+        worker = 0
+        control_plane = 0
+        for node in self._nodes.values():
+            if node.control_plane:
+                control_plane += 1
+            else:
+                worker += 1
+        return NodeCount(worker=worker, control_plane=control_plane)
+
 
 def output_cluster_api_sections(cluster: Cluster) -> None:
-    sections = {"k8s_pods_resources": cluster.pod_resources}
+    sections = {
+        "k8s_pods_resources": cluster.pod_resources,
+        "k8s_node_count_v1": cluster.node_count,
+    }
     for section_name, section_call in sections.items():
         with SectionWriter(section_name) as writer:
             writer.append(section_call().json())

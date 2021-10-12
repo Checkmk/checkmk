@@ -198,35 +198,48 @@ class NodeResources(BaseModel):
 class NodeAPI(BaseModel):
     metadata: MetaData
     conditions: NodeStatus
+    control_plane: bool
     resources: Dict[str, NodeResources]
 
     @classmethod
-    def from_client(cls, node: client.V1Node):
-        labels = node_labels(Labels(node.metadata.labels))
+    def from_client(cls, node: client.V1Node) -> NodeAPI:
+        node_labels = NodeLabels(node.metadata.labels)
         return cls(
-            metadata=parse_metadata(node.metadata, labels=labels),
+            metadata=parse_metadata(node.metadata, labels=node_labels.to_cmk_labels()),
             conditions=node_conditions(node),
             resources=parse_node_resources(node),
+            control_plane=node_labels.is_control_plane,
         )
 
 
-def node_labels(labels: Labels) -> Labels:
-    """Parse node labels
+class NodeLabels:
+    def __init__(self, labels: Optional[Labels]) -> None:
+        self._labels: Labels = Labels({})
+        if labels is not None:
+            self._labels = labels
+        self._is_control_plane = (
+            # 1.18 returns an empty string, 1.20 returns 'true'
+            "node-role.kubernetes.io/master" in self._labels
+            or "node-role.kubernetes.io/control-plane" in self._labels
+        )
 
-    >>> node_labels(Labels({'node-role.kubernetes.io/master': 'yes'}))
-    {'node-role.kubernetes.io/master': 'yes', 'cmk/kubernetes_object': 'control-plane_node', 'cmk/kubernetes': 'yes'}
+    @property
+    def is_control_plane(self) -> bool:
+        return self._is_control_plane
 
-    """
+    def to_cmk_labels(self) -> Labels:
+        """Parse node labels
 
-    is_control_plane = (
-        # 1.18 returns an empty string, 1.20 returns 'true'
-        ("node-role.kubernetes.io/control-plane" in labels)
-        or ("node-role.kubernetes.io/master" in labels)
-    )
+        >>> NodeLabels(Labels({'node-role.kubernetes.io/master': 'yes'})).to_cmk_labels()
+        {'node-role.kubernetes.io/master': 'yes', 'cmk/kubernetes_object': 'control-plane_node', 'cmk/kubernetes': 'yes'}
 
-    labels["cmk/kubernetes_object"] = "control-plane_node" if is_control_plane else "worker_node"
-    labels["cmk/kubernetes"] = "yes"
-    return labels
+        """
+        labels = self._labels.copy()
+        labels["cmk/kubernetes_object"] = (
+            "control-plane_node" if self._is_control_plane else "worker_node"
+        )
+        labels["cmk/kubernetes"] = "yes"
+        return Labels(labels)
 
 
 def node_conditions(node: client.V1Node) -> Optional[NodeStatus]:

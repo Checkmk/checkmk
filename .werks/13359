@@ -1,0 +1,13 @@
+Title: Events: Remove background from Match groups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1634029564
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p13
+
+Remove white background from Match groups in Event details.
+This caused white text on white background in dark theme which made
+reading the text impossible

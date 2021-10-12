@@ -1,8 +1,8 @@
 MOD_WSGI := mod_wsgi
-MOD_WSGI_VERS := 4.7.0
+MOD_WSGI_VERS := 4.9.0
 MOD_WSGI_DIR := $(MOD_WSGI)-$(MOD_WSGI_VERS)
 # Increase this to enforce a recreation of the build cache
-MOD_WSGI_BUILD_ID := 4
+MOD_WSGI_BUILD_ID := 1
 
 # Try to find the apxs binary
 ifneq ("$(wildcard /usr/sbin/apxs)","")

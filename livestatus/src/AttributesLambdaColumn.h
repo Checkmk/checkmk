@@ -8,56 +8,28 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <chrono>
 #include <memory>
 #include <string>
-#include <utility>
 
-#include "Column.h"
-#include "CustomVarsDictColumn.h"
+#include "CustomVarsDictFilter.h"
+#include "DictColumn.h"
 #include "Filter.h"
-#include "MonitoringCore.h"
+#include "Row.h"
 #include "opids.h"
-class Aggregator;
-enum class AttributeKind;
-class Row;
-class RowRenderer;
-
-#ifdef CMC
-#include "contact_fwd.h"
-#else
-// TODO(sp) Why on earth is "contact_fwd.h" not enough???
-#include "nagios.h"
-#endif
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty Attributes.
 template <class T>
-class AttributesLambdaColumn : public CustomVarsDictColumn {
-public:
-    AttributesLambdaColumn(const std::string& name,
-                           const std::string& description,
-                           const ColumnOffsets& offsets,
-                           std::function<Attributes(const T&)> f)
-        : CustomVarsDictColumn(
-              name, description, offsets,
-              // TODO(ml): The hierarchy of every *LambdaColumn is wrong anyway
-              // but this is the easiest way to get rid of the pointer
-              // arithmetic by replacing inheritance with delegation without
-              // breaking anything. So here we make the "base" ctor happy with a
-              // few more junk args.
-              nullptr, AttributeKind::tags)
-        , get_value_{std::move(f)} {}
-
+struct AttributesLambdaColumn : DictColumn::Callback<T> {
+    using DictColumn::Callback<T>::Callback;
     ~AttributesLambdaColumn() override = default;
-
-    [[nodiscard]] Attributes getValue(Row row) const override {
-        const T* data = columnData<T>(row);
-        return data == nullptr ? Attributes{} : get_value_(*data);
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string &value) const override {
+        return std::make_unique<CustomVarsDictFilter>(
+            kind, this->name(), [this](Row row) { return this->getValue(row); },
+            relOp, value);
     }
-
-private:
-    std::function<Attributes(const T&)> get_value_;
 };
 
 #endif

@@ -15,7 +15,10 @@ case "$1" in
             exit 0
         fi
 
-        gunicorn -D -p $PIDFILE -k uvicorn.workers.UvicornWorker marcv.server:app - > /dev/null
+        gunicorn -D -p $PIDFILE  \
+                --error-logfile $OMD_ROOT/var/log/marcv/error.log \
+                --access-logfile $OMD_ROOT/var/log/marcv/access.log \
+                -k uvicorn.workers.UvicornWorker marcv.server:app
         if [ $? -eq 0 ]; then
             echo "OK"
             exit 0

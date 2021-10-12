@@ -12,6 +12,8 @@ from typing import Dict
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
+from marcv.log import logger
+
 app = FastAPI()
 
 OMD_ROOT = Path(os.environ.get("OMD_ROOT", ""))
@@ -19,9 +21,7 @@ AGENT_OUTPUT_DIR = OMD_ROOT / "var/marcv/received_output"
 
 
 @app.post("/agent-data")
-async def agent_data(
-    uuid: str = Form(...), upload_file: UploadFile = File(...)
-) -> Dict[str, str]:
+async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
 
     file_dir = AGENT_OUTPUT_DIR / uuid
     file_path = file_dir / "received_output"
@@ -34,6 +34,8 @@ async def agent_data(
         os.rename(temp_path, file_path)
 
     except FileNotFoundError:
+        logger.error(f"uuid={uuid} Host is not registered")
         raise HTTPException(status_code=403, detail="Host is not registered")
 
+    logger.info(f"uuid={uuid} Agent data saved")
     return {"message": "Agent data saved."}

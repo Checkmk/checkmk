@@ -10,8 +10,8 @@ if [ -z $ONLY_COPY ]; then
     sudo omd stop $SITE marcv
 fi
 
-sudo su - $SITE -c "python3 -m pip uninstall -y marcv"
-sudo su - $SITE -c "python3 -m pip install "$PWD/dist/marcv-0.0.0-py3-none-any.whl""
+sudo "/omd/sites/$SITE/bin/python3" -m pip uninstall -y marcv
+sudo "/omd/sites/$SITE/bin/python3" -m pip install "$PWD/dist/marcv-0.0.0-py3-none-any.whl"
 
 if [ -z $ONLY_COPY ]; then
     sudo omd start $SITE marcv

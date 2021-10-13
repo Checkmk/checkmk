@@ -1,0 +1,89 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug test_cmc ONE TEST",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_cmc", //"${workspaceFolder}/main.exe",
+            "args": [
+                "--gtest_filter=MainHelperPoolTest.*"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "_Build_ Test",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Debug test_cmc",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_cmc", //"${workspaceFolder}/main.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "_Build_ DEBUG Core and _Copy_",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Debug cmc [sudo]",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/omd/sites/heute/bin/cmc",
+            "args": [
+                "-g"
+            ],
+            "stopAtEntry": false,
+            "cwd": "/omd/sites/heute",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            //"miDebuggerPath": "/usr/bin/sgdb",
+            "preLaunchTask": "_Build_ Test",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                    "sudo": true
+                }
+            ]
+        },
+        {
+            "name": "GDB Attach",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/cmc",
+            "processId": "${command:pickProcess}",
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

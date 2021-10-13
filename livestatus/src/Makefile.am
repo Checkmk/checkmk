@@ -107,10 +107,7 @@ liblivestatus_a_SOURCES = \
         CommentRenderer.cc \
         CountAggregator.cc \
         CrashReport.cc \
-        CustomVarsDictColumn.cc \
         CustomVarsDictFilter.cc \
-        CustomVarsNamesColumn.cc \
-        CustomVarsValuesColumn.cc \
         DictColumn.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \

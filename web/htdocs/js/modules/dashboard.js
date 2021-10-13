@@ -1175,6 +1175,15 @@ export function register_event_handlers() {
         utils.prevent_default_events(e);
         return false;
     });
+
+    // Stop dashlet drag and resize whenever the mouse leaves the content area
+    utils.add_event_handler(
+        "mouseleave",
+        function (e) {
+            return drag_dashlet_stop(e) && resize_dashlet_stop(e);
+        },
+        document
+    );
 }
 
 export function chart_pie(pie_id, x_scale, radius, color, right_side, pie_diameter) {

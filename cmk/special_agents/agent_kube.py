@@ -267,7 +267,7 @@ class SetupError(Exception):
 
 
 def collect_metrics_from_cluster_agent(cluster_url: str) -> List[str]:
-    cluster_resp = requests.get(f"{cluster_url}/kmetrics", verify=False)
+    cluster_resp = requests.get(f"{cluster_url}/kmetrics")  # TODO: certificate validation
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
 

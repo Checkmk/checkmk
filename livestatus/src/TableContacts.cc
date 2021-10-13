@@ -15,7 +15,7 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
-#include "AttributesLambdaColumn.h"
+#include "AttributesDictColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
 #include "IntColumn.h"
@@ -188,7 +188,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<AttributesDictColumn<contact>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets,
         CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
@@ -200,7 +200,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "tag_values",
         "A list of the values of all tags of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::tags}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<AttributesDictColumn<contact>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{table->core(), AttributeKind::tags}));
 
@@ -211,7 +211,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "label_values",
         "A list of the values of all labels of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::labels}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<AttributesDictColumn<contact>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{table->core(), AttributeKind::labels}));
 
@@ -222,7 +222,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "label_source_values",
         "A list of the values of all sources of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<AttributesLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<AttributesDictColumn<contact>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
         CustomAttributeMap{table->core(), AttributeKind::label_sources}));
 

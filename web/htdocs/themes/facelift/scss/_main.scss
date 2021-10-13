@@ -1246,7 +1246,7 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    color: $success;
+    color: $font-color-green;
     background-color: $inpage-highlight-color;
   }
 

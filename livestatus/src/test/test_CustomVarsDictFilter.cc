@@ -9,9 +9,11 @@
 #include <sstream>
 #include <string>
 
+#include "AttributesDictColumn.h"
 #include "Column.h"
-#include "CustomVarsDictColumn.h"
+#include "CustomAttributeMap.h"
 #include "CustomVarsDictFilter.h"
+#include "DictColumn.h"
 #include "Filter.h"
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
@@ -37,11 +39,8 @@ std::string b16encode(const std::string& str) {
 
 struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
-        CustomVarsDictColumn cvdc{
-            "name", "description", ColumnOffsets{}.add([](Row r) {
-                return &r.rawData<host>()->custom_variables;
-            }),
-            &core, kind};
+        AttributesDictColumn<host> cvdc{"name", "description", ColumnOffsets{},
+                                        CustomAttributeMap{&core, kind}};
         CustomVarsDictFilter filter{
             Filter::Kind::row, "name",
             [&cvdc](Row row) { return cvdc.getValue(row); },

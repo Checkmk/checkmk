@@ -20,13 +20,12 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
+#include "AttributesDictColumn.h"
 #include "BlobColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
 #include "CommentRenderer.h"
-#include "CustomVarsDictColumn.h"
-#include "CustomVarsNamesColumn.h"
-#include "CustomVarsValuesColumn.h"
+#include "CustomAttributeMap.h"
 #include "DoubleColumn.h"
 #include "DowntimeRenderer.h"
 #include "DynamicColumn.h"
@@ -607,49 +606,49 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "custom_variable_names",
-        "A list of the names of the custom variables", offsets_custom_variables,
-        mc, AttributeKind::custom_variables));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        "A list of the names of the custom variables", offsets,
+        CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "custom_variable_values",
-        "A list of the values of the custom variables",
-        offsets_custom_variables, mc, AttributeKind::custom_variables));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
+        "A list of the values of the custom variables", offsets,
+        CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
+    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        offsets_custom_variables, mc, AttributeKind::custom_variables));
+        offsets, CustomAttributeMap{mc, AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
-        prefix + "tag_names", "A list of the names of the tags",
-        offsets_custom_variables, mc, AttributeKind::tags));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
-        prefix + "tag_values", "A list of the values of the tags",
-        offsets_custom_variables, mc, AttributeKind::tags));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "tags", "A dictionary of the tags", offsets_custom_variables,
-        mc, AttributeKind::tags));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+        prefix + "tag_names", "A list of the names of the tags", offsets,
+        CustomAttributeMap::Keys{mc, AttributeKind::tags}));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+        prefix + "tag_values", "A list of the values of the tags", offsets,
+        CustomAttributeMap::Values{mc, AttributeKind::tags}));
+    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
+        prefix + "tags", "A dictionary of the tags", offsets,
+        CustomAttributeMap{mc, AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
-        prefix + "label_names", "A list of the names of the labels",
-        offsets_custom_variables, mc, AttributeKind::labels));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
-        prefix + "label_values", "A list of the values of the labels",
-        offsets_custom_variables, mc, AttributeKind::labels));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "labels", "A dictionary of the labels",
-        offsets_custom_variables, mc, AttributeKind::labels));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+        prefix + "label_names", "A list of the names of the labels", offsets,
+        CustomAttributeMap::Keys{mc, AttributeKind::labels}));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+        prefix + "label_values", "A list of the values of the labels", offsets,
+        CustomAttributeMap::Values{mc, AttributeKind::labels}));
+    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
+        prefix + "labels", "A dictionary of the labels", offsets,
+        CustomAttributeMap{mc, AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "label_source_names",
-        "A list of the names of the label sources", offsets_custom_variables,
-        mc, AttributeKind::label_sources));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        "A list of the names of the label sources", offsets,
+        CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "label_source_values",
-        "A list of the values of the label sources", offsets_custom_variables,
-        mc, AttributeKind::label_sources));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "label_sources", "A dictionary of the label sources",
-        offsets_custom_variables, mc, AttributeKind::label_sources));
+        "A list of the values of the label sources", offsets,
+        CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
+    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
+        prefix + "label_sources", "A dictionary of the label sources", offsets,
+        CustomAttributeMap{mc, AttributeKind::label_sources}));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom

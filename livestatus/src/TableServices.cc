@@ -20,12 +20,11 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
+#include "AttributesDictColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
 #include "CommentRenderer.h"
-#include "CustomVarsDictColumn.h"
-#include "CustomVarsNamesColumn.h"
-#include "CustomVarsValuesColumn.h"
+#include "CustomAttributeMap.h"
 #include "DoubleColumn.h"
 #include "DowntimeRenderer.h"
 #include "DynamicColumn.h"
@@ -587,55 +586,56 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
     }
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "custom_variable_names",
-        "A list of the names of the custom variables of the service",
-        offsets_custom_variables, table->core(),
-        AttributeKind::custom_variables));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        "A list of the names of the custom variables of the service", offsets,
+        CustomAttributeMap::Keys{table->core(),
+                                 AttributeKind::custom_variables}));
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "custom_variable_values",
-        "A list of the values of all custom variable of the service",
-        offsets_custom_variables, table->core(),
-        AttributeKind::custom_variables));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
+        "A list of the values of all custom variable of the service", offsets,
+        CustomAttributeMap::Values{table->core(),
+                                   AttributeKind::custom_variables}));
+    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        offsets_custom_variables, table->core(),
-        AttributeKind::custom_variables));
+        offsets,
+        CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "tag_names", "A list of the names of the tags of the service",
-        offsets_custom_variables, table->core(), AttributeKind::tags));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        offsets, CustomAttributeMap::Keys{table->core(), AttributeKind::tags}));
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "tag_values",
-        "A list of the values of all tags of the service",
-        offsets_custom_variables, table->core(), AttributeKind::tags));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "tags", "A dictionary of the tags", offsets_custom_variables,
-        table->core(), AttributeKind::tags));
+        "A list of the values of all tags of the service", offsets,
+        CustomAttributeMap::Values{table->core(), AttributeKind::tags}));
+    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
+        prefix + "tags", "A dictionary of the tags", offsets,
+        CustomAttributeMap{table->core(), AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "label_names",
-        "A list of the names of the labels of the service",
-        offsets_custom_variables, table->core(), AttributeKind::labels));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        "A list of the names of the labels of the service", offsets,
+        CustomAttributeMap::Keys{table->core(), AttributeKind::labels}));
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "label_values",
-        "A list of the values of all labels of the service",
-        offsets_custom_variables, table->core(), AttributeKind::labels));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "labels", "A dictionary of the labels",
-        offsets_custom_variables, table->core(), AttributeKind::labels));
+        "A list of the values of all labels of the service", offsets,
+        CustomAttributeMap::Values{table->core(), AttributeKind::labels}));
+    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
+        prefix + "labels", "A dictionary of the labels", offsets,
+        CustomAttributeMap{table->core(), AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "label_source_names",
-        "A list of the names of the sources of the service",
-        offsets_custom_variables, table->core(), AttributeKind::label_sources));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        "A list of the names of the sources of the service", offsets,
+        CustomAttributeMap::Keys{table->core(), AttributeKind::label_sources}));
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "label_source_values",
-        "A list of the values of all sources of the service",
-        offsets_custom_variables, table->core(), AttributeKind::label_sources));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "label_sources", "A dictionary of the label sources",
-        offsets_custom_variables, table->core(), AttributeKind::label_sources));
+        "A list of the values of all sources of the service", offsets,
+        CustomAttributeMap::Values{table->core(),
+                                   AttributeKind::label_sources}));
+    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
+        prefix + "label_sources", "A dictionary of the label sources", offsets,
+        CustomAttributeMap{table->core(), AttributeKind::label_sources}));
 
     table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "groups", "A list of all service groups the service is in",

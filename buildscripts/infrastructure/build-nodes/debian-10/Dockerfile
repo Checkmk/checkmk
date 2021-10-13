@@ -100,6 +100,7 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged

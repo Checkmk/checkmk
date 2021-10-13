@@ -1,0 +1,21 @@
+Title: set correct access rights on Linux TGZ data structure
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1634136587
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p13
+
+This is a regression since Werk #10429.
+
+With Werk #10429, it was prevented that the Linux TGZ package overwrites
+access rights of existing directories.
+
+However, this fix only works for 1.6 releases, while unfortunately it does
+not take effect in Checkmk 2.0 releases.
+
+Therefore the desired behavior is supplied with this Werk.
+

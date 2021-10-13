@@ -14,6 +14,7 @@
 #include "CustomVarsDictFilter.h"
 #include "DictColumn.h"
 #include "Filter.h"
+#include "MapUtils.h"
 #include "Row.h"
 #include "opids.h"
 

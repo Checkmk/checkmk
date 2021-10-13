@@ -7,10 +7,8 @@
 
 // We need it for std::transform, but IWYU "oscillates" a bit here... :-/
 #include <algorithm>  // IWYU pragma: keep
-#include <iterator>
 #include <memory>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
 
 #include "AttributeBitmaskColumn.h"
@@ -18,6 +16,7 @@
 #include "AttributesDictColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
+#include "CustomAttributeMap.h"
 #include "IntColumn.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
@@ -31,71 +30,6 @@
 extern TimeperiodsCache *g_timeperiods_cache;
 
 using namespace std::literals;
-
-namespace {
-template <typename T>
-std::vector<typename T::key_type> map_keys(const T &map) {
-    std::vector<typename T::key_type> out;
-    out.reserve(map.size());
-    std::transform(
-        std::begin(map), std::end(map), std::back_inserter(out),
-        [](const typename T::value_type &pair) { return pair.first; });
-    return out;
-}
-
-template <typename T>
-std::vector<typename T::mapped_type> map_values(const T &map) {
-    std::vector<typename T::mapped_type> out;
-    out.reserve(map.size());
-    std::transform(
-        std::begin(map), std::end(map), std::back_inserter(out),
-        [](const typename T::value_type &pair) { return pair.second; });
-    return out;
-}
-
-class CustomAttributeMap {
-public:
-    class Keys;
-    class Values;
-    CustomAttributeMap(const MonitoringCore *const mc, const AttributeKind kind)
-        : mc_{mc}, kind_{kind} {}
-    Attributes operator()(const contact &ct) {
-        if (const auto *p = ct.custom_variables) {
-            return mc_->customAttributes(&p, kind_);
-        }
-        return {};
-    };
-
-private:
-    const MonitoringCore *const mc_;
-    const AttributeKind kind_;
-};
-
-class CustomAttributeMap::Keys {
-public:
-    Keys(const MonitoringCore *const mc, const AttributeKind kind)
-        : m_{mc, kind} {}
-    std::vector<Attributes::key_type> operator()(const contact &ct) {
-        return map_keys(m_(ct));
-    }
-
-private:
-    CustomAttributeMap m_;
-};
-
-class CustomAttributeMap::Values {
-public:
-    Values(const MonitoringCore *const mc, const AttributeKind kind)
-        : m_{mc, kind} {}
-    std::vector<Attributes::mapped_type> operator()(const contact &ct) {
-        return map_values(m_(ct));
-    }
-
-private:
-    CustomAttributeMap m_;
-};
-
-}  // namespace
 
 TableContacts::TableContacts(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});

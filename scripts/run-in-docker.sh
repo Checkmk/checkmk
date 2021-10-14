@@ -30,5 +30,6 @@ docker run -t -a stdout -a stderr \
     -e PYTHON_FILES \
     -e RESULTS \
     -e WORKDIR \
+    $DOCKER_RUN_ADDOPTS \
     "$IMAGE_TESTING" \
     $COMMAND

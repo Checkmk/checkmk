@@ -14,8 +14,8 @@
 #include <utility>
 
 #include "Filter.h"
+#include "ListColumn.h"
 #include "ListFilter.h"  // IWYU pragma: keep
-#include "ListLambdaColumn.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"

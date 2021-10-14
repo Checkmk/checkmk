@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "Column.h"
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"

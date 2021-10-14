@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 enum class ServiceState;
 class ListRenderer;
 

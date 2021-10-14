@@ -20,7 +20,7 @@
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "Logger.h"
 #include "Query.h"
 #include "Row.h"

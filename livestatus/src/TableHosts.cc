@@ -33,7 +33,7 @@
 #include "DynamicRRDColumn.h"
 #include "HostListRenderer.h"
 #include "IntColumn.h"
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "LogEntry.h"
 #include "Logger.h"
 #include "LogwatchList.h"

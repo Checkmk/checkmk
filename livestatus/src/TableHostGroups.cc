@@ -12,7 +12,7 @@
 #include "HostListRenderer.h"
 #include "HostListState.h"
 #include "IntColumn.h"
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"

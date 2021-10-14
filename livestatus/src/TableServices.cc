@@ -30,7 +30,7 @@
 #include "DynamicColumn.h"
 #include "DynamicRRDColumn.h"
 #include "IntColumn.h"
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "Logger.h"
 #include "MacroExpander.h"
 #include "Metric.h"

@@ -16,7 +16,7 @@
 
 #include "DoubleColumn.h"
 #include "IntColumn.h"
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "StringColumn.h"
 #include "Table.h"

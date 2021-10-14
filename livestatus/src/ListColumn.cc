@@ -9,18 +9,16 @@
 
 #include "ListFilter.h"
 #include "Renderer.h"
-#include "Row.h"
 
-void deprecated::ListColumn::output(
-    Row row, RowRenderer &r, const contact *auth_user,
-    std::chrono::seconds timezone_offset) const {
+void ListColumn::output(Row row, RowRenderer &r, const contact *auth_user,
+                        std::chrono::seconds timezone_offset) const {
     ListRenderer l(r);
     for (const auto &val : getValue(row, auth_user, timezone_offset)) {
         l.output(val);
     }
 }
 
-std::unique_ptr<Filter> deprecated::ListColumn::createFilter(
+std::unique_ptr<Filter> ListColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
     return std::make_unique<ListFilter>(
@@ -32,7 +30,7 @@ std::unique_ptr<Filter> deprecated::ListColumn::createFilter(
         relOp, value, logger());
 }
 
-std::unique_ptr<Aggregator> deprecated::ListColumn::createAggregator(
+std::unique_ptr<Aggregator> ListColumn::createAggregator(
     AggregationFactory /*factory*/) const {
     throw std::runtime_error("aggregating on list column '" + name() +
                              "' not supported");

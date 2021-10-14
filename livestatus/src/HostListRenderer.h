@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "auth.h"
 #ifdef CMC
 #include <unordered_set>

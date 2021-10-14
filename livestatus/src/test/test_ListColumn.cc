@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "Row.h"
 #include "gtest/gtest.h"
 

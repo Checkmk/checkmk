@@ -23,7 +23,7 @@
 #include "Object.h"
 #endif
 
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "overload.h"  // IWYU pragma: keep
 class ListRenderer;
 class MonitoringCore;

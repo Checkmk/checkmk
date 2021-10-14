@@ -6,7 +6,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List, TypedDict
+from typing import Dict, List, Optional, TypedDict
 
 from pydantic import BaseModel
 
@@ -94,5 +94,25 @@ class Subset:
 
 
 class NodeCount(BaseModel):
+    """section: k8s_node_count_v1"""
+
     worker: int = 0
     control_plane: int = 0
+
+
+class APIHealthStatus(BaseModel):
+    status_code: int
+    response: str
+    # only set if status_code != 200
+    verbose_response: Optional[str]
+
+
+class APIHealth(BaseModel):
+    ready: APIHealthStatus
+    live: APIHealthStatus
+
+
+class ClusterInfo(BaseModel):
+    """section: k8s_cluster_details_v1"""
+
+    api_health: APIHealth

@@ -40,6 +40,7 @@ import cmk.utils.profile
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemas import (
+    ClusterInfo,
     MetaData,
     NodeResources,
     Phase,
@@ -192,7 +193,9 @@ class Node:
 class Cluster:
     @classmethod
     def from_api_server(cls, api_server: APIServer) -> Cluster:
-        cluster = cls()
+        cluster_details = api_server.cluster_details()
+
+        cluster = cls(cluster_details=cluster_details)
         for node_api in api_server.nodes():
             node = Node(node_api.metadata, node_api.resources, node_api.control_plane)
             cluster.add_node(node)
@@ -202,9 +205,10 @@ class Cluster:
 
         return cluster
 
-    def __init__(self) -> None:
+    def __init__(self, *, cluster_details: Optional[ClusterInfo] = None) -> None:
         self._nodes: Dict[str, Node] = {}
         self._pods: Dict[str, Pod] = {}
+        self._cluster_details: Optional[ClusterInfo] = cluster_details
 
     def add_node(self, node: Node) -> None:
         self._nodes[node.name] = node
@@ -237,11 +241,17 @@ class Cluster:
                 worker += 1
         return NodeCount(worker=worker, control_plane=control_plane)
 
+    def cluster_details(self) -> ClusterInfo:
+        if self._cluster_details is None:
+            raise AttributeError("cluster_details was not provided")
+        return self._cluster_details
+
 
 def output_cluster_api_sections(cluster: Cluster) -> None:
     sections = {
         "k8s_pods_resources": cluster.pod_resources,
         "k8s_node_count_v1": cluster.node_count,
+        "k8s_cluster_details_v1": cluster.cluster_details,
     }
     for section_name, section_call in sections.items():
         with SectionWriter(section_name) as writer:

@@ -8,5 +8,7 @@ from pydantic import BaseModel
 
 
 class NodeCount(BaseModel):
+    """section: k8s_node_count_v1"""
+
     worker: int = 0
     control_plane: int = 0

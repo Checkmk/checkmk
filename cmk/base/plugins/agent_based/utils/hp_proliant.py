@@ -33,4 +33,5 @@ PRODUCT_NAME_OID = ".1.3.6.1.4.1.232.2.2.4.2.0"
 DETECT = any_of(
     contains(PRODUCT_NAME_OID, "proliant"),
     contains(PRODUCT_NAME_OID, "storeeasy"),
+    contains(PRODUCT_NAME_OID, "synergy"),
 )

@@ -285,6 +285,7 @@ def hp_proliant_scan_function(oid):
     return (
         "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
         or "storeeasy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
+        or "synergy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
     )
 
 

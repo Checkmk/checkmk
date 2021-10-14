@@ -46,6 +46,7 @@ from typing import (
     ItemsView,
     List,
     Literal,
+    Mapping,
     NamedTuple,
     Optional as _Optional,
     Pattern,
@@ -226,6 +227,10 @@ class ValueSpec:
 
     def value_from_json(self, json_value):
         raise NotImplementedError()
+
+    def value_to_json_safe(self, value: Any) -> Any:
+        """Return a JSON compatible format without sensitive information like passwords"""
+        return self.value_to_json(value)
 
     def from_html_vars(self, varprefix: str) -> Any:
         """Create a value from the current settings of the HTML variables
@@ -692,6 +697,12 @@ class TextAscii(ValueSpec):
         if self._maxlen is not None and len(value) > self._maxlen:
             raise MKUserError(varprefix,
                               _("You must not provide more than %d characters.") % self._maxlen)
+
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
 
 
 class UUID(TextAscii):
@@ -1712,6 +1723,15 @@ class ListOfStrings(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    def value_to_json(self, value):
+        return [self._valuespec.value_to_json(e) for e in value]
+
+    def value_from_json(self, json_value):
+        return [self._valuespec.value_from_json(e) for e in json_value]
+
+    def value_to_json_safe(self, value):
+        return [self._valuespec.value_to_json_safe(e) for e in value]
+
 
 # TODO: Spread use of this valuespec
 def NetworkPort(title: _Optional[str], default_value: Union[object, int] = DEF_VALUE) -> Integer:
@@ -1993,6 +2013,15 @@ class ListOf(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    def value_to_json(self, value):
+        return [self._valuespec.value_to_json(e) for e in value]
+
+    def value_from_json(self, json_value):
+        return [self._valuespec.value_from_json(e) for e in json_value]
+
+    def value_to_json_safe(self, value):
+        return [self._valuespec.value_to_json_safe(e) for e in value]
+
 
 ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
 
@@ -2142,6 +2171,20 @@ class ListOfMultiple(ValueSpec):
             table_content += html.render_tr(
                 html.render_td(vs.title()) + html.render_td(HTML(vs.value_to_text(val))))
         return "%s" % html.render_table(table_content)
+
+    def value_to_json(self, value: Dict[str, Any]) -> Dict[str, Any]:
+        return {ident: self._choice_dict[ident].value_to_json(val) for ident, val in value.items()}
+
+    def value_from_json(self, json_value: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            ident: self._choice_dict[ident].value_from_json(val)
+            for ident, val in json_value.items()
+        }
+
+    def value_to_json_safe(self, value: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            ident: self._choice_dict[ident].value_to_json_safe(val) for ident, val in value.items()
+        }
 
     def from_html_vars(self, varprefix: str) -> Dict[str, Any]:
         value: Dict[str, Any] = {}
@@ -3062,6 +3105,25 @@ class CascadingDropdown(ValueSpec):
         except Exception:  # TODO: fix exc
             return None
 
+    def value_to_json_safe(
+        self, value: CascadingDropdownChoiceValue
+    ) -> Union[None, CascadingDropdownChoiceValue, List[Any]]:
+        choice = self._choice_from_value(value)
+        if not choice:
+            return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
+        ident, _title, vs = choice
+
+        if vs is None and ident == value:
+            return value
+
+        assert isinstance(value, tuple) and vs is not None
+
+        try:
+            vs.validate_datatype(value[1], "")
+            return [ident, vs.value_to_json_safe(value[1])]
+        except Exception:  # TODO: fix exc
+            return None
+
     def from_html_vars(self, varprefix: str) -> CascadingDropdownChoiceValue:
         choices = self.choices()
 
@@ -3957,6 +4019,12 @@ class Timeofday(ValueSpec):
         if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
 
+    def value_to_json(self, value: Any) -> List[Any]:
+        return [value[0], value[1]]
+
+    def value_from_json(self, json_value: Any) -> _Tuple[Any, Any]:
+        return (json_value[0], json_value[1])
+
 
 TimeofdayRangeValue = _Tuple[_Tuple[int, int], _Tuple[int, int]]
 
@@ -4042,6 +4110,18 @@ class TimeofdayRange(ValueSpec):
             raise MKUserError(
                 varprefix + "_until",
                 _("The <i>from</i> time must not be later then the <i>until</i> time."))
+
+    def value_to_json(self, value: Any) -> List[Any]:
+        return [
+            self._bounds[0].value_to_json(value[0]),
+            self._bounds[1].value_to_json(value[1]),
+        ]
+
+    def value_from_json(self, json_value: Any) -> _Tuple[Any, Any]:
+        return (
+            self._bounds[0].value_from_json(json_value[0]),
+            self._bounds[1].value_from_json(json_value[1]),
+        )
 
 
 class TimeHelper:
@@ -4219,6 +4299,13 @@ class Timerange(CascadingDropdown):
                 return ident
         return value
 
+    def value_to_json_safe(
+        self, value: CascadingDropdownChoiceValue
+    ) -> Union[None, CascadingDropdownChoiceValue, List[Any]]:
+        if isinstance(value, int):  # Handle default graph_timeranges
+            value = ("age", value)
+        return super().value_to_json_safe(value)
+
     def compute_range(self, rangespec):
         def _date_span(from_time, until_time):
             start = AbsoluteDate().value_to_text(from_time)
@@ -4364,6 +4451,8 @@ class Optional(ValueSpec):
         label: _Optional[str] = None,
         negate: bool = False,
         none_label: _Optional[str] = None,
+        # FIXME: Any is really problematic here since and makes it impossible to implement
+        # e.g. the value_to/from_json functions correctly.
         none_value: Any = None,
         sameline: bool = False,
         indent: bool = True,
@@ -4459,6 +4548,27 @@ class Optional(ValueSpec):
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
+
+    def value_to_json(self, value: Any) -> Any:
+        if value != self._none_value:
+            return self._valuespec.value_to_json(value)
+        if isinstance(value, tuple):
+            return list(value)
+        return value
+
+    def value_from_json(self, json_value: Any) -> Any:
+        if json_value != self._none_value:
+            return self._valuespec.value_from_json(json_value)
+        if isinstance(json_value, list):
+            return tuple(json_value)
+        return json_value
+
+    def value_to_json_safe(self, value: Any) -> Any:
+        if value != self._none_value:
+            return self._valuespec.value_to_json_safe(value)
+        if isinstance(value, tuple):
+            return list(value)
+        return value
 
 
 class Alternative(ValueSpec):
@@ -4573,11 +4683,20 @@ class Alternative(ValueSpec):
             return output + vs.value_to_text(value)
         return _("invalid:") + " " + escaping.escape_attribute(str(value))
 
-    def value_to_json(self, value):
-        return value
+    def value_to_json(self, value: Any) -> Any:
+        vs, match_value = self.matching_alternative(value)
+        return vs.value_to_json(match_value)
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: Any) -> Any:
+        # FIXME: This is wrong! value_to_json transforms tuples to lists. json_value could
+        # contain a list that should be a tuple at ANY level. So we would need to run
+        # self.matching_value(json_value) with every permutation from list to tuple
+        # inside json_value here. An example ruleset is "ESX Multipath Count".
         return json_value
+
+    def value_to_json_safe(self, value: Any) -> Any:
+        vs, match_value = self.matching_alternative(value)
+        return vs.value_to_json_safe(match_value)
 
     def from_html_vars(self, varprefix):
         nr = html.request.get_integer_input_mandatory(varprefix + "_use")
@@ -4707,6 +4826,9 @@ class Tuple(ValueSpec):
 
     def value_from_json(self, json_value: Any) -> _Tuple[Any, ...]:
         return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))
+
+    def value_to_json_safe(self, value: Any) -> List[Any]:
+        return [el.value_to_json_safe(val) for _, el, val in self._iter_value(value)]
 
     def from_html_vars(self, varprefix):
         return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
@@ -5013,6 +5135,13 @@ class Dictionary(ValueSpec):
             if param in json_value
         }
 
+    def value_to_json_safe(self, value: Any) -> Mapping[str, Any]:
+        return {
+            param: vs.value_to_json_safe(value[param])
+            for param, vs in self._get_elements()
+            if param in value
+        }
+
     def from_html_vars(self, varprefix):
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
@@ -5080,6 +5209,7 @@ class Dictionary(ValueSpec):
 
 # TODO: Cleanup this and all call sites. Replace it with some kind of DropdownChoice
 # based valuespec
+# NOTE: This valuespec doesn't support value_to/from_json.
 class ElementSelection(ValueSpec):
     """Base class for selection of a Nagios element out of a given list that must be loaded from a file.
 
@@ -5220,6 +5350,15 @@ class Foldable(ValueSpec):
     def from_html_vars(self, varprefix: str) -> Any:
         return self._valuespec.from_html_vars(varprefix)
 
+    def value_to_json(self, value: Any) -> Any:
+        return self._valuespec.value_to_json(value)
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return self._valuespec.value_from_json(json_value)
+
+    def value_to_json_safe(self, value: Any) -> Any:
+        return self._valuespec.value_to_json_safe(value)
+
     def validate_datatype(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_datatype(value, varprefix)
 
@@ -5315,6 +5454,15 @@ class Transform(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    def value_to_json(self, value):
+        return self._valuespec.value_to_json(self.forth(value))
+
+    def value_from_json(self, json_value):
+        return self.back(self._valuespec.value_from_json(json_value))
+
+    def value_to_json_safe(self, value: Any) -> Any:
+        return self._valuespec.value_to_json_safe(value)
+
 
 # TODO: Change to factory, cleanup kwargs
 class LDAPDistinguishedName(TextUnicode):
@@ -5387,6 +5535,12 @@ class Password(TextAscii):
         if value is None:
             return _("none")
         return u'******'
+
+    def value_to_json_safe(self, value: _Optional[str]) -> str:
+        if value is None:
+            return "none"
+        password_hash = hashlib.sha256(value.encode()).hexdigest()
+        return f"hash:{password_hash[:10]}"
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
@@ -5518,6 +5672,12 @@ class FileUpload(ValueSpec):
 
     def from_html_vars(self, varprefix: str) -> UploadedFile:
         return html.request.uploaded_file(varprefix)
+
+    def value_to_json(self, value: Any) -> Any:
+        return value
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return json_value
 
 
 class ImageUpload(FileUpload):
@@ -5751,6 +5911,12 @@ class Labels(ValueSpec):
                         placeholder=_("Add some label"),
                         data_world=self._world.value,
                         data_max_labels=self._max_labels)
+
+    def value_to_json(self, value: Any) -> Any:
+        return value
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return json_value
 
 
 def SingleLabel(world, label_source=None, **kwargs):
@@ -6049,6 +6215,12 @@ class IconSelector(ValueSpec):
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.
         return "%s" % self._render_icon(value["icon"] if isinstance(value, dict) else value)
 
+    def value_to_json(self, value: Any) -> Any:
+        return value
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return json_value
+
     def validate_datatype(self, value, varprefix):
         if self._with_emblem and not isinstance(value, (str, dict)):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
@@ -6136,6 +6308,12 @@ class Color(ValueSpec):
     def value_to_text(self, value):
         return value
 
+    def value_to_json(self, value: Any) -> Any:
+        return value
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return json_value
+
     def validate_datatype(self, value, varprefix):
         if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
@@ -6199,6 +6377,15 @@ class SSHKeyPair(ValueSpec):
 
     def value_to_text(self, value: SSHKeyPairValue) -> str:
         return self._get_key_fingerprint(value)
+
+    def value_to_json(self, value: Any) -> List[Any]:
+        return [value[0], value[1]]
+
+    def value_from_json(self, json_value: Any) -> _Tuple[Any, Any]:
+        return (json_value[0], json_value[1])
+
+    def value_to_json_safe(self, value: Any) -> str:
+        return f'fingerprint:{self._get_key_fingerprint(value)}'
 
     def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
         if html.request.has_var(varprefix):

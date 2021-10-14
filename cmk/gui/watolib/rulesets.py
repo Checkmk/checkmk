@@ -500,7 +500,7 @@ class Ruleset:
                    _("Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\"") %
                    (orig_rule.id, self.title(), rule.folder.alias_path()),
                    sites=rule.folder.all_site_ids(),
-                   diff_text=make_diff_text({}, rule.to_web_api()),
+                   diff_text=make_diff_text({}, rule.to_log()),
                    object_ref=rule.object_ref())
 
     def append_rule(self, folder, rule) -> int:
@@ -658,7 +658,7 @@ class Ruleset:
                    _("Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\"") %
                    (index, self.title(), rule.folder.alias_path()),
                    sites=rule.folder.all_site_ids(),
-                   diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()),
+                   diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
                    object_ref=rule.object_ref())
         self._on_change()
 
@@ -862,10 +862,15 @@ class Rule:
     def to_web_api(self):
         return self._to_config(self.conditions.to_config_without_folder())
 
-    def _to_config(self, conditions):
+    def to_log(self) -> RuleSpec:
+        """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
+        return self._to_config(self.conditions.to_config_without_folder(),
+                               self.ruleset.valuespec().value_to_json_safe)
+
+    def _to_config(self, conditions, value_func=lambda x: x):
         result = {
             "id": self.id,
-            "value": self.value,
+            "value": value_func(self.value),
             "condition": conditions,
         }
 

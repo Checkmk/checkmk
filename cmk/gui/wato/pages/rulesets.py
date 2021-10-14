@@ -1539,7 +1539,7 @@ class ABCEditRuleMode(WatoMode):
                   "folder \"%s\" to \"%s\"") %
                 (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites,
-                diff_text=make_diff_text(self._orig_rule.to_web_api(), self._rule.to_web_api()),
+                diff_text=make_diff_text(self._orig_rule.to_log(), self._rule.to_log()),
                 object_ref=self._rule.object_ref())
 
         flash(self._success_message())
@@ -2380,7 +2380,7 @@ class ModeNewRule(ABCEditRuleMode):
                    _("Created new rule #%d in ruleset \"%s\" in folder \"%s\"") %
                    (index, self._ruleset.title(), self._folder.alias_path()),
                    sites=self._folder.all_site_ids(),
-                   diff_text=make_diff_text({}, self._rule.to_web_api()),
+                   diff_text=make_diff_text({}, self._rule.to_log()),
                    object_ref=self._rule.object_ref())
 
     def _success_message(self):

@@ -1099,6 +1099,12 @@ class CheckTypeGroupSelection(ElementSelection):
     def value_to_text(self, value):
         return "<tt>%s</tt>" % value
 
+    def value_to_json(self, value: Any) -> Any:
+        return value
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return json_value
+
 
 class TimeperiodValuespec(ValueSpec):
     # Used by GUI switch
@@ -1229,6 +1235,15 @@ class TimeperiodValuespec(ValueSpec):
 
     def transform_value(self, value: Any) -> Any:
         return self._get_used_valuespec(value).transform_value(value)
+
+    def value_to_json(self, value: Any) -> Any:
+        return self._get_used_valuespec(value).value_to_json(value)
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return self._get_used_valuespec(json_value).value_from_json(json_value)
+
+    def value_to_json_safe(self, value: Any) -> Any:
+        return self._get_used_valuespec(value).value_to_json_safe(value)
 
 
 def main_module_from_rulespec_group_name(

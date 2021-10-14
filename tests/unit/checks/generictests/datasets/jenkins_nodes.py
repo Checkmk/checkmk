@@ -41,17 +41,17 @@ checks = {
                     ]
                 ), (0, u'Mode: Exclusive ', []), (0, 'Offline: no', []),
                 (
-                    0, u'Average response time: 35.0 ms', [
+                    0, u'Average response time: 35 milliseconds', [
                         ('avg_response_time', 0.035, None, None, None, None)
                     ]
                 ),
                 (
-                    0, u'Clock difference: 8.00 ms', [
+                    0, u'Clock difference: 8 milliseconds', [
                         ('jenkins_clock', 0.008, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Free temp space: 14.05 GB', [
+                    0, 'Free temp space: 14.0 GiB', [
                         ('jenkins_temp', 15085674496, None, None, None, None)
                     ]
                 )
@@ -79,17 +79,17 @@ checks = {
                     ]
                 ), (0, u'Mode: Exclusive ', []), (0, 'Offline: no', []),
                 (
-                    0, u'Average response time: 0.00 s', [
+                    0, u'Average response time: 0 seconds', [
                         ('avg_response_time', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, u'Clock difference: 0.00 s', [
+                    0, u'Clock difference: 0 seconds', [
                         ('jenkins_clock', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Free temp space: 30.33 GB', [
+                    0, 'Free temp space: 30.3 GiB', [
                         ('jenkins_temp', 32569888768, None, None, None, None)
                     ]
                 )

@@ -152,7 +152,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "MAP_ENABLED",
         "MAP_INSTANCE_STATE",
         "MAP_JOB_STATES",
-        "MAP_NODE_STATES",
         "MAP_PARAM_TO_TEXT",
         "MAP_QUEUE_STATES",
         "MAP_RPO_STATES",

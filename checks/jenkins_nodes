@@ -4,61 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<jenkins_nodes>>>
-# [[u'[{"displayName": "master", "description": "the master Jenkins node",
-# "temporarilyOffline": false, "monitorData":
-# {"hudson.node_monitors.SwapSpaceMonitor": {"totalPhysicalMemory":
-# 67429359616, "availableSwapSpace": 59097583616, "_class":
-# "hudson.node_monitors.SwapSpaceMonitor$MemoryUsage2",
-# "availablePhysicalMemory": 4450242560, "totalSwapSpace": 64000876544},
-# "hudson.node_monitors.ClockMonitor": {"diff": 0, "_class":
-# "hudson.util.ClockDifference"}, "hudson.node_monitors.DiskSpaceMonitor":
-# {"size": 290845855744, "timestamp": 1573468791686, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
-# "/var/lib/jenkins"}, "hudson.node_monitors.TemporarySpaceMonitor": {"size":
-# 32569888768, "timestamp": 1573468792277, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path": "/tmp"},
-# "hudson.node_monitors.ResponseTimeMonitor": {"timestamp": 1573468791687,
-# "average": 0, "_class": "hudson.node_monitors.ResponseTimeMonitor$Data"},
-# "hudson.node_monitors.ArchitectureMonitor": "Linux (amd64)"},
-# "assignedLabels": [{"busyExecutors": 3, "idleExecutors": 17},
-# {"busyExecutors": 3, "idleExecutors": 17}], "numExecutors": 20, "idle":
-# false, "offlineCause": null, "offline": false, "_class":
-# "hudson.model.Hudson$MasterComputer", "jnlpAgent": false}, {"displayName":
-# "Windows", "description": "Name: MYNAME, IP-Address: 1.1.1.1",
-# "temporarilyOffline": false, "monitorData":
-# {"hudson.node_monitors.SwapSpaceMonitor": {"totalPhysicalMemory":
-# 17179332608, "availableSwapSpace": 8569982976, "_class":
-# "hudson.node_monitors.SwapSpaceMonitor$MemoryUsage2",
-# "availablePhysicalMemory": 5656227840, "totalSwapSpace": 22548041728},
-# "hudson.node_monitors.ClockMonitor": {"diff": 8, "_class":
-# "hudson.util.ClockDifference"}, "hudson.node_monitors.DiskSpaceMonitor":
-# {"size": 15085674496, "timestamp": 1573468791711, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
-# "C:\\\\"}, "hudson.node_monitors.TemporarySpaceMonitor": {"size":
-# 15085674496, "timestamp": 1573468792334, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
-# "C:\\\\Windows\\\\Temp"}, "hudson.node_monitors.ResponseTimeMonitor":
-# {"timestamp": 1573468791722, "average": 35, "_class":
-# "hudson.node_monitors.ResponseTimeMonitor$Data"},
-# "hudson.node_monitors.ArchitectureMonitor": "Windows Server"},
-# "assignedLabels": [{"busyExecutors": 0, "idleExecutors": 1},
-# {"busyExecutors": 0, "idleExecutors": 1}], "numExecutors": 1, "idle": true,
-# "offlineCause": null, "offline": false, "_class":
-# "hudson.slaves.SlaveComputer", "jnlpAgent": true}]']]
-
 import json
+from typing import Any, Dict, Final, List, Mapping, MutableMapping
 
-MAP_NODE_STATES = {
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+_MAP_NODE_STATES: Final = {
     True: "yes",
     False: "no",
 }
 
 
-def parse_jenkins_nodes(info):
-    parsed = {}
+Section = Mapping[str, List[Mapping]]
 
-    for line in info:
+
+def parse_jenkins_nodes(string_table) -> Section:
+    parsed: Dict[str, List[Mapping]] = {}
+
+    for line in string_table:
         node_detail = json.loads(line[0])
 
         for node in node_detail:
@@ -70,35 +33,28 @@ def parse_jenkins_nodes(info):
     return parsed
 
 
-factory_settings["jenkins_nodes_default_levels"] = {
-    "jenkins_offline": 2,
-}
+def discover_jenkins_nodes(section: Section):
+    for item, values in section.items():
+        for line in values:
+            label_data = line.get("assignedLabels")
+            if label_data is None:
+                continue
+
+            service_labels = [
+                ServiceLabel("cmk/jenkins_node_label_%s" % label_name, "yes")
+                for label in label_data
+                if (label_name := label.get("name")) is not None and label_name != item
+            ]
+
+        yield Service(item=item, parameters={}, service_labels=service_labels)
 
 
-def inventory_jenkins_nodes(parsed):
-    if parsed:
-        for item, values in parsed.items():
-            for line in values:
-                label_data = line.get("assignedLabels")
-                if label_data is None:
-                    continue
+# TODO stop modifying params inplace!!
+def check_jenkins_nodes(item: str, params: MutableMapping[str, Any], section: Section):
+    item_data = section.get(item)
+    if item_data is None:
+        return
 
-                service_labels = []
-                for label in label_data:
-                    label_name = label.get("name")
-                    if label_name is None:
-                        continue
-
-                    if label_name != item:
-                        service_labels.append(
-                            ServiceLabel("cmk/jenkins_node_label_%s" % label_name, "yes")
-                        )
-
-            yield Service(item=item, parameters={}, service_labels=service_labels)
-
-
-@get_parsed_item_data
-def check_jenkins_nodes(item, params, item_data):
     for node in item_data:
 
         node_desc = node.get("description")
@@ -114,7 +70,7 @@ def check_jenkins_nodes(item, params, item_data):
             # description can be an empty string
             if data is not None and data != "":
                 if key != "description":
-                    data = MAP_NODE_STATES[data]
+                    data = _MAP_NODE_STATES[data]
 
                 yield 0, "%s: %s" % (infotext, data)
 
@@ -162,9 +118,6 @@ def check_jenkins_nodes(item, params, item_data):
                 infoname=infotext,
             )
 
-        state = 0
-        offline_state = node.get("offline")
-
         # get labels for each node
         labels_data = node.get("assignedLabels")
         label_collection = ""
@@ -188,18 +141,18 @@ def check_jenkins_nodes(item, params, item_data):
         if mode == "EXCLUSIVE" and label_collection:
             mode_infotext += "(Labels:%s)" % label_collection
 
-        mode_expected = params.get("jenkins_mode")
         if params.get("jenkins_mode") is not None:
+            mode_expected = params["jenkins_mode"]
             if mode_expected != mode:
                 mode_state = 2
                 mode_infotext += " (expected: %s)" % mode_expected.title()
 
         yield mode_state, mode_infotext
 
-        if offline_state:
-            state = params["jenkins_offline"]
+        offline_state = node["offline"]
+        state = params["jenkins_offline"] if offline_state else 0
 
-        yield state, "Offline: %s" % MAP_NODE_STATES[offline_state]
+        yield state, "Offline: %s" % _MAP_NODE_STATES[offline_state]
 
         for key, column, value, info, ds_key, hr_func in [
             (
@@ -208,7 +161,7 @@ def check_jenkins_nodes(item, params, item_data):
                 "average",
                 "Average response time",
                 "avg_response_time",
-                get_age_human_readable,
+                render.timespan,
             ),
             (
                 "monitorData",
@@ -216,7 +169,7 @@ def check_jenkins_nodes(item, params, item_data):
                 "diff",
                 "Clock difference",
                 "jenkins_clock",
-                get_age_human_readable,
+                render.timespan,
             ),
             (
                 "monitorData",
@@ -224,7 +177,7 @@ def check_jenkins_nodes(item, params, item_data):
                 "size",
                 "Free temp space",
                 "jenkins_temp",
-                get_bytes_human_readable,
+                render.bytes,
             ),
         ]:
 
@@ -238,25 +191,30 @@ def check_jenkins_nodes(item, params, item_data):
             try:
                 node_data = node[key][column][value]
             except (AttributeError, KeyError, TypeError):
-                pass
-            else:
-                if value in ["average", "diff"]:
-                    # ms in s
-                    node_data = node_data / 1000.0
+                continue
 
-                yield check_levels(
-                    node_data,
-                    ds_key,
-                    params.get(ds_key),
-                    human_readable_func=hr_func,
-                    infoname=info,
-                )
+            if value in ["average", "diff"]:
+                # ms in s
+                node_data = node_data / 1000.0
+
+            yield check_levels(
+                node_data,
+                ds_key,
+                params.get(ds_key),
+                human_readable_func=hr_func,
+                infoname=info,
+            )
+
+
+factory_settings["jenkins_nodes_default_levels"] = {
+    "jenkins_offline": 2,
+}
 
 
 check_info["jenkins_nodes"] = {
     "parse_function": parse_jenkins_nodes,
     "check_function": check_jenkins_nodes,
-    "inventory_function": inventory_jenkins_nodes,
+    "inventory_function": discover_jenkins_nodes,
     "default_levels_variable": "jenkins_nodes_default_levels",
     "service_description": "Jenkins Node %s",
     "has_perfdata": True,

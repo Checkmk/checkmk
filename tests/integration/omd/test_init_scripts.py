@@ -21,6 +21,7 @@ def test_init_scripts(site):
         "xinetd",
         "stunnel",
         "redis",
+        "marcv",
     ]
 
     if site.version.edition() == "enterprise":

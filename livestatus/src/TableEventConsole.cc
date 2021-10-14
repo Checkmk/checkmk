@@ -20,7 +20,6 @@
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
-#include "ListColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
 #include "Query.h"
@@ -275,7 +274,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     const MonitoringCore::Contact *ctc, Row row, bool &result) const {
-    auto col = std::static_pointer_cast<deprecated::ListColumn>(
+    auto col = std::static_pointer_cast<ListColumn::Callback<ECRow>>(
         column("event_contact_groups"));
     if (const auto *r = col->columnData<ECRow>(row)) {
         // TODO(sp) This check for None is a hack...

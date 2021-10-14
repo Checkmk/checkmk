@@ -279,7 +279,8 @@ def proliant_general_scan_function(oid):
 def hp_proliant_scan_function(oid):
     # migrated!
     return ("proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower() or
-            "storeeasy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower())
+            "storeeasy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower() or
+            "synergy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower())
 
 
 #.

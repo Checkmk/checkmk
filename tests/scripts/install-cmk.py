@@ -7,6 +7,7 @@
 the desired Checkmk version"""
 
 import abc
+import hashlib
 import logging
 import os
 import subprocess
@@ -130,13 +131,20 @@ class ABCPackageManager(abc.ABC):
 
         if build_system_path.exists():
             logger.info("Install from build system package (%s)", build_system_path)
+            self._write_package_hash(version, edition, build_system_path)
             self._install_package(build_system_path)
 
         else:
             logger.info("Install from download portal")
             package_path = self._download_package(version, package_name)
+            self._write_package_hash(version, edition, package_path)
             self._install_package(package_path)
             os.unlink(package_path)
+
+    def _write_package_hash(self, version: str, edition: str, package_path: Path) -> None:
+        with Path(f"/cmk_package_hash_{version}_{edition}").open("w") as f:
+            pkg_hash = sha256_file(package_path)
+            f.write(f"{pkg_hash}  {package_path.name}\n")
 
     @abc.abstractmethod
     def _package_name(self, edition: str, version: str) -> str:
@@ -185,6 +193,14 @@ class ABCPackageManager(abc.ABC):
         p = subprocess.Popen(cmd, shell=False, close_fds=True, encoding="utf-8")
         if p.wait() >> 8 != 0:
             raise Exception("Failed to install package")
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 class PackageManagerDEB(ABCPackageManager):

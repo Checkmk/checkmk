@@ -208,13 +208,15 @@ def _create_cmk_image(
     logger.info("Preparing image [%s]", image_name_with_tag)
     # First try to get the pre-built image from the local or remote registry
     image = _get_or_load_image(client, image_name_with_tag)
-    if image:
+    if (
+        image
+        and _is_based_on_current_base_image(image, base_image)
+        and _is_using_current_cmk_package(image, version)
+    ):
         # We found something locally or remote and ensured it's available locally.
-        #
         # Only use it when it's based on the latest available base image. Otherwise
         # skip it. The following code will re-build one based on the current base image
-        if _is_based_on_current_base_image(client, image, base_image):
-            return image_name_with_tag  # already found, nothing to do.
+        return image_name_with_tag  # already found, nothing to do.
 
     logger.info("Build image from [%s]", base_image_name_with_tag)
     if base_image is None:
@@ -245,7 +247,6 @@ def _create_cmk_image(
             binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _image_build_volumes().items()],
         ),
     ) as container:
-
         logger.info(
             "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
         )
@@ -272,11 +273,29 @@ def _create_cmk_image(
         logger.info("Check whether or not installation was OK")
         assert _exec_run(container, ["ls", "/omd/versions/default"], workdir="/") == 0
 
-        logger.info("Finalizing image")
+        # Now get the hash of the used Checkmk package from the container image and add it to the
+        # image labels. The hash was written to "/cmk_package_hash_{version}_{edition}" in the
+        # container.
+        logger.info("Get Checkmk package hash")
+        exit_code, output = container.exec_run(
+            ["cat", f"/cmk_package_hash_{version.version}_{version.edition()}"],
+        )
+        assert exit_code == 0
+        hash_entry = output.decode("ascii").strip()
+        logger.info("Checkmk package hash entry: %s", hash_entry)
 
+        logger.info("Stopping build container")
         container.stop()
+        tmp_image = container.commit()
 
-        image = container.commit(image_name_with_tag)
+        new_labels = container.labels.copy()
+        new_labels["org.tribe29.cmk_hash"] = hash_entry
+
+        logger.info("Finalizing image")
+        labeled_container = client.containers.run(tmp_image, labels=new_labels, detach=True)
+        image = labeled_container.commit(image_name_with_tag)
+        labeled_container.remove(force=True)
+
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
 
         try:
@@ -290,9 +309,7 @@ def _create_cmk_image(
     return image_name_with_tag
 
 
-def _is_based_on_current_base_image(
-    client: docker.DockerClient, image: Image, base_image: Optional[Image]
-) -> bool:
+def _is_based_on_current_base_image(image: Image, base_image: Optional[Image]) -> bool:
     logger.info("  Check whether or not image is based on the current base image")
     if base_image is None:
         logger.info("  Base image not available, assuming it's up-to-date")
@@ -309,6 +326,30 @@ def _is_based_on_current_base_image(
 
     logger.info("  Is based on current base image (%s)", base_image.short_id)
     return True
+
+
+def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
+    logger.info("  Check whether or not image is using the current Checkmk package")
+
+    cmk_hash_entry = image.labels.get("org.tribe29.cmk_hash")
+    if not cmk_hash_entry:
+        logger.info("  Checkmk package hash label missing (org.tribe29.cmk_hash). Trigger rebuild.")
+        return False
+
+    current_cmk_hashes = _get_current_cmk_hashes(version)
+    if cmk_hash_entry not in current_cmk_hashes:
+        logger.info("  Did not find image hash entry (%s) in current hashes", cmk_hash_entry)
+        logger.info(current_cmk_hashes)
+        return False
+
+    logger.info("  Used package hash (%s) matches the current one", cmk_hash_entry)
+    return True
+
+
+def _get_current_cmk_hashes(version: CMKVersion) -> str:
+    r = requests.get(f"https://download.checkmk.com/checkmk/{version.version}/HASHES", timeout=30)
+    r.raise_for_status()
+    return r.text
 
 
 def _image_build_volumes():

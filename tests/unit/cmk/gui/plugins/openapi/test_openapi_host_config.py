@@ -207,25 +207,25 @@ def test_openapi_host_update_after_move(
         status=200,
     )
 
-    wsgi_app.follow_link(
+    moved_example_updated = wsgi_app.follow_link(
         moved_example,
         '.../update',
         status=200,
         params=json.dumps({'attributes': {
             "alias": "foo"
         }}),
-        headers={'If-Match': example.headers['ETag']},
+        headers={'If-Match': moved_example.headers['ETag']},
         content_type='application/json',
     )
 
     wsgi_app.follow_link(
-        moved_heute,
+        moved_example_updated,
         '.../update',
         status=200,
         params=json.dumps({'attributes': {
             "alias": "foo"
         }}),
-        headers={'If-Match': heute.headers['ETag']},
+        headers={'If-Match': moved_example_updated.headers['ETag']},
         content_type='application/json',
     )
 
@@ -663,7 +663,7 @@ def test_openapi_host_move(
 
     base = '/NO_SITE/check_mk/api/1.0'
 
-    wsgi_app.call_method(
+    resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -671,7 +671,7 @@ def test_openapi_host_move(
         content_type='application/json',
     )
 
-    resp = wsgi_app.call_method(
+    wsgi_app.call_method(
         'post',
         base + "/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
@@ -699,7 +699,7 @@ def test_openapi_host_move_to_non_valid_folder(
 
     base = '/NO_SITE/check_mk/api/1.0'
 
-    wsgi_app.call_method(
+    resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -707,7 +707,7 @@ def test_openapi_host_move_to_non_valid_folder(
         content_type='application/json',
     )
 
-    resp = wsgi_app.call_method(
+    wsgi_app.call_method(
         'post',
         base + "/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
@@ -715,7 +715,7 @@ def test_openapi_host_move_to_non_valid_folder(
         status=200,
     )
 
-    _resp = wsgi_app.call_method(
+    wsgi_app.call_method(
         'post',
         base + "/objects/host_config/foobar/actions/move/invoke",
         params='{"target_folder": "/"}',

@@ -1290,7 +1290,7 @@ section_ntp() {
     # First we try to identify if we're beholden to systemd
     if inpath systemctl; then
         # shellcheck disable=SC2016
-        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
+        if [ "$(systemctl | awk '/ntp.service|ntpd.service|ntpsec.service/{print $3; exit}')" = "active" ]; then
             # remove heading, make first column space separated
             get_ntpq
             return

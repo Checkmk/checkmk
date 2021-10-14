@@ -1204,7 +1204,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
 
 class ChainVerifyResult(NamedTuple):
-    cert_pem: str
+    cert_pem: bytes
     error_number: int
     error_depth: int
     error_message: str
@@ -1409,9 +1409,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         cert_details = []
         for result in verify_chain_results:
             # use cryptography module over OpenSSL because it is easier to do the x509 parsing
-            crypto_cert = x509.load_pem_x509_certificate(
-                result.cert_pem.encode(), default_backend()
-            )
+            crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
 
             cert_details.append(
                 CertificateDetails(

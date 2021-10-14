@@ -12,7 +12,6 @@ def test_init_scripts(site):
         "apache",
         "core",
         "crontab",
-        "marcv",
         "mkeventd",
         "nagios",
         "npcd",

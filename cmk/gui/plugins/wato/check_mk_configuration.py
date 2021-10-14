@@ -1818,6 +1818,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
         )
 
 
+@config_variable_registry.register
 class RestAPIETagLocking(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement

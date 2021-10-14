@@ -260,6 +260,7 @@ def test_registered_configvars():
             "reporting_view_limit",
             "site_liveproxyd",
             "ntop_connection",
+            "rest_api_etag_locking",
         ]
 
     registered = sorted(config_variable_registry.keys())

@@ -85,25 +85,25 @@ class AutochecksManager:
         get_effective_hostname: HostOfClusteredService,
     ) -> Iterable[Service]:
         """Read automatically discovered checks of one host"""
-        for autocheck_service in self._read_raw_autochecks(hostname):
+        for autocheck_entry in self._read_raw_autochecks(hostname):
             try:
                 service_name = get_service_description(
-                    hostname, autocheck_service.check_plugin_name, autocheck_service.item
+                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
                 )
             except Exception:  # I dont't really know why this is ignored. Feels utterly wrong.
                 continue
 
             yield Service(
-                check_plugin_name=autocheck_service.check_plugin_name,
-                item=autocheck_service.item,
+                check_plugin_name=autocheck_entry.check_plugin_name,
+                item=autocheck_entry.item,
                 description=service_name,
                 parameters=compute_check_parameters(
                     get_effective_hostname(hostname, service_name),
-                    autocheck_service.check_plugin_name,
-                    autocheck_service.item,
-                    autocheck_service.discovered_parameters,
+                    autocheck_entry.check_plugin_name,
+                    autocheck_entry.item,
+                    autocheck_entry.discovered_parameters,
                 ),
-                service_labels=autocheck_service.service_labels,
+                service_labels=autocheck_entry.service_labels,
             )
 
     def discovered_labels_of(
@@ -120,13 +120,13 @@ class AutochecksManager:
         # Only read the raw autochecks here, do not compute the effective
         # check parameters. The latter would involve ruleset matching which
         # in turn would require already computed labels.
-        for autocheck_service in self._read_raw_autochecks(hostname):
+        for autocheck_entry in self._read_raw_autochecks(hostname):
             try:
                 hosts_labels[
                     get_service_description(
-                        hostname, autocheck_service.check_plugin_name, autocheck_service.item
+                        hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
                     )
-                ] = autocheck_service.service_labels
+                ] = autocheck_entry.service_labels
             except Exception:
                 continue  # ignore
 
@@ -166,7 +166,7 @@ class AutochecksManager:
                 raise
             return []
 
-        services = []
+        autocheck_entries = []
         for entry in autochecks_raw:
             try:
                 item = entry["item"]
@@ -195,7 +195,7 @@ class AutochecksManager:
             for label_id, label_value in entry["service_labels"].items():
                 labels.add_label(ServiceLabel(label_id, label_value))
 
-            services.append(
+            autocheck_entries.append(
                 _AutocheckEntry(
                     check_plugin_name=plugin_name,
                     item=item,
@@ -204,7 +204,7 @@ class AutochecksManager:
                 )
             )
 
-        return services
+        return autocheck_entries
 
 
 def _autochecks_path_for(hostname: HostName) -> Path:

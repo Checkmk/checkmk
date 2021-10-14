@@ -282,32 +282,20 @@ def assertCheckResultsEqual(actual, expected):
 
 
 class DiscoveryEntry(Tuploid):
-    """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
+    """A single entry as returned by the discovery function."""
 
     def __init__(self, entry):
-        # hack for ServiceLabel
-        if isinstance(entry, Service):
-            self.item, self.default_params, self.service_labels = (
-                entry.item,
-                entry.parameters,
-                entry.service_labels,
-            )
-        else:
-            self.item, self.default_params = entry
-        ti = type(self.item)
-        assert self.item is None or isinstance(
-            self.item, str
-        ), "DiscoveryEntry: item %r must be of type str, unicode or None - not %r" % (
-            self.item,
-            type(ti),
+        self.item, self.default_params = (
+            (entry.item, entry.parameters) if isinstance(entry, Service) else entry
         )
+        assert self.item is None or isinstance(self.item, str)
 
     @property
     def tuple(self):
-        return (self.item, self.default_params)
+        return self.item, self.default_params
 
     def __repr__(self):
-        return "DiscoveryEntry(%r, %r)" % self.tuple
+        return f"DiscoveryEntry{self.tuple!r}"
 
 
 class DiscoveryResult:

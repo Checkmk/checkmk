@@ -490,6 +490,7 @@ class Site:
                 self._set_number_of_helpers()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
+                self._disable_cmc_log_rotation()
                 self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
             self._enable_gui_debug_logging()
@@ -628,7 +629,7 @@ class Site:
     def _enable_cmc_debug_logging(self):
         self.makedirs("etc/check_mk/conf.d")
         self.write_file(
-            "etc/check_mk/conf.d/cmc-logging.mk",
+            "etc/check_mk/conf.d/cmc-debug-logging.mk",
             "cmc_log_levels = %r\n"
             % {
                 "cmk.alert": 7,
@@ -642,6 +643,13 @@ class Site:
                 "cmk.influxdb": 7,
                 "cmk.smartping": 7,
             },
+        )
+
+    def _disable_cmc_log_rotation(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file(
+            "etc/check_mk/conf.d/cmc-log-rotation.mk",
+            "cmc_log_rotation_method = 4\ncmc_log_limit = 1073741824\n",
         )
 
     def _enable_gui_debug_logging(self):
@@ -660,15 +668,18 @@ class Site:
         )
 
     def _tune_nagios(self):
-        # We want nagios to process queued external commands as fast as possible.  Even if we
-        # set command_check_interval to -1, nagios is doing some sleeping in between the
-        # command processing. We reduce the sleep time here to make it a little faster.
         self.write_file(
             "etc/nagios/nagios.d/zzz-test-tuning.cfg",
+            # We need to observe these entries with WatchLog for our tests
             "log_passive_checks=1\n"
+            # We want nagios to process queued external commands as fast as possible.  Even if we
+            # set command_check_interval to -1, nagios is doing some sleeping in between the
+            # command processing. We reduce the sleep time here to make it a little faster.
             "service_inter_check_delay_method=n\n"
             "host_inter_check_delay_method=n\n"
-            "sleep_time=0.05\n",
+            "sleep_time=0.05\n"
+            # WatchLog is not able to handle log rotations. Disable the rotation during tests.
+            "log_rotation_method=n\n",
         )
 
     def _install_test_python_modules(self):

@@ -75,7 +75,20 @@ def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
 
 
 def _add_ipmitool_args(subparsers: _SubParsersAction) -> None:
-    subparsers.add_parser("ipmitool", help="Use ipmitool")
+    parser_ipmitool = subparsers.add_parser(
+        "ipmitool",
+        help="Use ipmitool",
+    )
+    parser_ipmitool.add_argument(
+        "--intf",
+        type=str,
+        choices=("open", "imb", "lan", "lanplus"),
+        metavar="INTERFACE",
+        help=(
+            "IPMI Interface to be used. If not specified, the default interface as set at compile "
+            "time will be used."
+        ),
+    )
 
 
 def _parse_arguments(argv: Optional[Sequence[str]]) -> Args:
@@ -170,6 +183,14 @@ def _prepare_freeipmi_call(
     )
 
 
+def _ipmitool_additional_args(
+    args: Args,
+) -> Iterable[str]:
+    if iface := getattr(args, "intf"):
+        yield "-I"
+        yield iface
+
+
 def _prepare_ipmitool_call(
     args: Args,
 ) -> Tuple[Sequence[str], Mapping[str, Tuple[Iterable[str], Iterable[str]]]]:
@@ -184,6 +205,7 @@ def _prepare_ipmitool_call(
             args.password,
             "-L",
             args.privilege_lvl,
+            *_ipmitool_additional_args(args),
         ],
         {
             "": (

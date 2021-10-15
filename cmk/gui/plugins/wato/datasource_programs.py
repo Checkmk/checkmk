@@ -1993,8 +1993,28 @@ def _special_agents_ipmi_sensors_vs_freeipmi():
 
 def _special_agents_ipmi_sensors_vs_ipmitool():
     return Dictionary(
-        elements=_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
-        optional_keys=[],
+        elements=[
+            *_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
+            (
+                "intf",
+                DropdownChoice(
+                    title=_("IPMI Interface"),
+                    help=_(
+                        "IPMI Interface to be used. If not specified, the default interface as set "
+                        "at compile time will be used."
+                    ),
+                    choices=[
+                        ("open", "open - Linux OpenIPMI Interface (default)"),
+                        ("imb", "imb - Intel IMB Interface"),
+                        ("lan", "lan - IPMI v1.5 LAN Interface"),
+                        ("lanplus", "lanplus - IPMI v2.0 RMCP+ LAN Interface"),
+                    ],
+                ),
+            ),
+        ],
+        optional_keys=[
+            "intf",
+        ],
     )
 
 

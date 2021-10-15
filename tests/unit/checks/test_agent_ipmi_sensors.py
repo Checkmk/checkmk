@@ -59,6 +59,27 @@ from typing import Any, Mapping, Sequence
             ],
             id="freeipmi with optional args",
         ),
+        pytest.param(
+            (
+                "ipmitool",
+                {
+                    "username": "user",
+                    "password": "password",
+                    "privilege_lvl": "user",
+                    "intf": "lanplus",
+                },
+            ),
+            [
+                "address",
+                "user",
+                "password",
+                "user",
+                "ipmitool",
+                "--intf",
+                "lanplus",
+            ],
+            id="ipmitool with optional arg",
+        ),
     ],
 )
 def test_ipmi_sensors_argument_parsing(

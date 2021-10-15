@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Final, List, Mapping, Sequence, Tuple, Union
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 _MAP_NODE_STATES: Final = {
     True: "yes",
@@ -15,7 +16,7 @@ _MAP_NODE_STATES: Final = {
 }
 
 
-Section = Mapping[str, List[Mapping]]
+Section = Mapping[str, Sequence[Mapping]]
 
 
 def parse_jenkins_nodes(string_table) -> Section:
@@ -33,7 +34,13 @@ def parse_jenkins_nodes(string_table) -> Section:
     return parsed
 
 
-def discover_jenkins_nodes(section: Section):
+register.agent_section(
+    name="jenkins_nodes",
+    parse_function=parse_jenkins_nodes,
+)
+
+
+def discover_jenkins_nodes(section: Section) -> DiscoveryResult:
     for item, values in section.items():
         for line in values:
             label_data = line.get("assignedLabels")
@@ -46,10 +53,10 @@ def discover_jenkins_nodes(section: Section):
                 if (label_name := label.get("name")) is not None and label_name != item
             ]
 
-        yield Service(item=item, parameters={}, service_labels=service_labels)
+        yield Service(item=item, parameters={}, labels=service_labels)
 
 
-def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
+def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     item_data = section.get(item)
     if item_data is None:
         return
@@ -58,7 +65,7 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
 
         node_desc = node.get("description")
         if node_desc and node_desc is not None:
-            yield 0, "Description: %s" % node_desc.title()
+            yield Result(state=State.OK, summary=f"Description: {node_desc.title()}")
 
         for key, infotext in [
             ("jnlpAgent", "Is JNLP agent"),
@@ -71,7 +78,7 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
                 if key != "description":
                     data = _MAP_NODE_STATES[data]
 
-                yield 0, "%s: %s" % (infotext, data)
+                yield Result(state=State.OK, summary=f"{infotext}: {data}")
 
         exec_key = "numExecutors"
         exec_data = node.get(exec_key)
@@ -79,12 +86,12 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
         if exec_data is not None:
             exec_name = "jenkins_%s" % exec_key.lower()
 
-            yield check_levels(
+            yield from check_levels(
                 exec_data,
-                "jenkins_num_executors",
-                (None, None) + params.get(exec_name, (None, None)),
-                human_readable_func=int,
-                infoname="Total number of executors",
+                metric_name="jenkins_num_executors",
+                levels_lower=params.get(exec_name),
+                render_func=lambda x: str(int(x)),
+                label="Total number of executors",
             )
 
         for key, infotext in [
@@ -109,12 +116,12 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
 
             executor_name = "jenkins_%s" % key.lower()
 
-            yield check_levels(
+            yield from check_levels(
                 executors,
-                "jenkins_%s_executors" % key[0:4],
-                params.get(executor_name),
-                human_readable_func=int,
-                infoname=infotext,
+                metric_name="jenkins_%s_executors" % key[0:4],
+                levels_upper=params.get(executor_name),
+                render_func=lambda x: str(int(x)),
+                label=infotext,
             )
 
         # get labels for each node
@@ -127,11 +134,11 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
                     label_collection += " %s" % label_name
 
         mode = "Unknown"
-        mode_state = 3
+        mode_state = State.UNKNOWN
         mode_infotext = "Mode: "
         try:
             mode = node["assignedLabels"][0]["nodes"][0]["mode"]
-            mode_state = 0
+            mode_state = State.OK
         except (KeyError, ValueError):
             pass
 
@@ -143,15 +150,15 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
         if params.get("jenkins_mode") is not None:
             mode_expected = params["jenkins_mode"]
             if mode_expected != mode:
-                mode_state = 2
+                mode_state = State.CRIT
                 mode_infotext += " (expected: %s)" % mode_expected.title()
 
-        yield mode_state, mode_infotext
+        yield Result(state=mode_state, summary=mode_infotext)
 
         offline_state = node["offline"]
-        state = params["jenkins_offline"] if offline_state else 0
+        state = State(params["jenkins_offline"]) if offline_state else State.OK
 
-        yield state, "Offline: %s" % _MAP_NODE_STATES[offline_state]
+        yield Result(state=state, summary=f"Offline: {_MAP_NODE_STATES[offline_state]}")
 
         for key, column, value, info, ds_key, hr_func in [
             (
@@ -191,41 +198,36 @@ def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
                 # ms to s
                 node_data = node_data / 1000.0
 
-            yield check_levels(
+            yield from check_levels(
                 node_data,
-                ds_key,
-                levels_upper + levels_lower,
-                human_readable_func=hr_func,
-                infoname=info,
+                metric_name=ds_key,
+                levels_upper=levels_upper,
+                levels_lower=levels_lower,
+                render_func=hr_func,
+                label=info,
             )
 
 
-_Levels = Union[Tuple[None, None], Tuple[float, float]]
+_Levels = Union[None, Tuple[float, float]]
 
 
 def _get_levels(levels: Union[None, Tuple[float, ...]], *, lower: bool) -> Tuple[_Levels, _Levels]:
     if levels is None:
-        return (None, None), (None, None)
+        return None, None
     if lower:
-        return (None, None), (
+        return None, (
             levels[0] * 1024 * 1024,
             levels[1] * 1024 * 1024,
         )
     # presumably we have only len 4 or 2, but be safe.
-    return (levels[0], levels[1]), (levels[2], levels[3]) if len(levels) >= 4 else (None, None)
+    return (levels[0], levels[1]), (levels[2], levels[3]) if len(levels) >= 4 else None
 
 
-factory_settings["jenkins_nodes_default_levels"] = {
-    "jenkins_offline": 2,
-}
-
-
-check_info["jenkins_nodes"] = {
-    "parse_function": parse_jenkins_nodes,
-    "check_function": check_jenkins_nodes,
-    "inventory_function": discover_jenkins_nodes,
-    "default_levels_variable": "jenkins_nodes_default_levels",
-    "service_description": "Jenkins Node %s",
-    "has_perfdata": True,
-    "group": "jenkins_nodes",
-}
+register.check_plugin(
+    name="jenkins_nodes",
+    service_name="Jenkins Node %s",
+    discovery_function=discover_jenkins_nodes,
+    check_function=check_jenkins_nodes,
+    check_default_parameters={"jenkins_offline": 2},
+    check_ruleset_name="jenkins_nodes",
+)

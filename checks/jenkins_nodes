@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Final, List, Mapping, MutableMapping
+from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
@@ -49,8 +49,7 @@ def discover_jenkins_nodes(section: Section):
         yield Service(item=item, parameters={}, service_labels=service_labels)
 
 
-# TODO stop modifying params inplace!!
-def check_jenkins_nodes(item: str, params: MutableMapping[str, Any], section: Section):
+def check_jenkins_nodes(item: str, params: Mapping[str, Any], section: Section):
     item_data = section.get(item)
     if item_data is None:
         return
@@ -181,12 +180,7 @@ def check_jenkins_nodes(item: str, params: MutableMapping[str, Any], section: Se
             ),
         ]:
 
-            if params.get(ds_key) is not None and value == "size":
-                # lower level checking
-                params[ds_key] = (None, None) + (
-                    params[ds_key][0] * 1024 * 1024,
-                    params[ds_key][1] * 1024 * 1024,
-                )
+            levels_upper, levels_lower = _get_levels(params.get(ds_key), lower=value == "size")
 
             try:
                 node_data = node[key][column][value]
@@ -194,16 +188,31 @@ def check_jenkins_nodes(item: str, params: MutableMapping[str, Any], section: Se
                 continue
 
             if value in ["average", "diff"]:
-                # ms in s
+                # ms to s
                 node_data = node_data / 1000.0
 
             yield check_levels(
                 node_data,
                 ds_key,
-                params.get(ds_key),
+                levels_upper + levels_lower,
                 human_readable_func=hr_func,
                 infoname=info,
             )
+
+
+_Levels = Union[Tuple[None, None], Tuple[float, float]]
+
+
+def _get_levels(levels: Union[None, Tuple[float, ...]], *, lower: bool) -> Tuple[_Levels, _Levels]:
+    if levels is None:
+        return (None, None), (None, None)
+    if lower:
+        return (None, None), (
+            levels[0] * 1024 * 1024,
+            levels[1] * 1024 * 1024,
+        )
+    # presumably we have only len 4 or 2, but be safe.
+    return (levels[0], levels[1]), (levels[2], levels[3]) if len(levels) >= 4 else (None, None)
 
 
 factory_settings["jenkins_nodes_default_levels"] = {

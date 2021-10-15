@@ -171,10 +171,14 @@ def main(sys_argv=None):
     elif ipmi_cmd_type == "ipmitool":
         ipmi_cmd = [
             "ipmitool",
-            "-H", hostname,
-            "-U", username,
-            "-P", password,
-            "-L", privilege_lvl,
+            "-H",
+            hostname,
+            "-U",
+            username,
+            "-P",
+            password,
+            "-L",
+            privilege_lvl,
         ] + additional_opts
         # As in check_mk_agent
         queries = {

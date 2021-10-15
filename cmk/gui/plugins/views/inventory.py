@@ -98,22 +98,7 @@ def paint_host_inventory_tree(
         return "", ""
     assert isinstance(struct_tree, StructuredDataNode)
 
-    if column == "host_inventory":
-        painter_options = PainterOptions.get_instance()
-        tree_renderer: NodeRenderer = AttributeRenderer(
-            row["site"],
-            row["host_name"],
-            invpath,
-            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
-        )
-    else:
-        tree_id = "/" + str(row["invhist_time"])
-        tree_renderer = DeltaNodeRenderer(
-            row["site"],
-            row["host_name"],
-            invpath,
-            tree_id=tree_id,
-        )
+    tree_renderer = _get_tree_renderer(row, column, invpath)
 
     parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
     if attribute_keys is None:
@@ -127,6 +112,25 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
     query_str = "GET hosts\nColumns: host_name\nFilter: host_name = %s\n" % hostname
     with sites.prepend_site():
         return [SiteId(r[0]) for r in sites.live().query(query_str)]
+
+
+def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> NodeRenderer:
+    if column == "host_inventory":
+        painter_options = PainterOptions.get_instance()
+        return AttributeRenderer(
+            row["site"],
+            row["host_name"],
+            invpath,
+            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+        )
+
+    tree_id = "/" + str(row["invhist_time"])
+    return DeltaNodeRenderer(
+        row["site"],
+        row["host_name"],
+        invpath,
+        tree_id=tree_id,
+    )
 
 
 def _paint_host_inventory_tree_children(

@@ -365,7 +365,6 @@ class ErrorReporter:
         ("discovery", "logwatch_groups", "logwatch_groups"),
         ("discovery", "logwatch", "logwatch_groups"),
         ("inventory", "inv_if", "inv_if"),
-        ("inventory", "k8s_assigned_pods", "k8s_assigned_pods"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
         ("inventory", "suseconnect", "suseconnect"),
     }

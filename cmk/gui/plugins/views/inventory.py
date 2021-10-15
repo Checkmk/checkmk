@@ -159,7 +159,7 @@ def _paint_host_inventory_tree_value(
     if attribute_keys == []:
         child = struct_tree.get_table(parsed_path)
     else:
-        child = struct_tree.get_attributes(parsed_path)
+        child = _get_filtered_attributes(struct_tree, parsed_path, attribute_keys)
 
     if child is None:
         return "", ""
@@ -178,11 +178,20 @@ def _paint_host_inventory_tree_value(
             # a path and attribute_keys which may be either None, [], or ["KEY"].
             # TODO parse instead of validate
             assert isinstance(child, Attributes)
-            filtered = child.get_filtered_attributes(lambda key: key == attribute_keys[-1])
-            tree_renderer.show_attributes(filtered)
+            tree_renderer.show_attributes(child)
 
         code = HTML(output_funnel.drain())
     return "", code
+
+
+def _get_filtered_attributes(
+    struct_tree: StructuredDataNode,
+    path: SDPath,
+    keys: SDKeys,
+) -> Optional[Attributes]:
+    if (attributes := struct_tree.get_attributes(path)) is None:
+        return None
+    return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
 def _inv_filter_info():

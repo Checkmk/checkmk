@@ -11,6 +11,7 @@ import pytest
 from tests.testlib import Check
 
 from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.ibm_mq_queues import parse_ibm_mq_queues
 
 from .test_ibm_mq_include import parse_info
 
@@ -52,8 +53,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_queues(section)
     assert 2 + 1 == len(parsed)
 
     attrs = parsed["MY.TEST"]

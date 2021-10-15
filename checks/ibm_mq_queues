@@ -44,10 +44,6 @@ from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-
 factory_settings["ibm_mq_queues_default_levels"] = {}
 
 
-def parse_ibm_mq_queues(info):
-    return parse_runmqsc_display_output(info, "QUEUE")
-
-
 def inventory_ibm_mq_queues(parsed):
     for service_name in parsed:
         if ":" not in service_name:
@@ -195,7 +191,7 @@ def ibm_mq_get_qtime(qtime, label, key):
 
 
 check_info["ibm_mq_queues"] = {
-    "parse_function": parse_ibm_mq_queues,
+    # section is already migrated!
     "inventory_function": inventory_ibm_mq_queues,
     "check_function": check_ibm_mq_queues,
     "service_description": "IBM MQ Queue %s",

@@ -103,9 +103,7 @@ def paint_host_inventory_tree(
     parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
     if attribute_keys is None:
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
-    return _paint_host_inventory_tree_value(
-        struct_tree, parsed_path, tree_renderer, invpath, attribute_keys
-    )
+    return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, attribute_keys)
 
 
 def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
@@ -138,8 +136,7 @@ def _paint_host_inventory_tree_children(
     parsed_path: SDPath,
     tree_renderer: NodeRenderer,
 ) -> CellSpec:
-    node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
-    if node is None:
+    if (node := struct_tree.get_node(parsed_path)) is None:
         return "", ""
 
     with output_funnel.plugged():
@@ -152,7 +149,6 @@ def _paint_host_inventory_tree_value(
     struct_tree: StructuredDataNode,
     parsed_path: SDPath,
     tree_renderer: NodeRenderer,
-    invpath: SDRawPath,
     attribute_keys: SDKeys,
 ) -> CellSpec:
     child: Optional[Union[Table, Attributes]]
@@ -165,21 +161,7 @@ def _paint_host_inventory_tree_value(
         return "", ""
 
     with output_funnel.plugged():
-        if invpath.endswith(".") or invpath.endswith(":"):
-            invpath = invpath[:-1]
-
-        if attribute_keys == []:
-            # TODO parse instead of validate
-            assert isinstance(child, Table)
-            tree_renderer.show_table(child)
-
-        elif attribute_keys:
-            # In paint_host_inventory_tree we parse invpath and get
-            # a path and attribute_keys which may be either None, [], or ["KEY"].
-            # TODO parse instead of validate
-            assert isinstance(child, Attributes)
-            tree_renderer.show_attributes(child)
-
+        child.show(tree_renderer)
         code = HTML(output_funnel.drain())
     return "", code
 
@@ -2221,10 +2203,10 @@ def ajax_inv_render_tree() -> None:
         return
 
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath or "")
-    node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
-    if node is None:
+    if (node := struct_tree.get_node(parsed_path)) is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path))
         )
-    else:
-        node.show(tree_renderer)
+        return
+
+    node.show(tree_renderer)

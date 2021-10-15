@@ -6,9 +6,8 @@
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.docker_node_info import inventory_docker_node_info
 
 
 @pytest.mark.parametrize(
@@ -16,9 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
     [
         (
             {"nothing": "usable"},
-            [
-                Attributes(path=["software", "applications", "docker"]),
-            ],
+            [],
         ),
         (
             {
@@ -127,6 +124,16 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
                     },
                 ),
                 TableRow(
+                    path=["software", "applications", "docker", "swarm_manager"],
+                    key_columns={
+                        "NodeID": "x2my5tv8bqg0yh5jq98gzodr2",
+                    },
+                    inventory_columns={
+                        "Addr": "101.102.103.104:2377",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
                     path=["software", "applications", "docker", "node_labels"],
                     key_columns={"label": "this_is_a_label_in=etc_docker_daemon_json"},
                     inventory_columns={},
@@ -138,19 +145,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
                     inventory_columns={},
                     status_columns={},
                 ),
-                TableRow(
-                    path=["software", "applications", "docker", "swarm_manager"],
-                    key_columns={
-                        "NodeID": "x2my5tv8bqg0yh5jq98gzodr2",
-                        "Addr": "101.102.103.104:2377",
-                    },
-                    inventory_columns={},
-                    status_columns={},
-                ),
             ],
         ),
     ],
 )
 def test_inv_docker_node_info(fix_register, parsed, expected):
-    plugin = fix_register.inventory_plugins[InventoryPluginName("docker_node_info")]
-    assert list(plugin.inventory_function(parsed)) == expected
+    assert list(inventory_docker_node_info(parsed)) == expected

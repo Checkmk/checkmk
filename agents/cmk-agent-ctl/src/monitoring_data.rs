@@ -5,8 +5,12 @@
 use std::io::{Read, Result};
 use std::os::unix::net::UnixStream;
 
-pub fn collect() -> Result<Vec<u8>> {
+pub fn collect(package_name: &Option<String>) -> Result<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    UnixStream::connect("/run/check-mk-agent.socket")?.read_to_end(&mut mondata)?;
+    let package_name = match package_name {
+        Some(pkg) => &pkg,
+        None => "check-mk-agent",
+    };
+    UnixStream::connect(format!("/run/{}.socket", package_name))?.read_to_end(&mut mondata)?;
     return Ok(mondata);
 }

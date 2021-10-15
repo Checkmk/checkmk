@@ -16,6 +16,9 @@ pub struct Config {
 
     #[serde(default)]
     pub uuid: Option<String>,
+
+    #[serde(default)]
+    pub package_name: Option<String>,
 }
 
 impl Config {
@@ -38,6 +41,7 @@ impl Config {
         return Config {
             marcv_addresses: winner.marcv_addresses.or(loser.marcv_addresses),
             uuid: winner.uuid.or(loser.uuid),
+            package_name: winner.package_name.or(loser.package_name),
         };
     }
 
@@ -45,6 +49,7 @@ impl Config {
         return Config {
             marcv_addresses: args.server,
             uuid: None,
+            package_name: args.package_name,
         };
     }
 }

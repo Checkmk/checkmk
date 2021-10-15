@@ -12,4 +12,7 @@ pub struct Args {
 
     #[structopt(long, parse(from_str))]
     pub server: Option<Vec<String>>,
+
+    #[structopt(long, parse(from_str))]
+    pub package_name: Option<String>,
 }

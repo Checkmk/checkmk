@@ -23,6 +23,7 @@ fn register(config: config::Config, path_state: &Path) {
     match (config::Config {
         marcv_addresses: Option::from(marcv_addresses),
         uuid: Option::from(identifier),
+        package_name: config.package_name,
     }
     .to_file(path_state))
     {
@@ -39,7 +40,7 @@ fn push(config: config::Config) {
         .marcv_addresses
         .expect("Server addresses not specified");
     let identifier = config.uuid.expect("UUID not set");
-    match monitoring_data::collect() {
+    match monitoring_data::collect(&config.package_name) {
         Ok(mon_data) => match marcv_api::agent_data(&marcv_addresses[0], &identifier, mon_data) {
             Ok(message) => println!("{}", message),
             Err(error) => panic!("Error pushing monitoring data: {}", error),
@@ -48,8 +49,8 @@ fn push(config: config::Config) {
     }
 }
 
-fn dump() {
-    match monitoring_data::collect() {
+fn dump(config: config::Config) {
+    match monitoring_data::collect(&config.package_name) {
         Ok(mon_data) => match io::stdout().write_all(&mon_data) {
             Err(error) => panic!("Error writing monitoring data to stdout: {}", error),
             _ => {}
@@ -83,7 +84,7 @@ fn main() {
 
     match get_configuration(&Path::new("config.json"), &path_state_file, args) {
         Ok(config) => match mode.as_str() {
-            "dump" => dump(),
+            "dump" => dump(config),
             "register" => register(config, &path_state_file),
             "push" => push(config),
             "status" => status(config),

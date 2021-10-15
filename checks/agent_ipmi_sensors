@@ -31,6 +31,7 @@ def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
         ("--output-sensor-state", "output_sensor_state"),
         ("--ignore-not-available-sensors", "output_sensor_thresholds"),
         ("--output-sensor-thresholds", "ignore_not_available_sensors"),
+        ("--intf", "intf"),
     ]:
         this_opt = options.get(what)
         if this_opt is None:

@@ -43,6 +43,9 @@ FreeIPMI OPTIONS:
   --output-sensor-thresholds        Output sensor thresholds in output.
   -k KEY                            Specify the K_g BMC key to use when authenticating
                                     with the remote host for IPMI 2.0.
+
+IPMItool OPTIONS:
+  --intf INTERFACE                  Specify INTERFACE (lan, lanplus, etc.)
 """
     )
 
@@ -79,6 +82,7 @@ def main(sys_argv=None):
         "ignore-not-available-sensors",
         "driver-type=",
         "output-sensor-thresholds",
+        "intf=",
     ]
 
     opt_debug = False
@@ -132,6 +136,13 @@ def main(sys_argv=None):
         elif o in ["--output-sensor-thresholds"]:
             additional_opts.append(o)
 
+        # IPMItool options
+        elif o in ["--intf"]:
+            additional_opts += ["-I", "%s" % a]
+
+    if opt_debug:
+        sys.stderr.write("DEBUG: %s\n" % additional_opts)
+
     if len(args) == 1:
         hostname = args[0]
     else:
@@ -158,7 +169,7 @@ def main(sys_argv=None):
         ] + additional_opts
         queries: Dict[str, Tuple[List[str], List[str]]] = {"_sensors": ([], [])}
     elif ipmi_cmd_type == "ipmitool":
-        ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl]
+        ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl] + additional_opts
         # As in check_mk_agent
         queries = {
             "": (["sensor", "list"], ["command failed", "discrete"]),

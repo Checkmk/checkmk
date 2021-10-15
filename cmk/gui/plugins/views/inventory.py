@@ -101,9 +101,30 @@ def paint_host_inventory_tree(
     tree_renderer = _get_tree_renderer(row, column, invpath)
 
     parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
+    child: Union[None, StructuredDataNode, Table, Attributes]
+
     if attribute_keys is None:
-        return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
-    return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, attribute_keys)
+        child = struct_tree.get_node(parsed_path)
+        td_class = "invtree"
+
+    elif attribute_keys == []:
+        child = struct_tree.get_table(parsed_path)
+        td_class = ""
+
+    elif attribute_keys:
+        child = _get_filtered_attributes(struct_tree, parsed_path, attribute_keys)
+        td_class = ""
+
+    else:
+        raise NotImplementedError()
+
+    if child is None:
+        return "", ""
+
+    with output_funnel.plugged():
+        child.show(tree_renderer)
+        code = HTML(output_funnel.drain())
+    return td_class, code
 
 
 def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
@@ -129,41 +150,6 @@ def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> NodeRendere
         invpath,
         tree_id=tree_id,
     )
-
-
-def _paint_host_inventory_tree_children(
-    struct_tree: StructuredDataNode,
-    parsed_path: SDPath,
-    tree_renderer: NodeRenderer,
-) -> CellSpec:
-    if (node := struct_tree.get_node(parsed_path)) is None:
-        return "", ""
-
-    with output_funnel.plugged():
-        node.show(tree_renderer)
-        code = HTML(output_funnel.drain())
-    return "invtree", code
-
-
-def _paint_host_inventory_tree_value(
-    struct_tree: StructuredDataNode,
-    parsed_path: SDPath,
-    tree_renderer: NodeRenderer,
-    attribute_keys: SDKeys,
-) -> CellSpec:
-    child: Optional[Union[Table, Attributes]]
-    if attribute_keys == []:
-        child = struct_tree.get_table(parsed_path)
-    else:
-        child = _get_filtered_attributes(struct_tree, parsed_path, attribute_keys)
-
-    if child is None:
-        return "", ""
-
-    with output_funnel.plugged():
-        child.show(tree_renderer)
-        code = HTML(output_funnel.drain())
-    return "", code
 
 
 def _get_filtered_attributes(

@@ -39,6 +39,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 
@@ -89,6 +90,7 @@ from cmk.utils.type_defs import (
     LabelSources,
     Ruleset,
     RuleSetName,
+    Seconds,
     SectionName,
     ServicegroupName,
     ServiceName,
@@ -140,7 +142,18 @@ host_service_levels = []
 AllHosts = List[HostName]
 ShadowHosts = Dict[HostName, Dict]
 AllClusters = Dict[HostName, List[HostName]]
-RRDConfig = Dict[str, Any]
+
+
+class RRDConfig(TypedDict):
+    """RRDConfig
+    This typing might not be complete or even wrong, feel free to improve"""
+
+    cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
+    rras: List[Tuple[float, int, int]]
+    step: Seconds
+    format: Literal["pnp_multiple", "cmc_single"]
+
+
 CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]

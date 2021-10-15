@@ -44,7 +44,7 @@ fn push(config: config::Config) {
     }
 }
 
-fn pull() {
+fn dump() {
     match monitoring_data::collect() {
         Ok(mon_data) => match io::stdout().write_all(&mon_data) {
             Err(error) => panic!("Error writing monitoring data to stdout: {}", error),
@@ -79,9 +79,9 @@ fn main() {
 
     match get_configuration(&Path::new("config.json"), &path_state_file, args) {
         Ok(config) => match mode.as_str() {
+            "dump" => dump(),
             "register" => register(config, &path_state_file),
             "push" => push(config),
-            "pull" => pull(),
             "status" => status(config),
             _ => {
                 panic!("Invalid mode: {}", mode)

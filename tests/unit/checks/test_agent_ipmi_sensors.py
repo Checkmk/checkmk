@@ -58,6 +58,27 @@ pytestmark = pytest.mark.checks
             ],
             id="freeipmi with optional args",
         ),
+        pytest.param(
+            (
+                "ipmitool",
+                {
+                    "username": "user",
+                    "password": "password",
+                    "privilege_lvl": "user",
+                    "intf": "lanplus",
+                },
+            ),
+            [
+                "address",
+                "user",
+                "password",
+                "user",
+                "ipmitool",
+                "--intf",
+                "lanplus",
+            ],
+            id="ipmitool with optional arg",
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_load_all_checks")

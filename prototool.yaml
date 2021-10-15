@@ -5,7 +5,6 @@ lint:
   rules:
     remove:
       # We need better comments!
-      - COMMENTS_NO_INLINE
       - ENUMS_HAVE_SENTENCE_COMMENTS
       - MESSAGES_HAVE_SENTENCE_COMMENTS_EXCEPT_REQUEST_RESPONSE_TYPES
       # We can fix these when we use the respective languages.

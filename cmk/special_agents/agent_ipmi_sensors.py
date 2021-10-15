@@ -169,7 +169,13 @@ def main(sys_argv=None):
         ] + additional_opts
         queries: Dict[str, Tuple[List[str], List[str]]] = {"_sensors": ([], [])}
     elif ipmi_cmd_type == "ipmitool":
-        ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl] + additional_opts
+        ipmi_cmd = [
+            "ipmitool",
+            "-H", hostname,
+            "-U", username,
+            "-P", password,
+            "-L", privilege_lvl,
+        ] + additional_opts
         # As in check_mk_agent
         queries = {
             "": (["sensor", "list"], ["command failed", "discrete"]),

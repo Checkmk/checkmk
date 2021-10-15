@@ -1936,9 +1936,7 @@ def _special_agents_ipmi_sensors_vs_freeipmi():
 def _special_agents_ipmi_sensors_vs_ipmitool():
     return Dictionary(
         elements=_special_agents_ipmi_sensors_vs_ipmi_common_elements()
-        + [
-            ("intf", TextInput(title=_("IPMI Interface")))
-        ],
+        + [("intf", TextInput(title=_("IPMI Interface")))],
         optional_keys=[
             "intf",
         ],

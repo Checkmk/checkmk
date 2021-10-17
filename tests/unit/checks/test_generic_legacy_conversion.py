@@ -839,7 +839,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "storcli_vdrives_default_levels",
         "stormshield_cluster_node",
         "stormshield_packets_default_levels",
-        "stormshield_services_default_levels",
         "stormshield_updates",
         "strem1_humidity_defaultlevels",
         "strem1_temp_defaultlevels",

@@ -48,6 +48,10 @@ setversion:
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
+	# Temporary hack to unbreak integration tests until we have cmk-agent-ctl build integration in CI
+	mkdir linux
+	touch linux/cmk-agent-ctl
+	chmod +x linux/cmk-agent-ctl
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 

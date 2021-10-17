@@ -91,6 +91,19 @@ def _parameter_valuespec_systemd_services():
                 ),
             ),
             (
+                "deactivating_levels",
+                Tuple(
+                    title=_("Define a tolerating time period for deactivating services"),
+                    help=
+                    _("Choose time levels (in seconds) for which a service is allowed to be in an 'deactivating' state"
+                     ),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
+                        Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
+                    ],
+                ),
+            ),
+            (
                 "reloading_levels",
                 Tuple(
                     title=_("Define a tolerating time period for reloading services"),

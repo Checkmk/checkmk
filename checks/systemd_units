@@ -26,6 +26,10 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+from typing import Iterable, List, Tuple
+
+CheckResult = Iterable[Tuple[int, str, List[Tuple]]]
+
 _SYSTEMD_UNITS = [
     '.service ',  # A service unit describes how to manage a service or application on the server. This will include how to start or stop the service, under which circumstances it should be automatically started, and the dependency and ordering information for related software.
     '.socket ',  # A socket unit file describes a network or IPC socket, or a FIFO buffer that systemd uses for socket-based activation. These always have an associated .service file that will be started when activity is seen on the socket that this unit defines.
@@ -140,6 +144,7 @@ factory_settings["systemd_services_summary_default_levels"] = {
     },
     "states_default": 2,
     "activating_levels": (30, 60),
+    "deactivating_levels": (30, 60),
     "reloading_levels": (30, 60),
 }
 
@@ -208,6 +213,7 @@ def _services_split(services, blacklist):
         "excluded": [],
         "disabled": [],
         "activating": [],
+        "deactivating": [],
         "reloading": [],
         "static": []
     }
@@ -216,8 +222,8 @@ def _services_split(services, blacklist):
         if any(expr.match(service.name) for expr in compiled_patterns):
             services_organised["excluded"].append(service)
             continue
-        if service.active == "activating":
-            services_organised["activating"].append(service)
+        if service.active in ("activating", "deactivating"):
+            services_organised[service.active].append(service)
         elif service.state in ("reloading", "disabled", "static", "indirect"):
             service_type = "disabled" if service.state == "indirect" else service.state
             services_organised[service_type].append(service)
@@ -226,7 +232,7 @@ def _services_split(services, blacklist):
     return services_organised
 
 
-def _check_temporary_state(services, params, service_state):
+def _check_temporary_state(services, params, service_state) -> CheckResult:
     previous_state = get_item_state(service_state, {})
     now = int(time.time())
     current_state = {}
@@ -244,7 +250,7 @@ def _check_temporary_state(services, params, service_state):
     set_item_state(service_state, current_state)
 
 
-def _check_non_ok_services(systemd_services, params, output_string):
+def _check_non_ok_services(systemd_services, params, output_string) -> CheckResult:
     servicenames_by_status = {}
     for service in systemd_services:
         servicenames_by_status.setdefault(service.active, []).append(service.name)
@@ -258,7 +264,7 @@ def _check_non_ok_services(systemd_services, params, output_string):
         services_text = ", ".join(sorted(service_names))
         info = output_string % (count, "" if count == 1 else "s", status, services_text)
 
-        yield state, info
+        yield state, info, []
 
 
 def check_systemd_units_services_summary(_no_item, params, parsed):
@@ -272,7 +278,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     # some of the failed ones might be ignored, so this is OK:
     yield 0, "Failed: %d" % sum(s.active == "failed" for s in services)
 
-    long_output = []
+    long_output: List[Tuple[int, str, List[Tuple]]] = []
 
     included_template = "%d service%s %s (%s)"
     for subresult in _check_non_ok_services(services_organised["included"], params,
@@ -289,7 +295,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
         else:
             long_output.append(subresult)
 
-    for temporary_type in ("activating", "reloading"):
+    for temporary_type in ("activating", "reloading", "deactivating"):
         for subresult in _check_temporary_state(services_organised[temporary_type], params,
                                                 temporary_type):
             if subresult[0]:
@@ -300,7 +306,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     if services_organised["excluded"]:
         yield 0, "\nIgnored: %d" % len(services_organised["excluded"])
 
-    yield from long_output
+    yield from ((s, f"\n{t}", m) for s, t, m in long_output)
 
 
 check_info['systemd_units.services_summary'] = {

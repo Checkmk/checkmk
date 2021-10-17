@@ -4,21 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple
-
-import pytest
-
-from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
-from tests.unit.conftest import FixRegister
-
-
-class StormshieldService(NamedTuple):
-    state: str
-    uptime: int
-
+from cmk.base.plugins.agent_based.stormshield_services import (
+    check_stormshield_services,
+    discover_stormshield_services,
+    StormshieldService,
+)
 
 SECTION = {
     "one": StormshieldService("1", 42),
@@ -26,24 +18,19 @@ SECTION = {
 }
 
 
-@pytest.fixture(scope="module", name="stormshield_services")
-def _stormshield_services(fix_register: FixRegister):
-    return fix_register.check_plugins[CheckPluginName("stormshield_services")]
+def test_discover() -> None:
+    assert list(discover_stormshield_services(SECTION)) == [Service(item="one")]
 
 
-def test_discover(stormshield_services) -> None:
-    assert list(stormshield_services.discovery_function(SECTION)) == [Service(item="one")]
-
-
-def test_check_up(stormshield_services) -> None:
-    assert list(stormshield_services.check_function(item="one", params={}, section=SECTION)) == [
+def test_check_up() -> None:
+    assert list(check_stormshield_services(item="one", section=SECTION)) == [
         Result(state=State.OK, summary="Up"),
-        Result(state=State.OK, summary="Uptime: 42.0 s"),
+        Result(state=State.OK, summary="Uptime: 42 seconds"),
         Metric("uptime", 42.0),
     ]
 
 
-def test_check_down(stormshield_services) -> None:
-    assert list(stormshield_services.check_function(item="two", params={}, section=SECTION)) == [
+def test_check_down() -> None:
+    assert list(check_stormshield_services(item="two", section=SECTION)) == [
         Result(state=State.WARN, summary="Down"),
     ]

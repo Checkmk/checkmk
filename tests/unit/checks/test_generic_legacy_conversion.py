@@ -2483,7 +2483,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "stormshield_packets",
         "stormshield_policy",
         "stormshield_route",
-        "stormshield_services",
         "stormshield_updates",
         "strem1_sensors",
         "stulz_alerts",

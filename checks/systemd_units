@@ -81,7 +81,10 @@
 #             received from its bus interfaces. These are used to manage sets of system
 #             processes that are created externally.
 
-import typing
+from typing import Iterable, List, NamedTuple, Tuple
+
+CheckResult = Iterable[Tuple[int, str, List[Tuple]]]
+
 
 _SYSTEMD_UNITS = [
     ".service ",
@@ -114,7 +117,7 @@ _SYSTEMD_UNIT_FILE_STATES = [
 ]
 
 
-class UnitEntry(typing.NamedTuple):
+class UnitEntry(NamedTuple):
     name: str
     unit_type: str
     loaded_status: str
@@ -215,6 +218,7 @@ factory_settings["systemd_services_summary_default_levels"] = {
     },
     "states_default": 2,
     "activating_levels": (30, 60),
+    "deactivating_levels": (30, 60),
     "reloading_levels": (30, 60),
 }
 
@@ -293,6 +297,7 @@ def _services_split(services, blacklist):
         "excluded": [],
         "disabled": [],
         "activating": [],
+        "deactivating": [],
         "reloading": [],
         "static": [],
     }
@@ -301,8 +306,8 @@ def _services_split(services, blacklist):
         if any(expr.match(service.name) for expr in compiled_patterns):
             services_organised["excluded"].append(service)
             continue
-        if service.active_status == "activating":
-            services_organised["activating"].append(service)
+        if service.active_status in ("activating", "deactivating"):
+            services_organised[service.active_status].append(service)
         elif service.enabled_status in ("reloading", "disabled", "static", "indirect"):
             service_type = (
                 "disabled" if service.enabled_status == "indirect" else service.enabled_status
@@ -313,7 +318,7 @@ def _services_split(services, blacklist):
     return services_organised
 
 
-def _check_temporary_state(services, params, service_state):
+def _check_temporary_state(services, params, service_state) -> CheckResult:
     previous_state = get_item_state(service_state, {})
     now = int(time.time())
     current_state = {}
@@ -333,7 +338,7 @@ def _check_temporary_state(services, params, service_state):
     set_item_state(service_state, current_state)
 
 
-def _check_non_ok_services(systemd_services, params, output_string):
+def _check_non_ok_services(systemd_services, params, output_string) -> CheckResult:
     servicenames_by_status = {}
     for service in systemd_services:
         servicenames_by_status.setdefault(service.active_status, []).append(service.name)
@@ -347,7 +352,7 @@ def _check_non_ok_services(systemd_services, params, output_string):
         services_text = ", ".join(sorted(service_names))
         info = output_string % (count, "" if count == 1 else "s", status, services_text)
 
-        yield state, info
+        yield state, info, []
 
 
 def check_systemd_units_services_summary(_no_item, params, parsed):
@@ -361,7 +366,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     # some of the failed ones might be ignored, so this is OK:
     yield 0, "Failed: %d" % sum(s.active_status == "failed" for s in services)
 
-    long_output = []
+    long_output: List[Tuple[int, str, List[Tuple]]] = []
 
     included_template = "%d service%s %s (%s)"
     for subresult in _check_non_ok_services(
@@ -379,7 +384,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
         else:
             long_output.append(subresult)
 
-    for temporary_type in ("activating", "reloading"):
+    for temporary_type in ("activating", "reloading", "deactivating"):
         for subresult in _check_temporary_state(
             services_organised[temporary_type], params, temporary_type
         ):
@@ -391,7 +396,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     if services_organised["excluded"]:
         yield 0, "\nIgnored: %d" % len(services_organised["excluded"])
 
-    yield from long_output
+    yield from ((s, f"\n{t}", m) for s, t, m in long_output)
 
 
 check_info["systemd_units.services_summary"] = {

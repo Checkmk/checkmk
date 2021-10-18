@@ -64,9 +64,10 @@ def SOURCE_DIR = ''
 //
 node(NODE) {
     stage('Prepare version directory') {
-        sh('rm -rf "${WORKSPACE}/versions/"*')
-        sh('mkdir -p "${WORKSPACE}/versions"')
+        sh('rm -rf "${WORKSPACE}"')
     }
+
+    try { // intentionally no extra indentation
 
     stage('Checkout sources') {
         /// takes place as regular Jenkins user
@@ -236,6 +237,15 @@ node(NODE) {
                     upload_artifacts.deploy_to_website(UPLOAD_URL, CMK_VERS)
                 }
             }
+        }
+    }
+
+    } finally {
+        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+        BUILD_IMAGE.inside(DOCKER_BASE_ARGS) {
+            println(">>>>>>> clean WORKSPACE=${WORKSPACE}")
+            sh('chmod -R a+r+w "${WORKSPACE}"')
+            println("<<<<<<< clean WORKSPACE")
         }
     }
 }

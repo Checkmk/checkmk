@@ -221,6 +221,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		CONTENTS \
 		mk-job* \
 		waitmax \
+		linux \
 		windows/cfg_examples \
 		windows/check_mk_agent.msi \
 		windows/python-3.8.cab \

@@ -5,13 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Dict
+from typing import Dict, List
 
 import pytest
 
 from cmk.base.plugins.agent_based import lnx_if
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Attributes,
+    IgnoreResultsError,
+    Result,
+    Service,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
@@ -796,3 +803,78 @@ def test_lnx_if_regression(
             ]
             + res[1:]
         )
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
+        (
+            [],
+            [
+                Attributes(
+                    path=["networking"],
+                    inventory_attributes={
+                        "available_ethernet_ports": 0,
+                        "total_ethernet_ports": 0,
+                        "total_interfaces": 0,
+                    },
+                    status_attributes={},
+                ),
+            ],
+        ),
+        (
+            [
+                ["[start_iplink]"],
+                [
+                    "1:",
+                    "wlp3s0:",
+                    "<BROADCAST,MULTICAST>",
+                    "mtu",
+                    "1500",
+                    "qdisc",
+                    "fq_codel",
+                    "state",
+                    "UP",
+                    "mode",
+                    "DORMANT",
+                    "group",
+                    "default",
+                    "qlen",
+                    "1000",
+                ],
+                ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
+                ["[end_iplink]"],
+                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+            ],
+            [
+                TableRow(
+                    path=["networking", "interfaces"],
+                    key_columns={
+                        "index": 1,
+                        "description": "wlp3s0",
+                        "alias": "wlp3s0",
+                    },
+                    inventory_columns={
+                        "speed": 0,
+                        "phys_address": "AA:AA:AA:AA:AA:AA",
+                        "oper_status": 2,
+                        "port_type": 6,
+                        "available": True,
+                    },
+                    status_columns={},
+                ),
+                Attributes(
+                    path=["networking"],
+                    inventory_attributes={
+                        "available_ethernet_ports": 1,
+                        "total_ethernet_ports": 1,
+                        "total_interfaces": 1,
+                    },
+                    status_attributes={},
+                ),
+            ],
+        ),
+    ],
+)
+def test_inventory_lnx_if(string_table: List[List[str]], expected_result: InventoryResult):
+    assert list(lnx_if.inventory_lnx_if(lnx_if.parse_lnx_if(string_table))) == expected_result

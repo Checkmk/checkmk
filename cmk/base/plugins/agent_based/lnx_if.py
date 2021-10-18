@@ -6,8 +6,11 @@
 
 from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple, Union
 
-from .agent_based_api.v1 import register, type_defs
+from .agent_based_api.v1 import register, TableRow, type_defs
+from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import interfaces
+from .utils.inventory_interfaces import Interface as InterfaceInv
+from .utils.inventory_interfaces import inventorize_interfaces
 
 # Example output from agent:
 
@@ -300,4 +303,78 @@ register.check_plugin(
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_lnx_if,
     cluster_check_function=cluster_check_lnx_if,
+)
+
+
+def inventory_lnx_if(section: Section) -> InventoryResult:
+    ifaces, ip_stats = section
+
+    yield from inventorize_interfaces(
+        {
+            "usage_port_types": [
+                "6",
+                "32",
+                "62",
+                "117",
+                "127",
+                "128",
+                "129",
+                "180",
+                "181",
+                "182",
+                "205",
+                "229",
+            ],
+        },
+        (
+            InterfaceInv(
+                index=interface.index,
+                descr=interface.descr,
+                alias=interface.alias,
+                type=interface.type,
+                speed=int(interface.speed),
+                oper_status=int(interface.oper_status),
+                phys_address=interfaces.render_mac_address(interface.phys_address),
+            )
+            for interface in sorted(ifaces, key=lambda i: i.index)
+            # Always exclude dockers veth* interfaces on docker nodes.
+            # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
+            # Ignore useless half-empty tables (e.g. Viprinet-Router).
+            if not interface.descr.startswith("veth") and interface.type not in ("231", "232")
+        ),
+        len(ifaces),
+    )
+
+    yield from _inventorize_addresses(ip_stats)
+
+
+def _inventorize_addresses(ip_stats: Mapping[str, Mapping[str, Any]]) -> InventoryResult:
+    for if_name, attrs in ip_stats.items():
+        for key, ty in [
+            ("inet", "ipv4"),
+            ("inet6", "ipv6"),
+        ]:
+            for network in attrs.get(key, []):
+                yield TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={
+                        "device": if_name,
+                        "address": _get_address(network),
+                    },
+                    inventory_columns={
+                        "type": ty,
+                    },
+                )
+
+
+def _get_address(network: str) -> str:
+    return network.split("/")[0]
+
+
+register.inventory_plugin(
+    name="lnx_if",
+    inventory_function=inventory_lnx_if,
+    # TODO Use inv_if? Also have a look at winperf_if and other interface intentories..
+    # inventory_ruleset_name="inv_if",
+    # inventory_default_parameters={},
 )

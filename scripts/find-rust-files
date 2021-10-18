@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+REPO_DIR=$(git rev-parse --show-toplevel)
 
-CARGO_PROJECTS=$(find $REPO_PATH -name Cargo.toml | xargs dirname)
+# find all cargo project files, not located in ".cargo" folders
+# We use ".cargo" instead of $CARGO_HOME in order to skip even multiple .cargo directories
+CARGO_PROJECTS=$(find ${REPO_DIR} -path "*/.cargo/*" -prune -o -name Cargo.toml -print | xargs dirname)
 
 for project in ${CARGO_PROJECTS}; do
     find ${project}/src -type f -name *.rs

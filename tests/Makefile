@@ -348,7 +348,7 @@ test-cargo-check-docker:
 	../scripts/run-in-docker.sh make test-cargo-check
 
 test-cargo-test:
-	$(SCRIPTS)/run-cargo-command check
+	$(SCRIPTS)/run-cargo-command test
 
 test-cargo-test-docker:
 	../scripts/run-in-docker.sh make test-cargo-test

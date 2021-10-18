@@ -6,9 +6,8 @@
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.inventory_lnx_sysctl import inventory_lnx_sysctl, parse_lnx_sysctl
 
 
 @pytest.mark.parametrize(
@@ -64,51 +63,74 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
                 TableRow(
                     path=["software", "kernel_config"],
                     key_columns={
-                        "parameter": "abi.vsyscall32",
+                        "name": "abi.vsyscall32",
                         "value": "1",
                     },
+                    inventory_columns={},
+                    status_columns={},
                 ),
                 TableRow(
                     path=["software", "kernel_config"],
                     key_columns={
-                        "parameter": "dev.cdrom.info",
+                        "name": "dev.cdrom.info",
+                        "value": "",
+                    },
+                    inventory_columns={},
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "kernel_config"],
+                    key_columns={
+                        "name": "dev.cdrom.info",
                         "value": "CD-ROM information, Id: cdrom.c 3.20 2003/12/17",
                     },
+                    inventory_columns={},
+                    status_columns={},
                 ),
                 TableRow(
                     path=["software", "kernel_config"],
                     key_columns={
-                        "parameter": "dev.cdrom.info",
-                        "value": "drive name:",
-                    },
-                ),
-                TableRow(
-                    path=["software", "kernel_config"],
-                    key_columns={
-                        "parameter": "dev.cdrom.info",
-                        "value": "drive speed:",
-                    },
-                ),
-                TableRow(
-                    path=["software", "kernel_config"],
-                    key_columns={
-                        "parameter": "dev.cdrom.info",
+                        "name": "dev.cdrom.info",
                         "value": "drive # of slots:",
                     },
+                    inventory_columns={},
+                    status_columns={},
                 ),
                 TableRow(
                     path=["software", "kernel_config"],
                     key_columns={
-                        "parameter": "dev.hpet.max-user-freq",
+                        "name": "dev.cdrom.info",
+                        "value": "drive name:",
+                    },
+                    inventory_columns={},
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "kernel_config"],
+                    key_columns={
+                        "name": "dev.cdrom.info",
+                        "value": "drive speed:",
+                    },
+                    inventory_columns={},
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "kernel_config"],
+                    key_columns={
+                        "name": "dev.hpet.max-user-freq",
                         "value": "64",
                     },
+                    inventory_columns={},
+                    status_columns={},
                 ),
                 TableRow(
                     path=["software", "kernel_config"],
                     key_columns={
-                        "parameter": "kernel.hung_task_check_count",
+                        "name": "kernel.hung_task_check_count",
                         "value": "4194304",
                     },
+                    inventory_columns={},
+                    status_columns={},
                 ),
             ],
         ),
@@ -143,6 +165,5 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ),
     ],
 )
-def test_inv_oracle_systemparameter(fix_register, info, params, inventory_data):
-    plugin = fix_register.inventory_plugins[InventoryPluginName("lnx_sysctl")]
-    assert list(plugin.inventory_function(params, info)) == inventory_data
+def test_inv_oracle_systemparameter(info, params, inventory_data):
+    assert list(inventory_lnx_sysctl(params, parse_lnx_sysctl(info))) == inventory_data

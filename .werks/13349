@@ -1,0 +1,15 @@
+Title: Oracle agent plugin: Handle non-running Oracle monitoring process on target host
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1634568157
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p13
+
+The Oracle agent plugin now handles cases where the Oracle monitoring background
+process (<tt>ora_pmon</tt> on Unix systems) is not running correctly. In such cases,
+the agent plugin now prints out empty sections, s.t. the corresponding services on
+the Checkmk server go UNKNOWN.

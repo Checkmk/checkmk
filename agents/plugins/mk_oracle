@@ -2309,7 +2309,7 @@ print_dummy_sections () {
 
 
 do_dummy_sections () {
-    if $MK_ORA_SECTIONS; then
+    if [ -n "$MK_ORA_SECTIONS" ]; then
         return
     fi
 

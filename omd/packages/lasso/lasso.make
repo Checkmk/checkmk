@@ -17,7 +17,7 @@ $(LASSO)-unpack: $(LASSO_UNPACK)
 
 $(LASSO)-int: $(LASSO_INTERMEDIATE_INSTALL)
 
-ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
+ifeq ($(filter sles%,$(DISTRO_CODE)),)
 $(LASSO_BUILD): $(LASSO_UNPACK)
 	cd $(LASSO_BUILD_DIR) \
 	&& echo $(LASSO_VERS) > .tarball-version \
@@ -32,14 +32,14 @@ $(LASSO_BUILD):
 endif
 
 $(LASSO_INTERMEDIATE_INSTALL): $(LASSO_BUILD)
-ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
+ifeq ($(filter sles%,$(DISTRO_CODE)),)
 	$(MKDIR) $(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR)
 	$(MAKE) DESTDIR=$(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR) -C $(LASSO_BUILD_DIR) install
 endif
 	$(TOUCH) $@
 
 $(LASSO_INSTALL): $(LASSO_BUILD)
-ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
+ifeq ($(filter sles%,$(DISTRO_CODE)),)
 	$(MAKE) DESTDIR=$(DESTDIR) \
 		-C $(LASSO_BUILD_DIR) install
 	if [ -d "$(DESTDIR)/$(OMD_ROOT)/lib64/perl5" ]; then mv $(DESTDIR)/$(OMD_ROOT)/lib64/perl5 $(DESTDIR)/$(OMD_ROOT)/lib/; rm -r $(DESTDIR)/$(OMD_ROOT)/lib64; fi

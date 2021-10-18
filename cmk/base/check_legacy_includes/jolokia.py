@@ -4,8 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 import json
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -17,7 +28,7 @@ import json
 #   '----------------------------------------------------------------------'
 
 
-def parse_jolokia_json_output(info):
+def parse_jolokia_json_output(info: Sequence[Sequence[str]]) -> Iterable[Tuple[str, str, Any]]:
     for line in info:
         try:
             instance, mbean, raw_json_data = line
@@ -26,14 +37,14 @@ def parse_jolokia_json_output(info):
             continue
 
 
-def jolokia_mbean_attribute(attribute, mbean):
+def jolokia_mbean_attribute(attribute: object, mbean: str) -> str:
     tmp = mbean.split("%s=" % attribute, 1)[1]
     for delimiter in (",", "/"):
         tmp = tmp.split(delimiter, 1)[0]
     return tmp
 
 
-def jolokia_basic_split(line, expected_length):
+def jolokia_basic_split(line: MutableSequence[str], expected_length: int) -> MutableSequence[str]:
     # line should consist of $expected_length tokens,
     # if there are more, we assume the second one
     # was split up by it's spaces.
@@ -50,7 +61,7 @@ def jolokia_basic_split(line, expected_length):
     return tokens
 
 
-def jolokoia_extract_opt(instance_raw):
+def jolokoia_extract_opt(instance_raw: str) -> Tuple[str, MutableMapping[str, str], Sequence[str]]:
     if "," not in instance_raw:
         return instance_raw, {}, []
 
@@ -80,8 +91,8 @@ def jolokoia_extract_opt(instance_raw):
 #   '----------------------------------------------------------------------'
 
 
-def jolokia_metrics_parse(info):
-    parsed = {}
+def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, Mapping[str, Any]]:
+    parsed: Dict[str, Dict[str, Any]] = {}
     for line in info:
         if len(line) > 1 and line[1] == "ERROR":
             continue
@@ -145,12 +156,12 @@ def jolokia_metrics_parse(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_jolokia_metrics_apps(info, what):
+def inventory_jolokia_metrics_apps(info: Any, what: str) -> Sequence[Tuple[str, Optional[str]]]:
     inv = []
     parsed = jolokia_metrics_parse(info)
 
     if what == "app_sess":
-        levels = "jolokia_metrics_app_sess_default_levels"
+        levels: Optional[str] = "jolokia_metrics_app_sess_default_levels"
         needed_key = ["Sessions", "activeSessions"]
     elif what == "bea_app_sess":
         levels = "jolokia_metrics_app_sess_default_levels"

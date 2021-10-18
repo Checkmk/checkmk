@@ -558,13 +558,7 @@ class Endpoint:
                     "You may be able to query the central site.",
                 )
 
-            if not self.skip_locking and self.method != "get":
-                with store.lock_checkmk_configuration():
-                    response = self.func(param)
-            else:
-                response = self.func(param)
-
-            response.freeze()
+            response = self.func(param)
 
             if self.output_empty and response.status_code < 400 and response.data:
                 return problem(
@@ -655,7 +649,23 @@ class Endpoint:
             response.freeze()
             return response
 
-        return _validating_wrapper
+        def _wrap_with_wato_lock(func):
+            # We need to lock the whole of the validation process, not just the function itself.
+            # This is necessary, because sometimes validation logic loads values which trigger
+            # a cache-load, which - without locking - could become inconsistent. This is obviously
+            # a deeper problem of those components which needs to be fixed as well.
+            @functools.wraps(func)
+            def _wrapper(param):
+                if not self.skip_locking and self.method != "get":
+                    with store.lock_checkmk_configuration():
+                        response = func(param)
+                else:
+                    response = func(param)
+                return response
+
+            return _wrapper
+
+        return _wrap_with_wato_lock(_validating_wrapper)
 
     @property
     def does_redirects(self):

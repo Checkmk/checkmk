@@ -22,11 +22,18 @@
 #        Capabilities: [270] #19
 #        Kernel driver in use: fglrx_pci
 
+import re
+from typing import Mapping
 
-def inv_lnx_video(info):
-    node = inv_tree_list("hardware.video:")
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Mapping[str, str]
+
+
+def parse_lnx_video(string_table: StringTable) -> Section:
     array = {}
-    for line in info:
+    for line in string_table:
         if len(line) > 1:
             if re.search("VGA compatible controller", line[1]):
                 array["name"] = line[2]
@@ -34,9 +41,35 @@ def inv_lnx_video(info):
                 array["subsystem"] = line[1]
             elif line[0] == "Kernel driver in use":
                 array["driver"] = line[1]
-    node.append(array)
+    return array
 
 
-inv_info["lnx_video"] = {
-    "inv_function": inv_lnx_video,
-}
+register.agent_section(
+    name="lnx_video",
+    parse_function=parse_lnx_video,
+)
+
+
+def inventory_lnx_video(section: Section) -> InventoryResult:
+    # FIXME This is very strange: Raw data is parsed into ONE dict,
+    # but we save the controller attributes in a table...
+    # Maybe there are more controllers?
+    path = ["hardware", "video"]
+    if "name" in section:
+        yield TableRow(
+            path=path,
+            key_columns={
+                "name": section["name"],
+            },
+            inventory_columns={
+                "subsystem": section.get("subsystem"),
+                "driver": section.get("driver"),
+            },
+            status_columns={},
+        )
+
+
+register.inventory_plugin(
+    name="lnx_video",
+    inventory_function=inventory_lnx_video,
+)

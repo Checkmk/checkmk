@@ -64,7 +64,7 @@ def SOURCE_DIR = ''
 //
 node(NODE) {
     stage('Prepare version directory') {
-        sh('rm -rf "${WORKSPACE}"')
+        sh('rm -rf ${WORKSPACE}/*')
     }
 
     try { // intentionally no extra indentation

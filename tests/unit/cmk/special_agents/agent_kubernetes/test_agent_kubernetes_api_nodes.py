@@ -2,10 +2,10 @@ import datetime
 import json
 
 import pytest
-from kubernetes import client
-from kubernetes.client import ApiClient
-from mocket import Mocketizer
-from mocket.mockhttp import Entry
+from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes.client import ApiClient  # type: ignore[import] # pylint: disable=import-error
+from mocket import Mocketizer  # type: ignore[import]
+from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemas import (
     Labels,
@@ -56,6 +56,7 @@ class TestAPINode:
         metadata = parse_metadata(metadata_obj, node_labels.to_cmk_labels())
         assert metadata.name == "k8"
         assert metadata.namespace is None
+        assert metadata.labels is not None
         assert metadata.labels["cmk/kubernetes"] == "yes"
 
     def test_parse_metadata_datetime(self):
@@ -105,5 +106,6 @@ class TestAPINode:
         with Mocketizer():
             node = list(core_client.list_node().items)[0]
         conditions = node_conditions(node)
+        assert conditions is not None
         assert conditions.NetworkUnavailable is None
         assert conditions.Ready is True

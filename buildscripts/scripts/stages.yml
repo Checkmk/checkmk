@@ -39,6 +39,11 @@ VARIABLES:
       # of grep expressions won't just grep for '-'
       SH: "${WORKSPACE}/scripts/find-python-files | grep -h -e '^^' ${GREP_PATTERNS} - | sort"
 
+    - NAME: CHANGED_RUST_FILES
+      # filter list of all rust files to contain only changed files. Make sure an empty list
+      # of grep expressions won't just grep for '-'
+      SH: "${WORKSPACE}/scripts/find-rust-files | grep -h -e '^^' ${GREP_PATTERNS} - | sort"
+
     - NAME: CHANGED_PYLINT_RC_FILE
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/.pylintrc' - || true"
 
@@ -240,3 +245,18 @@ STAGES:
       COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt"
       TEXT_ON_SKIP: 'No SW Documentation files changed'
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
+
+    - NAME: 'Cargo/Rust Check'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_RUST_FILES
+      DIR: 'tests'
+      COMMAND: "make test-cargo-check-docker"
+      TEXT_ON_SKIP: 'No relevant Rust files changed'
+#      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+
+    - NAME: 'Cargo/Rust Test'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_RUST_FILES
+      DIR: 'tests'
+      COMMAND: "make test-cargo-test-docker"
+      TEXT_ON_SKIP: 'No relevant Rust files changed'
+#      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+

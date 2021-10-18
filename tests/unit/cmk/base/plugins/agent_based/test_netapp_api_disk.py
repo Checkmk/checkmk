@@ -8,7 +8,11 @@ import pytest
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.netapp_api_disk import (
+    inventory_netapp_api_disk,
+    parse_netapp_api_disk,
+)
 
 _AGENT_OUTPUT = [
     [
@@ -51,7 +55,10 @@ _AGENT_OUTPUT = [
 )
 def test_discover_netapp_api_disk(fix_register, string_table, expected_result):
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_disk_summary")]
-    assert sorted(check_plugin.discovery_function(string_table)) == expected_result
+    assert (
+        sorted(check_plugin.discovery_function(parse_netapp_api_disk(string_table)))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -75,4 +82,58 @@ def test_discover_netapp_api_disk(fix_register, string_table, expected_result):
 )
 def test_check_netapp_api_disk(fix_register, string_table, expected_result):
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_disk_summary")]
-    assert list(check_plugin.check_function(params={}, section=string_table)) == expected_result
+    assert (
+        list(check_plugin.check_function(params={}, section=parse_netapp_api_disk(string_table)))
+        == expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
+        ([], []),
+        (
+            _AGENT_OUTPUT,
+            [
+                TableRow(
+                    path=["hardware", "storage", "disks"],
+                    key_columns={
+                        "signature": "123:456",
+                    },
+                    inventory_columns={
+                        "serial": "ABC:DEF",
+                        "vendor": "NetApp",
+                        "bay": None,
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["hardware", "storage", "disks"],
+                    key_columns={
+                        "signature": "partner:123:456",
+                    },
+                    inventory_columns={
+                        "serial": "oartner:ABC:DEF",
+                        "vendor": "NetApp",
+                        "bay": None,
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["hardware", "storage", "disks"],
+                    key_columns={
+                        "signature": "remote:123:456",
+                    },
+                    inventory_columns={
+                        "serial": "remote:ABC:DEF",
+                        "vendor": "NetApp",
+                        "bay": None,
+                    },
+                    status_columns={},
+                ),
+            ],
+        ),
+    ],
+)
+def test_inventory_netapp_api_disk(string_table, expected_result):
+    assert list(inventory_netapp_api_disk(parse_netapp_api_disk(string_table))) == expected_result

@@ -257,7 +257,6 @@ def test_section_parse_function_does_something(fix_register):
         "jolokia_metrics",
         "libelle_business_shadow",
         "msexch_dag",
-        "netapp_api_disk",
         "netctr",
         "netif",
         "nvidia",

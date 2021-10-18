@@ -8,8 +8,6 @@
 import json
 from typing import List, Optional, Type
 
-from six import ensure_str
-
 import cmk.gui.forms as forms
 import cmk.gui.pages
 import cmk.gui.watolib as watolib
@@ -472,5 +470,5 @@ class ModeAjaxDiagHost(AjaxPage):
         return {
             "next_transid": transactions.fresh_transid(),
             "status_code": result.return_code,
-            "output": ensure_str(result.response, errors="replace"),
+            "output": result.response,
         }

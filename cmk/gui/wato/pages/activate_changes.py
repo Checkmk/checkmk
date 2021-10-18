@@ -666,7 +666,7 @@ class ModeAjaxStartActivation(AjaxPage):
         activation_id = manager.start(
             sites=affected_sites,
             activate_until=ensure_str(activate_until),
-            comment=None if comment is None else comment,
+            comment=comment,
             activate_foreign=activate_foreign,
         )
 

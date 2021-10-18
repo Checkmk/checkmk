@@ -11,8 +11,6 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from six import ensure_str
-
 import cmk.utils
 import cmk.utils.paths
 
@@ -84,7 +82,7 @@ def _git_add_files() -> None:
 
 
 def _git_command(args: List[str]) -> None:
-    command = ["git"] + [ensure_str(a) for a in args]
+    command = ["git"] + args
     logger.debug(
         "GIT: Execute in %s: %s",
         cmk.utils.paths.default_config_dir,
@@ -108,7 +106,7 @@ def _git_command(args: List[str]) -> None:
 
     status = p.wait()
     if status != 0:
-        out = "" if p.stdout is None else ensure_str(p.stdout.read())
+        out = "" if p.stdout is None else p.stdout.read()
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
             % (subprocess.list2cmdline(command), out.replace("\n", "<br>\n"))

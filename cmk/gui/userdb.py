@@ -724,8 +724,6 @@ def load_users(lock: bool = False) -> Users:
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():
-        # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)
 
         if uid not in result:
             result[uid] = contact
@@ -751,7 +749,6 @@ def load_users(lock: bool = False) -> Users:
         line = line.strip()
         if ":" in line:
             uid, password = line.strip().split(":")[:2]
-            uid = ensure_str(uid)
             if password.startswith("!"):
                 locked = True
                 password = password[1:]
@@ -781,15 +778,13 @@ def load_users(lock: bool = False) -> Users:
         line = line.strip()
         if ":" in line:
             user_id, serial = line.split(":")[:2]
-            user_id = ensure_str(user_id)
             if user_id in result:
                 result[user_id]["serial"] = utils.saveint(serial)
 
     # Now read the user specific files
     directory = cmk.utils.paths.var_dir + "/web/"
-    for d in os.listdir(directory):
-        if d[0] != ".":
-            uid = ensure_str(d)
+    for uid in os.listdir(directory):
+        if uid[0] != ".":
 
             # read special values from own files
             if uid in result:
@@ -810,9 +805,9 @@ def load_users(lock: bool = False) -> Users:
             # read automation secrets and add them to existing
             # users or create new users automatically
             try:
-                user_secret_path = Path(directory) / d / "automation.secret"
+                user_secret_path = Path(directory) / uid / "automation.secret"
                 with user_secret_path.open(encoding="utf-8") as f:
-                    secret: Optional[str] = ensure_str(f.read().strip())
+                    secret: Optional[str] = f.read().strip()
             except IOError:
                 secret = None
 
@@ -829,7 +824,7 @@ def load_users(lock: bool = False) -> Users:
 
 
 def custom_attr_path(userid: UserId, key: str) -> str:
-    return cmk.utils.paths.var_dir + "/web/" + ensure_str(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + userid + "/" + key + ".mk"
 
 
 def load_custom_attr(
@@ -923,7 +918,7 @@ def _save_user_profiles(updated_profiles: Users) -> None:
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id)
+        user_dir = cmk.utils.paths.var_dir + "/web/" + user_id
         store.mkdir(user_dir)
 
         # authentication secret for local processes
@@ -983,7 +978,7 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
     ]
     directory = cmk.utils.paths.var_dir + "/web"
     for user_dir in os.listdir(cmk.utils.paths.var_dir + "/web"):
-        if user_dir not in [".", ".."] and ensure_str(user_dir) not in updated_profiles:
+        if user_dir not in [".", ".."] and user_dir not in updated_profiles:
             entry = directory + "/" + user_dir
             if not os.path.isdir(entry):
                 continue

@@ -4,8 +4,11 @@ set -e
 COMMAND=$1
 shift
 COMMAND_OPTIONS=$*
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
-CARGO_PROJECTS=$(find ${REPO_PATH} -name Cargo.toml | xargs dirname)
+REPO_DIR=$(git rev-parse --show-toplevel)
+: "${CARGO_HOME:="${REPO_DIR}/.cargo"}"
+export CARGO_HOME
+
+CARGO_PROJECTS=$(find ${REPO_DIR} -path "${CARGO_HOME}" -prune -o -name Cargo.toml -print | xargs dirname)
 
 result=0
 

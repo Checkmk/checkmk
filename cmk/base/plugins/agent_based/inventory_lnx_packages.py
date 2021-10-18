@@ -29,10 +29,27 @@
 # cpio-lang|2.9|i586|rpm|Languages for package cpio|
 # zlib|1.2.3|i586|rpm|Data Compression Library|
 
+from typing import Iterable, NamedTuple
 
-def inv_lnx_packages(info):
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+
+class Package(NamedTuple):
+    name: str
+    version: str
+    arch: str
+    package_type: str
+    summary: str
+    package_version: str
+
+
+Section = Iterable[Package]
+
+
+def parse_lnx_packages(string_table: StringTable) -> Section:
     parsed_packages = []
-    for line in info:
+    for line in string_table:
         if len(line) == 6:
             pacname, version, arch, pactype, summary, inststate = line
             release = None
@@ -44,30 +61,58 @@ def inv_lnx_packages(info):
         if pactype == "deb":
             if "installed" not in inststate:
                 continue
+
         if arch == "amd64":
             arch = "x86_64"
-        entry = {
-            "name": pacname,
-            "version": version,
-            "arch": arch,
-            "package_type": pactype,
-            "summary": summary,
-        }
+
         # Split version into version of contained software and version of the
         # packages (RPM calls the later "release")
         parts = version.rsplit("-", 1)
         if len(parts) == 2:
             version, package_version = parts
-            entry["version"] = version
-            entry["package_version"] = package_version
+
         if release is not None:
-            entry["package_version"] = release
-        parsed_packages.append(entry)
+            package_version = release
 
-    paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name")))
+        parsed_packages.append(
+            Package(
+                name=pacname,
+                version=version,
+                arch=arch,
+                package_type=pactype,
+                summary=summary,
+                package_version=package_version,
+            )
+        )
+    return parsed_packages
 
 
-inv_info["lnx_packages"] = {
-    "inv_function": inv_lnx_packages,
-}
+register.agent_section(
+    name="lnx_packages",
+    parse_function=parse_lnx_packages,
+)
+
+
+def inventory_lnx_packages(section: Section) -> InventoryResult:
+    path = ["software", "packages"]
+    for package in sorted(section, key=lambda p: p.name):
+        yield TableRow(
+            path=path,
+            key_columns={
+                "name": package.name,
+            },
+            inventory_columns={
+                "version": package.version,
+                "arch": package.arch,
+                "package_type": package.package_type,
+                "summary": package.summary,
+                "package_version": package.package_version,
+            },
+            status_columns={},
+        )
+
+
+register.inventory_plugin(
+    name="lnx_packages",
+    inventory_function=inventory_lnx_packages,
+)

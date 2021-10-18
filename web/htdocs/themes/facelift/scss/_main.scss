@@ -1455,3 +1455,10 @@ div.foldable div.success {
 input.hidden_submit {
   display: none;
 }
+
+@mixin ellipsis-text-overflow {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

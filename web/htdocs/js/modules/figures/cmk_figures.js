@@ -489,7 +489,7 @@ export class FigureBase {
                 .attr("xlink:href", d => d.url || "#");
         }
 
-        title_component
+        let text_element = title_component
             .selectAll("text")
             .data(d => [d])
             .join("text")
@@ -498,6 +498,47 @@ export class FigureBase {
             .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");
+
+        const title_padding_left = parseInt(
+            utils
+                .get_computed_style(d3.select("div.dashlet div.title").node(), "padding-left")
+                .replace("px", "")
+        );
+
+        text_element.each((d, idx, nodes) => {
+            this._svg_text_overflow_ellipsis(
+                nodes[idx],
+                this.figure_size.width,
+                title_padding_left
+            );
+        });
+    }
+
+    /**
+     * Component to realize the css property text-overflow: ellipsis for svg text elements
+     * @param {DOMElement} text or tspan DOM element
+     * @param {number} width - Max width for the text/tspan element
+     * @param {number} padding - Padding for the text/tspan element
+     */
+    _svg_text_overflow_ellipsis(node, width, padding) {
+        let length = node.getComputedTextLength();
+        if (length <= width - padding) return;
+
+        const node_sel = d3.select(node);
+        let text = node_sel.text();
+        d3.select(node.parentNode)
+            .selectAll("title")
+            .data(d => [text])
+            .join("title")
+            .text(d => d)
+            .classed("svg_text_tooltip", true);
+
+        while (length > width - padding && text.length > 0) {
+            text = text.slice(0, -1);
+            node_sel.text(text + "...");
+            length = node.getComputedTextLength();
+        }
+        node_sel.attr("x", padding).attr("text-anchor", "left");
     }
 
     get_scale_render_function() {

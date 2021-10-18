@@ -236,9 +236,7 @@
           width: $single-column-mega-menu-width;
 
           li a {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            @include ellipsis-text-overflow;
           }
         }
 

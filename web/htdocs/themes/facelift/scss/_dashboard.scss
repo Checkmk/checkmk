@@ -96,6 +96,7 @@ div.dashlet {
 
   g.title a text,
   div.title a {
+    @include ellipsis-text-overflow;
     color: $font-color;
     text-decoration: none;
 

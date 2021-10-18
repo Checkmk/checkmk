@@ -17,6 +17,12 @@ Sample agent output:
 """
 
 from itertools import groupby
+from typing import Mapping, Sequence
+
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Sequence[Mapping[str, str]]
 
 
 def _translate(name, value):
@@ -60,22 +66,43 @@ def _pairify(line):
         return None
 
 
-def _parse_lnx_block_devices(info):
+def parse_lnx_block_devices(string_table: StringTable) -> Section:
     """Turn lines containing device names and attributes into a list of dicts
     containing those values for each device"""
     # translate list of encoded lines into list of key-value-pairs
-    lines = (line for li in info for line in (_pairify(li),) if line)
+    lines = (line for li in string_table for line in (_pairify(li),) if line)
     # create a list of chunks of key-value-pairs preceded by a `fsnode` entry
     it = iter([list(pairs) for _, pairs in groupby(lines, lambda pair: pair[0] == "fsnode")])
     # return a list of dicts created from the chunks
     return [dict((name, *attrs)) for (*_, name), attrs in zip(it, it)]
 
 
-def inv_lnx_block_devices(info, inventory_tree):
-    """Registers items extracted from @info on @inventory_tree"""
-    inventory_tree.get_list("hardware.storage.disks:").extend(_parse_lnx_block_devices(info))
+register.agent_section(
+    name="lnx_block_devices",
+    parse_function=parse_lnx_block_devices,
+)
 
 
-inv_info["lnx_block_devices"] = {
-    "inv_function": inv_lnx_block_devices,
-}
+def inventory_lnx_block_devices(section: Section) -> InventoryResult:
+    path = ["hardware", "storage", "disks"]
+    for row in section:
+        yield TableRow(
+            path=path,
+            key_columns={
+                "fsnode": row["fsnode"],
+            },
+            inventory_columns={
+                "firmware": row["firmware"],
+                "product": row["product"],
+                "serial": row["serial"],
+                "signature": row["signature"],
+                "size": row["size"],
+            },
+            status_columns={},
+        )
+
+
+register.inventory_plugin(
+    name="lnx_block_devices",
+    inventory_function=inventory_lnx_block_devices,
+)

@@ -6,14 +6,17 @@
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.inventory_lnx_block_devices import (
+    inventory_lnx_block_devices,
+    parse_lnx_block_devices,
+)
 
 
 @pytest.mark.parametrize(
-    "info, inventory_data",
+    "string_table, expected_result",
     [
+        ([], []),
         (
             [
                 ["|device|/sys/devices/pci0000:00/0000:00:1d.4/0000:3b:00.0/nvme/nvme0/nvme0n1|"],
@@ -28,18 +31,22 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
                 TableRow(
                     path=["hardware", "storage", "disks"],
                     key_columns={
-                        "firmware": "80002111",
                         "fsnode": "/sys/devices/pci0000:00/0000:00:1d.4/0000:3b:00.0/nvme/nvme0/nvme0n1",
+                    },
+                    inventory_columns={
+                        "firmware": "80002111",
                         "product": "PC601 NVMe SK hynix 512GB",
                         "serial": "AJ98N635810808T29",
                         "signature": "ace42e00-955b-21fd-2ee4-ac0000000001",
                         "size": 512110190592,
                     },
-                )
+                    status_columns={},
+                ),
             ],
         ),
     ],
 )
-def test_inv_lnx_block_devices(fix_register, info, inventory_data):
-    plugin = fix_register.inventory_plugins[InventoryPluginName("lnx_block_devices")]
-    assert list(plugin.inventory_function(info)) == inventory_data
+def test_lnx_block_devices(string_table, expected_result):
+    assert (
+        list(inventory_lnx_block_devices(parse_lnx_block_devices(string_table))) == expected_result
+    )

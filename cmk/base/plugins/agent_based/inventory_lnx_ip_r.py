@@ -61,11 +61,11 @@ def inventory_lnx_ip_r(section: Section) -> InventoryResult:
             path=path,
             key_columns={
                 "target": route["target"],
+                "gateway": route.get("gateway"),
             },
             inventory_columns={
                 "type": route["type"],
                 "device": route.get("device"),
-                "gateway": route.get("gateway"),
             },
             status_columns={},
         )

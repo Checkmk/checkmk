@@ -47,10 +47,10 @@ def inventory_solaris_routes(section: Section) -> InventoryResult:
             path=path,
             key_columns={
                 "target": route["target"],
+                "gateway": route["gateway"],
             },
             inventory_columns={
                 "device": route.get("device"),
-                "gateway": route["gateway"],
             },
             status_columns={},
         )

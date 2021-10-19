@@ -41,10 +41,10 @@ from cmk.base.plugins.agent_based.inventory_solaris_routes import (
                     path=["networking", "routes"],
                     key_columns={
                         "target": "0.0.0.0/0",
+                        "gateway": "1.2.3.4",
                     },
                     inventory_columns={
                         "device": None,
-                        "gateway": "1.2.3.4",
                     },
                     status_columns={},
                 ),
@@ -52,10 +52,10 @@ from cmk.base.plugins.agent_based.inventory_solaris_routes import (
                     path=["networking", "routes"],
                     key_columns={
                         "target": "0.0.0.0/0",
+                        "gateway": "1.2.3.5",
                     },
                     inventory_columns={
                         "device": "aggr2320001",
-                        "gateway": "1.2.3.5",
                     },
                     status_columns={},
                 ),
@@ -63,10 +63,10 @@ from cmk.base.plugins.agent_based.inventory_solaris_routes import (
                     path=["networking", "routes"],
                     key_columns={
                         "target": "1.0.0.0",
+                        "gateway": "1.2.3.8",
                     },
                     inventory_columns={
                         "device": "aggr3",
-                        "gateway": "1.2.3.8",
                     },
                     status_columns={},
                 ),
@@ -74,10 +74,10 @@ from cmk.base.plugins.agent_based.inventory_solaris_routes import (
                     path=["networking", "routes"],
                     key_columns={
                         "target": "1.2.30.0",
+                        "gateway": "1.2.30.6",
                     },
                     inventory_columns={
                         "device": "aggr3",
-                        "gateway": "1.2.30.6",
                     },
                     status_columns={},
                 ),
@@ -85,10 +85,10 @@ from cmk.base.plugins.agent_based.inventory_solaris_routes import (
                     path=["networking", "routes"],
                     key_columns={
                         "target": "1.2.31.0",
+                        "gateway": "1.2.31.7",
                     },
                     inventory_columns={
                         "device": "aggr2",
-                        "gateway": "1.2.31.7",
                     },
                     status_columns={},
                 ),
@@ -96,10 +96,10 @@ from cmk.base.plugins.agent_based.inventory_solaris_routes import (
                     path=["networking", "routes"],
                     key_columns={
                         "target": "127.0.0.1",
+                        "gateway": "127.0.0.1",
                     },
                     inventory_columns={
                         "device": "lo0",
-                        "gateway": "127.0.0.1",
                     },
                     status_columns={},
                 ),

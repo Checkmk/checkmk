@@ -9,11 +9,10 @@ from typing import Mapping, NamedTuple
 from cmk.utils.type_defs import CheckPluginName, Item
 
 from cmk.base.check_utils import LegacyCheckParameters
-from cmk.base.discovered_labels import ServiceLabel
 
 
 class AutocheckEntry(NamedTuple):
     check_plugin_name: CheckPluginName
     item: Item
-    discovered_parameters: LegacyCheckParameters
-    service_labels: Mapping[str, ServiceLabel]
+    parameters: LegacyCheckParameters
+    service_labels: Mapping[str, str]

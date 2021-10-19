@@ -108,9 +108,12 @@ class AutochecksManager:
                     get_effective_hostname(hostname, service_name),
                     autocheck_entry.check_plugin_name,
                     autocheck_entry.item,
-                    autocheck_entry.discovered_parameters,
+                    autocheck_entry.parameters,
                 ),
-                service_labels=autocheck_entry.service_labels,
+                service_labels={
+                    name: ServiceLabel(name, value)
+                    for name, value in autocheck_entry.service_labels.items()
+                },
             )
 
     def discovered_labels_of(
@@ -133,7 +136,7 @@ class AutochecksManager:
                     get_service_description(
                         hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
                     )
-                ] = autocheck_entry.service_labels
+                ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
             except Exception:
                 continue  # ignore
 
@@ -202,11 +205,8 @@ class AutochecksManager:
                 AutocheckEntry(
                     check_plugin_name=plugin_name,
                     item=item,
-                    discovered_parameters=entry["parameters"],
-                    service_labels={
-                        name: ServiceLabel(name, value)
-                        for name, value in entry["service_labels"].items()
-                    },
+                    parameters=entry["parameters"],
+                    service_labels=entry["service_labels"],
                 )
             )
 
@@ -299,8 +299,8 @@ def _parse_autocheck_service(
         check_plugin_name=autocheck_entry.check_plugin_name,
         item=autocheck_entry.item,
         description=description,
-        parameters=autocheck_entry.discovered_parameters,
-        service_labels=autocheck_entry.service_labels,
+        parameters=autocheck_entry.parameters,
+        service_labels={n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()},
     )
 
 

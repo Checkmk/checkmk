@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Deal with all sorts of legacy aand invalid formats of autochecks"""
 
-from typing import Dict, Iterable, Sequence, Tuple, Union
+from typing import Dict, Mapping, Sequence, Tuple, Union
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
 from cmk.base.check_utils import AutocheckService
-from cmk.base.discovered_labels import ServiceLabel
 
 from .utils import AutocheckEntry
 
@@ -26,10 +25,8 @@ def parse_autocheck_entry(entry: Union[Tuple, Dict]) -> AutocheckEntry:
     return AutocheckEntry(
         check_plugin_name=_parse_pre_20_check_plugin_name(check_plugin_name),
         item=_parse_pre_20_item(item),
-        discovered_parameters=_parse_parameters(parameters),
-        service_labels={
-            l.name: l for l in _parse_discovered_service_label_from_dict(dict_service_labels)
-        },
+        parameters=_parse_parameters(parameters),
+        service_labels=_parse_discovered_service_label_from_dict(dict_service_labels),
     )
 
 
@@ -76,13 +73,11 @@ def _parse_parameters(parameters: object) -> LegacyCheckParameters:
 
 def _parse_discovered_service_label_from_dict(
     dict_service_labels: object,
-) -> Iterable[ServiceLabel]:
-    if not isinstance(dict_service_labels, dict):
-        return
-    yield from (
-        ServiceLabel(str(key), str(value))
-        for key, value in dict_service_labels.items()
-        if key is not None
+) -> Mapping[str, str]:
+    return (
+        {str(key): str(value) for key, value in dict_service_labels.items()}
+        if isinstance(dict_service_labels, dict)
+        else {}
     )
 
 

@@ -207,7 +207,7 @@ def update_service_info(config_cache, hostnames):
 
     rename_journal = {}
     for hostname in hostnames:
-        for service in cmk.base.autochecks.parse_autochecks_file(
+        for service in cmk.base.autochecks.parse_autochecks_services(
             hostname,
             config.service_description,
             check_variables,

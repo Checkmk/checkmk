@@ -282,7 +282,7 @@ class UpdateConfig:
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)
             try:
-                autochecks = cmk.base.autochecks.parse_autochecks_file(
+                autochecks = cmk.base.autochecks.parse_autochecks_services(
                     hostname,
                     cmk.base.config.service_description,
                     check_variables,
@@ -300,7 +300,7 @@ class UpdateConfig:
                 continue
 
             autochecks = [self._fix_service(s, all_rulesets, hostname) for s in autochecks]
-            cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
+            cmk.base.autochecks.save_autochecks_services(hostname, autochecks)
 
         if failed_hosts:
             msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)

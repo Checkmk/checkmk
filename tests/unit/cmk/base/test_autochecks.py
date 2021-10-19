@@ -156,13 +156,13 @@ def test_manager_get_autochecks_of(
     assert all(isinstance(s.description, str) for s in result)
 
 
-def test_parse_autochecks_file_not_existing():
-    assert autochecks.parse_autochecks_file(HostName("host"), config.service_description) == []
+def test_parse_autochecks_services_not_existing():
+    assert autochecks.parse_autochecks_services(HostName("host"), config.service_description) == []
 
 
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("autochecks_content", ["@", "[abc123]"])
-def test_parse_autochecks_file_raises(
+def test_parse_autochecks_services_raises(
     fix_plugin_legacy,
     test_config: config.ConfigCache,
     autochecks_content: str,
@@ -172,7 +172,7 @@ def test_parse_autochecks_file_raises(
         f.write(autochecks_content)
 
     with pytest.raises(MKGeneralException):
-        autochecks.parse_autochecks_file(
+        autochecks.parse_autochecks_services(
             HostName("host"),
             config.service_description,
             fix_plugin_legacy.check_variables,
@@ -255,7 +255,7 @@ def test_parse_autochecks_file_raises(
         ),
     ],
 )
-def test_parse_autochecks_file(
+def test_parse_autochecks_services(
     fix_plugin_legacy,
     test_config: config.ConfigCache,
     autochecks_content: str,
@@ -265,7 +265,7 @@ def test_parse_autochecks_file(
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
 
-    parsed = autochecks.parse_autochecks_file(
+    parsed = autochecks.parse_autochecks_services(
         HostName("host"),
         config.service_description,
         fix_plugin_legacy.check_variables,
@@ -281,13 +281,13 @@ def test_parse_autochecks_file(
 
 def test_has_autochecks():
     assert autochecks.has_autochecks(HostName("host")) is False
-    autochecks.save_autochecks_file(HostName("host"), [])
+    autochecks.save_autochecks_services(HostName("host"), [])
     assert autochecks.has_autochecks(HostName("host")) is True
 
 
 def test_remove_autochecks_file():
     assert autochecks.has_autochecks(HostName("host")) is False
-    autochecks.save_autochecks_file(HostName("host"), [])
+    autochecks.save_autochecks_services(HostName("host"), [])
     assert autochecks.has_autochecks(HostName("host")) is True
     autochecks.remove_autochecks_file(HostName("host"))
     assert autochecks.has_autochecks(HostName("host")) is False
@@ -329,8 +329,8 @@ def test_remove_autochecks_file():
         ),
     ],
 )
-def test_save_autochecks_file(items: Sequence[AutocheckService], expected_content: str) -> None:
-    autochecks.save_autochecks_file(HostName("host"), items)
+def test_save_autochecks_services(items: Sequence[AutocheckService], expected_content: str) -> None:
+    autochecks.save_autochecks_services(HostName("host"), items)
 
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("r", encoding="utf-8") as f:

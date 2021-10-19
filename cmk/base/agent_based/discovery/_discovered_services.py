@@ -138,7 +138,7 @@ def _load_existing_services(
     *,
     host_name: HostName,
 ) -> Sequence[AutocheckService]:
-    return autochecks.parse_autochecks_file(host_name, config.service_description)
+    return autochecks.parse_autochecks_services(host_name, config.service_description)
 
 
 # Create a table of autodiscovered services of a host. Do not save

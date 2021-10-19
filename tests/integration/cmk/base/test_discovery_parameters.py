@@ -66,7 +66,7 @@ register.check_plugin(
     web.discover_services(host_name)
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
+    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
     for service in services:
         if str(service.check_plugin_name) == "test_check_1":
             assert service.item == "Parameters({'default': 42})"
@@ -83,7 +83,7 @@ register.check_plugin(
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     web.discover_services(host_name)
-    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
+    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
     for service in services:
         if str(service.check_plugin_name) == "test_check_1":
             assert service.item == "Parameters({'default': 42, 'levels': (1, 2)})"
@@ -145,7 +145,7 @@ register.check_plugin(
     web.discover_services(host_name)
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
+    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
 
     for service in services:
         if str(service.check_plugin_name) == "test_check_2":
@@ -163,7 +163,7 @@ register.check_plugin(
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     web.discover_services(host_name)
-    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
+    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
     for service in services:
         if str(service.check_plugin_name) == "test_check_2":
             assert service.item == (

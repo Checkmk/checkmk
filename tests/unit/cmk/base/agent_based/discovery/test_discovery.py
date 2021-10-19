@@ -893,7 +893,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             arg_only_new=False,
         )
 
-    services = autochecks.parse_autochecks_file(testhost, config.service_description)
+    services = autochecks.parse_autochecks_services(testhost, config.service_description)
     found = {
         (s.check_plugin_name, s.item): {
             label.name: label.value for label in s.service_labels.values()

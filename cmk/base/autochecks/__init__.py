@@ -150,7 +150,7 @@ class AutochecksManager:
         return self._raw_autochecks_cache[hostname]
 
     # TODO: use store.ObjectStore
-    # TODO: Common code with parse_autochecks_file? Cleanup.
+    # TODO: Common code with parse_autochecks_services? Cleanup.
     def _read_raw_autochecks_uncached(
         self,
         hostname: HostName,
@@ -257,7 +257,7 @@ def _load_raw_autochecks(
         )
 
 
-def parse_autochecks_file(
+def parse_autochecks_services(
     hostname: HostName,
     service_description: GetServiceDescription,
     check_variables: Optional[Dict[str, Any]] = None,
@@ -314,12 +314,12 @@ def set_autochecks_of_real_hosts(
     service_description: GetServiceDescription,
 ) -> None:
     # write new autochecks file for that host
-    save_autochecks_file(
+    save_autochecks_services(
         hostname,
         _consolidate_autochecks_of_real_hosts(
             hostname,
             new_services_with_nodes,
-            parse_autochecks_file(hostname, service_description),
+            parse_autochecks_services(hostname, service_description),
         ),
     )
 
@@ -354,7 +354,7 @@ def set_autochecks_of_cluster(
     for node in nodes:
         new_autochecks = [
             existing
-            for existing in parse_autochecks_file(node, service_description)
+            for existing in parse_autochecks_services(node, service_description)
             if hostname != host_of_clustered_service(node, existing.description)
         ] + [
             discovered
@@ -363,7 +363,7 @@ def set_autochecks_of_cluster(
         ]
 
         # write new autochecks file for that host
-        save_autochecks_file(node, deduplicate_autochecks(new_autochecks))
+        save_autochecks_services(node, deduplicate_autochecks(new_autochecks))
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
@@ -371,7 +371,7 @@ def set_autochecks_of_cluster(
     remove_autochecks_file(hostname)
 
 
-def save_autochecks_file(
+def save_autochecks_services(
     hostname: HostName,
     services: Sequence[AutocheckService],
 ) -> None:
@@ -398,7 +398,7 @@ def remove_autochecks_of_host(
     host_of_clustered_service: HostOfClusteredService,
     service_description: GetServiceDescription,
 ) -> int:
-    existing_services = parse_autochecks_file(hostname, service_description)
+    existing_services = parse_autochecks_services(hostname, service_description)
     new_services = [
         existing
         for existing in existing_services
@@ -409,5 +409,5 @@ def remove_autochecks_of_host(
         )
     ]
 
-    save_autochecks_file(hostname, new_services)
+    save_autochecks_services(hostname, new_services)
     return len(existing_services) - len(new_services)

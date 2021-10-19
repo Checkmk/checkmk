@@ -13,6 +13,7 @@
 #include <ostream>
 #include <utility>
 
+#include "ChronoUtils.h"
 #include "Logger.h"
 #include "Poller.h"
 
@@ -102,14 +103,18 @@ InputBuffer::Result InputBuffer::readRequest() {
                 if (rd == Result::timeout) {
                     if (query_started) {
                         Informational(_logger)
-                            << "Timeout of " << _query_timeout.count()
+                            << "Timeout of "
+                            << mk::ticks<std::chrono::milliseconds>(
+                                   _query_timeout)
                             << " ms exceeded while reading query";
                         return Result::timeout;
                     }
                     // Check if we exceeded the maximum time between two queries
                     if (timeout_reached(start_of_idle, _idle_timeout)) {
                         Informational(_logger)
-                            << "Idle timeout of " << _idle_timeout.count()
+                            << "Idle timeout of "
+                            << mk::ticks<std::chrono::milliseconds>(
+                                   _idle_timeout)
                             << " ms exceeded. Going to close connection.";
                         return Result::timeout;
                     }

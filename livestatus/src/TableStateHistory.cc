@@ -863,11 +863,9 @@ void TableStateHistory::process(
     Query *query, std::chrono::system_clock::duration query_timeframe,
     HostServiceState *hs_state) {
     hs_state->_duration = hs_state->_until - hs_state->_from;
-    auto duration_secs =
-        std::chrono::duration<double>(hs_state->_duration).count();
-    auto query_timeframe_secs =
-        std::chrono::duration<double>{query_timeframe}.count();
-    hs_state->_duration_part = duration_secs / query_timeframe_secs;
+    hs_state->_duration_part =
+        mk::ticks<std::chrono::duration<double>>(hs_state->_duration) /
+        mk::ticks<std::chrono::duration<double>>(query_timeframe);
 
     hs_state->_duration_unmonitored = 0s;
     hs_state->_duration_part_unmonitored = 0;

@@ -31,6 +31,11 @@ from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item,
 from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
 from cmk.base.discovered_labels import ServiceLabel
 
+from .migration import (
+    deduplicate_autochecks,
+    parse_pre_16_tuple_autocheck_entry,
+    parse_pre_20_check_plugin_name,
+)
 from .utils import AutocheckEntry
 
 ComputeCheckParameters = Callable[
@@ -289,15 +294,12 @@ def _parse_autocheck_entry(
     service_description: GetServiceDescription,
 ) -> Optional[AutocheckService]:
     if isinstance(entry, tuple):
-        check_plugin_name, item, parameters = _parse_pre_16_tuple_autocheck_entry(entry)
+        check_plugin_name, item, parameters = parse_pre_16_tuple_autocheck_entry(entry)
         dict_service_labels: object = {}
     else:
         check_plugin_name, item, parameters, dict_service_labels = _parse_dict_autocheck_entry(
             entry
         )
-
-    if not isinstance(check_plugin_name, str):
-        raise Exception("Invalid autocheck: Wrong check plugin type: %r" % check_plugin_name)
 
     if isinstance(item, (int, float)):
         # NOTE: We exclude complex here. :-)
@@ -305,12 +307,7 @@ def _parse_autocheck_entry(
     elif not isinstance(item, (str, type(None))):
         raise Exception("Invalid autocheck: Wrong item type: %r" % item)
 
-    try:
-        # Pre 1.7 check plugins had dots in the check plugin name. With the new check API in
-        # 1.7 they are replaced by '_', renaming e.g. 'cpu.loads' to 'cpu_loads'.
-        plugin_name = CheckPluginName(maincheckify(check_plugin_name))
-    except Exception:
-        raise Exception("Invalid autocheck: Wrong check plugin name: %r" % check_plugin_name)
+    plugin_name = parse_pre_20_check_plugin_name(check_plugin_name)
 
     if parameters is not None and not isinstance(parameters, (dict, tuple, list, str)):
         # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy). No idea
@@ -331,15 +328,6 @@ def _parse_autocheck_entry(
             l.name: l for l in _parse_discovered_service_label_from_dict(dict_service_labels)
         },
     )
-
-
-def _parse_pre_16_tuple_autocheck_entry(entry: Tuple) -> Tuple[object, object, object]:
-    try:
-        # drop hostname, legacy format with host in first column
-        raw_name, raw_item, raw_params = entry[1:] if len(entry) == 4 else entry
-    except ValueError as exc:
-        raise ValueError(f"Invalid autocheck: {entry!r}") from exc
-    return raw_name, raw_item, raw_params
 
 
 def _parse_dict_autocheck_entry(entry: Dict) -> Tuple[object, object, object, object]:
@@ -416,27 +404,12 @@ def set_autochecks_of_cluster(
         ]
 
         # write new autochecks file for that host
-        save_autochecks_file(node, _deduplicate_autochecks(new_autochecks))
+        save_autochecks_file(node, deduplicate_autochecks(new_autochecks))
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
     remove_autochecks_file(hostname)
-
-
-def _deduplicate_autochecks(autochecks: Sequence[AutocheckService]) -> Sequence[AutocheckService]:
-    """Cleanup duplicates that versions pre 1.6.0p8 may have introduced in the autochecks file
-
-    The first service is kept:
-
-    >>> _deduplicate_autochecks([
-    ...    AutocheckService(CheckPluginName('a'), None, "desctiption 1", None),
-    ...    AutocheckService(CheckPluginName('a'), None, "description 2", None),
-    ... ])[0].description
-    'desctiption 1'
-
-    """
-    return list({a.id(): a for a in reversed(autochecks)}.values())
 
 
 def save_autochecks_file(

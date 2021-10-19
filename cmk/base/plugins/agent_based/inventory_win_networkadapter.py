@@ -17,22 +17,28 @@
 # Subnet: 255.255.255.0
 # DefaultGateway: 192.168.178.1
 
+from typing import Dict, List, Mapping, Sequence
 
-def inv_win_networkadapter(info):
-    node = inv_tree_list("hardware.nwadapter:")
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Sequence[Mapping]
+
+
+def parse_win_networkadapter(string_table: StringTable) -> Section:
+    adapters: List[Mapping] = []
     first_varname = None
-    array = {}
-    addrtypes = {}
+    array: Dict = {}
+    addrtypes: Dict = {}
 
-    for line in info:
+    for line in string_table:
         # return 'lost' double-colons back
-        if len(line) > 2:
-            line = [line[0], ":".join(line[1:])]
+        if len(line) < 2:
+            continue
 
-        # parse and kill leading/trailing spaces
-        varname, value = line
-        varname = re.sub(" *", "", varname)
-        value = re.sub("^ ", "", value)
+        stripped_line = [w.strip() for w in line]
+        varname = stripped_line[0]
+        value = ":".join(line[1:])
 
         # empty? skip!
         if not value:
@@ -42,7 +48,7 @@ def inv_win_networkadapter(info):
         # if we meet varname again, then we assume that this
         # is new instance
         if first_varname and varname == first_varname:
-            node.append(array)
+            adapters.append(array)
             array = {}
             addrtypes = {}
 
@@ -72,9 +78,42 @@ def inv_win_networkadapter(info):
         for addrtype in addrtypes:
             array[addrtype] = ", ".join(addrtypes[addrtype])
 
-    node.append(array)
+    # Append last array
+    if array:
+        adapters.append(array)
+    return adapters
 
 
-inv_info["win_networkadapter"] = {
-    "inv_function": inv_win_networkadapter,
-}
+register.agent_section(
+    name="win_networkadapter",
+    parse_function=parse_win_networkadapter,
+)
+
+
+def inventory_win_networkadapter(section: Section) -> InventoryResult:
+    path = ["hardware", "nwadapter"]
+    for adapter in sorted(section, key=lambda a: a.get("name", "")):
+        if "name" in adapter:
+            yield TableRow(
+                path=path,
+                key_columns={
+                    "name": adapter["name"],
+                },
+                inventory_columns={
+                    "type": adapter.get("type"),
+                    "macaddress": adapter.get("macaddress"),
+                    "speed": adapter.get("speed"),
+                    "gateway": adapter.get("gateway"),
+                    "ipv4_address": adapter.get("ipv4_address"),
+                    "ipv6_address": adapter.get("ipv6address"),
+                    "ipv4_subnet": adapter.get("ipv4_subnet"),
+                    "ipv6_subnet": adapter.get("ipv6subnet"),
+                },
+                status_columns={},
+            )
+
+
+register.inventory_plugin(
+    name="win_networkadapter",
+    inventory_function=inventory_win_networkadapter,
+)

@@ -284,15 +284,35 @@ def parse_autochecks_file(
         service
         for entry in raw_autochecks
         if isinstance(entry, (tuple, dict))
-        and (service := _parse_autocheck_entry(hostname, entry, service_description)) is not None
+        and (service := _parse_autocheck_service(hostname, entry, service_description)) is not None
     ]
 
 
-def _parse_autocheck_entry(
+def _parse_autocheck_service(
     hostname: HostName,
     entry: Union[Tuple, Dict],
     service_description: GetServiceDescription,
 ) -> Optional[AutocheckService]:
+
+    autocheck_entry = _parse_autocheck_entry(entry)
+
+    try:
+        description = service_description(
+            hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+        )
+    except Exception:
+        return None  # ignore
+
+    return AutocheckService(
+        check_plugin_name=autocheck_entry.check_plugin_name,
+        item=autocheck_entry.item,
+        description=description,
+        parameters=autocheck_entry.discovered_parameters,
+        service_labels=autocheck_entry.service_labels,
+    )
+
+
+def _parse_autocheck_entry(entry: Union[Tuple, Dict]) -> AutocheckEntry:
     if isinstance(entry, tuple):
         check_plugin_name, item, parameters = parse_pre_16_tuple_autocheck_entry(entry)
         dict_service_labels: object = {}
@@ -314,16 +334,10 @@ def _parse_autocheck_entry(
         # what else it could be (LegacyCheckParameters is quite pointless).
         raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
 
-    try:
-        description = service_description(hostname, plugin_name, item)
-    except Exception:
-        return None  # ignore
-
-    return AutocheckService(
+    return AutocheckEntry(
         check_plugin_name=plugin_name,
         item=item,
-        description=description,
-        parameters=parameters,
+        discovered_parameters=parameters,
         service_labels={
             l.name: l for l in _parse_discovered_service_label_from_dict(dict_service_labels)
         },

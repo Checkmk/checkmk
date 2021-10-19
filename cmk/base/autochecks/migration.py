@@ -21,13 +21,13 @@ def parse_pre_20_check_plugin_name(raw_name: object) -> CheckPluginName:
         raise TypeError(f"Invalid autocheck: Check plugin type: {raw_name!r}")
 
 
-def parse_pre_16_tuple_autocheck_entry(entry: Tuple) -> Tuple[object, object, object]:
+def parse_pre_16_tuple_autocheck_entry(entry: Tuple) -> Tuple[object, object, object, object]:
     try:
         # drop hostname, legacy format with host in first column
         raw_name, raw_item, raw_params = entry[1:] if len(entry) == 4 else entry
     except ValueError as exc:
         raise ValueError(f"Invalid autocheck: {entry!r}") from exc
-    return raw_name, raw_item, raw_params
+    return raw_name, raw_item, raw_params, {}
 
 
 def parse_pre_20_item(item: object) -> Item:

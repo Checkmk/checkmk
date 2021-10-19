@@ -315,13 +315,11 @@ def _parse_autocheck_service(
 
 
 def _parse_autocheck_entry(entry: Union[Tuple, Dict]) -> AutocheckEntry:
-    if isinstance(entry, tuple):
-        check_plugin_name, item, parameters = parse_pre_16_tuple_autocheck_entry(entry)
-        dict_service_labels: object = {}
-    else:
-        check_plugin_name, item, parameters, dict_service_labels = _parse_dict_autocheck_entry(
-            entry
-        )
+    check_plugin_name, item, parameters, dict_service_labels = (
+        parse_pre_16_tuple_autocheck_entry(entry)
+        if isinstance(entry, tuple)
+        else _parse_dict_autocheck_entry(entry)
+    )
 
     return AutocheckEntry(
         check_plugin_name=parse_pre_20_check_plugin_name(check_plugin_name),

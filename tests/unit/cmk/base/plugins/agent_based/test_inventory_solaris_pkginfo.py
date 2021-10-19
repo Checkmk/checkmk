@@ -50,7 +50,7 @@ _INSTALLED_DATE = 123
                 TableRow(
                     path=["software", "packages"],
                     key_columns={
-                        "name": "  SUNWzoneu -   Solaris Zones (Usr)",
+                        "name": "SUNWzoneu - Solaris Zones (Usr)",
                     },
                     inventory_columns={
                         "package_type": "system",
@@ -65,7 +65,7 @@ _INSTALLED_DATE = 123
                 TableRow(
                     path=["software", "packages"],
                     key_columns={
-                        "name": "  SUNWzyd -   ZyDAS ZD1211 USB 802.11b/g Wireless Driver",
+                        "name": "SUNWzyd - ZyDAS ZD1211 USB 802.11b/g Wireless Driver",
                     },
                     inventory_columns={
                         "package_type": "system",

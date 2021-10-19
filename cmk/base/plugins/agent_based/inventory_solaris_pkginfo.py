@@ -36,7 +36,6 @@ Section = Sequence[Mapping]
 def parse_solaris_pkginfo(string_table: StringTable) -> Section:
     # TODO Clean up this awful parser:
     # - make package fields explicit - similar to lnx_packages.
-    # - strip fields
     # - type hints will also be better
 
     entry: Dict = {}
@@ -50,13 +49,9 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
 
     parsed_packages = []
     for line in string_table:
-        # key / value declaration is clear
-        if len(line) == 2:
-            key, value = line
-        else:
-            # in any other case the first element is the key an the rest will be joined to value
-            key = line[0]
-            value = " ".join(line[1:])
+        stripped_line = [w.strip() for w in line]
+        key = stripped_line[0]
+        value = " ".join(stripped_line[1:])
 
         if key == "PKGINST":
             # append the dict wich was build before to paclist
@@ -71,9 +66,7 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
             # 'try, except' blog is necessary because date conversion may fail because of non en_US
             # locale settings on the remote solaris server
             try:
-                install_date_epoch = int(
-                    time.mktime(time.strptime(value.strip(), "%b %d %Y %H %M"))
-                )
+                install_date_epoch = int(time.mktime(time.strptime(value, "%b %d %Y %H %M")))
                 entry.update({"install_date": install_date_epoch})
             except Exception:
                 pass
@@ -81,7 +74,7 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
             # iterate over translation dict and update entries
             for tkey in translation_dict:
                 if key == tkey:
-                    entry.update({translation_dict[tkey]: value.strip()})
+                    entry.update({translation_dict[tkey]: value})
     if entry:
         parsed_packages.append(entry)
     return parsed_packages

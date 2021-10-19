@@ -23,11 +23,23 @@
 #                   4 executables
 #                   1 setuid/setgid executables
 #                8862 blocks used (approx)
-#
+
+import time
+from typing import Dict, Mapping, Sequence
+
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Sequence[Mapping]
 
 
-def inv_solaris_pkginfo(info):
-    entry = {}
+def parse_solaris_pkginfo(string_table: StringTable) -> Section:
+    # TODO Clean up this awful parser:
+    # - make package fields explicit - similar to lnx_packages.
+    # - strip fields
+    # - type hints will also be better
+
+    entry: Dict = {}
     translation_dict = {
         "ARCH": "arch",
         "CATEGORY": "package_type",
@@ -37,7 +49,7 @@ def inv_solaris_pkginfo(info):
     }
 
     parsed_packages = []
-    for line in info:
+    for line in string_table:
         # key / value declaration is clear
         if len(line) == 2:
             key, value = line
@@ -45,6 +57,7 @@ def inv_solaris_pkginfo(info):
             # in any other case the first element is the key an the rest will be joined to value
             key = line[0]
             value = " ".join(line[1:])
+
         if key == "PKGINST":
             # append the dict wich was build before to paclist
             if entry:  # when the loop is executed for the first time, entry is empty
@@ -71,11 +84,36 @@ def inv_solaris_pkginfo(info):
                     entry.update({translation_dict[tkey]: value.strip()})
     if entry:
         parsed_packages.append(entry)
-
-    paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name", "")))
+    return parsed_packages
 
 
-inv_info["solaris_pkginfo"] = {
-    "inv_function": inv_solaris_pkginfo,
-}
+register.agent_section(
+    name="solaris_pkginfo",
+    parse_function=parse_solaris_pkginfo,
+)
+
+
+def inventory_solaris_pkginfo(section: Section) -> InventoryResult:
+    path = ["software", "packages"]
+    for package in sorted(section, key=lambda r: r.get("name", "")):
+        yield TableRow(
+            path=path,
+            key_columns={
+                "name": package.get("name"),
+            },
+            inventory_columns={
+                "install_date": package.get("install_date"),
+                "arch": package.get("arch"),
+                "package_type": package.get("package_type"),
+                "summary": package.get("summary"),
+                "version": package.get("version"),
+                "vendor": package.get("vendor"),
+            },
+            status_columns={},
+        )
+
+
+register.inventory_plugin(
+    name="solaris_pkginfo",
+    inventory_function=inventory_solaris_pkginfo,
+)

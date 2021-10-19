@@ -8,7 +8,7 @@
 from typing import Sequence, Tuple
 
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
 from cmk.base.check_utils import AutocheckService
 
@@ -28,6 +28,23 @@ def parse_pre_16_tuple_autocheck_entry(entry: Tuple) -> Tuple[object, object, ob
     except ValueError as exc:
         raise ValueError(f"Invalid autocheck: {entry!r}") from exc
     return raw_name, raw_item, raw_params
+
+
+def parse_pre_20_item(item: object) -> Item:
+    if isinstance(item, (int, float)):
+        # NOTE: We exclude complex here. :-)
+        return str(int(item))
+    if item is None or isinstance(item, str):
+        return item
+    raise TypeError(f"Invalid autocheck: Item should be Optional[str]: {item!r}")
+
+
+def parse_parameters(parameters: object) -> LegacyCheckParameters:
+    # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
+    if parameters is None or isinstance(parameters, (dict, tuple, list, str)):
+        return parameters
+    # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
+    raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
 
 
 def deduplicate_autochecks(autochecks: Sequence[AutocheckService]) -> Sequence[AutocheckService]:

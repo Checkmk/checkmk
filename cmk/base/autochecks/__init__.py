@@ -33,8 +33,10 @@ from cmk.base.discovered_labels import ServiceLabel
 
 from .migration import (
     deduplicate_autochecks,
+    parse_parameters,
     parse_pre_16_tuple_autocheck_entry,
     parse_pre_20_check_plugin_name,
+    parse_pre_20_item,
 )
 from .utils import AutocheckEntry
 
@@ -321,23 +323,10 @@ def _parse_autocheck_entry(entry: Union[Tuple, Dict]) -> AutocheckEntry:
             entry
         )
 
-    if isinstance(item, (int, float)):
-        # NOTE: We exclude complex here. :-)
-        item = str(int(item))
-    elif not isinstance(item, (str, type(None))):
-        raise Exception("Invalid autocheck: Wrong item type: %r" % item)
-
-    plugin_name = parse_pre_20_check_plugin_name(check_plugin_name)
-
-    if parameters is not None and not isinstance(parameters, (dict, tuple, list, str)):
-        # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy). No idea
-        # what else it could be (LegacyCheckParameters is quite pointless).
-        raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
-
     return AutocheckEntry(
-        check_plugin_name=plugin_name,
-        item=item,
-        discovered_parameters=parameters,
+        check_plugin_name=parse_pre_20_check_plugin_name(check_plugin_name),
+        item=parse_pre_20_item(item),
+        discovered_parameters=parse_parameters(parameters),
         service_labels={
             l.name: l for l in _parse_discovered_service_label_from_dict(dict_service_labels)
         },

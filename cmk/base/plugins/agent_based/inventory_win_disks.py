@@ -37,22 +37,30 @@
 # SCSIPort                    : 2
 # SCSITargetId                : 0
 
+from typing import Any, Dict, List, Mapping, Sequence
 
-def inv_win_disks(info):
-    node = inv_tree_list("hardware.storage.disks:")
-    array = {}
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Sequence[Mapping[str, Any]]
+
+
+def parse_win_disks(string_table: StringTable) -> Section:
+    disks: List[Mapping[str, Any]] = []
+    array: Dict[str, Any] = {}
     first_varname = None
 
-    for line in info:
-        if len(line) > 2:
-            line = [line[0], ":".join(line[1:])]
-        varname, value = line
-        varname = re.sub(" *", "", varname)
-        value = re.sub("^ ", "", value)
+    for line in string_table:
+        if len(line) < 2:
+            continue
+
+        stripped_line = [w.strip() for w in line]
+        varname = stripped_line[0]
+        value = ":".join(stripped_line[1:])
 
         if first_varname and varname == first_varname:
             # Looks like we have a new instance
-            node.append(array)
+            disks.append(array)
             array = {}
 
         if not first_varname:
@@ -84,10 +92,46 @@ def inv_win_disks(info):
                 array["signature"] = int(value)
             else:
                 array["signature"] = 0
+
         array["local"] = True
-    node.append(array)
+
+    # Append the last array
+    if array:
+        disks.append(array)
+
+    return disks
 
 
-inv_info["win_disks"] = {
-    "inv_function": inv_win_disks,
-}
+register.agent_section(
+    name="win_disks",
+    parse_function=parse_win_disks,
+)
+
+
+def inventory_win_disks(section: Section) -> InventoryResult:
+    path = ["hardware", "storage", "disks"]
+    for disk in sorted(section, key=lambda d: d.get("fsnode", "")):
+        if "fsnode" in disk:
+            yield TableRow(
+                path=path,
+                key_columns={
+                    "fsnode": disk["fsnode"],
+                },
+                inventory_columns={
+                    "vendor": disk.get("vendor"),
+                    "bus": disk.get("bus"),
+                    "product": disk.get("product"),
+                    "serial": disk.get("serial"),
+                    "size": disk.get("size"),
+                    "type": disk.get("type"),
+                    "signature": disk.get("signature"),
+                    "local": disk.get("local"),
+                },
+                status_columns={},
+            )
+
+
+register.inventory_plugin(
+    name="win_disks",
+    inventory_function=inventory_win_disks,
+)

@@ -6,28 +6,60 @@
 
 import pytest  # type: ignore[import]
 from testlib import SpecialAgent  # type: ignore[import]
+from typing import Any, Mapping, Sequence
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({
-        'username': 'user',
-        'password': 'password',
-        'privilege_lvl': 'user'
-    }, ["-u", "user", "-p", "password", "-l", "user", "--ipmi-command", "freeipmi", "address"]),
-    ({
-        'username': 'user',
-        'ipmi_driver': 'driver',
-        'password': 'password',
-        'privilege_lvl': 'user'
-    }, [
-        "-u", "user", "-p", "password", "-l", "user", "--ipmi-command", "freeipmi", "-D", "driver",
-        "address"
-    ]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        pytest.param(
+            (
+                "freeipmi",
+                {
+                    "username": "user",
+                    "password": "password",
+                    "privilege_lvl": "user",
+                },
+            ),
+            [
+                "address",
+                "user",
+                "password",
+                "user",
+                "freeipmi",
+            ],
+            id="freeipmi with mandatory args only",
+        ),
+        pytest.param(
+            (
+                "freeipmi",
+                {
+                    "username": "user",
+                    "ipmi_driver": "driver",
+                    "password": "password",
+                    "privilege_lvl": "user",
+                },
+            ),
+            [
+                "address",
+                "user",
+                "password",
+                "user",
+                "freeipmi",
+                "--driver",
+                "driver",
+            ],
+            id="freeipmi with optional arg",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("config_load_all_checks")
-def test_ipmi_sensors_argument_parsing(params, expected_args):
+def test_ipmi_sensors_argument_parsing(
+    params: Mapping[str, Any],
+    expected_args: Sequence[str],
+) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_ipmi_sensors')
     arguments = agent.argument_func(params, "host", "address")

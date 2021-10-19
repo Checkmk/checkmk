@@ -6,31 +6,25 @@
 
 
 def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
-    if isinstance(params, dict):
-        params = 'freeipmi', params
-
     ipmi_command, options = params
     args = [
-        "-u",
+        ipaddress,
         options["username"],
-        "-p",
         options["password"],
-        "-l",
         options["privilege_lvl"],
-        "--ipmi-command",
         ipmi_command,
     ]
 
     for opt, what in [
-        ("-D", "ipmi_driver"),
-        ("-k", "BMC_key"),
-        ("--driver-type", "driver_type"),
-        ('--quiet-cache', "quiet_cache"),
-        ("--sdr-cache-recreate", "sdr_cache_recreate"),
-        ('--interpret-oem-data', "interpret_oem_data"),
-        ('--output-sensor-state', "output_sensor_state"),
-        ('--ignore-not-available-sensors', "output_sensor_thresholds"),
-        ('--output-sensor-thresholds', "ignore_not_available_sensors"),
+        ("--driver", "ipmi_driver"),
+        ("--driver_type", "driver_type"),
+        ("--key", "BMC_key"),
+        ("--quiet_cache", "quiet_cache"),
+        ("--sdr_cache_recreate", "sdr_cache_recreate"),
+        ("--interpret_oem_data", "interpret_oem_data"),
+        ("--output_sensor_state", "output_sensor_state"),
+        ("--ignore_not_available_sensors", "output_sensor_thresholds"),
+        ("--output_sensor_thresholds", "ignore_not_available_sensors"),
     ]:
         this_opt = options.get(what)
         if this_opt is None:
@@ -39,7 +33,6 @@ def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
         if not isinstance(this_opt, bool):
             args.append(this_opt)
 
-    args.append(ipaddress)
     return args
 
 

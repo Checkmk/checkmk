@@ -47,6 +47,7 @@ from cmk.gui.valuespec import (
     TextUnicode,
     Transform,
     Tuple,
+    TextInput,
 )
 
 
@@ -1231,16 +1232,73 @@ def _special_agents_ipmi_sensors_transform_ipmi_sensors(params):
 def _special_agents_ipmi_sensors_vs_freeipmi():
     return Dictionary(
         elements=_special_agents_ipmi_sensors_vs_ipmi_common_elements() + [
-            ("ipmi_driver", TextAscii(title=_("IPMI driver"))),
-            ("driver_type", TextAscii(title=_("IPMI driver type"))),
-            ("BMC_key", TextAscii(title=_("BMC key"))),
-            ("quiet_cache", Checkbox(title=_("Quiet cache"), label=_("Enable"))),
-            ("sdr_cache_recreate", Checkbox(title=_("SDR cache recreate"), label=_("Enable"))),
-            ("interpret_oem_data", Checkbox(title=_("OEM data interpretation"), label=_("Enable"))),
-            ("output_sensor_state", Checkbox(title=_("Sensor state"), label=_("Enable"))),
-            ("output_sensor_thresholds", Checkbox(title=_("Sensor threshold"), label=_("Enable"))),
-            ("ignore_not_available_sensors",
-             Checkbox(title=_("Suppress not available sensors"), label=_("Enable"))),
+            (
+                "ipmi_driver",
+                TextInput(title=_("IPMI driver"),),
+            ),
+            (
+                "driver_type",
+                TextInput(
+                    title=_("IPMI driver type"),
+                    help=_("Driver type to use instead of doing an auto selection"),
+                ),
+            ),
+            (
+                "BMC_key",
+                TextInput(
+                    title=_("BMC key"),
+                    help=_(
+                        "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"),
+                ),
+            ),
+            (
+                "quiet_cache",
+                Checkbox(
+                    title=_("Quiet cache"),
+                    label=_("Enable"),
+                    help=("Do not output information about cache creation/deletion"),
+                ),
+            ),
+            (
+                "sdr_cache_recreate",
+                Checkbox(
+                    title=_("SDR cache recreate"),
+                    label=_("Enable"),
+                    help=_("Automatically recreate the sensor data repository (SDR) cache"),
+                ),
+            ),
+            (
+                "interpret_oem_data",
+                Checkbox(
+                    title=_("OEM data interpretation"),
+                    label=_("Enable"),
+                    help=_("Attempt to interpret OEM data"),
+                ),
+            ),
+            (
+                "output_sensor_state",
+                Checkbox(
+                    title=_("Sensor state"),
+                    label=_("Enable"),
+                    help=_("Output sensor state"),
+                ),
+            ),
+            (
+                "output_sensor_thresholds",
+                Checkbox(
+                    title=_("Sensor threshold"),
+                    label=_("Enable"),
+                    help=_("Output sensor thresholds"),
+                ),
+            ),
+            (
+                "ignore_not_available_sensors",
+                Checkbox(
+                    title=_("Suppress not available sensors"),
+                    label=_("Enable"),
+                    help=_("Ignore not-available (i.e. N/A) sensors in output"),
+                ),
+            ),
         ],
         optional_keys=[
             "ipmi_driver",

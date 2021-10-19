@@ -170,7 +170,7 @@ SpecialAgentInfoFunctionResult = Union[
     str, List[Union[str, int, float, Tuple[str, str, str]]], SpecialAgentConfiguration
 ]
 SpecialAgentInfoFunction = Callable[
-    [Dict[str, Any], str, Optional[str]], SpecialAgentInfoFunctionResult
+    [Mapping[str, Any], str, Optional[str]], SpecialAgentInfoFunctionResult
 ]
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]

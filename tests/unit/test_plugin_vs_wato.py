@@ -369,7 +369,6 @@ class ErrorReporter:
         ("inventory", "k8s_assigned_pods", "k8s_assigned_pods"),
         ("inventory", "lnx_if", "lnx_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
-        ("inventory", "solaris_routes", "solaris_routes"),
         ("inventory", "statgrab_net", "statgrab_net"),
         ("inventory", "suseconnect", "suseconnect"),
     }

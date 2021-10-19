@@ -5,24 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path
 from shutil import copyfileobj
 from tempfile import mkstemp
 from typing import Dict
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
+from marcv.constants import AGENT_OUTPUT_DIR
 from marcv.log import logger
 
 app = FastAPI()
 
-OMD_ROOT = Path(os.environ.get("OMD_ROOT", ""))
-AGENT_OUTPUT_DIR = OMD_ROOT / "var/marcv/received_output"
-
 
 @app.post("/agent-data")
-async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
-
+async def agent_data(
+    uuid: str = Form(...), upload_file: UploadFile = File(...)
+) -> Dict[str, str]:
     file_dir = AGENT_OUTPUT_DIR / uuid
     file_path = file_dir / "received_output"
 

@@ -31,13 +31,7 @@ from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item,
 from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
 from cmk.base.discovered_labels import ServiceLabel
 
-from .migration import (
-    deduplicate_autochecks,
-    parse_parameters,
-    parse_pre_16_tuple_autocheck_entry,
-    parse_pre_20_check_plugin_name,
-    parse_pre_20_item,
-)
+from .migration import deduplicate_autochecks, parse_autocheck_entry
 from .utils import AutocheckEntry
 
 ComputeCheckParameters = Callable[
@@ -296,7 +290,7 @@ def _parse_autocheck_service(
     service_description: GetServiceDescription,
 ) -> Optional[AutocheckService]:
 
-    autocheck_entry = _parse_autocheck_entry(entry)
+    autocheck_entry = parse_autocheck_entry(entry)
 
     try:
         description = service_description(
@@ -311,42 +305,6 @@ def _parse_autocheck_service(
         description=description,
         parameters=autocheck_entry.discovered_parameters,
         service_labels=autocheck_entry.service_labels,
-    )
-
-
-def _parse_autocheck_entry(entry: Union[Tuple, Dict]) -> AutocheckEntry:
-    check_plugin_name, item, parameters, dict_service_labels = (
-        parse_pre_16_tuple_autocheck_entry(entry)
-        if isinstance(entry, tuple)
-        else _parse_dict_autocheck_entry(entry)
-    )
-
-    return AutocheckEntry(
-        check_plugin_name=parse_pre_20_check_plugin_name(check_plugin_name),
-        item=parse_pre_20_item(item),
-        discovered_parameters=parse_parameters(parameters),
-        service_labels={
-            l.name: l for l in _parse_discovered_service_label_from_dict(dict_service_labels)
-        },
-    )
-
-
-def _parse_dict_autocheck_entry(entry: Dict) -> Tuple[object, object, object, object]:
-    if set(entry) != {"check_plugin_name", "item", "parameters", "service_labels"}:
-        raise MKGeneralException("Invalid autocheck: Wrong keys found: %r" % list(entry))
-
-    return entry["check_plugin_name"], entry["item"], entry["parameters"], entry["service_labels"]
-
-
-def _parse_discovered_service_label_from_dict(
-    dict_service_labels: object,
-) -> Iterable[ServiceLabel]:
-    if not isinstance(dict_service_labels, dict):
-        return
-    yield from (
-        ServiceLabel(str(key), str(value))
-        for key, value in dict_service_labels.items()
-        if key is not None
     )
 
 

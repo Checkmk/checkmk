@@ -563,8 +563,7 @@ void Query::parseLocaltimeLine(char *line) {
 
     if (offset != 0s) {
         using hour = std::chrono::duration<double, std::ratio<3600>>;
-        Debug(_logger) << "timezone offset is "
-                       << std::chrono::duration_cast<hour>(offset).count()
+        Debug(_logger) << "timezone offset is " << mk::ticks<hour>(offset)
                        << "h";
     }
     _timezone_offset = offset;
@@ -619,9 +618,7 @@ bool Query::timelimitReached() const {
         _output.setError(
             OutputBuffer::ResponseCode::payload_too_large,
             "Maximum query time of " +
-                std::to_string(
-                    std::chrono::duration_cast<std::chrono::seconds>(duration)
-                        .count()) +
+                std::to_string(mk::ticks<std::chrono::seconds>(duration)) +
                 " seconds exceeded!");
         return true;
     }

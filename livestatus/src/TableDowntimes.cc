@@ -11,6 +11,7 @@
 #include <type_traits>
 
 #include "BoolColumn.h"
+#include "ChronoUtils.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "IntColumn.h"
@@ -66,8 +67,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "duration", "The duration of the downtime in seconds", offsets,
         [](const Downtime &r) {
-            return std::chrono::duration_cast<std::chrono::seconds>(r._duration)
-                .count();
+            return mk::ticks<std::chrono::seconds>(r._duration);
         }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "triggered_by",

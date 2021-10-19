@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "ChronoUtils.h"
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "Filter.h"
@@ -81,8 +82,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration", "Duration of state (until - from)", offsets,
         [](const HostServiceState &r) {
-            return std::chrono::duration_cast<std::chrono::seconds>(r._duration)
-                .count();
+            return mk::ticks<std::chrono::seconds>(r._duration);
         }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part", "Duration part in regard to the query timeframe",
@@ -140,9 +140,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_ok", "OK duration of state ( until - from )", offsets,
         [](const HostServiceState &r) {
-            return std::chrono::duration_cast<std::chrono::seconds>(
-                       r._duration_ok)
-                .count();
+            return mk::ticks<std::chrono::seconds>(r._duration_ok);
         }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
@@ -152,9 +150,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_warning", "WARNING duration of state (until - from)", offsets,
         [](const HostServiceState &r) {
-            return std::chrono::duration_cast<std::chrono::seconds>(
-                       r._duration_warning)
-                .count();
+            return mk::ticks<std::chrono::seconds>(r._duration_warning);
         }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_warning",
@@ -164,9 +160,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_critical", "CRITICAL duration of state (until - from)",
         offsets, [](const HostServiceState &r) {
-            return std::chrono::duration_cast<std::chrono::seconds>(
-                       r._duration_critical)
-                .count();
+            return mk::ticks<std::chrono::seconds>(r._duration_critical);
         }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_critical",
@@ -176,9 +170,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_unknown", "UNKNOWN duration of state (until - from)", offsets,
         [](const HostServiceState &r) {
-            return std::chrono::duration_cast<std::chrono::seconds>(
-                       r._duration_unknown)
-                .count();
+            return mk::ticks<std::chrono::seconds>(r._duration_unknown);
         }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_unknown",
@@ -188,9 +180,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
         offsets, [](const HostServiceState &r) {
-            return std::chrono::duration_cast<std::chrono::seconds>(
-                       r._duration_unmonitored)
-                .count();
+            return mk::ticks<std::chrono::seconds>(r._duration_unmonitored);
         }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_unmonitored",

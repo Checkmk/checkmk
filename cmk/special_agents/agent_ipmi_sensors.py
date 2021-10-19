@@ -15,6 +15,7 @@ from argparse import _SubParsersAction
 from itertools import chain
 from typing import Iterable, Mapping, Optional, Sequence, Tuple
 
+from cmk.special_agents.utils.agent_common import special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
@@ -216,8 +217,7 @@ def parse_data(
             sys.stdout.write("%s\n" % line)
 
 
-def main(sys_argv=None):
-    args = _parse_arguments(sys.argv[1:] if sys_argv is None else sys_argv)
+def _main(args: Args) -> None:
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
     ipmi_cmd, queries = {"freeipmi": _prepare_freeipmi_call, "ipmitool": _prepare_ipmitool_call,}[
@@ -260,5 +260,10 @@ def main(sys_argv=None):
 
     if errors:
         sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
-        return 1
-    return 0
+        return
+    return
+
+
+def main() -> None:
+    """Main entry point to be used"""
+    special_agent_main(_parse_arguments, _main)

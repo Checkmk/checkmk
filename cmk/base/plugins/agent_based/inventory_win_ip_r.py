@@ -30,24 +30,62 @@
 # direct|255.255.255.255|255.255.255.255|0.0.0.0|vmxnet3 Ethernet Adapter
 # direct|255.255.255.255|255.255.255.255|0.0.0.0|Microsoft Failover Cluster Virtual Adapter
 
+from typing import NamedTuple, Sequence
 
-def inv_win_ip_r(info):
-    routes = inv_tree_list("networking.routes:")
-    for _type, target, mask, gateway, device in info:
-        routes.append(
-            {
-                "target": "{target}/{subnet}".format(
-                    target=target,
-                    # Convert subnetmask to CIDR
-                    subnet=sum([bin(int(x)).count("1") for x in mask.split(".")]),
-                ),
-                "device": device,
-                "gateway": gateway,
-                "type": _type,
-            }
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+
+class Route(NamedTuple):
+    target: str
+    device: str
+    gateway: str
+    type_: str
+
+
+Section = Sequence[Route]
+
+
+def parse_win_ip_r(string_table: StringTable) -> Section:
+    return [
+        Route(
+            target="{target}/{subnet}".format(
+                target=target,
+                # Convert subnetmask to CIDR
+                subnet=sum([bin(int(x)).count("1") for x in mask.split(".")]),
+            ),
+            device=device,
+            gateway=gateway,
+            type_=type_,
+        )
+        for type_, target, mask, gateway, device in string_table
+    ]
+
+
+register.agent_section(
+    name="win_ip_r",
+    parse_function=parse_win_ip_r,
+)
+
+
+def inventory_win_ip_r(section: Section) -> InventoryResult:
+    path = ["networking", "routes"]
+    for route in section:
+        yield TableRow(
+            path=path,
+            key_columns={
+                "target": route.target,
+                "gateway": route.gateway,
+            },
+            inventory_columns={
+                "device": route.device,
+                "type": route.type_,
+            },
+            status_columns={},
         )
 
 
-inv_info["win_ip_r"] = {
-    "inv_function": inv_win_ip_r,
-}
+register.inventory_plugin(
+    name="win_ip_r",
+    inventory_function=inventory_win_ip_r,
+)

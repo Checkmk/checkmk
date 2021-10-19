@@ -10,7 +10,7 @@ import datetime
 import enum
 import time
 from collections import defaultdict
-from typing import Dict, NewType, Optional
+from typing import Dict, List, NewType, Optional
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 from pydantic import BaseModel
@@ -106,6 +106,18 @@ class PodInfo(BaseModel):
     qos_class: Literal["burstable", "besteffort", "guaranteed"]
 
 
+class ContainerState(str, enum.Enum):
+    # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-states
+    RUNNING = "running"
+    WAITING = "waiting"
+    TERMINATED = "terminated"
+
+
+class ContainerInfo(BaseModel):
+    image: str
+    state: ContainerState
+
+
 def parse_pod_info(pod: client.V1Pod) -> PodInfo:
     info = {}
     if pod.spec:
@@ -155,6 +167,22 @@ def pod_resources(pod: client.V1Pod) -> PodUsageResources:
     return PodUsageResources(cpu=Resources(**cpu), memory=Resources(**memory))
 
 
+def pod_containers(pod: client.V1Pod) -> List[ContainerInfo]:
+    result = []
+    for status in pod.status.container_statuses:
+        if status.state.terminated is not None:
+            state = ContainerState.TERMINATED
+        elif status.state.running is not None:
+            state = ContainerState.RUNNING
+        elif status.state.waiting is not None:
+            state = ContainerState.WAITING
+        else:
+            raise AssertionError("Unknown contianer state {status.state}")
+
+        result.append(ContainerInfo(id=status.container_id, image=status.image, state=state))
+    return result
+
+
 class Phase(str, enum.Enum):
     RUNNING = "running"
     PENDING = "pending"
@@ -169,6 +197,7 @@ class PodAPI(BaseModel):
     phase: Phase
     info: PodInfo
     resources: PodUsageResources
+    containers: List[ContainerInfo]
 
     @classmethod
     def from_client(cls, pod: client.V1Pod) -> PodAPI:
@@ -178,6 +207,7 @@ class PodAPI(BaseModel):
             phase=Phase(pod.status.phase.lower()),
             info=parse_pod_info(pod),
             resources=pod_resources(pod),
+            containers=pod_containers(pod),
         )
 
 

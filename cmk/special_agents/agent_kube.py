@@ -18,6 +18,7 @@ import os
 import sys
 from collections import Counter, defaultdict
 from typing import (
+    Callable,
     DefaultDict,
     Dict,
     Iterator,
@@ -26,6 +27,7 @@ from typing import (
     NamedTuple,
     NewType,
     Optional,
+    Protocol,
     Sequence,
 )
 
@@ -41,6 +43,8 @@ from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, S
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemas import (
     ClusterInfo,
+    ContainerInfo,
+    ContainerState,
     MetaData,
     NodeResources,
     Phase,
@@ -62,6 +66,14 @@ class LivePod(NamedTuple):
 class LiveContainer(NamedTuple):
     name: str
     metrics: Dict[MetricName, MetricValue]
+
+
+class ContainerCount(BaseModel):
+    """k8s_node_container_count_v1"""
+
+    running: int = 0
+    waiting: int = 0
+    terminated: int = 0
 
 
 class PodResources(BaseModel):
@@ -145,12 +157,14 @@ class Pod:
         phase: Phase,
         info: PodInfo,
         resources: PodUsageResources,
+        containers: Sequence[ContainerInfo],
     ) -> None:
         self.uid = PodUID(uid)
         self.metadata = metadata
         self.node = info.node
         self.phase = phase
         self.resources = resources
+        self.containers = containers
 
     def name(self, prepend_namespace=False) -> str:
         if not prepend_namespace:
@@ -189,6 +203,19 @@ class Node:
         resources.update(dict(Counter([pod.phase for pod in self._pods])))
         return PodResources(**resources)
 
+    def container_count(self) -> ContainerCount:
+        result = ContainerCount()
+        for pod in self._pods:
+            for container in pod.containers:
+                if container.state == ContainerState.RUNNING:
+                    result.running += 1
+                elif container.state == ContainerState.WAITING:
+                    result.waiting += 1
+                else:
+                    result.terminated += 1
+
+        return result
+
 
 class Cluster:
     @classmethod
@@ -201,7 +228,9 @@ class Cluster:
             cluster.add_node(node)
 
         for pod in api_server.pods():
-            cluster.add_pod(Pod(pod.uid, pod.metadata, pod.phase, pod.info, pod.resources))
+            cluster.add_pod(
+                Pod(pod.uid, pod.metadata, pod.phase, pod.info, pod.resources, pod.containers)
+            )
 
         return cluster
 
@@ -231,6 +260,9 @@ class Cluster:
     def pods(self) -> Sequence[Pod]:
         return list(self._pods.values())
 
+    def nodes(self) -> Sequence[Node]:
+        return list(self._nodes.values())
+
     def node_count(self) -> NodeCount:
         worker = 0
         control_plane = 0
@@ -247,23 +279,42 @@ class Cluster:
         return self._cluster_details
 
 
+class JsonProtocol(Protocol):
+    def json(self) -> str:
+        ...
+
+
+def _write_sections(sections: Mapping[str, Callable[[], JsonProtocol]]) -> None:
+    for section_name, section_call in sections.items():
+        with SectionWriter(section_name) as writer:
+            writer.append(section_call().json())
+
+
 def output_cluster_api_sections(cluster: Cluster) -> None:
     sections = {
         "k8s_pods_resources": cluster.pod_resources,
         "k8s_node_count_v1": cluster.node_count,
         "k8s_cluster_details_v1": cluster.cluster_details,
     }
-    for section_name, section_call in sections.items():
-        with SectionWriter(section_name) as writer:
-            writer.append(section_call().json())
+    _write_sections(sections)
+
+
+def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
+    def output_sections(cluster_node: Node) -> None:
+        sections = {
+            "k8s_node_container_count_v1": cluster_node.container_count,
+        }
+        _write_sections(sections)
+
+    for node in api_nodes:
+        with ConditionalPiggybackSection(node.name):
+            output_sections(node)
 
 
 def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
-    def output_sections(cluster_pod: Pod):
+    def output_sections(cluster_pod: Pod) -> None:
         sections = {"k8s_cpu_resources": cluster_pod.cpu_resources}
-        for name, section_call in sections.items():
-            with SectionWriter(name) as writer:
-                writer.append(section_call().json())
+        _write_sections(sections)
 
     for pod in api_pods:
         with ConditionalPiggybackSection(pod.name(prepend_namespace=True)):
@@ -377,6 +428,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Sections based on API server
             output_cluster_api_sections(cluster)
+            output_nodes_api_sections(cluster.nodes())
             output_pods_api_sections(cluster.pods())  # TODO: make more explicit
 
             # Sections based on cluster agent live data

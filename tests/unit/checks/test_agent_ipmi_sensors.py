@@ -40,6 +40,9 @@ pytestmark = pytest.mark.checks
                     "ipmi_driver": "driver",
                     "password": "password",
                     "privilege_lvl": "user",
+                    "sdr_cache_recreate": True,
+                    "interpret_oem_data": True,
+                    "output_sensor_state": False,
                 },
             ),
             [
@@ -50,8 +53,10 @@ pytestmark = pytest.mark.checks
                 "freeipmi",
                 "--driver",
                 "driver",
+                "--sdr_cache_recreate",
+                "--interpret_oem_data",
             ],
-            id="freeipmi with optional arg",
+            id="freeipmi with optional args",
         ),
     ],
 )

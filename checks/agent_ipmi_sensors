@@ -4,36 +4,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from itertools import chain
+
 
 def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
     ipmi_command, options = params
-    args = [
+    return [
         ipaddress,
         options["username"],
         options["password"],
         options["privilege_lvl"],
         ipmi_command,
+        *chain.from_iterable(
+            (
+                opt,
+                value,
+            )
+            for opt, parameter in [
+                ("--driver", "ipmi_driver"),
+                ("--driver_type", "driver_type"),
+                ("--key", "BMC_key"),
+            ]
+            if (value := options.get(parameter))
+        ),
+        *(
+            flag
+            for flag, checkbox in [
+                ("--quiet_cache", "quiet_cache"),
+                ("--sdr_cache_recreate", "sdr_cache_recreate"),
+                ("--interpret_oem_data", "interpret_oem_data"),
+                ("--output_sensor_state", "output_sensor_state"),
+                ("--ignore_not_available_sensors", "ignore_not_available_sensors"),
+                ("--output_sensor_thresholds", "output_sensor_thresholds"),
+            ]
+            if options.get(checkbox)
+        ),
     ]
-
-    for opt, what in [
-        ("--driver", "ipmi_driver"),
-        ("--driver_type", "driver_type"),
-        ("--key", "BMC_key"),
-        ("--quiet_cache", "quiet_cache"),
-        ("--sdr_cache_recreate", "sdr_cache_recreate"),
-        ("--interpret_oem_data", "interpret_oem_data"),
-        ("--output_sensor_state", "output_sensor_state"),
-        ("--ignore_not_available_sensors", "output_sensor_thresholds"),
-        ("--output_sensor_thresholds", "ignore_not_available_sensors"),
-    ]:
-        this_opt = options.get(what)
-        if this_opt is None:
-            continue
-        args.append(opt)
-        if not isinstance(this_opt, bool):
-            args.append(this_opt)
-
-    return args
 
 
 special_agent_info["ipmi_sensors"] = agent_ipmi_sensors_arguments

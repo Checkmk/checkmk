@@ -41,6 +41,9 @@ from typing import Any, Mapping, Sequence
                     "ipmi_driver": "driver",
                     "password": "password",
                     "privilege_lvl": "user",
+                    "sdr_cache_recreate": True,
+                    "interpret_oem_data": True,
+                    "output_sensor_state": False,
                 },
             ),
             [
@@ -51,8 +54,10 @@ from typing import Any, Mapping, Sequence
                 "freeipmi",
                 "--driver",
                 "driver",
+                "--sdr_cache_recreate",
+                "--interpret_oem_data",
             ],
-            id="freeipmi with optional arg",
+            id="freeipmi with optional args",
         ),
     ],
 )

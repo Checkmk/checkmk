@@ -5,31 +5,33 @@ properties([
   pipelineTriggers([upstream('pylint3')]),
 ])
 
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
-    }
-    try {
-        stage("Execute Test") {
-            sh("""
+timeout(time: 12, unit: 'HOURS') {
+    node(NODE) {
+        stage('checkout sources') {
+            checkout(scm)
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
+        }
+        try {
+            stage("Execute Test") {
+                sh("""
                   make -C $WORKSPACE/tests test-mypy-docker
                """)
-        }
-        stage("Analyse Issues") {
-            publishIssues(
-                issues:[scanForIssues(tool: clang())],
-                trendChartType: 'TOOLS_ONLY',
-                qualityGates: [
-                    [
-                        threshold: 1,
-                        type: 'TOTAL',
-                        unstable: false
+            }
+            stage("Analyse Issues") {
+                publishIssues(
+                    issues: [scanForIssues(tool: clang())],
+                    trendChartType: 'TOOLS_ONLY',
+                    qualityGates: [
+                        [
+                            threshold: 1,
+                            type     : 'TOTAL',
+                            unstable : false
+                        ]
                     ]
-                ]
-            )
+                )
+            }
+        } catch (Exception e) {
+            notify.notify_error(e)
         }
-    } catch(Exception e) {
-        notify.notify_error(e)
     }
 }

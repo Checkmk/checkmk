@@ -43,35 +43,36 @@ def get_cmk_version(BRANCH, VERSION) {
     }
 }
 
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-    }
-    notify = load 'buildscripts/scripts/lib/notify.groovy'
-    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-    try {
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
-            BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v /var/run/docker.sock:/var/run/docker.sock") {
-                stage('Build Container') {
-                    def CREDENTIALS_ID
-                    if (EDITION == "raw") {
-                        CREDENTIALS_ID = '11fb3d5f-e44e-4f33-a651-274227cc48ab'
-                    } else {
-                        CREDENTIALS_ID = "registry.checkmk.com"
-                    }
+timeout(time: 12, unit: 'HOURS') {
+    node (NODE) {
+        stage('checkout sources') {
+            checkout(scm)
+        }
+        notify = load 'buildscripts/scripts/lib/notify.groovy'
+        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+        try {
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v /var/run/docker.sock:/var/run/docker.sock") {
+                    stage('Build Container') {
+                        def CREDENTIALS_ID
+                        if (EDITION == "raw") {
+                            CREDENTIALS_ID = '11fb3d5f-e44e-4f33-a651-274227cc48ab'
+                        } else {
+                            CREDENTIALS_ID = "registry.checkmk.com"
+                        }
 
-                    upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS)
+                        upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS)
 
-                    withCredentials([
-                        usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
-                        usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                        sh """
-                            ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG}
-                        """
-                    }
-                    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-                        sh """
+                        withCredentials([
+                            usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
+                            usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                            sh """
+                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG}
+                            """
+                            }
+                        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+                            sh """
                             cd ${PACKAGE_DIR}/${CMK_VERS}
                             rsync -av --relative \
                                 --exclude '*dbgsym*.deb' \
@@ -79,11 +80,12 @@ node (NODE) {
                                 ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
                                 ${UPLOAD_DEST}
                         """
+                        }
                     }
                 }
             }
+        } catch(Exception e) {
+            notify.notify_error(e)
         }
-    } catch(Exception e) {
-        notify.notify_error(e)
     }
 }

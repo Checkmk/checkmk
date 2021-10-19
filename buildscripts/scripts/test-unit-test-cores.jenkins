@@ -5,32 +5,34 @@ properties([
   pipelineTriggers([pollSCM('H/2 * * * *')]),
 ])
 
-node (NODE) {
-    stage('checkout sources') {
-        checkout(scm)
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
-    }
-
-    try {
-        stage("Execute NEB Test") {
-            sh("( cd livestatus/src/test && ./.f12 )")
+timeout(time: 12, unit: 'HOURS') {
+    node(NODE) {
+        stage('checkout sources') {
+            checkout(scm)
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
         }
 
-        stage("Execute NEB Test") {
-            sh("( cd enterprise/core/src/test && ./.f12 )")
-        }
+        try {
+            stage("Execute NEB Test") {
+                sh("( cd livestatus/src/test && ./.f12 )")
+            }
 
-        stage("Analyse Issues") {
-            xunit([GoogleTest(
-                deleteOutputFiles: true,
-                failIfNotNew: true,
-                pattern: 'livestatus/src/test_detail.xml, enterprise/core/src/test_detail.xml',
-                skipNoTestFiles: false, stopProcessingIfError: true
-            )])
-            def GCC = scanForIssues tool: gcc()
-            publishIssues issues:[GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+            stage("Execute NEB Test") {
+                sh("( cd enterprise/core/src/test && ./.f12 )")
+            }
+
+            stage("Analyse Issues") {
+                xunit([GoogleTest(
+                    deleteOutputFiles: true,
+                    failIfNotNew: true,
+                    pattern: 'livestatus/src/test_detail.xml, enterprise/core/src/test_detail.xml',
+                    skipNoTestFiles: false, stopProcessingIfError: true
+                )])
+                def GCC = scanForIssues tool: gcc()
+                publishIssues issues: [GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+            }
+        } catch (Exception e) {
+            notify.notify_error(e)
         }
-    } catch(Exception e) {
-        notify.notify_error(e)
     }
 }

@@ -231,6 +231,52 @@ TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
     EXPECT_TRUE(result[full_lines_ - 1].starts_with("UpdateRecoverAction:"));
 }
 
+class SectionProvidersMemFixture : public ::testing::Test {
+public:
+    struct Row {
+        std::string title;
+        std::string value;
+        std::string kb;
+    };
+    constexpr static std::string_view field_names_[8] = {
+        "MemTotal",  "MemFree",  "SwapTotal",    "SwapFree",
+        "PageTotal", "PageFree", "VirtualTotal", "VirtualFree"};
+    void SetUp() override {
+        uniq_name_ = getEngine().getUniqName();
+        auto mem = getEngine().generateContent(section_name);
+        auto rows = cma::tools::SplitString(mem, "\n");
+        header_ = rows[0];
+        auto count = rows.size();
+        for (size_t i = 1; i < count; ++i) {
+            auto values = cma::tools::SplitString(rows[i], ":");
+            cma::tools::LeftTrim(values[1]);
+            auto sub_values = cma::tools::SplitString(values[1], " ");
+            rows_.push_back({.title = values[0],
+                             .value = sub_values[0],
+                             .kb = sub_values[1]});
+        }
+    }
+    std::string uniq_name_;
+    std::string header_;
+    std::vector<Row> rows_;
+
+private:
+    Mem& getEngine() { return mem_provider_.getEngine(); }
+    srv::SectionProvider<Mem> mem_provider_;
+};
+
+TEST_F(SectionProvidersMemFixture, Mem) {
+    EXPECT_EQ(uniq_name_, section::kMemName);
+    EXPECT_EQ(header_, "<<<mem>>>");
+    ASSERT_EQ(rows_.size(), 8);
+    for (size_t i = 0; i < rows_.size(); ++i) {
+        const auto& row = rows_[i];
+        EXPECT_EQ(row.title, field_names_[i]);
+        EXPECT_TRUE(std::stoll(row.value) > 0);
+        EXPECT_EQ(row.kb, "kB");
+    }
+}
+
 class SectionProvidersFixture : public ::testing::Test {
 public:
     Services& getEngine() { return services_provider.getEngine(); }
@@ -264,33 +310,24 @@ TEST_F(SectionProvidersFixture, ServicesIntegration) {
     }
 }
 
-TEST(SectionHeaders, All) {
-    auto ret = cma::section::MakeHeader("x");
-    EXPECT_EQ(ret, "<<<x>>>\n");
+TEST(SectionHeaders, MakeHeader) {
+    EXPECT_EQ(section::MakeHeader("x"), "<<<x>>>\n");
+    EXPECT_EQ(section::MakeHeader("x", ','), "<<<x:sep(44)>>>\n");
+    EXPECT_EQ(section::MakeHeader("x", '\t'), "<<<x:sep(9)>>>\n");
+    EXPECT_EQ(section::MakeHeader("x", '\0'), "<<<x>>>\n");
+    EXPECT_EQ(section::MakeHeader("", '\0'), "<<<nothing>>>\n");
+}
 
-    ret = cma::section::MakeHeader("x", ',');
-    EXPECT_EQ(ret, "<<<x:sep(44)>>>\n");
+TEST(SectionHeaders, MakeSubSectionHeader) {
+    EXPECT_EQ(section::MakeSubSectionHeader("x"), "[x]\n");
+    EXPECT_EQ(section::MakeSubSectionHeader(""), "[nothing]\n");
+}
+TEST(SectionHeaders, MakeEmptyHeader) {
+    EXPECT_EQ(section::MakeEmptyHeader(), "<<<>>>\n");
+}
 
-    ret = cma::section::MakeHeader("x", '\t');
-    EXPECT_EQ(ret, "<<<x:sep(9)>>>\n");
-
-    ret = cma::section::MakeHeader("x", '\0');
-    EXPECT_EQ(ret, "<<<x>>>\n");
-
-    ret = cma::section::MakeHeader("", '\0');
-    EXPECT_EQ(ret, "<<<nothing>>>\n");
-
-    ret = cma::section::MakeSubSectionHeader("x");
-    EXPECT_EQ(ret, "[x]\n");
-
-    ret = cma::section::MakeSubSectionHeader("");
-    EXPECT_EQ(ret, "[nothing]\n");
-
-    ret = cma::section::MakeEmptyHeader();
-    EXPECT_EQ(ret, "<<<>>>\n");
-
-    ret = cma::section::MakeLocalHeader();
-    EXPECT_EQ(ret, "<<<local:sep(0)>>>\n");
+TEST(SectionHeaders, MakeLocalHeader) {
+    EXPECT_EQ(section::MakeLocalHeader(), "<<<local:sep(0)>>>\n");
 }
 
 }  // namespace cma::provider

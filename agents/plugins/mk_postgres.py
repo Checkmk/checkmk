@@ -706,7 +706,8 @@ class PostgresLinux(PostgresBase):
         out = ""
         for proc in procs_list:
             if any(pat.search(proc) for pat in procs_to_match):
-                if proc.find(self.name) != -1:
+                # the data directory for the instance "main" is not called "main" but "data" on some platforms
+                if self.name in proc or (self.name == "main" and "data" in proc):
                     out += proc + "\n"
         return out.rstrip()
 

@@ -7,7 +7,10 @@
 from typing import Dict
 
 from .agent_based_api.v1 import register, type_defs
+from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import interfaces
+from .utils.inventory_interfaces import Interface as InterfaceInv
+from .utils.inventory_interfaces import inventorize_interfaces
 
 
 def parse_statgrab_net(string_table: type_defs.StringTable) -> interfaces.Section:
@@ -67,4 +70,51 @@ register.agent_section(
     name="statgrab_net",
     parse_function=parse_statgrab_net,
     parsed_section_name="interfaces",
+)
+
+
+def inventory_statgrab_net(section: interfaces.Section) -> InventoryResult:
+    if not section:
+        return
+
+    yield from inventorize_interfaces(
+        {
+            "usage_port_types": [
+                "6",
+                "32",
+                "62",
+                "117",
+                "127",
+                "128",
+                "129",
+                "180",
+                "181",
+                "182",
+                "205",
+                "229",
+            ],
+        },
+        (
+            InterfaceInv(
+                index=interface.index,
+                descr=interface.descr,
+                alias=interface.alias,
+                type=interface.type,
+                speed=int(interface.speed),
+                oper_status=int(interface.oper_status),
+                phys_address=interfaces.render_mac_address(interface.phys_address),
+            )
+            for interface in sorted(section, key=lambda i: i.index)
+            if interface.speed
+        ),
+        len(section),
+    )
+
+
+register.inventory_plugin(
+    name="statgrab_net",
+    inventory_function=inventory_statgrab_net,
+    # TODO use 'inv_if'
+    # inventory_ruleset_name="inv_if",
+    # inventory_default_parameters={},
 )

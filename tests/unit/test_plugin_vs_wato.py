@@ -368,7 +368,6 @@ class ErrorReporter:
         ("inventory", "k8s_assigned_pods", "k8s_assigned_pods"),
         ("inventory", "lnx_if", "lnx_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
-        ("inventory", "statgrab_net", "statgrab_net"),
         ("inventory", "suseconnect", "suseconnect"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {

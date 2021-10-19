@@ -1551,6 +1551,8 @@ def ajax_dashlet() -> None:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     board = _add_context_to_dashboard(board)
+    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board["context"] = board_context
 
     ident = request.get_integer_input_mandatory("id")
     dashlet_spec = next(

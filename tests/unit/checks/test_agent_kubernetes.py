@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Any
+from typing import List, Mapping, Any
 
 import pytest
 from testlib import SpecialAgent  # type: ignore[import]
@@ -130,7 +130,7 @@ def test_parse_arguments(params, expected_args):
     ),
 ])
 @pytest.mark.usefixtures("config_load_all_checks")
-def test_client_configuration_host(params: Dict[str, Any], host: str) -> None:
+def test_client_configuration_host(params: Mapping[str, Any], host: str) -> None:
     # black box test: wato config and corresponding url that is used by the special agent to query k8s
     agent = SpecialAgent('agent_kubernetes')
     arguments: List[str] = []

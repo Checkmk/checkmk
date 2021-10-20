@@ -1854,17 +1854,17 @@ class ABCEditRuleMode(WatoMode):
         )
 
     # TODO: refine type
-    def _validate_predefined_condition(self, value: Any, varprefix: str) -> None:
-        if _allow_label_conditions(self._rulespec.name):
+    def _validate_predefined_condition(self, value: str, varprefix: str) -> None:
+        if _allow_service_label_conditions(self._rulespec.name):
             return
 
         conditions = self._get_predefined_rule_conditions(value)
-        if conditions.host_labels or conditions.service_labels:
+        if conditions.service_labels:
             raise MKUserError(
                 varprefix,
                 _(
                     "This predefined condition can not be used with the "
-                    "current ruleset, because it defines label conditions."
+                    "current ruleset, because it defines service label conditions."
                 ),
             )
 
@@ -1968,7 +1968,7 @@ class VSExplicitConditions(Transform):
             ("host_tags", self._vs_host_tag_condition()),
         ]
 
-        if _allow_label_conditions(self._rulespec.name):
+        if _allow_host_label_conditions(self._rulespec.name):
             elements.append(("host_labels", self._vs_host_label_condition()))
 
         elements.append(("explicit_hosts", self._vs_explicit_hosts()))
@@ -1983,7 +1983,7 @@ class VSExplicitConditions(Transform):
             "host_tags": conditions.host_tags,
         }
 
-        if _allow_label_conditions(self._rulespec.name):
+        if _allow_host_label_conditions(self._rulespec.name):
             explicit["host_labels"] = conditions.host_labels
 
         explicit_hosts = conditions.host_list
@@ -1995,7 +1995,7 @@ class VSExplicitConditions(Transform):
             if explicit_services is not None:
                 explicit["explicit_services"] = explicit_services
 
-            if _allow_label_conditions(self._rulespec.name):
+            if _allow_service_label_conditions(self._rulespec.name):
                 explicit["service_labels"] = conditions.service_labels
 
         return explicit
@@ -2008,7 +2008,7 @@ class VSExplicitConditions(Transform):
             ("explicit_services", self._vs_explicit_services())
         ]
 
-        if _allow_label_conditions(self._rulespec.name):
+        if _allow_service_label_conditions(self._rulespec.name):
             elements.append(("service_labels", self._vs_service_label_condition()))
 
         return elements
@@ -2038,14 +2038,16 @@ class VSExplicitConditions(Transform):
                 explicit.get("explicit_services"), is_service=True
             )
             service_labels = (
-                explicit["service_labels"] if _allow_label_conditions(self._rulespec.name) else {}
+                explicit["service_labels"]
+                if _allow_service_label_conditions(self._rulespec.name)
+                else {}
             )
 
         return RuleConditions(
             host_folder=explicit["folder_path"],
             host_tags=explicit["host_tags"],
             host_labels=explicit["host_labels"]
-            if _allow_label_conditions(self._rulespec.name)
+            if _allow_host_label_conditions(self._rulespec.name)
             else {},
             host_name=self._condition_list_from_valuespec(
                 explicit.get("explicit_hosts"), is_service=False
@@ -2211,10 +2213,16 @@ class VSExplicitConditions(Transform):
             return HTML(output_funnel.drain())
 
 
-def _allow_label_conditions(rulespec_name: str) -> bool:
-    """Rulesets that influence the labels of hosts or services must not use label conditions"""
+def _allow_host_label_conditions(rulespec_name: str) -> bool:
+    """Rulesets that influence the labels of hosts must not use host label conditions"""
     return rulespec_name not in [
         "host_label_rules",
+    ]
+
+
+def _allow_service_label_conditions(rulespec_name: str) -> bool:
+    """Rulesets that influence the labels of services must not use service label conditions"""
+    return rulespec_name not in [
         "service_label_rules",
     ]
 

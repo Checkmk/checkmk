@@ -149,7 +149,7 @@ class FixRegister:
         # some sanitiy checks, may decrease as we migrate
         assert len(config.check_info) > 1000
         assert len(config.snmp_info) > 400
-        assert len(inventory_plugins._inv_info) > 60
+        assert len(inventory_plugins._inv_info) > 59
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)

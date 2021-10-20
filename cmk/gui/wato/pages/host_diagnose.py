@@ -109,8 +109,8 @@ class ModeDiagHost(WatoMode):
                     ],
                 ),
                 PageMenuDropdown(
-                    name="hosts",
-                    title=_("Hosts"),
+                    name="host",
+                    title=_("Host"),
                     topics=[
                         PageMenuTopic(
                             title=_("For this host"),

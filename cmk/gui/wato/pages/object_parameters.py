@@ -67,8 +67,8 @@ class ModeObjectParameters(WatoMode):
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="hosts",
-                    title=_("Hosts"),
+                    name="host",
+                    title=_("Host"),
                     topics=[
                         PageMenuTopic(
                             title=_("For this host"),

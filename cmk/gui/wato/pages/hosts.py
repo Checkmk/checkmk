@@ -317,8 +317,8 @@ class ModeEditHost(ABCHostMode):
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="hosts",
-                    title=_("Hosts"),
+                    name="host",
+                    title=_("Host"),
                     topics=[
                         self._page_menu_save_topic(),
                         PageMenuTopic(

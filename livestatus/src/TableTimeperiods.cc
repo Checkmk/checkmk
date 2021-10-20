@@ -32,7 +32,8 @@ TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
             extern TimeperiodsCache* g_timeperiods_cache;
             return g_timeperiods_cache->inTimeperiod(&tp);
         }));
-    // TODO(mk): add days and exceptions
+    // TODO(sp): Missing columns: transitions, num_transitions,
+    // next_transition_id, next_transition
 }
 
 std::string TableTimeperiods::name() const { return "timeperiods"; }

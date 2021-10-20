@@ -8,7 +8,9 @@ ARG ARTIFACT_STORAGE
 # This certificate is needed for downloading packages from our Repo
 # and is missing in this Distro.
 COPY ISRG_Root_X1.pem /etc/ssl/certs/
-RUN cd /etc/ssl/certs/ && c_rehash
+RUN cd /etc/ssl/certs/ \
+    && trust anchor ISRG_Root_X1.pem \
+    && c_rehash
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp1 sles12sp1 \
     && zypper ref -s \

@@ -36,7 +36,12 @@ the action "Clear audit log" in the GUI the log is not deleted, but
 moved from wato_audit.log to wato_audit.log.YYYY-MM-DD. So in this
 case the passwords will not be visible in the GUI anymore, but remain
 in the historic log files of the site. The historic files are only
-accessible by the site user and group from the command line.
+accessible by the site user and group from the command line. A backup
+of the original audit log (before passwords were replaced) is copied
+to "~/audit_log_backup". If anything goes wrong during the update,
+you have to copy the files back to var/check_mk/wato/log and replace
+the passwords manually. If the update works as expected, you can
+remove the backup files.
 
 In distributed setups which do not replicate the configuration
 passwords are replaced during the update of each site.

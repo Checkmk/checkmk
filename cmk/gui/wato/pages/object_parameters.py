@@ -58,7 +58,7 @@ class ModeObjectParameters(WatoMode):
         self._service = request.get_unicode_input("service")
 
     def title(self):
-        title = _("Parameters of") + " " + self._hostname
+        title = _("Effective parameters of") + " " + self._hostname
         if self._service:
             title += " / " + self._service
         return title

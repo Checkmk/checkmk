@@ -985,7 +985,9 @@ class ModeFolder(WatoMode):
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
         if user.may("wato.rulesets"):
             html.icon_button(
-                host.params_url(), _("View the rule based parameters of this host"), "rulesets"
+                host.params_url(),
+                _("View the rule based effective parameters of this host"),
+                "rulesets",
             )
 
         if host.may("read"):

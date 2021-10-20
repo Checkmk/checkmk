@@ -262,7 +262,6 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:hw_single_temperature"),
         ("check", "checkgroup_parameters:hw_temperature"),
         ("check", "checkgroup_parameters:hw_temperature_single"),
-        ("check", "checkgroup_parameters:informix_tabextents"),
         ("check", "checkgroup_parameters:mailqueue_length"),
         ("check", "checkgroup_parameters:mssql_blocked_sessions"),
         ("check", "checkgroup_parameters:postgres_sessions"),

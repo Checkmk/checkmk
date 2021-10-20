@@ -1796,12 +1796,12 @@ def includes_of_plugin(check_file_path: str) -> CheckIncludes:
             return
 
         for key, val in zip(node.value.keys, node.value.values):
-            if not isinstance(key, ast.Str):
+            if not isinstance(key, ast.Constant):
                 continue
             if key.s == "includes":
                 if isinstance(val, ast.List):
                     for element in val.elts:
-                        if not isinstance(element, ast.Str):
+                        if not isinstance(element, ast.Constant):
                             raise MKGeneralException(
                                 "Includes must be a list of include file "
                                 "names, found '%s'" % type(element)
@@ -1815,7 +1815,7 @@ def includes_of_plugin(check_file_path: str) -> CheckIncludes:
     def _load_from_check_includes(node: ast.Assign) -> None:
         if isinstance(node.value, ast.List):
             for element in node.value.elts:
-                if not isinstance(element, ast.Str):
+                if not isinstance(element, ast.Constant):
                     raise MKGeneralException(
                         "Includes must be a list of include file "
                         "names, found '%s'" % type(element)

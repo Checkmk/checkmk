@@ -42,7 +42,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Cache pip
       uses: actions/cache@v2
       with:
@@ -69,4 +69,3 @@ jobs:
         TEST_TARGETS: ${{ matrix.target }}
       run: |
         make -C tests $TEST_TARGETS
-

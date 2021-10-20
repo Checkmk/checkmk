@@ -167,4 +167,4 @@ gunicorn= "==19.10" # used for running agent-receiver server
 agent-receiver = {editable = true, path = "./agent-receiver"}
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"

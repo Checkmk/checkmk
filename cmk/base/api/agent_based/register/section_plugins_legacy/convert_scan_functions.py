@@ -110,38 +110,44 @@ def _get_scan_function_ast(
             source = "%s\n%s" % (source, src_file.read())
     assert source != "", "Files: %r" % ((read_files, src_file_name),)
 
-    tree = ast.parse(source, filename=str(read_files[0]))
+    return _extract_scan_function_ast(
+        ast.parse(source, filename=str(read_files[0])),
+        snmp_scan_function.__name__,
+        name,
+    )
 
-    for statement in tree.body:
-        if isinstance(statement, ast.FunctionDef) and statement.name == snmp_scan_function.__name__:
-            return statement
 
-        if not isinstance(statement, ast.Assign):
-            continue
+def _extract_scan_function_ast(tree: ast.AST, scan_function_name: str, plugin_name: str) -> ast.AST:
 
-        target = statement.targets[0]
-        if not (
-            isinstance(target, ast.Subscript)
-            and isinstance(target.slice, ast.Index)
-            and isinstance(target.slice.value, ast.Str)
-        ):
-            continue
-        if not (target.slice.value.s == name or target.slice.value.s.startswith("%s." % name)):
-            continue
+    if explicit_scan_function_definitions := [
+        s for s in tree.body if isinstance(s, ast.FunctionDef) and s.name == scan_function_name
+    ]:
+        return explicit_scan_function_definitions[0]  # should only be one
 
-        if not isinstance(target.value, ast.Name):
-            continue
+    global_dict_entries = [  # like check_info["this_plugin"] = ...
+        (s.targets[0], s.value)
+        for s in tree.body
+        if (
+            isinstance(s, ast.Assign)
+            and isinstance(s.targets[0], ast.Subscript)
+            # TODO: in python 3.9 the 2 next lines seem to be
+            # and isinstance(s.targets[0].slice, ast.Constant)
+            # and s.targets[0].slice.value.split(".")[0] == plugin_name
+            and isinstance(s.targets[0].slice, ast.Constant)
+            and s.targets[0].slice.value.split(".")[0] == plugin_name
+        )
+    ]
 
+    for target, value in global_dict_entries:
         if target.value.id == "snmp_scan_functions":
-            return statement.value
+            return value
 
-        if target.value.id in ("check_info", "inv_info") and isinstance(statement.value, ast.Dict):
+        if target.value.id in ("check_info", "inv_info") and isinstance(value, ast.Dict):
             try:
-                idx = [k.s for k in statement.value.keys if isinstance(k, ast.Str)].index(
-                    "snmp_scan_function"
-                )
-                return statement.value.values[idx]
-            except ValueError:
+                return {
+                    k.s: v for k, v in zip(value.keys, value.values) if isinstance(k, ast.Constant)
+                }["snmp_scan_function"]
+            except KeyError:
                 pass
 
     raise ValueError(ast.dump(tree))

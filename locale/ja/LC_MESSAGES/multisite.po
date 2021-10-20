@@ -9234,6 +9234,14 @@ msgstr ""
 "サービスが'activating'状態になることを許可される時間レベル(秒単位)を選択しま"
 "す"
 
+#, fuzzy
+msgid ""
+"Choose time levels (in seconds) for which a service is allowed to be in an "
+"'deactivating' state"
+msgstr ""
+"サービスが'activating'状態になることを許可される時間レベル(秒単位)を選択しま"
+"す"
+
 msgid ""
 "Choose what kind of ouput data is sent to the Check_MK server: Only count "
 "the files, only report count and extrem files (i.e. the oldest, newest, "
@@ -10765,6 +10773,10 @@ msgstr "エージェントからCheckmkに送信されるデータの暗号化�
 
 msgid "Control group:"
 msgstr "コントロールグループ"
+
+#, fuzzy
+msgid "Control plane nodes"
+msgstr "コントローラー %d"
 
 msgid "Controller"
 msgstr "コントローラ"
@@ -12872,6 +12884,10 @@ msgid "Define a range of syslog priorities this rule matches"
 msgstr "このルールが一致するsyslog優先度の範囲を定義します"
 
 msgid "Define a tolerating time period for activating services"
+msgstr "サービスをアクティブ化するための許容期間を定義します"
+
+#, fuzzy
+msgid "Define a tolerating time period for deactivating services"
 msgstr "サービスをアクティブ化するための許容期間を定義します"
 
 msgid "Define a tolerating time period for reloading services"
@@ -19511,6 +19527,10 @@ msgstr "どのサイトからもデータを取得していません"
 msgid "Got no data from this site"
 msgstr "このサイトからデータを取得していません"
 
+#, fuzzy
+msgid "Got no result to create dump file"
+msgstr "%s 作成されたダンプファイルを取得します"
+
 msgid "Grab user from found processess"
 msgstr "見つかったプロセスからユーザーを取得します"
 
@@ -25578,6 +25598,10 @@ msgstr "Kubernetesネットワークインターフェース"
 
 msgid "Kubernetes Port"
 msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes node count"
+msgstr "Kubernetesノード"
 
 msgid "Kubernetes nodes"
 msgstr "Kubernetesノード"
@@ -31925,6 +31949,10 @@ msgstr ""
 msgid "Number of context lines before messages"
 msgstr "メッセージの前のコンテキスト行の数"
 
+#, fuzzy
+msgid "Number of control plane nodes"
+msgstr "コンテナの数"
+
 msgid "Number of critical alerts"
 msgstr "重要なアラートの数"
 
@@ -32312,6 +32340,10 @@ msgstr "ボールトの数"
 
 msgid "Number of warnings"
 msgstr "警告の数"
+
+#, fuzzy
+msgid "Number of worker nodes"
+msgstr "再試行回数"
 
 msgid "Number of zombie jobs"
 msgstr "ゾンビジョブの数"
@@ -57985,6 +58017,10 @@ msgstr "言葉"
 
 msgid "Work request queue length"
 msgstr "作業要求キューの長さ"
+
+#, fuzzy
+msgid "Worker nodes"
+msgstr "Dockerノード"
 
 msgid "Worker threads"
 msgstr "ワーカースレッド"

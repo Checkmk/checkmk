@@ -9610,6 +9610,14 @@ msgstr ""
 "Kies de tijd (in seconden) gedurende welke een dienst in een \"activerende\" "
 "toestand mag zijn"
 
+#, fuzzy
+msgid ""
+"Choose time levels (in seconds) for which a service is allowed to be in an "
+"'deactivating' state"
+msgstr ""
+"Kies de tijd (in seconden) gedurende welke een dienst in een \"activerende\" "
+"toestand mag zijn"
+
 msgid ""
 "Choose what kind of ouput data is sent to the Check_MK server: Only count "
 "the files, only report count and extrem files (i.e. the oldest, newest, "
@@ -11206,6 +11214,10 @@ msgstr "Controle encryptie van gegevens verzonden van agent naar Checkmk."
 
 msgid "Control group:"
 msgstr "Controlegroep:"
+
+#, fuzzy
+msgid "Control plane nodes"
+msgstr "Controller %d"
 
 msgid "Controller"
 msgstr "Controller"
@@ -13344,6 +13356,10 @@ msgid "Define a range of syslog priorities this rule matches"
 msgstr "Definieer een bereik van syslog prioriteiten waar deze regel op past"
 
 msgid "Define a tolerating time period for activating services"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+msgid "Define a tolerating time period for deactivating services"
 msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
 msgid "Define a tolerating time period for reloading services"
@@ -20133,6 +20149,10 @@ msgstr "Ik heb geen gegevens van geen enkele site"
 msgid "Got no data from this site"
 msgstr "Ik heb geen gegevens van deze site."
 
+#, fuzzy
+msgid "Got no result to create dump file"
+msgstr "%s Ophalen heeft een dump bestand gemaakt"
+
 msgid "Grab user from found processess"
 msgstr "Haal gebruiker uit gevonden processess"
 
@@ -26579,6 +26599,10 @@ msgstr "Kubernetes Netwerk interfaces"
 
 msgid "Kubernetes Port"
 msgstr "Kubernetes Poort"
+
+#, fuzzy
+msgid "Kubernetes node count"
+msgstr "Kubernetes knooppunten"
 
 msgid "Kubernetes nodes"
 msgstr "Kubernetes knooppunten"
@@ -33047,6 +33071,10 @@ msgstr "Aantal contextregels na berichten"
 msgid "Number of context lines before messages"
 msgstr "Aantal contextregels vóór berichten"
 
+#, fuzzy
+msgid "Number of control plane nodes"
+msgstr "Aantal containers"
+
 msgid "Number of critical alerts"
 msgstr "Aantal kritische signaleringen"
 
@@ -33438,6 +33466,10 @@ msgstr "Aantal kluizen"
 
 msgid "Number of warnings"
 msgstr "Aantal waarschuwingen"
+
+#, fuzzy
+msgid "Number of worker nodes"
+msgstr "Aantal herhalingen"
 
 msgid "Number of zombie jobs"
 msgstr "Aantal zombiebanen"
@@ -60725,6 +60757,10 @@ msgstr "Woorden"
 
 msgid "Work request queue length"
 msgstr "Lengte wachtrij werkaanvragen"
+
+#, fuzzy
+msgid "Worker nodes"
+msgstr "Docker knooppunten"
 
 msgid "Worker threads"
 msgstr "Werkende draden"

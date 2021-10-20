@@ -9637,6 +9637,14 @@ msgstr ""
 "Scegliere i livelli di tempo (in secondi) per i quali un servizio può essere "
 "in uno stato di \"attivazione\"."
 
+#, fuzzy
+msgid ""
+"Choose time levels (in seconds) for which a service is allowed to be in an "
+"'deactivating' state"
+msgstr ""
+"Scegliere i livelli di tempo (in secondi) per i quali un servizio può essere "
+"in uno stato di \"attivazione\"."
+
 msgid ""
 "Choose what kind of ouput data is sent to the Check_MK server: Only count "
 "the files, only report count and extrem files (i.e. the oldest, newest, "
@@ -11237,6 +11245,10 @@ msgstr "Controlla la crittografia dei dati inviati dagli agenti a Checkmk."
 
 msgid "Control group:"
 msgstr "Gruppo di controllo:"
+
+#, fuzzy
+msgid "Control plane nodes"
+msgstr "Controllore %d"
 
 msgid "Controller"
 msgstr "Controller"
@@ -13377,6 +13389,10 @@ msgstr ""
 "Definisci un intervallo di priorità syslog a cui questa regola corrisponde"
 
 msgid "Define a tolerating time period for activating services"
+msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
+
+#, fuzzy
+msgid "Define a tolerating time period for deactivating services"
 msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 msgid "Define a tolerating time period for reloading services"
@@ -20192,6 +20208,10 @@ msgstr "Non ho ricevuto dati da nessun sito"
 msgid "Got no data from this site"
 msgstr "Non ho ricevuto dati da questo sito"
 
+#, fuzzy
+msgid "Got no result to create dump file"
+msgstr "%s Recupera il file dump creato"
+
 msgid "Grab user from found processess"
 msgstr "Prendi l'utente dai processi trovati"
 
@@ -26631,6 +26651,10 @@ msgstr "Interfacce di rete Kubernetes"
 
 msgid "Kubernetes Port"
 msgstr "Porta Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes node count"
+msgstr "Nodi Kubernetes"
 
 msgid "Kubernetes nodes"
 msgstr "Nodi Kubernetes"
@@ -33126,6 +33150,10 @@ msgstr "Numero di linee di contesto dopo i messaggi"
 msgid "Number of context lines before messages"
 msgstr "Numero di linee di contesto prima dei messaggi"
 
+#, fuzzy
+msgid "Number of control plane nodes"
+msgstr "Numero di contenitori"
+
 msgid "Number of critical alerts"
 msgstr "Numero di allarmi critici"
 
@@ -33521,6 +33549,10 @@ msgstr "Numero di volte"
 
 msgid "Number of warnings"
 msgstr "Numero di avvertimenti"
+
+#, fuzzy
+msgid "Number of worker nodes"
+msgstr "Numero di tentativi"
 
 msgid "Number of zombie jobs"
 msgstr "Numero di lavori zombie"
@@ -60857,6 +60889,10 @@ msgstr "Parole"
 
 msgid "Work request queue length"
 msgstr "Lunghezza della coda di richieste di lavoro"
+
+#, fuzzy
+msgid "Worker nodes"
+msgstr "Nodi Docker"
 
 msgid "Worker threads"
 msgstr "Flussi di lavoro"

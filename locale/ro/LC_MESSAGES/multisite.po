@@ -9037,6 +9037,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Choose time levels (in seconds) for which a service is allowed to be in an "
+"'deactivating' state"
+msgstr ""
+
+msgid ""
 "Choose what kind of ouput data is sent to the Check_MK server: Only count "
 "the files, only report count and extrem files (i.e. the oldest, newest, "
 "largest and smallest, report the the full stats on all files, or sent "
@@ -10585,6 +10590,9 @@ msgstr ""
 #, fuzzy
 msgid "Control group:"
 msgstr "Grup nou"
+
+msgid "Control plane nodes"
+msgstr ""
 
 msgid "Controller"
 msgstr ""
@@ -12818,6 +12826,9 @@ msgid "Define a range of syslog priorities this rule matches"
 msgstr ""
 
 msgid "Define a tolerating time period for activating services"
+msgstr ""
+
+msgid "Define a tolerating time period for deactivating services"
 msgstr ""
 
 msgid "Define a tolerating time period for reloading services"
@@ -19572,6 +19583,9 @@ msgstr ""
 msgid "Got no data from this site"
 msgstr ""
 
+msgid "Got no result to create dump file"
+msgstr ""
+
 msgid "Grab user from found processess"
 msgstr ""
 
@@ -25123,6 +25137,10 @@ msgstr ""
 
 msgid "Kubernetes Port"
 msgstr ""
+
+#, fuzzy
+msgid "Kubernetes node count"
+msgstr "Adresă"
 
 msgid "Kubernetes nodes"
 msgstr ""
@@ -31875,6 +31893,10 @@ msgstr "Numarul maxim de mesaje"
 msgid "Number of context lines before messages"
 msgstr "Numarul maxim de mesaje"
 
+#, fuzzy
+msgid "Number of control plane nodes"
+msgstr "Numarul maxim de conexiuni"
+
 msgid "Number of critical alerts"
 msgstr ""
 
@@ -32302,6 +32324,10 @@ msgstr "Numarul maxim de mesaje"
 
 msgid "Number of warnings"
 msgstr ""
+
+#, fuzzy
+msgid "Number of worker nodes"
+msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "Number of zombie jobs"
@@ -56667,6 +56693,10 @@ msgstr ""
 
 msgid "Work request queue length"
 msgstr ""
+
+#, fuzzy
+msgid "Worker nodes"
+msgstr "licente nefolosite"
 
 #, fuzzy
 msgid "Worker threads"

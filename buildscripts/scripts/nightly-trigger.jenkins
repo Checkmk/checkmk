@@ -6,6 +6,7 @@ def NODE = ''
 def EDITION_DEFAULT = ''
 def DEPLOY_TO_WEBSITE = false
 def JOB_EDITION = JOB_BASE_NAME.split("-")[-1]
+def ENABLE_NIGHTLY_TRIGGER = false
 
 withFolderProperties{
     switch (JOB_EDITION) {
@@ -40,6 +41,7 @@ withFolderProperties{
             throw new Exception('unknown trigger job')
     }
     NODE = env.BUILD_NODE
+    ENABLE_NIGHTLY_TRIGGER = env.ENABLE_NIGHTLY_TRIGGER == "True"
 }
 
 properties([
@@ -49,7 +51,7 @@ properties([
         string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise or managed' )
     ]),
     pipelineTriggers(
-        FOLDER_ID.startsWith('Testing') ? [] : [cron("0 ${START_HOUR} * * *")]
+        ENABLE_NIGHTLY_TRIGGER ? [cron("0 ${START_HOUR} * * *")] : []
     )
 ])
 

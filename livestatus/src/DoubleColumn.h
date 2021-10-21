@@ -80,16 +80,4 @@ private:
     const function_type f_;
 };
 
-class DoubleColumn::Constant : public DoubleColumn {
-public:
-    Constant(const std::string& name, const std::string& description,
-             value_type x)
-        : DoubleColumn{name, description, {}}, x_{x} {}
-    ~Constant() override = default;
-    value_type getValue(Row /*row*/) const override { return x_; }
-
-private:
-    const value_type x_;
-};
-
 #endif  // DoubleColumn_h

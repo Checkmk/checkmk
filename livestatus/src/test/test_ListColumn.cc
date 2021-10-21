@@ -20,23 +20,6 @@ struct DummyRow : Row {
 
 struct DummyValue {};
 
-TEST(ListColumn, ConstantList) {
-    const auto v = ListColumn::value_type{"hello"s, "world"s};
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = ListColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-}
-
-TEST(ListColumn, ConstantDefaultRow) {
-    const auto v = ListColumn::value_type{"hello"s, "world"s};
-    const auto row = DummyRow{nullptr};
-    const auto col = ListColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-}
-
 TEST(ListColumn, GetValueLambda) {
     auto v = ListColumn::value_type{"hello"s, "world"s};
 

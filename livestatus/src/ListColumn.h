@@ -14,7 +14,6 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 #include <vector>
 
@@ -149,22 +148,6 @@ private:
     const std::vector<U> Default{};
     std::unique_ptr<ListColumnRenderer<U>> renderer_;
     function_type f_;
-};
-
-class ListColumn::Constant : public ListColumn {
-public:
-    Constant(const std::string& name, const std::string& description,
-             value_type x)
-        : ListColumn{name, description, {}}, x_{std::move(x)} {}
-    ~Constant() override = default;
-    value_type getValue(Row /*row*/, const contact* /*auth_user*/,
-                        std::chrono::seconds /*timezone_offset*/
-    ) const override {
-        return x_;
-    }
-
-private:
-    const value_type x_;
 };
 
 #endif

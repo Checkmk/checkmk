@@ -198,17 +198,18 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
             return external_command_buffer.high;
         }));
 #else
-    addColumn(std::make_unique<IntColumn::Constant>(
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "external_command_buffer_slots",
-        "The size of the buffer for the external commands (placeholder)", 0));
-    addColumn(std::make_unique<IntColumn::Constant>(
+        "The size of the buffer for the external commands (placeholder)",
+        offsets, [](const TableStatus & /*r*/) { return 0; }));
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer (placeholder)",
-        0));
-    addColumn(std::make_unique<IntColumn::Constant>(
+        offsets, [](const TableStatus & /*r*/) { return 0; }));
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer (placeholder)",
-        0));
+        offsets, [](const TableStatus & /*r*/) { return 0; }));
 #endif  // NAGIOS4
 
     // Livestatus' own status

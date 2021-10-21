@@ -8,6 +8,12 @@
 #include "NagiosGlobals.h"  // IWYU pragma: keep
 #include "nagios.h"
 
+#ifdef NAGIOS4
+#define CONST_IN_NAGIOS4 const
+#else
+#define CONST_IN_NAGIOS4
+#endif
+
 extern "C" {
 // official exports ------------------------------------------------------------
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -17,13 +23,22 @@ int accept_passive_service_checks;
 int check_time_against_period(time_t /*unused*/, timeperiod * /*unused*/) {
     return 0;
 }
-command *find_command(char * /*unused*/) { return nullptr; }
-contact *find_contact(char * /*unused*/) { return nullptr; }
-contactgroup *find_contactgroup(char * /*unused*/) { return nullptr; }
-host *find_host(char * /*unused*/) { return nullptr; }
-hostgroup *find_hostgroup(char * /*unused*/) { return nullptr; }
-service *find_service(char * /*unused*/, char * /*unused*/) { return nullptr; }
-servicegroup *find_servicegroup(char * /*unused*/) { return nullptr; }
+command *find_command(CONST_IN_NAGIOS4 char * /*unused*/) { return nullptr; }
+contact *find_contact(CONST_IN_NAGIOS4 char * /*unused*/) { return nullptr; }
+contactgroup *find_contactgroup(CONST_IN_NAGIOS4 char * /*unused*/) {
+    return nullptr;
+}
+host *find_host(CONST_IN_NAGIOS4 char * /*unused*/) { return nullptr; }
+hostgroup *find_hostgroup(CONST_IN_NAGIOS4 char * /*unused*/) {
+    return nullptr;
+}
+service *find_service(CONST_IN_NAGIOS4 char * /*unused*/,
+                      CONST_IN_NAGIOS4 char * /*unused*/) {
+    return nullptr;
+}
+servicegroup *find_servicegroup(CONST_IN_NAGIOS4 char * /*unused*/) {
+    return nullptr;
+}
 time_t get_next_log_rotation_time(void) { return 0; }
 char *get_program_version(void) { return nullptr; }
 int is_contact_for_host(host * /*unused*/, contact * /*unused*/) { return 0; }
@@ -62,10 +77,15 @@ int process_external_command1(char * /*unused*/) { return 0; }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 time_t program_start;
 int rotate_log_file(time_t /*unused*/) { return 0; }
-int schedule_new_event(int /*unused*/, int /*unused*/, time_t /*unused*/,
-                       int /*unused*/, unsigned long /*unused*/,
-                       void * /*unused*/, int /*unused*/, void * /*unused*/,
-                       void * /*unused*/, int /*unused*/) {
+#ifdef NAGIOS4
+timed_event *
+#else
+int
+#endif
+schedule_new_event(int /*unused*/, int /*unused*/, time_t /*unused*/,
+                   int /*unused*/, unsigned long /*unused*/, void * /*unused*/,
+                   int /*unused*/, void * /*unused*/, void * /*unused*/,
+                   int /*unused*/) {
     return 0;
 }
 int submit_external_command(char * /*unused*/, int * /*unused*/) { return 0; }
@@ -97,8 +117,10 @@ unsigned long event_broker_options;
 int execute_host_checks;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int execute_service_checks;
+#ifndef NAGIOS4
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 circular_buffer external_command_buffer;
+#endif
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int external_command_buffer_slots;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

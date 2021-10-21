@@ -18,25 +18,6 @@ struct DummyRow : Row {
 
 struct DummyValue {};
 
-TEST(StringColumn, ConstantString) {
-    const auto v = "hello"s;
-
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = StringColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-}
-
-TEST(StringColumn, ConstantDefaultRow) {
-    const auto v = "hello"s;
-
-    const auto row = DummyRow{nullptr};
-    const auto col = StringColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-}
-
 TEST(StringColumn, GetValueLambda) {
     auto v = "hello"s;
 

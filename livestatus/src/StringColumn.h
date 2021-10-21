@@ -82,21 +82,6 @@ private:
     const std::function<std::string(const T&)> f_;
 };
 
-class StringColumn::Constant : public StringColumn {
-public:
-    Constant(const std::string& name, const std::string& description,
-             std::string x)
-        : StringColumn{name, description, {}}, x_{std::move(x)} {}
-    ~Constant() override = default;
-
-    [[nodiscard]] std::string getValue(Row /*row*/) const override {
-        return x_;
-    }
-
-private:
-    const std::string x_;
-};
-
 template <class T>
 struct StringColumn::Callback<T>::PerfData : StringColumn::Callback<T> {
     using StringColumn::Callback<T>::Callback;

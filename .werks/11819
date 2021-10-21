@@ -11,4 +11,3 @@ Version: 2.1.0i1
 From ntopng verion 5, a new REST API version (v2) is used. This exposes different endpoints for querying alert information.
 With this werk, the new REST API version is supported.
 
-<b>Note:</b> Due to a change in ntopng REST APIv2, the hour selection in the alert crossfilter is currently not working.

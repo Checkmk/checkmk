@@ -163,7 +163,6 @@ class AutochecksManager:
         try:
             autochecks_raw = _load_raw_autochecks(
                 path=path,
-                check_variables=None,
             )
         except SyntaxError as e:
             logger.exception("Syntax error in file %s: %s", path, e)
@@ -220,7 +219,6 @@ def _autochecks_path_for(hostname: HostName) -> Path:
 def _load_raw_autochecks(
     *,
     path: Path,
-    check_variables: Optional[Dict[str, Any]],
 ) -> Union[Iterable[Dict[str, Any]], Tuple]:
     """Read raw autochecks and resolve parameters"""
     if not path.exists():
@@ -240,9 +238,7 @@ def _load_raw_autochecks(
         # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
         # are resolved now *before* they are written to the autochecks file, and earlier autochecks
         # files are resolved during cmk-update-config.
-        return eval(  # pylint: disable=eval-used
-            raw_file_content, check_variables or {}, check_variables or {}
-        )
+        return eval(raw_file_content, {}, {})  # pylint: disable=eval-used
     except NameError as exc:
         raise MKGeneralException(
             "%s in an autocheck entry of host '%s' (%s). This entry is in pre Checkmk 1.7 "
@@ -256,14 +252,12 @@ def _load_raw_autochecks(
 def parse_autochecks_services(
     hostname: HostName,
     service_description: GetServiceDescription,
-    check_variables: Optional[Dict[str, Any]] = None,
 ) -> Sequence[AutocheckService]:
     """Read autochecks, but do not compute final check parameters"""
     path = _autochecks_path_for(hostname)
     try:
         raw_autochecks = _load_raw_autochecks(
             path=path,
-            check_variables=check_variables,
         )
     except SyntaxError as e:
         if cmk.utils.debug.enabled():

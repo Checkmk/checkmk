@@ -160,10 +160,8 @@ def test_parse_autochecks_services_not_existing():
     assert autochecks.parse_autochecks_services(HostName("host"), config.service_description) == []
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("autochecks_content", ["@", "[abc123]"])
 def test_parse_autochecks_services_raises(
-    fix_plugin_legacy,
     test_config: config.ConfigCache,
     autochecks_content: str,
 ) -> None:
@@ -175,7 +173,6 @@ def test_parse_autochecks_services_raises(
         autochecks.parse_autochecks_services(
             HostName("host"),
             config.service_description,
-            fix_plugin_legacy.check_variables,
         )
 
 
@@ -209,29 +206,15 @@ def test_parse_autochecks_services_raises(
           ('df', u'/', {}),
           ('df', u'/xyz', "lala"),
           ('df', u'/zzz', ['abc', 'xyz']),
-          ('cpu.loads', None, cpuload_default_levels),
           ('chrony', None, {}),
           ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
-          ('if64', u'00001001', { "errors" : if_default_error_levels, "traffic" : if_default_traffic_levels, "average" : if_default_average , "state" : "1", "speed" : 1000000000}),
         ]""",
             [
                 (CheckPluginName("df"), "/", {}),
                 (CheckPluginName("df"), "/xyz", "lala"),
                 (CheckPluginName("df"), "/zzz", ["abc", "xyz"]),
-                (CheckPluginName("cpu_loads"), None, (5.0, 10.0)),
                 (CheckPluginName("chrony"), None, {}),
                 (CheckPluginName("lnx_if"), "2", {"speed": 10000000, "state": ["1"]}),
-                (
-                    CheckPluginName("if64"),
-                    "00001001",
-                    {
-                        "average": None,
-                        "errors": (0.01, 0.1),
-                        "speed": 1000000000,
-                        "state": "1",
-                        "traffic": (None, None),
-                    },
-                ),
             ],
         ),
         # Dict: Regular processing
@@ -240,7 +223,6 @@ def test_parse_autochecks_services_raises(
           {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {}},
           {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': "lala", 'service_labels': {"x": "y"}},
           {'check_plugin_name': 'df', 'item': '/zzz', 'parameters': ['abc', 'xyz'], 'service_labels': {"x": "y"}},
-          {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {"x": "y"}},
           {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {"x": "y"}},
           {'check_plugin_name': 'lnx_if', 'item': '2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {"x": "y"}},
         ]""",
@@ -248,7 +230,6 @@ def test_parse_autochecks_services_raises(
                 (CheckPluginName("df"), "/", {}),
                 (CheckPluginName("df"), "/xyz", "lala"),
                 (CheckPluginName("df"), "/zzz", ["abc", "xyz"]),
-                (CheckPluginName("cpu_loads"), None, (5.0, 10.0)),
                 (CheckPluginName("chrony"), None, {}),
                 (CheckPluginName("lnx_if"), "2", {"speed": 10000000, "state": ["1"]}),
             ],
@@ -256,7 +237,6 @@ def test_parse_autochecks_services_raises(
     ],
 )
 def test_parse_autochecks_services(
-    fix_plugin_legacy,
     test_config: config.ConfigCache,
     autochecks_content: str,
     expected_result: Sequence[Tuple[CheckPluginName, str, LegacyCheckParameters]],
@@ -268,7 +248,6 @@ def test_parse_autochecks_services(
     parsed = autochecks.parse_autochecks_services(
         HostName("host"),
         config.service_description,
-        fix_plugin_legacy.check_variables,
     )
     assert len(parsed) == len(expected_result)
 

@@ -179,6 +179,7 @@ class UpdateConfig:
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
+            # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
@@ -282,9 +283,8 @@ class UpdateConfig:
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)
             try:
-                autochecks = cmk.base.autochecks.parse_autochecks_services(
-                    hostname,
-                    cmk.base.config.service_description,
+                autochecks = cmk.base.autochecks.migration.load_unmigrated_autocheck_entries(
+                    autocheck_file,
                     check_variables,
                 )
             except MKGeneralException as exc:
@@ -299,8 +299,8 @@ class UpdateConfig:
                 failed_hosts.append(hostname)
                 continue
 
-            autochecks = [self._fix_service(s, all_rulesets, hostname) for s in autochecks]
-            cmk.base.autochecks.save_autochecks_services(hostname, autochecks)
+            autochecks = [self._fix_entry(s, all_rulesets, hostname) for s in autochecks]
+            cmk.base.autochecks.save_autochecks(hostname, autochecks)
 
         if failed_hosts:
             msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)
@@ -370,31 +370,30 @@ class UpdateConfig:
 
         return None
 
-    def _fix_service(
+    def _fix_entry(
         self,
-        service: cmk.base.autochecks.AutocheckService,
+        entry: cmk.base.autochecks.AutocheckEntry,
         all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
         hostname: str,
-    ) -> cmk.base.autochecks.AutocheckService:
+    ) -> cmk.base.autochecks.AutocheckEntry:
         """Change names of removed plugins to the new ones and transform parameters"""
-        new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(service.check_plugin_name)
+        new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(entry.check_plugin_name)
         new_params = self._transformed_params(
-            new_plugin_name or service.check_plugin_name,
-            service.parameters,
+            new_plugin_name or entry.check_plugin_name,
+            entry.parameters,
             all_rulesets,
             hostname,
         )
 
         if new_plugin_name is None and new_params is None:
-            # don't create a new service if nothing has changed
-            return service
+            # don't create a new entry if nothing has changed
+            return entry
 
-        return cmk.base.autochecks.AutocheckService(
-            check_plugin_name=new_plugin_name or service.check_plugin_name,
-            item=service.item,
-            description=service.description,
-            parameters=new_params or service.parameters,
-            service_labels=service.service_labels,
+        return cmk.base.autochecks.AutocheckEntry(
+            check_plugin_name=new_plugin_name or entry.check_plugin_name,
+            item=entry.item,
+            parameters=new_params or entry.parameters,
+            service_labels=entry.service_labels,
         )
 
     def _rewrite_wato_rulesets(self):

@@ -202,7 +202,6 @@ def update_pnp_info_files(perfvar, newvar, filepath):
 
 
 def update_service_info(config_cache, hostnames):
-    check_variables = config.get_check_variables()
     cmc_capable = not cmk.utils.version.is_raw_edition()
 
     rename_journal = {}
@@ -210,7 +209,6 @@ def update_service_info(config_cache, hostnames):
         for service in cmk.base.autochecks.parse_autochecks_services(
             hostname,
             config.service_description,
-            check_variables,
         ):
             if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
                 if cmc_capable:

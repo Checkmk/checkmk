@@ -5,14 +5,52 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Deal with all sorts of legacy aand invalid formats of autochecks"""
 
-from typing import Dict, Sequence, Tuple, Union
+from pathlib import Path
+from typing import Any, Dict, Sequence, Tuple, Union
 
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import Item
 
 from cmk.base.check_utils import AutocheckService
 
 from .utils import AutocheckEntry
+
+
+def load_unmigrated_autocheck_entries(
+    path: Path, check_variables: Dict[str, Any]
+) -> Sequence[AutocheckEntry]:
+    try:
+        with path.open(encoding="utf-8") as f:
+            raw_file_content = f.read().strip()
+            assert raw_file_content
+    except (FileNotFoundError, AssertionError):
+        return []
+
+    try:
+        # This evaluation was needed to resolve references to variables in the autocheck
+        # default parameters and to evaluate data structure declarations containing references to
+        # variables.
+        # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
+        # are resolved now *before* they are written to the autochecks file, and earlier autochecks
+        # files are resolved during cmk-update-config.
+        return [
+            parse_autocheck_entry(entry)
+            for entry in eval(  # pylint: disable=eval-used
+                raw_file_content, check_variables, check_variables
+            )
+            if isinstance(entry, (tuple, dict))
+        ]
+    except NameError as exc:
+        raise MKGeneralException(
+            "%s in an autocheck entry of host '%s' (%s). This entry is in pre Checkmk 1.7 "
+            "format and needs to be converted. This is normally done by "
+            '"cmk-update-config -v" during "omd update". Please execute '
+            '"cmk-update-config -v" for converting the old configuration.'
+            % (str(exc).capitalize(), path.stem, path)
+        )
+    except SyntaxError as exc:
+        raise MKGeneralException(f"Unable to parse autochecks file {path}: {exc}")
 
 
 def parse_autocheck_entry(entry: Union[Tuple, Dict]) -> AutocheckEntry:

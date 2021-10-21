@@ -9,8 +9,8 @@ from typing import Dict, Generic, Literal, Optional, Sequence, Tuple, Type, Type
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
-from cmk.special_agents.utils_kubernetes.schemas import node_from_client, pod_from_client
 from cmk.special_agents.utils_kubernetes.schemata import api
+from cmk.special_agents.utils_kubernetes.transform import node_from_client, pod_from_client
 
 
 class CoreAPI:

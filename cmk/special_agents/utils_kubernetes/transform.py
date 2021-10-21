@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+This file contains helper functions to convert kubernetes specific
+data structures to version independent data structured defined in schemata.api
+"""
+
 from __future__ import annotations
 
 import datetime

@@ -7,7 +7,7 @@ from kubernetes.client import ApiClient  # type: ignore[import] # pylint: disabl
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
-from cmk.special_agents.utils_kubernetes.schemas import (
+from cmk.special_agents.utils_kubernetes.transform import (
     Labels,
     node_conditions,
     NodeLabels,

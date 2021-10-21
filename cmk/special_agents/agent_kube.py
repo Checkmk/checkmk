@@ -41,8 +41,7 @@ import cmk.utils.profile
 
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
-from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.section_schemas import NodeCount
+from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 MetricName = NewType("MetricName", str)
 MetricValue = NewType("MetricValue", float)
@@ -186,13 +185,13 @@ class Node:
     def append(self, pod: Pod) -> None:
         self._pods.append(pod)
 
-    def pod_resources(self) -> PodResources:
+    def pod_resources(self) -> section.PodResources:
         resources = {
             "capacity": self.resources["capacity"].pods,
             "allocatable": self.resources["allocatable"].pods,
         }
         resources.update(dict(Counter([pod.phase for pod in self._pods])))
-        return PodResources(**resources)
+        return section.PodResources(**resources)
 
     def container_count(self) -> ContainerCount:
         result = ContainerCount()
@@ -241,12 +240,12 @@ class Cluster:
         node.append(pod)
         self._pods[pod.name(prepend_namespace=True)] = pod
 
-    def pod_resources(self) -> PodResources:
+    def pod_resources(self) -> section.PodResources:
         resources: DefaultDict[str, int] = defaultdict(int)
         for node in self._nodes.values():
             for k, v in dict(node.pod_resources()).items():
                 resources[k] += v
-        return PodResources(**resources)
+        return section.PodResources(**resources)
 
     def pods(self) -> Sequence[Pod]:
         return list(self._pods.values())
@@ -254,7 +253,7 @@ class Cluster:
     def nodes(self) -> Sequence[Node]:
         return list(self._nodes.values())
 
-    def node_count(self) -> NodeCount:
+    def node_count(self) -> section.NodeCount:
         worker = 0
         control_plane = 0
         for node in self._nodes.values():
@@ -262,7 +261,7 @@ class Cluster:
                 control_plane += 1
             else:
                 worker += 1
-        return NodeCount(worker=worker, control_plane=control_plane)
+        return section.NodeCount(worker=worker, control_plane=control_plane)
 
     def cluster_details(self) -> api.ClusterInfo:
         if self._cluster_details is None:

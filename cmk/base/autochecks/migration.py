@@ -39,15 +39,7 @@ def load_unmigrated_autocheck_entries(
             )
             if isinstance(entry, (tuple, dict))
         ]
-    except NameError as exc:
-        raise MKGeneralException(
-            "%s in an autocheck entry of host '%s' (%s). This entry is in pre Checkmk 1.7 "
-            "format and needs to be converted. This is normally done by "
-            '"cmk-update-config -v" during "omd update". Please execute '
-            '"cmk-update-config -v" for converting the old configuration.'
-            % (str(exc).capitalize(), path.stem, path)
-        )
-    except (SyntaxError, TypeError) as exc:
+    except (SyntaxError, NameError, TypeError, ValueError) as exc:
         raise MKGeneralException(f"Unable to parse autochecks file {path}: {exc}")
 
 

@@ -188,15 +188,14 @@ def _parse_autocheck_service(
 def set_autochecks_of_real_hosts(
     hostname: HostName,
     new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
-    service_description: GetServiceDescription,
 ) -> None:
+    store = AutochecksStore(hostname)
     # write new autochecks file for that host
-    save_autochecks_services(
-        hostname,
+    store.write(
         _consolidate_autochecks_of_real_hosts(
             hostname,
             new_services_with_nodes,
-            parse_autochecks_services(hostname, service_description),
+            store.read(),
         ),
     )
 
@@ -204,16 +203,25 @@ def set_autochecks_of_real_hosts(
 def _consolidate_autochecks_of_real_hosts(
     hostname: HostName,
     new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
-    existing_autochecks: Sequence[AutocheckService],
-) -> Sequence[AutocheckService]:
+    existing_autochecks: Sequence[AutocheckEntry],
+) -> Sequence[AutocheckEntry]:
     consolidated = {
-        discovered.id(): discovered
+        discovered.id(): AutocheckEntry(
+            check_plugin_name=discovered.check_plugin_name,
+            item=discovered.item,
+            parameters=discovered.parameters,
+            service_labels={l.name: l.value for l in discovered.service_labels.values()},
+        )
         for discovered, found_on_nodes in new_services_with_nodes
         if hostname in found_on_nodes
     }
     # overwrite parameters from existing ones for those which are kept
     new_services = {x.service.id() for x in new_services_with_nodes}
-    consolidated.update((ex.id(), ex) for ex in existing_autochecks if ex.id() in new_services)
+    consolidated.update(
+        (id_, ex)
+        for ex in existing_autochecks
+        if (id_ := (ex.check_plugin_name, ex.item)) in new_services
+    )
 
     return list(consolidated.values())
 

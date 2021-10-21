@@ -3296,7 +3296,6 @@ class HostConfig:
             autochecks.set_autochecks_of_real_hosts(
                 self.hostname,
                 new_services,
-                service_description,  # top level function!
             )
 
     def remove_autochecks(self) -> int:

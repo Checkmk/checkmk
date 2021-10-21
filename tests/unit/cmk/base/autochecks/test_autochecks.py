@@ -114,6 +114,10 @@ def _service(name: str, params: Optional[Dict[str, str]] = None) -> AutocheckSer
     return AutocheckService(CheckPluginName(name), None, "", params or {})
 
 
+def _entry(name: str, params: Optional[Dict[str, str]] = None) -> autochecks.AutocheckEntry:
+    return autochecks.AutocheckEntry(CheckPluginName(name), None, params or {}, {})
+
+
 def test_consolidate_autochecks_of_real_hosts() -> None:
 
     new_services_with_nodes = [
@@ -130,22 +134,24 @@ def test_consolidate_autochecks_of_real_hosts() -> None:
             _service("D"), [HostName("othernode"), HostName("yetanothernode")]
         ),
     ]
-    preexisting_services = [
-        _service("C", {"params": "old"}),  # still there
-        _service("D"),  # no longer found on the node
-        _service("E"),  # not found at all
+    preexisting_entries = [
+        _entry("C", {"params": "old"}),  # still there
+        _entry("D"),  # no longer found on the node
+        _entry("E"),  # not found at all
     ]
 
+    # the dict is just b/c it's easier to test against.
     consolidated = autochecks._consolidate_autochecks_of_real_hosts(
         HostName("node"),
         new_services_with_nodes,
-        preexisting_services,
+        preexisting_entries,
     )
 
-    # these are service we expect:
-    # Note: this is the status quo. I am not sure why we keep service D
-    assert sorted(str(s.check_plugin_name) for s in consolidated) == ["A", "C", "D"]
+    # for easier test access:
+    by_plugin = {str(e.check_plugin_name): e for e in consolidated}
 
+    # these are entries we expect (Note: this is status quo. Not sure why we keep service D):
+    assert len(consolidated) == 3
+    assert set(by_plugin) == {"A", "C", "D"}
     # and this one should have kept the old parameters
-    service_c = [s for s in consolidated if str(s.check_plugin_name) == "C"][0]
-    assert service_c.parameters == {"params": "old"}
+    assert by_plugin["C"].parameters == {"params": "old"}

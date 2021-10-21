@@ -4,9 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest
 
 from cmk.automations.results import SetAutochecksResult, TryDiscoveryResult
+
+from cmk.gui.watolib.services import Discovery
 
 mock_discovery_result = TryDiscoveryResult(
     check_table=[
@@ -842,3 +846,47 @@ def test_openapi_discovery(
             headers={"Accept": "application/json"},
             status=204,
         )
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_openapi_discover_single_service(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+    mocker,
+) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    # create a host
+    wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params=json.dumps(
+            {
+                "folder": "/",
+                "host_name": "example.com",
+                "attributes": {},
+            }
+        ),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    discovery_spy = mocker.spy(Discovery, "__init__")
+    mocker.patch("cmk.gui.watolib.services.execute_discovery_job")
+
+    # we want to test this call:
+    wsgi_app.call_method(
+        "put",
+        base + "/objects/host/example.com/actions/update_discovery_phase/invoke",
+        params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+        status=204,
+    )
+
+    # 'monitored' is the external name for the target_phase, internally 'old' is used.
+    assert discovery_spy.call_args.kwargs["api_request"]["update_target"] == "old"

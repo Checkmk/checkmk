@@ -155,7 +155,7 @@ def update_service_phase(params):
     check_type = body["check_type"]
     service_item = body["service_item"]
     _update_single_service_phase(
-        target_phase,
+        SERVICE_DISCOVERY_PHASES[target_phase],
         host,
         check_type,
         service_item,

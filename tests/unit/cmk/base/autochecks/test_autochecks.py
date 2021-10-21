@@ -111,17 +111,6 @@ def test_parse_autochecks_services(
     ]
 
 
-def test_remove_autochecks_file():
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir) / "host.mk"
-    assert not autochecks_file.exists()
-
-    autochecks.save_autochecks_services(HostName("host"), [])
-    assert autochecks_file.exists()
-
-    autochecks.remove_autochecks_file(HostName("host"))
-    assert not autochecks_file.exists()
-
-
 @pytest.mark.parametrize(
     "items,expected_content",
     [

@@ -17,6 +17,7 @@ import io
 import itertools
 import operator
 import re
+import socket
 import statistics
 import time
 from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Tuple, Union
@@ -44,6 +45,11 @@ Tables = Dict[TableName, Dict[SiteName, ResultList]]
 class FakeSocket:
     def __init__(self, mock_live: MockSingleSiteConnection) -> None:
         self.mock_live = mock_live
+        (self._write_socket, self._read_socket) = socket.socketpair()
+        # The fake socket always states that there is something to read
+        # (otherwise, select/poll calls on this fake socket will run into a timeout)
+        # The actual (fake) data is not send/received via this FakeSocket fds, anyway
+        self._write_socket.send(b"This could be your data")
 
     def settimeout(self, timeout: Optional[int]) -> None:
         pass
@@ -51,10 +57,19 @@ class FakeSocket:
     def connect(self, address: str) -> None:
         pass
 
+    def fileno(self):
+        return self._read_socket.fileno()
+
+    def close(self):
+        return
+
     def recv(self, length: int) -> bytes:
         return self.mock_live.socket_recv(length)
 
     def send(self, data: bytes) -> None:
+        return self.mock_live.socket_send(data)
+
+    def sendall(self, data: bytes) -> None:
         return self.mock_live.socket_send(data)
 
 

@@ -480,11 +480,11 @@ class LoginPage(Page):
             assert username_var is not None
             username = UserId(username_var.rstrip())
             if not username:
-                raise MKUserError("_username", _("No username given."))
+                raise MKUserError("_username", _("Missing username"))
 
             password = request.var("_password", "")
             if not password:
-                raise MKUserError("_password", _("No password given."))
+                raise MKUserError("_password", _("Missing password"))
 
             default_origtarget = url_prefix() + "check_mk/"
             origtarget = request.get_url_input("_origtarget", default_origtarget)
@@ -524,7 +524,7 @@ class LoginPage(Page):
                 raise HTTPRedirect(origtarget)
 
             userdb.on_failed_login(username)
-            raise MKUserError(None, _("Invalid credentials."))
+            raise MKUserError(None, _("Invalid login"))
         except MKUserError as e:
             user_errors.add(e)
 
@@ -556,11 +556,13 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
+        html.open_a(href="https://checkmk.com")
         html.img(
             src=theme.detect_icon_path(icon_name="logo", prefix="mk-"),
             id_="logo",
             class_="custom" if theme.has_custom_logo() else None,
         )
+        html.close_a()
 
         html.begin_form("login", method="POST", add_transid=False, action="login.py")
         html.hidden_field("_login", "1")
@@ -599,7 +601,7 @@ class LoginPage(Page):
         footer.append(
             HTML(
                 "&copy; %s"
-                % html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank")
+                % html.render_a("tribe29 GmbH", href="https://tribe29.com", target="_blank")
             )
         )
 

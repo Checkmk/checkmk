@@ -237,12 +237,12 @@ def test_parse_autochecks_services_raises(
         # Dict: Regular processing
         (
             """[
-          {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
-          {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': "lala", 'service_labels': {u"x": u"y"}},
-          {'check_plugin_name': 'df', 'item': u'/zzz', 'parameters': ['abc', 'xyz'], 'service_labels': {u"x": u"y"}},
-          {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u"x": u"y"}},
-          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {u"x": u"y"}},
-          {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {u"x": u"y"}},
+          {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {}},
+          {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': "lala", 'service_labels': {"x": "y"}},
+          {'check_plugin_name': 'df', 'item': '/zzz', 'parameters': ['abc', 'xyz'], 'service_labels': {"x": "y"}},
+          {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {"x": "y"}},
+          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {"x": "y"}},
+          {'check_plugin_name': 'lnx_if', 'item': '2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {"x": "y"}},
         ]""",
             [
                 (CheckPluginName("df"), "/", {}),

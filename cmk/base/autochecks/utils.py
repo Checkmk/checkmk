@@ -5,13 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from typing import Any, Mapping, NamedTuple
+import ast
+from typing import Any, Mapping, NamedTuple, Sequence
 
 from cmk.utils.type_defs import CheckPluginName, Item
 
 from cmk.base.check_utils import LegacyCheckParameters
 
 
+# If we switched to something less stupid than "LegacyCheckParameters", see
+# if we can use pydantic
 class AutocheckEntry(NamedTuple):
     check_plugin_name: CheckPluginName
     item: Item
@@ -34,3 +37,21 @@ class AutocheckEntry(NamedTuple):
             parameters=cls._parse_parameters(raw_dict["parameters"]),
             service_labels={str(n): str(v) for n, v in raw_dict["service_labels"].items()},
         )
+
+    def dump(self) -> Mapping[str, Any]:
+        return {
+            "check_plugin_name": str(self.check_plugin_name),
+            "item": self.item,
+            "parameters": self.parameters,
+            "service_labels": self.service_labels,
+        }
+
+
+class AutochecksSerializer:
+    @staticmethod
+    def serialize(entries: Sequence[AutocheckEntry]) -> bytes:
+        return ("[\n%s]\n" % "".join(f"  {e.dump()!r},\n" for e in entries)).encode("utf-8")
+
+    @staticmethod
+    def deserialize(raw: bytes) -> Sequence[AutocheckEntry]:
+        return [AutocheckEntry.load(d) for d in ast.literal_eval(raw.decode("utf-8"))]

@@ -32,7 +32,7 @@ from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Servic
 from cmk.base.discovered_labels import ServiceLabel
 
 from .migration import deduplicate_autochecks, parse_autocheck_entry
-from .utils import AutocheckEntry
+from .utils import AutocheckEntry, AutochecksSerializer
 
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters], Optional[LegacyCheckParameters]
@@ -371,14 +371,25 @@ def save_autochecks_services(
     hostname: HostName,
     services: Sequence[AutocheckService],
 ) -> None:
-    path = _autochecks_path_for(hostname)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    content = []
-    content.append("[")
-    for service in sorted(services):
-        content.append("  %s," % service.dump_autocheck())
-    content.append("]\n")
-    store.save_text_to_file(path, "\n".join(content))
+    save_autochecks(
+        hostname,
+        [
+            AutocheckEntry(
+                check_plugin_name=s.check_plugin_name,
+                item=s.item,
+                parameters=s.parameters,
+                service_labels={l.name: l.value for l in s.service_labels.values()},
+            )
+            for s in sorted(services)
+        ],
+    )
+
+
+def save_autochecks(hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:
+    store.ObjectStore(
+        _autochecks_path_for(hostname),
+        serializer=AutochecksSerializer(),
+    ).write_obj(entries)
 
 
 def remove_autochecks_file(hostname: HostName) -> None:

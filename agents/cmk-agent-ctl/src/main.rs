@@ -2,37 +2,37 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+mod certs;
 mod cli;
 mod config;
 mod marcv_api;
 mod monitoring_data;
 mod uuid;
+use config::RegistrationState;
 use std::io::{self, Result as IOResult, Write};
 use std::path::Path;
 use structopt::StructOpt;
 
 fn register(config: config::Config, path_state: &Path) {
+    let mut registration_state = RegistrationState::from_file(path_state).unwrap();
     let marcv_addresses = config
         .marcv_addresses
         .expect("Server addresses not specified");
-    let identifier = config.uuid.unwrap_or(uuid::make());
-    match marcv_api::register(&marcv_addresses[0], &identifier) {
-        Ok(message) => println!("{}", message),
-        Err(error) => panic!("Error during registration: {}", error),
+
+    for address in marcv_addresses {
+        let identifier = uuid::make();
+        let (csr, private_key) = certs::make_csr(&identifier).unwrap();
+        let certificate = marcv_api::register(&address, csr).unwrap();
+
+        registration_state.add_server_spec(config::ServerSpec {
+            marcv_address: address,
+            uuid: identifier,
+            private_key: String::from_utf8(private_key).unwrap(),
+            client_cert: certificate,
+        })
     }
-    match (config::Config {
-        marcv_addresses: Option::from(marcv_addresses),
-        uuid: Option::from(identifier),
-        package_name: config.package_name,
-    }
-    .to_file(path_state))
-    {
-        Err(error) => panic!(
-            "Error while saving state file after registration: {}",
-            error
-        ),
-        _ => {}
-    }
+
+    registration_state.to_file(path_state).unwrap()
 }
 
 fn push(config: config::Config) {
@@ -40,7 +40,7 @@ fn push(config: config::Config) {
         .marcv_addresses
         .expect("Server addresses not specified");
     let identifier = config.uuid.expect("UUID not set");
-    match monitoring_data::collect(&config.package_name) {
+    match monitoring_data::collect(config.package_name) {
         Ok(mon_data) => match marcv_api::agent_data(&marcv_addresses[0], &identifier, mon_data) {
             Ok(message) => println!("{}", message),
             Err(error) => panic!("Error pushing monitoring data: {}", error),
@@ -50,7 +50,7 @@ fn push(config: config::Config) {
 }
 
 fn dump(config: config::Config) {
-    match monitoring_data::collect(&config.package_name) {
+    match monitoring_data::collect(config.package_name) {
         Ok(mon_data) => match io::stdout().write_all(&mon_data) {
             Err(error) => panic!("Error writing monitoring data to stdout: {}", error),
             _ => {}

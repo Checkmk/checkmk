@@ -33,10 +33,6 @@ impl Config {
         return Ok(Config::empty_config());
     }
 
-    pub fn to_file(self, path: &Path) -> Result<()> {
-        return write(path, &serde_json::to_string(&self)?);
-    }
-
     pub fn merge_two_configs(loser: Config, winner: Config) -> Config {
         return Config {
             marcv_addresses: winner.marcv_addresses.or(loser.marcv_addresses),
@@ -51,5 +47,40 @@ impl Config {
             uuid: None,
             package_name: args.package_name,
         };
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RegistrationState {
+    #[serde(default)]
+    pub server_specs: Vec<ServerSpec>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ServerSpec {
+    pub marcv_address: String,
+    pub uuid: String,
+    pub private_key: String,
+    pub client_cert: String,
+}
+
+impl RegistrationState {
+    fn empty_state() -> RegistrationState {
+        return serde_json::from_str("{}").unwrap();
+    }
+
+    pub fn from_file(path: &Path) -> Result<RegistrationState> {
+        if path.exists() {
+            return Ok(serde_json::from_str(&read_to_string(path)?)?);
+        }
+        return Ok(RegistrationState::empty_state());
+    }
+
+    pub fn to_file(self, path: &Path) -> Result<()> {
+        return write(path, &serde_json::to_string(&self)?);
+    }
+
+    pub fn add_server_spec(&mut self, server_spec: ServerSpec) {
+        self.server_specs.push(server_spec)
     }
 }

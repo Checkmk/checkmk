@@ -10,8 +10,8 @@ struct JSONResponse {
     message: String,
 }
 
-pub fn register(_server_address: &str, uuid: &str) -> reqwest::Result<String> {
-    return Ok(String::from("Fake registration with uuid ") + uuid);
+pub fn register(_server_address: &str, _csr: Vec<u8>) -> reqwest::Result<String> {
+    return Ok(String::from("Fake certificate for "));
 }
 
 pub fn agent_data(

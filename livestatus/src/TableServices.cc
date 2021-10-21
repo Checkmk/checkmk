@@ -694,9 +694,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets, [](const service & /*r*/) {
             return std::chrono::system_clock::time_point{};
         }));
-    table->addColumn(std::make_unique<IntColumn::Constant>(
+    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
         prefix + "cache_interval",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0));
+        "A dummy column in order to be compatible with Check_MK Multisite",
+        offsets, [](const service & /*r*/) { return 0; }));
 }
 
 void TableServices::answerQuery(Query *query) {

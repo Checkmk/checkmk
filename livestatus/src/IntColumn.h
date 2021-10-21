@@ -91,20 +91,4 @@ private:
     const function_type f_;
 };
 
-class IntColumn::Constant : public IntColumn {
-public:
-    Constant(const std::string& name, const std::string& description,
-             value_type x)
-        : IntColumn{name, description, {}}, x_{x} {}
-    ~Constant() override = default;
-
-    value_type getValue(Row /*row*/,
-                        const contact* /*auth_user*/) const override {
-        return x_;
-    }
-
-private:
-    const value_type x_;
-};
-
 #endif

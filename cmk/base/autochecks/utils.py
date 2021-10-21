@@ -3,8 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
-from typing import Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
 from cmk.utils.type_defs import CheckPluginName, Item
 
@@ -16,3 +17,20 @@ class AutocheckEntry(NamedTuple):
     item: Item
     parameters: LegacyCheckParameters
     service_labels: Mapping[str, str]
+
+    @staticmethod
+    def _parse_parameters(parameters: object) -> LegacyCheckParameters:
+        # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
+        if parameters is None or isinstance(parameters, (dict, tuple, list, str)):
+            return parameters
+        # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
+        raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
+
+    @classmethod
+    def load(cls, raw_dict: Mapping[str, Any]) -> AutocheckEntry:
+        return cls(
+            check_plugin_name=CheckPluginName(raw_dict["check_plugin_name"]),
+            item=None if (raw_item := raw_dict["item"]) is None else str(raw_item),
+            parameters=cls._parse_parameters(raw_dict["parameters"]),
+            service_labels={str(n): str(v) for n, v in raw_dict["service_labels"].items()},
+        )

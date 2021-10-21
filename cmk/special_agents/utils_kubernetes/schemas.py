@@ -7,14 +7,13 @@
 from __future__ import annotations
 
 import datetime
-import enum
 import time
 from collections import defaultdict
 from typing import Dict, List, NewType, Optional
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
-from pydantic import BaseModel
-from typing_extensions import Literal
+
+from .schemata import api
 
 Labels = NewType("Labels", Dict[str, str])
 
@@ -60,7 +59,7 @@ def parse_memory(value: str) -> float:
     return float(value)
 
 
-def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> MetaData:
+def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> api.MetaData:
     def convert_to_timestamp(k8s_date_time) -> float:
         if isinstance(k8s_date_time, str):
             date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ")
@@ -75,7 +74,7 @@ def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> MetaData:
     if not labels:
         labels = metadata.labels if metadata.labels else {}
 
-    return MetaData(
+    return api.MetaData(
         name=metadata.name,
         namespace=metadata.namespace,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
@@ -83,42 +82,7 @@ def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> MetaData:
     )
 
 
-class MetaData(BaseModel):
-    name: str
-    namespace: Optional[str] = None
-    creation_timestamp: Optional[float] = None
-    labels: Optional[Labels] = None
-    prefix = ""
-    use_namespace = False
-
-
-class NamespaceConfig(BaseModel):
-    metadata: MetaData
-    phase: Optional[str] = None
-
-
-class PodInfo(BaseModel):
-    node: str
-    host_network: Optional[str] = None
-    dns_policy: Optional[str] = None
-    host_ip: Optional[str] = None
-    pod_ip: str
-    qos_class: Literal["burstable", "besteffort", "guaranteed"]
-
-
-class ContainerState(str, enum.Enum):
-    # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-states
-    RUNNING = "running"
-    WAITING = "waiting"
-    TERMINATED = "terminated"
-
-
-class ContainerInfo(BaseModel):
-    image: str
-    state: ContainerState
-
-
-def parse_pod_info(pod: client.V1Pod) -> PodInfo:
+def parse_pod_info(pod: client.V1Pod) -> api.PodInfo:
     info = {}
     if pod.spec:
         info.update({"node": pod.spec.node_name, "host_network": pod.spec.host_network})
@@ -131,20 +95,10 @@ def parse_pod_info(pod: client.V1Pod) -> PodInfo:
                 "qos_class": pod.status.qos_class.lower(),
             }
         )
-    return PodInfo(**info)
+    return api.PodInfo(**info)
 
 
-class Resources(BaseModel):
-    limit: float = float("inf")
-    requests: float = 0.0
-
-
-class PodUsageResources(BaseModel):
-    cpu: Resources
-    memory: Resources
-
-
-def pod_resources(pod: client.V1Pod) -> PodUsageResources:
+def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
     memory: Dict[str, float] = defaultdict(float)
     cpu: Dict[str, float] = defaultdict(float)
 
@@ -164,100 +118,23 @@ def pod_resources(pod: client.V1Pod) -> PodUsageResources:
             cpu["requests"] += parse_frac_prefix(resources.requests.get("cpu", "0.0"))
             memory["requests"] += parse_memory(resources.requests.get("memory", "0.0"))
 
-    return PodUsageResources(cpu=Resources(**cpu), memory=Resources(**memory))
+    return api.PodUsageResources(cpu=api.Resources(**cpu), memory=api.Resources(**memory))
 
 
-def pod_containers(pod: client.V1Pod) -> List[ContainerInfo]:
+def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
     result = []
     for status in pod.status.container_statuses:
         if status.state.terminated is not None:
-            state = ContainerState.TERMINATED
+            state = api.ContainerState.TERMINATED
         elif status.state.running is not None:
-            state = ContainerState.RUNNING
+            state = api.ContainerState.RUNNING
         elif status.state.waiting is not None:
-            state = ContainerState.WAITING
+            state = api.ContainerState.WAITING
         else:
             raise AssertionError("Unknown contianer state {status.state}")
 
-        result.append(ContainerInfo(id=status.container_id, image=status.image, state=state))
+        result.append(api.ContainerInfo(id=status.container_id, image=status.image, state=state))
     return result
-
-
-class Phase(str, enum.Enum):
-    RUNNING = "running"
-    PENDING = "pending"
-    SUCCEEDED = "succeeded"
-    FAILED = "failed"
-    UNKNOWN = "unknown "
-
-
-class PodAPI(BaseModel):
-    uid: str
-    metadata: MetaData
-    phase: Phase
-    info: PodInfo
-    resources: PodUsageResources
-    containers: List[ContainerInfo]
-
-    @classmethod
-    def from_client(cls, pod: client.V1Pod) -> PodAPI:
-        return cls(
-            uid=pod.metadata.uid,
-            metadata=parse_metadata(pod.metadata),
-            phase=Phase(pod.status.phase.lower()),
-            info=parse_pod_info(pod),
-            resources=pod_resources(pod),
-            containers=pod_containers(pod),
-        )
-
-
-class NodeStatus(BaseModel):
-    NetworkUnavailable: Optional[bool] = None
-    MemoryPressure: bool
-    DiskPressure: bool
-    PIDPressure: bool
-    Ready: bool
-
-
-class NodeResources(BaseModel):
-    cpu = 0.0
-    memory = 0.0
-    pods = 0
-
-
-class APIHealthStatus(BaseModel):
-    status_code: int
-    response: str
-    # only set if status_code != 200
-    verbose_response: Optional[str]
-
-
-class APIHealth(BaseModel):
-    ready: APIHealthStatus
-    live: APIHealthStatus
-
-
-class ClusterInfo(BaseModel):
-    """section: k8s_cluster_details_v1"""
-
-    api_health: APIHealth
-
-
-class NodeAPI(BaseModel):
-    metadata: MetaData
-    conditions: NodeStatus
-    control_plane: bool
-    resources: Dict[str, NodeResources]
-
-    @classmethod
-    def from_client(cls, node: client.V1Node) -> NodeAPI:
-        node_labels = NodeLabels(node.metadata.labels)
-        return cls(
-            metadata=parse_metadata(node.metadata, labels=node_labels.to_cmk_labels()),
-            conditions=node_conditions(node),
-            resources=parse_node_resources(node),
-            control_plane=node_labels.is_control_plane,
-        )
 
 
 class NodeLabels:
@@ -275,7 +152,7 @@ class NodeLabels:
     def is_control_plane(self) -> bool:
         return self._is_control_plane
 
-    def to_cmk_labels(self) -> Labels:
+    def to_cmk_labels(self) -> api.Labels:
         """Parse node labels
 
         >>> NodeLabels(Labels({'node-role.kubernetes.io/master': 'yes'})).to_cmk_labels()
@@ -287,19 +164,19 @@ class NodeLabels:
             "control-plane_node" if self._is_control_plane else "worker_node"
         )
         labels["cmk/kubernetes"] = "yes"
-        return Labels(labels)
+        return api.Labels(labels)
 
 
-def node_conditions(node: client.V1Node) -> Optional[NodeStatus]:
+def node_conditions(node: client.V1Node) -> Optional[api.NodeStatus]:
     if not node.status:
         return None
     conditions = node.status.conditions
     if not conditions:
         return None
-    return NodeStatus(**{c.type: bool(c.status) for c in conditions})
+    return api.NodeStatus(**{c.type: bool(c.status) for c in conditions})
 
 
-def parse_node_resources(node: client.V1Node) -> Dict[str, NodeResources]:
+def parse_node_resources(node: client.V1Node) -> Dict[str, api.NodeResources]:
     if node.status:
         capacity = node.status.capacity
         allocatable = node.status.allocatable
@@ -309,25 +186,47 @@ def parse_node_resources(node: client.V1Node) -> Dict[str, NodeResources]:
     return node_resources(capacity, allocatable)
 
 
-def node_resources(capacity, allocatable) -> Dict[str, NodeResources]:
+def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
     resources = {
-        "capacity": NodeResources(),
-        "allocatable": NodeResources(),
+        "capacity": api.NodeResources(),
+        "allocatable": api.NodeResources(),
     }
 
     if not capacity and not allocatable:
         return resources
 
     if capacity:
-        resources["capacity"] = NodeResources(
+        resources["capacity"] = api.NodeResources(
             cpu=parse_frac_prefix(capacity.get("cpu", 0.0)),
             memory=parse_memory(capacity.get("memory", 0.0)),
             pods=capacity.get("pods", 0),
         )
     if allocatable:
-        resources["allocatable"] = NodeResources(
+        resources["allocatable"] = api.NodeResources(
             cpu=parse_frac_prefix(allocatable.get("cpu", 0.0)),
             memory=parse_memory(allocatable.get("memory", 0.0)),
             pods=allocatable.get("pods", 0),
         )
     return resources
+
+
+def pod_from_client(pod: client.V1Pod) -> api.Pod:
+    return api.Pod(
+        uid=pod.metadata.uid,
+        metadata=parse_metadata(pod.metadata),
+        phase=api.Phase(pod.status.phase.lower()),
+        info=parse_pod_info(pod),
+        resources=pod_resources(pod),
+        containers=pod_containers(pod),
+    )
+
+
+def node_from_client(node: client.V1Node) -> api.Node:
+    node_labels = NodeLabels(node.metadata.labels)
+    labels = node_labels.to_cmk_labels()
+    return api.Node(
+        metadata=parse_metadata(node.metadata, labels=labels),
+        conditions=node_conditions(node),
+        resources=parse_node_resources(node),
+        control_plane=node_labels.is_control_plane,
+    )

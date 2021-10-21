@@ -41,16 +41,7 @@ import cmk.utils.profile
 
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
-from cmk.special_agents.utils_kubernetes.schemas import (
-    ClusterInfo,
-    ContainerInfo,
-    ContainerState,
-    MetaData,
-    NodeResources,
-    Phase,
-    PodInfo,
-    PodUsageResources,
-)
+from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.section_schemas import NodeCount
 
 MetricName = NewType("MetricName", str)
@@ -153,11 +144,11 @@ class Pod:
     def __init__(
         self,
         uid: str,
-        metadata: MetaData,
-        phase: Phase,
-        info: PodInfo,
-        resources: PodUsageResources,
-        containers: Sequence[ContainerInfo],
+        metadata: api.MetaData,
+        phase: api.Phase,
+        info: api.PodInfo,
+        resources: api.PodUsageResources,
+        containers: Sequence[api.ContainerInfo],
     ) -> None:
         self.uid = PodUID(uid)
         self.metadata = metadata
@@ -181,7 +172,7 @@ class Pod:
 
 class Node:
     def __init__(
-        self, metadata: MetaData, resources: Dict[str, NodeResources], control_plane: bool
+        self, metadata: api.MetaData, resources: Dict[str, api.NodeResources], control_plane: bool
     ) -> None:
         self.metadata = metadata
         self.resources = resources
@@ -207,9 +198,9 @@ class Node:
         result = ContainerCount()
         for pod in self._pods:
             for container in pod.containers:
-                if container.state == ContainerState.RUNNING:
+                if container.state == api.ContainerState.RUNNING:
                     result.running += 1
-                elif container.state == ContainerState.WAITING:
+                elif container.state == api.ContainerState.WAITING:
                     result.waiting += 1
                 else:
                     result.terminated += 1
@@ -219,7 +210,7 @@ class Node:
 
 class Cluster:
     @classmethod
-    def from_api_server(cls, api_server: APIServer) -> Cluster:
+    def from_api_server(cls, api_server: api.API) -> Cluster:
         cluster_details = api_server.cluster_details()
 
         cluster = cls(cluster_details=cluster_details)
@@ -234,10 +225,10 @@ class Cluster:
 
         return cluster
 
-    def __init__(self, *, cluster_details: Optional[ClusterInfo] = None) -> None:
+    def __init__(self, *, cluster_details: Optional[api.ClusterInfo] = None) -> None:
         self._nodes: Dict[str, Node] = {}
         self._pods: Dict[str, Pod] = {}
-        self._cluster_details: Optional[ClusterInfo] = cluster_details
+        self._cluster_details: Optional[api.ClusterInfo] = cluster_details
 
     def add_node(self, node: Node) -> None:
         self._nodes[node.name] = node
@@ -273,7 +264,7 @@ class Cluster:
                 worker += 1
         return NodeCount(worker=worker, control_plane=control_plane)
 
-    def cluster_details(self) -> ClusterInfo:
+    def cluster_details(self) -> api.ClusterInfo:
         if self._cluster_details is None:
             raise AttributeError("cluster_details was not provided")
         return self._cluster_details

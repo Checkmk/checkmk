@@ -9,13 +9,8 @@ from typing import Dict, Generic, Literal, Optional, Sequence, Tuple, Type, Type
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
-from cmk.special_agents.utils_kubernetes.schemas import (
-    APIHealth,
-    APIHealthStatus,
-    ClusterInfo,
-    NodeAPI,
-    PodAPI,
-)
+from cmk.special_agents.utils_kubernetes.schemas import node_from_client, pod_from_client
+from cmk.special_agents.utils_kubernetes.schemata import api
 
 
 class CoreAPI:
@@ -25,14 +20,14 @@ class CoreAPI:
 
     def __init__(self, api_client: client.ApiClient) -> None:
         self.connection = client.CoreV1Api(api_client)
-        self._nodes: Dict[str, NodeAPI] = {}
-        self._pods: Dict[str, PodAPI] = {}
+        self._nodes: Dict[str, api.Node] = {}
+        self._pods: Dict[str, api.Pod] = {}
         self._collect_objects()
 
-    def nodes(self) -> Sequence[NodeAPI]:
+    def nodes(self) -> Sequence[api.Node]:
         return tuple(self._nodes.values())
 
-    def pods(self) -> Sequence[PodAPI]:
+    def pods(self) -> Sequence[api.Pod]:
         return tuple(self._pods.values())
 
     def _collect_objects(self):
@@ -42,7 +37,7 @@ class CoreAPI:
     def _collect_pods(self):
         self._pods.update(
             {
-                pod.metadata.name: PodAPI.from_client(pod)
+                pod.metadata.name: pod_from_client(pod)
                 for pod in self.connection.list_pod_for_all_namespaces().items
             }
         )
@@ -50,7 +45,7 @@ class CoreAPI:
     def _collect_nodes(self):
         self._nodes.update(
             {
-                node.metadata.name: NodeAPI.from_client(node)
+                node.metadata.name: node_from_client(node)
                 for node in self.connection.list_node().items
             }
         )
@@ -87,7 +82,7 @@ class RawAPI:
         )
         return RawAPIResponse(response=response, status_code=status_code, headers=headers)
 
-    def _get_api_health(self, endpoint_name) -> APIHealthStatus:
+    def _get_api_health(self, endpoint_name) -> api.APIHealthStatus:
         def get_health(query_params=None) -> Tuple[int, str]:
             # https://kubernetes.io/docs/reference/using-api/health-checks/
             response = self._request(
@@ -102,14 +97,14 @@ class RawAPI:
             _status_code, http_body = get_health({"verbose": ""})
             verbose_response = http_body
 
-        return APIHealthStatus(
+        return api.APIHealthStatus(
             response=response,
             status_code=status_code,
             verbose_response=verbose_response,
         )
 
-    def api_health(self) -> APIHealth:
-        return APIHealth(ready=self._get_api_health("ready"), live=self._get_api_health("live"))
+    def api_health(self) -> api.APIHealth:
+        return api.APIHealth(ready=self._get_api_health("ready"), live=self._get_api_health("live"))
 
 
 class APIServer:
@@ -130,12 +125,12 @@ class APIServer:
         self.core_api = core_api
         self.raw_api = raw_api
 
-    def nodes(self) -> Sequence[NodeAPI]:
+    def nodes(self) -> Sequence[api.Node]:
         return self.core_api.nodes()
 
-    def pods(self) -> Sequence[PodAPI]:
+    def pods(self) -> Sequence[api.Pod]:
         return self.core_api.pods()
 
-    def cluster_details(self) -> ClusterInfo:
+    def cluster_details(self) -> api.ClusterInfo:
         health = self.raw_api.api_health()
-        return ClusterInfo(api_health=health)
+        return api.ClusterInfo(api_health=health)

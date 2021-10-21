@@ -7,7 +7,7 @@
 from cmk.base.plugins.agent_based.utils.k8s import ClusterInfo as ClusterInfoC
 from cmk.base.plugins.agent_based.utils.k8s import NodeCount as NodeCountC
 
-from cmk.special_agents.utils_kubernetes.schemas import ClusterInfo as ClusterInfoA
+from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
 from cmk.special_agents.utils_kubernetes.section_schemas import NodeCount as NodeCountA
 
 

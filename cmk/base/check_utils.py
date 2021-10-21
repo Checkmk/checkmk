@@ -76,11 +76,3 @@ class AutocheckService(Service):
     ones.
     More importantly: an general 'Service' instance may not be dumped into the autochecks file.
     """
-
-    def dump_autocheck(self) -> str:
-        return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (
-            str(self.check_plugin_name),
-            self.item,
-            self.parameters,
-            {l.name: l.value for l in self.service_labels.values()},
-        )

@@ -8,30 +8,18 @@
 import logging
 from contextlib import suppress
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
 from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
 from cmk.base.discovered_labels import ServiceLabel
 
-from .migration import deduplicate_autochecks, parse_autocheck_entry
+from .migration import deduplicate_autochecks
 from .utils import AutocheckEntry, AutochecksSerializer
 
 ComputeCheckParameters = Callable[
@@ -149,104 +137,12 @@ class AutochecksManager:
         hostname: HostName,
     ) -> Sequence[AutocheckEntry]:
         if hostname not in self._raw_autochecks_cache:
-            self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(hostname)
+            self._raw_autochecks_cache[hostname] = load_autochecks(hostname)
         return self._raw_autochecks_cache[hostname]
-
-    # TODO: use store.ObjectStore
-    # TODO: Common code with parse_autochecks_services? Cleanup.
-    def _read_raw_autochecks_uncached(
-        self,
-        hostname: HostName,
-    ) -> Sequence[AutocheckEntry]:
-        """Read automatically discovered checks of one host"""
-        path = _autochecks_path_for(hostname)
-        try:
-            autochecks_raw = _load_raw_autochecks(
-                path=path,
-            )
-        except SyntaxError as e:
-            logger.exception("Syntax error in file %s: %s", path, e)
-            if cmk.utils.debug.enabled():
-                raise
-            return []
-        except Exception as e:
-            logger.exception("Error in file %s:\n%s", path, e)
-            if cmk.utils.debug.enabled():
-                raise
-            return []
-
-        autocheck_entries = []
-        for entry in autochecks_raw:
-            try:
-                item = entry["item"]
-            except TypeError:  # pre 1.6 tuple!
-                raise MKGeneralException(
-                    "Invalid check entry '%r' of host '%s' (%s) found. This "
-                    "entry is in pre Checkmk 1.6 format and needs to be converted. This is "
-                    'normally done by "cmk-update-config -v" during "omd update". Please '
-                    'execute "cmk-update-config -v" for convertig the old configuration.'
-                    % (entry, hostname, path)
-                )
-
-            try:
-                plugin_name = CheckPluginName(maincheckify(entry["check_plugin_name"]))
-                assert item is None or isinstance(item, str)
-            except Exception:
-                raise MKGeneralException(
-                    "Invalid check entry '%r' of host '%s' (%s) found. This "
-                    "entry is in pre Checkmk 2.0 format and needs to be converted. This is "
-                    'normally done by "cmk-update-config -v" during "omd update". Please '
-                    'execute "cmk-update-config -v" for convertig the old configuration.'
-                    % (entry, hostname, path)
-                )
-
-            autocheck_entries.append(
-                AutocheckEntry(
-                    check_plugin_name=plugin_name,
-                    item=item,
-                    parameters=entry["parameters"],
-                    service_labels=entry["service_labels"],
-                )
-            )
-
-        return autocheck_entries
 
 
 def _autochecks_path_for(hostname: HostName) -> Path:
     return Path(cmk.utils.paths.autochecks_dir, hostname + ".mk")
-
-
-def _load_raw_autochecks(
-    *,
-    path: Path,
-) -> Union[Iterable[Dict[str, Any]], Tuple]:
-    """Read raw autochecks and resolve parameters"""
-    if not path.exists():
-        return []
-
-    logger.debug("Loading autochecks from %s", path)
-    with path.open(encoding="utf-8") as f:
-        raw_file_content = f.read()
-
-    if not raw_file_content.strip():
-        return []
-
-    try:
-        # This evaluation was needed to resolve references to variables in the autocheck
-        # default parameters and to evaluate data structure declarations containing references to
-        # variables.
-        # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
-        # are resolved now *before* they are written to the autochecks file, and earlier autochecks
-        # files are resolved during cmk-update-config.
-        return eval(raw_file_content, {}, {})  # pylint: disable=eval-used
-    except NameError as exc:
-        raise MKGeneralException(
-            "%s in an autocheck entry of host '%s' (%s). This entry is in pre Checkmk 1.7 "
-            "format and needs to be converted. This is normally done by "
-            '"cmk-update-config -v" during "omd update". Please execute '
-            '"cmk-update-config -v" for converting the old configuration.'
-            % (str(exc).capitalize(), path.stem, path)
-        )
 
 
 def parse_autochecks_services(
@@ -254,33 +150,26 @@ def parse_autochecks_services(
     service_description: GetServiceDescription,
 ) -> Sequence[AutocheckService]:
     """Read autochecks, but do not compute final check parameters"""
-    path = _autochecks_path_for(hostname)
+
     try:
-        raw_autochecks = _load_raw_autochecks(
-            path=path,
-        )
+        autocheck_entries = load_autochecks(hostname)
     except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise
-        raise MKGeneralException(
-            "Unable to parse autochecks of host %s (%s): %s" % (hostname, path, e)
-        )
+        raise MKGeneralException(f"Unable to parse autochecks of host {hostname}: {e}")
 
     return [
         service
-        for entry in raw_autochecks
-        if isinstance(entry, (tuple, dict))
-        and (service := _parse_autocheck_service(hostname, entry, service_description)) is not None
+        for entry in autocheck_entries
+        if (service := _parse_autocheck_service(hostname, entry, service_description)) is not None
     ]
 
 
 def _parse_autocheck_service(
     hostname: HostName,
-    entry: Union[Tuple, Dict],
+    autocheck_entry: AutocheckEntry,
     service_description: GetServiceDescription,
 ) -> Optional[AutocheckService]:
-
-    autocheck_entry = parse_autocheck_entry(entry)
 
     try:
         description = service_description(
@@ -384,6 +273,13 @@ def save_autochecks(hostname: HostName, entries: Sequence[AutocheckEntry]) -> No
         _autochecks_path_for(hostname),
         serializer=AutochecksSerializer(),
     ).write_obj(entries)
+
+
+def load_autochecks(hostname: HostName) -> Sequence[AutocheckEntry]:
+    return store.ObjectStore(
+        _autochecks_path_for(hostname),
+        serializer=AutochecksSerializer(),
+    ).read_obj(default=[])
 
 
 def remove_autochecks_file(hostname: HostName) -> None:

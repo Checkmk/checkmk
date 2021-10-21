@@ -49,7 +49,7 @@ def load_unmigrated_autocheck_entries(
             '"cmk-update-config -v" for converting the old configuration.'
             % (str(exc).capitalize(), path.stem, path)
         )
-    except SyntaxError as exc:
+    except (SyntaxError, TypeError) as exc:
         raise MKGeneralException(f"Unable to parse autochecks file {path}: {exc}")
 
 

@@ -13,7 +13,6 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 
 import cmk.base.agent_based.discovery as discovery
@@ -35,70 +34,13 @@ def test_config(monkeypatch) -> config.ConfigCache:
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_manager_get_autochecks_of_raises(test_config: config.ConfigCache) -> None:
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:
-        f.write(
-            "[\n  {'check_plugin_name': 123, 'item': 'abc', 'parameters': {},"
-            " 'service_labels': {}},\n]"
-        )
-
-    manager = test_config._autochecks_manager
-
-    with pytest.raises(MKGeneralException):
-        manager.get_autochecks_of(
-            HostName("host"),
-            config.compute_check_parameters,
-            config.service_description,
-            lambda hostname, _descr: hostname,
-        )
-
-
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
-        ("[]", []),
-        ("", []),
-        ("@", []),
-        ("[abc123]", []),
-        # Dict: Allow non string items
-        (
-            """[
-  {'check_plugin_name': 'df', 'item': u'123', 'parameters': {}, 'service_labels': {}},
-]""",
-            [
-                discovery.Service(
-                    CheckPluginName("df"),
-                    "123",
-                    "",
-                    {
-                        "inodes_levels": (10.0, 5.0),
-                        "levels": (80.0, 90.0),
-                        "levels_low": (50.0, 60.0),
-                        "magic_normsize": 20,
-                        "show_inodes": "onlow",
-                        "show_levels": "onmagic",
-                        "show_reserved": False,
-                        "trend_perfdata": True,
-                        "trend_range": 24,
-                    },
-                ),
-            ],
-        ),
-        # Dict: Exception on name reference behaves like SyntaxError
-        (
-            """[
-  {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {}},
-]""",
-            [],
-        ),
         # Dict: Regular processing
         (
             """[
   {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
-  {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': {}, 'service_labels': {}},
-  {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {}},
 ]""",
             [
                 discovery.Service(
@@ -116,13 +58,6 @@ def test_manager_get_autochecks_of_raises(test_config: config.ConfigCache) -> No
                         "trend_perfdata": True,
                         "trend_range": 24,
                     },
-                ),
-                discovery.Service(CheckPluginName("cpu_loads"), None, "", (5.0, 10.0)),
-                discovery.Service(
-                    CheckPluginName("lnx_if"),
-                    "2",
-                    "",
-                    {"errors": (0.01, 0.1), "speed": 10000000, "state": ["1"]},
                 ),
             ],
         ),
@@ -150,112 +85,30 @@ def test_manager_get_autochecks_of(
     # Check that the ConfigCache method also returns the correct data
     assert test_config.get_autochecks_of(HostName("host")) == result
 
-    # Check that there are no str items (None, int, ...)
-    assert all(not isinstance(s.item, bytes) for s in result)
-    # All desriptions need to be of type text
-    assert all(isinstance(s.description, str) for s in result)
-
-
-def test_parse_autochecks_services_not_existing():
-    assert autochecks.parse_autochecks_services(HostName("host"), config.service_description) == []
-
-
-@pytest.mark.parametrize("autochecks_content", ["@", "[abc123]"])
-def test_parse_autochecks_services_raises(
-    test_config: config.ConfigCache,
-    autochecks_content: str,
-) -> None:
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:
-        f.write(autochecks_content)
-
-    with pytest.raises(MKGeneralException):
-        autochecks.parse_autochecks_services(
-            HostName("host"),
-            config.service_description,
-        )
-
 
 @pytest.mark.usefixtures("fix_register")
-@pytest.mark.parametrize(
-    "autochecks_content,expected_result",
-    [
-        ("[]", []),
-        ("", []),
-        # Tuple: Handle old format
-        (
-            """[
-  ('hostxyz', 'df', '/', {}),
-]""",
-            [
-                (CheckPluginName("df"), "/", {}),
-            ],
-        ),
-        # Tuple: Convert non unicode item
-        (
-            """[
-          ('df', '/', {}),
-        ]""",
-            [
-                (CheckPluginName("df"), "/", {}),
-            ],
-        ),
-        # Tuple: Regular processing
-        (
-            """[
-          ('df', u'/', {}),
-          ('df', u'/xyz', "lala"),
-          ('df', u'/zzz', ['abc', 'xyz']),
-          ('chrony', None, {}),
-          ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
-        ]""",
-            [
-                (CheckPluginName("df"), "/", {}),
-                (CheckPluginName("df"), "/xyz", "lala"),
-                (CheckPluginName("df"), "/zzz", ["abc", "xyz"]),
-                (CheckPluginName("chrony"), None, {}),
-                (CheckPluginName("lnx_if"), "2", {"speed": 10000000, "state": ["1"]}),
-            ],
-        ),
-        # Dict: Regular processing
-        (
-            """[
-          {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {}},
-          {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': "lala", 'service_labels': {"x": "y"}},
-          {'check_plugin_name': 'df', 'item': '/zzz', 'parameters': ['abc', 'xyz'], 'service_labels': {"x": "y"}},
-          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {"x": "y"}},
-          {'check_plugin_name': 'lnx_if', 'item': '2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {"x": "y"}},
-        ]""",
-            [
-                (CheckPluginName("df"), "/", {}),
-                (CheckPluginName("df"), "/xyz", "lala"),
-                (CheckPluginName("df"), "/zzz", ["abc", "xyz"]),
-                (CheckPluginName("chrony"), None, {}),
-                (CheckPluginName("lnx_if"), "2", {"speed": 10000000, "state": ["1"]}),
-            ],
-        ),
-    ],
-)
 def test_parse_autochecks_services(
     test_config: config.ConfigCache,
-    autochecks_content: str,
-    expected_result: Sequence[Tuple[CheckPluginName, str, LegacyCheckParameters]],
 ) -> None:
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:
-        f.write(autochecks_content)
+    autocheck_entries = [
+        autochecks.AutocheckEntry(CheckPluginName("df"), "/zzz", ["abc", "xyz"], {}),
+        autochecks.AutocheckEntry(CheckPluginName("chrony"), None, {}, {}),
+        autochecks.AutocheckEntry(
+            CheckPluginName("lnx_if"), "2", {"speed": 10000000, "state": ["1"]}, {}
+        ),
+    ]
+    autochecks.save_autochecks(HostName("host"), autocheck_entries)
 
-    parsed = autochecks.parse_autochecks_services(
+    services = autochecks.parse_autochecks_services(
         HostName("host"),
         config.service_description,
     )
-    assert len(parsed) == len(expected_result)
 
-    for index, service in enumerate(parsed):
-        expected = expected_result[index]
-        assert service.check_plugin_name == expected[0]
-        assert service.item == expected[1]
-        assert service.parameters == expected[2], service.check_plugin_name
+    assert [s.description for s in services] == [
+        "fs_/zzz",
+        "NTP Time",
+        "Interface 2",
+    ]
 
 
 def test_remove_autochecks_file():

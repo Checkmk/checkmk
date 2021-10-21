@@ -260,3 +260,9 @@ STAGES:
       TEXT_ON_SKIP: 'No relevant Rust files changed'
 #      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
+    - NAME: 'Rust Format'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_RUST_FILES
+      DIR: 'tests'
+      COMMAND: "make test-rustfmt &> ${RESULTS}/rustfmt.txt"
+      TEXT_ON_SKIP: 'No relevant Rust files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/rustfmt.txt"

@@ -7,5 +7,3 @@ ExecStart=-###ROOT###/bin/unixcat ###ROOT###/tmp/run/live-tcp
 Type=oneshot
 StandardInput=socket
 LimitNPROC=500
-User=###SITE###
-Group=###SITE###

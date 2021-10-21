@@ -142,34 +142,12 @@ def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
     return result
 
 
-class NodeLabels:
-    def __init__(self, labels: Optional[Labels]) -> None:
-        self._labels: Labels = Labels({})
-        if labels is not None:
-            self._labels = labels
-        self._is_control_plane = (
-            # 1.18 returns an empty string, 1.20 returns 'true'
-            "node-role.kubernetes.io/master" in self._labels
-            or "node-role.kubernetes.io/control-plane" in self._labels
-        )
-
-    @property
-    def is_control_plane(self) -> bool:
-        return self._is_control_plane
-
-    def to_cmk_labels(self) -> api.Labels:
-        """Parse node labels
-
-        >>> NodeLabels(Labels({'node-role.kubernetes.io/master': 'yes'})).to_cmk_labels()
-        {'node-role.kubernetes.io/master': 'yes', 'cmk/kubernetes_object': 'control-plane_node', 'cmk/kubernetes': 'yes'}
-
-        """
-        labels = self._labels.copy()
-        labels["cmk/kubernetes_object"] = (
-            "control-plane_node" if self._is_control_plane else "worker_node"
-        )
-        labels["cmk/kubernetes"] = "yes"
-        return api.Labels(labels)
+def is_control_plane(labels: Optional[Labels]) -> bool:
+    return labels is not None and (
+        # 1.18 returns an empty string, 1.20 returns 'true'
+        "node-role.kubernetes.io/master" in labels
+        or "node-role.kubernetes.io/control-plane" in labels
+    )
 
 
 def node_conditions(node: client.V1Node) -> Optional[api.NodeStatus]:
@@ -227,11 +205,9 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
 
 
 def node_from_client(node: client.V1Node) -> api.Node:
-    node_labels = NodeLabels(node.metadata.labels)
-    labels = node_labels.to_cmk_labels()
     return api.Node(
-        metadata=parse_metadata(node.metadata, labels=labels),
+        metadata=parse_metadata(node.metadata),
         conditions=node_conditions(node),
         resources=parse_node_resources(node),
-        control_plane=node_labels.is_control_plane,
+        control_plane=is_control_plane(node.metadata.labels),
     )

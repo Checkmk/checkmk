@@ -7,12 +7,7 @@ from kubernetes.client import ApiClient  # type: ignore[import] # pylint: disabl
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
-from cmk.special_agents.utils_kubernetes.transform import (
-    Labels,
-    node_conditions,
-    NodeLabels,
-    parse_metadata,
-)
+from cmk.special_agents.utils_kubernetes.transform import Labels, node_conditions, parse_metadata
 
 
 def kubernetes_api_client():
@@ -52,12 +47,9 @@ class TestAPINode:
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
         labels = Labels(labels)
-        node_labels = NodeLabels(labels)
-        metadata = parse_metadata(metadata_obj, node_labels.to_cmk_labels())
+        metadata = parse_metadata(metadata_obj)
         assert metadata.name == "k8"
         assert metadata.namespace is None
-        assert metadata.labels is not None
-        assert metadata.labels["cmk/kubernetes"] == "yes"
 
     def test_parse_metadata_datetime(self):
         now = datetime.datetime(2021, 10, 11, 13, 53, 10)

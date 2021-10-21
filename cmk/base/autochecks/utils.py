@@ -6,9 +6,12 @@
 from __future__ import annotations
 
 import ast
+from pathlib import Path
 from typing import Any, Mapping, NamedTuple, Sequence
 
-from cmk.utils.type_defs import CheckPluginName, Item
+import cmk.utils.paths
+from cmk.utils.store import ObjectStore
+from cmk.utils.type_defs import CheckPluginName, HostName, Item
 
 from cmk.base.check_utils import LegacyCheckParameters
 
@@ -55,3 +58,25 @@ class AutochecksSerializer:
     @staticmethod
     def deserialize(raw: bytes) -> Sequence[AutocheckEntry]:
         return [AutocheckEntry.load(d) for d in ast.literal_eval(raw.decode("utf-8"))]
+
+
+class AutochecksStore:
+    def __init__(self, host_name: HostName) -> None:
+        self._store = ObjectStore(
+            Path(cmk.utils.paths.autochecks_dir, f"{host_name}.mk"),
+            serializer=AutochecksSerializer(),
+        )
+
+    def read(self) -> Sequence[AutocheckEntry]:
+        return self._store.read_obj(default=[])
+
+    def write(self, entries: Sequence[AutocheckEntry]) -> None:
+        self._store.write_obj(
+            sorted(entries, key=lambda e: (str(e.check_plugin_name), str(e.item)))
+        )
+
+    def clear(self):
+        try:
+            self._store.path.unlink()
+        except OSError:
+            pass

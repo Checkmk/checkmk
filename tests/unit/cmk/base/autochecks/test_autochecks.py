@@ -19,7 +19,6 @@ import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 from cmk.base.check_utils import AutocheckService
-from cmk.base.discovered_labels import ServiceLabel
 
 
 @pytest.fixture(autouse=True)
@@ -91,13 +90,13 @@ def test_parse_autochecks_services(
     test_config: config.ConfigCache,
 ) -> None:
     autocheck_entries = [
-        autochecks.AutocheckEntry(CheckPluginName("df"), "/zzz", ["abc", "xyz"], {}),
         autochecks.AutocheckEntry(CheckPluginName("chrony"), None, {}, {}),
+        autochecks.AutocheckEntry(CheckPluginName("df"), "/zzz", ["abc", "xyz"], {}),
         autochecks.AutocheckEntry(
             CheckPluginName("lnx_if"), "2", {"speed": 10000000, "state": ["1"]}, {}
         ),
     ]
-    autochecks.save_autochecks(HostName("host"), autocheck_entries)
+    autochecks.AutochecksStore(HostName("host")).write(autocheck_entries)
 
     services = autochecks.parse_autochecks_services(
         HostName("host"),
@@ -105,56 +104,10 @@ def test_parse_autochecks_services(
     )
 
     assert [s.description for s in services] == [
-        "fs_/zzz",
         "NTP Time",
+        "fs_/zzz",
         "Interface 2",
     ]
-
-
-@pytest.mark.parametrize(
-    "items,expected_content",
-    [
-        ([], "[\n]\n"),
-        (
-            [
-                AutocheckService(
-                    CheckPluginName("df"),
-                    "/xyz",
-                    "Filesystem /xyz",
-                    None,
-                    {"x": ServiceLabel("x", "y")},
-                ),
-                AutocheckService(
-                    CheckPluginName("df"),
-                    "/",
-                    "Filesystem /",
-                    {},
-                    {"x": ServiceLabel("x", "y")},
-                ),
-                AutocheckService(
-                    CheckPluginName("cpu_loads"),
-                    None,
-                    "CPU load",
-                    {},
-                    {"x": ServiceLabel("x", "y")},
-                ),
-            ],
-            """[
-  {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': {}, 'service_labels': {'x': 'y'}},
-  {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {'x': 'y'}},
-  {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': None, 'service_labels': {'x': 'y'}},
-]\n""",
-        ),
-    ],
-)
-def test_save_autochecks_services(items: Sequence[AutocheckService], expected_content: str) -> None:
-    autochecks.save_autochecks_services(HostName("host"), items)
-
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
-    with autochecks_file.open("r", encoding="utf-8") as f:
-        content = f.read()
-
-    assert expected_content == content
 
 
 def _service(name: str, params: Optional[Dict[str, str]] = None) -> AutocheckService:

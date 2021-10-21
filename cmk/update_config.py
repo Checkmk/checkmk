@@ -301,7 +301,7 @@ class UpdateConfig:
                 continue
 
             autochecks = [self._fix_entry(s, all_rulesets, hostname) for s in autochecks]
-            cmk.base.autochecks.save_autochecks(hostname, autochecks)
+            cmk.base.autochecks.AutochecksStore(hostname).write(autochecks)
 
         if failed_hosts:
             msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)

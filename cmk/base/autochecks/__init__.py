@@ -7,12 +7,10 @@
 
 import logging
 from contextlib import suppress
-from pathlib import Path
 from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence
 
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
@@ -24,7 +22,7 @@ from cmk.base.check_utils import (
 )
 from cmk.base.discovered_labels import ServiceLabel
 
-from .utils import AutocheckEntry, AutochecksSerializer
+from .utils import AutocheckEntry, AutochecksStore
 
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters], Optional[LegacyCheckParameters]
@@ -141,12 +139,8 @@ class AutochecksManager:
         hostname: HostName,
     ) -> Sequence[AutocheckEntry]:
         if hostname not in self._raw_autochecks_cache:
-            self._raw_autochecks_cache[hostname] = load_autochecks(hostname)
+            self._raw_autochecks_cache[hostname] = AutochecksStore(hostname).read()
         return self._raw_autochecks_cache[hostname]
-
-
-def _autochecks_path_for(hostname: HostName) -> Path:
-    return Path(cmk.utils.paths.autochecks_dir, hostname + ".mk")
 
 
 def parse_autochecks_services(
@@ -156,7 +150,7 @@ def parse_autochecks_services(
     """Read autochecks, but do not compute final check parameters"""
 
     try:
-        autocheck_entries = load_autochecks(hostname)
+        autocheck_entries = AutochecksStore(hostname).read()
     except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise
@@ -251,15 +245,14 @@ def set_autochecks_of_cluster(
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
-    remove_autochecks_file(hostname)
+    AutochecksStore(hostname).clear()
 
 
 def save_autochecks_services(
     hostname: HostName,
     services: Sequence[AutocheckService],
 ) -> None:
-    save_autochecks(
-        hostname,
+    AutochecksStore(hostname).write(
         [
             AutocheckEntry(
                 check_plugin_name=s.check_plugin_name,
@@ -268,29 +261,8 @@ def save_autochecks_services(
                 service_labels={l.name: l.value for l in s.service_labels.values()},
             )
             for s in sorted(services)
-        ],
+        ]
     )
-
-
-def save_autochecks(hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:
-    store.ObjectStore(
-        _autochecks_path_for(hostname),
-        serializer=AutochecksSerializer(),
-    ).write_obj(entries)
-
-
-def load_autochecks(hostname: HostName) -> Sequence[AutocheckEntry]:
-    return store.ObjectStore(
-        _autochecks_path_for(hostname),
-        serializer=AutochecksSerializer(),
-    ).read_obj(default=[])
-
-
-def remove_autochecks_file(hostname: HostName) -> None:
-    try:
-        _autochecks_path_for(hostname).unlink()
-    except OSError:
-        pass
 
 
 def remove_autochecks_of_host(

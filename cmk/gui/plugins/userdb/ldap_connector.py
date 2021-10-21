@@ -455,6 +455,8 @@ class LDAPUserConnector(UserConnector):
         try:
             conn.simple_bind_s(ensure_str(user_dn), password_store.extract(password))
             self._logger.info("  SUCCESS")
+        except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
+            raise
         except ldap.LDAPError as e:
             self._logger.info("  FAILED (%s: %s)" % (e.__class__.__name__, e))
             if catch:
@@ -1128,6 +1130,11 @@ class LDAPUserConnector(UserConnector):
                     result = user_id
                 else:
                     result = self._add_suffix(user_id)
+        except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
+            self._logger.warning(
+                "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
+            )
+            result = False
         except Exception:
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False

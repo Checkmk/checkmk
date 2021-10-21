@@ -6,14 +6,14 @@
 
 # pylint: disable=redefined-outer-name
 from pathlib import Path
-from typing import Dict, Optional, Sequence, Tuple
+from typing import Dict, Optional, Sequence
 
 import pytest
 
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks

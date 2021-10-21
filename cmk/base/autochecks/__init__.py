@@ -16,10 +16,14 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
-from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
+from cmk.base.check_utils import (
+    AutocheckService,
+    deduplicate_autochecks,
+    LegacyCheckParameters,
+    Service,
+)
 from cmk.base.discovered_labels import ServiceLabel
 
-from .migration import deduplicate_autochecks
 from .utils import AutocheckEntry, AutochecksSerializer
 
 ComputeCheckParameters = Callable[

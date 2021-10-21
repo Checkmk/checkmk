@@ -12,8 +12,6 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import Item
 
-from cmk.base.check_utils import AutocheckService
-
 from .utils import AutocheckEntry
 
 
@@ -101,18 +99,3 @@ def _parse_pre_20_item(item: object) -> Item:
     if item is None or isinstance(item, str):
         return item
     raise TypeError(f"Invalid autocheck: Item should be Optional[str]: {item!r}")
-
-
-def deduplicate_autochecks(autochecks: Sequence[AutocheckService]) -> Sequence[AutocheckService]:
-    """Cleanup duplicates that versions pre 1.6.0p8 may have introduced in the autochecks file
-
-    The first service is kept:
-
-    >>> deduplicate_autochecks([
-    ...    AutocheckService('a', None, "desctiption 1", None),
-    ...    AutocheckService('a', None, "description 2", None),
-    ... ])[0].description
-    'desctiption 1'
-
-    """
-    return list({a.id(): a for a in reversed(autochecks)}.values())

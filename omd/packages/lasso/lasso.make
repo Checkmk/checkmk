@@ -43,6 +43,7 @@ ifeq ($(filter sles%,$(DISTRO_CODE)),)
 	$(MAKE) DESTDIR=$(DESTDIR) \
 		-C $(LASSO_BUILD_DIR) install
 	if [ -d "$(DESTDIR)/$(OMD_ROOT)/lib64/perl5" ]; then mv $(DESTDIR)/$(OMD_ROOT)/lib64/perl5 $(DESTDIR)/$(OMD_ROOT)/lib/; rm -r $(DESTDIR)/$(OMD_ROOT)/lib64; fi
+	chmod -R u+w $(DESTDIR)/$(OMD_ROOT)/lib/x86_64-linux-gnu/perl5
 endif
 	$(TOUCH) $@
 

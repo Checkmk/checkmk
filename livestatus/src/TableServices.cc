@@ -688,10 +688,12 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         table->core(), offsets));
-    table->addColumn(std::make_unique<TimeColumn::Constant>(
+    table->addColumn(std::make_unique<TimeColumn::Callback<service>>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        std::chrono::system_clock::time_point{}));
+        offsets, [](const service & /*r*/) {
+            return std::chrono::system_clock::time_point{};
+        }));
     table->addColumn(std::make_unique<IntColumn::Constant>(
         prefix + "cache_interval",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

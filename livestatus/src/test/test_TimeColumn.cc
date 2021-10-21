@@ -21,25 +21,6 @@ struct DummyRow : Row {
 
 struct DummyValue {};
 
-TEST(TimeColumn, ConstantTime) {
-    const auto v = Clock::now();
-    const auto tz = 1h;
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = TimeColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-}
-
-TEST(TimeColumn, ConstantDefaultRow) {
-    const auto v = Clock::now();
-    const auto tz = 1h;
-    const auto row = DummyRow{nullptr};
-    const auto col = TimeColumn::Constant{"name"s, "description"s, v};
-
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-}
-
 TEST(TimeColumn, GetValueLambda) {
     const auto v = Clock::now();
     const auto tz = 1h;

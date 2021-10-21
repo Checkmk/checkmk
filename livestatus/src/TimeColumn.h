@@ -85,19 +85,4 @@ private:
     std::function<value_type(const T&)> f_;
 };
 
-class TimeColumn::Constant : public TimeColumn {
-public:
-    Constant(const std::string& name, const std::string& description,
-             value_type x)
-        : TimeColumn{name, description, {}}, x_{x} {};
-
-    [[nodiscard]] value_type getValue(
-        Row /*row*/, std::chrono::seconds timezone_offset) const override {
-        return timezone_offset + x_;
-    }
-
-private:
-    const value_type x_;
-};
-
 #endif

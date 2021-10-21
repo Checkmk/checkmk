@@ -26,6 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.watolib.automations import compatible_with_central_site
 
 
 @page_registry.register_page("automation_login")
@@ -52,6 +53,39 @@ class ModeAutomationLogin(AjaxPage):
         if not request.has_var("_version"):
             raise MKGeneralException(_("Your central site is incompatible with this remote site"))
 
+        # - _version and _edition_short were added with 1.5.0p10 to the login call only
+        # - x-checkmk-version and x-checkmk-edition were added with 2.0.0p1
+        # Prefer the headers and fall back to the request variables for now.
+        central_version = (
+            request.headers["x-checkmk-version"]
+            if "x-checkmk-version" in request.headers
+            else request.get_ascii_input_mandatory("_version")
+        )
+        central_edition_short = (
+            request.headers["x-checkmk-edition"]
+            if "x-checkmk-edition" in request.headers
+            else request.get_ascii_input_mandatory("_edition_short")
+        )
+
+        if not compatible_with_central_site(
+            central_version,
+            central_edition_short,
+            cmk_version.__version__,
+            cmk_version.edition_short(),
+        ):
+            raise MKGeneralException(
+                _(
+                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
+                    "remote site (Version: %s, Edition: %s)"
+                )
+                % (
+                    central_version,
+                    central_edition_short,
+                    cmk_version.__version__,
+                    cmk_version.edition_short(),
+                )
+            )
+
         response.set_data(
             repr(
                 {
@@ -73,6 +107,7 @@ class ModeAutomation(AjaxPage):
 
     def _from_vars(self):
         self._authenticate()
+        self._verify_compatibility()
         self._command = request.get_str_input_mandatory("command")
 
     def _authenticate(self):
@@ -83,6 +118,28 @@ class ModeAutomation(AjaxPage):
 
         if secret != _get_login_secret():
             raise MKAuthException(_("Invalid automation secret."))
+
+    def _verify_compatibility(self) -> None:
+        central_version = request.headers.get("x-checkmk-version", "")
+        central_edition_short = request.headers.get("x-checkmk-edition", "")
+        if not compatible_with_central_site(
+            central_version,
+            central_edition_short,
+            cmk_version.__version__,
+            cmk_version.edition_short(),
+        ):
+            raise MKGeneralException(
+                _(
+                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
+                    "remote site (Version: %s, Edition: %s)"
+                )
+                % (
+                    central_version,
+                    central_edition_short,
+                    cmk_version.__version__,
+                    cmk_version.edition_short(),
+                )
+            )
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.

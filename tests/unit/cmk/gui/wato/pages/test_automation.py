@@ -9,8 +9,11 @@ from typing import Any, Mapping, Optional, Sequence, Tuple
 
 import pytest
 
+import cmk.utils.version as cmk_version
+
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry
 
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request, response
 from cmk.gui.wato.pages import automation
 from cmk.gui.watolib.utils import mk_repr
@@ -58,6 +61,11 @@ class TestModeAutomation:
             self._check_mk_local_automation_serialized,
         )
 
+    @pytest.fixture(name="patch_version")
+    def patch_version_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(cmk_version, "__version__", "2.1.0i1")
+        monkeypatch.setattr(cmk_version, "edition_short", lambda: "cee")
+
     @pytest.fixture(name="setup_request")
     def setup_request_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(automation, "_get_login_secret", lambda **_kwargs: "secret")
@@ -73,30 +81,52 @@ class TestModeAutomation:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
+        "patch_version",
     )
     def test_execute_cmk_automation_post_21(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(
             request,
             "headers",
-            {"x-checkmk-version": "2.1.0"},
+            {"x-checkmk-version": "2.1.0", "x-checkmk-edition": "cee"},
         )
         automation.ModeAutomation()._execute_cmk_automation()
         assert response.get_data() == b"((1, 2), 'abc')"
 
-    @pytest.mark.parametrize("set_version", [True, False])
+    @pytest.mark.usefixtures(
+        "result_type_registry",
+        "check_mk_local_automation_serialized",
+        "setup_request",
+        "patch_version",
+    )
+    def test_execute_cmk_automation_pre_21(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(
+            request,
+            "headers",
+            {"x-checkmk-version": "2.0.0p10", "x-checkmk-edition": "cee"},
+        )
+        automation.ModeAutomation()._execute_cmk_automation()
+        assert response.get_data() == b"{'field_1': (1, 2), 'field_2': 'abc'}"
+
+    @pytest.mark.parametrize(
+        "incomp_version",
+        [
+            "1.6.0p23",  # prepre major
+            "2.2.0",  # newer major
+            "3.0.0",  # newer major
+        ],
+    )
     @pytest.mark.usefixtures(
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
     )
-    def test_execute_cmk_automation_pre_21(
-        self, set_version: bool, monkeypatch: pytest.MonkeyPatch
+    def test_execute_cmk_automation_pre_pre_major(
+        self, incomp_version: str, monkeypatch: pytest.MonkeyPatch
     ):
-        if set_version:
-            monkeypatch.setattr(
-                request,
-                "headers",
-                {"x-checkmk-version": "2.0.0p10"},
-            )
-        automation.ModeAutomation()._execute_cmk_automation()
-        assert response.get_data() == b"{'field_1': (1, 2), 'field_2': 'abc'}"
+        monkeypatch.setattr(
+            request,
+            "headers",
+            {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
+        )
+        with pytest.raises(MKGeneralException, match="is incompatible"):
+            automation.ModeAutomation()._execute_cmk_automation()

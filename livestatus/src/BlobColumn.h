@@ -72,21 +72,6 @@ private:
     const std::function<std::vector<char>(const T &)> get_value_;
 };
 
-class BlobColumn::Constant : public BlobColumn {
-public:
-    Constant(std::string name, std::string description, std::vector<char> v)
-        : BlobColumn(std::move(name), std::move(description), {})
-        , v{std::move(v)} {};
-    ~Constant() override = default;
-    [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
-        Row /*row*/) const override {
-        return std::make_unique<std::vector<char>>(v);
-    }
-
-private:
-    const std::vector<char> v;
-};
-
 template <class T>
 struct BlobColumn::Callback<T>::File : BlobColumn::Callback<T> {
     File(const std::string &name, const std::string &description,

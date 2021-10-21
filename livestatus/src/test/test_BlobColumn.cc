@@ -45,27 +45,6 @@ std::vector<char> to_value(const std::string& s) {
     return {std::begin(s), std::end(s)};
 }
 
-TEST(BlobColumn, ConstantBlob) {
-    const auto v = to_value("hello"s);
-
-    const auto val = DummyValue{};
-    const auto row = DummyRow{&val};
-    const auto col = BlobColumn::Constant{"name"s, "description"s, v};
-
-    ASSERT_NE(nullptr, col.getValue(row));
-    EXPECT_EQ(v, *col.getValue(row));
-}
-
-TEST(BlobColumn, ConstantDefaultRow) {
-    const auto v = to_value("hello"s);
-
-    const auto row = DummyRow{nullptr};
-    const auto col = BlobColumn::Constant{"name"s, "description"s, v};
-
-    ASSERT_NE(nullptr, col.getValue(row));
-    EXPECT_EQ(v, *col.getValue(row));
-}
-
 TEST_F(FileFixture, BlobColumnReadFile) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};

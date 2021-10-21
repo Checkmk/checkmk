@@ -24,14 +24,13 @@ class CoreAPI:
         self._pods: Dict[str, api.Pod] = {}
         self._collect_objects()
 
-    def nodes(self) -> Sequence[api.Node]:
-        return tuple(self._nodes.values())
+    def nodes(self) -> Sequence[client.V1Node]:
+        return self.connection.list_node().items
 
     def pods(self) -> Sequence[api.Pod]:
         return tuple(self._pods.values())
 
     def _collect_objects(self):
-        self._collect_nodes()
         self._collect_pods()
 
     def _collect_pods(self):
@@ -39,14 +38,6 @@ class CoreAPI:
             {
                 pod.metadata.name: pod_from_client(pod)
                 for pod in self.connection.list_pod_for_all_namespaces().items
-            }
-        )
-
-    def _collect_nodes(self):
-        self._nodes.update(
-            {
-                node.metadata.name: node_from_client(node)
-                for node in self.connection.list_node().items
             }
         )
 
@@ -82,29 +73,33 @@ class RawAPI:
         )
         return RawAPIResponse(response=response, status_code=status_code, headers=headers)
 
-    def _get_api_health(self, endpoint_name) -> api.APIHealthStatus:
+    def _get_healthz(self, url) -> api.HealthZ:
         def get_health(query_params=None) -> Tuple[int, str]:
             # https://kubernetes.io/docs/reference/using-api/health-checks/
-            response = self._request(
-                "GET", f"/{endpoint_name}z", response_type=str, query_params=query_params
-            )
+            try:
+                response = self._request("GET", url, response_type=str, query_params=query_params)
+            except client.rest.ApiException as e:
+                return e.status, e.body
             return response.status_code, response.response
 
         status_code, http_body = get_health()
         response = http_body
         verbose_response = None
         if status_code != 200:
-            _status_code, http_body = get_health({"verbose": ""})
+            _status_code, http_body = get_health({"verbose": "1"})
             verbose_response = http_body
 
-        return api.APIHealthStatus(
+        return api.HealthZ(
             response=response,
             status_code=status_code,
             verbose_response=verbose_response,
         )
 
     def api_health(self) -> api.APIHealth:
-        return api.APIHealth(ready=self._get_api_health("ready"), live=self._get_api_health("live"))
+        return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
+
+    def get_kubelet_health(self, node_link) -> api.HealthZ:
+        return self._get_healthz(f"{node_link}/proxy/healthz")
 
 
 class APIServer:
@@ -126,7 +121,14 @@ class APIServer:
         self.raw_api = raw_api
 
     def nodes(self) -> Sequence[api.Node]:
-        return self.core_api.nodes()
+        result = []
+        for raw_node in self.core_api.nodes():
+            result.append(
+                node_from_client(
+                    raw_node, self.raw_api.get_kubelet_health(raw_node.metadata.self_link)
+                )
+            )
+        return result
 
     def pods(self) -> Sequence[api.Pod]:
         return self.core_api.pods()

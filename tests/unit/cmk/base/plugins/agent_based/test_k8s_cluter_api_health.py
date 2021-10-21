@@ -7,7 +7,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.k8s_cluster_api_health import check
-from cmk.base.plugins.agent_based.utils.k8s import APIHealth, APIHealthStatus, ClusterInfo
+from cmk.base.plugins.agent_based.utils.k8s import APIHealth, ClusterInfo, HealthZ
 
 
 @pytest.mark.parametrize(
@@ -16,8 +16,8 @@ from cmk.base.plugins.agent_based.utils.k8s import APIHealth, APIHealthStatus, C
         pytest.param(
             ClusterInfo(
                 api_health=APIHealth(
-                    ready=APIHealthStatus(status_code=200, response="ok", verbose_response=None),
-                    live=APIHealthStatus(status_code=200, response="ok", verbose_response=None),
+                    ready=HealthZ(status_code=200, response="ok", verbose_response=None),
+                    live=HealthZ(status_code=200, response="ok", verbose_response=None),
                 )
             ),
             [
@@ -29,10 +29,10 @@ from cmk.base.plugins.agent_based.utils.k8s import APIHealth, APIHealthStatus, C
         pytest.param(
             ClusterInfo(
                 api_health=APIHealth(
-                    ready=APIHealthStatus(
+                    ready=HealthZ(
                         status_code=500, response="nok", verbose_response="some\nvery\nlong\noutput"
                     ),
-                    live=APIHealthStatus(status_code=200, response="ok", verbose_response=None),
+                    live=HealthZ(status_code=200, response="ok", verbose_response=None),
                 )
             ),
             [

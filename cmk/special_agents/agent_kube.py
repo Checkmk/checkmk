@@ -171,11 +171,16 @@ class Pod:
 
 class Node:
     def __init__(
-        self, metadata: api.MetaData, resources: Dict[str, api.NodeResources], control_plane: bool
+        self,
+        metadata: api.MetaData,
+        resources: Dict[str, api.NodeResources],
+        control_plane: bool,
+        kubelet_info: api.KubeletInfo,
     ) -> None:
         self.metadata = metadata
         self.resources = resources
         self.control_plane = control_plane
+        self.kubelet_info = kubelet_info
         self._pods: List[Pod] = []
 
     @property
@@ -192,6 +197,9 @@ class Node:
         }
         resources.update(dict(Counter([pod.phase for pod in self._pods])))
         return section.PodResources(**resources)
+
+    def kubelet(self) -> api.KubeletInfo:
+        return self.kubelet_info
 
     def container_count(self) -> ContainerCount:
         result = ContainerCount()
@@ -214,7 +222,9 @@ class Cluster:
 
         cluster = cls(cluster_details=cluster_details)
         for node_api in api_server.nodes():
-            node = Node(node_api.metadata, node_api.resources, node_api.control_plane)
+            node = Node(
+                node_api.metadata, node_api.resources, node_api.control_plane, node_api.kubelet_info
+            )
             cluster.add_node(node)
 
         for pod in api_server.pods():
@@ -293,6 +303,7 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
             "k8s_node_container_count_v1": cluster_node.container_count,
+            "k8s_node_kubelet_v1": cluster_node.kubelet,
         }
         _write_sections(sections)
 

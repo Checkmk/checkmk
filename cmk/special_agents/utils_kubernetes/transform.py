@@ -204,10 +204,14 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
     )
 
 
-def node_from_client(node: client.V1Node) -> api.Node:
+def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
     return api.Node(
         metadata=parse_metadata(node.metadata),
         conditions=node_conditions(node),
         resources=parse_node_resources(node),
         control_plane=is_control_plane(node.metadata.labels),
+        kubelet_info=api.KubeletInfo(
+            version=node.status.node_info.kubelet_version,
+            health=kubelet_health,
+        ),
     )

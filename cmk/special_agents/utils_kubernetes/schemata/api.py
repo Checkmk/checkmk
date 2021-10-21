@@ -44,11 +44,31 @@ class NodeResources(BaseModel):
     pods = 0
 
 
+class HealthZ(BaseModel):
+    status_code: int
+    response: str
+    # only set if status_code != 200
+    verbose_response: Optional[str]
+
+
+class APIHealth(BaseModel):
+    ready: HealthZ
+    live: HealthZ
+
+
+class KubeletInfo(BaseModel):
+    """section: k8s_node_kubelet_v1"""
+
+    version: str
+    health: HealthZ
+
+
 class Node(BaseModel):
     metadata: MetaData
     conditions: NodeStatus
     control_plane: bool
     resources: Dict[str, NodeResources]
+    kubelet_info: KubeletInfo
 
 
 class Resources(BaseModel):
@@ -97,18 +117,6 @@ class Pod(BaseModel):
     info: PodInfo
     resources: PodUsageResources
     containers: List[ContainerInfo]
-
-
-class APIHealthStatus(BaseModel):
-    status_code: int
-    response: str
-    # only set if status_code != 200
-    verbose_response: Optional[str]
-
-
-class APIHealth(BaseModel):
-    ready: APIHealthStatus
-    live: APIHealthStatus
 
 
 class ClusterInfo(BaseModel):

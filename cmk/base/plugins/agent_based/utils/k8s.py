@@ -100,7 +100,7 @@ class NodeCount(BaseModel):
     control_plane: int = 0
 
 
-class APIHealthStatus(BaseModel):
+class HealthZ(BaseModel):
     status_code: int
     response: str
     # only set if status_code != 200
@@ -108,8 +108,8 @@ class APIHealthStatus(BaseModel):
 
 
 class APIHealth(BaseModel):
-    ready: APIHealthStatus
-    live: APIHealthStatus
+    ready: HealthZ
+    live: HealthZ
 
 
 class ClusterInfo(BaseModel):

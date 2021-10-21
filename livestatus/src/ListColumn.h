@@ -167,20 +167,4 @@ private:
     const value_type x_;
 };
 
-class ListColumn::Reference : public ListColumn {
-public:
-    Reference(const std::string& name, const std::string& description,
-              const value_type& x)
-        : ListColumn{name, description, {}}, x_{x} {}
-    ~Reference() override = default;
-    value_type getValue(Row /*row*/, const contact* /*auth_user*/,
-                        std::chrono::seconds /*timezone_offset*/
-    ) const override {
-        return x_;
-    }
-
-private:
-    const value_type& x_;
-};
-
 #endif

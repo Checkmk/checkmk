@@ -97,20 +97,6 @@ private:
     const std::string x_;
 };
 
-class StringColumn::Reference : public StringColumn {
-public:
-    Reference(const std::string& name, const std::string& description,
-              const std::string& x)
-        : StringColumn{name, description, {}}, x_{x} {}
-    ~Reference() override = default;
-    [[nodiscard]] std::string getValue(Row /*row*/) const override {
-        return x_;
-    }
-
-private:
-    const std::string& x_;
-};
-
 template <class T>
 struct StringColumn::Callback<T>::PerfData : StringColumn::Callback<T> {
     using StringColumn::Callback<T>::Callback;

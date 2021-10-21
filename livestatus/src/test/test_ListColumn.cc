@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <algorithm>
 #include <chrono>
 #include <string>
 #include <vector>
@@ -35,17 +34,6 @@ TEST(ListColumn, ConstantDefaultRow) {
     const auto row = DummyRow{nullptr};
     const auto col = ListColumn::Constant{"name"s, "description"s, v};
 
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-}
-
-TEST(ListColumn, Reference) {
-    auto v = ListColumn::value_type{"hello"s, "world"s};
-    const auto row = DummyRow{nullptr};
-    const auto col = ListColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
-
-    v.emplace_back("good morning"s);
     EXPECT_EQ(v, col.getValue(row, nullptr, 0s));
 }
 

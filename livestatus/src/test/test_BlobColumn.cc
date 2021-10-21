@@ -66,25 +66,6 @@ TEST(BlobColumn, ConstantDefaultRow) {
     EXPECT_EQ(v, *col.getValue(row));
 }
 
-TEST(BlobColumn, Reference) {
-    const auto s = "hello"s;
-    auto v = to_value(s);
-
-    const auto row = DummyRow{nullptr};
-    const auto col = BlobColumn::Reference{"name"s, "description"s, v};
-
-    ASSERT_NE(nullptr, col.getValue(row));
-    EXPECT_EQ(v, *col.getValue(row));
-    EXPECT_EQ(s.size(), col.getValue(row)->size());
-
-    auto extra = "xxx"s;
-    v.insert(std::end(v), std::begin(extra), std::end(extra));
-
-    ASSERT_NE(nullptr, col.getValue(row));
-    EXPECT_EQ(v, *col.getValue(row));
-    EXPECT_EQ(s.size() + extra.size(), col.getValue(row)->size());
-}
-
 TEST_F(FileFixture, BlobColumnReadFile) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};

@@ -34,17 +34,6 @@ TEST(DoubleColumn, ConstantDefaultRow) {
     EXPECT_EQ(v, col.getValue(row));
 }
 
-TEST(DoubleColumn, Reference) {
-    auto v = 5.0;
-    const auto row = DummyRow{nullptr};
-    const auto col = DoubleColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-
-    v *= 2.0;
-    EXPECT_EQ(v, col.getValue(row));
-}
-
 TEST(DoubleColumn, GetValueLambda) {
     const auto v = 5.0;
 

@@ -92,16 +92,4 @@ private:
     const value_type x_;
 };
 
-class DoubleColumn::Reference : public DoubleColumn {
-public:
-    Reference(const std::string& name, const std::string& description,
-              value_type& x)
-        : DoubleColumn{name, description, {}}, x_{x} {}
-    ~Reference() override = default;
-    value_type getValue(Row /*row*/) const override { return x_; }
-
-private:
-    const value_type& x_;
-};
-
 #endif  // DoubleColumn_h

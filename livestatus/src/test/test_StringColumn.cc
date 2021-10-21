@@ -37,18 +37,6 @@ TEST(StringColumn, ConstantDefaultRow) {
     EXPECT_EQ(v, col.getValue(row));
 }
 
-TEST(StringColumn, Reference) {
-    auto v = "hello"s;
-
-    const auto row = DummyRow{nullptr};
-    const auto col = StringColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v, col.getValue(row));
-
-    v += " world"s;
-    EXPECT_EQ(v, col.getValue(row));
-}
-
 TEST(StringColumn, GetValueLambda) {
     auto v = "hello"s;
 

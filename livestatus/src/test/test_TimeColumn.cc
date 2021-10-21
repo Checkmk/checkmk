@@ -40,18 +40,6 @@ TEST(TimeColumn, ConstantDefaultRow) {
     EXPECT_EQ(v + tz, col.getValue(row, tz));
 }
 
-TEST(TimeColumn, Reference) {
-    auto v = Clock::now();
-    const auto tz = 1h;
-    const auto row = DummyRow{nullptr};
-    const auto col = TimeColumn::Reference{"name"s, "description"s, v};
-
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-
-    v += 1h;
-    EXPECT_EQ(v + tz, col.getValue(row, tz));
-}
-
 TEST(TimeColumn, GetValueLambda) {
     const auto v = Clock::now();
     const auto tz = 1h;

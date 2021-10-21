@@ -107,20 +107,4 @@ private:
     const value_type x_;
 };
 
-class IntColumn::Reference : public IntColumn {
-public:
-    Reference(const std::string& name, const std::string& description,
-              value_type& x)
-        : IntColumn{name, description, {}}, x_{x} {}
-    ~Reference() override = default;
-
-    value_type getValue(Row /*row*/,
-                        const contact* /*auth_user*/) const override {
-        return x_;
-    }
-
-private:
-    const value_type& x_;
-};
-
 #endif

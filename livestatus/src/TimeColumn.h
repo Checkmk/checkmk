@@ -100,18 +100,4 @@ private:
     const value_type x_;
 };
 
-class TimeColumn::Reference : public TimeColumn {
-public:
-    Reference(const std::string& name, const std::string& description,
-              std::chrono::system_clock::time_point& x)
-        : TimeColumn{name, description, {}}, x_{x} {};
-    [[nodiscard]] value_type getValue(
-        Row /*row*/, std::chrono::seconds timezone_offset) const override {
-        return timezone_offset + x_;
-    }
-
-private:
-    const value_type& x_;
-};
-
 #endif

@@ -17,7 +17,7 @@ from typing import (
     Tuple,
 )
 
-from .agent_based_api.v1 import Attributes, register, Result, State, TableRow
+from .agent_based_api.v1 import register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 from .utils.interfaces import (
     CHECK_DEFAULT_PARAMETERS,
@@ -25,12 +25,13 @@ from .utils.interfaces import (
     discover_interfaces,
     DISCOVERY_DEFAULT_PARAMETERS,
     Interface,
-    InventoryParams,
     mac_address_from_hexstring,
     render_mac_address,
     saveint,
 )
 from .utils.interfaces import Section as SectionInterfaces
+from .utils.inventory_interfaces import Interface as InterfaceInv
+from .utils.inventory_interfaces import inventorize_interfaces
 
 Line = Sequence[str]
 Lines = Iterator[Line]
@@ -602,69 +603,49 @@ def inventory_winperf_if(
     section_winperf_if_teaming: Optional[SectionTeaming],
     section_winperf_if_extended: Optional[SectionExtended],
 ) -> InventoryResult:
-
     if not section_winperf_if:
         return
-
-    params: InventoryParams = {
-        "usage_port_types": [
-            "6",
-            "32",
-            "62",
-            "117",
-            "127",
-            "128",
-            "129",
-            "180",
-            "181",
-            "182",
-            "205",
-            "229",
-        ],
-    }
-    total_ethernet_ports = 0
-    available_ethernet_ports = 0
-
-    for interface in sorted(
-        interfaces := _merge_sections(
-            section_winperf_if.interfaces,
-            section_winperf_if_teaming,
-            section_winperf_if_extended,
-        ),
-        key=lambda iface: int(iface.index[-1]),
-    ):
-
-        if interface.type in ("231", "232") or not interface.speed:
-            continue  # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
-            # Ignore useless half-empty tables (e.g. Viprinet-Router)
-
-        if_available = None
-        if interface.type in params["usage_port_types"]:
-            total_ethernet_ports += 1
-            if if_available := interface.oper_status == "2":
-                available_ethernet_ports += 1
-
-        yield TableRow(
-            path=["networking", "interfaces"],
-            key_columns={
-                "index": int(interface.index[-1]),
-                "description": interface.descr,
-                "alias": interface.alias,
-                "speed": int(interface.speed),
-                "phys_address": render_mac_address(interface.phys_address),
-                "oper_status": int(interface.oper_status[0]),
-                "port_type": int(interface.type),
-                "available": if_available,
-            },
-        )
-
-    yield Attributes(
-        path=["networking"],
-        inventory_attributes={
-            "available_ethernet_ports": available_ethernet_ports,
-            "total_ethernet_ports": total_ethernet_ports,
-            "total_interfaces": len(interfaces),
+    interfaces = _merge_sections(
+        section_winperf_if.interfaces,
+        section_winperf_if_teaming,
+        section_winperf_if_extended,
+    )
+    yield from inventorize_interfaces(
+        {
+            "usage_port_types": [
+                "6",
+                "32",
+                "62",
+                "117",
+                "127",
+                "128",
+                "129",
+                "180",
+                "181",
+                "182",
+                "205",
+                "229",
+            ],
         },
+        (
+            InterfaceInv(
+                index=interface.index[-1],
+                descr=interface.descr,
+                alias=interface.alias,
+                type=interface.type,
+                speed=int(interface.speed),
+                oper_status=int(interface.oper_status[0]),
+                phys_address=render_mac_address(interface.phys_address),
+            )
+            for interface in sorted(
+                interfaces,
+                key=lambda iface: int(iface.index[-1]),
+            )
+            # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
+            # Ignore useless half-empty tables (e.g. Viprinet-Router)
+            if interface.type not in ("231", "232") and interface.speed
+        ),
+        len(interfaces),
     )
 
 

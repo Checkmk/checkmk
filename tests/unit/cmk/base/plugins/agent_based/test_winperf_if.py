@@ -3993,13 +3993,14 @@ def test_inventory_winperf_if() -> None:
                 "index": 1,
                 "description": "QLogic 1 10GbE Server Adapter 2",
                 "alias": "QLogic 1 10GbE Server Adapter 2",
+            },
+            inventory_columns={
                 "speed": 10000000000,
                 "phys_address": "",
                 "oper_status": 1,
                 "port_type": 6,
                 "available": False,
             },
-            inventory_columns={},
             status_columns={},
         ),
         TableRow(
@@ -4008,13 +4009,14 @@ def test_inventory_winperf_if() -> None:
                 "index": 2,
                 "description": "QLogic 1 10GbE Server Adapter",
                 "alias": "Ethernet 2",
+            },
+            inventory_columns={
                 "speed": 10000000000,
                 "phys_address": "5C:F3:FC:37:2A:30",
                 "oper_status": 1,
                 "port_type": 6,
                 "available": False,
             },
-            inventory_columns={},
             status_columns={},
         ),
         TableRow(
@@ -4023,13 +4025,14 @@ def test_inventory_winperf_if() -> None:
                 "index": 7,
                 "description": "IBM USB Remote NDIS Network Device 2",
                 "alias": "Local Area Connection 2",
+            },
+            inventory_columns={
                 "speed": 9728000,
                 "phys_address": "42:F2:E9:21:BE:D1",
                 "oper_status": 1,
                 "port_type": 6,
                 "available": False,
             },
-            inventory_columns={},
             status_columns={},
         ),
         TableRow(
@@ -4038,13 +4041,14 @@ def test_inventory_winperf_if() -> None:
                 "index": 8,
                 "description": "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
                 "alias": "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
+            },
+            inventory_columns={
                 "speed": 100000,
                 "phys_address": "",
                 "oper_status": 1,
                 "port_type": 6,
                 "available": False,
             },
-            inventory_columns={},
             status_columns={},
         ),
         Attributes(

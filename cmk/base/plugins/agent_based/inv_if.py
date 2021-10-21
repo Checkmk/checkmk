@@ -4,27 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Sequence, Union
+from typing import Iterable, List, Optional, Sequence, Union
 
-from .agent_based_api.v1 import Attributes, exists, OIDBytes, register, SNMPTree, TableRow
+from .agent_based_api.v1 import exists, OIDBytes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
 from .utils import uptime
-from .utils.interfaces import InventoryParams, render_mac_address
-
-
-@dataclass
-class Interface:
-    index: str
-    descr: str
-    alias: str
-    type: str
-    speed: int
-    oper_status: int
-    phys_address: str
-    admin_status: Optional[int]
-    last_change: float
+from .utils.interfaces import render_mac_address
+from .utils.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
 
 
 @dataclass
@@ -128,24 +115,6 @@ register.snmp_section(
 )
 
 
-def round_to_day(ts):
-    broken = time.localtime(ts)
-    return time.mktime(
-        (
-            broken.tm_year,
-            broken.tm_mon,
-            broken.tm_mday,
-            0,
-            0,
-            0,
-            broken.tm_wday,
-            broken.tm_yday,
-            broken.tm_isdst,
-        )
-    )
-
-
-# TODO unify with other if inventory plugins
 def inventory_if(
     params: InventoryParams,
     section_inv_if: Optional[SectionInvIf],
@@ -153,77 +122,11 @@ def inventory_if(
 ) -> InventoryResult:
     if section_inv_if is None or section_uptime is None or section_uptime.uptime_sec is None:
         return
-
-    now = time.time()
-
-    usage_port_types = params.get(
-        "usage_port_types",
-        ["6", "32", "62", "117", "127", "128", "129", "180", "181", "182", "205", "229"],
-    )
-    unused_duration = params.get("unused_duration", 30 * 86400)
-
-    total_ethernet_ports = 0
-    available_ethernet_ports = 0
-
-    for interface in section_inv_if.interfaces:
-
-        if interface.last_change > 0:
-            state_age = section_uptime.uptime_sec - interface.last_change
-
-            # Assume counter rollover in case uptime is less than last_change and
-            # add 497 days (counter maximum).
-            # This way no negative change times are shown anymore. The state change is shown
-            # wrong in case it's really 497 days ago when state changed but there's no way to
-            # get the count of rollovers since change (or since uptime) and it's better the
-            # wrong negative state change is not shown anymore...
-            if state_age < 0:
-                state_age = 42949672 - interface.last_change + section_uptime.uptime_sec
-
-        else:
-            # Assume point of time of boot as last state change.
-            state_age = section_uptime.uptime_sec
-
-        last_change_timestamp = round_to_day(now - state_age)
-
-        # in case ifIndex is missing
-        try:
-            if_index_nr: Union[str, int] = int(interface.index)
-        except ValueError:
-            if_index_nr = ""
-
-        interface_row: Dict[str, Union[str, float, None]] = {
-            "description": interface.descr,
-            "alias": interface.alias,
-            "speed": interface.speed,
-            "phys_address": interface.phys_address,
-            "oper_status": interface.oper_status,
-            "admin_status": interface.admin_status,  # 1(up) or 2(down)
-            "port_type": int(interface.type),
-        }
-
-        if interface.type in usage_port_types:
-            total_ethernet_ports += 1
-            if_available = interface.oper_status == 2 and state_age > unused_duration
-            if if_available:
-                available_ethernet_ports += 1
-            interface_row["available"] = if_available
-
-        yield TableRow(
-            path=["networking", "interfaces"],
-            key_columns={"index": if_index_nr},
-            inventory_columns=interface_row,
-            status_columns={
-                "last_change": int(last_change_timestamp),
-            },
-        )
-
-    yield Attributes(
-        path=["networking"],
-        inventory_attributes={
-            "available_ethernet_ports": available_ethernet_ports,
-            "total_ethernet_ports": total_ethernet_ports,
-            "total_interfaces": section_inv_if.n_interfaces_total,
-        },
+    yield from inventorize_interfaces(
+        params,
+        section_inv_if.interfaces,
+        section_inv_if.n_interfaces_total,
+        uptime_sec=section_uptime.uptime_sec,
     )
 
 

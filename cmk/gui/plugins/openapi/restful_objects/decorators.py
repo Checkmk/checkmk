@@ -270,7 +270,7 @@ class Endpoint:
         etag: Optional[ETagBehaviour] = None,
         status_descriptions: Optional[Dict[int, str]] = None,
         options: Optional[Dict[str, str]] = None,
-        tag_group: Literal["Monitoring", "Setup"] = "Setup",
+        tag_group: Literal["Monitoring", "Setup", "Checkmk Internal"] = "Setup",
         blacklist_in: Optional[Sequence[EndpointTarget]] = None,
         additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
         valid_from: Optional[Version] = None,
@@ -724,6 +724,11 @@ class Endpoint:
 
         if self.tag_group == "Setup":
             responses["403"] = self._path_item(403, "Configuration via WATO is disabled.")
+        if self.tag_group == "Checkmk Internal" and 403 in self._expected_status_codes:
+            responses["403"] = self._path_item(
+                403,
+                "You have insufficient permissions for this operation.",
+            )
 
         if 404 in self._expected_status_codes:
             responses["404"] = self._path_item(404, "The requested object has not been found.")

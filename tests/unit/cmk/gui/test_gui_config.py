@@ -333,6 +333,7 @@ def test_registered_permissions():
         "general.notify",
         "general.painter_options",
         "general.parent_child_topology",
+        "general.post_csr_rest_api",
         "general.publish_bookmark_list",
         "general.publish_to_foreign_groups_bookmark_list",
         "general.publish_custom_snapin",

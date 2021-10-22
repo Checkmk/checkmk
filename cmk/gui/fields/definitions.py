@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Any, Optional, Protocol, Tuple
 
 import pytz
+from cryptography.x509 import load_pem_x509_csr
 from marshmallow import fields as _fields
 from marshmallow import post_load, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
@@ -1328,6 +1329,32 @@ class Timestamp(_fields.DateTime):
         return datetime.timestamp(val)
 
 
+class X509ReqPEMField(_fields.String):
+    default_error_messages = {
+        "malformed": "Malformed CSR",
+        "invalid": "Invalid CSR (signature and public key do not match)",
+    }
+
+    def _validate(self, value):
+        if not value.is_signature_valid:
+            raise self.make_error("invalid")
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        try:
+            return load_pem_x509_csr(
+                super()
+                ._deserialize(
+                    value,
+                    attr,
+                    data,
+                    **kwargs,
+                )
+                .encode()
+            )
+        except ValueError:
+            raise self.make_error("malformed")
+
+
 __all__ = [
     "attributes_field",
     "column_field",
@@ -1348,4 +1375,5 @@ __all__ = [
     "SiteField",
     "String",
     "Timestamp",
+    "X509ReqPEMField",
 ]

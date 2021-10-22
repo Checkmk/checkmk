@@ -687,3 +687,10 @@ class Version(LinkSchema):
         required=False,
     )
     additionalCapabilities = fields.Nested(VersionCapabilities)
+
+
+class X509PEM(BaseSchema):
+    cert = fields.Str(
+        required=True,
+        description="PEM-encoded X.509 certificate signed by local site CA.",
+    )

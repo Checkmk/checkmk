@@ -25,6 +25,7 @@ from cmk.utils.certs import (
     make_subject_name,
     rsa_public_key_from_cert_or_csr,
     sign_csr,
+    sign_csr_with_local_ca,
 )
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
@@ -248,6 +249,48 @@ def test_sign_csr() -> None:
     )
     assert str(cert.not_valid_before) == "1970-01-01 00:01:40"
     assert str(cert.not_valid_after) == "1970-01-03 00:01:40"
+    check_certificate_against_private_key(
+        cert,
+        key,
+    )
+    # ensure that 'from_peter' is indeed signed by 'peter'
+    check_certificate_against_public_key(
+        cert,
+        rsa_public_key_from_cert_or_csr(root_cert),
+    )
+
+
+def test_sign_csr_with_local_ca(mocker: MockerFixture) -> None:
+    root_key = make_private_key()
+    root_cert = make_root_certificate(
+        make_subject_name("peter"),
+        1,
+        root_key,
+    )
+    mocker.patch(
+        "cmk.utils.certs.load_local_ca",
+        return_value=(
+            root_cert,
+            root_key,
+        ),
+    )
+    key = make_private_key()
+    csr = make_csr(
+        make_subject_name("from_peter"),
+        key,
+    )
+    with on_time(567892121, "UTC"):
+        cert = sign_csr_with_local_ca(
+            csr,
+            100,
+        )
+
+    assert check_cn(
+        cert,
+        "from_peter",
+    )
+    assert str(cert.not_valid_before) == "1987-12-30 19:48:41"
+    assert str(cert.not_valid_after) == "1988-04-08 19:48:41"
     check_certificate_against_private_key(
         cert,
         key,

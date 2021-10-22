@@ -30,6 +30,8 @@ from cryptography.x509 import (
 )
 from cryptography.x509.oid import NameOID
 
+from cmk.utils.paths import omd_root
+
 
 def cert_dir(site_root_dir: Path) -> Path:
     return site_root_dir / "etc" / "ssl"
@@ -49,6 +51,10 @@ def load_cert_and_private_key(path_pem: Path) -> Tuple[Certificate, RSAPrivateKe
             None,
         ),
     )
+
+
+def load_local_ca() -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+    return load_cert_and_private_key(root_cert_path(cert_dir(Path(omd_root))))
 
 
 def make_private_key() -> RSAPrivateKeyWithSerialization:
@@ -148,6 +154,17 @@ def sign_csr(
             signing_private_key,
             SHA256(),
         )
+    )
+
+
+def sign_csr_with_local_ca(
+    csr: CertificateSigningRequest,
+    days_valid: int,
+) -> Certificate:
+    return sign_csr(
+        csr,
+        days_valid,
+        *load_local_ca(),
     )
 
 

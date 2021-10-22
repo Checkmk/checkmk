@@ -401,6 +401,7 @@ OPTIONS: ReDocSpec = {
     "x-tagGroups": [
         {"name": "Monitoring", "tags": []},
         {"name": "Setup", "tags": []},
+        {"name": "Checkmk Internal", "tags": []},
     ],
     "x-ignoredHeaderParameters": [
         "User-Agent",

@@ -76,6 +76,7 @@ node_modules/
 pip-mirror-tmp
 RemoteSystemsTempFiles
 requirements.txt
+requirements-no-dev.txt
 stamp-h1
 tags
 tests/web/data/*

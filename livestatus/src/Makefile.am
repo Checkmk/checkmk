@@ -108,7 +108,6 @@ liblivestatus_a_SOURCES = \
         CountAggregator.cc \
         CrashReport.cc \
         CustomVarsDictFilter.cc \
-        DictColumn.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
         DowntimeOrComment.cc \

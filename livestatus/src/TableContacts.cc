@@ -17,6 +17,7 @@
 #include "BoolColumn.h"
 #include "Column.h"
 #include "CustomAttributeMap.h"
+#include "DictColumn.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"

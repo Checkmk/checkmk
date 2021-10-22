@@ -25,6 +25,7 @@
 #include "Column.h"
 #include "CommentRenderer.h"
 #include "CustomAttributeMap.h"
+#include "DictColumn.h"
 #include "DoubleColumn.h"
 #include "DowntimeRenderer.h"
 #include "DynamicColumn.h"

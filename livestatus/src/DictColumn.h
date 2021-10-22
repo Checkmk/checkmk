@@ -11,13 +11,17 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "Column.h"
 #include "Filter.h"
+#include "Renderer.h"
 #include "Row.h"
 #include "opids.h"
+
 enum class AttributeKind;
 class Aggregator;
 class RowRenderer;
@@ -29,45 +33,41 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
-struct DictColumn : Column {
+template <class T>
+class DictColumn : public Column {
+public:
     using value_type = std::unordered_map<std::string, std::string>;
-    // The next two classes may be implemented later for consistency.
-    // However, they are not currently necessary.
-    // class Constant;
-    // class Reference;
-    template <class T>
-    class Callback;
-    using Column::Column;
-    virtual ~DictColumn() override = default;
+    using function_type = std::function<value_type(const T &)>;
+
+    DictColumn(const std::string &name, const std::string &description,
+               const ColumnOffsets &offsets, const function_type &f)
+        : Column{name, description, offsets}, f_{f} {}
+    ~DictColumn() override = default;
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::dict; }
 
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        DictRenderer d(r);
+        for (const auto &it : getValue(row)) {
+            d.output(it.first, it.second);
+        }
+    }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override = 0;
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
-        AggregationFactory factory) const override;
+        AggregationFactory /*factory*/) const override {
+        throw std::runtime_error("aggregating on dictionary column '" + name() +
+                                 "' not supported");
+    }
 
-    virtual value_type getValue(Row row) const = 0;
-};
-
-template <class T>
-class DictColumn::Callback : public DictColumn {
-public:
-    using function_type = std::function<value_type(const T &)>;
-    Callback(const std::string &name, const std::string &description,
-             const ColumnOffsets &offsets, const function_type &f)
-        : DictColumn{name, description, offsets}, f_{f} {}
-    ~Callback() override = default;
-
-    value_type getValue(Row row) const override {
+    virtual value_type getValue(Row row) const {
         const T *data = columnData<T>(row);
         return data == nullptr ? Default : f_(*data);
-    }
+    };
 
 private:
     value_type Default{};

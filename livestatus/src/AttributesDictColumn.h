@@ -21,9 +21,10 @@
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty Attributes.
 template <class T>
-struct AttributesDictColumn : DictColumn::Callback<T> {
-    using DictColumn::Callback<T>::Callback;
+struct AttributesDictColumn : DictColumn<T> {
+    using DictColumn<T>::DictColumn;
     ~AttributesDictColumn() override = default;
+
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override {

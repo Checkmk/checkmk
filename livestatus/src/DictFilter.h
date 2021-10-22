@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef CustomVarsDictFilter_h
-#define CustomVarsDictFilter_h
+#ifndef DictFilter_h
+#define DictFilter_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -27,14 +27,14 @@ class Row;
 #include "nagios.h"
 #endif
 
-class CustomVarsDictFilter : public ColumnFilter {
+class DictFilter : public ColumnFilter {
     // Elsewhere, `function_type` is a std::variant of functions but we
     // currently have a single element, so we skip that entirely.
     using function_type = std::function<Attributes(Row)>;
 
 public:
-    CustomVarsDictFilter(Kind kind, std::string columnName, function_type f,
-                         RelationalOperator relOp, const std::string &value);
+    DictFilter(Kind kind, std::string columnName, function_type f,
+               RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     [[nodiscard]] std::unique_ptr<Filter> copy() const override;
@@ -47,4 +47,4 @@ private:
     std::string ref_varname_;
 };
 
-#endif  // CustomVarsDictFilter_h
+#endif  // DictFilter_h

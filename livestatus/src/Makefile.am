@@ -54,7 +54,7 @@ test_neb_SOURCES = \
     test/test_AttributeListColumn.cc \
     test/test_BlobColumn.cc \
     test/test_CrashReport.cc \
-    test/test_CustomVarsDictFilter.cc \
+    test/test_DictFilter.cc \
     test/test_DoubleColumn.cc \
     test/test_FileSystemHelper.cc \
     test/test_IntColumn.cc \
@@ -107,7 +107,7 @@ liblivestatus_a_SOURCES = \
         CommentRenderer.cc \
         CountAggregator.cc \
         CrashReport.cc \
-        CustomVarsDictFilter.cc \
+        DictFilter.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
         DowntimeOrComment.cc \

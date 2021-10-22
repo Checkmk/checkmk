@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "CustomVarsDictFilter.h"
+#include "DictFilter.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -57,10 +57,8 @@ parse_result parse_unquoted(const std::string &str, size_t start) {
 }
 }  // namespace
 
-CustomVarsDictFilter::CustomVarsDictFilter(Kind kind, std::string columnName,
-                                           function_type f,
-                                           RelationalOperator relOp,
-                                           const std::string &value)
+DictFilter::DictFilter(Kind kind, std::string columnName, function_type f,
+                       RelationalOperator relOp, const std::string &value)
     : ColumnFilter{kind, std::move(columnName), relOp, value}
     , f_{std::move(f)} {
     std::string rest;
@@ -74,9 +72,8 @@ CustomVarsDictFilter::CustomVarsDictFilter(Kind kind, std::string columnName,
     regExp_ = makeRegExpFor(oper(), ref_string_);
 }
 
-bool CustomVarsDictFilter::accepts(
-    Row row, const contact * /* auth_user */,
-    std::chrono::seconds /* timezone_offset */) const {
+bool DictFilter::accepts(Row row, const contact * /* auth_user */,
+                         std::chrono::seconds /* timezone_offset */) const {
     auto cvm = f_(row);
     auto it = cvm.find(ref_varname_);
     auto act_string = it == cvm.end() ? "" : it->second;
@@ -106,11 +103,11 @@ bool CustomVarsDictFilter::accepts(
     return false;  // unreachable
 }
 
-std::unique_ptr<Filter> CustomVarsDictFilter::copy() const {
-    return std::make_unique<CustomVarsDictFilter>(*this);
+std::unique_ptr<Filter> DictFilter::copy() const {
+    return std::make_unique<DictFilter>(*this);
 }
 
-std::unique_ptr<Filter> CustomVarsDictFilter::negate() const {
-    return std::make_unique<CustomVarsDictFilter>(
+std::unique_ptr<Filter> DictFilter::negate() const {
+    return std::make_unique<DictFilter>(
         kind(), columnName(), f_, negateRelationalOperator(oper()), value());
 }

@@ -11,8 +11,8 @@
 
 #include "Column.h"
 #include "CustomAttributeMap.h"
-#include "CustomVarsDictFilter.h"
 #include "DictColumn.h"
+#include "DictFilter.h"
 #include "Filter.h"
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
@@ -36,14 +36,13 @@ std::string b16encode(const std::string& str) {
     return os.str();
 }
 
-struct CustomVarsDictFilterTest : public ::testing::Test {
+struct DictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
         DictColumn<host> cvdc{"name", "description", ColumnOffsets{},
                               CustomAttributeMap{&core, kind}};
-        CustomVarsDictFilter filter{
-            Filter::Kind::row, "name",
-            [&cvdc](Row row) { return cvdc.getValue(row); },
-            RelationalOperator::equal, value};
+        DictFilter filter{Filter::Kind::row, "name",
+                          [&cvdc](Row row) { return cvdc.getValue(row); },
+                          RelationalOperator::equal, value};
         return filter.accepts(Row{&test_host}, {}, {});
     }
 
@@ -68,14 +67,14 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
 };
 }  // namespace
 
-TEST_F(CustomVarsDictFilterTest, empty) {
+TEST_F(DictFilterTest, empty) {
     EXPECT_TRUE(accepts(AttributeKind::tags, ""));
     EXPECT_TRUE(accepts(AttributeKind::tags, " "));
     EXPECT_FALSE(accepts(AttributeKind::tags, "GUT"));
     EXPECT_FALSE(accepts(AttributeKind::tags, "GUT '' "));
 }
 
-TEST_F(CustomVarsDictFilterTest, UnquotedKinds) {
+TEST_F(DictFilterTest, UnquotedKinds) {
     EXPECT_TRUE(accepts(AttributeKind::custom_variables, "GUT Mies"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "GUT Guten Tag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "GUT foo"));
@@ -83,27 +82,27 @@ TEST_F(CustomVarsDictFilterTest, UnquotedKinds) {
     EXPECT_FALSE(accepts(AttributeKind::label_sources, "GUT bart"));
 }
 
-TEST_F(CustomVarsDictFilterTest, UnquotedSplitting) {
+TEST_F(DictFilterTest, UnquotedSplitting) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT Guten Tag!"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT    Guten Tag!"));
     EXPECT_FALSE(accepts(AttributeKind::tags, "    GUT    Guten Tag!    "));
 }
 
-TEST_F(CustomVarsDictFilterTest, UnquotedUTF8) {
+TEST_F(DictFilterTest, UnquotedUTF8) {
     EXPECT_TRUE(accepts(AttributeKind::labels, "GÓÐ Góðan dag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ Góðan dag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ    Góðan dag!"));
     EXPECT_FALSE(accepts(AttributeKind::labels, "    GÓÐ    Góðan dag!   "));
 }
 
-TEST_F(CustomVarsDictFilterTest, QuotedSplitting) {
+TEST_F(DictFilterTest, QuotedSplitting) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "'GUT' 'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT' 'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT'    'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "    'GUT'    'Guten Tag!'    "));
 }
 
-TEST_F(CustomVarsDictFilterTest, QuotedEscape) {
+TEST_F(DictFilterTest, QuotedEscape) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rollin' 'Rock''n Rollin'''"));

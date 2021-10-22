@@ -17,7 +17,7 @@
 #include <utility>
 
 #include "Column.h"
-#include "CustomVarsDictFilter.h"
+#include "DictFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -58,7 +58,7 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override {
-        return std::make_unique<CustomVarsDictFilter>(
+        return std::make_unique<DictFilter>(
             kind, this->name(), [this](Row row) { return this->getValue(row); },
             relOp, value);
     }

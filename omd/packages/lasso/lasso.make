@@ -45,6 +45,7 @@ $(LASSO_INSTALL): $(LASSO_BUILD)
 ifeq ($(filter sles%,$(DISTRO_CODE)),)
 	$(MAKE) DESTDIR=$(DESTDIR) \
 		-C $(LASSO_BUILD_DIR) install
+endif
 	$(TOUCH) $@
 
 $(LASSO)_download:

@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-KEYFILE=$OMD_ROOT/etc/ssl/marcv/server_key.pem
-CERTFILE=$OMD_ROOT/etc/ssl/marcv/server_cert.pem
 PIDFILE=$OMD_ROOT/tmp/run/marcv.pid
 PID=$(cat $PIDFILE 2>/dev/null)
+KEY_AND_CERT_FILE=$OMD_ROOT/etc/ssl/marcv_cert.pem
 
 case "$1" in
 
@@ -26,6 +25,8 @@ case "$1" in
         gunicorn -D -p $PIDFILE  \
                 --error-logfile $OMD_ROOT/var/log/marcv/error.log \
                 --access-logfile $OMD_ROOT/var/log/marcv/access.log \
+                --keyfile "$KEY_AND_CERT_FILE" \
+                --certfile "$KEY_AND_CERT_FILE" \
                 -b 127.0.0.1:$port \
                 -k uvicorn.workers.UvicornWorker marcv.server:app
         if [ $? -eq 0 ]; then

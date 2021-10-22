@@ -11,7 +11,4 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=["fastapi==0.68", "python-multipart==0.0.*"],
-    entry_points={
-        "console_scripts": ["create_server_certificate=marcv.create_certificate:main"]
-    },
 )

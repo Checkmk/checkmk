@@ -25,7 +25,7 @@ def prevent_livestatus_connect():
 
 
 @pytest.fixture
-def ca(tmp_path, monkeypatch):
+def ca(tmp_path):
     p = tmp_path / "etc" / "ssl"
     return certs.CertificateAuthority(p, "ca-name")
 
@@ -165,12 +165,12 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
     with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:
-        f.write((ca.ca_path / "ca.pem").open(encoding="utf-8").read())
+        f.write((ca._ca_path / "ca.pem").open(encoding="utf-8").read())
 
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 
     if ca_file_path is not None:
-        ca_file_path = "%s/%s" % (ca.ca_path, ca_file_path)
+        ca_file_path = "%s/%s" % (ca._ca_path, ca_file_path)
 
     live = livestatus.SingleSiteConnection(
         "unix:/tmp/xyz", tls=tls, verify=verify, ca_file_path=ca_file_path

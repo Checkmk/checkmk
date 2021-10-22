@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Alias: Restrict livestatus port to IP addresses
 # Menu: Distributed Monitoring
@@ -20,7 +20,7 @@ case "$1" in
         perl -pi -e 's/(IPAddressAllow=).*$/\1'"$2"'/g' "$OMD_ROOT/etc/mk-livestatus/livestatus.socket"
     ;;
     depends)
-        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+        [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" = on ]
     ;;
 esac
 

@@ -337,7 +337,7 @@ class TagConfig:
         self.aux_tag_list += other.aux_tag_list
         return self
 
-    def get_tag_groups(self):
+    def get_tag_groups(self) -> List[TagGroup]:
         return self.tag_groups
 
     def get_topic_choices(self):

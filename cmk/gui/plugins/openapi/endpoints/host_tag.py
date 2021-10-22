@@ -25,9 +25,19 @@ from cmk.gui.http import Response
 from cmk.gui import fields
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.gui.watolib.tags import (save_tag_group, load_tag_config, edit_tag_group, load_tag_group,
-                                  update_tag_config, tag_group_exists, change_host_tags_in_folders,
-                                  TagCleanupMode, OperationRemoveTagGroup, RepairError, is_builtin)
+from cmk.gui.watolib.tags import (
+    save_tag_group,
+    load_tag_config,
+    edit_tag_group,
+    load_tag_group,
+    update_tag_config,
+    tag_group_exists,
+    change_host_tags_in_folders,
+    TagCleanupMode,
+    OperationRemoveTagGroup,
+    RepairError,
+    is_builtin,
+)
 from cmk.gui.plugins.openapi.restful_objects import (
     Endpoint,
     request_schemas,
@@ -83,7 +93,7 @@ def create_host_tag_group(params):
     method='get',
     etag='output',
     path_params=[HOST_TAG_GROUP_NAME],
-    response_schema=response_schemas.ConcreteHostTagGroup,
+    response_schema=response_schemas.HostTagGroupObject,
 )
 def show_host_tag_group(params):
     """Show a host tag group"""
@@ -92,29 +102,21 @@ def show_host_tag_group(params):
     return _serve_host_tag_group(tag_group.get_dict_format())
 
 
-@Endpoint(constructors.collection_href('host_tag_group'),
-          '.../collection',
-          method='get',
-          response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(
+    constructors.collection_href('host_tag_group'),
+    '.../collection',
+    method='get',
+    response_schema=response_schemas.HostTagGroupCollection,
+)
 def list_host_tag_groups(params):
     """Show all host tag groups"""
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
-    tag_groups_collection = {
-        'id': 'host_tag',
-        'domainType': 'host_tag_group',
-        'value': [
-            constructors.collection_item(
-                domain_type='host_tag_group',
-                obj={
-                    'title': tag_group_obj.title,
-                    'id': tag_group_obj.id
-                },
-            ) for tag_group_obj in tag_config.get_tag_groups()
-        ],
-        'links': [constructors.link_rel('self', constructors.collection_href('host_tag_group'))]
-    }
-    return constructors.serve_json(tag_groups_collection)
+    host_tag_groups = [
+        serialize_host_tag_group(group.get_dict_format()) for group in tag_config.get_tag_groups()
+    ]
+    return constructors.serve_json(
+        constructors.collection_object(domain_type='host_tag_group', value=host_tag_groups))
 
 
 @Endpoint(
@@ -125,7 +127,7 @@ def list_host_tag_groups(params):
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[405],
     request_schema=request_schemas.UpdateHostTagGroup,
-    response_schema=response_schemas.ConcreteHostTagGroup,
+    response_schema=response_schemas.HostTagGroupObject,
 )
 def update_host_tag_group(params):
     """Update a host tag group"""

@@ -422,11 +422,35 @@ class CollectionItem(OneOfSchema):
     type_field_remove = False
 
 
-class ConcreteHostTagGroup(DomainObject):
+class TagChoice(BaseSchema):
+    id = fields.String(description="The id of the tag choice")
+    title = fields.String(description="The title of the tag choice")
+    aux_tags = fields.List(
+        fields.String(
+            description="Id of the aux tag",
+            example="snmp",
+        ),
+        description="The collection of aux tags",
+    )
+
+
+class HostTagGroupExtensions(BaseSchema):
+    tags = fields.List(
+        fields.Nested(TagChoice),
+        description="The collection of tag choices",
+    )
+    topic = fields.String(description="The topic of the tag group")
+
+
+class HostTagGroupObject(DomainObject):
     domainType = fields.Constant(
         "host_tag_group",
         required=True,
         description="The domain type of the object.",
+    )
+    extensions = fields.Nested(
+        HostTagGroupExtensions,
+        description="Topic and tag choices of the host tag group",
     )
 
 
@@ -445,6 +469,17 @@ class DomainObjectCollection(Linkable):
         many=True,
     )
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
+
+
+class HostTagGroupCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "host_tag_group",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(HostTagGroupObject()),
+        description="A list of host tag group objects.",
+    )
 
 
 class HostConfigCollection(DomainObjectCollection):

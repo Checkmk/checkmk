@@ -1,0 +1,16 @@
+Title: API host_tag_group: change show all endpoint to include additional information
+Class: fix
+Compatible: incompat
+Component: core
+Date: 1634889214
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p14
+
+In the previous version, the show all endpoint for the host tag groups
+returned only the domain type and title of each group. This werk now
+includes additional information such as id, links and
+members following the pattern of other show all endpoints. It is possible
+that the static API clients must be recompiled for this change to take
+effect.

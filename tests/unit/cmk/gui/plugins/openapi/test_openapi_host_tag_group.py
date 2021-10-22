@@ -223,3 +223,21 @@ def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user,
         base + "/objects/host_tag_group/group_id999",
         status=200,
     )
+
+
+def test_openapi_host_tag_group_collection(wsgi_app, with_automation_user,
+                                           suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/domain-types/host_tag_group/collections/all",
+        status=200,
+    )
+
+    resp_body = resp.json_body["value"]
+    assert "id" in resp_body[0]
+    assert "topic" in resp_body[0]["extensions"]
+    assert resp_body[0]["domainType"] == "host_tag_group"

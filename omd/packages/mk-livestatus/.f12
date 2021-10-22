@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
     cat .site
@@ -17,6 +17,8 @@ ROOT=/omd/sites/$SITE
         etc \
         "$ROOT/"
 )
+
+sudo cp "$PWD/"LIVESTATUS_[[:upper:]]* "$ROOT/lib/omd/hooks"
 
 sudo find "$ROOT/etc" -type f -exec \
     perl -pi -e "s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g" "{}" \;

@@ -180,6 +180,16 @@ def _2_0_ignored_services():
                 ],
             },
         },
+        {
+            "id": "1",
+            "value": True,
+            "condition": {
+                "host_name": ["heute"],
+                "service_description": {
+                    "$nor": [{"$regex": "Filesystem /opt/omd/sites/heute/tmp$"}]
+                },
+            },
+        },
     ]
 
 

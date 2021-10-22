@@ -57,28 +57,28 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 // static
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                                     const ColumnOffsets &offsets) {
-    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
+    table->addColumn(std::make_unique<StringColumn<servicegroup>>(
         prefix + "name", "The name of the service group", offsets,
         [](const servicegroup &r) {
             return r.group_name == nullptr ? "" : r.group_name;
         }));
-    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
+    table->addColumn(std::make_unique<StringColumn<servicegroup>>(
         prefix + "alias", "An alias of the service group", offsets,
         [](const servicegroup &r) {
             return r.alias == nullptr ? "" : r.alias;
         }));
-    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
+    table->addColumn(std::make_unique<StringColumn<servicegroup>>(
         prefix + "notes", "Optional additional notes about the service group",
         offsets, [](const servicegroup &r) {
             return r.notes == nullptr ? "" : r.notes;
         }));
-    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
+    table->addColumn(std::make_unique<StringColumn<servicegroup>>(
         prefix + "notes_url",
         "An optional URL to further notes on the service group", offsets,
         [](const servicegroup &r) {
             return r.notes_url == nullptr ? "" : r.notes_url;
         }));
-    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
+    table->addColumn(std::make_unique<StringColumn<servicegroup>>(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
         offsets, [](const servicegroup &r) {

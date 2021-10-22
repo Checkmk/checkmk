@@ -19,10 +19,10 @@
 
 TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn::Callback<CrashReport>>(
+    addColumn(std::make_unique<StringColumn<CrashReport>>(
         "id", "The ID of a crash report", offsets,
         [](const CrashReport &r) { return r._id; }));
-    addColumn(std::make_unique<StringColumn::Callback<CrashReport>>(
+    addColumn(std::make_unique<StringColumn<CrashReport>>(
         "component", "The component that crashed (gui, agent, check, etc.)",
         offsets, [](const CrashReport &r) { return r._component; }));
     addDynamicColumn(std::make_unique<DynamicFileColumn<CrashReport>>(

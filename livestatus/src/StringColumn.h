@@ -24,13 +24,15 @@ class Aggregator;
 class Row;
 class RowRenderer;
 
-struct StringColumn : ::Column {
-    class Constant;
-    class Reference;
-    template <class T>
-    class Callback;
-
-    using ::Column::Column;
+// TODO(ml, sp): C++-20 should let us use strings as default template parameter
+// (see P0732).
+template <class T>
+class StringColumn : public Column {
+public:
+    StringColumn(const std::string& name, const std::string& description,
+                 const ColumnOffsets& offsets,
+                 const std::function<std::string(const T&)>& f)
+        : Column{name, description, offsets}, f_{f} {}
     ~StringColumn() override = default;
 
     [[nodiscard]] ColumnType type() const override {
@@ -56,23 +58,7 @@ struct StringColumn : ::Column {
                                  "' not supported");
     }
 
-    [[nodiscard]] virtual std::string getValue(Row row) const = 0;
-};
-
-// TODO(ml, sp): C++-20 should let us use strings as default
-// template parameter (see P0732).
-template <class T>
-class StringColumn::Callback : public StringColumn {
-public:
-    struct PerfData;
-
-    Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets,
-             const std::function<std::string(const T&)>& f)
-        : StringColumn{name, description, offsets}, f_{f} {}
-    ~Callback() override = default;
-
-    [[nodiscard]] std::string getValue(Row row) const override {
+    [[nodiscard]] std::string getValue(Row row) const {
         using namespace std::string_literals;
         const T* data = columnData<T>(row);
         return data == nullptr ? ""s : f_(*data);
@@ -83,8 +69,11 @@ private:
 };
 
 template <class T>
-struct StringColumn::Callback<T>::PerfData : StringColumn::Callback<T> {
-    using StringColumn::Callback<T>::Callback;
+class StringColumnPerfData : public StringColumn<T> {
+public:
+    using StringColumn<T>::StringColumn;
+    ~StringColumnPerfData() override = default;
+
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
         return std::make_unique<PerfdataAggregator>(

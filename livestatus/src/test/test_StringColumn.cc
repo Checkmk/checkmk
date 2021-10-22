@@ -4,6 +4,7 @@
 // source code package.
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "Row.h"
@@ -23,7 +24,7 @@ TEST(StringColumn, GetValueLambda) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = StringColumn::Callback<DummyRow>{
+    const auto col = StringColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -35,7 +36,7 @@ TEST(StringColumn, GetValueDefault) {
     auto v = "hello"s;
 
     const auto row = DummyRow{nullptr};
-    const auto col = StringColumn::Callback<DummyRow>{
+    const auto col = StringColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};

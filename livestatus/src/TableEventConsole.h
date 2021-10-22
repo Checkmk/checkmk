@@ -17,7 +17,6 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "StringColumn.h"
 #include "Table.h"
 #ifdef CMC
 #include "contact_fwd.h"
@@ -31,18 +30,16 @@ class DoubleColumn;
 class Query;
 class Row;
 template <class T>
+class StringColumn;
+template <class T>
 class TimeColumn;
-
-// NOTE: We have a few "keep" pragmas above to avoid the insane handling of
-// template foward declarations, when the templates have parameters with
-// defaults. Yet another example "simple things gone wrong"... :-/
 
 class ECRow {
 public:
     ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
-    static std::unique_ptr<StringColumn::Callback<ECRow>> makeStringColumn(
+    static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<IntColumn::Callback<ECRow>> makeIntColumn(

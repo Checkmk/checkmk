@@ -18,12 +18,12 @@
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
+    addColumn(std::make_unique<StringColumn<contactgroup>>(
         "name", "The name of the contactgroup", offsets,
         [](const contactgroup &r) {
             return r.group_name == nullptr ? "" : r.group_name;
         }));
-    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
+    addColumn(std::make_unique<StringColumn<contactgroup>>(
         "alias", "The alias of the contactgroup", offsets,
         [](const contactgroup &r) {
             return r.alias == nullptr ? "" : r.alias;

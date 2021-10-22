@@ -164,10 +164,10 @@ ECRow::ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
 }
 
 // static
-std::unique_ptr<StringColumn::Callback<ECRow>> ECRow::makeStringColumn(
+std::unique_ptr<StringColumn<ECRow>> ECRow::makeStringColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<StringColumn::Callback<ECRow>>(
+    return std::make_unique<StringColumn<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getString(name); });
 }
@@ -255,7 +255,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
     const auto *c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
-    auto precedence = std::static_pointer_cast<StringColumn::Callback<ECRow>>(
+    auto precedence = std::static_pointer_cast<StringColumn<ECRow>>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
     if (precedence == "rule") {

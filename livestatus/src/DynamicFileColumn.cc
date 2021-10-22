@@ -46,7 +46,7 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
                                  "': '" + f.string() + "' not in '" +
                                  basepath().string() + "'");
     }
-    return std::make_unique<typename BlobColumn::Callback<T>::File>(
+    return std::make_unique<BlobColumnFile<T>>(
         name, _description, _offsets, _basepath,
         [this, f](const T &r) { return _filepath(r, f); });
 }

@@ -318,7 +318,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numQueuedAlerts());
         }));
-    addColumn(std::make_unique<BlobColumn::Callback<TableStatus>::File>(
+    addColumn(std::make_unique<BlobColumnFile<TableStatus>>(
         "license_usage_history", "Historic license usage information", offsets,
         [mc]() { return mc->licenseUsageHistoryPath(); },
         [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));

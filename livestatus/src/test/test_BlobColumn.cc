@@ -48,7 +48,7 @@ std::vector<char> to_value(const std::string& s) {
 TEST_F(FileFixture, BlobColumnReadFile) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = BlobColumn::Callback<DummyRow>::File{
+    const auto col = BlobColumnFile<DummyRow>{
         "name"s,
         "description"s,
         {},

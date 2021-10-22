@@ -57,7 +57,7 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     }
     // TODO(sp) Using TableEventConsoleReplication here is a cruel hack,
     // DynamicEventConsoleReplicationColumn should really be a template.
-    return std::make_unique<BlobColumn::Callback<TableEventConsoleReplication>>(
+    return std::make_unique<BlobColumn<TableEventConsoleReplication>>(
         name, "replication value", _offsets,
         [result =
              std::move(result)](const TableEventConsoleReplication & /*r*/) {

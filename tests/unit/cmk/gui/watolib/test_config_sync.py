@@ -491,7 +491,7 @@ def test_generate_pre_17_site_snapshot(
         )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "fixture_disable_cmk_update_config")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
 def test_apply_pre_17_sync_snapshot(
     edition_short,
@@ -499,7 +499,6 @@ def test_apply_pre_17_sync_snapshot(
     tmp_path,
     with_user_login,
     remote_site,
-    fixture_disable_cmk_update_config,
 ):
     snapshot_data_collector_class = (
         "CMESnapshotDataCollector" if edition_short == "cme" else "CRESnapshotDataCollector"
@@ -623,7 +622,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 
     mocked_responses.add(
         method=responses.POST,
-        url="http://localhost/unit_remote_1/check_mk/automation.py?command=get-config-sync-state&debug=&secret=watosecret",
+        url="http://localhost/unit_remote_1/check_mk/automation.py?command=get-config-sync-state",
         body=repr(
             (
                 {
@@ -653,7 +652,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 
     mocked_responses.add(
         method=responses.POST,
-        url="http://localhost/unit_remote_1/check_mk/automation.py?command=receive-config-sync&debug=&secret=watosecret",
+        url="http://localhost/unit_remote_1/check_mk/automation.py?command=receive-config-sync",
         body="True",
     )
 

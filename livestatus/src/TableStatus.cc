@@ -284,12 +284,12 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
-    addColumn(std::make_unique<BoolColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<BoolColumn<TableStatus>>(
         "has_event_handlers",
         "Whether or not at alert handler rules are configured (0/1)", offsets,
         [](const TableStatus & /*r*/) { return g_any_event_handler_enabled; }));
 
-    addColumn(std::make_unique<BoolColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<BoolColumn<TableStatus>>(
         "is_trial_expired", "Whether or not expired trial of demo version",
         offsets, [](const TableStatus & /*r*/) {
 #ifdef DEMOVERSION  // will be patched by version.groovy for DEMO release

@@ -100,14 +100,14 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         "Wether the contact will be notified about service problems in general (0/1)",
         offsets,
         [](const contact &ct) { return ct.service_notifications_enabled; }));
-    table->addColumn(std::make_unique<BoolColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<BoolColumn<contact>>(
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period (0/1)",
         offsets, [](const contact &ct) {
             return g_timeperiods_cache->inTimeperiod(
                 ct.host_notification_period_ptr);
         }));
-    table->addColumn(std::make_unique<BoolColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<BoolColumn<contact>>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification period (0/1)",
         offsets, [](const contact &ct) {

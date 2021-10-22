@@ -102,7 +102,6 @@ liblivestatus_a_SOURCES = \
         AttributeListColumn.cc \
         Average.cc \
         BlobColumn.cc \
-        BoolColumn.cc \
         Column.cc \
         ColumnFilter.cc \
         CommentRenderer.cc \

@@ -482,13 +482,13 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "percent_state_change", "Percent state change", offsets,
         [](const service &r) { return r.percent_state_change; }));
 
-    table->addColumn(std::make_unique<BoolColumn::Callback<service, true>>(
+    table->addColumn(std::make_unique<BoolColumn<service, true>>(
         prefix + "in_check_period",
         "Whether the service is currently in its check period (0/1)", offsets,
         [](const service &r) {
             return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
         }));
-    table->addColumn(std::make_unique<BoolColumn::Callback<service, true>>(
+    table->addColumn(std::make_unique<BoolColumn<service, true>>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
         offsets, [mc](const service &r) {
@@ -498,7 +498,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return it == attrs.end() ||
                    g_timeperiods_cache->inTimeperiod(it->second);
         }));
-    table->addColumn(std::make_unique<BoolColumn::Callback<service, true>>(
+    table->addColumn(std::make_unique<BoolColumn<service, true>>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
         offsets, [](const service &r) {

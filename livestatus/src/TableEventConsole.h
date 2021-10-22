@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-#include "DoubleColumn.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
@@ -26,7 +25,10 @@
 #else
 #include "nagios.h"
 #endif
+
 class ColumnOffsets;
+template <class T>
+class DoubleColumn;
 class Query;
 class Row;
 
@@ -45,7 +47,7 @@ public:
     static std::unique_ptr<IntColumn::Callback<ECRow>> makeIntColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<DoubleColumn::Callback<ECRow>> makeDoubleColumn(
+    static std::unique_ptr<DoubleColumn<ECRow>> makeDoubleColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<TimeColumn::Callback<ECRow>> makeTimeColumn(

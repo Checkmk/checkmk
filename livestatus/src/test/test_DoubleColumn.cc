@@ -3,6 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <memory>
 #include <string>
 
 #include "DoubleColumn.h"
@@ -22,7 +23,7 @@ TEST(DoubleColumn, GetValueLambda) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = DoubleColumn::Callback<DummyRow>{
+    const auto col = DoubleColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -34,7 +35,7 @@ TEST(DoubleColumn, GetValueDefault) {
     const auto v = 5.0;
 
     const auto row = DummyRow{nullptr};
-    const auto col = DoubleColumn::Callback<DummyRow>{
+    const auto col = DoubleColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};

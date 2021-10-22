@@ -84,7 +84,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration);
         }));
-    addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
         "duration_part", "Duration part in regard to the query timeframe",
         offsets, [](const HostServiceState &r) { return r._duration_part; }));
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
@@ -142,7 +142,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_ok);
         }));
-    addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
         offsets,
         [](const HostServiceState &r) { return r._duration_part_ok; }));
@@ -152,7 +152,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_warning);
         }));
-    addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
         "duration_part_warning",
         "WARNING duration part in regard to the query timeframe", offsets,
         [](const HostServiceState &r) { return r._duration_part_warning; }));
@@ -162,7 +162,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         offsets, [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_critical);
         }));
-    addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
         "duration_part_critical",
         "CRITICAL duration part in regard to the query timeframe", offsets,
         [](const HostServiceState &r) { return r._duration_part_critical; }));
@@ -172,7 +172,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_unknown);
         }));
-    addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
         "duration_part_unknown",
         "UNKNOWN duration part in regard to the query timeframe", offsets,
         [](const HostServiceState &r) { return r._duration_part_unknown; }));
@@ -182,7 +182,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         offsets, [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_unmonitored);
         }));
-    addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
         "duration_part_unmonitored",
         "UNMONITORED duration part in regard to the query timeframe", offsets,
         [](const HostServiceState &r) {

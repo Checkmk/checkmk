@@ -24,24 +24,31 @@
 #include "contact_fwd.h"
 #include "opids.h"
 
+// NOTE: The C++ spec explicitly disallows doubles as non-type template
+// parameters. We could add an int or perhaps even some std::ratio if we want.
+// Currently the default is hardwired to zero.
+// TODO(ml, sp): C++-20 should let us use double as default template parameter
+// (see P0732).
+template <class T>
 class DoubleColumn : public Column {
 public:
     using value_type = double;
-    class Constant;
-    class Reference;
-    template <class T>
-    class Callback;
-    using Column::Column;
+    using function_type = std::function<value_type(const T&)>;
+
+    DoubleColumn(const std::string& name, const std::string& description,
+                 const ColumnOffsets& offsets, const function_type& f)
+        : Column{name, description, offsets}, f_{f} {}
     ~DoubleColumn() override = default;
 
-    [[nodiscard]] virtual value_type getValue(Row row) const = 0;
+    [[nodiscard]] ColumnType type() const override {
+        return ColumnType::double_;
+    }
+
     void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         r.output(getValue(row));
     }
-    [[nodiscard]] ColumnType type() const override {
-        return ColumnType::double_;
-    }
+
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string& value) const override {
@@ -49,28 +56,14 @@ public:
             kind, name(), [this](Row row) { return this->getValue(row); },
             relOp, value, logger());
     }
+
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
         return std::make_unique<DoubleAggregator>(
             factory, [this](Row row) { return this->getValue(row); });
     }
-};
 
-// NOTE: The C++ spec explicitly disallows doubles as non-type template
-// parameters. We could add an int or perhaps even some std::ratio if we want.
-// Currently the default is hardwired to zero.
-// TODO(ml, sp): C++-20 should let us use double as default
-// template parameter (see P0732).
-template <class T>
-class DoubleColumn::Callback : public DoubleColumn {
-    using function_type = std::function<value_type(const T&)>;
-
-public:
-    Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets, const function_type& f)
-        : DoubleColumn{name, description, offsets}, f_{f} {}
-    ~Callback() override = default;
-    [[nodiscard]] value_type getValue(Row row) const override {
+    [[nodiscard]] value_type getValue(Row row) const {
         const T* data = columnData<T>(row);
         return data == nullptr ? 0.0 : f_(*data);
     }

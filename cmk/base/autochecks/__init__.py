@@ -217,10 +217,6 @@ def _autochecks_path_for(hostname: HostName) -> Path:
     return Path(cmk.utils.paths.autochecks_dir, hostname + ".mk")
 
 
-def has_autochecks(hostname: HostName) -> bool:
-    return _autochecks_path_for(hostname).exists()
-
-
 def _load_raw_autochecks(
     *,
     path: Path,

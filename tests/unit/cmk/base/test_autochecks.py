@@ -279,18 +279,15 @@ def test_parse_autochecks_services(
         assert service.parameters == expected[2], service.check_plugin_name
 
 
-def test_has_autochecks():
-    assert autochecks.has_autochecks(HostName("host")) is False
-    autochecks.save_autochecks_services(HostName("host"), [])
-    assert autochecks.has_autochecks(HostName("host")) is True
-
-
 def test_remove_autochecks_file():
-    assert autochecks.has_autochecks(HostName("host")) is False
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir) / "host.mk"
+    assert not autochecks_file.exists()
+
     autochecks.save_autochecks_services(HostName("host"), [])
-    assert autochecks.has_autochecks(HostName("host")) is True
+    assert autochecks_file.exists()
+
     autochecks.remove_autochecks_file(HostName("host"))
-    assert autochecks.has_autochecks(HostName("host")) is False
+    assert not autochecks_file.exists()
 
 
 @pytest.mark.parametrize(

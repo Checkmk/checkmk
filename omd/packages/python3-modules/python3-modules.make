@@ -38,6 +38,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INS
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH):$(PACKAGE_POSTGRESQL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$(PACKAGE_POSTGRESQL_BIN):$$PATH" ; \
 	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
+            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple \
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 	    `: fixup git local dependencies` \

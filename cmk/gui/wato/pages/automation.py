@@ -48,6 +48,7 @@ class ModeAutomationLogin(AjaxPage):
             raise MKAuthException(_("This account has no permission for automation."))
 
         response.set_content_type("text/plain")
+        _set_version_headers()
 
         # Parameter was added with 1.5.0p10
         if not request.has_var("_version"):
@@ -107,6 +108,7 @@ class ModeAutomation(AjaxPage):
 
     def _from_vars(self):
         self._authenticate()
+        _set_version_headers()
         self._verify_compatibility()
         self._command = request.get_str_input_mandatory("command")
 
@@ -259,6 +261,15 @@ class ModeAutomation(AjaxPage):
             if config.debug:
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
+
+
+def _set_version_headers() -> None:
+    """Add the x-checkmk-version, x-checkmk-edition headers to the HTTP response
+
+    Has been added with 2.0.0p13.
+    """
+    response.headers["x-checkmk-version"] = cmk_version.__version__
+    response.headers["x-checkmk-edition"] = cmk_version.edition_short()
 
 
 def _get_login_secret(create_on_demand=False):

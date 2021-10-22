@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       PIPENV_IGNORE_VIRTUALENVS: 1
+      USE_EXTERNAL_PIPENV_MIRROR: true
       PYTHONWARNINGS: ignore:DeprecationWarning
     strategy:
       matrix:

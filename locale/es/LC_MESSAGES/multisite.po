@@ -5893,6 +5893,9 @@ msgstr ""
 "marcadores de posición <tt>\\1</tt>, <tt>\\2</tt>, etc. para insertar el "
 "primer, segundo, etc. grupo coincidente."
 
+msgid "Attempt to interpret OEM data"
+msgstr ""
+
 msgid "Atto Fibrebridge FC port"
 msgstr "Puerto Atto Fibrebridge FC"
 
@@ -6138,6 +6141,9 @@ msgstr ""
 
 msgid "Automatically invalidate notification"
 msgstr "Invalidar automáticamente la notificación"
+
+msgid "Automatically recreate the sensor data repository (SDR) cache"
+msgstr ""
 
 msgid ""
 "Automatically schedule service discovery check after service configuration "
@@ -16142,6 +16148,9 @@ msgstr "Fecha del conductor"
 msgid "Driver Version"
 msgstr "Versión del conductor"
 
+msgid "Driver type to use instead of doing an auto selection"
+msgstr ""
+
 msgid "Drop Domain Suffix"
 msgstr "Eliminar el sufijo del dominio"
 
@@ -16754,6 +16763,10 @@ msgid "Effective labels"
 msgstr "Etiquetas eficaces"
 
 msgid "Effective parameters"
+msgstr "Parámetros efectivos"
+
+#, fuzzy
+msgid "Effective parameters of"
 msgstr "Parámetros efectivos"
 
 msgid "Either Containers, Images, Local Volumes or Build Cache"
@@ -23109,6 +23122,15 @@ msgstr "Semáforos IPC"
 msgid "IPMI"
 msgstr "IPMI"
 
+#, fuzzy
+msgid "IPMI Interface"
+msgstr "Interfaz"
+
+msgid ""
+"IPMI Interface to be used. If not specified, the default interface as set at "
+"compile time will be used."
+msgstr ""
+
 msgid "IPMI Management Board"
 msgstr "Consejo de Administración del IPMI"
 
@@ -24644,6 +24666,9 @@ msgstr "Ignorar los intervalos más cortos o iguales"
 msgid "Ignore levels"
 msgstr "Ignorar los niveles"
 
+msgid "Ignore not-available (i.e. N/A) sensors in output"
+msgstr ""
+
 msgid "Ignore notification period"
 msgstr "Ignorar el periodo de notificación"
 
@@ -25640,6 +25665,10 @@ msgstr "Instalar y activar el servicio systemd"
 
 msgid "Install and activate xinetd service"
 msgstr "Instalar y activar el servicio xinetd"
+
+#, fuzzy
+msgid "Install only packages from trusted sources"
+msgstr "Instalar y activar el servicio systemd"
 
 msgid "Install this package"
 msgstr "Instalar este paquete"
@@ -26687,6 +26716,10 @@ msgstr "Sólo muestra la disponibilidad (es decir, OK/UP)"
 #, fuzzy
 msgid "KByte"
 msgstr "Bytes"
+
+msgid ""
+"K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
+msgstr ""
 
 msgid "Kaspersky Anti-Virus (Linux)"
 msgstr "Kaspersky Anti-Virus (Linux)"
@@ -34873,6 +34906,14 @@ msgstr "Salida de paquetes no unicast"
 msgid "Output power"
 msgstr "Potencia de salida"
 
+#, fuzzy
+msgid "Output sensor state"
+msgstr "Estado del sensor"
+
+#, fuzzy
+msgid "Output sensor thresholds"
+msgstr "Umbral del sensor"
+
 msgid "Output text encoding settings for SNMP devices"
 msgstr ""
 "Configuración de la codificación del texto de salida para los dispositivos "
@@ -35166,6 +35207,13 @@ msgstr "Archivos empaquetados"
 msgid "Packages"
 msgstr "Paquetes"
 
+msgid ""
+"Packages can potentially harm your Checkmk installation. It is recommended "
+"to use only packages from trusted sources.<br>Visit the <a href=\"https://"
+"exchange.checkmk.com/\">Checkmk Exchange<a>  for packages reviewed by Tribe "
+"29."
+msgstr ""
+
 msgid "Packet loss"
 msgstr "Pérdida de paquetes"
 
@@ -35372,9 +35420,6 @@ msgid ""
 msgstr ""
 "Los parámetros deben contener sólo A-Z, a-z, 0-9 y _ y no deben comenzar con "
 "un dígito."
-
-msgid "Parameters of"
-msgstr "Parámetros de"
 
 msgid "Parameters:"
 msgstr "Parámetros:"
@@ -59123,7 +59168,8 @@ msgstr "Ver nombre"
 msgid "View pending changes"
 msgstr "Ver los cambios pendientes"
 
-msgid "View the rule based parameters of this host"
+#, fuzzy
+msgid "View the rule based effective parameters of this host"
 msgstr "Ver los parámetros basados en reglas de este host"
 
 msgid "Views"
@@ -65167,6 +65213,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Parameters of"
+#~ msgstr "Parámetros de"
 
 #~ msgid "Main directory"
 #~ msgstr "Directorio principal"

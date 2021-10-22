@@ -5622,6 +5622,9 @@ msgstr ""
 "たグループがある場合は、プレースホルダー<tt>\\1</tt>、 <tt>\\2</tt>などを使用"
 "して、最初、2番目などの一致するグループを挿入できます。"
 
+msgid "Attempt to interpret OEM data"
+msgstr ""
+
 msgid "Atto Fibrebridge FC port"
 msgstr "Atto Fibrebridge FCポート"
 
@@ -5862,6 +5865,9 @@ msgstr ""
 
 msgid "Automatically invalidate notification"
 msgstr "通知を自動的に無効にする"
+
+msgid "Automatically recreate the sensor data repository (SDR) cache"
+msgstr ""
 
 msgid ""
 "Automatically schedule service discovery check after service configuration "
@@ -15475,6 +15481,9 @@ msgstr ""
 msgid "Driver Version"
 msgstr "ドライバーバージョン"
 
+msgid "Driver type to use instead of doing an auto selection"
+msgstr ""
+
 msgid "Drop Domain Suffix"
 msgstr "ドメインサフィックスを削除する"
 
@@ -16075,6 +16084,10 @@ msgid "Effective labels"
 msgstr "効果的なラベル"
 
 msgid "Effective parameters"
+msgstr "有効なパラメータ"
+
+#, fuzzy
+msgid "Effective parameters of"
 msgstr "有効なパラメータ"
 
 msgid "Either Containers, Images, Local Volumes or Build Cache"
@@ -22168,6 +22181,15 @@ msgstr "IPCセマフォ"
 msgid "IPMI"
 msgstr "IPMI"
 
+#, fuzzy
+msgid "IPMI Interface"
+msgstr "インターフェース"
+
+msgid ""
+"IPMI Interface to be used. If not specified, the default interface as set at "
+"compile time will be used."
+msgstr ""
+
 msgid "IPMI Management Board"
 msgstr "IPMIマネージメントボード"
 
@@ -23540,6 +23562,9 @@ msgstr "短いか等しい間隔を無視する"
 msgid "Ignore levels"
 msgstr "レベルを無視する"
 
+msgid "Ignore not-available (i.e. N/A) sensors in output"
+msgstr ""
+
 msgid "Ignore notification period"
 msgstr "通知期間を無視する"
 
@@ -24471,6 +24496,10 @@ msgstr "systemdサービスをインストールしてアクティブ化する"
 
 msgid "Install and activate xinetd service"
 msgstr "xinetdサービスをインストールしてアクティブ化する"
+
+#, fuzzy
+msgid "Install only packages from trusted sources"
+msgstr "systemdサービスをインストールしてアクティブ化する"
 
 msgid "Install this package"
 msgstr "このパッケージをインストールします"
@@ -25478,6 +25507,10 @@ msgstr "可用性を表示するだけです (i.e. OK/UP)"
 #, fuzzy
 msgid "KByte"
 msgstr "バイト"
+
+msgid ""
+"K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
+msgstr ""
 
 msgid "Kaspersky Anti-Virus (Linux)"
 msgstr "カスペルスキーアンチウイルス(Linux)"
@@ -33429,6 +33462,14 @@ msgstr "ユニキャスト以外のパケットを出力する"
 msgid "Output power"
 msgstr "出力電力"
 
+#, fuzzy
+msgid "Output sensor state"
+msgstr "センサーの状態"
+
+#, fuzzy
+msgid "Output sensor thresholds"
+msgstr "センサーのしきい値"
+
 msgid "Output text encoding settings for SNMP devices"
 msgstr "SNMPデバイスの出力テキストエンコーディング設定"
 
@@ -33709,6 +33750,13 @@ msgstr "パッケージ化されたファイル"
 msgid "Packages"
 msgstr "パッケージ"
 
+msgid ""
+"Packages can potentially harm your Checkmk installation. It is recommended "
+"to use only packages from trusted sources.<br>Visit the <a href=\"https://"
+"exchange.checkmk.com/\">Checkmk Exchange<a>  for packages reviewed by Tribe "
+"29."
+msgstr ""
+
 msgid "Packet loss"
 msgstr "パケットロス"
 
@@ -33914,9 +33962,6 @@ msgid ""
 msgstr ""
 "パラメータには、AZ、az、0〜9、および_のみを含める必要があり、数字で始めること"
 "はできません。"
-
-msgid "Parameters of"
-msgstr "のパラメータ"
 
 msgid "Parameters:"
 msgstr "パラメーター:"
@@ -56082,7 +56127,8 @@ msgstr "名前を表示"
 msgid "View pending changes"
 msgstr "保留中の変更を表示する"
 
-msgid "View the rule based parameters of this host"
+#, fuzzy
+msgid "View the rule based effective parameters of this host"
 msgstr "このホストのルールベースのパラメータを表示する"
 
 msgid "Views"
@@ -61699,6 +61745,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Parameters of"
+#~ msgstr "のパラメータ"
 
 #~ msgid "Main directory"
 #~ msgstr "メインディレクトリ"

@@ -5510,6 +5510,9 @@ msgid ""
 "tt>, etc. for inserting the first, second etc matching group."
 msgstr ""
 
+msgid "Attempt to interpret OEM data"
+msgstr ""
+
 msgid "Atto Fibrebridge FC port"
 msgstr ""
 
@@ -5755,6 +5758,9 @@ msgid ""
 msgstr ""
 
 msgid "Automatically invalidate notification"
+msgstr ""
+
+msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
 
 msgid ""
@@ -15496,6 +15502,9 @@ msgstr ""
 msgid "Driver Version"
 msgstr ""
 
+msgid "Driver type to use instead of doing an auto selection"
+msgstr ""
+
 msgid "Drop Domain Suffix"
 msgstr ""
 
@@ -16100,6 +16109,10 @@ msgstr "Reguli neaplicate"
 
 #, fuzzy
 msgid "Effective parameters"
+msgstr "Reguli neaplicate"
+
+#, fuzzy
+msgid "Effective parameters of"
 msgstr "Reguli neaplicate"
 
 msgid "Either Containers, Images, Local Volumes or Build Cache"
@@ -22124,6 +22137,15 @@ msgstr ""
 msgid "IPMI"
 msgstr ""
 
+#, fuzzy
+msgid "IPMI Interface"
+msgstr "Adresă"
+
+msgid ""
+"IPMI Interface to be used. If not specified, the default interface as set at "
+"compile time will be used."
+msgstr ""
+
 msgid "IPMI Management Board"
 msgstr ""
 
@@ -23150,6 +23172,9 @@ msgstr ""
 msgid "Ignore levels"
 msgstr "trei nivele"
 
+msgid "Ignore not-available (i.e. N/A) sensors in output"
+msgstr ""
+
 msgid "Ignore notification period"
 msgstr ""
 
@@ -23985,6 +24010,9 @@ msgid "Install and activate systemd service"
 msgstr ""
 
 msgid "Install and activate xinetd service"
+msgstr ""
+
+msgid "Install only packages from trusted sources"
 msgstr ""
 
 #, fuzzy
@@ -25016,6 +25044,10 @@ msgid "Just show the availability (i.e. OK/UP)"
 msgstr ""
 
 msgid "KByte"
+msgstr ""
+
+msgid ""
+"K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
 msgstr ""
 
 msgid "Kaspersky Anti-Virus (Linux)"
@@ -33445,6 +33477,13 @@ msgstr ""
 msgid "Output power"
 msgstr ""
 
+#, fuzzy
+msgid "Output sensor state"
+msgstr "Numele Elementului"
+
+msgid "Output sensor thresholds"
+msgstr ""
+
 msgid "Output text encoding settings for SNMP devices"
 msgstr ""
 
@@ -33725,6 +33764,13 @@ msgstr "Acces la Agenți"
 msgid "Packages"
 msgstr ""
 
+msgid ""
+"Packages can potentially harm your Checkmk installation. It is recommended "
+"to use only packages from trusted sources.<br>Visit the <a href=\"https://"
+"exchange.checkmk.com/\">Checkmk Exchange<a>  for packages reviewed by Tribe "
+"29."
+msgstr ""
+
 msgid "Packet loss"
 msgstr ""
 
@@ -33933,9 +33979,6 @@ msgstr ""
 msgid ""
 "Parameters must contain only A-Z, a-z, 0-9 and _ and must not begin with a "
 "digit."
-msgstr ""
-
-msgid "Parameters of"
 msgstr ""
 
 #, fuzzy
@@ -55062,7 +55105,7 @@ msgstr "Nume nou"
 msgid "View pending changes"
 msgstr "Activare Schimbări!"
 
-msgid "View the rule based parameters of this host"
+msgid "View the rule based effective parameters of this host"
 msgstr ""
 
 msgid "Views"
@@ -62878,10 +62921,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Name of the User"
 #~ msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-#~ msgid "Network Interface"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "New Attribute"

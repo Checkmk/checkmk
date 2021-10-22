@@ -9,7 +9,6 @@
 #include <sstream>
 #include <string>
 
-#include "AttributesDictColumn.h"
 #include "Column.h"
 #include "CustomAttributeMap.h"
 #include "CustomVarsDictFilter.h"
@@ -39,8 +38,8 @@ std::string b16encode(const std::string& str) {
 
 struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
-        AttributesDictColumn<host> cvdc{"name", "description", ColumnOffsets{},
-                                        CustomAttributeMap{&core, kind}};
+        DictColumn<host> cvdc{"name", "description", ColumnOffsets{},
+                              CustomAttributeMap{&core, kind}};
         CustomVarsDictFilter filter{
             Filter::Kind::row, "name",
             [&cvdc](Row row) { return cvdc.getValue(row); },

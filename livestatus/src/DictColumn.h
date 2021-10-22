@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "Column.h"
+#include "CustomVarsDictFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -56,7 +57,11 @@ public:
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string &value) const override = 0;
+        const std::string &value) const override {
+        return std::make_unique<CustomVarsDictFilter>(
+            kind, this->name(), [this](Row row) { return this->getValue(row); },
+            relOp, value);
+    }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory /*factory*/) const override {
@@ -64,13 +69,12 @@ public:
                                  "' not supported");
     }
 
-    virtual value_type getValue(Row row) const {
+    value_type getValue(Row row) const {
         const T *data = columnData<T>(row);
-        return data == nullptr ? Default : f_(*data);
+        return data == nullptr ? value_type{} : f_(*data);
     };
 
 private:
-    value_type Default{};
     function_type f_;
 };
 

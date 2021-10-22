@@ -20,7 +20,6 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
-#include "AttributesDictColumn.h"
 #include "BlobColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
@@ -618,7 +617,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
+    table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets, CustomAttributeMap{mc, AttributeKind::custom_variables}));
 
@@ -628,7 +627,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::tags}));
-    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
+    table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{mc, AttributeKind::tags}));
 
@@ -638,7 +637,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::labels}));
-    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
+    table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{mc, AttributeKind::labels}));
 
@@ -650,7 +649,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<AttributesDictColumn<host>>(
+    table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
         CustomAttributeMap{mc, AttributeKind::label_sources}));
 

@@ -20,7 +20,6 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
-#include "AttributesDictColumn.h"
 #include "BoolColumn.h"
 #include "Column.h"
 #include "CommentRenderer.h"
@@ -600,7 +599,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         "A list of the values of all custom variable of the service", offsets,
         CustomAttributeMap::Values{table->core(),
                                    AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
+    table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets,
         CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
@@ -612,7 +611,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "tag_values",
         "A list of the values of all tags of the service", offsets,
         CustomAttributeMap::Values{table->core(), AttributeKind::tags}));
-    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
+    table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{table->core(), AttributeKind::tags}));
 
@@ -624,7 +623,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "label_values",
         "A list of the values of all labels of the service", offsets,
         CustomAttributeMap::Values{table->core(), AttributeKind::labels}));
-    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
+    table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{table->core(), AttributeKind::labels}));
 
@@ -637,7 +636,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         "A list of the values of all sources of the service", offsets,
         CustomAttributeMap::Values{table->core(),
                                    AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<AttributesDictColumn<service>>(
+    table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
         CustomAttributeMap{table->core(), AttributeKind::label_sources}));
 

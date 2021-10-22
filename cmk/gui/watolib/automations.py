@@ -357,7 +357,47 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
     if response.status_code != 200:
         raise MKUserError(None, _("HTTP Error - %d: %s") % (response.status_code, response.text))
 
+    _verify_compatibility(response)
+
     return response
+
+
+def _verify_compatibility(response: requests.Response) -> None:
+    """Ensure we are compatible with the remote site
+
+    In distributed setups the sync from a newer major version central site to an older central site
+    is not allowed. Since 2.1.0 the remote site is performing most of the validations. But in case
+    the newer site is the central site and the remote site is the older, e.g. 2.1.0 to 2.0.0, there
+    is no validation logic on the remote site. To ensure the validation is also performed in this
+    case, we execute the validation logic also in the central site when receiving the answer to the
+    remote call before processing it's content.
+
+    Since 2.0.0p13 the remote site answers with x-checkmk-version, x-checkmk-edition headers.
+    """
+    central_version = cmk_version.__version__
+    central_edition_short = cmk_version.edition_short()
+
+    remote_version = response.headers.get("x-checkmk-version", "")
+    remote_edition_short = response.headers.get("x-checkmk-edition", "")
+
+    if not remote_version or not remote_edition_short:
+        return  # No validation
+
+    if not compatible_with_central_site(
+        central_version, central_edition_short, remote_version, remote_edition_short
+    ):
+        raise MKGeneralException(
+            _(
+                "The central (Version: %s, Edition: %s) and remote site "
+                "(Version: %s, Edition: %s) are not compatible"
+            )
+            % (
+                central_version,
+                central_edition_short,
+                remote_version,
+                remote_edition_short,
+            )
+        )
 
 
 def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):

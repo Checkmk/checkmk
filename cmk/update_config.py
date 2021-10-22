@@ -497,12 +497,24 @@ class UpdateConfig:
             if not rule.is_discovery_rule():
                 continue
 
-            rule.conditions.service_description = [
-                cmk.gui.watolib.rulesets.service_description_to_condition(
-                    unescape(s["$regex"].rstrip("$")))
-                for s in rule.conditions.service_description
-                if "$regex" in s
-            ]
+            if isinstance(rule.conditions.service_description,
+                          dict) and rule.conditions.service_description.get("$nor"):
+                rule.conditions.service_description = {
+                    "$nor": [
+                        cmk.gui.watolib.rulesets.service_description_to_condition(
+                            unescape(s["$regex"].rstrip("$")))
+                        for s in rule.conditions.service_description["$nor"]
+                        if "$regex" in s
+                    ]
+                }
+
+            else:
+                rule.conditions.service_description = [
+                    cmk.gui.watolib.rulesets.service_description_to_condition(
+                        unescape(s["$regex"].rstrip("$")))
+                    for s in rule.conditions.service_description
+                    if "$regex" in s
+                ]
 
     def _validate_regexes_in_item_specs(self, all_rulesets):
         def format_error(msg: str):

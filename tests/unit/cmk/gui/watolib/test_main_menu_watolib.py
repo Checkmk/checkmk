@@ -62,6 +62,7 @@ def test_registered_modules():
 
     if not cmk_version.is_raw_edition():
         expected_modules += [
+            "agent_registration",
             "agents",
             "alert_handlers",
             "dcd_connections",

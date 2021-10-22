@@ -254,6 +254,7 @@ def test_registered_permission_sections():
 
     if not cmk_version.is_raw_edition():
         expected_sections += [
+            ("agent_registration", (50, "Agent registration", False)),
             ("custom_graph", (50, "Custom graphs", True)),
             ("forecast_graph", (50, "Forecast graphs", True)),
             ("graph_collection", (50, "Graph collections", True)),
@@ -706,6 +707,7 @@ def test_registered_permissions():
 
     if not cmk_version.is_raw_edition():
         expected_permissions += [
+            "agent_registration.edit",
             "dashboard.problems",
             "dashboard.site",
             "dashboard.ntop_alerts",

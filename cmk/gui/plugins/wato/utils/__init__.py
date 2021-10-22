@@ -94,7 +94,6 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     AjaxDropdownChoice,
     Alternative,
     CascadingDropdown,
-    Checkbox,
     Dictionary,
     DocumentationURL,
     DropdownChoice,
@@ -493,19 +492,18 @@ def HostnameTranslation(**kwargs):
     return Dictionary(
         title=title,
         help=help_txt,
-        elements=[
-            (
-                "drop_domain",
-                FixedValue(
-                    True,
-                    title=_("Convert FQHN"),
-                    totext=_(
-                        "Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"
-                    ),
-                ),
-            ),
-        ]
-        + _translation_elements("host"),
+        elements=[_get_drop_domain_element()] + translation_elements("host"),
+    )
+
+
+def _get_drop_domain_element() -> _Tuple[str, ValueSpec]:
+    return (
+        "drop_domain",
+        FixedValue(
+            True,
+            title=_("Convert FQHN"),
+            totext=_("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
+        ),
     )
 
 
@@ -515,11 +513,11 @@ def ServiceDescriptionTranslation(**kwargs):
     return Dictionary(
         title=title,
         help=help_txt,
-        elements=_translation_elements("service"),
+        elements=translation_elements("service"),
     )
 
 
-def _translation_elements(what):
+def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
     if what == "host":
         singular = "hostname"
         plural = "hostnames"

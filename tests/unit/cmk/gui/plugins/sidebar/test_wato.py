@@ -30,6 +30,12 @@ def expected_items() -> Dict[str, List[str]]:
 
     agents_items += [
         "download_agents",
+    ]
+
+    if not cmk_version.is_raw_edition():
+        agents_items.append("agent_registration")
+
+    agents_items += [
         "wato.py?group=vm_cloud_container&mode=rulesets",
         "wato.py?group=datasource_programs&mode=rulesets",
         "wato.py?group=agent&mode=rulesets",

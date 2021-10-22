@@ -46,6 +46,7 @@ class ModeAutomationLogin(AjaxPage):
             raise MKAuthException(_("This account has no permission for automation."))
 
         html.set_output_format("python")
+        _set_version_headers()
 
         if not html.request.has_var("_version"):
             # Be compatible to calls from sites using versions before 1.5.0p10.
@@ -96,6 +97,8 @@ class ModeAutomation(AjaxPage):
         self._handle_exc(self.page)
 
     def page(self):
+        _set_version_headers()
+
         # To prevent mixups in written files we use the same lock here as for
         # the normal WATO page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
@@ -170,6 +173,15 @@ class ModeAutomation(AjaxPage):
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
+
+
+def _set_version_headers() -> None:
+    """Add the x-checkmk-version, x-checkmk-edition headers to the HTTP response
+
+    Has been added with 2.0.0p13.
+    """
+    html.response.headers["x-checkmk-version"] = cmk_version.__version__
+    html.response.headers["x-checkmk-edition"] = cmk_version.edition_short()
 
 
 def _get_login_secret(create_on_demand=False):

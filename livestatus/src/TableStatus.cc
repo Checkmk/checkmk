@@ -136,20 +136,20 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "Whether Nagios checks for external commands at its command pipe (0/1)",
         offsets,
         [](const TableStatus & /*r*/) { return check_external_commands; }));
-    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "program_start", "The time of the last program start as UNIX timestamp",
         offsets, [](const TableStatus & /*r*/) {
             return std::chrono::system_clock::from_time_t(program_start);
         }));
 #ifndef NAGIOS4
-    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp", offsets,
         [](const TableStatus & /*r*/) {
             return std::chrono::system_clock::from_time_t(last_command_check);
         }));
 #else
-    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
         offsets, [](const TableStatus & /*r*/) {
@@ -157,7 +157,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
             return std::chrono::system_clock::time_point{};
         }));
 #endif  // NAGIOS4
-    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "last_log_rotation", "Time time of the last log file rotation", offsets,
         [mc](const TableStatus & /*r*/) {
             return mc->last_logfile_rotation();
@@ -300,7 +300,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         }));
 
     // Special stuff for Check_MK
-    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
         offsets, [mc](const TableStatus & /*r*/) {
@@ -330,7 +330,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "average_runnable_jobs_checker",
         "The average count of queued replies which have not yet been delivered to the checker helpers",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "state_file_created", "The time when state file had been created",
         offsets, [](const TableStatus & /*r*/) {
             return std::chrono::system_clock::time_point{};

@@ -38,7 +38,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "id", "The id of the comment", offsets,
         [](const Comment &r) { return r._id; }));
-    addColumn(std::make_unique<TimeColumn::Callback<Comment>>(
+    addColumn(std::make_unique<TimeColumn<Comment>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
         [](const Comment &r) { return r._entry_time; }));
     addColumn(std::make_unique<IntColumn::Callback<Comment>>(
@@ -62,7 +62,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "expires", "Whether this comment expires", offsets,
         [](const Comment &r) { return r._expires; }));
-    addColumn(std::make_unique<TimeColumn::Callback<Comment>>(
+    addColumn(std::make_unique<TimeColumn<Comment>>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         offsets, [](const Comment &r) { return r._expire_time; }));
 

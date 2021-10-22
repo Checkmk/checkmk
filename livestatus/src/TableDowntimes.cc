@@ -39,7 +39,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "id", "The id of the downtime", offsets,
         [](const Downtime &r) { return r._id; }));
-    addColumn(std::make_unique<TimeColumn::Callback<Downtime>>(
+    addColumn(std::make_unique<TimeColumn<Downtime>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
         [](const Downtime &r) { return r._entry_time; }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
@@ -51,10 +51,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "0, if this entry is for a host, 1 if it is for a service", offsets,
         [](const Downtime &r) { return r._is_service; }));
 
-    addColumn(std::make_unique<TimeColumn::Callback<Downtime>>(
+    addColumn(std::make_unique<TimeColumn<Downtime>>(
         "start_time", "The start time of the downtime as UNIX timestamp",
         offsets, [](const Downtime &r) { return r._start_time; }));
-    addColumn(std::make_unique<TimeColumn::Callback<Downtime>>(
+    addColumn(std::make_unique<TimeColumn<Downtime>>(
         "end_time", "The end time of the downtime as UNIX timestamp", offsets,
         [](const Downtime &r) { return r._end_time; }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(

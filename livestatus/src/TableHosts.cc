@@ -313,14 +313,14 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "current_attempt", "Number of the current check attempts",
         offsets, [](const host &r) { return r.current_attempt; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_notification",
         "Time of the last notification (Unix timestamp)", offsets,
         [](const host &r) {
             return std::chrono::system_clock::from_time_t(
                 r.last_host_notification);
         }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "next_notification",
         "Time of the next notification (Unix timestamp)", offsets,
         [](const host &r) {
@@ -328,26 +328,26 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 r.next_host_notification);
         }));
 #else
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_notification",
         "Time of the last notification (Unix timestamp)", offsets,
         [](const host &r) {
             return std::chrono::system_clock::from_time_t(r.last_notification);
         }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "next_notification",
         "Time of the next notification (Unix timestamp)", offsets,
         [](const host &r) {
             return std::chrono::system_clock::from_time_t(r.next_notification);
         }));
 #endif  // NAGIOS4
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "next_check",
         "Scheduled time for the next check (Unix timestamp)", offsets,
         [](const host &r) {
             return std::chrono::system_clock::from_time_t(r.next_check);
         }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_hard_state_change",
         "Time of the last hard state change (Unix timestamp)", offsets,
         [](const host &r) {
@@ -399,31 +399,31 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "Whether to check to send a recovery notification when flapping stops (0/1)",
         offsets,
         [](const host &r) { return r.check_flapping_recovery_notification; }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_check", "Time of the last check (Unix timestamp)",
         offsets, [](const host &r) {
             return std::chrono::system_clock::from_time_t(r.last_check);
         }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_state_change",
         "Time of the last state change - soft or hard (Unix timestamp)",
         offsets, [](const host &r) {
             return std::chrono::system_clock::from_time_t(r.last_state_change);
         }));
 
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_time_up",
         "The last time the host was UP (Unix timestamp)", offsets,
         [](const host &r) {
             return std::chrono::system_clock::from_time_t(r.last_time_up);
         }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_time_down",
         "The last time the host was DOWN (Unix timestamp)", offsets,
         [](const host &r) {
             return std::chrono::system_clock::from_time_t(r.last_time_down);
         }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_time_unreachable",
         "The last time the host was UNREACHABLE (Unix timestamp)", offsets,
         [](const host &r) {
@@ -783,7 +783,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [mc](const host &hst) {
             return pnpgraph_present(mc, hst.name, dummy_service_description());
         }));
-    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
         offsets, [mc](const host &hst) {

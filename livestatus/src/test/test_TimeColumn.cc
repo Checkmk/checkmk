@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "Row.h"
@@ -26,7 +27,7 @@ TEST(TimeColumn, GetValueLambda) {
     const auto tz = 1h;
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = TimeColumn::Callback<DummyRow>{
+    const auto col = TimeColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -38,11 +39,11 @@ TEST(TimeColumn, GetValueDefault) {
     const auto v = Clock::now();
     const auto tz = 1h;
     const auto row = DummyRow{nullptr};
-    const auto col = TimeColumn::Callback<DummyRow>{
+    const auto col = TimeColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
 
     EXPECT_NE(v + tz, col.getValue(row, tz));
-    EXPECT_EQ(TimeColumn::value_type{} + tz, col.getValue(row, tz));
+    EXPECT_EQ(TimeColumn<DummyRow>::value_type{} + tz, col.getValue(row, tz));
 }

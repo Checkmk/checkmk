@@ -67,16 +67,16 @@ std::string getCustomVariable(const MonitoringCore *mc,
 TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<TimeColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "time", "Time of the log event (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) { return r._time; }));
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "lineno", "The number of the line in the log file", offsets,
         [](const HostServiceState &r) { return r._lineno; }));
-    addColumn(std::make_unique<TimeColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "from", "Start time of state (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) { return r._from; }));
-    addColumn(std::make_unique<TimeColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "until", "End time of state (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) { return r._until; }));
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(

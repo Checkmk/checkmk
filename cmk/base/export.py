@@ -9,10 +9,16 @@ of Check_MK. The GUI is e.g. accessing this module for gathering things
 from the configuration.
 """
 
-from typing import Dict
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, Item, ServiceName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    CheckPluginNameStr,
+    HostName,
+    Item,
+    Labels,
+    ServiceName,
+)
 
 import cmk.base.config as config
 
@@ -63,7 +69,7 @@ def ruleset_match_object_for_checkgroup_parameters(
     return config_cache.ruleset_match_object_for_checkgroup_parameters(hostname, item, svc_desc)
 
 
-def get_host_labels(hostname: HostName) -> Dict[str, str]:
+def get_host_labels(hostname: HostName) -> Labels:
     _load_config()
     config_cache = config.get_config_cache()
     return config_cache.get_host_config(hostname).labels

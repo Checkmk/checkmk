@@ -1241,7 +1241,7 @@ def format_plugin_output(output: str, row: Row) -> HTML:
 
 
 def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpec) -> CellContent:
-    assert not isinstance(content, dict)
+    assert isinstance(content, (str, HTML))
     if display_options.disabled(display_options.I):
         return content
 
@@ -2181,7 +2181,7 @@ class Cell:
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
-            assert not isinstance(content, dict)
+            assert isinstance(content, (str, HTML))
             tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, dict)
@@ -2213,7 +2213,7 @@ class Cell:
             css_classes, rendered_txt = self.render_content(row)
             if rendered_txt is None:
                 return css_classes, ""
-            assert not isinstance(rendered_txt, dict)
+            assert isinstance(rendered_txt, (str, HTML))
 
             txt: PDFCellContent = rendered_txt.strip()
 
@@ -2279,7 +2279,7 @@ class Cell:
 
     def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         tdclass, content = self.render(row)
-        assert not isinstance(content, dict)
+        assert isinstance(content, (str, HTML))
         html.td(content, class_=tdclass, colspan=colspan)
         return content != ""
 

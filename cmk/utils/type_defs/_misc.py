@@ -47,6 +47,7 @@ RuleValue = Any  # TODO: Improve this type
 # really, really need to fix all those signatures! Some test cases for tuples are in
 # test_tuple_rulesets.py. They contain some horrible hand-made types...
 
+
 # TODO: Improve this type
 class RuleConditionsSpec(TypedDict, total=False):
     host_tags: Any
@@ -90,7 +91,7 @@ Ruleset = List[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
-Labels = Dict[str, str]
+Labels = Mapping[str, str]
 LabelSources = Dict[str, str]
 
 TagID = str

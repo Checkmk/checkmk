@@ -22,6 +22,7 @@ from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
+    Labels,
     RuleConditionsSpec,
     Ruleset,
     RuleValue,
@@ -57,7 +58,7 @@ class RulesetMatchObject:
         self,
         host_name: Optional[HostName] = None,
         service_description: Optional[ServiceName] = None,
-        service_labels: Optional[Dict[str, str]] = None,
+        service_labels: Optional[Labels] = None,
     ) -> None:
         super().__init__()
         self.host_name = host_name
@@ -68,7 +69,7 @@ class RulesetMatchObject:
             self._generate_service_labels_hash(self.service_labels),
         )
 
-    def _generate_service_labels_hash(self, service_labels: Optional[Dict[str, str]]) -> int:
+    def _generate_service_labels_hash(self, service_labels: Optional[Labels]) -> int:
         return hash(None if service_labels is None else frozenset(service_labels.items()))
 
     def to_dict(self) -> Dict:

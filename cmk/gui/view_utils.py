@@ -7,7 +7,7 @@
 import json
 import re
 from html import unescape
-from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Any, List, Mapping, Optional, Tuple, TYPE_CHECKING, Union
 
 from livestatus import SiteId
 
@@ -25,7 +25,7 @@ CSSClass = Optional[str]
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see
 # paint_aggregated_tree_state()) in case the output_format is not HTML. Once we have
 # separated the data from rendering of the data, we can hopefully clean this up
-CellContent = Union[str, HTML, Dict[str, Any]]
+CellContent = Union[str, HTML, Mapping[str, Any]]
 CellSpec = Tuple[CSSClass, CellContent]
 
 if TYPE_CHECKING:

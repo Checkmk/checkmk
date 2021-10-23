@@ -5,23 +5,28 @@
 
 # The test image is selected automatically, but can still be set via 
 # enviroment. e.g. for master:
-# export IMAGE_TESTING="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
+# export IMAGE_ID="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 
 set -ex
 COMMAND=$@
-REPO_DIR=$(git rev-parse --show-toplevel)
-: "${IMAGE_TESTING:="$($REPO_DIR/buildscripts/docker_image_aliases/resolve.sh IMAGE_TESTING)"}"
+REPO_DIR="$(git rev-parse --show-toplevel)"
 
-echo "Running in Docker container from $IMAGE_TESTING (workdir $PWD)"
+: "${IMAGE_ALIAS:=IMAGE_TESTING}"
+: "${IMAGE_ID:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh ${IMAGE_ALIAS})"}"
+
+# in case of worktrees $REPO_DIR might not contain the actual repository clone
+GIT_TOPLEVEL="$(dirname $(realpath $(git rev-parse --git-common-dir)))"
+
+echo "Running in Docker container from ${IMAGE_ID} (workdir ${PWD})"
 
 docker run -t -a stdout -a stderr \
     --rm \
     --init \
-    -u "$UID:$(id -g)" \
-    -v "$REPO_DIR:$REPO_DIR" \
+    -u "${UID}:$(id -g)" \
+    -v "${GIT_TOPLEVEL}:${GIT_TOPLEVEL}" \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     --group-add=$(getent group docker | cut -d: -f3) \
-    -w "$PWD" \
+    -w "${PWD}" \
     -e JUNIT_XML \
     -e PYLINT_ARGS \
     -e PYTEST_ADDOPTS \
@@ -30,6 +35,7 @@ docker run -t -a stdout -a stderr \
     -e PYTHON_FILES \
     -e RESULTS \
     -e WORKDIR \
-    $DOCKER_RUN_ADDOPTS \
-    "$IMAGE_TESTING" \
-    $COMMAND
+    ${DOCKER_RUN_ADDOPTS} \
+    "${IMAGE_ID}" \
+    ${COMMAND}
+

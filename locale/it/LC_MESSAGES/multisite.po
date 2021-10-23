@@ -25358,7 +25358,24 @@ msgstr "Informazioni"
 msgid "Informations to query"
 msgstr "Informazioni da interrogare"
 
-msgid "Informix Table Extents"
+#, fuzzy
+msgid "Informix DB spaces"
+msgstr "Ignora lo spazio usato"
+
+#, fuzzy
+msgid "Informix locks"
+msgstr "Estensioni di tabella Informix"
+
+#, fuzzy
+msgid "Informix log usage"
+msgstr "Informazioni da interrogare"
+
+#, fuzzy
+msgid "Informix sessions"
+msgstr "Sessioni inattive"
+
+#, fuzzy
+msgid "Informix table extents"
 msgstr "Estensioni di tabella Informix"
 
 msgid "Ingress"
@@ -27329,9 +27346,6 @@ msgstr "Livelli per il numero di giorni fino alla scadenza"
 
 msgid "Levels for number of down channels"
 msgstr "Livelli per il numero di canali discendenti"
-
-msgid "Levels for number of table extents"
-msgstr "Livelli per il numero di estensioni della tabella"
 
 msgid "Levels for occupied memory"
 msgstr "Livelli per la memoria occupata"
@@ -52493,7 +52507,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
-"it defines label conditions."
+"it defines service label conditions."
 msgstr ""
 "Ogni condizione predefinita è di proprietà di un gruppo di utenti che sono "
 "in grado di modificare, cancellare e utilizzare le condizioni predefinite "
@@ -57096,6 +57110,10 @@ msgstr "Livelli superiori per le dimensioni"
 msgid "Upper levels for surge queue length"
 msgstr "Livelli superiori per la lunghezza della coda"
 
+#, fuzzy
+msgid "Upper levels for the DB space size"
+msgstr "Livelli superiori per la dimensione del secchio"
+
 msgid "Upper levels for the age"
 msgstr "Livelli superiori per l'età"
 
@@ -57118,14 +57136,30 @@ msgstr "Livelli superiori per la dimensione della licenza"
 msgid "Upper levels for the license usage"
 msgstr "Livelli superiori per l'uso della licenza"
 
+#, fuzzy
+msgid "Upper levels for the logs usage size"
+msgstr "Livelli superiori per la dimensione della licenza"
+
 msgid "Upper levels for the number of active database connections"
 msgstr "Livelli superiori per il numero di connessioni attive al database"
+
+#, fuzzy
+msgid "Upper levels for the number of locks"
+msgstr "Livelli superiori per il numero di allarmi"
 
 msgid "Upper levels for the number of registered desktops"
 msgstr "Livelli superiori per il numero di desktop registrati"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr "Livelli superiori per il numero di richieste respinte (spillover)"
+
+#, fuzzy
+msgid "Upper levels for the number of sessions"
+msgstr "Livello superiore per il numero totale di messaggi"
+
+#, fuzzy
+msgid "Upper levels for the number of table extents"
+msgstr "Livelli per il numero di estensioni della tabella"
 
 msgid "Upper levels for the vault size"
 msgstr "Livelli superiori per la dimensione della volta"
@@ -57236,6 +57270,14 @@ msgid "Upper percentual levels for SELECT requests"
 msgstr "Livelli percentuali superiori per le richieste SELECT"
 
 msgid "Upper percentual levels for healthy hosts"
+msgstr "Livelli percentuali superiori per gli ospiti sani"
+
+#, fuzzy
+msgid "Upper percentual levels for the DB space size"
+msgstr "Livelli percentuali superiori per gli ospiti sani"
+
+#, fuzzy
+msgid "Upper percentual levels for the logs usage size"
 msgstr "Livelli percentuali superiori per gli ospiti sani"
 
 msgid "Upper warning level"
@@ -61741,13 +61783,6 @@ msgstr ""
 "Il rapporto è calcolato con <i>spare / (failed + spare)</i>."
 
 msgid ""
-"You can set a limit to the number of table extents for Informix Database "
-"application"
-msgstr ""
-"È possibile impostare un limite al numero di estensioni di tabella per "
-"l'applicazione Informix Database"
-
-msgid ""
 "You can set a limit to the offline to spare disk ratio. The ratio is "
 "calculated with <i>spare / (offline + spare)</i>."
 msgstr ""
@@ -64816,6 +64851,13 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid ""
+#~ "You can set a limit to the number of table extents for Informix Database "
+#~ "application"
+#~ msgstr ""
+#~ "È possibile impostare un limite al numero di estensioni di tabella per "
+#~ "l'applicazione Informix Database"
 
 #~ msgid "Parameters of"
 #~ msgstr "Parametri di"

@@ -25320,7 +25320,24 @@ msgstr "Informell"
 msgid "Informations to query"
 msgstr "Abzurufende Informationen"
 
-msgid "Informix Table Extents"
+#, fuzzy
+msgid "Informix DB spaces"
+msgstr "Verwendeten Speicherplatz ignorieren"
+
+#, fuzzy
+msgid "Informix locks"
+msgstr "Informix Tabellenerweiterungen"
+
+#, fuzzy
+msgid "Informix log usage"
+msgstr "Abzurufende Informationen"
+
+#, fuzzy
+msgid "Informix sessions"
+msgstr "Inaktive Sessions"
+
+#, fuzzy
+msgid "Informix table extents"
 msgstr "Informix Tabellenerweiterungen"
 
 msgid "Ingress"
@@ -27292,9 +27309,6 @@ msgstr "Schwellen für Anzahl an Tagen bis Ablauf"
 
 msgid "Levels for number of down channels"
 msgstr "Schwellwerte für die Anzahl von Kanälen, die DOWN sind."
-
-msgid "Levels for number of table extents"
-msgstr "Schwellwerte für Anzahl der Tabellen-Extents"
 
 msgid "Levels for occupied memory"
 msgstr "Schwellwerte für belegten Speicher"
@@ -52389,7 +52403,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
-"it defines label conditions."
+"it defines service label conditions."
 msgstr ""
 "Jede vordefinierte Bedingung ist Eigentum einer Gruppe von Benutzern, die in "
 "der Lage sind, bestehende vordefinierte Bedingungen zu bearbeiten, zu "
@@ -56981,6 +56995,10 @@ msgstr "Obere Schwellen für die Größe"
 msgid "Upper levels for surge queue length"
 msgstr "Obere Schwellwerte für die Länge der Überspannungswarteschlange"
 
+#, fuzzy
+msgid "Upper levels for the DB space size"
+msgstr "Obere Schwellen für Bucketgröße"
+
 msgid "Upper levels for the age"
 msgstr "Obere Schwellen für das Alter"
 
@@ -57002,14 +57020,30 @@ msgstr "Obere Schwellen für die Lizenzgröße"
 msgid "Upper levels for the license usage"
 msgstr "Obere Schwellen für die Lizenznutzung"
 
+#, fuzzy
+msgid "Upper levels for the logs usage size"
+msgstr "Obere Schwellen für die Lizenzgröße"
+
 msgid "Upper levels for the number of active database connections"
 msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
+
+#, fuzzy
+msgid "Upper levels for the number of locks"
+msgstr "Obere Schwellen für die Anzahl der Vorfälle"
 
 msgid "Upper levels for the number of registered desktops"
 msgstr "Obergrenze für die Anzahl der registrierten Desktops"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr "Obere Schwellwerte für die Anzahl der abgelehnten Anfragen (Spillover)"
+
+#, fuzzy
+msgid "Upper levels for the number of sessions"
+msgstr "Obergrenze für die Gesamtanzahl der Meldungen"
+
+#, fuzzy
+msgid "Upper levels for the number of table extents"
+msgstr "Schwellwerte für Anzahl der Tabellen-Extents"
 
 msgid "Upper levels for the vault size"
 msgstr "Obergrenze für die Tresorgröße"
@@ -57119,6 +57153,14 @@ msgid "Upper percentual levels for SELECT requests"
 msgstr "Obere, prozentuale Schwellen für DELETE-Anfragen"
 
 msgid "Upper percentual levels for healthy hosts"
+msgstr "Obere prozentuale Schwellwerte für gesunde Hosts"
+
+#, fuzzy
+msgid "Upper percentual levels for the DB space size"
+msgstr "Obere prozentuale Schwellwerte für gesunde Hosts"
+
+#, fuzzy
+msgid "Upper percentual levels for the logs usage size"
 msgstr "Obere prozentuale Schwellwerte für gesunde Hosts"
 
 msgid "Upper warning level"
@@ -61611,13 +61653,6 @@ msgstr ""
 "<i>Ersatzplatten / (defekte Platten + Ersatzplatten)</i>."
 
 msgid ""
-"You can set a limit to the number of table extents for Informix Database "
-"application"
-msgstr ""
-"Sie können ein Limit für die Anzahl der Tabellen-Extents für Informix-"
-"Datenbankanwendungen festlegen"
-
-msgid ""
 "You can set a limit to the offline to spare disk ratio. The ratio is "
 "calculated with <i>spare / (offline + spare)</i>."
 msgstr ""
@@ -64694,6 +64729,13 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "You can set a limit to the number of table extents for Informix Database "
+#~ "application"
+#~ msgstr ""
+#~ "Sie können ein Limit für die Anzahl der Tabellen-Extents für Informix-"
+#~ "Datenbankanwendungen festlegen"
 
 #~ msgid "Parameters of"
 #~ msgstr "Parameter von"

@@ -23855,8 +23855,24 @@ msgstr ""
 msgid "Informations to query"
 msgstr ""
 
-msgid "Informix Table Extents"
+#, fuzzy
+msgid "Informix DB spaces"
+msgstr "spatiu utilizat"
+
+msgid "Informix locks"
 msgstr ""
+
+#, fuzzy
+msgid "Informix log usage"
+msgstr "Informații Adiționale"
+
+#, fuzzy
+msgid "Informix sessions"
+msgstr "Reguli neaplicate"
+
+#, fuzzy
+msgid "Informix table extents"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Ingress"
@@ -25871,10 +25887,6 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Levels for number of down channels"
-msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-msgid "Levels for number of table extents"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
@@ -49463,7 +49475,7 @@ msgstr ""
 
 msgid ""
 "This predefined condition can not be used with the current ruleset, because "
-"it defines label conditions."
+"it defines service label conditions."
 msgstr ""
 
 msgid "This problem has been acknowledged"
@@ -53484,6 +53496,10 @@ msgid "Upper levels for surge queue length"
 msgstr ""
 
 #, fuzzy
+msgid "Upper levels for the DB space size"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels for the age"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -53507,8 +53523,16 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 msgid "Upper levels for the license usage"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
+#, fuzzy
+msgid "Upper levels for the logs usage size"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 msgid "Upper levels for the number of active database connections"
 msgstr ""
+
+#, fuzzy
+msgid "Upper levels for the number of locks"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Upper levels for the number of registered desktops"
@@ -53516,6 +53540,14 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr ""
+
+#, fuzzy
+msgid "Upper levels for the number of sessions"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Upper levels for the number of table extents"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Upper levels for the vault size"
@@ -53642,6 +53674,14 @@ msgstr ""
 
 msgid "Upper percentual levels for healthy hosts"
 msgstr ""
+
+#, fuzzy
+msgid "Upper percentual levels for the DB space size"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Upper percentual levels for the logs usage size"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "Upper warning level"
@@ -57388,11 +57428,6 @@ msgstr ""
 msgid ""
 "You can set a limit to the failed to spare disk ratio. The ratio is "
 "calculated with <i>spare / (failed + spare)</i>."
-msgstr ""
-
-msgid ""
-"You can set a limit to the number of table extents for Informix Database "
-"application"
 msgstr ""
 
 msgid ""

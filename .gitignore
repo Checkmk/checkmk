@@ -12,6 +12,7 @@
 .metadata
 .mypy_cache
 .mypy_cache/
+.cargo
 .ropeproject
 .syntastic
 .testmondata
@@ -25,6 +26,10 @@
 *.iml
 *.py.*.py
 *.pyc
+*_pb2.py
+*_pb2.pyi
+*.pb.cc
+*.pb.h
 *.timer
 **/launch.json
 *~
@@ -55,6 +60,7 @@ config.sub
 configure
 depcomp
 marcv/dist/*
+agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 GPATH
@@ -76,6 +82,7 @@ tests/web/data/*
 tests/var/*
 web/htdocs/js/*_min.js.map
 /results
+/buildscripts/infrastructure/build-nodes/scripts/defines.make
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode

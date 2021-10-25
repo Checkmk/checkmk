@@ -785,6 +785,7 @@ class ModeFolder(WatoMode):
 
         html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
+        html.input("_bulk_move", type_="submit", id_="form_hosts_submit", style="display: none")
         html.end_form()
 
         row_count = len(hostnames)
@@ -961,7 +962,10 @@ class ModeFolder(WatoMode):
                           onchange="cmk.selection.update_bulk_moveto(this.value)",
                           class_='bulk_moveto',
                           form="form_hosts")
-            html.button("_bulk_move", _("Move"), form="form_hosts")
+            html.a('Move',
+                   class_="button",
+                   href='javascript:void(0)',
+                   onclick="document.getElementById('form_hosts_submit').click()")
 
             return html.drain()
 

@@ -281,18 +281,17 @@ input.button.hot {
 }
 
 a.button {
-  height: 24px;
-  padding: 0.1ex 1ex;
-  margin: 2px;
-  font-weight: normal;
-  color: rgb(0, 0, 0);
-  text-decoration: none;
-  background-color: rgb(204, 204, 170);
-  border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
-  border-style: solid;
-  border-width: 1px;
+  display: inline-block;
+  width: auto;
+  padding: 8px 16px;
+  margin: 0 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #fff;
+  cursor: pointer;
+  background-color: #11181d;
   border-radius: 4px;
-  -webkit-border-radius: 4px;
+  box-shadow: none;
 }
 
 /*for IE8 */

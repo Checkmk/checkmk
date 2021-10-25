@@ -135,3 +135,11 @@ class PodResources(BaseModel):
     unknown: int = 0
     capacity: Optional[int] = None
     allocatable: Optional[int] = None
+
+
+class ContainerCount(BaseModel):
+    """section: k8s_node_container_count_v1"""
+
+    running: int = 0
+    waiting: int = 0
+    terminated: int = 0

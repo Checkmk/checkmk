@@ -28,7 +28,7 @@ TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
         [](const contactgroup &r) {
             return r.alias == nullptr ? "" : r.alias;
         }));
-    addColumn(std::make_unique<ListColumn<contactgroup, std::string>>(
+    addColumn(std::make_unique<ListColumn<contactgroup>>(
         "members", "A list of all members of this contactgroup", offsets,
         [](const contactgroup &r) {
             std::vector<std::string> names;

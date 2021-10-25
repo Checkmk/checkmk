@@ -539,7 +539,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                    g_timeperiods_cache->inTimeperiod(it->second);
         }));
 
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
         offsets, [](const host &hst) {
@@ -609,11 +609,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
 
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
@@ -621,31 +621,31 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets, CustomAttributeMap{mc, AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "tag_names", "A list of the names of the tags", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::tags}));
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::tags}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{mc, AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_names", "A list of the names of the labels", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::labels}));
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::labels}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{mc, AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_source_names",
         "A list of the names of the label sources", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
@@ -810,7 +810,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         BlobFileReader<host>{
             [mc]() { return mc->structuredStatusPath(); },
             [](const host &r) { return std::filesystem::path{r.name}; }}));
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
         [mc](const host &hst, const Column &col) {
@@ -840,7 +840,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                     interval_length);
         }));
 
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "groups", "A list of all host groups this host is in", offsets,
         [mc](const host &hst, const contact *auth_user) {
             std::vector<std::string> group_names;
@@ -854,7 +854,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return group_names;
         }));
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in", offsets,
         [](const host &hst) {
@@ -897,7 +897,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             ServiceListRenderer::verbosity::full),
         ServiceListGetter{mc}));
 
-    table->addColumn(std::make_unique<ListColumn<host, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
         offsets, [mc](const host &r) {

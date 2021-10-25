@@ -504,7 +504,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
         }));
 
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "contacts",
         "A list of all contacts of the service, either direct or via a contact group",
         offsets, [](const service &r) {
@@ -580,12 +580,12 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
     }
 
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables of the service", offsets,
         CustomAttributeMap::Keys{table->core(),
                                  AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service", offsets,
         CustomAttributeMap::Values{table->core(),
@@ -595,10 +595,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets,
         CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "tag_names", "A list of the names of the tags of the service",
         offsets, CustomAttributeMap::Keys{table->core(), AttributeKind::tags}));
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "tag_values",
         "A list of the values of all tags of the service", offsets,
         CustomAttributeMap::Values{table->core(), AttributeKind::tags}));
@@ -606,11 +606,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{table->core(), AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_names",
         "A list of the names of the labels of the service", offsets,
         CustomAttributeMap::Keys{table->core(), AttributeKind::labels}));
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_values",
         "A list of the values of all labels of the service", offsets,
         CustomAttributeMap::Values{table->core(), AttributeKind::labels}));
@@ -618,11 +618,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{table->core(), AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_source_names",
         "A list of the names of the sources of the service", offsets,
         CustomAttributeMap::Keys{table->core(), AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_source_values",
         "A list of the values of all sources of the service", offsets,
         CustomAttributeMap::Values{table->core(),
@@ -631,7 +631,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "label_sources", "A dictionary of the label sources", offsets,
         CustomAttributeMap{table->core(), AttributeKind::label_sources}));
 
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "groups", "A list of all service groups the service is in",
         offsets, [mc](const service &svc, const contact *auth_user) {
             std::vector<std::string> group_names;
@@ -646,7 +646,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             }
             return group_names;
         }));
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in", offsets,
         [](const service &svc) {
@@ -658,7 +658,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return names;
         }));
 
-    table->addColumn(std::make_unique<ListColumn<service, std::string>>(
+    table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
         offsets, [mc](const service &r) {

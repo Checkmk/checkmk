@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "IntColumn.h"
+#include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "Table.h"
 #ifdef CMC
@@ -26,8 +27,6 @@
 class ColumnOffsets;
 template <class T>
 class DoubleColumn;
-template <class T, class U>
-class ListColumn;
 class Query;
 class Row;
 template <class T>
@@ -52,7 +51,7 @@ public:
     static std::unique_ptr<TimeColumn<ECRow>> makeTimeColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<ListColumn<ECRow, std::string>> makeListColumn(
+    static std::unique_ptr<ListColumn<ECRow>> makeListColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
 

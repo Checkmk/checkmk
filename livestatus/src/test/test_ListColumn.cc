@@ -22,12 +22,12 @@ struct DummyRow : Row {
 struct DummyValue {};
 
 TEST(ListColumn, GetValueLambda) {
-    using value_type = ListColumn<DummyRow, std::string>::value_type;
+    using value_type = ListColumn<DummyRow>::value_type;
     value_type v{"hello"s, "world"s};
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = ListColumn<DummyRow, std::string>{
+    const auto col = ListColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -36,11 +36,11 @@ TEST(ListColumn, GetValueLambda) {
 }
 
 TEST(ListColumn, GetValueDefault) {
-    using value_type = ListColumn<DummyRow, std::string>::value_type;
+    using value_type = ListColumn<DummyRow>::value_type;
     value_type v{"hello"s, "world"s};
 
     const auto row = DummyRow{nullptr};
-    const auto col = ListColumn<DummyRow, std::string>{
+    const auto col = ListColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};

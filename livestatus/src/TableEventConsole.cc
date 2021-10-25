@@ -202,10 +202,10 @@ std::unique_ptr<TimeColumn<ECRow>> ECRow::makeTimeColumn(
 }
 
 // static
-std::unique_ptr<ListColumn<ECRow, std::string>> ECRow::makeListColumn(
+std::unique_ptr<ListColumn<ECRow>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<ListColumn<ECRow, std::string>>(
+    return std::make_unique<ListColumn<ECRow>>(
         name, description, offsets, [name](const ECRow &r) {
             auto result = r.getString(name);
             return result.empty() || result == "\002"
@@ -274,7 +274,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     const MonitoringCore::Contact *ctc, Row row, bool &result) const {
-    auto col = std::static_pointer_cast<ListColumn<ECRow, std::string>>(
+    auto col = std::static_pointer_cast<ListColumn<ECRow>>(
         column("event_contact_groups"));
     if (const auto *r = col->columnData<ECRow>(row)) {
         // TODO(sp) This check for None is a hack...

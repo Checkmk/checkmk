@@ -53,7 +53,7 @@ struct SimpleListColumnRenderer : ListColumnRenderer<U> {
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty vector.
-template <class T, class U>
+template <class T, class U = std::string>
 class ListColumn : public Column {
 public:
     using f0_t = std::function<std::vector<U>(const T&)>;

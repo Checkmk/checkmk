@@ -761,6 +761,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
             html.open_tr()
 
             leaf_td = html.render_td(code, class_=["leaf", odd], style=td_style, colspan=colspan)
+            odd = "even" if odd == "odd" else "odd"
 
             tds = [leaf_td]
             for rowspan, c in parents:

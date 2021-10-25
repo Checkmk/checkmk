@@ -41,9 +41,9 @@ std::string serialize(const column::attribute_list::AttributeBit& bit);
 }  // namespace column::detail
 
 template <class T, class U>
-class AttributeListColumn : public ListColumnCallback<T, U> {
+class AttributeListColumn : public ListColumn<T, U> {
 public:
-    using ListColumnCallback<T, U>::ListColumnCallback;
+    using ListColumn<T, U>::ListColumn;
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string& value) const override {

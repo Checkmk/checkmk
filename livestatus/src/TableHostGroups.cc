@@ -54,15 +54,17 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
         offsets, [](const hostgroup &r) {
             return r.action_url == nullptr ? "" : r.action_url;
         }));
+    table->addColumn(
+        std::make_unique<ListColumn<hostgroup, column::host_list::Entry>>(
+            prefix + "members",
+            "A list of all host names that are members of the hostgroup",
+            offsets,
+            std::make_unique<HostListRenderer>(
+                HostListRenderer::verbosity::none),
+            column::host_list::HostListGetter<hostgroup>{
+                [](const hostgroup &r) { return r.members; }}));
     table->addColumn(std::make_unique<
-                     ListColumnCallback<hostgroup, column::host_list::Entry>>(
-        prefix + "members",
-        "A list of all host names that are members of the hostgroup", offsets,
-        std::make_unique<HostListRenderer>(HostListRenderer::verbosity::none),
-        column::host_list::HostListGetter<hostgroup>{
-            [](const hostgroup &r) { return r.members; }}));
-    table->addColumn(std::make_unique<
-                     ListColumnCallback<hostgroup, column::host_list::Entry>>(
+                     ListColumn<hostgroup, column::host_list::Entry>>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together with state and has_been_checked",
         offsets,

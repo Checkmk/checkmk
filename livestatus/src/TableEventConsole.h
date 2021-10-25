@@ -27,7 +27,7 @@ class ColumnOffsets;
 template <class T>
 class DoubleColumn;
 template <class T, class U>
-class ListColumnCallback;
+class ListColumn;
 class Query;
 class Row;
 template <class T>
@@ -52,9 +52,9 @@ public:
     static std::unique_ptr<TimeColumn<ECRow>> makeTimeColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<ListColumnCallback<ECRow, std::string>>
-    makeListColumn(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets);
+    static std::unique_ptr<ListColumn<ECRow, std::string>> makeListColumn(
+        const std::string &name, const std::string &description,
+        const ColumnOffsets &offsets);
 
     [[nodiscard]] std::string getString(const std::string &column_name) const;
     [[nodiscard]] int32_t getInt(const std::string &column_name) const;

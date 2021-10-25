@@ -37,22 +37,51 @@ inline std::string serialize(const std::string& s) {
 }
 }  // namespace column::detail
 
+template <class U>
+struct ListColumnRenderer {
+    using value_type = U;
+    virtual ~ListColumnRenderer() = default;
+    virtual void output(ListRenderer& l, const U& value) const = 0;
+};
+
+template <class U>
+struct SimpleListColumnRenderer : ListColumnRenderer<U> {
+    void output(ListRenderer& l, const U& value) const override {
+        l.output(column::detail::serialize<U>(value));
+    }
+};
+
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty vector.
 template <class T, class U>
-struct ListColumn : Column {
+class ListColumn : public Column {
+public:
+    using f0_t = std::function<std::vector<U>(const T&)>;
+    using f1_t = std::function<std::vector<U>(const T&, const Column&)>;
+    using f2_t = std::function<std::vector<U>(const T&, const contact*)>;
+    using f3_t = std::function<std::vector<U>(const T&, std::chrono::seconds)>;
+    using function_type = std::variant<f0_t, f1_t, f2_t, f3_t>;
     using value_type = std::vector<std::string>;
 
-    using Column::Column;
-    ~ListColumn() override = default;
+    ListColumn(const std::string& name, const std::string& description,
+               const ColumnOffsets& offsets,
+               std::unique_ptr<ListColumnRenderer<U>> renderer, function_type f)
+        : Column{name, description, offsets}
+        , renderer_{std::move(renderer)}
+        , f_{std::move(f)} {}
+    ListColumn(const std::string& name, const std::string& description,
+               const ColumnOffsets& offsets, function_type f)
+        : ListColumn{name, description, offsets,
+                     std::make_unique<SimpleListColumnRenderer<U>>(),
+                     std::move(f)} {}
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::list; }
 
     void output(Row row, RowRenderer& r, const contact* auth_user,
                 std::chrono::seconds timezone_offset) const override {
-        ListRenderer l(r);
-        for (const auto& val : getValue(row, auth_user, timezone_offset)) {
-            l.output(val);
+        ListRenderer l{r};
+        for (const auto& val : getRawValue(row, auth_user, timezone_offset)) {
+            renderer_->output(l, val);
         }
     }
 
@@ -77,53 +106,7 @@ struct ListColumn : Column {
     // TODO(sp) What we actually want here is a stream of strings, not a
     // concrete container.
     virtual value_type getValue(Row row, const contact* auth_user,
-                                std::chrono::seconds timezone_offset) const = 0;
-};
-
-template <class U>
-struct ListColumnRenderer {
-    using value_type = U;
-    virtual ~ListColumnRenderer() = default;
-    virtual void output(ListRenderer& l, const U& value) const = 0;
-};
-
-template <class U>
-struct SimpleListColumnRenderer : ListColumnRenderer<U> {
-    void output(ListRenderer& l, const U& value) const override {
-        l.output(column::detail::serialize<U>(value));
-    }
-};
-
-// TODO(sp): Is there a way to have a default value in the template parameters?
-// Currently it is hardwired to the empty vector.
-template <class T, class U>
-class ListColumnCallback : public ListColumn<T, U> {
-    using f0_t = std::function<std::vector<U>(const T&)>;
-    using f1_t = std::function<std::vector<U>(const T&, const Column&)>;
-    using f2_t = std::function<std::vector<U>(const T&, const contact*)>;
-    using f3_t = std::function<std::vector<U>(const T&, std::chrono::seconds)>;
-
-protected:
-    using function_type = std::variant<f0_t, f1_t, f2_t, f3_t>;
-
-public:
-    ListColumnCallback(const std::string& name, const std::string& description,
-                       const ColumnOffsets& offsets,
-                       std::unique_ptr<ListColumnRenderer<U>> renderer,
-                       function_type f)
-        : ListColumn<T, U>{name, description, offsets}
-        , renderer_{std::move(renderer)}
-        , f_{std::move(f)} {}
-    ListColumnCallback(const std::string& name, const std::string& description,
-                       const ColumnOffsets& offsets, function_type f)
-        : ListColumnCallback{name, description, offsets,
-                             std::make_unique<SimpleListColumnRenderer<U>>(),
-                             std::move(f)} {}
-    ~ListColumnCallback() override = default;
-
-    [[nodiscard]] typename ListColumn<T, U>::value_type getValue(
-        Row row, const contact* auth_user,
-        std::chrono::seconds timezone_offset) const override {
+                                std::chrono::seconds timezone_offset) const {
         auto raw_value = getRawValue(row, auth_user, timezone_offset);
         std::vector<std::string> values;
         std::transform(raw_value.begin(), raw_value.end(),
@@ -132,21 +115,13 @@ public:
         return values;
     }
 
-    void output(Row row, RowRenderer& r, const contact* auth_user,
-                std::chrono::seconds timezone_offset) const override {
-        ListRenderer l{r};
-        for (const auto& val : getRawValue(row, auth_user, timezone_offset)) {
-            renderer_->output(l, val);
-        }
-    }
-
 private:
     [[nodiscard]] std::vector<U> getRawValue(
         Row row, const contact* auth_user,
         std::chrono::seconds timezone_offset) const {
         const T* data = ListColumn<T, U>::template columnData<T>(row);
         if (data == nullptr) {
-            return Default;
+            return {};
         }
         if (std::holds_alternative<f0_t>(f_)) {
             return std::get<f0_t>(f_)(*data);
@@ -163,7 +138,6 @@ private:
         throw std::runtime_error("unreachable");
     }
 
-    const std::vector<U> Default{};
     std::unique_ptr<ListColumnRenderer<U>> renderer_;
     function_type f_;
 };

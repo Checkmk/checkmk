@@ -10,7 +10,6 @@
 
 #include "Column.h"
 #include "IntColumn.h"
-#include "ListColumn.h"
 #include "LogEntry.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"

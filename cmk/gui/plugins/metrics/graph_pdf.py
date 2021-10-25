@@ -98,12 +98,12 @@ def render_graph_pdf(
     # Regular title (above graph area)
     if graph_render_options["show_title"] is True:
         pdf_document.render_aligned_text(
-            left,
+            left + right_margin,
             top - title_height,
             width,
             title_height,
             graph_artwork["title"],
-            align="center",
+            align="left",
             bold=True,
             color=foreground_color,
         )

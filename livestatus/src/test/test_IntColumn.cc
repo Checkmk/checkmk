@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -24,7 +23,7 @@ TEST(IntColumn, GetValueLambda) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = IntColumnCallback<DummyRow>{
+    const auto col = IntColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -36,7 +35,7 @@ TEST(IntColumn, GetValueDefault) {
     auto v = 1337;
 
     const auto row = DummyRow{nullptr};
-    const auto col = IntColumnCallback<DummyRow>{
+    const auto col = IntColumn<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};

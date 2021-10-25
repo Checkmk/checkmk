@@ -52,7 +52,7 @@ public:
     enum class verbosity { none, low, medium, full };
     explicit ServiceListRenderer(verbosity v) : verbosity_{v} {}
     void output(ListRenderer &l,
-                const column::service_list::Entry &entry) const;
+                const column::service_list::Entry &entry) const override;
 
 private:
     verbosity verbosity_;

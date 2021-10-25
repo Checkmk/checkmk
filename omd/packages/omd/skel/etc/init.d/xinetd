@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Start only if at least on xinetd based service
-# is activated
+# Start only if at least one xinetd-based service is activated.
 
 test "$(ls -A ###ROOT###/etc/xinetd.d/)" || exit 5
 

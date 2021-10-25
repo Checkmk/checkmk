@@ -18,7 +18,7 @@ from typing import List
 logger = logging.getLogger()
 
 
-def repo_path():
+def repo_path() -> str:
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 

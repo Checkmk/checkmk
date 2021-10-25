@@ -38,10 +38,7 @@ inline std::string serialize(const std::string& s) {
 
 struct ListColumn : Column {
     using value_type = std::vector<std::string>;
-    class Constant;
-    class Reference;
-    template <class T, class U = std::string>
-    class Callback;
+
     using Column::Column;
     ~ListColumn() override = default;
 
@@ -80,7 +77,7 @@ struct SimpleListColumnRenderer : ListColumnRenderer<U> {
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty vector.
 template <class T, class U>
-class ListColumn::Callback : public ListColumn {
+class ListColumnCallback : public ListColumn {
     using f0_t = std::function<std::vector<U>(const T&)>;
     using f1_t = std::function<std::vector<U>(const T&, const Column&)>;
     using f2_t = std::function<std::vector<U>(const T&, const contact*)>;
@@ -90,18 +87,19 @@ protected:
     using function_type = std::variant<f0_t, f1_t, f2_t, f3_t>;
 
 public:
-    Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets,
-             std::unique_ptr<ListColumnRenderer<U>> renderer, function_type f)
+    ListColumnCallback(const std::string& name, const std::string& description,
+                       const ColumnOffsets& offsets,
+                       std::unique_ptr<ListColumnRenderer<U>> renderer,
+                       function_type f)
         : ListColumn{name, description, offsets}
         , renderer_{std::move(renderer)}
         , f_{std::move(f)} {}
-    Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets, function_type f)
-        : Callback{name, description, offsets,
-                   std::make_unique<SimpleListColumnRenderer<U>>(),
-                   std::move(f)} {}
-    ~Callback() override = default;
+    ListColumnCallback(const std::string& name, const std::string& description,
+                       const ColumnOffsets& offsets, function_type f)
+        : ListColumnCallback{name, description, offsets,
+                             std::make_unique<SimpleListColumnRenderer<U>>(),
+                             std::move(f)} {}
+    ~ListColumnCallback() override = default;
 
     [[nodiscard]] value_type getValue(
         Row row, const contact* auth_user,

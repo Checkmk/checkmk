@@ -114,11 +114,11 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
             return g_timeperiods_cache->inTimeperiod(
                 ct.service_notification_period_ptr);
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
@@ -127,10 +127,10 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         offsets,
         CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "tag_names", "A list of all tags of the contact", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::tags}));
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "tag_values",
         "A list of the values of all tags of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::tags}));
@@ -138,10 +138,10 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{table->core(), AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "label_names", "A list of all labels of the contact", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::labels}));
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "label_values",
         "A list of the values of all labels of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::labels}));
@@ -149,10 +149,10 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{table->core(), AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "label_source_names", "A list of all sources of the contact",
         offsets, CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<ListColumnCallback<contact, std::string>>(
         prefix + "label_source_values",
         "A list of the values of all sources of the contact", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::label_sources}));

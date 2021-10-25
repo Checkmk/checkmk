@@ -25,7 +25,7 @@ TEST(ListColumn, GetValueLambda) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = ListColumn::Callback<DummyRow>{
+    const auto col = ListColumnCallback<DummyRow, std::string>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -37,7 +37,7 @@ TEST(ListColumn, GetValueDefault) {
     auto v = ListColumn::value_type{"hello"s, "world"s};
 
     const auto row = DummyRow{nullptr};
-    const auto col = ListColumn::Callback<DummyRow>{
+    const auto col = ListColumnCallback<DummyRow, std::string>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};

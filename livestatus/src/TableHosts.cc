@@ -539,7 +539,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                    g_timeperiods_cache->inTimeperiod(it->second);
         }));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
         offsets, [](const host &hst) {
@@ -556,7 +556,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<host, DowntimeData>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, DowntimeData>>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host", offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
@@ -564,7 +564,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<host, DowntimeData>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
         offsets,
@@ -573,7 +573,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<host, DowntimeData>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets,
@@ -582,7 +582,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<host, CommentData>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, CommentData>>(
         prefix + "comments", "A list of the ids of all comments of this host",
         offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
@@ -590,7 +590,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<host, CommentData>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, CommentData>>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
         offsets,
@@ -599,7 +599,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<host, CommentData>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
         offsets,
@@ -609,11 +609,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
@@ -621,31 +621,31 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets, CustomAttributeMap{mc, AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "tag_names", "A list of the names of the tags", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::tags}));
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::tags}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         CustomAttributeMap{mc, AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "label_names", "A list of the names of the labels", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::labels}));
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::labels}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         CustomAttributeMap{mc, AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "label_source_names",
         "A list of the names of the label sources", offsets,
         CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets,
         CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
@@ -670,7 +670,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(
-        std::make_unique<ListColumn::Callback<host, column::host_list::Entry>>(
+        std::make_unique<ListColumnCallback<host, column::host_list::Entry>>(
             prefix + "parents", "A list of all direct parents of the host",
             offsets,
             std::make_unique<HostListRenderer>(
@@ -678,7 +678,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             column::host_list::HostListGetter<host>{
                 [](const host &r) { return r.parent_hosts; }}));
     table->addColumn(
-        std::make_unique<ListColumn::Callback<host, column::host_list::Entry>>(
+        std::make_unique<ListColumnCallback<host, column::host_list::Entry>>(
             prefix + "childs", "A list of all direct children of the host",
             offsets,
             std::make_unique<HostListRenderer>(
@@ -686,7 +686,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             column::host_list::HostListGetter<host>{
                 [](const host &r) { return r.child_hosts; }}));
     table->addDynamicColumn(std::make_unique<
-                            DynamicRRDColumn<ListColumn::Callback<
+                            DynamicRRDColumn<ListColumnCallback<
                                 host, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
@@ -811,7 +811,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         BlobFileReader<host>{
             [mc]() { return mc->structuredStatusPath(); },
             [](const host &r) { return std::filesystem::path{r.name}; }}));
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
         [mc](const host &hst, const Column &col) {
@@ -841,7 +841,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                     interval_length);
         }));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "groups", "A list of all host groups this host is in", offsets,
         [mc](const host &hst, const contact *auth_user) {
             std::vector<std::string> group_names;
@@ -855,7 +855,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return group_names;
         }));
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in", offsets,
         [](const host &hst) {
@@ -868,13 +868,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(std::make_unique<
-                     ListColumn::Callback<host, ::column::service_list::Entry>>(
+                     ListColumnCallback<host, ::column::service_list::Entry>>(
         prefix + "services", "A list of all services of the host", offsets,
         std::make_unique<ServiceListRenderer>(
             ServiceListRenderer::verbosity::none),
         ServiceListGetter{mc}));
     table->addColumn(std::make_unique<
-                     ListColumn::Callback<host, ::column::service_list::Entry>>(
+                     ListColumnCallback<host, ::column::service_list::Entry>>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
         offsets,
@@ -882,7 +882,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             ServiceListRenderer::verbosity::low),
         ServiceListGetter{mc}));
     table->addColumn(std::make_unique<
-                     ListColumn::Callback<host, ::column::service_list::Entry>>(
+                     ListColumnCallback<host, ::column::service_list::Entry>>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
         offsets,
@@ -890,7 +890,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             ServiceListRenderer::verbosity::medium),
         ServiceListGetter{mc}));
     table->addColumn(std::make_unique<
-                     ListColumn::Callback<host, ::column::service_list::Entry>>(
+                     ListColumnCallback<host, ::column::service_list::Entry>>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
         offsets,
@@ -898,7 +898,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             ServiceListRenderer::verbosity::full),
         ServiceListGetter{mc}));
 
-    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+    table->addColumn(std::make_unique<ListColumnCallback<host, std::string>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
         offsets, [mc](const host &r) {

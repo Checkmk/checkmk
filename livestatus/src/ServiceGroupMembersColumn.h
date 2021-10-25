@@ -43,7 +43,7 @@ struct Entry {
 namespace detail {
 std::string checkValue(Logger *logger, RelationalOperator relOp,
                        const std::string &value);
-}
+}  // namespace detail
 }  // namespace column::service_group_members
 
 class ServiceGroupMembersRenderer
@@ -51,16 +51,17 @@ class ServiceGroupMembersRenderer
 public:
     enum class verbosity { none, full };
     explicit ServiceGroupMembersRenderer(verbosity v) : verbosity_{v} {}
-    void output(ListRenderer &l,
-                const column::service_group_members::Entry &entry) const;
+    void output(
+        ListRenderer &l,
+        const column::service_group_members::Entry &entry) const override;
 
 private:
     verbosity verbosity_;
 };
 
 template <class T, class U>
-struct ServiceGroupMembersColumn : ListColumn::Callback<T, U> {
-    using ListColumn::Callback<T, U>::Callback;
+struct ServiceGroupMembersColumn : ListColumnCallback<T, U> {
+    using ListColumnCallback<T, U>::ListColumnCallback;
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;

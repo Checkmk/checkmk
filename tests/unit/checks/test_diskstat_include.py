@@ -8,7 +8,7 @@
 import pytest
 
 import cmk.base.check_legacy_includes.diskstat
-from cmk.base.check_legacy_includes.diskstat import *
+from cmk.base.check_legacy_includes.diskstat import check_diskstat_generic, check_diskstat_line
 
 from .checktestlib import assertCheckResultsEqual, CheckResult
 

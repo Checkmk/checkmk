@@ -4,6 +4,7 @@
 // source code package.
 
 #include <chrono>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -21,7 +22,8 @@ struct DummyRow : Row {
 struct DummyValue {};
 
 TEST(ListColumn, GetValueLambda) {
-    auto v = ListColumn::value_type{"hello"s, "world"s};
+    using value_type = ListColumn<DummyRow, std::string>::value_type;
+    value_type v{"hello"s, "world"s};
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
@@ -34,7 +36,8 @@ TEST(ListColumn, GetValueLambda) {
 }
 
 TEST(ListColumn, GetValueDefault) {
-    auto v = ListColumn::value_type{"hello"s, "world"s};
+    using value_type = ListColumn<DummyRow, std::string>::value_type;
+    value_type v{"hello"s, "world"s};
 
     const auto row = DummyRow{nullptr};
     const auto col = ListColumnCallback<DummyRow, std::string>{
@@ -43,5 +46,5 @@ TEST(ListColumn, GetValueDefault) {
         }};
 
     EXPECT_NE(v, col.getValue(row, nullptr, 0s));
-    EXPECT_EQ(ListColumn::value_type{}, col.getValue(row, nullptr, 0s));
+    EXPECT_EQ(value_type{}, col.getValue(row, nullptr, 0s));
 }

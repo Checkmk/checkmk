@@ -19,6 +19,7 @@
 
 #include "Column.h"
 #include "Filter.h"
+#include "ListFilter.h"
 #include "Renderer.h"
 #include "Row.h"
 #include "contact_fwd.h"
@@ -36,6 +37,9 @@ inline std::string serialize(const std::string& s) {
 }
 }  // namespace column::detail
 
+// TODO(sp): Is there a way to have a default value in the template parameters?
+// Currently it is hardwired to the empty vector.
+template <class T, class U>
 struct ListColumn : Column {
     using value_type = std::vector<std::string>;
 
@@ -45,14 +49,30 @@ struct ListColumn : Column {
     [[nodiscard]] ColumnType type() const override { return ColumnType::list; }
 
     void output(Row row, RowRenderer& r, const contact* auth_user,
-                std::chrono::seconds timezone_offset) const override;
+                std::chrono::seconds timezone_offset) const override {
+        ListRenderer l(r);
+        for (const auto& val : getValue(row, auth_user, timezone_offset)) {
+            l.output(val);
+        }
+    }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override;
+        const std::string& value) const override {
+        return std::make_unique<ListFilter>(
+            kind, name(),
+            [this](Row row, const contact* auth_user,
+                   std::chrono::seconds timezone_offset) {
+                return getValue(row, auth_user, timezone_offset);
+            },
+            relOp, value, logger());
+    }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
-        AggregationFactory factory) const override;
+        AggregationFactory /*factory*/) const override {
+        throw std::runtime_error("aggregating on list column '" + name() +
+                                 "' not supported");
+    }
 
     // TODO(sp) What we actually want here is a stream of strings, not a
     // concrete container.
@@ -77,7 +97,7 @@ struct SimpleListColumnRenderer : ListColumnRenderer<U> {
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty vector.
 template <class T, class U>
-class ListColumnCallback : public ListColumn {
+class ListColumnCallback : public ListColumn<T, U> {
     using f0_t = std::function<std::vector<U>(const T&)>;
     using f1_t = std::function<std::vector<U>(const T&, const Column&)>;
     using f2_t = std::function<std::vector<U>(const T&, const contact*)>;
@@ -91,7 +111,7 @@ public:
                        const ColumnOffsets& offsets,
                        std::unique_ptr<ListColumnRenderer<U>> renderer,
                        function_type f)
-        : ListColumn{name, description, offsets}
+        : ListColumn<T, U>{name, description, offsets}
         , renderer_{std::move(renderer)}
         , f_{std::move(f)} {}
     ListColumnCallback(const std::string& name, const std::string& description,
@@ -101,7 +121,7 @@ public:
                              std::move(f)} {}
     ~ListColumnCallback() override = default;
 
-    [[nodiscard]] value_type getValue(
+    [[nodiscard]] typename ListColumn<T, U>::value_type getValue(
         Row row, const contact* auth_user,
         std::chrono::seconds timezone_offset) const override {
         auto raw_value = getRawValue(row, auth_user, timezone_offset);
@@ -124,7 +144,7 @@ private:
     [[nodiscard]] std::vector<U> getRawValue(
         Row row, const contact* auth_user,
         std::chrono::seconds timezone_offset) const {
-        const T* data = columnData<T>(row);
+        const T* data = ListColumn<T, U>::template columnData<T>(row);
         if (data == nullptr) {
             return Default;
         }

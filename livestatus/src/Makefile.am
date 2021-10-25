@@ -121,7 +121,6 @@ liblivestatus_a_SOURCES = \
         HostServiceState.cc \
         InputBuffer.cc \
         IntFilter.cc \
-        ListColumn.cc \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \

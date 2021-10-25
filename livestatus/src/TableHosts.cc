@@ -262,54 +262,54 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return r.long_plugin_output == nullptr ? "" : r.long_plugin_output;
         }));
 
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "initial_state", "Initial host state", offsets,
         [](const host &r) { return r.initial_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "max_check_attempts",
         "Max check attempts for active host checks", offsets,
         [](const host &r) { return r.max_attempts; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "flap_detection_enabled",
         "Whether flap detection is enabled (0/1)", offsets,
         [](const host &r) { return r.flap_detection_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "check_freshness",
         "Whether freshness checks are activated (0/1)", offsets,
         [](const host &r) { return r.check_freshness; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled (0/1)", offsets,
         [](const host &r) { return r.process_performance_data; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "accept_passive_checks",
         "Whether passive host checks are accepted (0/1)", offsets,
         [](const host &r) { return r.accept_passive_host_checks; }));
 #else
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "accept_passive_checks",
         "Whether passive host checks are accepted (0/1)", offsets,
         [](const host &r) { return r.accept_passive_checks; }));
 #endif  // NAGIOS4
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "event_handler_enabled",
         "Whether event handling is enabled (0/1)", offsets,
         [](const host &r) { return r.event_handler_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "acknowledgement_type",
         "Type of acknowledgement (0: none, 1: normal, 2: sticky)", offsets,
         [](const host &r) { return r.acknowledgement_type; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "check_type", "Type of check (0: active, 1: passive)", offsets,
         [](const host &r) { return r.check_type; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "last_state", "State before last state change", offsets,
         [](const host &r) { return r.last_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "last_hard_state", "Last hard state", offsets,
         [](const host &r) { return r.last_hard_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "current_attempt", "Number of the current check attempts",
         offsets, [](const host &r) { return r.current_attempt; }));
 #ifndef NAGIOS4
@@ -354,47 +354,47 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return std::chrono::system_clock::from_time_t(
                 r.last_hard_state_change);
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "has_been_checked",
         "Whether the host has already been checked (0/1)", offsets,
         [](const host &r) { return r.has_been_checked; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "current_notification_number",
         "Number of the current notification", offsets,
         [](const host &r) { return r.current_notification_number; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "pending_flex_downtime",
         "Number of pending flexible downtimes", offsets,
         [](const host &r) { return r.pending_flex_downtime; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "total_services", "The total number of services of the host",
         offsets, [](const host &r) { return r.total_services; }));
     // Note: this is redundant with "active_checks_enabled". Nobody noted this
     // before...
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "checks_enabled",
         "Whether checks of the host are enabled (0/1)", offsets,
         [](const host &r) { return r.checks_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "notifications_enabled",
         "Whether notifications of the host are enabled (0/1)", offsets,
         [](const host &r) { return r.notifications_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "acknowledged",
         "Whether the current host problem has been acknowledged (0/1)", offsets,
         [](const host &r) { return r.problem_has_been_acknowledged; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "state",
         "The current state of the host (0: up, 1: down, 2: unreachable)",
         offsets, [](const host &r) { return r.current_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "state_type", "Type of the current state (0: soft, 1: hard)",
         offsets, [](const host &r) { return r.state_type; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "no_more_notifications",
         "Whether to stop sending notifications (0/1)", offsets,
         [](const host &r) { return r.no_more_notifications; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "check_flapping_recovery_notification",
         "Whether to check to send a recovery notification when flapping stops (0/1)",
         offsets,
@@ -431,32 +431,32 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 r.last_time_unreachable);
         }));
 
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "is_flapping", "Whether the host state is flapping (0/1)",
         offsets, [](const host &r) { return r.is_flapping; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "scheduled_downtime_depth",
         "The number of downtimes this host is currently in", offsets,
         [](const host &r) { return r.scheduled_downtime_depth; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "is_executing",
         "is there a host check currently running... (0/1)", offsets,
         [](const host &r) { return r.is_executing; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "active_checks_enabled",
         "Whether active checks are enabled for the host (0/1)", offsets,
         [](const host &r) { return r.checks_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "check_options",
         "The current check option, forced, normal, freshness... (0-2)", offsets,
         [](const host &r) { return r.check_options; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "obsess_over_host",
         "The current obsess_over_host setting... (0/1)", offsets,
         [](const host &r) { return r.obsess_over_host; }));
 #else
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "obsess_over_host",
         "The current obsess_over_host setting... (0/1)", offsets,
         [](const host &r) { return r.obsess; }));
@@ -692,81 +692,81 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         mc, offsets));
 
     auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services", "The total number of services of the host",
         offsets,
         ServiceListState{get_service_auth, ServiceListState::Type::num}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::worst_state}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_ok",
         "The number of the host's services with the soft state OK", offsets,
         ServiceListState{get_service_auth, ServiceListState::Type::num_ok}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN", offsets,
         ServiceListState{get_service_auth, ServiceListState::Type::num_warn}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT", offsets,
         ServiceListState{get_service_auth, ServiceListState::Type::num_crit}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
         offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_unknown}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet (pending)",
         offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_pending}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_handled_problems",
         "The number of the host's services which have handled problems",
         offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_handled_problems}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_unhandled_problems",
         "The number of the host's services which have unhandled problems",
         offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_unhandled_problems}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::worst_hard_state}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK", offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_hard_ok}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN", offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_hard_warn}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT", offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_hard_crit}));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
         offsets,
         ServiceListState{get_service_auth,
                          ServiceListState::Type::num_hard_unknown}));
 
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
         offsets, [](const host &hst) {
@@ -776,7 +776,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return hst.state_type == HARD_STATE ? hst.current_state
                                                 : hst.last_hard_state;
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<IntColumnCallback<host>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
         offsets, [mc](const host &hst) {

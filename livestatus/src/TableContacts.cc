@@ -86,16 +86,16 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
             }));
     }
 
-    table->addColumn(std::make_unique<IntColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<IntColumnCallback<contact>>(
         prefix + "can_submit_commands",
         "Wether the contact is allowed to submit commands (0/1)", offsets,
         [](const contact &ct) { return ct.can_submit_commands; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<IntColumnCallback<contact>>(
         prefix + "host_notifications_enabled",
         "Wether the contact will be notified about host problems in general (0/1)",
         offsets,
         [](const contact &ct) { return ct.host_notifications_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<contact>>(
+    table->addColumn(std::make_unique<IntColumnCallback<contact>>(
         prefix + "service_notifications_enabled",
         "Wether the contact will be notified about service problems in general (0/1)",
         offsets,

@@ -70,7 +70,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "time", "Time of the log event (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) { return r._time; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "lineno", "The number of the line in the log file", offsets,
         [](const HostServiceState &r) { return r._lineno; }));
     addColumn(std::make_unique<TimeColumn<HostServiceState>>(
@@ -79,7 +79,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "until", "End time of state (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) { return r._until; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "duration", "Duration of state (until - from)", offsets,
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration);
@@ -87,24 +87,24 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<DoubleColumn<HostServiceState>>(
         "duration_part", "Duration part in regard to the query timeframe",
         offsets, [](const HostServiceState &r) { return r._duration_part; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)",
         offsets, [](const HostServiceState &r) { return r._state; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "host_down", "Shows if the host of this service is down", offsets,
         [](const HostServiceState &r) { return r._host_down; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "in_downtime", "Shows if the host or service is in downtime", offsets,
         [](const HostServiceState &r) { return r._in_downtime; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "in_host_downtime", "Shows if the host of this service is in downtime",
         offsets,
         [](const HostServiceState &r) { return r._in_host_downtime; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "is_flapping", "Shows if the host or service is flapping", offsets,
         [](const HostServiceState &r) { return r._is_flapping; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "in_notification_period",
         "Shows if the host or service is within its notification period",
         offsets,
@@ -113,7 +113,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "notification_period",
         "The notification period of the host or service in question", offsets,
         [](const HostServiceState &r) { return r._notification_period; }));
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "in_service_period",
         "Shows if the host or service is within its service period", offsets,
         [](const HostServiceState &r) { return r._in_service_period; }));
@@ -137,7 +137,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "long_log_output", "Complete logfile output relevant for this state",
         offsets, [](const HostServiceState &r) { return r._long_log_output; }));
 
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "duration_ok", "OK duration of state ( until - from )", offsets,
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_ok);
@@ -147,7 +147,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         offsets,
         [](const HostServiceState &r) { return r._duration_part_ok; }));
 
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "duration_warning", "WARNING duration of state (until - from)", offsets,
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_warning);
@@ -157,7 +157,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "WARNING duration part in regard to the query timeframe", offsets,
         [](const HostServiceState &r) { return r._duration_part_warning; }));
 
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "duration_critical", "CRITICAL duration of state (until - from)",
         offsets, [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_critical);
@@ -167,7 +167,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "CRITICAL duration part in regard to the query timeframe", offsets,
         [](const HostServiceState &r) { return r._duration_part_critical; }));
 
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "duration_unknown", "UNKNOWN duration of state (until - from)", offsets,
         [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_unknown);
@@ -177,7 +177,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "UNKNOWN duration part in regard to the query timeframe", offsets,
         [](const HostServiceState &r) { return r._duration_part_unknown; }));
 
-    addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
+    addColumn(std::make_unique<IntColumnCallback<HostServiceState>>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
         offsets, [](const HostServiceState &r) {
             return mk::ticks<std::chrono::seconds>(r._duration_unmonitored);

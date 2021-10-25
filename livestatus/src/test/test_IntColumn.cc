@@ -22,7 +22,7 @@ TEST(IntColumn, GetValueLambda) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = IntColumn::Callback<DummyRow>{
+    const auto col = IntColumnCallback<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -34,7 +34,7 @@ TEST(IntColumn, GetValueDefault) {
     auto v = 1337;
 
     const auto row = DummyRow{nullptr};
-    const auto col = IntColumn::Callback<DummyRow>{
+    const auto col = IntColumnCallback<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};

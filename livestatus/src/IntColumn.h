@@ -23,12 +23,10 @@
 #include "opids.h"
 class Row;
 
-struct IntColumn : Column {
+class IntColumn : public Column {
+public:
     using value_type = std::int32_t;
-    class Constant;
-    class Reference;
-    template <class T, value_type = 0>
-    class Callback;
+
     using Column::Column;
     ~IntColumn() override = default;
 
@@ -63,17 +61,17 @@ struct IntColumn : Column {
     }
 };
 
-template <class T, IntColumn::value_type Default>
-class IntColumn::Callback : public IntColumn {
+template <class T, IntColumn::value_type Default = 0>
+class IntColumnCallback : public IntColumn {
     using f0_t = std::function<value_type(const T&)>;
     using f1_t = std::function<value_type(const T&, const contact*)>;
 
 public:
     using function_type = std::variant<f0_t, f1_t>;
-    Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets, const function_type& f)
+    IntColumnCallback(const std::string& name, const std::string& description,
+                      const ColumnOffsets& offsets, const function_type& f)
         : IntColumn{name, description, offsets}, f_{f} {}
-    ~Callback() override = default;
+    ~IntColumnCallback() override = default;
 
     value_type getValue(Row row, const contact* auth_user) const override {
         const T* data = columnData<T>(row);

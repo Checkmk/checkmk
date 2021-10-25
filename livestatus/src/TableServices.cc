@@ -241,47 +241,47 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return r.icon_image_alt == nullptr ? "" : r.icon_image_alt;
         }));
 
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "initial_state", "The initial state of the service", offsets,
         [](const service &r) { return r.initial_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "max_check_attempts", "The maximum number of check attempts",
         offsets, [](const service &r) { return r.max_attempts; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "current_attempt", "The number of the current check attempt",
         offsets, [](const service &r) { return r.current_attempt; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "state",
         "The current state of the service (0: OK, 1: WARN, 2: CRITICAL, 3: UNKNOWN)",
         offsets, [](const service &r) { return r.current_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "has_been_checked",
         "Whether the service already has been checked (0/1)", offsets,
         [](const service &r) { return r.has_been_checked; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "last_state", "The last state of the service", offsets,
         [](const service &r) { return r.last_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "last_hard_state", "The last hard state of the service",
         offsets, [](const service &r) { return r.last_hard_state; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "state_type",
         "The type of the current state (0: soft, 1: hard)", offsets,
         [](const service &r) { return r.state_type; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "check_type",
         "The type of the last check (0: active, 1: passive)", offsets,
         [](const service &r) { return r.check_type; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "acknowledged",
         "Whether the current service problem has been acknowledged (0/1)",
         offsets,
         [](const service &r) { return r.problem_has_been_acknowledged; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "acknowledgement_type",
         "The type of the acknownledgement (0: none, 1: normal, 2: sticky)",
         offsets, [](const service &r) { return r.acknowledgement_type; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "no_more_notifications",
         "Whether to stop sending notifications (0/1)", offsets,
         [](const service &r) { return r.no_more_notifications; }));
@@ -333,7 +333,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.next_notification);
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "current_notification_number",
         "The number of the current notification", offsets,
         [](const service &r) { return r.current_notification_number; }));
@@ -350,67 +350,67 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return std::chrono::system_clock::from_time_t(
                 r.last_hard_state_change);
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "scheduled_downtime_depth",
         "The number of scheduled downtimes the service is currently in",
         offsets, [](const service &r) { return r.scheduled_downtime_depth; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "is_flapping", "Whether the service is flapping (0/1)",
         offsets, [](const service &r) { return r.is_flapping; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "checks_enabled",
         "Whether active checks are enabled for the service (0/1)", offsets,
         [](const service &r) { return r.checks_enabled; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "accept_passive_checks",
         "Whether the service accepts passive checks (0/1)", offsets,
         [](const service &r) { return r.accept_passive_service_checks; }));
 #else
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "accept_passive_checks",
         "Whether the service accepts passive checks (0/1)", offsets,
         [](const service &r) { return r.accept_passive_checks; }));
 #endif  // NAGIOS4
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "event_handler_enabled",
         "Whether and event handler is activated for the service (0/1)", offsets,
         [](const service &r) { return r.event_handler_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "notifications_enabled",
         "Whether notifications are enabled for the service (0/1)", offsets,
         [](const service &r) { return r.notifications_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled for the service (0/1)",
         offsets, [](const service &r) { return r.process_performance_data; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "is_executing",
         "is there a service check currently running... (0/1)", offsets,
         [](const service &r) { return r.is_executing; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "active_checks_enabled",
         "Whether active checks are enabled for the service (0/1)", offsets,
         [](const service &r) { return r.checks_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "check_options",
         "The current check option, forced, normal, freshness... (0/1)", offsets,
         [](const service &r) { return r.check_options; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "flap_detection_enabled",
         "Whether flap detection is enabled for the service (0/1)", offsets,
         [](const service &r) { return r.flap_detection_enabled; }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "check_freshness",
         "Whether freshness checks are activated (0/1)", offsets,
         [](const service &r) { return r.check_freshness; }));
 #ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
         offsets, [](const service &r) { return r.obsess_over_service; }));
 #else
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
         offsets, [](const service &r) { return r.obsess; }));
@@ -426,7 +426,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             "A list of all modified attributes", offsets, [](const service &r) {
                 return column::attribute_list::encode(r.modified_attributes);
             }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",
         offsets, [](const service &svc) {
@@ -436,7 +436,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return svc.state_type == HARD_STATE ? svc.current_state
                                                 : svc.last_hard_state;
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
         offsets, [mc](const service &svc) {
@@ -684,7 +684,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets, [](const service & /*r*/) {
             return std::chrono::system_clock::time_point{};
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<service>>(
+    table->addColumn(std::make_unique<IntColumnCallback<service>>(
         prefix + "cache_interval",
         "A dummy column in order to be compatible with Check_MK Multisite",
         offsets, [](const service & /*r*/) { return 0; }));

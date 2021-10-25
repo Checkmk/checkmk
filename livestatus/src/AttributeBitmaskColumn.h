@@ -24,8 +24,8 @@ class Logger;
 class IntFilter;
 
 template <class T, int32_t Default = 0>
-struct AttributeBitmaskColumn : IntColumn::Callback<T, Default> {
-    using IntColumn::Callback<T, Default>::Callback;
+struct AttributeBitmaskColumn : IntColumnCallback<T, Default> {
+    using IntColumnCallback<T, Default>::IntColumnCallback;
     ~AttributeBitmaskColumn() override = default;
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(

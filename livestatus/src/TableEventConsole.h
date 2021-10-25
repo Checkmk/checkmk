@@ -43,7 +43,7 @@ public:
     static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<IntColumn::Callback<ECRow>> makeIntColumn(
+    static std::unique_ptr<IntColumnCallback<ECRow>> makeIntColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<DoubleColumn<ECRow>> makeDoubleColumn(

@@ -70,10 +70,10 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<TimeColumn<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) { return r.time(); }));
-    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
+    addColumn(std::make_unique<IntColumnCallback<LogEntry>>(
         "lineno", "The number of the line in the log file", offsets_entry,
         [](const LogEntry &r) { return r.lineno(); }));
-    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
+    addColumn(std::make_unique<IntColumnCallback<LogEntry>>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
         offsets_entry,
@@ -100,7 +100,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "The complete output of the check, if any is associated with the message",
         offsets_entry,
         [](const LogEntry &r) { return r.long_plugin_output(); }));
-    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
+    addColumn(std::make_unique<IntColumnCallback<LogEntry>>(
         "state", "The state of the host or service in question", offsets_entry,
         [](const LogEntry &r) { return r.state(); }));
     addColumn(std::make_unique<StringColumn<LogEntry>>(
@@ -109,7 +109,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<StringColumn<LogEntry>>(
         "state_info", "Additional information about the state", offsets_entry,
         [](const LogEntry &r) { return r.state_info(); }));
-    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
+    addColumn(std::make_unique<IntColumnCallback<LogEntry>>(
         "attempt", "The number of the check attempt", offsets_entry,
         [](const LogEntry &r) { return r.attempt(); }));
     addColumn(std::make_unique<StringColumn<LogEntry>>(

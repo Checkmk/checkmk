@@ -284,13 +284,14 @@ a.button {
   display: inline-block;
   width: auto;
   padding: 8px 16px;
-  margin: 0 10px;
-  font-weight: 700;
+  margin: 0 $spacing;
+  font-weight: $font-weight-bold;
   letter-spacing: 1px;
-  color: #fff;
+  color: $font-color;
+  text-decoration: none;
   cursor: pointer;
-  background-color: #11181d;
-  border-radius: 4px;
+  background-color: $input-button-bg-color;
+  border-radius: $theme-border-radius;
   box-shadow: none;
 }
 

@@ -279,7 +279,7 @@ class ModeFolder(WatoMode):
             return
 
         hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
-        is_enabled = bool(self._folder.has_hosts())
+        has_hosts = bool(self._folder.has_hosts())
         search_text = html.request.var("search")
 
         # Remember if that host has a target folder (i.e. was imported with
@@ -306,7 +306,7 @@ class ModeFolder(WatoMode):
                         button_name="_bulk_delete",
                         message=_("Do you really want to delete the selected hosts?"),
                     ),
-                    is_enabled=is_enabled,
+                    is_enabled=has_hosts,
                 )
 
             if config.user.may("wato.edit_hosts"):
@@ -317,7 +317,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_bulk_edit",
                     ),
-                    is_enabled=is_enabled,
+                    is_enabled=has_hosts,
                 )
 
                 yield PageMenuEntry(
@@ -327,7 +327,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_bulk_cleanup",
                     ),
-                    is_enabled=is_enabled,
+                    is_enabled=has_hosts,
                 )
 
         if config.user.may("wato.services"):
@@ -338,7 +338,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_inventory",
                 ),
-                is_enabled=is_enabled,
+                is_enabled=has_hosts,
             )
 
         if not self._folder.locked_hosts():
@@ -350,7 +350,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_parentscan",
                     ),
-                    is_enabled=is_enabled,
+                    is_enabled=has_hosts,
                 )
             if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
                 yield PageMenuEntry(
@@ -358,7 +358,8 @@ class ModeFolder(WatoMode):
                     icon_name="move",
                     name="move_rules",
                     item=PageMenuPopup(self._render_bulk_move_form()),
-                    is_enabled=is_enabled,
+                    is_enabled=has_hosts and
+                    (self._folder.has_parent() or self._folder.has_subfolders()),
                 )
 
                 if at_least_one_imported:
@@ -373,7 +374,7 @@ class ModeFolder(WatoMode):
                                       'you did the import from. Please make sure that you have '
                                       'done an <b>inventory</b> before moving the hosts.'),
                         ),
-                        is_enabled=is_enabled,
+                        is_enabled=has_hosts,
                     )
 
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
@@ -962,7 +963,9 @@ class ModeFolder(WatoMode):
                           onchange="cmk.selection.update_bulk_moveto(this.value)",
                           class_='bulk_moveto',
                           form="form_hosts")
-            html.a('Move',
+            # TODO use html.button("_bulk_move", _("Move"), form="form_hosts")
+            # if IE11 support is dropped
+            html.a(_('Move'),
                    class_="button",
                    href='javascript:void(0)',
                    onclick="document.getElementById('form_hosts_submit').click()")

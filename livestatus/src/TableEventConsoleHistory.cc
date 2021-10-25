@@ -5,6 +5,7 @@
 
 #include "TableEventConsoleHistory.h"
 
+#include <cstdint>
 #include <memory>
 
 #include "Column.h"

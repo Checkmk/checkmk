@@ -5,6 +5,7 @@
 
 #include "TableEventConsoleEvents.h"
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 

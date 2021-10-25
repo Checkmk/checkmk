@@ -23,9 +23,10 @@
 #include "opids.h"
 class Row;
 
+template <class T, int32_t Default = 0>
 class IntColumn : public Column {
 public:
-    using value_type = std::int32_t;
+    using value_type = int32_t;
 
     using Column::Column;
     ~IntColumn() override = default;
@@ -61,20 +62,20 @@ public:
     }
 };
 
-template <class T, IntColumn::value_type Default = 0>
-class IntColumnCallback : public IntColumn {
-    using f0_t = std::function<value_type(const T&)>;
-    using f1_t = std::function<value_type(const T&, const contact*)>;
+template <class T, int32_t Default = 0>
+class IntColumnCallback : public IntColumn<T, Default> {
+    using f0_t = std::function<int32_t(const T&)>;
+    using f1_t = std::function<int32_t(const T&, const contact*)>;
 
 public:
     using function_type = std::variant<f0_t, f1_t>;
     IntColumnCallback(const std::string& name, const std::string& description,
                       const ColumnOffsets& offsets, const function_type& f)
-        : IntColumn{name, description, offsets}, f_{f} {}
+        : IntColumn<T, Default>{name, description, offsets}, f_{f} {}
     ~IntColumnCallback() override = default;
 
-    value_type getValue(Row row, const contact* auth_user) const override {
-        const T* data = columnData<T>(row);
+    int32_t getValue(Row row, const contact* auth_user) const override {
+        const T* data = IntColumn<T, Default>::template columnData<T>(row);
         if (std::holds_alternative<f0_t>(f_)) {
             return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
         }

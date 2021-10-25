@@ -5,6 +5,7 @@
 
 #include "TableEventConsoleStatus.h"
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 

@@ -3,6 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <cstdint>
+#include <memory>
 #include <string>
 
 #include "IntColumn.h"

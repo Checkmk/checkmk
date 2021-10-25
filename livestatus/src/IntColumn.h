@@ -26,10 +26,10 @@ class Row;
 template <class T, int32_t Default = 0>
 class IntColumn : public Column {
 public:
-    using f0_t = std::function<int32_t(const T&)>;
-    using f1_t = std::function<int32_t(const T&, const contact*)>;
-    using function_type = std::variant<f0_t, f1_t>;
     using value_type = int32_t;
+    using f0_t = std::function<value_type(const T&)>;
+    using f1_t = std::function<value_type(const T&, const contact*)>;
+    using function_type = std::variant<f0_t, f1_t>;
 
     IntColumn(const std::string& name, const std::string& description,
               const ColumnOffsets& offsets, const function_type& f)

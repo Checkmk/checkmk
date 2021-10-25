@@ -6,7 +6,7 @@ use super::cli::Args;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fs::{read_to_string, write};
-use std::io::Result;
+use std::io;
 use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
@@ -26,7 +26,7 @@ impl Config {
         return serde_json::from_str("{}").unwrap();
     }
 
-    pub fn from_file(path: &Path) -> Result<Config> {
+    pub fn from_file(path: &Path) -> io::Result<Config> {
         if path.exists() {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
@@ -60,8 +60,7 @@ pub struct RegistrationState {
 pub struct ServerSpec {
     pub marcv_address: String,
     pub uuid: String,
-    pub private_key: String,
-    pub client_cert: String,
+    pub client_chain: String,
 }
 
 impl RegistrationState {
@@ -69,15 +68,15 @@ impl RegistrationState {
         return serde_json::from_str("{}").unwrap();
     }
 
-    pub fn from_file(path: &Path) -> Result<RegistrationState> {
+    pub fn from_file(path: &Path) -> io::Result<RegistrationState> {
         if path.exists() {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
         return Ok(RegistrationState::empty_state());
     }
 
-    pub fn to_file(self, path: &Path) -> Result<()> {
-        return write(path, &serde_json::to_string(&self)?);
+    pub fn to_file(self, path: &Path) -> io::Result<()> {
+        write(path, &serde_json::to_string(&self)?)
     }
 
     pub fn add_server_spec(&mut self, server_spec: ServerSpec) {

@@ -9,7 +9,7 @@ mod marcv_api;
 mod monitoring_data;
 mod uuid;
 use config::RegistrationState;
-use std::io::{self, Result as IOResult, Write};
+use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
 
@@ -21,30 +21,39 @@ fn register(config: config::Config, path_state: &Path) {
 
     for address in marcv_addresses {
         let identifier = uuid::make();
-        let (csr, private_key) = certs::make_csr(&identifier).unwrap();
-        let certificate = marcv_api::register(&address, csr).unwrap();
+        let (csr, private_key) = match certs::make_csr(&identifier) {
+            Ok(data) => data,
+            Err(error) => panic!("Error creating CSR: {}", error),
+        };
+        let certificate = match marcv_api::register(&address, csr) {
+            Ok(cert) => cert,
+            Err(error) => panic!("Error registering at {}: {}", &address, error),
+        };
+
+        let chain =
+            String::from_utf8(private_key).unwrap() + &String::from_utf8(certificate).unwrap();
 
         registration_state.add_server_spec(config::ServerSpec {
             marcv_address: address,
             uuid: identifier,
-            private_key: String::from_utf8(private_key).unwrap(),
-            client_cert: certificate,
+            client_chain: chain,
         })
     }
 
-    registration_state.to_file(path_state).unwrap()
+    registration_state.to_file(path_state).unwrap();
 }
 
-fn push(config: config::Config) {
-    let marcv_addresses = config
-        .marcv_addresses
-        .expect("Server addresses not specified");
-    let identifier = config.uuid.expect("UUID not set");
+fn push(config: config::Config, reg_state: config::RegistrationState) {
     match monitoring_data::collect(config.package_name) {
-        Ok(mon_data) => match marcv_api::agent_data(&marcv_addresses[0], &identifier, mon_data) {
-            Ok(message) => println!("{}", message),
-            Err(error) => panic!("Error pushing monitoring data: {}", error),
-        },
+        Ok(mon_data) => {
+            for server_spec in reg_state.server_specs {
+                // TODO: Find a way we don't have to clone the mon_data (lifetimes?)
+                match marcv_api::agent_data(mon_data.clone(), server_spec) {
+                    Ok(message) => println!("{}", message),
+                    Err(error) => panic!("Error pushing monitoring data: {}", error),
+                };
+            }
+        }
         Err(error) => panic!("Error collecting monitoring data: {}", error),
     }
 }
@@ -63,18 +72,15 @@ fn status(_config: config::Config) {
     panic!("Status mode not yet implemented")
 }
 
-fn get_configuration(
-    path_config: &Path,
-    path_state: &Path,
-    args: cli::Args,
-) -> IOResult<config::Config> {
+fn get_configuration(path_config: &Path, args: cli::Args) -> io::Result<config::Config> {
     return Ok(config::Config::merge_two_configs(
-        config::Config::merge_two_configs(
-            config::Config::from_file(path_state)?,
-            config::Config::from_file(path_config)?,
-        ),
+        config::Config::from_file(path_config)?,
         config::Config::from_args(args),
     ));
+}
+
+fn get_reg_state(path: &Path) -> io::Result<config::RegistrationState> {
+    return Ok(config::RegistrationState::from_file(path)?);
 }
 
 fn main() {
@@ -82,16 +88,23 @@ fn main() {
     let args = cli::Args::from_args();
     let mode = String::from(&args.mode);
 
-    match get_configuration(&Path::new("config.json"), &path_state_file, args) {
-        Ok(config) => match mode.as_str() {
-            "dump" => dump(config),
-            "register" => register(config, &path_state_file),
-            "push" => push(config),
-            "status" => status(config),
-            _ => {
-                panic!("Invalid mode: {}", mode)
-            }
-        },
+    let config = match get_configuration(&Path::new("config.json"), args) {
+        Ok(cfg) => cfg,
         Err(error) => panic!("Error while obtaining configuration: {}", error),
+    };
+
+    let reg_state = match get_reg_state(&Path::new("state.json")) {
+        Ok(cfg) => cfg,
+        Err(error) => panic!("Error while obtaining configuration: {}", error),
+    };
+
+    match mode.as_str() {
+        "dump" => dump(config),
+        "register" => register(config, &path_state_file),
+        "push" => push(config, reg_state),
+        "status" => status(config),
+        _ => {
+            panic!("Invalid mode: {}", mode)
+        }
     }
 }

@@ -17,12 +17,6 @@ case "$1" in
             exit 0
         fi
 
-        create_server_certificate
-        if [ $? != 0 ]; then
-            echo "ERROR"
-            exit 1
-        fi
-
         if [ "$OMD_SITE" == "comp_remote" ]; then
             port=8001
         else
@@ -32,8 +26,6 @@ case "$1" in
         gunicorn -D -p $PIDFILE  \
                 --error-logfile $OMD_ROOT/var/log/marcv/error.log \
                 --access-logfile $OMD_ROOT/var/log/marcv/access.log \
-                --keyfile=$KEYFILE \
-                --certfile=$CERTFILE \
                 -b 127.0.0.1:$port \
                 -k uvicorn.workers.UvicornWorker marcv.server:app
         if [ $? -eq 0 ]; then

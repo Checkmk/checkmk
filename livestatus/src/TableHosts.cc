@@ -790,23 +790,27 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return mk_inventory_last(mc->mkInventoryPath() / hst.name);
         }));
 
-    table->addColumn(std::make_unique<BlobColumnFile<host>>(
+    table->addColumn(std::make_unique<BlobColumn<host>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", offsets,
-        [mc]() { return mc->mkInventoryPath(); },
-        [](const host &r) { return std::filesystem::path{r.name}; }));
-    table->addColumn(std::make_unique<BlobColumnFile<host>>(
+        BlobFileReader<host>{
+            [mc]() { return mc->mkInventoryPath(); },
+            [](const host &r) { return std::filesystem::path{r.name}; }}));
+    table->addColumn(std::make_unique<BlobColumn<host>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
-        [mc]() { return mc->mkInventoryPath(); },
-        [](const host &r) {
-            return std::filesystem::path{std::string{r.name} + ".gz"};
-        }));
-    table->addColumn(std::make_unique<BlobColumnFile<host>>(
+        BlobFileReader<host>{[mc]() { return mc->mkInventoryPath(); },
+                             [](const host &r) {
+                                 return std::filesystem::path{
+                                     std::string{r.name} + ".gz"};
+                             }}));
+    table->addColumn(std::make_unique<BlobColumn<host>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
-        offsets, [mc]() { return mc->structuredStatusPath(); },
-        [](const host &r) { return std::filesystem::path{r.name}; }));
+        offsets,
+        BlobFileReader<host>{
+            [mc]() { return mc->structuredStatusPath(); },
+            [](const host &r) { return std::filesystem::path{r.name}; }}));
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,

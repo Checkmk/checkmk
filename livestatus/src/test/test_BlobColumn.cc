@@ -48,13 +48,14 @@ std::vector<char> to_value(const std::string& s) {
 TEST_F(FileFixture, BlobColumnReadFile) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = BlobColumnFile<DummyRow>{
+    const auto col = BlobColumn<DummyRow>{
         "name"s,
         "description"s,
         {},
-        [this]() { return basepath; },
-        [this](const DummyRow& /*row*/) { return filename; },
-    };
+        BlobFileReader<DummyRow>{
+            [this]() { return basepath; },
+            [this](const DummyRow& /*row*/) { return filename; },
+        }};
 
     ASSERT_NE(nullptr, col.getValue(row));
     EXPECT_FALSE(col.getValue(row)->empty());

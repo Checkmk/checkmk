@@ -73,12 +73,11 @@ private:
     const std::function<std::vector<char>(const T &)> f_;
 };
 
-namespace detail {
 template <class T>
-class FileImpl {
+class BlobFileReader {
 public:
-    FileImpl(std::function<std::filesystem::path()> basepath,
-             std::function<std::filesystem::path(const T &)> filepath)
+    BlobFileReader(std::function<std::filesystem::path()> basepath,
+                   std::function<std::filesystem::path(const T &)> filepath)
         : _basepath{std::move(basepath)}
         , _filepath{std::move(filepath)}
         , _logger{"cmk.livestatus"} {}
@@ -121,19 +120,6 @@ private:
     const std::function<std::filesystem::path()> _basepath;
     const std::function<std::filesystem::path(const T &)> _filepath;
     mutable ThreadNameLogger _logger;
-};
-}  // namespace detail
-
-template <class T>
-struct BlobColumnFile : BlobColumn<T> {
-    BlobColumnFile(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets,
-                   const std::function<std::filesystem::path()> &basepath,
-                   std::function<std::filesystem::path(const T &)> filepath)
-        : BlobColumn<T>{name, description, offsets,
-                        detail::FileImpl{basepath, std::move(filepath)}} {}
-
-    ~BlobColumnFile() override = default;
 };
 
 #endif  // BlobColumn_h

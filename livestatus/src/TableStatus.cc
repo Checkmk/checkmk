@@ -318,10 +318,13 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numQueuedAlerts());
         }));
-    addColumn(std::make_unique<BlobColumnFile<TableStatus>>(
+    addColumn(std::make_unique<BlobColumn<TableStatus>>(
         "license_usage_history", "Historic license usage information", offsets,
-        [mc]() { return mc->licenseUsageHistoryPath(); },
-        [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));
+        BlobFileReader<TableStatus>{
+            [mc]() { return mc->licenseUsageHistoryPath(); },
+            [](const TableStatus & /*r*/) {
+                return std::filesystem::path{};
+            }}));
     addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "average_runnable_jobs_fetcher",
         "The average count of scheduled fetcher jobs which have not yet been processed",

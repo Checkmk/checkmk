@@ -433,7 +433,7 @@ class LDAPUserConnector(UserConnector):
             if "bind" in self._config:
                 self._bind(
                     self._replace_macros(self._config["bind"][0]),
-                    self._config["bind"][1],
+                    ("password", self._config["bind"][1][1]),
                     catch=False,
                     conn=conn,
                 )
@@ -1088,7 +1088,7 @@ class LDAPUserConnector(UserConnector):
     #
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, user_id, password: _Tuple[str, str]) -> CheckCredentialsResult:
+    def check_credentials(self, user_id, password: str) -> CheckCredentialsResult:
         self.connect()
 
         # Did the user provide an suffix with his user_id? This might enforce
@@ -1118,7 +1118,7 @@ class LDAPUserConnector(UserConnector):
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
-            self._bind(user_dn, password)
+            self._bind(user_dn, ("password", password))
             if not self._has_suffix():
                 result = user_id
             else:

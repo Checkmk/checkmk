@@ -14,8 +14,6 @@ import traceback
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
 
-from six import ensure_binary
-
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -263,8 +261,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
-        # ? type of current_config seems to be Dict[str,Any]
-        trusted_cas += [ensure_binary(e) for e in current_config["trusted_cas"]]
+
+        trusted_cas += [e.encode() for e in current_config["trusted_cas"]]
 
         store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
         return errors

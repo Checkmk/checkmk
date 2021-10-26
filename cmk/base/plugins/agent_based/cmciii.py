@@ -16,7 +16,17 @@ from .agent_based_api.v1 import (
     State,
     type_defs,
 )
-from .utils.cmciii import Devices, Section, Sensors, SensorType, Variable
+from .utils.cmciii import (
+    CheckParams,
+    Devices,
+    discovery_default_parameters,
+    DiscoveryParams,
+    get_sensor,
+    Section,
+    Sensors,
+    SensorType,
+    Variable,
+)
 
 MAP_STATES = {
     "1": (State.UNKNOWN, "not available"),
@@ -261,13 +271,14 @@ register.snmp_section(
 )
 
 
-def discover_cmciii(section: Section) -> type_defs.DiscoveryResult:
-    for entry in section["state"]:
-        yield Service(item=entry)
+def discover_cmciii(params: DiscoveryParams, section: Section) -> type_defs.DiscoveryResult:
+    for id_, entry in section["state"].items():
+        item = f"{entry['_location_']} {id_}" if params.get("use_sensor_description") else id_
+        yield Service(item=item, parameters={"_item_key": id_})
 
 
-def check_cmciii(item: str, section: Section) -> type_defs.CheckResult:
-    entry = section["state"].get(item)
+def check_cmciii(item: str, params: CheckParams, section: Section) -> type_defs.CheckResult:
+    entry = get_sensor(item, params, section["state"])
     if not entry:
         return
 
@@ -280,4 +291,8 @@ register.check_plugin(
     service_name="State %s",
     discovery_function=discover_cmciii,
     check_function=check_cmciii,
+    discovery_ruleset_name="discovery_cmciii",
+    discovery_default_parameters=discovery_default_parameters(),
+    discovery_ruleset_type=register.RuleSetType.MERGED,
+    check_default_parameters={},
 )

@@ -107,6 +107,13 @@ class HealthZ(BaseModel):
     verbose_response: Optional[str]
 
 
+class KubeletInfo(BaseModel):
+    """section: k8s_node_kubelet_v1"""
+
+    version: str
+    health: HealthZ
+
+
 class APIHealth(BaseModel):
     ready: HealthZ
     live: HealthZ

@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import {set} from "lodash";
 import $ from "jquery";
 import * as utils from "utils";
 import * as popup_menu from "popup_menu";
@@ -820,10 +821,10 @@ function service_desc_autocompleter(css_class, container) {
         let host_id = elem.id.endsWith("_service_hint")
             ? `${elem.id.slice(0, -13)}_hostname_hint`
             : "context_host_p_host";
-        let val_or_empty = obj => (obj ? obj.value : "");
+        let val_or_empty = obj => (obj ? {host: obj.value} : {});
 
         return {
-            host: val_or_empty(document.getElementById(host_id)),
+            context: val_or_empty(document.getElementById(host_id)),
             strict: elem.dataset.strict,
         };
     };
@@ -832,11 +833,18 @@ function service_desc_autocompleter(css_class, container) {
 }
 
 function autocompleter_with_host_service_hints(css_class, container) {
-    let params = elem => ({
-        host: document.getElementById(`${elem.id}_hostname_hint`).value,
-        service: document.getElementById(`${elem.id}_service_hint`).value,
-        strict: elem.dataset.strict,
-    });
+    let params = elem => {
+        let obj = {strict: elem.dataset.strict};
+        let hint = document.getElementById(`${elem.id}_hostname_hint`).value;
+        if (hint) {
+            set(obj, "context.host.host", hint);
+        }
+        hint = document.getElementById(`${elem.id}_service_hint`).value;
+        if (hint) {
+            set(obj, "context.service.service", hint);
+        }
+        return obj;
+    };
 
     select2_vs_autocomplete(container, css_class, params);
 }

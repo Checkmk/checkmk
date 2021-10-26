@@ -37,6 +37,7 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
+from cmk.gui.plugins.metrics.utils import find_metrics_of_query_bare, keep_sorted_match
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
@@ -128,26 +129,13 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         return graph_template.get("title") or _metric_title_from_id(graph_template["id"])
 
     @classmethod
-    def _graph_choices_from_livestatus_row(
-        cls,
-        perf_data: str,
-        metrics: Iterable[MetricName],
-        check_cmd: str,
-    ) -> Iterable[TupleType[str, str]]:
+    def _graph_choices_from_livestatus_row(cls, row) -> Iterable[TupleType[str, str]]:
         yield from (
             (
                 template["id"],
                 cls._graph_template_title(template),
             )
-            for template in get_graph_templates(
-                translated_metrics_from_row(
-                    {
-                        "service_metrics": metrics,
-                        "service_perf_data": perf_data,
-                        "service_check_command": check_cmd,
-                    }
-                )
-            )
+            for template in get_graph_templates(translated_metrics_from_row(row))
         )
 
     # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
@@ -156,7 +144,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the
         completions_params to get the list of choices"""
-        if not (params.get("host") or params.get("service")):
+        if not params.get("context"):
             choices: Iterable[TupleType[str, str]] = (
                 (
                     graph_id,
@@ -169,37 +157,14 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             )
 
         else:
-            query = "\n".join(
-                [
-                    "GET services",
-                    "Columns: perf_data metrics check_command",
-                ]
-                + [
-                    f"Filter: {filter_name} = {livestatus.lqencode(filter_value)}"
-                    for filter_name, filter_value in (
-                        ("host_name", params.get("host")),
-                        ("service_description", params.get("service")),
-                    )
-                    if filter_value
-                ]
-            )
-            with sites.set_limit(None):
-                choices = set(
-                    chain.from_iterable(
-                        cls._graph_choices_from_livestatus_row(
-                            perf_data,
-                            metrics,
-                            check_cmd,
-                        )
-                        for perf_data, metrics, check_cmd in sites.live().query(query)
-                    )
+            choices = set(
+                chain.from_iterable(
+                    cls._graph_choices_from_livestatus_row(row)
+                    for row in find_metrics_of_query_bare(params["context"])
                 )
+            )
 
-        val_lower = value.lower()
-        return sorted(
-            (choice for choice in choices if val_lower in choice[1].lower()),
-            key=lambda tuple_id_title: tuple_id_title[1],
-        )
+        return keep_sorted_match(value, choices)
 
 
 @dashlet_registry.register

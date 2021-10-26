@@ -431,7 +431,11 @@ def _get_post_discovery_autocheck_services(
                 new = [
                     s
                     for s in discovered_services_with_nodes
-                    if service_filters.new(host_name, s.service)
+                    if service_filters.new(
+                        config.service_description(
+                            host_name, s.service.check_plugin_name, s.service.item
+                        )
+                    )
                 ]
                 result.self_new += len(new)
                 post_discovery_services.extend(new)
@@ -447,13 +451,13 @@ def _get_post_discovery_autocheck_services(
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
             for entry in discovered_services_with_nodes:
-                if (
-                    mode
-                    in (
-                        DiscoveryMode.FIXALL,
-                        DiscoveryMode.REMOVE,
+                if mode in (
+                    DiscoveryMode.FIXALL,
+                    DiscoveryMode.REMOVE,
+                ) and service_filters.vanished(
+                    config.service_description(
+                        host_name, entry.service.check_plugin_name, entry.service.item
                     )
-                    and service_filters.vanished(host_name, entry.service)
                 ):
                     result.self_removed += 1
                 else:
@@ -626,7 +630,11 @@ def _check_service_lists(
         for (discovered_service, _found_on_nodes) in t_services:
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
-            if not unfiltered and service_filter(host_name, discovered_service):
+            if not unfiltered and service_filter(
+                config.service_description(
+                    host_name, discovered_service.check_plugin_name, discovered_service.item
+                )
+            ):
                 unfiltered = True
 
             # TODO In service_filter:we use config.service_description(...)

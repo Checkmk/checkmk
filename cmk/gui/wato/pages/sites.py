@@ -19,11 +19,8 @@ from typing import Type, Union
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-
-# mypy can't find x509 for some reason (is a c extension involved?)
-from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
-from OpenSSL import crypto  # type: ignore[import]
-from OpenSSL import SSL  # type: ignore[attr-defined]
+from cryptography.x509.oid import ExtensionOID, NameOID
+from OpenSSL import crypto, SSL  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -1329,7 +1326,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             )
 
         try:
-            cert_details = self._fetch_certificate_details()
+            cert_details = list(self._fetch_certificate_details())
         except Exception as e:
             logger.exception("Failed to fetch peer certificate")
             html.show_error(_("Failed to fetch peer certificate (%s)") % e)
@@ -1397,7 +1394,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def _cert_trusted_css_class(self, cert):
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
-    def _fetch_certificate_details(self) -> List[CertificateDetails]:
+    def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:
         """Creates a list of certificate details for the chain certs"""
         verify_chain_results = self._fetch_certificate_chain_verify_results()
         if not verify_chain_results:
@@ -1406,30 +1403,22 @@ class ModeSiteLivestatusEncryption(WatoMode):
         def get_name(name_obj):
             return name_obj.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
 
-        cert_details = []
         for result in verify_chain_results:
-            # use cryptography module over OpenSSL because it is easier to do the x509 parsing
             crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
-
-            cert_details.append(
-                CertificateDetails(
-                    issued_to=get_name(crypto_cert.subject),
-                    issued_by=get_name(crypto_cert.issuer),
-                    valid_from=str(crypto_cert.not_valid_before),
-                    valid_till=str(crypto_cert.not_valid_after),
-                    signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                    digest_sha256=binascii.hexlify(
-                        crypto_cert.fingerprint(hashes.SHA256())
-                    ).decode(),
-                    serial_number=crypto_cert.serial_number,
-                    is_ca=self._is_ca_certificate(crypto_cert),
-                    verify_result=result,
-                )
+            yield CertificateDetails(
+                issued_to=get_name(crypto_cert.subject),
+                issued_by=get_name(crypto_cert.issuer),
+                valid_from=str(crypto_cert.not_valid_before),
+                valid_till=str(crypto_cert.not_valid_after),
+                signature_algorithm=crypto_cert.signature_hash_algorithm.name,
+                digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
+                serial_number=crypto_cert.serial_number,
+                is_ca=self._is_ca_certificate(crypto_cert),
+                verify_result=result,
             )
 
-        return cert_details
-
-    def _is_ca_certificate(self, crypto_cert: "SSL.Certificate") -> bool:
+    @staticmethod
+    def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
         try:
             key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
             use_key_for_signing = key_usage.value.key_cert_sign is True

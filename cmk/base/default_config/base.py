@@ -135,7 +135,7 @@ generate_hostconf = True
 generate_dummy_commands = True
 dummy_check_commandline = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
 nagios_illegal_chars = "`;~!$%^&*|'\"<>?,="
-cmc_illegal_chars = "\t"  # Tab is an illegal character for CMC
+cmc_illegal_chars = ";\t"  # Tab is an illegal character for CMC and semicolon breaks metric system
 
 # Data to be defined in main.mk
 tag_config: _Dict[str, _List] = {

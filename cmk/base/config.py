@@ -1204,14 +1204,13 @@ def get_final_service_description(hostname: HostName, description: ServiceName) 
     try:
         new_description = cache[description]
     except KeyError:
-        if is_cmc():
-            new_description = "".join(
-                [c for c in description if c not in cmc_illegal_chars]
-            ).rstrip("\\")
-        else:
-            new_description = "".join(
-                [c for c in description if c not in nagios_illegal_chars]
-            ).rstrip("\\")
+        new_description = "".join(
+            [
+                c
+                for c in description
+                if c not in (cmc_illegal_chars if is_cmc() else nagios_illegal_chars)
+            ]
+        ).rstrip("\\")
         cache[description] = new_description
 
     return new_description

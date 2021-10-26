@@ -14,7 +14,6 @@
 
 #include "Average.h"
 #include "BlobColumn.h"
-#include "BoolColumn.h"
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "IntColumn.h"

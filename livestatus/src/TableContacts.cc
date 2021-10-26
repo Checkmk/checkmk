@@ -13,7 +13,6 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
-#include "BoolColumn.h"
 #include "Column.h"
 #include "CustomAttributeMap.h"
 #include "DictColumn.h"

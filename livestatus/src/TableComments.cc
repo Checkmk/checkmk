@@ -10,7 +10,6 @@
 #include <memory>
 #include <type_traits>
 
-#include "BoolColumn.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "IntColumn.h"

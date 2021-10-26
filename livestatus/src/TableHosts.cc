@@ -21,7 +21,6 @@
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
 #include "BlobColumn.h"
-#include "BoolColumn.h"
 #include "Column.h"
 #include "CommentRenderer.h"
 #include "CustomAttributeMap.h"

@@ -84,4 +84,19 @@ private:
     const function_type f_;
 };
 
+namespace column::detail {
+constexpr int32_t toInt32(bool b) { return b ? 1 : 0; }
+}  // namespace column::detail
+
+template <class T, bool Default = false>
+class BoolColumn : public IntColumn<T, column::detail::toInt32(Default)> {
+public:
+    BoolColumn(const std::string& name, const std::string& description,
+               const ColumnOffsets& offsets, std::function<bool(const T&)> f)
+        : IntColumn<T, column::detail::toInt32(Default)>{
+              name, description, offsets, [f = std::move(f)](const T& t) {
+                  return column::detail::toInt32(f(t));
+              }} {}
+};
+
 #endif

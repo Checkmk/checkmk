@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-#include "BoolColumn.h"
+#include "IntColumn.h"
 #include "Row.h"
 #include "gtest/gtest.h"
 
@@ -29,7 +29,7 @@ TEST(BoolColumn, GetValueLambda) {
                 return v;
             }};
 
-        EXPECT_EQ(v ? 1 : 0, col.getValue(row));
+        EXPECT_EQ(v ? 1 : 0, col.getValue(row, nullptr));
     }
 }
 
@@ -41,6 +41,6 @@ TEST(BoolColumn, GetValueDefault) {
                 return v;
             }};
 
-        EXPECT_EQ(1, col.getValue(row));
+        EXPECT_EQ(1, col.getValue(row, nullptr));
     }
 }

@@ -11,7 +11,7 @@ A host tag group is a collection of different host tags, with each host receivin
 tag from the group.
 
 You can find an introduction to hosts including host tags and host tag groups in the
-[Checkmk guide](hhttps://docs.checkmk.com/latest/en/wato_hosts.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 
 import json

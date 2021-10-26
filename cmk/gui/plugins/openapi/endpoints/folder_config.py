@@ -17,7 +17,7 @@ Due to HTTP escaping folders are represented with the tilde character (`~`) as t
 ### Host and Folder attributes
 
 Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
-host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
+host inherits all attributes of its folder and the folder's parent folders. So setting an SNMP
 community in a folder is equivalent to setting the same on all hosts in said folder.
 
 Some host endpoints allow one to view the "effective attributes", which is an aggregation of all

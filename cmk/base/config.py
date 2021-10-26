@@ -1187,33 +1187,25 @@ def active_check_service_description(
 
 def get_final_service_description(hostname: HostName, description: ServiceName) -> ServiceName:
     translations = get_service_translations(hostname)
-    if translations:
-        # Translate
-        description = cmk.utils.translations.translate_service_description(
-            translations, description
-        )
-
-    # Note: we strip the service description (remove spaces).
-    # One check defines "Pages %s" as a description, but the item
-    # can by empty in some cases. Nagios silently drops leading
+    # Note: at least strip the service description.
+    # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
     # and trailing spaces in the configuration file.
-    description = description.strip()
+    description = (
+        cmk.utils.translations.translate_service_description(translations, description).strip()
+        if translations
+        else description.strip()
+    )
 
-    # Sanitize; Remove illegal characters from a service description
+    # Sanitize: remove illegal characters from a service description
     cache = _config_cache.get("final_service_description")
-    try:
-        new_description = cache[description]
-    except KeyError:
-        new_description = "".join(
-            [
-                c
-                for c in description
-                if c not in (cmc_illegal_chars if is_cmc() else nagios_illegal_chars)
-            ]
-        ).rstrip("\\")
-        cache[description] = new_description
+    with contextlib.suppress(KeyError):
+        return cache[description]
 
-    return new_description
+    illegal_chars = cmc_illegal_chars if is_cmc() else nagios_illegal_chars
+
+    return cache.setdefault(
+        description, "".join(c for c in description if c not in illegal_chars).rstrip("\\")
+    )
 
 
 def service_ignored(
@@ -1343,7 +1335,7 @@ def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.Tra
 
 def get_service_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
     translations_cache = _config_cache.get("service_description_translations")
-    if hostname in translations_cache:
+    with contextlib.suppress(KeyError):
         return translations_cache[hostname]
 
     rules = get_config_cache().host_extra_conf(hostname, service_description_translation)
@@ -1356,8 +1348,7 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
             else:
                 translations[k] = v
 
-    translations_cache[hostname] = translations
-    return translations
+    return translations_cache.setdefault(hostname, translations)
 
 
 def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:

@@ -9,7 +9,7 @@ import re
 import socket
 import subprocess
 import sys
-from email.utils import formataddr
+from email.utils import formataddr, formatdate
 from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
@@ -171,6 +171,7 @@ def substitute_context(template, context):
 
 
 def set_mail_headers(target, subject, from_address, reply_to, mail):
+    mail["Date"] = formatdate(localtime=True)
     mail["Subject"] = subject
     mail["To"] = target
 

@@ -19,24 +19,36 @@ fn register(config: config::Config, path_state: &Path) {
         .marcv_addresses
         .expect("Server addresses not specified");
 
-    for address in marcv_addresses {
-        let identifier = uuid::make();
-        let (csr, private_key) = match certs::make_csr(&identifier) {
+    for marcv_address in marcv_addresses {
+        let root_cert = match &config.root_certificate {
+            Some(cert) => cert.clone(),
+            None => {
+                let fetched_cert = match certs::fetch_root_cert(&marcv_address) {
+                    Ok(cert) => cert,
+                    Err(error) => panic!("Error establishing trust with marcv: {}", error),
+                };
+                String::from_utf8(fetched_cert).unwrap()
+            }
+        };
+
+        let uuid = uuid::make();
+        let (csr, private_key) = match certs::make_csr(&uuid) {
             Ok(data) => data,
             Err(error) => panic!("Error creating CSR: {}", error),
         };
-        let certificate = match marcv_api::register(&address, csr) {
+        let certificate = match marcv_api::register(&marcv_address, csr) {
             Ok(cert) => cert,
-            Err(error) => panic!("Error registering at {}: {}", &address, error),
+            Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
         };
 
-        let chain =
+        let client_chain =
             String::from_utf8(private_key).unwrap() + &String::from_utf8(certificate).unwrap();
 
         registration_state.add_server_spec(config::ServerSpec {
-            marcv_address: address,
-            uuid: identifier,
-            client_chain: chain,
+            marcv_address,
+            uuid,
+            client_chain,
+            root_cert,
         })
     }
 

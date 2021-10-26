@@ -14,7 +14,9 @@ struct JSONResponse {
 }
 
 pub fn register(_server_address: &str, _csr: Vec<u8>) -> reqwest::Result<Vec<u8>> {
-    return Ok(Vec::from("Fake certificate"));
+    return Ok(Vec::from(
+        "-----BEGIN CERTIFICATE-----\ndummy\n-----END CERTIFICATE-----\n",
+    ));
 }
 
 pub fn agent_data(

@@ -70,6 +70,7 @@ from cmk.gui.plugins.userdb.utils import (
     USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views
+from cmk.gui.plugins.wato import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users
@@ -256,6 +257,11 @@ class UpdateConfig:
         site_mgmt.save_sites(configured_sites, activate=False)
 
     def _update_global_config(self, global_config):
+        return self._transform_global_config_values(
+            self._update_removed_global_config_vars(global_config)
+        )
+
+    def _update_removed_global_config_vars(self, global_config):
         # Replace old settings with new ones
         for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
             if old_config_name in global_config:
@@ -272,6 +278,18 @@ class UpdateConfig:
 
         # Delete unused settings
         global_config = filter_unknown_settings(global_config)
+        return global_config
+
+    def _transform_global_config_value(self, config_var, config_val):
+        return config_variable_registry[config_var]().valuespec().transform_value(config_val)
+
+    def _transform_global_config_values(self, global_config):
+        global_config.update(
+            {
+                config_var: self._transform_global_config_value(config_var, config_val)
+                for config_var, config_val in global_config.items()
+            }
+        )
         return global_config
 
     def _rewrite_autochecks(self):

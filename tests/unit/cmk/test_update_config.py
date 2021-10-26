@@ -9,8 +9,10 @@ import argparse
 import io
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
+from pytest_mock import MockerFixture
 
 from tests.testlib.base import Scenario
 
@@ -666,3 +668,46 @@ def test_password_sanitizer_multiline():
     sanitizer = update_config.PasswordSanitizer()
     entry = sanitizer.replace_password(mock_audit_log_entry("edit-rule", diff))
     assert entry.diff_text == expected
+
+
+def test_update_global_config(mocker: MockerFixture) -> None:
+    mocker.patch.object(
+        update_config,
+        "REMOVED_GLOBALS_MAP",
+        [
+            ("global_a", "new_global_a", {True: 1, False: 0}),
+            ("global_b", "new_global_b", {}),
+            ("missing", "new_missing", {}),
+        ],
+    )
+    mocker.patch.object(
+        update_config,
+        "filter_unknown_settings",
+        lambda global_config: {k: v for k, v in global_config.items() if k != "unknown"},
+    )
+    mocker.patch.object(
+        update_config.UpdateConfig,
+        "_transform_global_config_value",
+        lambda _self, config_var, config_val: {
+            "new_global_a": config_val,
+            "new_global_b": 15,
+            "global_c": ["x", "y", "z"],
+            "unchanged": config_val,
+        }[config_var],
+    )
+    assert update_config.UpdateConfig(
+        cmk.utils.log.logger, argparse.Namespace()
+    )._update_global_config(
+        {
+            "global_a": True,
+            "global_b": 14,
+            "global_c": None,
+            "unchanged": "please leave me alone",
+            "unknown": "How did this get here?",
+        }
+    ) == {
+        "global_c": ["x", "y", "z"],
+        "unchanged": "please leave me alone",
+        "new_global_a": 1,
+        "new_global_b": 15,
+    }

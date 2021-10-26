@@ -45,6 +45,7 @@ import cmk.base.autochecks
 import cmk.base.check_api
 import cmk.base.config
 from cmk.base.api.agent_based import register
+from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 
 import cmk.gui.config
 import cmk.gui.groups
@@ -283,7 +284,7 @@ class UpdateConfig:
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)
             try:
-                autochecks = cmk.base.autochecks.migration.load_unmigrated_autocheck_entries(
+                autochecks = load_unmigrated_autocheck_entries(
                     autocheck_file,
                     check_variables,
                 )

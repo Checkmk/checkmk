@@ -33,7 +33,6 @@ public:
                const ColumnOffsets& offsets,
                std::function<value_type(const T&)> f)
         : Column{name, description, offsets}, f_{std::move(f)} {}
-    ~TimeColumn() override = default;
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::time; }
 

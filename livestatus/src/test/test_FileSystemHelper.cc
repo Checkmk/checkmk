@@ -17,7 +17,6 @@ namespace fs = std::filesystem;
 class PathContainsFixtureBase
     : public ::testing::TestWithParam<std::tuple<fs::path, fs::path, bool>> {
 protected:
-    ~PathContainsFixtureBase() override = default;
     [[nodiscard]] fs::path basepath() const { return basepath_; };
     [[nodiscard]] fs::path directory() const {
         return basepath() / directory_;

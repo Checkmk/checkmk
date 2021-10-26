@@ -38,7 +38,6 @@ public:
     DoubleColumn(const std::string& name, const std::string& description,
                  const ColumnOffsets& offsets, const function_type& f)
         : Column{name, description, offsets}, f_{f} {}
-    ~DoubleColumn() override = default;
 
     [[nodiscard]] ColumnType type() const override {
         return ColumnType::double_;

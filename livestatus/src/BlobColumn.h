@@ -37,7 +37,6 @@ public:
                const ColumnOffsets &offsets,
                std::function<std::vector<char>(const T &)> f)
         : Column{name, description, offsets}, f_{std::move(f)} {}
-    ~BlobColumn() override = default;
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::blob; }
 

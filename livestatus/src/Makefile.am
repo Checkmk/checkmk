@@ -111,7 +111,6 @@ liblivestatus_a_SOURCES = \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
         DowntimeOrComment.cc \
-        DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
         EventConsoleConnection.cc \

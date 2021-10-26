@@ -33,7 +33,6 @@ public:
                  const ColumnOffsets& offsets,
                  const std::function<std::string(const T&)>& f)
         : Column{name, description, offsets}, f_{f} {}
-    ~StringColumn() override = default;
 
     [[nodiscard]] ColumnType type() const override {
         return ColumnType::string;
@@ -72,7 +71,6 @@ template <class T>
 class StringColumnPerfData : public StringColumn<T> {
 public:
     using StringColumn<T>::StringColumn;
-    ~StringColumnPerfData() override = default;
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {

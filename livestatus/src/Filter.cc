@@ -5,8 +5,6 @@
 
 #include "Filter.h"
 
-Filter::~Filter() = default;
-
 std::optional<std::string> Filter::stringValueRestrictionFor(
     const std::string& /* column_name */) const {
     return {};

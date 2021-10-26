@@ -26,7 +26,6 @@ class IntFilter;
 template <class T, int32_t Default = 0>
 struct AttributeBitmaskColumn : IntColumn<T, Default> {
     using IntColumn<T, Default>::IntColumn;
-    ~AttributeBitmaskColumn() override = default;
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

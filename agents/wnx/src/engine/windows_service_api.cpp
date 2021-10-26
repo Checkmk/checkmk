@@ -1146,6 +1146,21 @@ bool ProcessServiceConfiguration(std::wstring_view service_name) {
     return true;
 }
 
+namespace {
+bool IsServiceProcess() {
+    auto win_station = ::GetProcessWindowStation();
+    if (win_station == nullptr) {
+        return false;  // may happen when not enough user rights
+    }
+
+    USEROBJECTFLAGS uof = {0};
+    auto success = ::GetUserObjectInformation(win_station, UOI_FLAGS, &uof,
+                                              sizeof(USEROBJECTFLAGS), nullptr);
+    // service should be NON-VISIBLE
+    return success && ((uof.dwFlags & WSF_VISIBLE) == 0);
+}
+}  // namespace
+
 // entry point in service mode
 // normally this is "BLOCKING FOR EVER"
 // called by Windows Service Manager
@@ -1154,10 +1169,13 @@ bool ProcessServiceConfiguration(std::wstring_view service_name) {
 int ServiceAsService(
     std::wstring_view app_name, std::chrono::milliseconds delay,
     const std::function<bool(const void* some_context)>& internal_callback) {
-    XLOG::l.i("service to run");
+    if (!IsServiceProcess()) {
+        return 0;
+    }
 
-    cma::OnStartApp();               // path from service
-    ON_OUT_OF_SCOPE(cma::OnExit());  // we are sure that this is last foo
+    cma::OnStartApp();
+    XLOG::l.i("service to run");
+    ON_OUT_OF_SCOPE(cma::OnExit());
 
     SelfConfigure();
 

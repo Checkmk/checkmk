@@ -31,3 +31,11 @@ class NodeCount(BaseModel):
 
     worker: int = 0
     control_plane: int = 0
+
+
+class ContainerCount(BaseModel):
+    """k8s_node_container_count_v1"""
+
+    running: int = 0
+    waiting: int = 0
+    terminated: int = 0

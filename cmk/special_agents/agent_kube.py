@@ -58,24 +58,6 @@ class LiveContainer(NamedTuple):
     metrics: Dict[MetricName, MetricValue]
 
 
-class ContainerCount(BaseModel):
-    """k8s_node_container_count_v1"""
-
-    running: int = 0
-    waiting: int = 0
-    terminated: int = 0
-
-
-class PodResources(BaseModel):
-    running: int = 0
-    pending: int = 0
-    succeeded: int = 0
-    failed: int = 0
-    unknown: int = 0
-    capacity: int = 0
-    allocatable: int = 0
-
-
 class Resources(BaseModel):
     limit: float
     requests: float
@@ -201,8 +183,8 @@ class Node:
     def kubelet(self) -> api.KubeletInfo:
         return self.kubelet_info
 
-    def container_count(self) -> ContainerCount:
-        result = ContainerCount()
+    def container_count(self) -> section.ContainerCount:
+        result = section.ContainerCount()
         for pod in self._pods:
             for container in pod.containers:
                 if container.state == api.ContainerState.RUNNING:

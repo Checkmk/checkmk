@@ -14,6 +14,7 @@ from itertools import chain
 from typing import (
     Any,
     Callable,
+    cast,
     Container,
     Dict,
     Iterable,
@@ -32,8 +33,6 @@ from typing import (
 
 from six import ensure_str
 
-import livestatus
-
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
@@ -49,7 +48,10 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.plugins.views import data_source_registry, DataSourceLivestatus
+from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers, get_only_sites_from_context
 from cmk.gui.type_defs import (
+    Choice,
     Choices,
     Perfdata,
     PerfometerSpec,
@@ -58,6 +60,7 @@ from cmk.gui.type_defs import (
     TranslatedMetric,
     TranslatedMetrics,
     UnitInfo,
+    VisualContext,
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
@@ -65,6 +68,7 @@ from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
 )
+from cmk.gui.visuals import collect_filters
 
 LegacyPerfometer = Tuple[str, Any]
 Atom = TypeVar("Atom")
@@ -833,8 +837,7 @@ def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[Graph
 
 def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
     for graph_template in graph_info.values():
-        template = graph_template_for_metrics(graph_template, translated_metrics)
-        if template:
+        if template := graph_template_for_metrics(graph_template, translated_metrics):
             yield template
 
 
@@ -1239,49 +1242,60 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def find_host_services(
-    host_name: str, service_description: str = ""
-) -> Iterator[Tuple[str, str, Tuple[str, ...]]]:
-    if not host_name and not service_description:  # optimization: avoid query with empty result
-        return
-    # TODO: site hint!
+def find_metrics_of_query(
+    context: VisualContext,
+) -> Iterator[Tuple[ServiceName, str, Tuple[_MetricName, ...]]]:
+    datasource = cast(DataSourceLivestatus, data_source_registry["services"]())
+    filters = collect_filters(datasource.infos)
+    filterheaders = "".join(get_livestatus_filter_headers(context, filters))
+    selected_sites = get_only_sites_from_context(context)
 
+    # optimization: avoid query with unconstrained result
+    if not filterheaders and not selected_sites:
+        return
+    #
     # Also fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
-    query = (
-        "GET services\n"
-        "Columns: description check_command perf_data metrics host_check_command host_metrics \n"
-    )
-
-    if host_name:
-        query += "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
-
-    if service_description:
-        query += "Filter: service_description = %s\n" % livestatus.lqencode(service_description)
-
+    columns = [
+        "service_description",
+        "service_check_command",
+        "service_perf_data",
+        "service_metrics",
+        "host_check_command",
+        "host_metrics",
+    ]
     host_check_command, host_metrics = None, None
-    for (
-        svc_desc,
-        check_command,
-        perf_data,
-        rrd_metrics,
-        host_check_command,
-        host_metrics,
-    ) in sites.live().query(query):
-        parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
-        known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
-        yield svc_desc, check_command, tuple(known_metrics)
+    with sites.only_sites(selected_sites):
+        for (
+            svc_desc,
+            check_command,
+            perf_data,
+            rrd_metrics,
+            host_check_command,
+            host_metrics,
+        ) in sites.live().query(
+            "GET services\n" + "Columns: %s\n" % " ".join(columns) + filterheaders
+        ):
+            parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
+            known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
+            yield str(svc_desc), str(check_command), tuple(map(str, known_metrics))
 
     if host_check_command:
-        yield "_HOST_", host_check_command, tuple(host_metrics)
+        yield "_HOST_", str(host_check_command), tuple(map(str, host_metrics))
 
 
-def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tuple[str, str]]:
+def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         translated = perfvar_translation(perfvar, check_command)
         name = translated["name"]
         mi = metric_info.get(name, {})
         yield name, mi.get("title", name.title())
+
+
+def available_metrics(context: VisualContext) -> Iterator[Choice]:
+    options = set(find_metrics_of_query(context))
+    for _unused, check_command, metrics in options:
+        yield from metric_choices(check_command, metrics)
 
 
 @autocompleter_registry.register
@@ -1331,23 +1345,28 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
     # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
     @classmethod
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-
-        def metrics():
-            options = set(find_host_services(params.get("host", ""), params.get("service", "")))
-            for _unused, check_command, metrics in options:
-                yield from metric_choices(check_command, metrics)
-
-        if not params.get("host") and not params.get("service"):
-            choices: Choices = [
+        host, service = params.get("host", ""), params.get("service", "")
+        if not any((host, service)):
+            all_registered_metrics = (
                 (metric_id, metric_detail["title"])
                 for metric_id, metric_detail in metric_info.items()
-            ]
-        else:
-            choices = list(set(metrics()))
+            )
+            return keep_sorted_match(value, all_registered_metrics)
 
-        return sorted(v for v in choices if value.lower() in v[1].lower())
+        params["context"] = {"host": {"host": host}, "service": {"service": service}}
+        return autocomplete_metric_choices(value, params)
+
+
+def keep_sorted_match(input_value: str, choices: Iterable[Choice]) -> Choices:
+
+    return sorted(v for v in choices if input_value.lower() in v[1].lower())
+
+
+def autocomplete_metric_choices(input_value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current field input_value and the completions_params to get the list of choices"""
+
+    return keep_sorted_match(input_value, set(available_metrics(params["context"])))
 
 
 # .

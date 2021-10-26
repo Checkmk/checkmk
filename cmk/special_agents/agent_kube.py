@@ -304,6 +304,7 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
         sections = {
             "k8s_node_container_count_v1": cluster_node.container_count,
             "k8s_node_kubelet_v1": cluster_node.kubelet,
+            "k8s_node_pods_resources_v1": cluster_node.pod_resources,
         }
         _write_sections(sections)
 

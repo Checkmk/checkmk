@@ -53,6 +53,7 @@ public:
             },
             relOp, value);
     }
+
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
         return std::make_unique<IntAggregator>(

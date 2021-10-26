@@ -53,6 +53,7 @@ test_neb_SOURCES = \
     test/TableQueryHelper.cc \
     test/test_AttributeListColumn.cc \
     test/test_BlobColumn.cc \
+    test/test_BoolColumn.cc \
     test/test_CrashReport.cc \
     test/test_DictFilter.cc \
     test/test_DoubleColumn.cc \

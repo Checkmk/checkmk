@@ -6,8 +6,9 @@
 
 import logging
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List, Sequence
 from typing import Tuple as _Tuple
+from typing import Union
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
@@ -1755,6 +1756,21 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
         )
 
 
+def _transform_trusted_certs(certs: Iterable[Union[str, bytes]]) -> Sequence[str]:
+    # In 2.0, the underlying config file ca-certificates.mk contained the trusted certificates
+    # either as bytes or as str, depending on how they were added (str via editing the global
+    # settings, bytes by pressing "Add to trusted CAs" in the livestatus encryption page)
+    return [
+        cert.decode()
+        if isinstance(
+            cert,
+            bytes,
+        )
+        else cert
+        for cert in certs
+    ]
+
+
 @config_variable_registry.register
 class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
     def group(self):
@@ -1797,9 +1813,12 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                 ),
                 (
                     "trusted_cas",
-                    ListOfCAs(
-                        title=_("Checkmk specific"),
-                        allow_empty=True,
+                    Transform(
+                        ListOfCAs(
+                            title=_("Checkmk specific"),
+                            allow_empty=True,
+                        ),
+                        forth=_transform_trusted_certs,
                     ),
                 ),
             ],

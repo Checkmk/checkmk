@@ -12,12 +12,9 @@ import cmk.gui.availability as availability
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import graph_info, metric_info
 from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
-from cmk.gui.plugins.metrics.utils import (
-    get_graph_template_choices,
-    metric_info,
-    perfvar_translation,
-)
+from cmk.gui.plugins.metrics.utils import perfvar_translation
 from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.webapi import api_call_collection_registry, APICallCollection
 from cmk.gui.visuals import cleaup_context_filters, get_filter_headers
@@ -128,15 +125,18 @@ class APICallGrafanaConnector(APICallCollection):
         if presentation not in combined_graph_presentations:
             raise MKGeneralException(_("The requested item %s does not exist") % presentation)
 
+        # Because grafana connector <= 1.1.0 sends empty string when no site filter is
+        # applied, yet cmk takes takes context['site'] as enforced thus "" is an applied site filter
+        if "site" in request["context"] and not request["context"]["site"]:
+            request["context"].pop("site")
+
         # The grafana connector needs the template title for making them
         # selectable by the user. We extend the graph identification here.
         # Otherwise we would need more API calls
         response = []
         for graph_identification in matching_combined_graphs(request):
             graph_template_id = graph_identification[1]["graph_template"]
-            graph_title = dict(get_graph_template_choices()).get(
-                graph_template_id, graph_template_id
-            )
+            graph_title = graph_info.get(graph_template_id, graph_template_id)
 
             response.append(
                 {

@@ -10801,7 +10801,10 @@ msgid "Could not find the group specified for role %s"
 msgstr ""
 
 #, python-format
-msgid "Could not find the requested crash %s on site %s"
+msgid ""
+"Could not find the requested crash %s on site %s. Maybe the automatic "
+"cleanup found more than 200 crash reports below ~/var/check_mk/crashes and "
+"already deleted the requested crash report."
 msgstr ""
 
 #, python-format
@@ -28519,6 +28522,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Maximum concurrent executions"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Maximum concurrent executions for forwarded messages"
 msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
@@ -51286,6 +51293,16 @@ msgid ""
 "the backup encryption keys in a safe place. If you loose your keys or the "
 "keys passphrases, your backup can not be restored.<br>The following keys "
 "have not been downloaded yet: %s"
+msgstr ""
+
+msgid ""
+"To determine the notified contacts and used notification plugin the "
+"mknotifyd starts a new subprocess for each message forwarded by a remote "
+"site. This parameter determines how many of these processes are started in "
+"parallel. To achieve a good performance in distributed setups it should "
+"match roughly the concurrent executions of the of the notification plugins "
+"of incoming messages. Note however that concurrent will incease the load on "
+"the CPU."
 msgstr ""
 
 msgid ""

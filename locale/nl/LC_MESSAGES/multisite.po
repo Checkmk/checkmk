@@ -11418,8 +11418,11 @@ msgid "Could not find the group specified for role %s"
 msgstr "Kon de groep gespecificeerd voor rol %s niet vinden"
 
 #, python-format
-msgid "Could not find the requested crash %s on site %s"
-msgstr "Kon de gevraagde crash %s niet vinden op site %s"
+msgid ""
+"Could not find the requested crash %s on site %s. Maybe the automatic "
+"cleanup found more than 200 crash reports below ~/var/check_mk/crashes and "
+"already deleted the requested crash report."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -29818,6 +29821,10 @@ msgid "Maximum concurrent active checks"
 msgstr "Maximaal aantal gelijktijdige actieve controles"
 
 msgid "Maximum concurrent executions"
+msgstr "Maximaal aantal gelijktijdige uitvoeringen"
+
+#, fuzzy
+msgid "Maximum concurrent executions for forwarded messages"
 msgstr "Maximaal aantal gelijktijdige uitvoeringen"
 
 msgid "Maximum connections per second"
@@ -54858,6 +54865,16 @@ msgstr ""
 "gedownload: %s"
 
 msgid ""
+"To determine the notified contacts and used notification plugin the "
+"mknotifyd starts a new subprocess for each message forwarded by a remote "
+"site. This parameter determines how many of these processes are started in "
+"parallel. To achieve a good performance in distributed setups it should "
+"match roughly the concurrent executions of the of the notification plugins "
+"of incoming messages. Note however that concurrent will incease the load on "
+"the CPU."
+msgstr ""
+
+msgid ""
 "To monitor Azure resources add this datasource to <b>one</b> host. The data "
 "will be transported using the piggyback mechanism, so make sure to create "
 "one host for every monitored resource group. You can learn about the "
@@ -64714,6 +64731,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Could not find the requested crash %s on site %s"
+#~ msgstr "Kon de gevraagde crash %s niet vinden op site %s"
 
 #~ msgid ""
 #~ "You can set a limit to the number of table extents for Informix Database "

@@ -12,7 +12,7 @@ You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
-from typing import List
+from typing import List, Optional
 
 from cmk.gui import watolib
 from cmk.gui.http import Response
@@ -116,6 +116,7 @@ class UpdateDiscoveryPhase(BaseSchema):
         description='The value uniquely identifying the service on a given host.',
         example='/home',
         required=True,
+        allow_none=True,
     )
     target_phase = fields.String(
         description='The target phase of the service.',
@@ -160,7 +161,7 @@ def _update_single_service_phase(
     target_phase: str,
     host: watolib.CREHost,
     check_type: str,
-    service_item: str,
+    service_item: Optional[str],
 ) -> None:
     discovery = Discovery(
         host=host,

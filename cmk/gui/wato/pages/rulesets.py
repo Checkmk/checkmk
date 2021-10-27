@@ -755,7 +755,8 @@ class ModeEditRuleset(WatoMode):
         if self._hostname:
             title += _(" for host %s") % self._hostname
             if request.has_var("item") and self._rulespec.item_type:
-                title += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
+                assert self._rulespec.item_name is not None
+                title += _(" and %s '%s'") % (self._rulespec.item_name.lower(), self._item)
 
         return title
 
@@ -769,6 +770,16 @@ class ModeEditRuleset(WatoMode):
                         PageMenuTopic(
                             title=_("Setup"),
                             entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add rule"),
+                            entries=list(self._page_menu_entries_rules()),
                         ),
                     ],
                 ),
@@ -822,6 +833,38 @@ class ModeEditRuleset(WatoMode):
                         ]
                     )
                 ),
+                is_shortcut=True,
+                is_suggested=True,
+            )
+
+    def _page_menu_entries_rules(self) -> Iterable[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Add rule"),
+            icon_name={"icon": "rulesets", "emblem": "add"},
+            item=make_form_submit_link(form_name="new_rule", button_name="_new_dflt_rule"),
+            is_shortcut=True,
+            is_suggested=True,
+        )
+
+        if not self._folder.is_root():
+            yield PageMenuEntry(
+                title=_("Add rule in folder %s") % self._folder.title(),
+                icon_name={"icon": "rulesets", "emblem": "add"},
+                item=make_form_submit_link(form_name="new_rule", button_name="_new_rule"),
+                is_shortcut=True,
+                is_suggested=True,
+            )
+
+        if self._hostname:
+            title = _("Add rule for current host")
+            if self._item is not None and self._rulespec.item_type:
+                assert self._rulespec.item_name is not None
+                title = _("Add rule for current host and %s") % self._rulespec.item_name.lower()
+
+            yield PageMenuEntry(
+                title=title,
+                icon_name={"icon": "rulesets", "emblem": "add"},
+                item=make_form_submit_link(form_name="new_rule", button_name="_new_host_rule"),
                 is_shortcut=True,
                 is_suggested=True,
             )
@@ -1167,45 +1210,12 @@ class ModeEditRuleset(WatoMode):
         html.begin_form("new_rule", add_transid=False)
         html.hidden_field("ruleset_back_mode", self._back_mode, add_var=True)
 
-        html.open_table()
         if self._hostname:
-            label = _("Host %s") % self._hostname
-            ty = _("Host")
-            if self._item is not None and self._rulespec.item_type:
-                assert self._rulespec.item_name is not None
-                label += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
-                ty = self._rulespec.item_name
-
-            html.open_tr()
-            html.open_td()
-            html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
             html.hidden_field("item", watolib.mk_repr(self._item).decode())
             html.hidden_field("service", watolib.mk_repr(self._service).decode())
-            html.close_td()
-            html.open_td(style="vertical-align:middle")
-            html.write_text(label)
-            html.close_td()
-            html.close_tr()
 
-        html.open_tr()
-        html.open_td()
-        html.open_a(
-            href="",
-            class_="create_rule",
-            onclick='cmk.page_menu.form_submit("new_rule", "_new_rule")',
-        )
-        html.icon("new")
-        html.write_text(_("Create rule in folder"))
-        html.close_a()
-        html.close_td()
-        html.open_td()
-
-        html.dropdown("rule_folder", watolib.Folder.folder_choices(), deflt=self._folder.path())
-        html.close_td()
-        html.close_tr()
-        html.close_table()
-        html.write_text("\n")
+        html.hidden_field("rule_folder", self._folder.path())
         html.hidden_field("varname", self._name)
         html.hidden_field("mode", "new_rule")
         html.hidden_field("folder", self._folder.path())
@@ -2568,12 +2578,16 @@ class ModeNewRule(ABCEditRuleMode):
         return _("New rule: %s") % self._rulespec.title
 
     def _set_folder(self) -> None:
-        if request.has_var("_new_rule"):
-            # Start creating new rule in the choosen folder
+        if request.has_var("_new_dflt_rule"):
+            # Start creating a new rule with default selections (root folder)
+            self._folder = watolib.Folder.root_folder()
+
+        elif request.has_var("_new_rule"):
+            # Start creating a new rule in the chosen folder
             self._folder = watolib.Folder.folder(request.get_ascii_input_mandatory("rule_folder"))
 
         elif request.has_var("_new_host_rule"):
-            # Start creating new rule for a specific host
+            # Start creating a new rule for a specific host
             self._folder = watolib.Folder.current()
 
         else:

@@ -20,6 +20,7 @@ from cryptography.x509 import (
     Certificate,
     CertificateBuilder,
     CertificateSigningRequest,
+    CertificateSigningRequestBuilder,
     KeyUsage,
     load_pem_x509_certificate,
     Name,
@@ -116,18 +117,31 @@ def make_root_certificate(
     )
 
 
-def make_signed_certificate(
+def make_csr(
     subject_name: Name,
+    private_key: RSAPrivateKeyWithSerialization,
+) -> CertificateSigningRequest:
+    return (
+        CertificateSigningRequestBuilder()
+        .subject_name(subject_name)
+        .sign(
+            private_key,
+            SHA256(),
+        )
+    )
+
+
+def sign_csr(
+    csr: CertificateSigningRequest,
     days_valid: int,
-    public_key: RSAPublicKey,
     signing_cert: Certificate,
     signing_private_key: RSAPrivateKeyWithSerialization,
 ) -> Certificate:
     return (
         _make_cert_builder(
-            subject_name,
+            csr.subject,
             days_valid,
-            public_key,
+            rsa_public_key_from_cert_or_csr(csr),
         )
         .issuer_name(signing_cert.issuer)
         .sign(

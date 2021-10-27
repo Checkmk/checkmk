@@ -33,11 +33,12 @@ from cryptography.x509 import Certificate
 
 from cmk.utils.certs import (
     load_cert_and_private_key,
+    make_csr,
     make_private_key,
     make_root_certificate,
-    make_signed_certificate,
     make_subject_name,
     root_cert_path,
+    sign_csr,
 )
 
 CERT_NOT_AFTER = 999 * 365  # 999 years by default
@@ -78,10 +79,12 @@ class CertificateAuthority:
             raise RuntimeError("Certificate authority is not initialized yet")
         private_key = make_private_key()
         return (
-            make_signed_certificate(
-                make_subject_name(cn),
+            sign_csr(
+                make_csr(
+                    make_subject_name(cn),
+                    private_key,
+                ),
                 CERT_NOT_AFTER,
-                private_key.public_key(),
                 *self._get_root_certificate(),
             ),
             private_key,

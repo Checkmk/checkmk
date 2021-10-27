@@ -19,11 +19,12 @@ from tests.testlib.certs import (
 
 from cmk.utils.certs import (
     load_cert_and_private_key,
+    make_csr,
     make_private_key,
     make_root_certificate,
-    make_signed_certificate,
     make_subject_name,
     rsa_public_key_from_cert_or_csr,
+    sign_csr,
 )
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
@@ -185,7 +186,7 @@ def test_load_cert_and_private_key(
     )
 
 
-def test_make_private_key():
+def test_make_private_key() -> None:
     assert make_private_key().key_size == 2048
 
 
@@ -209,22 +210,38 @@ def test_make_root_certificate() -> None:
     )
 
 
-def test_make_signed_certificate() -> None:
+def test_make_csr() -> None:
+    csr = make_csr(
+        make_subject_name("abc123"),
+        make_private_key(),
+    )
+    assert csr.is_signature_valid
+    assert check_cn(
+        csr,
+        "abc123",
+    )
+
+
+def test_sign_csr() -> None:
     root_key = make_private_key()
+    root_cert = make_root_certificate(
+        make_subject_name("peter"),
+        1,
+        root_key,
+    )
     key = make_private_key()
+    csr = make_csr(
+        make_subject_name("from_peter"),
+        key,
+    )
     with on_time(100, "UTC"):
-        root_cert = make_root_certificate(
-            make_subject_name("peter"),
-            1,
-            root_key,
-        )
-        cert = make_signed_certificate(
-            make_subject_name("from_peter"),
+        cert = sign_csr(
+            csr,
             2,
-            key.public_key(),
             root_cert,
             root_key,
         )
+
     assert check_cn(
         cert,
         "from_peter",

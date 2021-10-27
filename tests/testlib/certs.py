@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Union
+
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.x509 import Certificate
+from cryptography.x509 import Certificate, CertificateSigningRequest
 from cryptography.x509.oid import NameOID
 
 from cmk.utils.certs import rsa_public_key_from_cert_or_csr
@@ -39,7 +41,7 @@ def check_certificate_against_public_key(
 
 
 def check_cn(
-    cert: Certificate,
+    cert_or_csr: Union[Certificate, CertificateSigningRequest],
     expected_cn: str,
 ) -> bool:
-    return cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == expected_cn
+    return cert_or_csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == expected_cn

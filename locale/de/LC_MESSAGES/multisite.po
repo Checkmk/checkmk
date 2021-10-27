@@ -15027,6 +15027,10 @@ msgstr ""
 "produzieren"
 
 #, fuzzy
+msgid "Displays inventory data of a Host."
+msgstr "Zeigt eine Liste von Hosts an."
+
+#, fuzzy
 msgid "Displays statistics about events as a hexagon and a table."
 msgstr "Zeigt eine Statistik über die Services als Globus und als Tabelle."
 
@@ -25835,9 +25839,6 @@ msgstr "Ungültiger Konfigurationshashwert"
 msgid "Invalid credentials"
 msgstr "Anmeldedaten sind ungültig"
 
-msgid "Invalid credentials."
-msgstr "Anmeldedaten sind ungültig."
-
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Üngultiger Datentyp des Zeitstempels (muss int/float sein)"
 
@@ -25914,6 +25915,10 @@ msgstr "Ungültiger Schlüssel: %s"
 #, python-format
 msgid "Invalid key(s): %s"
 msgstr "Ungültige Schlüssel: %s"
+
+#, fuzzy
+msgid "Invalid login"
+msgstr "Ungültiger Schlüssel"
 
 msgid "Invalid login credentials."
 msgstr "Anmeldedaten sind ungültig."
@@ -30632,6 +30637,10 @@ msgstr "Fehlender oder ungültiger Modus. Erlaubt sind 'agent' und 'status'."
 msgid "Missing parameter \"%s\"."
 msgstr "Der Parameter \"%s\" fehlt."
 
+#, fuzzy
+msgid "Missing password"
+msgstr "Passwort anbinden"
+
 msgid "Missing prediction data."
 msgstr "Die Information für die Vorhersage fehlt."
 
@@ -30666,6 +30675,10 @@ msgstr "Der Parameter spec fehlt"
 
 msgid "Missing test host name"
 msgstr "Fehlender Test-Hostname"
+
+#, fuzzy
+msgid "Missing username"
+msgstr "Fehlender Hostname"
 
 msgid "Missing variable siteid"
 msgstr "Variable siteid fehlt"
@@ -32253,9 +32266,6 @@ msgstr "Kein Monitoring-Kern"
 msgid "No object type"
 msgstr "Kein Objekttyp"
 
-msgid "No password given."
-msgstr "Kein Passwort eingegeben."
-
 msgid "No pending changes"
 msgstr "Keine anstehenden Änderungen"
 
@@ -32359,9 +32369,6 @@ msgstr ""
 "Keine unpaketierten Dateien gefunden. Wenn Sie neue Erweiterungspakete "
 "erstellen möchten, dann müssen Sie Dateien in Ihrer Check_MK-Instanz "
 "unterhalb von <tt>%s/local</tt> erzeugen."
-
-msgid "No username given."
-msgstr "Keinen Benutzernamen eingegeben."
 
 msgid "No users are defined yet."
 msgstr "Keine Benutzer definiert."
@@ -64747,6 +64754,15 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Invalid credentials."
+#~ msgstr "Anmeldedaten sind ungültig."
+
+#~ msgid "No password given."
+#~ msgstr "Kein Passwort eingegeben."
+
+#~ msgid "No username given."
+#~ msgstr "Keinen Benutzernamen eingegeben."
+
 #~ msgid "Could not find the requested crash %s on site %s"
 #~ msgstr "Konnte den angeforderten Absturz %s auf der Site %s nicht finden"
 
@@ -70608,9 +70624,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Configuration Replication (Distributed WATO)"
 #~ msgstr "Replikationskonfiguration (Verteiltes WATO)"
-
-#~ msgid "Displays a list of hosts."
-#~ msgstr "Zeigt eine Liste von Hosts an."
 
 #~ msgid "Dropdown list, selection of service group is <b>enforced</b>"
 #~ msgstr "Auswahlliste: Auswahl von Service-Gruppe ist <b>verpflichtend</b>"

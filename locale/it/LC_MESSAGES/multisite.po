@@ -15056,6 +15056,10 @@ msgid "Displays hosts and services producing the most notifications"
 msgstr "Visualizza gli host e i servizi che producono più notifiche"
 
 #, fuzzy
+msgid "Displays inventory data of a Host."
+msgstr "Non ho trovato dati di inventario per questo host."
+
+#, fuzzy
 msgid "Displays statistics about events as a hexagon and a table."
 msgstr ""
 "Visualizza le statistiche sugli stati di servizio come globo e una tabella."
@@ -25877,9 +25881,6 @@ msgstr "hash di configurazione non valido"
 msgid "Invalid credentials"
 msgstr "Credenziali non valide"
 
-msgid "Invalid credentials."
-msgstr "Credenziali non valide."
-
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipo di dato non valido del timestamp: deve essere int o float."
 
@@ -25957,6 +25958,10 @@ msgstr "Identità non valida: %s"
 #, python-format
 msgid "Invalid key(s): %s"
 msgstr "Chiave(e) non valida(e): %s"
+
+#, fuzzy
+msgid "Invalid login"
+msgstr "Identità non valida"
 
 msgid "Invalid login credentials."
 msgstr "Credenziali di accesso non valide."
@@ -30675,6 +30680,10 @@ msgstr "Modo mancante o non valido. Sono ammessi \"agente\" e \"stato\"."
 msgid "Missing parameter \"%s\"."
 msgstr "Parametro mancante \"%s\"."
 
+#, fuzzy
+msgid "Missing password"
+msgstr "Rilegare la password"
+
 msgid "Missing prediction data."
 msgstr "Dati di previsione mancanti."
 
@@ -30709,6 +30718,10 @@ msgstr "Parametro spec mancante"
 
 msgid "Missing test host name"
 msgstr "Nome dell'host di prova mancante"
+
+#, fuzzy
+msgid "Missing username"
+msgstr "Nome host mancante"
 
 msgid "Missing variable siteid"
 msgstr "Variabile mancante siteid"
@@ -32293,9 +32306,6 @@ msgstr "Nessun nucleo di monitoraggio"
 msgid "No object type"
 msgstr "Nessun tipo di oggetto"
 
-msgid "No password given."
-msgstr "Nessuna password data."
-
 msgid "No pending changes"
 msgstr "Nessun cambiamento in sospeso"
 
@@ -32400,9 +32410,6 @@ msgstr ""
 "Nessun file non confezionato trovato. Se vuoi creare nuovi pacchetti di "
 "estensione allora devi creare i file sotto la directory <tt>%s/local</tt> "
 "della tua istanza di Check_MK."
-
-msgid "No username given."
-msgstr "Nessun nome utente indicato."
 
 msgid "No users are defined yet."
 msgstr "Nessun utente è ancora definito."
@@ -64868,6 +64875,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Invalid credentials."
+#~ msgstr "Credenziali non valide."
+
+#~ msgid "No password given."
+#~ msgstr "Nessuna password data."
+
+#~ msgid "No username given."
+#~ msgstr "Nessun nome utente indicato."
 
 #~ msgid "Could not find the requested crash %s on site %s"
 #~ msgstr "Impossibile trovare il crash richiesto %s sul sito %s"

@@ -14503,6 +14503,10 @@ msgstr ""
 msgid "Displays hosts and services producing the most notifications"
 msgstr "trimite notificare"
 
+#, fuzzy
+msgid "Displays inventory data of a Host."
+msgstr "O listă cu utilizatori specifici"
+
 msgid "Displays statistics about events as a hexagon and a table."
 msgstr ""
 
@@ -24375,9 +24379,6 @@ msgstr ""
 msgid "Invalid credentials"
 msgstr ""
 
-msgid "Invalid credentials."
-msgstr ""
-
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr ""
 
@@ -24452,6 +24453,10 @@ msgstr ""
 #, python-format
 msgid "Invalid key(s): %s"
 msgstr ""
+
+#, fuzzy
+msgid "Invalid login"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Invalid login credentials."
 msgstr ""
@@ -29356,6 +29361,10 @@ msgstr ""
 msgid "Missing parameter \"%s\"."
 msgstr ""
 
+#, fuzzy
+msgid "Missing password"
+msgstr "Parola"
+
 msgid "Missing prediction data."
 msgstr ""
 
@@ -29390,6 +29399,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Missing test host name"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Missing username"
 msgstr " pe siteul de monitorizare: "
 
 msgid "Missing variable siteid"
@@ -31057,9 +31070,6 @@ msgstr " pe siteul de monitorizare: "
 msgid "No object type"
 msgstr "Conexiune Noua"
 
-msgid "No password given."
-msgstr ""
-
 msgid "No pending changes"
 msgstr ""
 
@@ -31163,9 +31173,6 @@ msgid ""
 "No unpackaged files found. If you want to create new extension packages then "
 "you need to create files below the directory <tt>%s/local</tt> of your "
 "Check_MK instance."
-msgstr ""
-
-msgid "No username given."
 msgstr ""
 
 msgid "No users are defined yet."
@@ -62859,10 +62866,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Invalid bookmark id."
 #~ msgstr "Adaugă bookmark"
-
-#, fuzzy
-#~ msgid "Invalid hostname"
-#~ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 #~ msgid "Item (Used in service description)"

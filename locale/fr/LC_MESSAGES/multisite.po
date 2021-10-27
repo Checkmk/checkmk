@@ -15201,6 +15201,10 @@ msgid "Displays hosts and services producing the most notifications"
 msgstr "Affiche les hôtes et les services produisant le plus de notifications"
 
 #, fuzzy
+msgid "Displays inventory data of a Host."
+msgstr "Je n'ai trouvé aucune donnée d'inventaire pour cet hôte."
+
+#, fuzzy
 msgid "Displays statistics about events as a hexagon and a table."
 msgstr ""
 "Affiche les statistiques sur les états de service sous forme de globe et de "
@@ -26145,9 +26149,6 @@ msgstr "Hachage de configuration invalide"
 msgid "Invalid credentials"
 msgstr "Informations d'identification non valides"
 
-msgid "Invalid credentials."
-msgstr "Informations d'identification non valides."
-
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Type de données invalide pour le timestamp : doit être int ou float."
 
@@ -26227,6 +26228,10 @@ msgstr "Identifiant non valide : %s"
 #, python-format
 msgid "Invalid key(s): %s"
 msgstr "Clé(s) invalide(s) : %s"
+
+#, fuzzy
+msgid "Invalid login"
+msgstr "Identité non valide"
 
 msgid "Invalid login credentials."
 msgstr "Identifiants de connexion non valides."
@@ -30981,6 +30986,10 @@ msgstr ""
 msgid "Missing parameter \"%s\"."
 msgstr "Paramètre \"%s\" manquant."
 
+#, fuzzy
+msgid "Missing password"
+msgstr "Lier le mot de passe"
+
 msgid "Missing prediction data."
 msgstr "Données de prédiction manquantes."
 
@@ -31015,6 +31024,10 @@ msgstr "Paramètre de spécification manquant"
 
 msgid "Missing test host name"
 msgstr "Nom d'hôte de test manquant"
+
+#, fuzzy
+msgid "Missing username"
+msgstr "Nom d'hôte manquant"
 
 msgid "Missing variable siteid"
 msgstr "Variable manquante siteid"
@@ -32607,9 +32620,6 @@ msgstr "Pas de noyau de surveillance"
 msgid "No object type"
 msgstr "Aucun type d'objet"
 
-msgid "No password given."
-msgstr "Aucun mot de passe n'est donné."
-
 msgid "No pending changes"
 msgstr "Aucun changement en cours"
 
@@ -32714,9 +32724,6 @@ msgstr ""
 "Aucun fichier non emballé trouvé. Si vous voulez créer de nouveaux paquets "
 "d'extension, vous devez créer des fichiers sous le répertoire <tt>%s/local</"
 "tt> de votre instance Check_MK."
-
-msgid "No username given."
-msgstr "Aucun nom d'utilisateur n'est donné."
 
 msgid "No users are defined yet."
 msgstr "Aucun utilisateur n'est encore défini."
@@ -65582,6 +65589,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Invalid credentials."
+#~ msgstr "Informations d'identification non valides."
+
+#~ msgid "No password given."
+#~ msgstr "Aucun mot de passe n'est donné."
+
+#~ msgid "No username given."
+#~ msgstr "Aucun nom d'utilisateur n'est donné."
 
 #~ msgid "Could not find the requested crash %s on site %s"
 #~ msgstr "Impossible de trouver le crash %s demandé sur le site %s"

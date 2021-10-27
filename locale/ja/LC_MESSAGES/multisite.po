@@ -14495,6 +14495,10 @@ msgid "Displays hosts and services producing the most notifications"
 msgstr "最も多くの通知を生成するホストとサービスを表示します"
 
 #, fuzzy
+msgid "Displays inventory data of a Host."
+msgstr "このホストのインベントリデータが見つかりませんでした。"
+
+#, fuzzy
 msgid "Displays statistics about events as a hexagon and a table."
 msgstr "サービス状態に関する統計をグローブとテーブルとして表示します"
 
@@ -24848,9 +24852,6 @@ msgstr "無効な構成ハッシュ"
 msgid "Invalid credentials"
 msgstr "無効な資格情報"
 
-msgid "Invalid credentials."
-msgstr "無効な資格情報"
-
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr ""
 "タイムスタンプのデータ型が無効です:intまたはfloatである必要があります。"
@@ -24925,6 +24926,10 @@ msgstr "無効なID: %s"
 #, python-format
 msgid "Invalid key(s): %s"
 msgstr "無効なキー: %s"
+
+#, fuzzy
+msgid "Invalid login"
+msgstr "無効なID"
 
 msgid "Invalid login credentials."
 msgstr "ログイン資格情報が無効です。"
@@ -29529,6 +29534,10 @@ msgstr ""
 msgid "Missing parameter \"%s\"."
 msgstr "パラメータ \"%s\" がありません"
 
+#, fuzzy
+msgid "Missing password"
+msgstr "バインドパスワード"
+
 msgid "Missing prediction data."
 msgstr "予測データがありません。"
 
@@ -29563,6 +29572,10 @@ msgstr "スペックパラメータがありません"
 
 msgid "Missing test host name"
 msgstr "テストホスト名がありません"
+
+#, fuzzy
+msgid "Missing username"
+msgstr "ホスト名がありません"
 
 msgid "Missing variable siteid"
 msgstr "変数siteidがありません"
@@ -31131,9 +31144,6 @@ msgstr "モニタリングコアなし"
 msgid "No object type"
 msgstr "オブジェクトタイプなし"
 
-msgid "No password given."
-msgstr "パスワードが指定されていません。"
-
 msgid "No pending changes"
 msgstr "保留中の変更はありません"
 
@@ -31236,9 +31246,6 @@ msgstr ""
 "パッケージ化されていないファイルが見つかりません。新しい拡張パッケージを作成"
 "する場合は、Check_MKインスタンスのディレクトリ<tt>%s/local </tt>の下にファイ"
 "ルを作成する必要があります。"
-
-msgid "No username given."
-msgstr "ユーザー名が指定されていません。"
 
 msgid "No users are defined yet."
 msgstr "ユーザーはまだ定義されていません。"
@@ -61799,6 +61806,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Invalid credentials."
+#~ msgstr "無効な資格情報"
+
+#~ msgid "No password given."
+#~ msgstr "パスワードが指定されていません。"
+
+#~ msgid "No username given."
+#~ msgstr "ユーザー名が指定されていません。"
 
 #~ msgid "Could not find the requested crash %s on site %s"
 #~ msgstr "サイト%sで要求されたクラッシュ%sが見つかりませんでした"

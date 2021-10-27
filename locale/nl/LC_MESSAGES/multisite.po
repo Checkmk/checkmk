@@ -15013,6 +15013,10 @@ msgid "Displays hosts and services producing the most notifications"
 msgstr "Toont hosts en diensten die de meeste meldingen produceren"
 
 #, fuzzy
+msgid "Displays inventory data of a Host."
+msgstr "Geen inventarisgegevens gevonden voor deze host."
+
+#, fuzzy
 msgid "Displays statistics about events as a hexagon and a table."
 msgstr ""
 "Toont statistieken over service toestanden als een wereldbol en een tabel."
@@ -25821,9 +25825,6 @@ msgstr "Ongeldige configuratie hash"
 msgid "Invalid credentials"
 msgstr "Ongeldige inloggegevens"
 
-msgid "Invalid credentials."
-msgstr "Ongeldige inloggegevens."
-
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ongeldig datatype van timestamp: moet int of float zijn."
 
@@ -25899,6 +25900,10 @@ msgstr "Ongeldige ident: %s"
 #, python-format
 msgid "Invalid key(s): %s"
 msgstr "Ongeldige sleutel(s): %s"
+
+#, fuzzy
+msgid "Invalid login"
+msgstr "Ongeldige ident"
 
 msgid "Invalid login credentials."
 msgstr "Ongeldige inloggegevens."
@@ -30607,6 +30612,10 @@ msgstr "Ontbrekende of ongeldige modus. Toegestaan zijn 'agent' en 'status'."
 msgid "Missing parameter \"%s\"."
 msgstr "Ontbrekende parameter \"%s\"."
 
+#, fuzzy
+msgid "Missing password"
+msgstr "Bind wachtwoord"
+
 msgid "Missing prediction data."
 msgstr "Ontbrekende voorspellingsgegevens."
 
@@ -30641,6 +30650,10 @@ msgstr "Ontbrekende spec parameter"
 
 msgid "Missing test host name"
 msgstr "Ontbrekende test host naam"
+
+#, fuzzy
+msgid "Missing username"
+msgstr "Ontbrekende hostnaam"
 
 msgid "Missing variable siteid"
 msgstr "Ontbrekende variabele siteid"
@@ -32215,9 +32228,6 @@ msgstr "Geen bewakingskern"
 msgid "No object type"
 msgstr "Geen objecttype"
 
-msgid "No password given."
-msgstr "Geen wachtwoord gegeven."
-
 msgid "No pending changes"
 msgstr "Geen hangende wijzigingen"
 
@@ -32322,9 +32332,6 @@ msgstr ""
 "Geen uitgepakte bestanden gevonden. Als u nieuwe uitbreidingspakketten wilt "
 "aanmaken, moet u bestanden aanmaken onder de directory <tt>%s/local</tt> van "
 "uw Check_MK instantie."
-
-msgid "No username given."
-msgstr "Geen gebruikersnaam gegeven."
 
 msgid "No users are defined yet."
 msgstr "Er zijn nog geen gebruikers gedefinieerd."
@@ -64731,6 +64738,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Invalid credentials."
+#~ msgstr "Ongeldige inloggegevens."
+
+#~ msgid "No password given."
+#~ msgstr "Geen wachtwoord gegeven."
+
+#~ msgid "No username given."
+#~ msgstr "Geen gebruikersnaam gegeven."
 
 #~ msgid "Could not find the requested crash %s on site %s"
 #~ msgstr "Kon de gevraagde crash %s niet vinden op site %s"

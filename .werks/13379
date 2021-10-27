@@ -1,0 +1,12 @@
+Title: Fix sorting of "Top alerters" dashlet
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1635329415
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p14
+
+From now on, the "Top alerters (last 7 days)" dashlet will be sorted by number
+of problems.

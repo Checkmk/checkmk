@@ -8,10 +8,14 @@ import json
 
 import pytest
 
+from cmk.utils import version
+
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @pytest.mark.usefixtures("with_host")
@@ -809,6 +813,7 @@ def test_openapi_host_update_invalid(
     )
 
 
+@managedtest
 def test_openapi_create_host_with_contact_group(
     wsgi_app,
     with_automation_user,

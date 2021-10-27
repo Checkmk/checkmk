@@ -605,8 +605,6 @@ class CEESiteManagement(SiteManagement):
                 "socket": siteconf["socket"],
             }
 
-            conf[siteid]["connect_timeout"] = siteconf.get("timeout", 2)
-
             if "tcp" in proxy_params:
                 conf[siteid]["tcp"] = proxy_params["tcp"]
 

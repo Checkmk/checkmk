@@ -425,7 +425,7 @@ def collection_property(
         ...     _base = '/objects/host_config/example.com'
         ...     _hosts = [{'name': 'host1'}, {'name': 'host2'}]
         ...     collection_property('hosts', _hosts, _base)
-        {'id': 'hosts', 'memberType': 'property', 'value': [{'name': 'host1'}, {'name': 'host2'}], \
+        {'id': 'hosts', 'memberType': 'collection', 'value': [{'name': 'host1'}, {'name': 'host2'}], \
 'links': [{'rel': 'self', \
 'href': 'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/collections/hosts', \
 'method': 'GET', 'type': 'application/json', 'domainType': 'link'}]}
@@ -435,7 +435,7 @@ def collection_property(
     """
     return {
         "id": name,
-        "memberType": "property",
+        "memberType": "collection",
         "value": value,
         "links": [link_rel(rel="self", href=base.rstrip("/") + f"/collections/{name}")],
     }

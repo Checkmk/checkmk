@@ -1,0 +1,43 @@
+Title: REST API change memberType of collection properties
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1635320280
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The memberType attribute on "collection properties" on "domain objects" is
+now (as expected) "collection" and not "property" as before.
+
+You may have to change your scripts if you rely on data in a "collection property".
+
+The affected endpoints are:
+
+ * Activate changes:
+    - list activations
+ * BI:
+    - get BI packs
+ * Folder:
+    - all folder collections with hosts
+ * Host Tag Group:
+    - list host tag groups
+ * Password:
+    - list passwords
+ * Time Periods:
+    - list time periods
+ * User Config:
+    - list users
+ * Contactgroups:
+    - bulk create contact groups
+    - bulk update contact groups
+    - list contact groups
+ * Hostgroups:
+    - bulk create host groups
+    - bulk update host groups
+    - list host groups
+ * Servicegroups:
+    - bulk create service groups
+    - bulk update service groups
+    - list service groups

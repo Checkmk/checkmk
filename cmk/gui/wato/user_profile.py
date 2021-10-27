@@ -75,7 +75,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
     quick_items = [
         TopicMenuItem(
             name="ui_theme",
-            title=_("Interface theme"),
+            title=_("Color theme"),
             url='javascript:cmk.sidebar.toggle_user_attribute("ajax_ui_theme.py")',
             target="",
             sort_index=10,
@@ -95,24 +95,24 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
 
     items = [
         TopicMenuItem(
-            name="change_password",
-            title=_("Change password"),
-            url="user_change_pw.py",
-            sort_index=10,
-            icon="topic_change_password",
-        ),
-        TopicMenuItem(
             name="user_profile",
             title=_("Edit profile"),
             url="user_profile.py",
-            sort_index=20,
+            sort_index=10,
             icon="topic_profile",
+        ),
+        TopicMenuItem(
+            name="change_password",
+            title=_("Change password"),
+            url="user_change_pw.py",
+            sort_index=30,
+            icon="topic_change_password",
         ),
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",
-            sort_index=30,
+            sort_index=40,
             icon="sidebar_logout",
         ),
     ]
@@ -124,7 +124,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
                 name="notification_rules",
                 title=_("Notification rules"),
                 url="wato.py?mode=user_notifications_p",
-                sort_index=30,
+                sort_index=20,
                 icon="topic_events",
             ),
         )
@@ -132,14 +132,13 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
     return [
         TopicMenuTopic(
             name="user",
-            title=_("Quick toggle"),
-            # TODO(rb): set correct icon
-            icon="topic_profile",
+            title=_("User interface"),
+            icon="topic_user_interface",
             items=quick_items,
         ),
         TopicMenuTopic(
             name="user",
-            title=_("Profile"),
+            title=_("User profile"),
             icon="topic_profile",
             items=items,
         ),

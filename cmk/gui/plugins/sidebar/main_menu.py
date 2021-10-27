@@ -229,7 +229,7 @@ class MegaMenuRenderer:
 
     def _show_items(self, topic_id: str, topic: TopicMenuTopic) -> None:
         html.open_ul()
-        for item in topic.items:
+        for item in sorted(topic.items, key=lambda g: g.sort_index):
             self._show_item(item)
         html.open_li(class_="show_all_items")
         html.open_a(href="", onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)

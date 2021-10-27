@@ -39,3 +39,9 @@ class ContainerCount(BaseModel):
     running: int = 0
     waiting: int = 0
     terminated: int = 0
+
+
+class CpuUsage(BaseModel):
+    """section: k8s_live_cpu_usage_v1"""
+
+    cpu_usage_total: int

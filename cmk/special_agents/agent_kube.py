@@ -312,16 +312,25 @@ def filter_outdated_pods(
 
 
 def pod_checkmk_sections(containers: List[LiveContainer]) -> None:
-    included_metrics = ["cpu_usage_total"]
-    for metric_name in included_metrics:
-        with SectionWriter(f"k8s_live_{metric_name}") as writer:
-            writer.append_json(
-                {
-                    container.name: container.metrics[MetricName(metric_name)]
-                    for container in containers
-                    if metric_name in container.metrics
-                }
-            )
+    sections = [
+        ("cpu_usage_total", section.CpuUsage, ("cpu_usage_total")),  # TODO: adjust check section
+    ]
+    for section_name, section_model, metrics in sections:
+        with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
+            containers_sections = {}
+            for container in containers:
+                try:
+                    containers_sections[container.name] = section_model(
+                        **{
+                            metric: container.metrics[MetricName(metric)]
+                            for metric in metrics
+                            if metric in container.metrics
+                        }
+                    ).json()
+                except ValueError:  # TODO: decide if additional conditions are necessary
+                    continue
+
+            writer.append(containers_sections)
 
 
 class SetupError(Exception):

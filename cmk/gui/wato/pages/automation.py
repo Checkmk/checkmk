@@ -7,6 +7,7 @@
 automation functions on slaves,"""
 
 import traceback
+from contextlib import nullcontext
 from typing import Iterable
 
 import cmk.utils.paths
@@ -158,19 +159,26 @@ class ModeAutomation(AjaxPage):
         # the normal WATO page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
-        with store.lock_checkmk_configuration():
-            # TODO: Refactor these two calls to also use the automation_command_registry
-            if self._command == "checkmk-automation":
-                self._execute_cmk_automation()
-                return
-            if self._command == "push-profile":
-                self._execute_push_profile()
-                return
-            try:
-                automation_command = watolib.automation_command_registry[self._command]
-            except KeyError:
-                raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
-            self._execute_automation_command(automation_command)
+        lock_config = not (
+            self._command == "checkmk-automation"
+            and request.get_str_input_mandatory("automation") == "active-check"
+        )
+        with store.lock_checkmk_configuration() if lock_config else nullcontext():
+            self._execute_automation()
+
+    def _execute_automation(self):
+        # TODO: Refactor these two calls to also use the automation_command_registry
+        if self._command == "checkmk-automation":
+            self._execute_cmk_automation()
+            return
+        if self._command == "push-profile":
+            self._execute_push_profile()
+            return
+        try:
+            automation_command = watolib.automation_command_registry[self._command]
+        except KeyError:
+            raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
+        self._execute_automation_command(automation_command)
 
     @staticmethod
     def _format_cmk_automation_result(

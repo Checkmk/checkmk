@@ -14,7 +14,6 @@ from itertools import chain
 from typing import (
     Any,
     Callable,
-    cast,
     Container,
     Dict,
     Iterable,
@@ -48,8 +47,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.views import data_source_registry, DataSourceLivestatus
-from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers, get_only_sites_from_context
+from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
@@ -69,7 +67,6 @@ from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
 )
-from cmk.gui.visuals import collect_filters
 
 LegacyPerfometer = Tuple[str, Any]
 Atom = TypeVar("Atom")
@@ -1245,17 +1242,10 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def find_metrics_of_query_bare(context: VisualContext) -> List[Dict[str, Any]]:
-    datasource = cast(DataSourceLivestatus, data_source_registry["services"]())
-    filters = collect_filters(datasource.infos)
-    filterheaders = "".join(get_livestatus_filter_headers(context, filters))
-    selected_sites = get_only_sites_from_context(context)
-
-    # optimization: avoid query with unconstrained result
-    if not filterheaders and not selected_sites:
-        return []
-    #
-    # Also fetch host data with the *same* query. This saves one round trip. And head
+def find_metrics_of_query(
+    context: VisualContext,
+) -> Iterator[Tuple[ServiceName, str, Tuple[_MetricName, ...]]]:
+    # Fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
     columns = [
         "service_description",
@@ -1265,19 +1255,9 @@ def find_metrics_of_query_bare(context: VisualContext) -> List[Dict[str, Any]]:
         "host_check_command",
         "host_metrics",
     ]
-    with sites.only_sites(selected_sites), sites.prepend_site():
-        data = sites.live().query(
-            "GET services\n" + "Columns: %s\n" % " ".join(columns) + filterheaders
-        )
-        res_columns = ["site"] + columns
-        return [dict(zip(res_columns, row)) for row in data]
 
-
-def find_metrics_of_query(
-    context: VisualContext,
-) -> Iterator[Tuple[ServiceName, str, Tuple[_MetricName, ...]]]:
     row = {}
-    for row in find_metrics_of_query_bare(context):
+    for row in livestatus_query_bare(context, columns):
         parsed_perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"]
         )

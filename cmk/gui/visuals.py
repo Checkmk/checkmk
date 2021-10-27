@@ -15,9 +15,7 @@ from itertools import chain, starmap
 from typing import (
     Any,
     Callable,
-    Container,
     Dict,
-    Iterable,
     Iterator,
     List,
     Literal,
@@ -63,6 +61,7 @@ from cmk.gui.permissions import declare_permission, permission_registry
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
     active_filter_flag,
+    collect_filters,
     Filter,
     filter_registry,
     filters_allowed_for_info,
@@ -1526,12 +1525,6 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 def get_filter_headers(table, infos, context: VisualContext):
     filter_headers = "".join(get_livestatus_filter_headers(context, collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
-
-
-def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
-    for filter_obj in filter_registry.values():
-        if filter_obj.info in info_keys and filter_obj.available():
-            yield filter_obj
 
 
 # .

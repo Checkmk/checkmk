@@ -37,9 +37,9 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
-from cmk.gui.plugins.metrics.utils import find_metrics_of_query_bare, keep_sorted_match
+from cmk.gui.plugins.metrics.utils import keep_sorted_match
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
+from cmk.gui.plugins.visuals.utils import get_only_sites_from_context, livestatus_query_bare
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
 from cmk.gui.valuespec import (
     autocompleter_registry,
@@ -157,10 +157,16 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             )
 
         else:
+            columns = [
+                "service_check_command",
+                "service_perf_data",
+                "service_metrics",
+            ]
+
             choices = set(
                 chain.from_iterable(
                     cls._graph_choices_from_livestatus_row(row)
-                    for row in find_metrics_of_query_bare(params["context"])
+                    for row in livestatus_query_bare(params["context"], columns)
                 )
             )
 

@@ -10,7 +10,21 @@
 import abc
 import time
 from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from livestatus import SiteId
 
@@ -615,3 +629,31 @@ def get_livestatus_filter_headers(
                 yield header
         except MKUserError as e:
             user_errors.add(e)
+
+
+def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
+    for filter_obj in filter_registry.values():
+        if filter_obj.info in info_keys and filter_obj.available():
+            yield filter_obj
+
+
+def livestatus_query_bare(
+    context: VisualContext, columns: List[str], cache: Optional[Literal["reload"]] = None
+) -> List[Dict[str, Any]]:
+    """Return for the service table filtered by context the given columns.
+    Optional cache reload. Return with site info in"""
+    filters = collect_filters(["host", "service"])
+    filterheaders = "".join(get_livestatus_filter_headers(context, filters))
+    selected_sites = get_only_sites_from_context(context)
+
+    # optimization: avoid query with unconstrained result
+    if not filterheaders and not selected_sites:
+        return []
+    query = ["GET services", "Columns: %s" % " ".join(columns), filterheaders]
+    if cache:
+        query.insert(1, f"Cache: {cache}")
+
+    with sites.only_sites(selected_sites), sites.prepend_site():
+        data = sites.live().query("\n".join(query))
+        res_columns = ["site"] + columns
+        return [dict(zip(res_columns, row)) for row in data]

@@ -114,7 +114,8 @@ def list_host_tag_groups(params):
         "value": [
             constructors.collection_item(
                 domain_type="host_tag_group",
-                obj={"title": tag_group_obj.title, "id": tag_group_obj.id},
+                title=tag_group_obj.title,
+                identifier=tag_group_obj.id,
             )
             for tag_group_obj in tag_config.get_tag_groups()
         ],

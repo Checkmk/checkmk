@@ -148,10 +148,8 @@ def list_passwords(params):
         "value": [
             constructors.collection_item(
                 domain_type="password",
-                obj={
-                    "title": details["title"],
-                    "id": password_id,
-                },
+                title=details["title"],
+                identifier=password_id,
             )
             for password_id, details in load_passwords().items()
         ],

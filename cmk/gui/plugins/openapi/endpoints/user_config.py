@@ -62,7 +62,8 @@ def list_users(params):
         "value": [
             constructors.collection_item(
                 domain_type="user_config",
-                obj={"title": attrs["alias"], "id": user_id},
+                title=attrs["alias"],
+                identifier=user_id,
             )
             for user_id, attrs in userdb.load_users(False).items()
         ],

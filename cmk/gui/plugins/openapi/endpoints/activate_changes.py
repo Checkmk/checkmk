@@ -181,10 +181,8 @@ def list_activations(params):
         activations.append(
             constructors.collection_item(
                 domain_type="activation_run",
-                obj={
-                    "id": activation_id,
-                    "title": change["_comment"],
-                },
+                identifier=activation_id,
+                title=change["_comment"],
             )
         )
 

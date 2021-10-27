@@ -56,10 +56,8 @@ def serialize_group_list(
         value=[
             constructors.collection_item(
                 domain_type=domain_type,
-                obj={
-                    "title": group["alias"],
-                    "id": group["id"],
-                },
+                title=group["alias"],
+                identifier=group["id"],
             )
             for group in collection
         ],

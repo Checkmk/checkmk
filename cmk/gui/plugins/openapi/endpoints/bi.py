@@ -310,10 +310,8 @@ def get_bi_packs(params):
     packs = [
         constructors.collection_item(
             domain_type="bi_pack",
-            obj={
-                "id": pack.id,
-                "title": pack.title,
-            },
+            identifier=pack.id,
+            title=pack.title,
         )
         for pack in bi_packs.packs.values()
     ]

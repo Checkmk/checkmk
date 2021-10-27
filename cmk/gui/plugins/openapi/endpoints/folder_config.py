@@ -314,8 +314,12 @@ def _folders_collection(
                 name="hosts",
                 domain_type="folder_config",
                 entries=[
-                    constructors.collection_item("host_config", {"title": host, "id": host})
-                    for host in folder.hosts()
+                    constructors.collection_item(
+                        "host_config",
+                        title=host_name,
+                        identifier=host_name,
+                    )
+                    for host_name in folder.hosts()
                 ],
                 base="",
             )
@@ -410,10 +414,8 @@ def _serialize_folder(folder: CREFolder, show_hosts):
             value=[
                 constructors.collection_item(
                     domain_type="host_config",
-                    obj={
-                        "id": host.id(),
-                        "title": host.name(),
-                    },
+                    identifier=host.id(),
+                    title=host.name(),
                 )
                 for host in folder.hosts().values()
             ],

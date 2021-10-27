@@ -36,11 +36,11 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
 	test-format-js test-format-js-docker test-format-css test-format-css-docker \
-	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
-	test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
-	test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
+	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker \
+	test-integration test-integration-docker test-integration-docker-debug \
+	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
-	test-unit-sh test-unit-sh-docker \
+	test-unit-sh test-unit-sh-docker test-shellcheck \
 	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker \
 	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker
@@ -68,6 +68,8 @@ help:
 	@echo "test-format-css-docker              - Run the CSS formatting in docker"
 	@echo "test-gui-crawl                      - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
+	@echo "test-xss-crawl                      - Run XSS crawl locally"
+	@echo "test-xss-crawl-docker               - Run XSS crawl in container"
 	@echo "test-integration                    - Run integration tests locally"
 	@echo "test-integration-docker             - Run integration tests in container"
 	@echo "test-integration-docker-debug       - Run test container for manual debugging"
@@ -220,6 +222,12 @@ test-gui-crawl: prepare-node-modules prepare-playwright
 
 test-gui-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
+
+test-xss-crawl: prepare-node-modules prepare-playwright
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
+
+test-xss-crawl-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-xss-crawl"
 
 test-integration: prepare-node-modules
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)

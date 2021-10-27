@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.routing import Map, Rule, Submount
 
 from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
@@ -19,8 +20,10 @@ def create_url_map(debug=False):
         Rule("/form.py", endpoint=test_formdata),
     ]
 
-    cmk_app = CheckmkApp(debug=debug)
-    api_app = CheckmkRESTAPI(debug=debug).wsgi_app
+    # Fix wsgi.url_scheme with werkzeug.middleware.proxy_fix.ProxyFix
+    # would be always http instead
+    cmk_app = ProxyFix(CheckmkApp(debug=debug))
+    api_app = ProxyFix(CheckmkRESTAPI(debug=debug).wsgi_app)
 
     return Map(
         [

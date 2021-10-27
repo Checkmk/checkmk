@@ -31,7 +31,6 @@ OS_PACKAGES    += rsync
 OS_PACKAGES    += smbclient
 OS_PACKAGES    += rpcbind # otherwise missing path in util.pm
 OS_PACKAGES    += unzip
-OS_PACKAGES    += xinetd
 OS_PACKAGES    += freeradius-utils
 #
 # Checkmk build specific packages below

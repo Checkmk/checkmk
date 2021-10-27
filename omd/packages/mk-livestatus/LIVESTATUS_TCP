@@ -14,6 +14,11 @@
 )
 USE_XINETD=$?
 
+if [ $USE_XINETD = 1 ] && ! command -v xinetd > /dev/null; then
+    echo "This feature requires either xinetd or systemd >= 235"
+    exit 1
+fi
+
 case "$1" in
     default)
         echo "off"

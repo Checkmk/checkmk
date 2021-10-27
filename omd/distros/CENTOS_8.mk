@@ -27,7 +27,6 @@ OS_PACKAGES      += php-json
 OS_PACKAGES      += readline
 OS_PACKAGES      += rsync
 OS_PACKAGES      += uuid
-OS_PACKAGES      += xinetd
 OS_PACKAGES      += cronie
 OS_PACKAGES      += freeradius-utils
 OS_PACKAGES      += libpcap # needed for ICMP of CMC

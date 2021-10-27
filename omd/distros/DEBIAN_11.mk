@@ -33,7 +33,6 @@ OS_PACKAGES      += smbclient
 OS_PACKAGES      += rpcbind
 OS_PACKAGES      += lcab # needed for creating MSI packages
 OS_PACKAGES      += unzip
-OS_PACKAGES      += xinetd
 OS_PACKAGES      += libfreeradius3
 OS_PACKAGES      += libpcap0.8 # needed for cmc
 OS_PACKAGES      += libgsf-1-114 # needed by msitools/Agent Bakery

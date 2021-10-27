@@ -10,7 +10,7 @@ def check_dns_arguments(params):
     args = ["-H", description]
 
     if "server" in settings:
-        if settings["server"] is not None:
+        if settings["server"] not in {None, "default DNS server"}:
             args += ["-s", settings["server"]]
     else:
         args += ["-s", "$HOSTADDRESS$"]

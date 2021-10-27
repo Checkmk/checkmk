@@ -524,6 +524,9 @@ def _valuespec_active_checks_dns():
                                  title=_("Specify DNS Server"),
                                  allow_empty=False,
                                  help=_("Optional DNS server you want to use for the lookup")),
+                             FixedValue(value="default DNS server",
+                                        totext=_("default DNS server"),
+                                        title=_("Use default DNS server")),
                          ])),
                     ("expect_all_addresses",
                      DropdownChoice(

@@ -951,6 +951,16 @@ class LDAPUserConnector(UserConnector):
             # here which seemed to be a performance problem. Resolving the nesting involves more single
             # queries but performs much better.
             for dn, cn in matched_groups.items():
+                # Avoid double escaping:
+                # self._ldap_search escapes the 'dn' but here we've got already escaped 'dn', ie.
+                # >>> s = u'cn=#my cn,ou=my_groups,ou=my_u,dc=my_dc,dc=my_dc'
+                # >>> s = s.replace("#", r"\#")
+                # u'cn=\\#my cn,ou=my_groups,ou=my_u,dc=my_dc,dc=my_dc'
+                # >>> s = s.replace("#", r"\#")
+                # u'cn=\\\\#my cn,ou=my_groups,ou=my_u,dc=my_dc,dc=my_dc'
+                # => Results in 'No such object'
+                dn = _unescape_dn(dn)
+
                 # Try to get members from group cache
                 try:
                     groups[dn] = self._group_cache[True][dn]

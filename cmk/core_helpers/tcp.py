@@ -116,24 +116,23 @@ class TCPFetcher(AgentFetcher):
 
     def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")
-        if not self._socket:
-            return AgentRawData(b"")
+        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL))
 
-        def recvall(sock: socket.socket) -> bytes:
-            buffer: List[bytes] = []
+    @staticmethod
+    def _recvall(sock: socket.socket, flags: int = 0) -> bytes:
+        buffer: List[bytes] = []
+        try:
             while True:
-                data = sock.recv(4096, socket.MSG_WAITALL)
+                data = sock.recv(4096, flags)
                 if not data:
                     break
                 buffer.append(data)
-            return b"".join(buffer)
-
-        try:
-            return AgentRawData(recvall(self._socket))
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise
             raise MKFetcherError("Communication failed: %s" % e)
+
+        return b"".join(buffer)
 
     def _decrypt(self, output: AgentRawData) -> AgentRawData:
         if not output:

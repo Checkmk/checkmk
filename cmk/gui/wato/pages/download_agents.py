@@ -7,7 +7,6 @@
 
 import abc
 import fnmatch
-import glob
 import os
 from typing import Iterator, List, Optional
 
@@ -28,6 +27,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato import folder_preserving_link, mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils import agent
 
 
 class ABCModeDownloadAgents(WatoMode):
@@ -230,7 +230,7 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
         return _("Windows files")
 
     def _packed_agents(self):
-        return glob.glob(cmk.utils.paths.agents_dir + "/windows/c*.msi")
+        return [agent.packed_agent_path_windows_msi()]
 
     def _walk_base_dir(self):
         return cmk.utils.paths.agents_dir + "/windows"
@@ -246,9 +246,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
         return _("Linux, Solaris, AIX files")
 
     def _packed_agents(self):
-        return glob.glob(cmk.utils.paths.agents_dir + "/*.deb") + glob.glob(
-            cmk.utils.paths.agents_dir + "/*.rpm"
-        )
+        return [agent.packed_agent_path_linux_deb(), agent.packed_agent_path_linux_rpm()]
 
     def _walk_base_dir(self):
         return cmk.utils.paths.agents_dir

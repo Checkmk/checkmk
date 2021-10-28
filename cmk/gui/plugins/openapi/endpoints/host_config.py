@@ -42,6 +42,9 @@ import itertools
 import json
 import operator
 from typing import Any, Dict, Iterable, List
+from urllib.parse import urlencode
+
+import cmk.utils.version as cmk_version
 
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import fields, watolib
@@ -449,6 +452,24 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
         "is_offline": host.is_offline(),
         "cluster_nodes": host.cluster_nodes(),
     }
+
+    agent_links = []
+    if not cmk_version.is_raw_edition():
+        from cmk.gui.cee.agent_bakery import agent_package_types
+
+        for agent_type in sorted(agent_package_types().keys()):
+            agent_links.append(
+                constructors.link_rel(
+                    rel="cmk/download",
+                    href="{}?{}".format(
+                        constructors.domain_type_action_href("agent", "download"),
+                        urlencode({"os_type": agent_type, "host_name": host.id()}),
+                    ),
+                    method="get",
+                    title=f"Download the {agent_type} agent of the host.",
+                )
+            )
+
     return constructors.domain_object(
         domain_type="host_config",
         identifier=host.id(),
@@ -460,7 +481,8 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
                 method="get",
                 title="The folder config of the host.",
             ),
-        ],
+        ]
+        + agent_links,
         extensions=extensions,
     )
 

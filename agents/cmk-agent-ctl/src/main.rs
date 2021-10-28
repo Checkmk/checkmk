@@ -36,13 +36,14 @@ fn register(config: config::Config, path_state: &Path) {
             Ok(data) => data,
             Err(error) => panic!("Error creating CSR: {}", error),
         };
-        let certificate = match marcv_api::register(&marcv_address, csr) {
-            Ok(cert) => cert,
-            Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
-        };
+        let certificate =
+            // TODO: geht username and passsword from config
+            match marcv_api::register(&marcv_address, &root_cert, csr, "cmkadmin", "cmk") {
+                Ok(cert) => cert,
+                Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
+            };
 
-        let client_chain =
-            String::from_utf8(private_key).unwrap() + &String::from_utf8(certificate).unwrap();
+        let client_chain = String::from_utf8(private_key).unwrap() + &certificate;
 
         registration_state.add_server_spec(config::ServerSpec {
             marcv_address,

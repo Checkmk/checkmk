@@ -5,7 +5,7 @@
 use crate::certs;
 use crate::config::ServerSpec;
 use reqwest;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 
 #[derive(Deserialize)]
@@ -13,10 +13,37 @@ struct JSONResponse {
     message: String,
 }
 
-pub fn register(_server_address: &str, _csr: Vec<u8>) -> reqwest::Result<Vec<u8>> {
-    return Ok(Vec::from(
-        "-----BEGIN CERTIFICATE-----\ndummy\n-----END CERTIFICATE-----\n",
-    ));
+#[derive(Serialize)]
+struct CSRBody {
+    csr: String,
+}
+
+#[derive(Deserialize)]
+struct CSRResponse {
+    cert: String,
+}
+
+pub fn register(
+    server_address: &str,
+    root_cert: &str,
+    csr: Vec<u8>,
+    checkmk_user: &str,
+    checkmk_password: &str,
+) -> Result<String, Box<dyn Error>> {
+    Ok(
+        certs::client(None, Some(String::from(root_cert).into_bytes()))?
+            .post(format!("https://{}/csr", server_address))
+            .header(
+                "authentication",
+                format!("Bearer {} {}", checkmk_user, checkmk_password),
+            )
+            .json(&CSRBody {
+                csr: String::from_utf8(csr)?,
+            })
+            .send()?
+            .json::<CSRResponse>()?
+            .cert,
+    )
 }
 
 pub fn agent_data(

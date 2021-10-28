@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Alias: TCP port number for marcv server
+# Menu: Basic
+# Description:
+#  Configure the port on which marcv server
+#  will listen to requests.
+
+case "$1" in
+    default)
+        echo "8000"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    depends)
+        [ "$CONFIG_MARCV" = on ]
+    ;;
+esac

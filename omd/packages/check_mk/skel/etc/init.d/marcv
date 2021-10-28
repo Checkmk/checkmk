@@ -7,6 +7,11 @@ PIDFILE=$OMD_ROOT/tmp/run/marcv.pid
 PID=$(cat $PIDFILE 2>/dev/null)
 KEY_AND_CERT_FILE=$OMD_ROOT/etc/ssl/marcv_cert.pem
 
+. $OMD_ROOT/etc/omd/site.conf
+if [ "$CONFIG_MARCV" != on ] ; then
+    exit 5
+fi
+
 case "$1" in
 
     start)
@@ -19,7 +24,7 @@ case "$1" in
         if [ "$OMD_SITE" == "comp_remote" ]; then
             port=8001
         else
-            port=8000
+            port=$CONFIG_MARCV_PORT
         fi
 
         gunicorn -D -p $PIDFILE  \

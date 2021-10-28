@@ -281,6 +281,7 @@ def find_usages_of_contact_group(name: GroupName) -> List[Tuple[str, str]]:
     used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
     used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
+    used_in += _find_usages_of_contact_group_in_dashboards(name)
 
     return used_in
 
@@ -381,6 +382,32 @@ def _find_usages_of_contact_group_in_notification_rules(name: str) -> List[Tuple
                 )
                 used_in.append((title, "wato.py?mode=user_notifications&user=%s" % user_id))
 
+    return used_in
+
+
+def _find_usages_of_contact_group_in_dashboards(name: str) -> List[Tuple[str, str]]:
+    used_in: List[Tuple[str, str]] = []
+    # FIXME: This leads to a circular import otherwise.
+    from cmk.gui.plugins.dashboard.utils import get_all_dashboards
+
+    for (dashboard_owner, dashboard_name), board in get_all_dashboards().items():
+        public_value: Union[bool, Tuple[str, List[str]]] = board["public"]
+        if isinstance(public_value, tuple) and name in public_value[1]:
+            title = "%s: %s" % (_("Dashboard of user %s") % dashboard_owner, dashboard_name)
+            used_in.append(
+                (
+                    title,
+                    makeuri_contextless(
+                        request,
+                        [
+                            ("load_name", dashboard_name),
+                            ("mode", "edit"),
+                            ("owner", dashboard_owner),
+                        ],
+                        filename="edit_dashboard.py",
+                    ),
+                )
+            )
     return used_in
 
 

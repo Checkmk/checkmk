@@ -5185,9 +5185,10 @@ msgstr ""
 "Um identificador deve consistir apenas de letras, dígitos, traço e "
 "sublinhado e deve começar com uma letra ou sublinhado."
 
+#, fuzzy
 msgid ""
 "An identifier must only consist of letters, digits, dash, dot, at and "
-"underscore. But it must start with a letter or underscore."
+"underscore. But it must start with a digit, letter or underscore."
 msgstr ""
 "Um identificador deve consistir apenas em letras, dígitos, traço, ponto, at "
 "e underscore. Mas deve começar com uma letra ou um sublinhado."
@@ -25480,9 +25481,12 @@ msgstr "Instalar e ativar o serviço Systemd"
 msgid "Install and activate xinetd service"
 msgstr "Instalar e ativar o serviço xinetd"
 
-#, fuzzy
-msgid "Install only packages from trusted sources"
-msgstr "Instalar e ativar o serviço Systemd"
+msgid ""
+"Install only packages from trusted sources. Packages can potentially harm "
+"your Checkmk installation. It is recommended to use only packages from "
+"trusted sources.<br>Visit the <a href=\"https://exchange.checkmk.com/"
+"\">Checkmk Exchange<a>  for packages reviewed by Tribe 29."
+msgstr ""
 
 msgid "Install this package"
 msgstr "Instale este pacote"
@@ -34970,13 +34974,6 @@ msgstr "Arquivos empacotados"
 
 msgid "Packages"
 msgstr "Pacotes"
-
-msgid ""
-"Packages can potentially harm your Checkmk installation. It is recommended "
-"to use only packages from trusted sources.<br>Visit the <a href=\"https://"
-"exchange.checkmk.com/\">Checkmk Exchange<a>  for packages reviewed by Tribe "
-"29."
-msgstr ""
 
 msgid "Packet loss"
 msgstr "Perda de pacotes"
@@ -47242,6 +47239,12 @@ msgstr ""
 "ser dadas."
 
 #, python-format
+msgid ""
+"The central (Version: %s, Edition: %s) and remote site (Version: %s, "
+"Edition: %s) are not compatible"
+msgstr ""
+
+#, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
 msgstr "O caractere <tt>%s</tt> não é permitido aqui."
 
@@ -56042,6 +56045,10 @@ msgstr ""
 msgid "Unable to parse provided data: %s"
 msgstr "Incapacidade de analisar os dados fornecidos: %s"
 
+#, fuzzy, python-format
+msgid "Unable to parse version: %r"
+msgstr "Impossível carregar o ícone: %s"
+
 #, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
@@ -62584,6 +62591,12 @@ msgstr "As suas %s foram eliminadas."
 msgid "Your %s has been saved."
 msgstr "As suas %s foram salvas."
 
+#, fuzzy, python-format
+msgid ""
+"Your central site (Version: %s, Edition: %s) is incompatible with this "
+"remote site (Version: %s, Edition: %s)"
+msgstr "Você não está logado no site remoto."
+
 #, fuzzy
 msgid "Your central site is incompatible with this remote site"
 msgstr "Você não está logado no site remoto."
@@ -64687,6 +64700,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Install and activate systemd service"
+#~ msgid "Install only packages from trusted sources"
+#~ msgstr "Instalar e ativar o serviço Systemd"
 
 #~ msgid "Invalid credentials."
 #~ msgstr "Credenciais inválidas."

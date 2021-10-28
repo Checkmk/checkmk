@@ -7,7 +7,6 @@
 
 import os
 import abc
-import glob
 import fnmatch
 from typing import List, Iterator, Optional
 
@@ -33,6 +32,7 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     folder_preserving_link,
 )
+from cmk.gui.utils import agent
 
 
 class ABCModeDownloadAgents(WatoMode):
@@ -88,7 +88,7 @@ class ABCModeDownloadAgents(WatoMode):
             )
 
     @abc.abstractmethod
-    def _packed_agents(self):
+    def _packed_agents(self) -> List[str]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -194,7 +194,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     def title(self) -> str:
         return _("Other operating systems")
 
-    def _packed_agents(self):
+    def _packed_agents(self) -> List[str]:
         return []
 
     def _walk_base_dir(self):
@@ -231,8 +231,8 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
     def title(self) -> str:
         return _("Windows files")
 
-    def _packed_agents(self):
-        return glob.glob(cmk.utils.paths.agents_dir + "/windows/c*.msi")
+    def _packed_agents(self) -> List[str]:
+        return [str(agent.packed_agent_path_windows_msi())]
 
     def _walk_base_dir(self):
         return cmk.utils.paths.agents_dir + "/windows"
@@ -247,9 +247,8 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
     def title(self) -> str:
         return _("Linux, Solaris, AIX files")
 
-    def _packed_agents(self):
-        return glob.glob(cmk.utils.paths.agents_dir +
-                         "/*.deb") + glob.glob(cmk.utils.paths.agents_dir + "/*.rpm")
+    def _packed_agents(self) -> List[str]:
+        return [str(agent.packed_agent_path_linux_deb()), str(agent.packed_agent_path_linux_rpm())]
 
     def _walk_base_dir(self):
         return cmk.utils.paths.agents_dir

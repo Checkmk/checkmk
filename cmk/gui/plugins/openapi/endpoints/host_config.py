@@ -39,6 +39,7 @@ A host_config object can have the following relations present in `links`:
 
 """
 from typing import Iterable, Dict, Any, List
+from urllib.parse import urlencode
 
 import itertools
 import json
@@ -61,6 +62,7 @@ from cmk.gui.plugins.webapi import check_hostname
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 from cmk.gui.watolib.host_rename import perform_rename_hosts
+import cmk.utils.version as cmk_version
 import cmk.gui.watolib.activate_changes as activate_changes
 
 
@@ -424,6 +426,26 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
         'is_offline': host.is_offline(),
         'cluster_nodes': host.cluster_nodes(),
     }
+
+    agent_links = []
+    if not cmk_version.is_raw_edition():
+        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
+
+        for agent_type in sorted(agent_bakery.agent_package_types().keys()):
+            agent_links.append(
+                constructors.link_rel(
+                    rel="cmk/download",
+                    href="{}?{}".format(
+                        constructors.domain_type_action_href("agent", "download"),
+                        urlencode({
+                            "os_type": agent_type,
+                            "host_name": host.id()
+                        }),
+                    ),
+                    method="get",
+                    title=f"Download the {agent_type} agent of the host.",
+                ))
+
     return constructors.domain_object(
         domain_type='host_config',
         identifier=host.id(),
@@ -435,7 +457,7 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
                 method='get',
                 title='The folder config of the host.',
             ),
-        ],
+        ] + agent_links,
         extensions=extensions,
     )
 

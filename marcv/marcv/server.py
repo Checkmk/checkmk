@@ -7,14 +7,61 @@
 import os
 from shutil import copyfileobj
 from tempfile import mkstemp
-from typing import Dict
+from typing import Dict, Mapping, Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from cryptography.x509 import load_pem_x509_csr
+from cryptography.x509.oid import NameOID
+from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
+from pydantic import BaseModel
 
+from marcv.checkmk_rest_api import post_csr
 from marcv.constants import AGENT_OUTPUT_DIR
 from marcv.log import logger
 
 app = FastAPI()
+
+
+class CSRBody(BaseModel):
+    csr: str
+
+
+def _uuid_from_pem_csr(pem_csr: str) -> str:
+    try:
+        return (
+            load_pem_x509_csr(pem_csr.encode())
+            .subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
+            .value
+        )
+    except ValueError:
+        return "[CSR parsing failed]"
+
+
+@app.post("/csr")
+async def sign_csr(
+    *,
+    authentication: Optional[str] = Header(None),
+    csr_body: CSRBody,
+) -> Mapping[str, str]:
+    rest_api_csr_resp = post_csr(
+        str(authentication),
+        csr_body.csr,
+    )
+    if rest_api_csr_resp.ok:
+        logger.info(
+            "uuid=%s CSR signed",
+            _uuid_from_pem_csr(csr_body.csr),
+        )
+        return rest_api_csr_resp.json()
+
+    logger.info(
+        "uuid=%s CSR failed with %s",
+        _uuid_from_pem_csr(csr_body.csr),
+        rest_api_csr_resp.text,
+    )
+    raise HTTPException(
+        status_code=rest_api_csr_resp.status_code,
+        detail=rest_api_csr_resp.text,
+    )
 
 
 @app.post("/agent-data")

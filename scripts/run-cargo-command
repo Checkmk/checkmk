@@ -11,16 +11,4 @@ REPO_DIR=$(git rev-parse --show-toplevel)
 : "${CARGO_HOME:="${REPO_DIR}/.cargo"}"
 export CARGO_HOME
 
-# find all cargo project files, not located in ".cargo" folders
-# We use ".cargo" instead of $CARGO_HOME in order to skip even multiple .cargo directories
-CARGO_PROJECTS=$(find ${REPO_DIR} -path "*/.cargo/*" -prune -o -name Cargo.toml -print | xargs dirname)
-
-result=0
-
-for project in ${CARGO_PROJECTS}; do
-    cd ${project}
-    cargo ${COMMAND} ${COMMAND_OPTIONS} || result=1
-    cd -
-done
-
-exit ${result}
+cargo ${COMMAND} ${COMMAND_OPTIONS}

@@ -342,13 +342,13 @@ test-unit-core:
 	cd ../enterprise/core/src && ./.f12
 
 test-cargo-check:
-	$(SCRIPTS)/run-cargo-command check
+	$(SCRIPTS)/run-cargo-command-in-projects check
 
 test-cargo-check-docker:
 	../scripts/run-in-docker.sh make test-cargo-check
 
 test-cargo-test:
-	$(SCRIPTS)/run-cargo-command test
+	$(SCRIPTS)/run-cargo-command-in-projects test
 
 test-cargo-test-docker:
 	../scripts/run-in-docker.sh make test-cargo-test

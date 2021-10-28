@@ -22,13 +22,10 @@ fn register(config: config::Config, path_state: &Path) {
     for marcv_address in marcv_addresses {
         let root_cert = match &config.root_certificate {
             Some(cert) => cert.clone(),
-            None => {
-                let fetched_cert = match certs::fetch_root_cert(&marcv_address) {
-                    Ok(cert) => cert,
-                    Err(error) => panic!("Error establishing trust with marcv: {}", error),
-                };
-                String::from_utf8(fetched_cert).unwrap()
-            }
+            None => match certs::fetch_root_cert(&marcv_address) {
+                Ok(cert) => cert,
+                Err(error) => panic!("Error establishing trust with marcv: {}", error),
+            },
         };
 
         let uuid = uuid::make();
@@ -43,7 +40,7 @@ fn register(config: config::Config, path_state: &Path) {
                 Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
             };
 
-        let client_chain = String::from_utf8(private_key).unwrap() + &certificate;
+        let client_chain = private_key + &certificate;
 
         registration_state.add_server_spec(config::ServerSpec {
             marcv_address,

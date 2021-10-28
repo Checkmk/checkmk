@@ -1,4 +1,3 @@
-use openssl::error::ErrorStack;
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
@@ -11,7 +10,7 @@ use reqwest::{Certificate, Identity};
 use std::error::Error;
 use std::net::TcpStream;
 
-pub fn make_csr(cn: &str) -> Result<(Vec<u8>, Vec<u8>), ErrorStack> {
+pub fn make_csr(cn: &str) -> Result<(String, String), Box<dyn Error>> {
     // https://github.com/sfackler/rust-openssl/blob/master/openssl/examples/mk_certs.rs
     let rsa = Rsa::generate(2048)?;
     let key_pair = PKey::from_rsa(rsa)?;
@@ -27,8 +26,8 @@ pub fn make_csr(cn: &str) -> Result<(Vec<u8>, Vec<u8>), ErrorStack> {
     crt_builder.sign(&key_pair, MessageDigest::sha256())?;
 
     Ok((
-        crt_builder.build().to_pem()?,
-        key_pair.private_key_to_pem_pkcs8()?,
+        String::from_utf8(crt_builder.build().to_pem()?)?,
+        String::from_utf8(key_pair.private_key_to_pem_pkcs8()?)?,
     ))
 }
 
@@ -55,7 +54,7 @@ pub fn client(
         .build()?)
 }
 
-pub fn fetch_root_cert(address: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+pub fn fetch_root_cert(address: &str) -> Result<String, Box<dyn Error>> {
     let tcp_stream = TcpStream::connect(address).unwrap();
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
@@ -72,5 +71,5 @@ pub fn fetch_root_cert(address: &str) -> Result<Vec<u8>, Box<dyn Error>> {
 
     ssl_stream.shutdown()?;
 
-    Ok(root_cert)
+    Ok(String::from_utf8(root_cert)?)
 }

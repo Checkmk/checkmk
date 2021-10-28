@@ -26,7 +26,7 @@ struct CSRResponse {
 pub fn register(
     server_address: &str,
     root_cert: &str,
-    csr: Vec<u8>,
+    csr: String,
     checkmk_user: &str,
     checkmk_password: &str,
 ) -> Result<String, Box<dyn Error>> {
@@ -37,9 +37,7 @@ pub fn register(
                 "authentication",
                 format!("Bearer {} {}", checkmk_user, checkmk_password),
             )
-            .json(&CSRBody {
-                csr: String::from_utf8(csr)?,
-            })
+            .json(&CSRBody { csr: csr })
             .send()?
             .json::<CSRResponse>()?
             .cert,

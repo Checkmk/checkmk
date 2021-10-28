@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from itertools import chain
-from typing import Any, Dict, Iterable, Mapping
-from typing import Tuple as TupleType
+from typing import Any, Iterable, Mapping
 
 import livestatus
 
@@ -18,12 +16,7 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.metrics import (
-    get_graph_templates,
-    graph_info,
-    metric_info,
-    translated_metrics_from_row,
-)
+from cmk.gui.metrics import graph_info, metric_info
 from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
@@ -37,12 +30,10 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
-from cmk.gui.plugins.metrics.utils import keep_sorted_match
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.plugins.visuals.utils import get_only_sites_from_context, livestatus_query_bare
+from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
 from cmk.gui.valuespec import (
-    autocompleter_registry,
     Dictionary,
     DictionaryElements,
     DictionaryEntry,
@@ -59,7 +50,6 @@ def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
     return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
 
-@autocompleter_registry.register
 class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all graph templates"""
 
@@ -125,56 +115,6 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             varprefix,
             self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,
         )
-
-    @staticmethod
-    def _graph_template_title(graph_template: Mapping) -> str:
-        return graph_template.get("title") or _metric_title_from_id(graph_template["id"])
-
-    @classmethod
-    def _graph_choices_from_livestatus_row(cls, row) -> Iterable[TupleType[str, str]]:
-        yield from (
-            (
-                template["id"],
-                cls._graph_template_title(template),
-            )
-            for template in get_graph_templates(translated_metrics_from_row(row))
-        )
-
-    # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the
-        completions_params to get the list of choices"""
-        if not params.get("context"):
-            choices: Iterable[TupleType[str, str]] = (
-                (
-                    graph_id,
-                    str(
-                        graph_details.get(
-                            "title",
-                            graph_id,
-                        )
-                    ),
-                )
-                for graph_id, graph_details in graph_info.items()
-            )
-
-        else:
-            columns = [
-                "service_check_command",
-                "service_perf_data",
-                "service_metrics",
-            ]
-
-            choices = set(
-                chain.from_iterable(
-                    cls._graph_choices_from_livestatus_row(row)
-                    for row in livestatus_query_bare(params["context"], columns)
-                )
-            )
-
-        return keep_sorted_match(value, choices)
 
 
 @dashlet_registry.register

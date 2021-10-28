@@ -93,7 +93,6 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice,
     AjaxDropdownChoice,
     Alternative,
-    autocompleter_registry,
     CascadingDropdown,
     Checkbox,
     Dictionary,
@@ -1362,7 +1361,6 @@ class _CheckTypeMgmtSelection(DualListChoice):
         ]
 
 
-@autocompleter_registry.register
 class ConfigHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
@@ -1370,22 +1368,6 @@ class ConfigHostname(AjaxDropdownChoice):
     Fetching the choices from the current WATO config"""
 
     ident = "config_hostname"
-
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
-        match_pattern = re.compile(value, re.IGNORECASE)
-        match_list: Choices = []
-        for host_name, host_object in all_hosts.items():
-            if match_pattern.search(host_name) is not None and host_object.may("read"):
-                match_list.append((host_name, host_name))
-
-        if not any(x[0] == value for x in match_list):
-            match_list.insert(0, (value, value))  # User is allowed to enter anything they want
-
-        return match_list
 
 
 class ABCEventsMode(WatoMode, abc.ABC):

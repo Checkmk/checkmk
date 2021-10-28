@@ -50,13 +50,12 @@ from OpenSSL import crypto  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from six import ensure_binary, ensure_str
 
-import livestatus
-
 import cmk.utils.defines as defines
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import Seconds
 
 import cmk.gui.forms as forms
@@ -2649,6 +2648,10 @@ class DropdownChoice(ValueSpec):
 
 
 class AjaxDropdownChoice(DropdownChoice):
+    # This valuespec is a coodinate effort between the python
+    # renderer. A JS component for the ajax query and the AJAX
+    # python endpoint. You're responsible of putting them together.
+    # for new autocompleters.
     ident = ""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -2721,38 +2724,31 @@ class AjaxDropdownChoice(DropdownChoice):
             data_strict=self._strict,
         )
 
-    @classmethod
-    @abc.abstractmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        raise NotImplementedError()
+
+AutocompleterFunc = Callable[[str, Dict], Choices]
 
 
-class AutocompleterRegistry(cmk.utils.plugin_registry.Registry[Type[AjaxDropdownChoice]]):
+class AutocompleterRegistry(Registry[AutocompleterFunc]):
     def plugin_name(self, instance):
-        return instance.ident
+        return instance._ident
+
+    def register_expression(self, ident: str) -> Callable[[AutocompleterFunc], AutocompleterFunc]:
+        def wrap(plugin_func: AutocompleterFunc) -> AutocompleterFunc:
+            if not callable(plugin_func):
+                raise TypeError()
+
+            # We define the attribute here. for the `plugin_name` method.
+            plugin_func._ident = ident  # type: ignore[attr-defined]
+
+            self.register(plugin_func)
+            return plugin_func
+
+        return wrap
 
 
 autocompleter_registry = AutocompleterRegistry()
 
 
-def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choices:
-    """Livestatus query of single column of unique elements.
-    Prepare dropdown choices"""
-    with sites.set_limit(limit):
-        choices = [
-            (h, h) for h in sorted(sites.live().query_column_unique(query), key=lambda h: h.lower())
-        ]
-
-    if len(choices) > limit:
-        choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))
-
-    if (value, value) not in choices and params["strict"] == "False":
-        choices.insert(0, (value, value))  # User is allowed to enter anything they want
-    return choices
-
-
-# TODO: Cleanup kwargs
-@autocompleter_registry.register
 class MonitoredHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
@@ -2771,24 +2767,10 @@ class MonitoredHostname(AjaxDropdownChoice):
             **kwargs,
         )
 
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        query = (
-            "GET hosts\n"
-            "Cache: reload\n"
-            "Columns: host_name\n"
-            "Filter: host_name ~~ %s" % livestatus.lqencode(value)
-        )
-
-        return _sorted_unique_lq(query, 200, value, params)
-
     def value_to_text(self, value: str) -> str:
         return value
 
 
-@autocompleter_registry.register
 class MonitoredServiceDescription(AjaxDropdownChoice):
     """Unfiltered Service Descriptions for input with dropdown completion
 
@@ -2797,56 +2779,49 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
 
     ident = "monitored_service_description"
 
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        host = params.get("host")
-        if host is None and params["strict"] == "withHost":
-            return []
 
-        query = (
-            "GET services\n"
-            "Cache: reload\n"
-            "Columns: service_description\n"
-            "Filter: service_description ~~ %s\n" % livestatus.lqencode(value)
+class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
+    def __init__(
+        self,
+        css_spec: List[str],
+        hint_label: str,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+        self._css_spec = css_spec
+        self._hint_label = hint_label
+
+    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+        raise NotImplementedError()
+
+    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
+        if self._label:
+            html.span(self._label, class_="vs_floating_text")
+
+        html.dropdown(
+            varprefix,
+            self._options_for_html(self._choices_from_value(value)),
+            deflt=self._option_for_html(value),
+            class_=self._css_spec,
+            style="width: 250px;",
+            read_only=self._read_only,
         )
 
-        if host:
-            query += "Filter: host_name = %s\n" % livestatus.lqencode(params["host"])
+        vs_host = MonitoredHostname(
+            label=_("Filter %s selection by hostname: ") % self._hint_label,
+            choices=[],
+            strict="True",
+        )
+        html.br()
+        vs_host.render_input(varprefix + "_hostname_hint", None)
 
-        return _sorted_unique_lq(query, 200, value, params)
-
-
-@page_registry.register_page("ajax_vs_autocomplete")
-class PageVsAutocomplete(AjaxPage):
-    def page(self):
-        api_request = self.webapi_request()
-        ident = api_request["ident"]
-        if not ident:
-            raise MKUserError("ident", _('You need to set the "%s" parameter.') % "ident")
-
-        completer = autocompleter_registry.get(ident)
-        if completer is None:
-            raise MKUserError("ident", _("Invalid ident: %s") % ident)
-
-        params = api_request.get("params")
-        if params is None:
-            raise MKUserError("params", _('You need to set the "%s" parameter.') % "params")
-
-        value = api_request.get("value")
-        if value is None:
-            raise MKUserError("params", _('You need to set the "%s" parameter.') % "value")
-
-        result_data = completer.autocomplete_choices(value, params)
-
-        # Check for correct result_data format
-        assert isinstance(result_data, list)
-        if result_data:
-            assert isinstance(result_data[0], (list, tuple))
-            assert len(result_data[0]) == 2
-
-        return {"choices": result_data}
+        vs_service = MonitoredServiceDescription(
+            label=_("Filter %s selection by service: ") % self._hint_label,
+            choices=[],
+            strict="True",
+        )
+        html.br()
+        vs_service.render_input(varprefix + "_service_hint", None)
 
 
 # TODO: Rename to ServiceState() or something like this
@@ -6934,47 +6909,3 @@ def _type_name(v):
         return type(v).__name__
     except Exception:
         return escaping.escape_attribute(str(type(v)))
-
-
-class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
-    def __init__(
-        self,
-        css_spec: List[str],
-        hint_label: str,
-        **kwargs: Any,
-    ):
-        super().__init__(**kwargs)
-        self._css_spec = css_spec
-        self._hint_label = hint_label
-
-    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
-        raise NotImplementedError()
-
-    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
-        if self._label:
-            html.span(self._label, class_="vs_floating_text")
-
-        html.dropdown(
-            varprefix,
-            self._options_for_html(self._choices_from_value(value)),
-            deflt=self._option_for_html(value),
-            class_=self._css_spec,
-            style="width: 250px;",
-            read_only=self._read_only,
-        )
-
-        vs_host = MonitoredHostname(
-            label=_("Filter %s selection by hostname: ") % self._hint_label,
-            choices=[],
-            strict="True",
-        )
-        html.br()
-        vs_host.render_input(varprefix + "_hostname_hint", None)
-
-        vs_service = MonitoredServiceDescription(
-            label=_("Filter %s selection by service: ") % self._hint_label,
-            choices=[],
-            strict="True",
-        )
-        html.br()
-        vs_service.render_input(varprefix + "_service_hint", None)

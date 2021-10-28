@@ -638,17 +638,21 @@ def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
 
 
 def livestatus_query_bare_string(
-    context: VisualContext, columns: Iterable[str], cache: Optional[Literal["reload"]] = None
+    table: Literal["host", "service"],
+    context: VisualContext,
+    columns: Iterable[str],
+    cache: Optional[Literal["reload"]] = None,
 ) -> str:
     """Return for the service table filtered by context the given columns.
     Optional cache reload. Return with site info in"""
-    filters = collect_filters(["host", "service"])
+    infos = {"host": ["host"], "service": ["host", "service"]}.get(table, [])
+    filters = collect_filters(infos)
     filterheaders = "".join(get_livestatus_filter_headers(context, filters))
 
     # optimization: avoid query with unconstrained result
     if not filterheaders and not get_only_sites_from_context(context):
         return ""
-    query = ["GET services", "Columns: %s" % " ".join(columns), filterheaders]
+    query = ["GET %ss" % table, "Columns: %s" % " ".join(columns), filterheaders]
     if cache:
         query.insert(1, f"Cache: {cache}")
 
@@ -656,15 +660,17 @@ def livestatus_query_bare_string(
 
 
 def livestatus_query_bare(
-    context: VisualContext, columns: List[str], cache: Optional[Literal["reload"]] = None
+    table: Literal["host", "service"],
+    context: VisualContext,
+    columns: List[str],
+    cache: Optional[Literal["reload"]] = None,
 ) -> List[Dict[str, Any]]:
     """Return for the service table filtered by context the given columns.
     Optional cache reload. Return with site info in"""
-    if query := livestatus_query_bare_string(context, columns, cache):
+    if query := livestatus_query_bare_string(table, context, columns, cache):
         selected_sites = get_only_sites_from_context(context)
+        res_columns = ["site"] + columns
         with sites.only_sites(selected_sites), sites.prepend_site():
-            data = sites.live().query("\n".join(query))
-            res_columns = ["site"] + columns
-            return [dict(zip(res_columns, row)) for row in data]
+            return [dict(zip(res_columns, row)) for row in sites.live().query(query)]
 
     return []

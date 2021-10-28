@@ -65,11 +65,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import (
-    autocompleter_registry,
-    DropdownChoiceValue,
-    DropdownChoiceWithHostAndServiceHints,
-)
+from cmk.gui.valuespec import DropdownChoiceValue, DropdownChoiceWithHostAndServiceHints
 
 LegacyPerfometer = Tuple[str, Any]
 Atom = TypeVar("Atom")
@@ -1286,9 +1282,17 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def find_metrics_of_query(
+def metric_choices(check_command: str, perfvars: Tuple[_MetricName, ...]) -> Iterator[Choice]:
+    for perfvar in perfvars:
+        translated = perfvar_translation(perfvar, check_command)
+        name = translated["name"]
+        mi = metric_info.get(name, {})
+        yield name, str(mi.get("title", name.title()))
+
+
+def metrics_of_query(
     context: VisualContext,
-) -> Iterator[Tuple[ServiceName, str, Tuple[_MetricName, ...]]]:
+) -> Iterator[Choice]:
     # Fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
     columns = [
@@ -1301,46 +1305,24 @@ def find_metrics_of_query(
     ]
 
     row = {}
-    for row in livestatus_query_bare(context, columns):
+    for row in livestatus_query_bare("service", context, columns):
         parsed_perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"]
         )
         known_metrics = set([perf[0] for perf in parsed_perf_data] + row["service_metrics"])
-        yield str(row["service_description"]), str(check_command), tuple(map(str, known_metrics))
+        yield from metric_choices(str(check_command), tuple(map(str, known_metrics)))
 
-    if row.get("host_check_command"):
-        yield "_HOST_", str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
-
-
-def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Choice]:
-    for perfvar in perfvars:
-        translated = perfvar_translation(perfvar, check_command)
-        name = translated["name"]
-        mi = metric_info.get(name, {})
-        yield name, str(mi.get("title", name.title()))
+    if row["host_check_command"]:
+        yield from metric_choices(
+            str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
+        )
 
 
-def available_metrics(context: VisualContext) -> Iterator[Choice]:
-    options = set(find_metrics_of_query(context))
-    for _unused, check_command, metrics in options:
-        yield from metric_choices(check_command, metrics)
+def registered_metrics() -> Iterator[Choice]:
+    for metric_id, metric_detail in metric_info.items():
+        yield metric_id, str(metric_detail["title"])
 
 
-def keep_sorted_match(input_value: str, choices: Iterable[Choice]) -> Choices:
-
-    return sorted(
-        (v for v in choices if input_value.lower() in v[1].lower()), key=lambda a: a[1].lower()
-    )
-
-
-def autocomplete_metric_choices(input_value: str, params: Dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current field input_value and the completions_params to get the list of choices"""
-
-    return keep_sorted_match(input_value, set(available_metrics(params["context"])))
-
-
-@autocompleter_registry.register
 class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
 
@@ -1356,18 +1338,18 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             "hint_label": _("metric"),
             "choices": [(None, _("Select metric"))],
             "title": _("Metric"),
+            "regex": re.compile("^[a-zA-Z][a-zA-Z0-9_]*$"),
+            "regex_error": _(
+                "Metric names must only consist of letters, digits and "
+                "underscores and they must start with a letter."
+            ),
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)
-        self._regex: re.Pattern = re.compile("^[a-zA-Z][a-zA-Z0-9_]*$")
-        self._regex_error = _(
-            "Metric names must only consist of letters, digits and "
-            "underscores and they must start with a letter."
-        )
 
     def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         # ? DropdownChoiceValue is an alias for Any
-        if value is not None and not self._regex.match(ensure_str(value)):
+        if value is not None and self._regex and not self._regex.match(ensure_str(value)):
             raise MKUserError(varprefix, self._regex_error)
 
     def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
@@ -1384,19 +1366,6 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
                 (value, value.title()),
             )
         ]
-
-    # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        context = params.get("context", {})
-        if not context:
-            all_registered_metrics = (
-                (metric_id, str(metric_detail["title"]))
-                for metric_id, metric_detail in metric_info.items()
-            )
-            return keep_sorted_match(value, all_registered_metrics)
-
-        return autocomplete_metric_choices(value, params)
 
 
 # .

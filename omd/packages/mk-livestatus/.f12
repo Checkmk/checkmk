@@ -22,12 +22,3 @@ sudo cp "$PWD/"LIVESTATUS_[[:upper:]]* "$ROOT/lib/omd/hooks"
 
 sudo find "$ROOT/etc" -type f -exec \
     perl -pi -e "s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g" "{}" \;
-
-sudo -u "$SITE" \
-    mkdir -p "$ROOT/.config/systemd/user"
-sudo -u "$SITE" \
-    cp -f "$ROOT/etc/mk-livestatus/livestatus.socket" \
-    "$ROOT/.config/systemd/user"
-sudo -u "$SITE" \
-    cp -f "$ROOT/etc/mk-livestatus/livestatus@.service" \
-    "$ROOT/.config/systemd/user"

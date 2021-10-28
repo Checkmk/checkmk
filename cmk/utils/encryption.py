@@ -22,6 +22,7 @@ class TransportProtocol(enum.Enum):
     MD5 = b"00"
     SHA256 = b"02"
     PBKDF2 = b"03"
+    TLS = b"16"
     NONE = b"99"
 
 

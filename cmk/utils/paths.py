@@ -31,6 +31,8 @@ opt_root = _path("/opt" + omd_root)
 
 mkbackup_lock_dir = Path("/run/lock/mkbackup")
 trusted_ca_file = _omd_path("var/ssl/ca-certificates.crt")
+root_cert_file = _omd_path("etc/ssl/ca.pem")
+site_cert_file = _omd_path("etc/ssl/sites/{}.pem".format(os.environ.get("OMD_SITE")))
 default_config_dir = _omd_path("etc/check_mk")
 main_config_file = _omd_path("etc/check_mk/main.mk")
 final_config_file = _omd_path("etc/check_mk/final.mk")

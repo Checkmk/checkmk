@@ -8,7 +8,8 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Final, Iterable, Iterator, Optional, Sequence
+from typing import Dict, Final, Iterable, Iterator, Mapping, Optional, Sequence
+from uuid import UUID
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker
@@ -43,6 +44,7 @@ class _Builder:
         host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
+        controller_uuid: Optional[UUID],
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
         force_snmp_cache_refresh: bool,
@@ -50,6 +52,7 @@ class _Builder:
         super().__init__()
         self.host_config: Final = host_config
         self.ipaddress: Final = ipaddress
+        self.controller_uuid: Final = controller_uuid
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
@@ -190,6 +193,7 @@ class _Builder:
             return TCPSource(
                 self.hostname,
                 self.ipaddress,
+                controller_uuid=self.controller_uuid,
                 main_data_source=main_data_source,
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
@@ -209,6 +213,7 @@ class _Builder:
 def make_sources(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
+    controller_uuid: Optional[UUID],
     *,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
@@ -218,6 +223,7 @@ def make_sources(
     return _Builder(
         host_config,
         ipaddress,
+        controller_uuid=controller_uuid,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
@@ -248,6 +254,7 @@ def fetch_all(
 def make_cluster_sources(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
+    controller_uuids: Mapping[HostName, UUID],
 ) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -258,6 +265,7 @@ def make_cluster_sources(
         for source in make_sources(
             HostConfig.make_host_config(host_name),
             config.lookup_ip_address(config_cache.get_host_config(host_name)),
+            controller_uuids.get(host_name),
             force_snmp_cache_refresh=False,
         )
     ]

@@ -171,7 +171,11 @@ class TestMakeHostSectionsHosts:
                 ipaddress,
                 template="",
             ),
-            TCPSource,
+            lambda hostname, ipaddress: TCPSource(
+                hostname,
+                ipaddress,
+                controller_uuid=None,
+            ),
         ],
     )
     def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):
@@ -209,7 +213,7 @@ class TestMakeHostSectionsHosts:
     ):
         sources = [
             ProgramSource.ds(hostname, ipaddress, template=""),
-            TCPSource(hostname, ipaddress),
+            TCPSource(hostname, ipaddress, controller_uuid=None),
         ]
 
         host_sections = _collect_host_sections(
@@ -242,8 +246,8 @@ class TestMakeHostSectionsHosts:
     ):
         sources = [
             ProgramSource.ds(HostName(f"{hostname}0"), ipaddress, template=""),
-            TCPSource(HostName(f"{hostname}1"), ipaddress),
-            TCPSource(HostName(f"{hostname}2"), ipaddress),
+            TCPSource(HostName(f"{hostname}1"), ipaddress, controller_uuid=None),
+            TCPSource(HostName(f"{hostname}2"), ipaddress, controller_uuid=None),
         ]
 
         host_sections = _collect_host_sections(
@@ -343,7 +347,7 @@ class TestMakeHostSectionsClusters:
         assert host_config.nodes
 
     def test_no_sources(self, cluster, nodes, config_cache, host_config):
-        sources = make_cluster_sources(config_cache, host_config)
+        sources = make_cluster_sources(config_cache, host_config, {})
 
         host_sections = _collect_host_sections(
             sources=sources,
@@ -418,10 +422,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    sources = make_cluster_sources(
-        config_cache,
-        host_config,
-    )
+    sources = make_cluster_sources(config_cache, host_config, {})
 
     host_sections = _collect_host_sections(
         sources=sources,

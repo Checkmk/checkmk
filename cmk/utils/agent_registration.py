@@ -6,7 +6,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Iterator, Mapping, NamedTuple
+from typing import Any, Iterator, Mapping, NamedTuple, Optional
 from uuid import UUID
 
 from cmk.utils.type_defs import HostName
@@ -52,6 +52,15 @@ class UUIDLinkManager:
                 # Since Python 3.9 pathlib provides Path.readlink()
                 target=Path(os.readlink(source)),
             )
+
+    def mapping(self) -> Mapping[HostName, UUID]:
+        return {link.hostname: link.uuid for link in self}
+
+    def get_uuid(self, host_name: HostName) -> Optional[UUID]:
+        for link in self:
+            if link.hostname == host_name:
+                return link.uuid
+        return None
 
     def create_link(self, hostname: HostName, uuid: UUID) -> None:
         """Create a link for encryption (CRE) or push agent (CCE).

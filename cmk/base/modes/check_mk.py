@@ -28,6 +28,7 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -431,11 +432,16 @@ def mode_dump_agent(hostname: HostName) -> None:
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = config.lookup_ip_address(host_config)
+        received_outputs = Path(cmk.utils.paths.omd_root, "var/agent-receiver/received-outputs")
+        data_source = Path(cmk.utils.paths.data_source_cache_dir, "push-agent")
+        uuid = UUIDLinkManager(
+            received_outputs_dir=received_outputs, data_source_dir=data_source
+        ).get_uuid(host_config.hostname)
 
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source in sources.make_sources(host_config, ipaddress):
+        for source in sources.make_sources(host_config, ipaddress, uuid):
             source.file_cache_max_age = config.max_cachefile_age()
             if not isinstance(source, sources.agent.AgentSource):
                 continue

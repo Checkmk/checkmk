@@ -51,5 +51,7 @@ def make_scenario(hostname, tags):
 )
 def test_generates_correct_sections(hostname, tags, fetchers, monkeypatch):
     make_scenario(hostname, tags).apply(monkeypatch)
-    conf = fetcher_configuration.fetchers(config.HostConfig.make_host_config(hostname))
+    conf = fetcher_configuration.fetchers(
+        config.HostConfig.make_host_config(hostname), controller_uuid=None
+    )
     assert [FetcherType[f["fetcher_type"]] for f in conf["fetchers"]] == fetchers

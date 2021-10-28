@@ -7,11 +7,13 @@
 import copy
 import logging
 import socket
+import ssl
 from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.paths import root_cert_file, site_cert_file
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import verify_ipaddress
@@ -26,6 +28,7 @@ class TCPFetcher(AgentFetcher):
         *,
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
+        controller_uuid: Optional[str],
         timeout: float,
         encryption_settings: Mapping[str, str],
         use_only_cache: bool,
@@ -34,6 +37,7 @@ class TCPFetcher(AgentFetcher):
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
+        self.controller_uuid: Final = controller_uuid
         self.timeout: Final = timeout
         self.encryption_settings: Final = encryption_settings
         self.use_only_cache: Final = use_only_cache
@@ -54,6 +58,7 @@ class TCPFetcher(AgentFetcher):
                     f"family={self.family!r}",
                     f"timeout={self.timeout!r}",
                     f"encryption_settings={self.encryption_settings!r}",
+                    f"controller_uuid={self.controller_uuid!r}",
                     f"use_only_cache={self.use_only_cache!r}",
                 )
             )
@@ -75,6 +80,7 @@ class TCPFetcher(AgentFetcher):
             "file_cache": self.file_cache.to_json(),
             "family": self.family,
             "address": self.address,
+            "controller_uuid": self.controller_uuid,
             "timeout": self.timeout,
             "encryption_settings": self.encryption_settings,
             "use_only_cache": self.use_only_cache,
@@ -115,7 +121,12 @@ class TCPFetcher(AgentFetcher):
 
         protocol = self._detect_transport_protocol()
 
-        return self._validate_decrypted_data(self._decrypt(protocol, self._raw_data()))
+        # TODO: make this configurable! This will be "auto":
+        fetch_from_tls = protocol == TransportProtocol.TLS
+
+        return self._validate_decrypted_data(
+            self._fetch_via_tls() if fetch_from_tls else self._decrypt(protocol, self._raw_data())
+        )
 
     def _detect_transport_protocol(self) -> TransportProtocol:
         try:
@@ -127,6 +138,17 @@ class TCPFetcher(AgentFetcher):
             return TransportProtocol(raw_protocol)
         except ValueError:
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+
+    def _fetch_via_tls(self) -> AgentRawData:
+        if self.controller_uuid is None:
+            raise MKFetcherError("No agent controller registered, but TLS required")
+
+        ctx = ssl.create_default_context(cafile=root_cert_file)
+        ctx.load_cert_chain(certfile=site_cert_file)
+
+        with ctx.wrap_socket(self._socket, server_hostname=self.controller_uuid) as ssock:
+            self._logger.debug("Reading data from agent via TLS socket")
+            return AgentRawData(self._recvall(ssock))
 
     def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")

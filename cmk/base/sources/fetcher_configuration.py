@@ -6,6 +6,7 @@
 
 import socket
 from typing import Any, Dict, Optional
+from uuid import UUID
 
 from cmk.utils.type_defs import HostAddress
 
@@ -24,7 +25,7 @@ def get_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
     return core_config.ip_address_of(host_config, socket.AF_INET)
 
 
-def fetchers(host_config: HostConfig) -> Dict[str, Any]:
+def fetchers(host_config: HostConfig, controller_uuid: Optional[UUID]) -> Dict[str, Any]:
     ipaddress = get_ip_address(host_config)
     return {
         "fetchers": [
@@ -32,10 +33,10 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                 "fetcher_type": c.fetcher_type.name,
                 "fetcher_params": c.fetcher_configuration,
             }
-            for c in make_sources(host_config, ipaddress)
+            for c in make_sources(host_config, ipaddress, controller_uuid)
         ]
     }
 
 
-def clusters(host_config: HostConfig) -> Dict[str, Any]:
+def clusters(host_config: HostConfig, _controller_uuid: Optional[UUID]) -> Dict[str, Any]:
     return {"clusters": {"nodes": host_config.nodes or ()}}

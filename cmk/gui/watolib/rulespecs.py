@@ -1099,12 +1099,6 @@ class CheckTypeGroupSelection(ElementSelection):
     def value_to_text(self, value):
         return "<tt>%s</tt>" % value
 
-    def value_to_json(self, value: Any) -> Any:
-        return value
-
-    def value_from_json(self, json_value: Any) -> Any:
-        return json_value
-
 
 class TimeperiodValuespec(ValueSpec):
     # Used by GUI switch

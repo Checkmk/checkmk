@@ -75,16 +75,19 @@
         aws_access_key: "{{ ec2_access_key }}"
         aws_secret_key: "{{ ec2_secret_key }}"
         key_name: "{{ ec2_key }}"
+        # TODO: This may need to be changed when pushing the image to Amazon Marketplace (CMK-8655)
         region: "{{ ec2_region }}"
         group: "{{ ec2_security_group_vms }}"
         instance_type: "{{ item.value.instance_type }}"
         image: "{{ ami_id }}"
         wait: true
         volumes:
+            # Partition 1: OMD Versions: We store here the application
           - device_name: /dev/sda1
             volume_type: gp2
             volume_size: "{{ item.value.disk_volume }}"
             delete_on_termination: true
+            # Partition 2: OMD Sites: We store here the user data
           - device_name: /dev/sdb
             volume_type: gp2
             volume_size: 5
@@ -252,6 +255,7 @@
 
     # the ports are already configured as open in the security group used by this script
     # when the AMI is cloned the customer has to configure the ports in a security group
+    # TODO: Should we also check if other ports are closed? (CMK-7830)
     - name: Check all port numbers are accessible from the current host
       wait_for:
         host: '{{ ec2_instance[0][0]["public_ip"] }}'

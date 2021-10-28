@@ -55,28 +55,6 @@ def _get_item_data(item, parsed):
 #
 
 
-def parse_oracle_performance(info):
-    def _try_parse_int(s):
-        try:
-            return int(s)
-        except ValueError:
-            return None
-
-    parsed = {}
-    for line in info:
-        if len(line) < 3:
-            continue
-        parsed.setdefault(line[0], {})
-        parsed[line[0]].setdefault(line[1], {})
-        counters = line[3:]
-        if len(counters) == 1:
-            parsed[line[0]][line[1]].setdefault(line[2], _try_parse_int(counters[0]))
-        else:
-            parsed[line[0]][line[1]].setdefault(line[2], list(map(_try_parse_int, counters)))
-
-    return parsed
-
-
 def check_oracle_performance(item, params, parsed):
     discovery_params = host_extra_conf_merged(host_name(), oracle_performance_discovery)
     data = _get_item_data(item, parsed)
@@ -164,7 +142,7 @@ def check_oracle_performance(item, params, parsed):
 
 
 check_info["oracle_performance"] = {
-    "parse_function": parse_oracle_performance,
+    # section is already migrated!
     "inventory_function": discover(),
     "check_function": check_oracle_performance,
     "service_description": "ORA %s Performance",

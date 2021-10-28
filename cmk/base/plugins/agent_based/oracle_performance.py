@@ -4,26 +4,53 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<oracle_performance:sep(124)>>>
-# XE|SGA_info|Maximum SGA Size|367439872
+from typing import Any, Dict, Mapping
+
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
+Section = Mapping[str, Mapping[str, Mapping[str, Any]]]
 
 
-def inv_oracle_performance(parsed, status_data_tree):
-    def get_pga_data(data):
-        pga_data = {}
-        for key, entrylist in data.items():
-            pga_data.setdefault(key, entrylist[0])
-        return pga_data
+def parse_oracle_performance(string_table: StringTable) -> Section:
+    def _try_parse_int(s):
+        try:
+            return int(s)
+        except ValueError:
+            return None
 
-    sga_status_node = status_data_tree.get_list("software.applications.oracle.sga:")
-    pga_status_node = status_data_tree.get_list("software.applications.oracle.pga:")
+    parsed: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    for line in string_table:
+        if len(line) < 3:
+            continue
+        parsed.setdefault(line[0], {})
+        parsed[line[0]].setdefault(line[1], {})
+        counters = line[3:]
+        if len(counters) == 1:
+            parsed[line[0]][line[1]].setdefault(line[2], _try_parse_int(counters[0]))
+        else:
+            parsed[line[0]][line[1]].setdefault(line[2], list(map(_try_parse_int, counters)))
 
-    for entry, entryinfo in sorted(parsed.items()):
+    return parsed
+
+
+register.agent_section(
+    name="oracle_performance",
+    parse_function=parse_oracle_performance,
+)
+
+
+def inventory_oracle_performance(section: Section) -> InventoryResult:
+    for entry, entryinfo in sorted(section.items()):
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]
-            sga_status_node.append(
-                {
+            yield TableRow(
+                path=["software", "applications", "oracle", "sga"],
+                key_columns={
                     "sid": entry,
+                },
+                inventory_columns={},
+                status_columns={
                     "fixed_size": sga_data.get("Fixed SGA Size"),
                     "max_size": sga_data.get("Maximum SGA Size"),
                     "redo_buffer": sga_data.get("Redo Buffers"),
@@ -38,14 +65,19 @@ def inv_oracle_performance(parsed, status_data_tree):
                     "granule_size": sga_data.get("Granule Size"),
                     "start_oh_shared_pool": sga_data.get("Startup overhead in Shared Pool"),
                     "free_mem_avail": sga_data.get("Free SGA Memory Available"),
-                }
+                },
             )
+
         if "PGA_info" in entryinfo:
             # entryinfo["PGA_info"] = Dict[str, List[int, str]]
-            pga_data = get_pga_data(entryinfo["PGA_info"])
-            pga_status_node.append(
-                {
+            pga_data = {key: entrylist[0] for key, entrylist in entryinfo["PGA_info"].items()}
+            yield TableRow(
+                path=["software", "applications", "oracle", "pga"],
+                key_columns={
                     "sid": entry,
+                },
+                inventory_columns={},
+                status_columns={
                     "aggregate_pga_auto_target": pga_data.get("aggregate PGA auto target"),
                     "aggregate_pga_target_parameter": pga_data.get(
                         "aggregate PGA target parameter"
@@ -69,11 +101,11 @@ def inv_oracle_performance(parsed, status_data_tree):
                         "total PGA used for manual workareas"
                     ),
                     "total_freeable_pga_memory": pga_data.get("total freeable PGA memory"),
-                }
+                },
             )
 
 
-inv_info["oracle_performance"] = {
-    "inv_function": inv_oracle_performance,
-    "has_status_data": True,
-}
+register.inventory_plugin(
+    name="oracle_performance",
+    inventory_function=inventory_oracle_performance,
+)

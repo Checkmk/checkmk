@@ -5428,7 +5428,6 @@ class Dictionary(ValueSpec):
 
 # TODO: Cleanup this and all call sites. Replace it with some kind of DropdownChoice
 # based valuespec
-# NOTE: This valuespec doesn't support value_to/from_json.
 class ElementSelection(ValueSpec):
     """Base class for selection of a Nagios element out of a given list that must be loaded from a file.
 
@@ -5480,6 +5479,12 @@ class ElementSelection(ValueSpec):
     def value_to_text(self, value) -> ValueSpecText:
         self.load_elements()
         return self._elements.get(value, value)
+
+    def value_to_json(self, value: Any) -> Any:
+        return value
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return json_value
 
     def from_html_vars(self, varprefix):
         return request.var(varprefix)

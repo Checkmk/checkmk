@@ -1755,7 +1755,7 @@ def _valuespec_active_checks_ldap():
                                     allow_empty=False,
                                     size=60,
                                 ),
-                                Password(
+                                IndividualOrStoredPassword(
                                     title=_("Password"),
                                     help=_(
                                         "Password for binding, if your server requires an authentication"
@@ -1998,7 +1998,7 @@ def _valuespec_active_checks_smtp():
                                         size=12,
                                         allow_empty=False,
                                     ),
-                                    Password(
+                                    IndividualOrStoredPassword(
                                         title=_("Password"),
                                         size=12,
                                         allow_empty=False,

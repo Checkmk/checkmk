@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from typing import Iterator
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -387,7 +387,6 @@ class TestRealisticSearch:
         )
 
     @pytest.mark.usefixtures(
-        "load_plugins",
         "with_admin_login",
         "fake_omd_default_globals",
         "fake_diskspace_default_globals",
@@ -421,7 +420,6 @@ class TestRealisticSearch:
         return live
 
     @pytest.mark.usefixtures(
-        "load_plugins",
         "with_admin_login",
         "fake_omd_default_globals",
         "fake_diskspace_default_globals",
@@ -451,7 +449,6 @@ class TestRealisticSearch:
         assert list(searcher.search("custom host attributes"))
 
     @pytest.mark.usefixtures(
-        "load_plugins",
         "with_admin_login",
         "fake_omd_default_globals",
         "fake_diskspace_default_globals",

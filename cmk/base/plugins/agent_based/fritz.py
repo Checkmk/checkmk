@@ -6,7 +6,7 @@
 
 from typing import Any, Mapping, Sequence
 
-from .agent_based_api.v1 import register, type_defs
+from .agent_based_api.v1 import Attributes, register, type_defs
 from .utils import interfaces
 
 Section = Mapping[str, str]
@@ -146,4 +146,21 @@ register.check_plugin(
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_fritz_wan_if,
+)
+
+
+def inventory_fritz(section: Section) -> type_defs.InventoryResult:
+    yield Attributes(
+        path=["hardware", "system"],
+        inventory_attributes={"model": section.get("VersionDevice")},
+    )
+    yield Attributes(
+        path=["software", "os"],
+        inventory_attributes={"version": section.get("VersionOS")},
+    )
+
+
+register.inventory_plugin(
+    name="fritz",
+    inventory_function=inventory_fritz,
 )

@@ -112,7 +112,21 @@ class TCPFetcher(AgentFetcher):
             raise MKFetcherError(
                 "Got no data: No usable cache file present at %s" % self.file_cache.base_path
             )
-        return self._validate_decrypted_data(self._decrypt(self._raw_data()))
+
+        protocol = self._detect_transport_protocol()
+
+        return self._validate_decrypted_data(self._decrypt(protocol, self._raw_data()))
+
+    def _detect_transport_protocol(self) -> TransportProtocol:
+        try:
+            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
+        except socket.error as e:
+            raise MKFetcherError(f"Communication failed: {e}") from e
+
+        try:
+            return TransportProtocol(raw_protocol)
+        except ValueError:
+            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
     def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")
@@ -134,17 +148,17 @@ class TCPFetcher(AgentFetcher):
 
         return b"".join(buffer)
 
-    def _decrypt(self, output: AgentRawData) -> AgentRawData:
+    def _decrypt(self, protocol: TransportProtocol, output: AgentRawData) -> AgentRawData:
         if not output:
             return output  # nothing to to, validation will fail
 
-        if output.startswith(b"<<<"):
+        if protocol is TransportProtocol.PLAIN:
             self._logger.debug("Output is not encrypted")
             if self.encryption_settings["use_regular"] == "enforce":
                 raise MKFetcherError(
                     "Agent output is plaintext but encryption is enforced by configuration"
                 )
-            return output
+            return protocol.value + output  # bring back stolen bytes
 
         self._logger.debug("Output is encrypted or invalid")
         if self.encryption_settings["use_regular"] == "disable":
@@ -154,7 +168,13 @@ class TCPFetcher(AgentFetcher):
 
         try:
             self._logger.debug("Try to decrypt output")
-            output = self._decrypt_agent_data(output=output)
+            output = AgentRawData(
+                decrypt_by_agent_protocol(
+                    self.encryption_settings["passphrase"],
+                    protocol,
+                    output,
+                )
+            )
         except MKFetcherError:
             raise
         except Exception as e:
@@ -172,17 +192,3 @@ class TCPFetcher(AgentFetcher):
         if len(output) < 16:
             raise MKFetcherError("Too short output from agent: %r" % output)
         return output
-
-    def _decrypt_agent_data(self, output: AgentRawData) -> AgentRawData:
-        try:
-            protocol = TransportProtocol(output[:2])
-        except ValueError as exc:
-            raise MKFetcherError from exc
-
-        return AgentRawData(
-            decrypt_by_agent_protocol(
-                self.encryption_settings["passphrase"],
-                protocol,
-                output[2:],
-            )
-        )

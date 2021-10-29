@@ -16,6 +16,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
+from cmk.utils.encryption import TransportProtocol
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result, SectionName
 
@@ -853,7 +854,7 @@ class TestTCPFetcher:
 
     def test_decrypt_plaintext_is_noop(self, file_cache: DefaultAgentFileCache) -> None:
         settings = {"use_regular": "allow"}
-        output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
+        output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -862,13 +863,13 @@ class TestTCPFetcher:
             encryption_settings=settings,
             use_only_cache=False,
         )
-        assert fetcher._decrypt(output) == output
+        assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
     def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(
         self, file_cache: DefaultAgentFileCache
     ) -> None:
         settings = {"use_regular": "enforce"}
-        output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
+        output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -879,24 +880,7 @@ class TestTCPFetcher:
         )
 
         with pytest.raises(MKFetcherError):
-            fetcher._decrypt(output)
-
-    def test_decrypt_payload_with_wrong_protocol_raises_MKFetcherError(
-        self, file_cache: DefaultAgentFileCache
-    ) -> None:
-        settings = {"use_regular": "enforce"}
-        output = AgentRawData(b"the first two bytes are not a number")
-        fetcher = TCPFetcher(
-            file_cache,
-            family=socket.AF_INET,
-            address=("1.2.3.4", 0),
-            timeout=0.0,
-            encryption_settings=settings,
-            use_only_cache=False,
-        )
-
-        with pytest.raises(MKFetcherError):
-            fetcher._decrypt(output)
+            fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:]))
 
 
 class TestFetcherCaching:

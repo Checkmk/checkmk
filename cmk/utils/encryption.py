@@ -18,6 +18,7 @@ OPENSSL_SALTED_MARKER = "Salted__"
 
 
 class TransportProtocol(enum.Enum):
+    PLAIN = b"<<"
     MD5 = b"00"
     SHA256 = b"02"
     PBKDF2 = b"03"

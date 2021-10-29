@@ -92,11 +92,11 @@ def inventory_lnx_block_devices(section: Section) -> InventoryResult:
                 "fsnode": row["fsnode"],
             },
             inventory_columns={
-                "firmware": row["firmware"],
-                "product": row["product"],
-                "serial": row["serial"],
-                "signature": row["signature"],
-                "size": row["size"],
+                "firmware": row.get("firmware", ""),
+                "product": row.get("product", ""),
+                "serial": row.get("serial", ""),
+                "signature": row.get("signature", ""),
+                "size": row.get("size", ""),
             },
             status_columns={},
         )

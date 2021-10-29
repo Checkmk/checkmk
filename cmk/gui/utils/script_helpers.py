@@ -19,7 +19,6 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
-from cmk.gui.modules import load_all_plugins
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -34,17 +33,16 @@ def session_wsgi_app(debug):
 
 
 @contextmanager
-def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
+def application_context() -> Iterator[None]:
     with AppContext(session_wsgi_app(debug=False)):
         yield
 
 
-@contextmanager
-def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
-    req = Request(environ)
+def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> RequestContext:
+    req = Request(dict(create_environ(), REQUEST_URI="") if environ is None else environ)
     resp = Response(mimetype="text/html")
     funnel = OutputFunnel(resp)
-    with RequestContext(
+    return RequestContext(
         req=req,
         resp=resp,
         funnel=funnel,
@@ -54,18 +52,23 @@ def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
         timeout_manager=TimeoutManager(),
         theme=Theme(),
         prefix_logs_with_url=False,
-    ):
+    )
+
+
+@contextmanager
+def request_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
+    with make_request_context(environ=environ):
         yield
 
 
 @contextmanager
 def application_and_request_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
-    if environ is None:
-        environ = dict(create_environ(), REQUEST_URI="")
-    with application_context(environ), request_context(environ):
+    with application_context(), request_context(environ):
         yield
 
 
 def initialize_gui_environment() -> None:
+    from cmk.gui.modules import load_all_plugins
+
     load_config()
     load_all_plugins()

@@ -29,11 +29,13 @@ import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log as log
 import cmk.gui.pages
+from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import request
+from cmk.gui.globals import request, RequestContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.sites import get_site_config, has_wato_slave_sites, wato_slave_sites
+from cmk.gui.utils.script_helpers import make_request_context
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.hosts_and_folders import Host
@@ -156,11 +158,19 @@ class DiscoveredHostLabelSyncJob(gui_background_job.GUIBackgroundJob):
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
 
+        with (request_context := make_request_context()):  # pylint: disable=superfluous-parens
+            load_config()
+
         with ThreadPool(20) as pool:
             results = pool.map(
                 self._execute_site_sync_bg,
                 [
-                    (site_id, site_spec, SiteRequest(newest_host_labels.get(site_id, 0.0), None))
+                    (
+                        request_context,
+                        site_id,
+                        site_spec,
+                        SiteRequest(newest_host_labels.get(site_id, 0.0), None),
+                    )
                     for site_id, site_spec in wato_slave_sites().items()
                 ],
             )
@@ -168,10 +178,17 @@ class DiscoveredHostLabelSyncJob(gui_background_job.GUIBackgroundJob):
         self._process_site_sync_results(newest_host_labels, results)
 
     def _execute_site_sync_bg(
-        self, args: Tuple[SiteId, SiteConfiguration, SiteRequest]
+        self,
+        args: Tuple[
+            RequestContext,
+            SiteId,
+            SiteConfiguration,
+            SiteRequest,
+        ],
     ) -> SiteResult:
         log.init_logging()  # NOTE: We run in a subprocess!
-        return _execute_site_sync(*args)
+        with args[0]:
+            return _execute_site_sync(*args[1:])
 
     def _process_site_sync_results(
         self, newest_host_labels: Dict[SiteId, float], results: List[SiteResult]

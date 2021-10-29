@@ -24,6 +24,7 @@ from tests.testlib.utils import (
     add_python_paths,
     current_base_branch_name,
     get_cmk_download_credentials,
+    package_hash_path,
 )
 from tests.testlib.version import CMKVersion
 
@@ -142,9 +143,8 @@ class ABCPackageManager(abc.ABC):
             os.unlink(package_path)
 
     def _write_package_hash(self, version: str, edition: str, package_path: Path) -> None:
-        with Path(f"/cmk_package_hash_{version}_{edition}").open("w") as f:
-            pkg_hash = sha256_file(package_path)
-            f.write(f"{pkg_hash}  {package_path.name}\n")
+        pkg_hash = sha256_file(package_path)
+        package_hash_path(version, edition).write_text(f"{pkg_hash}  {package_path.name}\n")
 
     @abc.abstractmethod
     def _package_name(self, edition: str, version: str) -> str:

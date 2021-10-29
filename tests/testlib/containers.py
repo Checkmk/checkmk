@@ -274,11 +274,10 @@ def _create_cmk_image(
         assert _exec_run(container, ["ls", "/omd/versions/default"], workdir="/") == 0
 
         # Now get the hash of the used Checkmk package from the container image and add it to the
-        # image labels. The hash was written to "/cmk_package_hash_{version}_{edition}" in the
-        # container.
+        # image labels.
         logger.info("Get Checkmk package hash")
         exit_code, output = container.exec_run(
-            ["cat", f"/cmk_package_hash_{version.version}_{version.edition()}"],
+            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition()))],
         )
         assert exit_code == 0
         hash_entry = output.decode("ascii").strip()

@@ -2658,6 +2658,10 @@ msgstr "アクセスポイント名"
 msgid "Access point statistics"
 msgstr "アクセスポイントの統計"
 
+#, fuzzy
+msgid "Access points"
+msgstr "アクセスポイント"
+
 msgid "Access to Agents"
 msgstr "エージェントへのアクセス"
 
@@ -9306,6 +9310,17 @@ msgstr "Cisco Nexusスーパーバイザのメモリ使用量"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
+#, fuzzy
+msgid "Cisco Prime WLAN Controller Access Points"
+msgstr "Cisco Prime WiFiアクセスポイント"
+
+#, fuzzy
+msgid "Cisco Prime WLAN Controller Clients"
+msgstr "Cisco Prime WiFi接続"
+
+msgid "Cisco Prime WLAN Controller Last Backup"
+msgstr ""
+
 msgid "Cisco Prime WiFi Access Points"
 msgstr "Cisco Prime WiFiアクセスポイント"
 
@@ -9472,6 +9487,10 @@ msgstr "受け取ったクライアント要求"
 
 msgid "Client secret"
 msgstr "Client secret"
+
+#, fuzzy
+msgid "Clients"
+msgstr "クライアント"
 
 msgid "Clients pending on a blocking call"
 msgstr ""
@@ -25900,6 +25919,10 @@ msgstr "ラストシーン"
 msgid "Last Updated"
 msgstr "最終更新"
 
+#, fuzzy
+msgid "Last backup"
+msgstr "バックアップ"
+
 msgid "Last bake result"
 msgstr ""
 
@@ -28817,6 +28840,10 @@ msgstr "保存間隔あたりの最大メッセージ数"
 msgid "Maximum number of RPC requests per second"
 msgstr "1秒あたりのRPCリクエストの最大数"
 
+#, fuzzy
+msgid "Maximum number of access points"
+msgstr "メッセージの最大数"
+
 msgid "Maximum number of allowed connection attempts reached, terminating"
 msgstr "許可された接続試行の最大数に達し、終了します"
 
@@ -28843,6 +28870,10 @@ msgstr "サービスのチェック試行の最大数"
 
 msgid "Maximum number of client type requests per second"
 msgstr "1秒あたりのクライアントタイプリクエストの最大数"
+
+#, fuzzy
+msgid "Maximum number of clients"
+msgstr "スレッドの最大数"
 
 msgid "Maximum number of connections or listeners"
 msgstr "接続またはリスナーの最大数"
@@ -31946,6 +31977,10 @@ msgstr ""
 
 msgid "Number of Web ACLs"
 msgstr "Web ACLの数"
+
+#, fuzzy
+msgid "Number of access points"
+msgstr "データポイントの数"
 
 msgid "Number of active Plugs"
 msgstr "アクティブなプラグの数"
@@ -54906,6 +54941,10 @@ msgstr "資格情報を使用する"
 msgid "Use custom connection parameters"
 msgstr "カスタム接続パラメータを使用する"
 
+#, fuzzy
+msgid "Use default DNS server"
+msgstr "デフォルトのポートを使用する"
+
 msgid "Use default layout"
 msgstr "デフォルトのレイアウトを使用する"
 
@@ -60266,6 +60305,10 @@ msgstr "減衰"
 #, python-format
 msgid "default (%s)"
 msgstr "デフォルト (%s)"
+
+#, fuzzy
+msgid "default DNS server"
+msgstr "DNSサーバーを指定する"
 
 msgid "degraded"
 msgstr "劣化"

@@ -2761,6 +2761,10 @@ msgstr "Name des Accesspoints"
 msgid "Access point statistics"
 msgstr "Accesspoint-Statistiken"
 
+#, fuzzy
+msgid "Access points"
+msgstr "Accesspoint"
+
 msgid "Access to Agents"
 msgstr "Zugriff auf Agenten"
 
@@ -9666,6 +9670,17 @@ msgstr "Speicherverbrauch von Cisco Nexus Supervisor"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
+#, fuzzy
+msgid "Cisco Prime WLAN Controller Access Points"
+msgstr "Cisco Prime WiFi Zugangspunkte"
+
+#, fuzzy
+msgid "Cisco Prime WLAN Controller Clients"
+msgstr "Cisco Prime WiFi Verbindungen"
+
+msgid "Cisco Prime WLAN Controller Last Backup"
+msgstr ""
+
 msgid "Cisco Prime WiFi Access Points"
 msgstr "Cisco Prime WiFi Zugangspunkte"
 
@@ -9831,6 +9846,10 @@ msgstr "Client-Anfrage erhalten"
 
 msgid "Client secret"
 msgstr "Kundenpasswort"
+
+#, fuzzy
+msgid "Clients"
+msgstr "Kunde"
 
 #, fuzzy
 msgid "Clients pending on a blocking call"
@@ -26919,6 +26938,10 @@ msgstr "Zuletzt gesehen"
 msgid "Last Updated"
 msgstr "Zuletzt Aktualisiert"
 
+#, fuzzy
+msgid "Last backup"
+msgstr "Log Backup"
+
 msgid "Last bake result"
 msgstr "Letztes Back-Ergebnis"
 
@@ -29897,6 +29920,10 @@ msgstr "Maximale Meldungen pro Speicher-Intervall"
 msgid "Maximum number of RPC requests per second"
 msgstr "Maxmale Anzahl von RPCs pro Sekunde"
 
+#, fuzzy
+msgid "Maximum number of access points"
+msgstr "Maximale Anzahl von Meldungen"
+
 msgid "Maximum number of allowed connection attempts reached, terminating"
 msgstr "Maximale Anzahl der erlaubten Verbindungsveruche erreicht. Beende."
 
@@ -29926,6 +29953,10 @@ msgstr "Maximale Anzahl von Check-Versuchen für Service"
 
 msgid "Maximum number of client type requests per second"
 msgstr "Maximale Anzahl von Anfragen vom Typ Client pro Sekunde"
+
+#, fuzzy
+msgid "Maximum number of clients"
+msgstr "Maximale Anzahl von Threads"
 
 msgid "Maximum number of connections or listeners"
 msgstr "Maximale Anzahl von Verbindungen oder Listeners"
@@ -33102,6 +33133,10 @@ msgstr "Anzahl Transaktionen pro Minute auf einem Lotus Domino Server"
 
 msgid "Number of Web ACLs"
 msgstr "Anzahl von Web-ACLs"
+
+#, fuzzy
+msgid "Number of access points"
+msgstr "Anzahl der Datenpunkte"
 
 msgid "Number of active Plugs"
 msgstr "Anzahl von aktiven Anschlüssen"
@@ -57396,6 +57431,10 @@ msgstr "Zugangsdaten angeben"
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
+#, fuzzy
+msgid "Use default DNS server"
+msgstr "Standardport benutzen"
+
 msgid "Use default layout"
 msgstr "Standardlayout verwenden"
 
@@ -63202,6 +63241,10 @@ msgstr "Abklingen"
 #, python-format
 msgid "default (%s)"
 msgstr "Standard (%s)"
+
+#, fuzzy
+msgid "default DNS server"
+msgstr "DNS Server angeben"
 
 msgid "degraded"
 msgstr "degraded"

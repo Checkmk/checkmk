@@ -2805,6 +2805,10 @@ msgstr "Nombre del punto de acceso"
 msgid "Access point statistics"
 msgstr "Estadísticas de los puntos de acceso"
 
+#, fuzzy
+msgid "Access points"
+msgstr "Puntos de acceso"
+
 msgid "Access to Agents"
 msgstr "Acceso a los agentes"
 
@@ -9767,6 +9771,17 @@ msgstr "Uso de la memoria del supervisor Cisco Nexus"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
+#, fuzzy
+msgid "Cisco Prime WLAN Controller Access Points"
+msgstr "Puntos de acceso WiFi Cisco Prime"
+
+#, fuzzy
+msgid "Cisco Prime WLAN Controller Clients"
+msgstr "Conexiones WiFi Cisco Prime"
+
+msgid "Cisco Prime WLAN Controller Last Backup"
+msgstr ""
+
 msgid "Cisco Prime WiFi Access Points"
 msgstr "Puntos de acceso WiFi Cisco Prime"
 
@@ -9931,6 +9946,10 @@ msgstr "Solicitudes de clientes recibidas"
 
 msgid "Client secret"
 msgstr "Secreto de cliente"
+
+#, fuzzy
+msgid "Clients"
+msgstr "Cliente"
 
 msgid "Clients pending on a blocking call"
 msgstr "Clientes pendientes de una llamada de bloqueo"
@@ -27115,6 +27134,10 @@ msgstr "Última vez que se vio"
 msgid "Last Updated"
 msgstr "Última actualización"
 
+#, fuzzy
+msgid "Last backup"
+msgstr "copia de seguridad"
+
 msgid "Last bake result"
 msgstr "Resultado de la última cocción"
 
@@ -30125,6 +30148,10 @@ msgstr "Máximo de mensajes por intervalo de guardado"
 msgid "Maximum number of RPC requests per second"
 msgstr "Número máximo de peticiones RPC por segundo"
 
+#, fuzzy
+msgid "Maximum number of access points"
+msgstr "Número máximo de mensajes"
+
 msgid "Maximum number of allowed connection attempts reached, terminating"
 msgstr ""
 "Se ha alcanzado el número máximo de intentos de conexión permitidos, "
@@ -30156,6 +30183,10 @@ msgstr "Número máximo de intentos de comprobación del servicio"
 
 msgid "Maximum number of client type requests per second"
 msgstr "Número máximo de solicitudes de tipo cliente por segundo"
+
+#, fuzzy
+msgid "Maximum number of clients"
+msgstr "Número máximo de hilos"
 
 msgid "Maximum number of connections or listeners"
 msgstr "Número máximo de conexiones o escuchas"
@@ -33340,6 +33371,10 @@ msgstr "Número de transacciones por minuto en un servidor Lotus Domino"
 
 msgid "Number of Web ACLs"
 msgstr "Número de ACLs de la web"
+
+#, fuzzy
+msgid "Number of access points"
+msgstr "Número de puntos de datos"
 
 msgid "Number of active Plugs"
 msgstr "Número de enchufes activos"
@@ -57862,6 +57897,10 @@ msgstr "Utilizar las credenciales"
 msgid "Use custom connection parameters"
 msgstr "Utilizar parámetros de conexión personalizados"
 
+#, fuzzy
+msgid "Use default DNS server"
+msgstr "Utilizar el puerto por defecto"
+
 msgid "Use default layout"
 msgstr "Utilizar el diseño por defecto"
 
@@ -63719,6 +63758,10 @@ msgstr "decadencia"
 #, python-format
 msgid "default (%s)"
 msgstr "por defecto (%s)"
+
+#, fuzzy
+msgid "default DNS server"
+msgstr "Especificar servidor DNS"
 
 msgid "degraded"
 msgstr "degradado"

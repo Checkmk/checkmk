@@ -2453,6 +2453,10 @@ msgstr "Numele punctului de acces"
 msgid "Access point statistics"
 msgstr "Numele punctului de acces"
 
+#, fuzzy
+msgid "Access points"
+msgstr "Punct de Acces"
+
 msgid "Access to Agents"
 msgstr "Acces la Agenți"
 
@@ -9106,6 +9110,17 @@ msgid "Cisco Prime"
 msgstr ""
 
 #, fuzzy
+msgid "Cisco Prime WLAN Controller Access Points"
+msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "Cisco Prime WLAN Controller Clients"
+msgstr "Conexiuni Active"
+
+msgid "Cisco Prime WLAN Controller Last Backup"
+msgstr ""
+
+#, fuzzy
 msgid "Cisco Prime WiFi Access Points"
 msgstr "Conexiuni Active"
 
@@ -9279,6 +9294,10 @@ msgstr ""
 
 msgid "Client secret"
 msgstr ""
+
+#, fuzzy
+msgid "Clients"
+msgstr "Adaugă Conținut"
 
 #, fuzzy
 msgid "Clients pending on a blocking call"
@@ -25451,6 +25470,10 @@ msgstr "Adaugă Excepție"
 msgid "Last Updated"
 msgstr ""
 
+#, fuzzy
+msgid "Last backup"
+msgstr "Vechimea maxima a backup-urilor"
+
 msgid "Last bake result"
 msgstr ""
 
@@ -28590,6 +28613,10 @@ msgid "Maximum number of RPC requests per second"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
+msgid "Maximum number of access points"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Maximum number of allowed connection attempts reached, terminating"
 msgstr "Numarul maxim de incercari de verificare pentru serviciu"
 
@@ -28618,6 +28645,10 @@ msgstr "Numarul maxim de incercari de verificare pentru serviciu"
 #, fuzzy
 msgid "Maximum number of client type requests per second"
 msgstr "Numarul maxim de incercari de verificare pentru serviciu"
+
+#, fuzzy
+msgid "Maximum number of clients"
+msgstr "Numarul maxim de mesaje"
 
 msgid "Maximum number of connections or listeners"
 msgstr ""
@@ -31877,6 +31908,10 @@ msgstr ""
 #, fuzzy
 msgid "Number of Web ACLs"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Number of access points"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of active Plugs"
 msgstr ""
@@ -53908,6 +53943,10 @@ msgid "Use custom connection parameters"
 msgstr ""
 
 #, fuzzy
+msgid "Use default DNS server"
+msgstr "Matrice"
+
+#, fuzzy
 msgid "Use default layout"
 msgstr "Matrice"
 
@@ -58699,6 +58738,10 @@ msgstr ""
 #, python-format
 msgid "default (%s)"
 msgstr ""
+
+#, fuzzy
+msgid "default DNS server"
+msgstr "doua nivele"
 
 msgid "degraded"
 msgstr ""

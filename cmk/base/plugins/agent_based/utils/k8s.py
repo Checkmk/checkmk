@@ -161,6 +161,5 @@ class Memory(BaseModel):
 
 
 class Resources(BaseModel):
-
-    limit: float
-    requests: float
+    limit: float = float("inf")
+    requests: float = 0.0

@@ -13,9 +13,11 @@ from cmk.base.plugins.agent_based.utils.k8s import PodResources as PodResourcesC
 from cmk.base.plugins.agent_based.utils.k8s import (
     PodResourcesWithCapacity as PodResourcesWithCapacityC,
 )
+from cmk.base.plugins.agent_based.utils.k8s import Resources as ResourcesC
 
 from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import KubeletInfo as KubeletInfoA
+from cmk.special_agents.utils_kubernetes.schemata.api import Resources as ResourcesA
 from cmk.special_agents.utils_kubernetes.schemata.section import ContainerCount as ContainerCountA
 from cmk.special_agents.utils_kubernetes.schemata.section import Memory as MemoryA
 from cmk.special_agents.utils_kubernetes.schemata.section import NodeCount as NodeCountA
@@ -26,10 +28,11 @@ from cmk.special_agents.utils_kubernetes.schemata.section import (
 
 
 def test_schemata_did_not_diverge() -> None:
-    assert NodeCountA.schema() == NodeCountC.schema()
     assert ClusterInfoA.schema() == ClusterInfoC.schema()
     assert ContainerCountA.schema() == ContainerCountC.schema()
     assert KubeletInfoA.schema() == KubeletInfoC.schema()
+    assert MemoryC.schema() == MemoryA.schema()
+    assert NodeCountA.schema() == NodeCountC.schema()
     assert PodResourcesA.schema() == PodResourcesC.schema()
     assert PodResourcesWithCapacityA.schema() == PodResourcesWithCapacityC.schema()
-    assert MemoryC.schema() == MemoryA.schema()
+    assert ResourcesA.schema() == ResourcesC.schema()

@@ -1,0 +1,12 @@
+Title: Fix result view for searches with empty result
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1635494596
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p14
+
+If you searched in monitoring search or quicksearch and the result was empty,
+the view shown on "Enter" was always "allservices".

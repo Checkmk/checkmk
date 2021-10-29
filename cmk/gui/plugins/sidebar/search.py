@@ -514,16 +514,8 @@ class QuicksearchManager:
         # Generate a search page for the topmost search_object with results
         url_params: HTTPVariables = []
         for search_object in search_objects:
-            if search_object.num_rows() > 0:
-                url_params.extend(search_object.get_search_url_params())
-                break
-        else:
-            url_params.extend([
-                ("view_name", "allservices"),
-                ("filled_in", "filter"),
-                ("_show_filter_form", "0"),
-                ("service_regex", query),
-            ])
+            url_params.extend(search_object.get_search_url_params())
+            break
 
         return _build_url(url_params)
 

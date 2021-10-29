@@ -15,7 +15,7 @@ case "$1" in
     ;;
     set)
         sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
-        perl -pi -e 's/(ListenStream=)\d+/\1'"$2"'/g' "$OMD_ROOT/etc/mk-livestatus/livestatus.socket"
+        perl -pi -e 's|(ListenStream=)\d+|${1}'"$2"'|g' "$OMD_ROOT/etc/mk-livestatus/livestatus.socket"
     ;;
     depends)
         [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" = on ]

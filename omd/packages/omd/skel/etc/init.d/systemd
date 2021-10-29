@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Start only if at least one systemd-based service is activated.
-test "$(ls -A "${OMD_ROOT}/.config/systemd/user/")" || exit 5
+test "$(ls -A "${OMD_ROOT}/.config/systemd/user/" > /dev/null 2>&1)" || exit 5
 
 # Start only if LIVESTATUS_TCP is configured.
 # shellcheck source=/dev/null

@@ -10,7 +10,7 @@ import socket
 from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
-from cmk.utils.encryption import decrypt_by_agent_protocol, DigestType
+from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
@@ -175,7 +175,7 @@ class TCPFetcher(AgentFetcher):
 
     def _decrypt_agent_data(self, output: AgentRawData) -> AgentRawData:
         try:
-            protocol = DigestType(output[:2])
+            protocol = TransportProtocol(output[:2])
         except ValueError as exc:
             raise MKFetcherError from exc
 

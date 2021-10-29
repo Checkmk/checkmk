@@ -45,19 +45,19 @@ pub fn register(
 }
 
 pub fn agent_data(
+    uuid: &str,
+    marcv_address: &str,
+    server_spec: &ServerSpec,
     monitoring_data: Vec<u8>,
-    server_spec: ServerSpec,
 ) -> Result<String, Box<dyn Error>> {
-    let client_chain = server_spec.client_chain.into_bytes();
-    let uuid = server_spec.uuid;
-    let marcv_address = server_spec.marcv_address;
+    let client_chain = String::from(&server_spec.client_chain).into_bytes();
 
     // TODO: Use root cert from TOFU
     Ok(certs::client(Some(client_chain), None)?
-        .post(marcv_address + "/agent-data")
+        .post(String::from(marcv_address) + "/agent-data")
         .multipart(
             reqwest::blocking::multipart::Form::new()
-                .text("uuid", uuid)
+                .text("uuid", String::from(uuid))
                 .part(
                     "upload_file",
                     reqwest::blocking::multipart::Part::bytes(monitoring_data)

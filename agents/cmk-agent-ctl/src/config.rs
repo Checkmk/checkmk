@@ -3,8 +3,10 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::cli::Args;
+use super::uuid::make as make_uuid;
 use serde::Deserialize;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::fs::{read_to_string, write};
 use std::io;
 use std::path::Path;
@@ -57,14 +59,14 @@ impl Config {
 
 #[derive(Serialize, Deserialize)]
 pub struct RegistrationState {
+    #[serde(default = "make_uuid")]
+    pub uuid: String,
     #[serde(default)]
-    pub server_specs: Vec<ServerSpec>,
+    pub server_specs: HashMap<String, ServerSpec>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ServerSpec {
-    pub marcv_address: String,
-    pub uuid: String,
     pub client_chain: String,
     pub root_cert: String,
 }
@@ -83,9 +85,5 @@ impl RegistrationState {
 
     pub fn to_file(self, path: &Path) -> io::Result<()> {
         write(path, &serde_json::to_string(&self)?)
-    }
-
-    pub fn add_server_spec(&mut self, server_spec: ServerSpec) {
-        self.server_specs.push(server_spec)
     }
 }

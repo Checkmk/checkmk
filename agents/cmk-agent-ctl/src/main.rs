@@ -13,13 +13,13 @@ use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
 
-fn register(config: config::Config, path_state: &Path) {
-    let mut registration_state = RegistrationState::from_file(path_state).unwrap();
+fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
     let marcv_addresses = config
         .marcv_addresses
         .expect("Server addresses not specified");
 
     for marcv_address in marcv_addresses {
+        // TODO: what if registration_state.contains_key(marcv_address) (already registered)?
         let root_cert = match &config.root_certificate {
             Some(cert) => cert.clone(),
             None => match certs::fetch_root_cert(&marcv_address) {
@@ -28,8 +28,7 @@ fn register(config: config::Config, path_state: &Path) {
             },
         };
 
-        let uuid = uuid::make();
-        let (csr, private_key) = match certs::make_csr(&uuid) {
+        let (csr, private_key) = match certs::make_csr(&reg_state.uuid) {
             Ok(data) => data,
             Err(error) => panic!("Error creating CSR: {}", error),
         };
@@ -42,23 +41,29 @@ fn register(config: config::Config, path_state: &Path) {
 
         let client_chain = private_key + &certificate;
 
-        registration_state.add_server_spec(config::ServerSpec {
+        reg_state.server_specs.insert(
             marcv_address,
-            uuid,
-            client_chain,
-            root_cert,
-        })
+            config::ServerSpec {
+                client_chain,
+                root_cert,
+            },
+        );
     }
 
-    registration_state.to_file(path_state).unwrap();
+    reg_state.to_file(path_state_out).unwrap();
 }
 
 fn push(config: config::Config, reg_state: config::RegistrationState) {
     match monitoring_data::collect(config.package_name) {
         Ok(mon_data) => {
-            for server_spec in reg_state.server_specs {
+            for (marcv_address, server_spec) in reg_state.server_specs.iter() {
                 // TODO: Find a way we don't have to clone the mon_data (lifetimes?)
-                match marcv_api::agent_data(mon_data.clone(), server_spec) {
+                match marcv_api::agent_data(
+                    &reg_state.uuid,
+                    marcv_address,
+                    server_spec,
+                    mon_data.clone(),
+                ) {
                     Ok(message) => println!("{}", message),
                     Err(error) => panic!("Error pushing monitoring data: {}", error),
                 };
@@ -103,14 +108,14 @@ fn main() {
         Err(error) => panic!("Error while obtaining configuration: {}", error),
     };
 
-    let reg_state = match get_reg_state(&Path::new("state.json")) {
+    let reg_state = match get_reg_state(&path_state_file) {
         Ok(cfg) => cfg,
         Err(error) => panic!("Error while obtaining configuration: {}", error),
     };
 
     match mode.as_str() {
         "dump" => dump(config),
-        "register" => register(config, &path_state_file),
+        "register" => register(config, reg_state, &path_state_file),
         "push" => push(config, reg_state),
         "status" => status(config),
         _ => {

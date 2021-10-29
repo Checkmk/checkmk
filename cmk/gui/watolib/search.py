@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from contextlib import contextmanager, suppress
-from dataclasses import asdict, dataclass
+from contextlib import suppress
+from dataclasses import dataclass
 from functools import partial
 from itertools import chain
 from time import sleep
@@ -18,7 +18,6 @@ from typing import (
     Dict,
     Final,
     Iterable,
-    Iterator,
     List,
     Mapping,
     Optional,
@@ -26,26 +25,19 @@ from typing import (
 )
 
 import redis
-from werkzeug.test import create_environ
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.redis import get_redis_client
 
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
-from cmk.gui.config import make_config_object
-from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, g, local, request, RequestContext, user
+from cmk.gui.globals import g, request, user
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
-from cmk.gui.htmllib import html
-from cmk.gui.http import Request, Response
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
-from cmk.gui.utils.logged_in import SuperUserContext, UserContext
-from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.gui.utils.theme import Theme
+from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.utils import may_edit_ruleset
 
@@ -355,29 +347,8 @@ class IndexSearcher:
         self._user_id = user.ident
         self._redis_client = get_redis_client()
 
-    @contextmanager
-    def _SearchContext(self) -> Iterator[None]:
-        _request = Request(create_environ())
-        _response = Response()
-        _funnel = OutputFunnel(_response)
-        _theme = Theme()
-        _theme.from_config(config.ui_theme)
-        _config = make_config_object(asdict(local.config))
-        with RequestContext(
-            req=_request,
-            resp=_response,
-            funnel=_funnel,
-            config_obj=_config,
-            html_obj=html(_request, _response, _funnel, output_format="html"),
-            display_options=DisplayOptions(),
-            theme=_theme,
-        ), UserContext(self._user_id):
-            yield
-
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
-        with self._SearchContext():
-            results = self._search(query)
-        yield from self._sort_search_results(results)
+        yield from self._sort_search_results(self._search(query))
 
     def _search(self, query: SearchQuery) -> Mapping[str, Iterable[SearchResult]]:
         if not IndexBuilder.index_is_built(self._redis_client):

@@ -1505,7 +1505,8 @@ class MonitoringSearch(ABCMegaMenuSearch):
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
         tooltip = _(
-            "Search for menu entries, hosts, services or host- and servicegroups.\n"
+            "Search with regular expressions for menu entries, \n"
+            "hosts, services or host- and servicegroups.\n\n"
             "You can use the following filters:\n"
             "h: Host\n"
             "s: Service\n"
@@ -1515,7 +1516,8 @@ class MonitoringSearch(ABCMegaMenuSearch):
             "al: Alias\n"
             "tg: Host tag\n"
             "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-            "sl: Service label (e.g. sl: cmk/os_family:linux)"
+            "sl: Service label (e.g. sl: cmk/os_family:linux)\n\n"
+            "Note that for simplicity '*' will be substituted with '.*'."
         )
         html.input(
             id_=f"mk_side_search_field_{self.name}",

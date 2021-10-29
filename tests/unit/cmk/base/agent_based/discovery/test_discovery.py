@@ -1634,8 +1634,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     }
 
     monkeypatch.setattr(
-        _discovered_services,
-        "_load_existing_services",
+        autochecks.AutochecksStore,
+        "read",
         lambda *args, **kwargs: [
             services["old"],
             services["vanished"],

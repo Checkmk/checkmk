@@ -161,11 +161,11 @@ def parse_autochecks_services(
     return [
         service
         for entry in autocheck_entries
-        if (service := _parse_autocheck_service(hostname, entry, service_description)) is not None
+        if (service := parse_autocheck_service(hostname, entry, service_description)) is not None
     ]
 
 
-def _parse_autocheck_service(
+def parse_autocheck_service(
     hostname: HostName,
     autocheck_entry: AutocheckEntry,
     service_description: GetServiceDescription,
@@ -250,7 +250,7 @@ def set_autochecks_of_cluster(
         ]
 
         # write new autochecks file for that host
-        save_autochecks_services(node, deduplicate_autochecks(new_autochecks))
+        _save_autochecks_services(node, deduplicate_autochecks(new_autochecks))
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
@@ -258,7 +258,7 @@ def set_autochecks_of_cluster(
     AutochecksStore(hostname).clear()
 
 
-def save_autochecks_services(
+def _save_autochecks_services(
     hostname: HostName,
     services: Sequence[AutocheckService],
 ) -> None:
@@ -292,5 +292,5 @@ def remove_autochecks_of_host(
         )
     ]
 
-    save_autochecks_services(hostname, new_services)
+    _save_autochecks_services(hostname, new_services)
     return len(existing_services) - len(new_services)

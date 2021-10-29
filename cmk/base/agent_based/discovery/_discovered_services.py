@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Container, Generator, Iterator, List, MutableMapping, Optional, Sequence, Set
+from typing import Container, Iterator, List, MutableMapping, Optional, Sequence, Set
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -26,15 +26,14 @@ from cmk.utils.type_defs import (
 import cmk.core_helpers.cache
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based import checking_classes
-from cmk.base.check_utils import AutocheckService, ServiceID
-from cmk.base.discovered_labels import ServiceLabel
+from cmk.base.autochecks import AutocheckEntry, AutochecksStore
+from cmk.base.check_utils import ServiceID
 
 from .utils import QualifiedDiscovery
 
@@ -48,10 +47,10 @@ def analyse_discovered_services(
     forget_existing: bool,
     keep_vanished: bool,
     on_error: OnError,
-) -> QualifiedDiscovery[AutocheckService]:
+) -> QualifiedDiscovery[AutocheckEntry]:
 
     return _analyse_discovered_services(
-        existing_services=_load_existing_services(host_name=host_name),
+        existing_services=AutochecksStore(host_name).read(),
         discovered_services=_discover_services(
             host_name=host_name,
             ipaddress=ipaddress,
@@ -67,12 +66,12 @@ def analyse_discovered_services(
 
 def _analyse_discovered_services(
     *,
-    existing_services: Sequence[AutocheckService],
-    discovered_services: List[AutocheckService],
+    existing_services: Sequence[AutocheckEntry],
+    discovered_services: List[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
-) -> QualifiedDiscovery[AutocheckService]:
+) -> QualifiedDiscovery[AutocheckEntry]:
 
     return QualifiedDiscovery(
         preexisting=_services_to_remember(
@@ -86,16 +85,16 @@ def _analyse_discovered_services(
             run_plugin_names=run_plugin_names,
             keep_vanished=keep_vanished,
         ),
-        key=lambda s: s.id(),
+        key=lambda s: (s.check_plugin_name, s.item),
     )
 
 
 def _services_to_remember(
     *,
-    choose_from: Sequence[AutocheckService],
+    choose_from: Sequence[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
-) -> Sequence[AutocheckService]:
+) -> Sequence[AutocheckEntry]:
     """Compile a list of services to regard as being the last known state
 
     This list is used to classify services into new/old/vanished.
@@ -107,10 +106,10 @@ def _services_to_remember(
 
 def _services_to_keep(
     *,
-    choose_from: Sequence[AutocheckService],
+    choose_from: Sequence[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     keep_vanished: bool,
-) -> List[AutocheckService]:
+) -> List[AutocheckEntry]:
     """Compile a list of services to keep in addition to the discovered ones
 
     These services are considered to be currently present (even if they are not discovered).
@@ -124,21 +123,14 @@ def _services_to_keep(
 
 
 def _drop_plugins_services(
-    services: Sequence[AutocheckService],
+    services: Sequence[AutocheckEntry],
     plugin_names: Container[CheckPluginName],
-) -> List[AutocheckService]:
+) -> List[AutocheckEntry]:
     return (
         []
         if plugin_names is EVERYTHING
         else [s for s in services if s.check_plugin_name not in plugin_names]
     )
-
-
-def _load_existing_services(
-    *,
-    host_name: HostName,
-) -> Sequence[AutocheckService]:
-    return autochecks.parse_autochecks_services(host_name, config.service_description)
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -166,7 +158,7 @@ def _discover_services(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     on_error: OnError,
-) -> List[AutocheckService]:
+) -> List[AutocheckEntry]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(parsed_sections_broker, run_plugin_names)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
@@ -174,15 +166,15 @@ def _discover_services(
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for host_extra_conf{_merged,} calls in the legacy checks.
 
-    service_table: MutableMapping[ServiceID, AutocheckService] = {}
+    service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
     try:
         with plugin_contexts.current_host(host_name):
             for check_plugin_name in plugin_candidates:
                 try:
                     service_table.update(
                         {
-                            service.id(): service
-                            for service in _discover_plugins_services(
+                            (entry.check_plugin_name, entry.item): entry
+                            for entry in _discover_plugins_services(
                                 check_plugin_name=check_plugin_name,
                                 host_name=host_name,
                                 ipaddress=ipaddress,
@@ -288,7 +280,7 @@ def _discover_plugins_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
-) -> Iterator[AutocheckService]:
+) -> Iterator[AutocheckEntry]:
     # Skip this check type if is ignored for that host
     if config.service_ignored(host_name, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -322,8 +314,16 @@ def _discover_plugins_services(
         kwargs = {**kwargs, "params": disco_params}
 
     try:
-        plugins_services = check_plugin.discovery_function(**kwargs)
-        yield from _enriched_discovered_services(host_name, check_plugin.name, plugins_services)
+        yield from (
+            AutocheckEntry(
+                check_plugin_name=check_plugin.name,
+                item=service.item,
+                parameters=unwrap_parameters(service.parameters),
+                # Convert from APIs ServiceLabel to internal ServiceLabel
+                service_labels={label.name: label.value for label in service.labels},
+            )
+            for service in check_plugin.discovery_function(**kwargs)
+        )
     except Exception as e:
         if on_error is OnError.RAISE:
             raise
@@ -332,27 +332,3 @@ def _discover_plugins_services(
                 "  Exception in discovery function of check plugin '%s': %s"
                 % (check_plugin.name, e)
             )
-
-
-def _enriched_discovered_services(
-    host_name: HostName,
-    check_plugin_name: CheckPluginName,
-    plugins_services: checking_classes.DiscoveryResult,
-) -> Generator[AutocheckService, None, None]:
-    for service in plugins_services:
-        description = config.service_description(host_name, check_plugin_name, service.item)
-        # make sanity check
-        if not description:
-            console.error(
-                f"{host_name}: {check_plugin_name} returned empty service description - ignoring it.\n"
-            )
-            continue
-
-        yield AutocheckService(
-            check_plugin_name=check_plugin_name,
-            item=service.item,
-            description=description,
-            parameters=unwrap_parameters(service.parameters),
-            # Convert from APIs ServiceLabel to internal ServiceLabel
-            service_labels={name: ServiceLabel(name, value) for name, value in service.labels},
-        )

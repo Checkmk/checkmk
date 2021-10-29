@@ -278,7 +278,7 @@ def _commandline_discovery_on_host(
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
     # We should put the persisting in one place.
-    autochecks.save_autochecks_services(host_name, service_result.present)
+    autochecks.AutochecksStore(host_name).write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):
@@ -1029,6 +1029,17 @@ def _get_node_services(
         on_error=on_error,
     )
 
+    # TODO: see if we really need the service object. Can we just compute
+    # the description and keep using the AucheckEntry instances?
+    services = [
+        (check_source, service)
+        for check_source, autocheck_entry in service_result.chain_with_qualifier()
+        if (
+            service := autochecks.parse_autocheck_service(
+                host_name, autocheck_entry, config.service_description
+            )
+        )
+    ]
     return {
         service.id(): (
             _node_service_source(
@@ -1040,7 +1051,7 @@ def _get_node_services(
             service,
             [host_name],
         )
-        for check_source, service in service_result.chain_with_qualifier()
+        for check_source, service in services
     }
 
 
@@ -1163,7 +1174,7 @@ def _get_cluster_services(
         node_config = config_cache.get_host_config(node)
         node_ipaddress = config.lookup_ip_address(node_config)
 
-        services = analyse_discovered_services(
+        entries = analyse_discovered_services(
             host_name=node,
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
@@ -1173,7 +1184,18 @@ def _get_cluster_services(
             on_error=on_error,
         )
 
-        for check_source, service in services.chain_with_qualifier():
+        # TODO: see if we really need the service object. Can we just compute
+        # the description and keep using the AucheckEntry instances?
+        services = [
+            (check_source, service)
+            for check_source, autocheck_entry in entries.chain_with_qualifier()
+            if (
+                service := autochecks.parse_autocheck_service(
+                    node, autocheck_entry, config.service_description
+                )
+            )
+        ]
+        for check_source, service in services:
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,

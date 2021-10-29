@@ -37,7 +37,13 @@ class TCPFetcher(AgentFetcher):
         self.timeout: Final = timeout
         self.encryption_settings: Final = encryption_settings
         self.use_only_cache: Final = use_only_cache
-        self._socket: Optional[socket.socket] = None
+        self._opt_socket: Optional[socket.socket] = None
+
+    @property
+    def _socket(self) -> socket.socket:
+        if self._opt_socket is None:
+            raise MKFetcherError("Not connected")
+        return self._opt_socket
 
     def __repr__(self) -> str:
         return (
@@ -82,14 +88,14 @@ class TCPFetcher(AgentFetcher):
             self.address[1],
             self.timeout,
         )
-        self._socket = socket.socket(self.family, socket.SOCK_STREAM)
+        self._opt_socket = socket.socket(self.family, socket.SOCK_STREAM)
         try:
             self._socket.settimeout(self.timeout)
             self._socket.connect(self.address)
             self._socket.settimeout(None)
         except socket.error as e:
             self._socket.close()
-            self._socket = None
+            self._opt_socket = None
 
             if cmk.utils.debug.enabled():
                 raise
@@ -99,16 +105,13 @@ class TCPFetcher(AgentFetcher):
         self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
         if self._socket is not None:
             self._socket.close()
-        self._socket = None
+        self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self.use_only_cache:
             raise MKFetcherError(
                 "Got no data: No usable cache file present at %s" % self.file_cache.base_path
             )
-        if self._socket is None:
-            raise MKFetcherError("Not connected")
-
         return self._validate_decrypted_data(self._decrypt(self._raw_data()))
 
     def _raw_data(self) -> AgentRawData:

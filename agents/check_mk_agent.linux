@@ -192,9 +192,10 @@ set_up_profiling() {
 preamble_5() {
     unset -v LANG
     if inpath locale && inpath paste; then
-        case "$(locale -a | paste -sd ' ' -)" in
-            *[!A-Za-z]'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
-            *[!A-Za-z]'C.utf8'*) LC_ALL="C.utf8" ;;
+	#     v keep this spaces in place, to catch if string is in first postion
+        case " $(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'*) LC_ALL="C.utf8" ;;
         esac
         LC_ALL="${LC_ALL:-C}"
         export LC_ALL

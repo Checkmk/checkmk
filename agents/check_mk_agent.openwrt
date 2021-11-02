@@ -265,13 +265,15 @@ section_df() {
     # These should generally be monitored on the NFS server, not on the clients.
 
     echo '<<<df>>>'
-    df -PTk | sed 1d
+    _df_excludefs="Type|smbfs|cifs|iso9660|udf|nfsv4|nfs|mvfs|zfs|prl_fs"
+    df -kPT | awk -v filter="${_df_excludefs}" '$2 !~ filter'
 
     # df inodes information
-    echo '<<<df>>>'
-    echo '[df_inodes_start]'
-    df -PTi | sed 1d
-    echo '[df_inodes_end]'
+    if df -i >/dev/null 2>&1; then
+        printf -- '%s\n' "<<<df>>>" "[df_inodes_start]"
+        df -PTi | awk -v filter="${_df_excludefs}" '$2 !~ filter'
+        printf -- '%s\n'  '[df_inodes_end]'
+    fi
 }
 
 section_zfsget() {

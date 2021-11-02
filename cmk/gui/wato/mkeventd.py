@@ -1282,7 +1282,7 @@ def vs_mkeventd_rule(customer=None):
 #   |      |_____\___/ \__,_|\__,_|  \___/\/ |____/ \__,_| \_/ \___|       |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Loading and saving of rule packages                                 |
+#   |  Loading and saving of rule packs                                    |
 #   '----------------------------------------------------------------------'
 
 
@@ -1511,7 +1511,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return ["mkeventd.edit"]
 
     def title(self):
-        return _("Event Console rule packages")
+        return _("Event Console rule packs")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -1623,7 +1623,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             flash(_("Copied rules from master"))
             return redirect(self.mode_url())
 
-        # Move rule packages
+        # Move rule packs
         elif request.has_var("_move"):
             from_pos = request.get_integer_input_mandatory("_move")
             to_pos = request.get_integer_input_mandatory("_index")
@@ -2008,7 +2008,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         self._rules = self._rule_pack["rules"]
 
     def title(self):
-        return _("Rule package %s") % self._rule_pack["title"]
+        return _("Rule pack %s") % self._rule_pack["title"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -2172,7 +2172,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         priorities = _deref(cmk.gui.mkeventd.syslog_priorities)
         facilities = dict(_deref(cmk.gui.mkeventd.syslog_facilities))
 
-        # Show content of the rule package
+        # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
@@ -4687,7 +4687,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
     @classmethod
     def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
         yield BreadcrumbItem(
-            title="Event Console rule packages",
+            title="Event Console rule packs",
             url=makeuri_contextless(
                 request,
                 [("mode", "mkeventd_rule_packs")],
@@ -5075,7 +5075,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
             rule_pack_id = rule_pack["id"]
             yield MatchItem(
                 title=f"{rule_pack_id} ({rule_pack_title})",
-                topic=_("Event Console rule packages"),
+                topic=_("Event Console rule packs"),
                 url=ModeEventConsoleRules.mode_url(rule_pack=rule_pack["id"]),
                 match_texts=[rule_pack_title, rule_pack_id],
             )

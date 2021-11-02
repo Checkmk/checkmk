@@ -458,7 +458,7 @@ class IndexSearcher:
         # string concatenation is used
         return (
             # _("Business Intelligence"),
-            _("Event Console rule packages"),
+            _("Event Console rule packs"),
             _("Event Console rules"),
             _("Event Console settings"),
             # _("Users"),

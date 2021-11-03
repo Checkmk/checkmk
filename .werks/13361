@@ -1,0 +1,20 @@
+Title: CRE: Disallow round brackets and tab in service descriptions
+Class: fix
+Compatible: compat
+Component: core
+Date: 1635929078
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p15
+
+When having a round bracket in service description the nagios core would
+not start.
+
+Having a round bracket in service description was not allowed before 2.0.0p14 but
+this restriction was accidentally removed with Werk #13360.
+Round brackets will again be removed from service descriptions from now on which
+matches the behaviour from 2.0.0p13.
+
+Notice: You are only affected by this issue if you are using the Nagios core

@@ -74,13 +74,17 @@ inpath() {
 # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
 unset -v LANG
 if inpath locale && inpath paste; then
-    case "$(locale -a | paste -sd ' ' -)" in
-        *'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
-        *'C.utf8'*) LC_ALL="C.utf8" ;;
+    # The space at the beginning of " $(locale ...)" is important, since we also have a space in
+    # the conditions. We need this to also match C.UTF-8 and C.utf8 right at the beginning.
+    # Furthermore, we cannot simply use *'C.UTF-8'* (without the space), because this also
+    # matches e.g. es_EC.UTF-8.
+    case " $(locale -a | paste -sd ' ' -)" in
+        *' C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+        *' C.utf8'*) LC_ALL="C.utf8" ;;
     esac
-    LC_ALL="${LC_ALL:-C}"
-    export LC_ALL
 fi
+LC_ALL="${LC_ALL:-C}"
+export LC_ALL
 
 read_python_version() {
     if inpath "$1"; then

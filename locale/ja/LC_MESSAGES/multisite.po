@@ -9753,6 +9753,10 @@ msgstr "中央値の色"
 msgid "Color of the scattered dots"
 msgstr "散らばった点の色"
 
+#, fuzzy
+msgid "Color theme"
+msgstr "中央値の色"
+
 msgid "Colored background"
 msgstr "色付きのバックグラウンド"
 
@@ -24691,9 +24695,6 @@ msgstr "Ntopで知られているインターフェース"
 msgid "Interface settings"
 msgstr "インターフェース設定"
 
-msgid "Interface theme"
-msgstr "インターフェーステーマ"
-
 msgid "Interfaces"
 msgstr "インターフェイス"
 
@@ -36352,9 +36353,6 @@ msgstr "クイック検索"
 
 msgid "Quick setup"
 msgstr "クイックセットアップ"
-
-msgid "Quick toggle"
-msgstr "クイックトグル"
 
 msgid "Quicksearch"
 msgstr "クイック検索"
@@ -61862,6 +61860,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Interface theme"
+#~ msgstr "インターフェーステーマ"
+
+#~ msgid "Quick toggle"
+#~ msgstr "クイックトグル"
 
 #, fuzzy
 #~| msgid "Install and activate systemd service"

@@ -10171,6 +10171,10 @@ msgstr "Colore della mediana"
 msgid "Color of the scattered dots"
 msgstr "Colore dei punti sparsi"
 
+#, fuzzy
+msgid "Color theme"
+msgstr "Colore della mediana"
+
 msgid "Colored background"
 msgstr "Sfondo colorato"
 
@@ -25714,9 +25718,6 @@ msgstr "Interfaccia conosciuta in Ntop"
 msgid "Interface settings"
 msgstr "Impostazioni dell'interfaccia"
 
-msgid "Interface theme"
-msgstr "Tema dell'interfaccia"
-
 msgid "Interfaces"
 msgstr "Interfacce"
 
@@ -37711,9 +37712,6 @@ msgstr "Ricerca rapida"
 
 msgid "Quick setup"
 msgstr "Impostazione rapida"
-
-msgid "Quick toggle"
-msgstr "Girella rapida"
 
 msgid "Quicksearch"
 msgstr "Quicksearch"
@@ -64931,6 +64929,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Interface theme"
+#~ msgstr "Tema dell'interfaccia"
+
+#~ msgid "Quick toggle"
+#~ msgstr "Girella rapida"
 
 #, fuzzy
 #~| msgid "Install and activate systemd service"

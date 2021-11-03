@@ -9574,6 +9574,10 @@ msgid "Color of the scattered dots"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
+msgid "Color theme"
+msgstr "Parola"
+
+#, fuzzy
 msgid "Colored background"
 msgstr "Sterge Elementul"
 
@@ -24217,10 +24221,6 @@ msgstr "Grup nou"
 msgid "Interface settings"
 msgstr "Setari"
 
-#, fuzzy
-msgid "Interface theme"
-msgstr "Setari"
-
 msgid "Interfaces"
 msgstr ""
 
@@ -36413,10 +36413,6 @@ msgstr "Cautare rapida"
 
 #, fuzzy
 msgid "Quick setup"
-msgstr "Cautare rapida"
-
-#, fuzzy
-msgid "Quick toggle"
 msgstr "Cautare rapida"
 
 msgid "Quicksearch"
@@ -60377,6 +60373,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Interface theme"
+#~ msgstr "Setari"
+
+#, fuzzy
+#~ msgid "Quick toggle"
+#~ msgstr "Cautare rapida"
 
 #, fuzzy
 #~ msgid "Label with status color"

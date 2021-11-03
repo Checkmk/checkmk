@@ -10116,6 +10116,10 @@ msgstr "Farbe für den Median"
 msgid "Color of the scattered dots"
 msgstr "Farbe für die vereinzelten Punkte"
 
+#, fuzzy
+msgid "Color theme"
+msgstr "Farbe für den Median"
+
 msgid "Colored background"
 msgstr "Farbiger Hintergrund"
 
@@ -25673,9 +25677,6 @@ msgstr "In Ntop bekannte Netzwerkschnittstellen"
 msgid "Interface settings"
 msgstr "Einstellungen der Netzwerkschnittstellen"
 
-msgid "Interface theme"
-msgstr "Thema der Oberfläche"
-
 msgid "Interfaces"
 msgstr "Schnittstellen"
 
@@ -37663,9 +37664,6 @@ msgstr "Schnellsuche"
 
 msgid "Quick setup"
 msgstr "Schnelle Einrichtung"
-
-msgid "Quick toggle"
-msgstr "Schneller Wechsel"
 
 msgid "Quicksearch"
 msgstr "Schnellsuche"
@@ -64809,6 +64807,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Interface theme"
+#~ msgstr "Thema der Oberfläche"
+
+#~ msgid "Quick toggle"
+#~ msgstr "Schneller Wechsel"
 
 #, fuzzy
 #~| msgid "Install and activate systemd service"

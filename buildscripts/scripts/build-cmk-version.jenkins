@@ -172,6 +172,7 @@ timeout(time: 12, unit: 'HOURS') {
                 def FINAL_SOURCE_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + SOURCE_PACKAGE_NAME
 
                 copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
+                generate_version_file(get_versions_dir(WORKSPACE, CMK_VERS), CMK_VERS)
 
                 cleanup_source_package(WORKSPACE, FINAL_SOURCE_PACKAGE_PATH)
 
@@ -321,6 +322,12 @@ def build_linux_agent_updater(AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO
             cp ${WORKSPACE}/git/enterprise/agents/plugins/cmk-update-agent${SUFFIX} ${WORKSPACE}/agents
         """
     }
+}
+
+def generate_version_file(PATH, CMK_VERS) {
+    sh("""
+        echo "${CMK_VERS}" > ${PATH}/VERSION.cmk
+    """)
 }
 
 def create_source_package(WORKSPACE, CMK_VERS) {

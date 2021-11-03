@@ -45,3 +45,10 @@ class CpuUsage(BaseModel):
     """section: k8s_live_cpu_usage_v1"""
 
     cpu_usage_total: int
+
+
+class CpuLoad(BaseModel):
+    """section: k8s_live_cpu_load_v1"""
+
+    cpu_cfs_throttled_time: int
+    cpu_load_average: int

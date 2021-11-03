@@ -314,6 +314,7 @@ def filter_outdated_pods(
 def pod_checkmk_sections(containers: List[LiveContainer]) -> None:
     sections = [
         ("cpu_usage_total", section.CpuUsage, ("cpu_usage_total")),  # TODO: adjust check section
+        ("cpu_load", section.CpuLoad, ("cpu_cfs_throttled_time", "cpu_load_average")),
     ]
     for section_name, section_model, metrics in sections:
         with SectionWriter(f"k8s_live_{section_name}_v1") as writer:

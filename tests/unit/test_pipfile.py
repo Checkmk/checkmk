@@ -253,8 +253,8 @@ def test_dependencies_are_used_cee() -> None:
     assert sorted(get_unused_dependencies()) == CEE_UNUSED_PACKAGES
 
 
-@pytest.mark.skipif(is_enterprise_repo(), reason="Test is only for CCE")
-def test_dependencies_are_used_cce() -> None:
+@pytest.mark.skipif(is_enterprise_repo(), reason="Test is only for CRE")
+def test_dependencies_are_used_cre() -> None:
     unused_packages = CEE_UNUSED_PACKAGES + [
         "PyPDF3",  # is only used in CEE
         "numpy",  # is only used in CEE

@@ -1,33 +1,14 @@
 import datetime
 import json
 
-import pytest
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
-from kubernetes.client import ApiClient  # type: ignore[import] # pylint: disable=import-error
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.transform import Labels, node_conditions, parse_metadata
 
 
-def kubernetes_api_client():
-    config = client.Configuration()
-    config.host = "http://dummy"
-    config.api_key_prefix["authorization"] = "Bearer"
-    config.api_key["authorization"] = "dummy"
-    config.verify_ssl = False
-    return ApiClient(config)
-
-
 class TestAPINode:
-    @pytest.fixture
-    def core_client(self):
-        return client.CoreV1Api(kubernetes_api_client())
-
-    @pytest.fixture
-    def dummy_host(self):
-        return kubernetes_api_client().configuration.host
-
     def test_parse_metadata(self):
         labels = {
             "beta.kubernetes.io/arch": "amd64",

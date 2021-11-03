@@ -130,6 +130,7 @@ class Pod:
         info: api.PodInfo,
         resources: api.PodUsageResources,
         containers: Sequence[api.ContainerInfo],
+        conditions: Sequence[api.PodCondition],
     ) -> None:
         self.uid = PodUID(uid)
         self.metadata = metadata
@@ -137,6 +138,7 @@ class Pod:
         self.phase = phase
         self.resources = resources
         self.containers = containers
+        self.status_conditions = conditions
 
     def name(self, prepend_namespace=False) -> str:
         if not prepend_namespace:
@@ -148,6 +150,20 @@ class Pod:
         return Resources(
             limit=self.resources.cpu.limit,
             requests=self.resources.cpu.requests,
+        )
+
+    def conditions(self) -> section.PodConditions:
+        # TODO: separate section for custom conditions
+        return section.PodConditions(
+            **{
+                condition.type.value: section.PodCondition(
+                    status=condition.status,
+                    reason=condition.reason,
+                    detail=condition.detail,
+                )
+                for condition in self.status_conditions
+                if condition.type is not None
+            }
         )
 
 
@@ -211,7 +227,15 @@ class Cluster:
 
         for pod in api_server.pods():
             cluster.add_pod(
-                Pod(pod.uid, pod.metadata, pod.phase, pod.info, pod.resources, pod.containers)
+                Pod(
+                    pod.uid,
+                    pod.metadata,
+                    pod.phase,
+                    pod.info,
+                    pod.resources,
+                    pod.containers,
+                    pod.conditions,
+                )
             )
 
         return cluster
@@ -297,7 +321,10 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
 
 def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
     def output_sections(cluster_pod: Pod) -> None:
-        sections = {"k8s_cpu_resources": cluster_pod.cpu_resources}
+        sections = {
+            "k8s_cpu_resources": cluster_pod.cpu_resources,
+            "k8s_pod_condition_v1": cluster_pod.conditions,
+        }
         _write_sections(sections)
 
     for pod in api_pods:

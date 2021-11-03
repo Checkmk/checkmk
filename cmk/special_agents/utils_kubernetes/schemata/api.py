@@ -17,6 +17,7 @@ import enum
 from typing import Dict, List, Literal, NewType, Optional, Protocol, Sequence
 
 from pydantic import BaseModel
+from pydantic.class_validators import validator
 
 Labels = NewType("Labels", Dict[str, str])
 
@@ -110,6 +111,29 @@ class ContainerInfo(BaseModel):
     state: ContainerState
 
 
+class ConditionType(str, enum.Enum):
+    # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
+    PODSCHEDULED = "scheduled"
+    CONTAINERSREADY = "containersready"
+    INITIALIZED = "initialized"
+    READY = "ready"
+
+
+class PodCondition(BaseModel):
+    status: bool
+    type: Optional[ConditionType]
+    custom_type: Optional[str]
+    reason: Optional[str]
+    detail: Optional[str]
+
+    @validator("custom_type")
+    @classmethod
+    def verify_type(cls, v, values):
+        if "type" not in values and not v:
+            raise ValueError("either type or custom_type is required")
+        return v
+
+
 class Pod(BaseModel):
     uid: str
     metadata: MetaData
@@ -117,6 +141,7 @@ class Pod(BaseModel):
     info: PodInfo
     resources: PodUsageResources
     containers: List[ContainerInfo]
+    conditions: List[PodCondition]
 
 
 class ClusterInfo(BaseModel):

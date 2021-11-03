@@ -10,6 +10,7 @@ The schemas contained in this file are used to serialize data in the agent outpu
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 """
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -24,6 +25,21 @@ class PodResources(BaseModel):
     unknown: int = 0
     capacity: int = 0
     allocatable: int = 0
+
+
+class PodCondition(BaseModel):
+    status: bool
+    reason: Optional[str]
+    detail: Optional[str]
+
+
+class PodConditions(BaseModel):
+    """section: k8s_pod_conditions_v1"""
+
+    initialized: PodCondition
+    scheduled: PodCondition
+    containersready: PodCondition
+    ready: PodCondition
 
 
 class NodeCount(BaseModel):

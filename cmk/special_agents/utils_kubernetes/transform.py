@@ -14,7 +14,7 @@ from __future__ import annotations
 import datetime
 import time
 from collections import defaultdict
-from typing import Dict, List, NewType, Optional
+from typing import Dict, List, NewType, Optional, Sequence, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
@@ -142,6 +142,31 @@ def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
     return result
 
 
+def pod_conditions(
+    conditions: Sequence[client.V1PodCondition],
+) -> List[api.PodCondition]:
+    condition_types = {
+        "PodScheduled": api.ConditionType.PODSCHEDULED,
+        "Initialized": api.ConditionType.INITIALIZED,
+        "ContainersReady": api.ConditionType.CONTAINERSREADY,
+        "Ready": api.ConditionType.READY,
+    }
+    result = []
+    for condition in conditions:
+        pod_condition = {
+            "status": condition.status,
+            "reason": condition.reason,
+            "detail": condition.message,
+        }
+        if condition.type in condition_types:
+            pod_condition["type"] = condition_types[condition.type]
+        else:
+            pod_condition["custom_type"] = condition.type
+
+        result.append(api.PodCondition(**pod_condition))
+    return result
+
+
 def is_control_plane(labels: Optional[Labels]) -> bool:
     return labels is not None and (
         # 1.18 returns an empty string, 1.20 returns 'true'
@@ -201,6 +226,7 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
         info=parse_pod_info(pod),
         resources=pod_resources(pod),
         containers=pod_containers(pod),
+        conditions=pod_conditions(pod.status.conditions),
     )
 
 

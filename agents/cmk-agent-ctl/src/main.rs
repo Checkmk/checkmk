@@ -16,7 +16,10 @@ use structopt::StructOpt;
 fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
     let marcv_addresses = config
         .marcv_addresses
-        .expect("Server addresses not specified");
+        .expect("Server addresses not specified.");
+    let credentials = config
+        .credentials
+        .expect("Missing credentials for registration.");
 
     for marcv_address in marcv_addresses {
         // TODO: what if registration_state.contains_key(marcv_address) (already registered)?
@@ -32,12 +35,10 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
             Ok(data) => data,
             Err(error) => panic!("Error creating CSR: {}", error),
         };
-        let certificate =
-            // TODO: geht username and passsword from config
-            match marcv_api::register(&marcv_address, &root_cert, csr, "cmkadmin", "cmk") {
-                Ok(cert) => cert,
-                Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
-            };
+        let certificate = match marcv_api::csr(&marcv_address, &root_cert, csr, &credentials) {
+            Ok(cert) => cert,
+            Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
+        };
 
         let client_chain = private_key + &certificate;
 

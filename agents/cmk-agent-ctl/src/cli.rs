@@ -10,9 +10,15 @@ pub struct Args {
     #[structopt(help = "Execution mode, should be one of 'register', 'push', 'dump', 'status'")]
     pub mode: String,
 
-    #[structopt(long, parse(from_str))]
+    #[structopt(long, short = "s", parse(from_str))]
     pub server: Option<Vec<String>>,
 
     #[structopt(long, parse(from_str))]
     pub package_name: Option<String>,
+
+    #[structopt(long, short = "u", requires = "password", parse(from_str))]
+    pub user: Option<String>,
+
+    #[structopt(long, short = "p", requires = "user", parse(from_str))]
+    pub password: Option<String>,
 }

@@ -23,21 +23,17 @@ struct CSRResponse {
     cert: String,
 }
 
-pub fn register(
+pub fn csr(
     server_address: &str,
     root_cert: &str,
     csr: String,
-    checkmk_user: &str,
-    checkmk_password: &str,
+    credentials: &str,
 ) -> Result<String, Box<dyn Error>> {
     Ok(
         certs::client(None, Some(String::from(root_cert).into_bytes()))?
             .post(format!("https://{}/csr", server_address))
-            .header(
-                "authentication",
-                format!("Bearer {} {}", checkmk_user, checkmk_password),
-            )
-            .json(&CSRBody { csr: csr })
+            .header("authentication", format!("Bearer {}", credentials))
+            .json(&CSRBody { csr })
             .send()?
             .json::<CSRResponse>()?
             .cert,
@@ -52,7 +48,9 @@ pub fn agent_data(
 ) -> Result<String, Box<dyn Error>> {
     let client_chain = String::from(&server_spec.client_chain).into_bytes();
 
-    // TODO: Use root cert from TOFU
+    // TODO:
+    // - Send client cert in header instead of as TLS client cert (agent receiver isn't capable of extracting cert info)
+    // - Use root cert
     Ok(certs::client(Some(client_chain), None)?
         .post(String::from(marcv_address) + "/agent-data")
         .multipart(

@@ -23,6 +23,9 @@ pub struct Config {
     pub package_name: Option<String>,
 
     #[serde(default)]
+    pub credentials: Option<String>,
+
+    #[serde(default)]
     pub root_certificate: Option<String>,
 }
 
@@ -43,6 +46,7 @@ impl Config {
             marcv_addresses: winner.marcv_addresses.or(loser.marcv_addresses),
             uuid: winner.uuid.or(loser.uuid),
             package_name: winner.package_name.or(loser.package_name),
+            credentials: winner.credentials.or(loser.credentials),
             root_certificate: winner.root_certificate.or(loser.root_certificate),
         };
     }
@@ -52,6 +56,11 @@ impl Config {
             marcv_addresses: args.server,
             uuid: None,
             package_name: args.package_name,
+            credentials: if let (Some(u), Some(p)) = (args.user, args.password) {
+                Some(String::from(format!("{} {}", &u, &p)))
+            } else {
+                None
+            },
             root_certificate: None,
         };
     }

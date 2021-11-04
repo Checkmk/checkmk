@@ -187,6 +187,11 @@ class CheckmkApp:
     def __init__(self, debug=False):
         self.debug = debug
 
+        # Make sure all plugins are initialized as early as possible. At least
+        # we need the plugins (i.e. the permissions declared in these) at the
+        # time before the first login for generating auth.php.
+        modules.call_load_plugins_hooks()
+
     def __call__(self, environ, start_response):
         req = http.Request(environ)
 
@@ -228,11 +233,6 @@ def _process_request(
     environ, start_response, debug=False
 ) -> Response:  # pylint: disable=too-many-branches
     try:
-        # Make sure all plugins are initialized as early as possible. At least
-        # we need the plugins (i.e. the permissions declared in these) at the
-        # time before the first login for generating auth.php.
-        modules.call_load_plugins_hooks()
-
         page_handler = get_and_wrap_page(requested_file_name(request))
         resp = page_handler()
     except HTTPRedirect as e:

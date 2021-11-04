@@ -20,7 +20,12 @@ import cmk.utils.version as cmk_version
 import cmk.gui.config
 import cmk.gui.permissions as permissions
 from cmk.gui.globals import config
-from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
+from cmk.gui.permissions import (
+    load_dynamic_permissions,
+    Permission,
+    permission_registry,
+    permission_section_registry,
+)
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -271,6 +276,8 @@ def test_registered_permission_sections():
 
 @pytest.mark.non_resilient
 def test_registered_permissions():
+    load_dynamic_permissions()
+
     expected_permissions = [
         "action.acknowledge",
         "action.addcomment",

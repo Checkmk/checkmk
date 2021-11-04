@@ -1202,13 +1202,11 @@ def load_plugins(force):
     global loaded_with_language
 
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        clear_alarm_sound_states()
         return
 
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
-    clear_alarm_sound_states()
 
     transform_old_dict_based_icons()
 
@@ -2563,13 +2561,6 @@ def _do_table_join(
         row["JOIN"] = joininfo
 
 
-g_alarm_sound_states: Set[str] = set([])
-
-
-def clear_alarm_sound_states() -> None:
-    g_alarm_sound_states.clear()
-
-
 def save_state_for_playing_alarm_sounds(row: "Row") -> None:
     if not config.enable_sounds or not config.sounds:
         return
@@ -2590,11 +2581,14 @@ def save_state_for_playing_alarm_sounds(row: "Row") -> None:
         except KeyError:
             continue
 
-        g_alarm_sound_states.add(state_name)
+        g.setdefault("alarm_sound_states", set()).add(state_name)
 
 
 def play_alarm_sounds() -> None:
     if not config.enable_sounds or not config.sounds:
+        return
+
+    if "alarm_sound_states" not in g:
         return
 
     url = config.sound_url
@@ -2602,7 +2596,7 @@ def play_alarm_sounds() -> None:
         url += "/"
 
     for state_name, wav in config.sounds:
-        if not state_name or state_name in g_alarm_sound_states:
+        if not state_name or state_name in g.alarm_sound_states:
             html.play_sound(url + wav)
             break  # only one sound at one time
 

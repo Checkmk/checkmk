@@ -1,0 +1,15 @@
+Title: <tt>datapower_fan</tt>: Fix <tt>KeyError (...)</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636038354
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p16
+
+The check plugin <tt>datapower_fan</tt>, which monitors the fans of
+IBM Datapower Gateways, crashed with
+<tt>KeyError (...)</tt>
+for some devices.

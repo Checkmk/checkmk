@@ -6,7 +6,7 @@ Date: 1635876599
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.0.0p15
+Version: 2.0.0p16
 
 For readability purposes of long titles in graphs, the titles are now left
 aligned instead of being centered.

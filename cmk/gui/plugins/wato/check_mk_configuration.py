@@ -1760,15 +1760,7 @@ def _transform_trusted_certs(certs: Iterable[Union[str, bytes]]) -> Sequence[str
     # In 2.0, the underlying config file ca-certificates.mk contained the trusted certificates
     # either as bytes or as str, depending on how they were added (str via editing the global
     # settings, bytes by pressing "Add to trusted CAs" in the livestatus encryption page)
-    return [
-        cert.decode()
-        if isinstance(
-            cert,
-            bytes,
-        )
-        else cert
-        for cert in certs
-    ]
+    return [cert.decode("ascii") if isinstance(cert, bytes) else cert for cert in certs]
 
 
 @config_variable_registry.register

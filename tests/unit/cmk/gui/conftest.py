@@ -94,7 +94,7 @@ def load_plugins(request_context, monkeypatch, tmp_path):
     import cmk.gui.modules as modules
 
     monkeypatch.setattr(config, "roles", {"user": {}, "admin": {}, "guest": {}})
-    modules.load_all_plugins()
+    modules.call_load_plugins_hooks()
     yield
     monkeypatch.undo()
 

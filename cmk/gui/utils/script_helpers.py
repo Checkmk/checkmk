@@ -68,7 +68,7 @@ def application_and_request_context(environ: Optional[Mapping[str, Any]] = None)
 
 
 def initialize_gui_environment() -> None:
-    from cmk.gui.modules import load_all_plugins
+    from cmk.gui.modules import call_load_plugins_hooks
 
     load_config()
-    load_all_plugins()
+    call_load_plugins_hooks()

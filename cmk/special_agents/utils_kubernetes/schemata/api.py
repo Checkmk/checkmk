@@ -107,6 +107,7 @@ class ContainerState(str, enum.Enum):
 
 
 class ContainerInfo(BaseModel):
+    id: Optional[str]  # id of non-ready container is None
     image: str
     state: ContainerState
 

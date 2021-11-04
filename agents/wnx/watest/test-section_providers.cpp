@@ -40,7 +40,7 @@ TEST(SectionProviders, Basic) {
     EXPECT_EQ(e.errorCount(), 0);
     EXPECT_EQ(e.timeout(), 0);
     EXPECT_EQ(e.getUniqName(), "empty");
-    EXPECT_EQ(e.separator(), ' ');
+    EXPECT_EQ(e.separator(), '\0');
 }
 
 TEST(SectionProviders, Construction) {

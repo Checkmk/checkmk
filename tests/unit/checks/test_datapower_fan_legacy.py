@@ -11,15 +11,32 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.datapower_fan import Fan
 
 from tests.unit.conftest import FixRegister
 
-_SECTION = [
-    ["11", "9700", "4"],
-    ["12", "5600", "5"],
-    ["13", "9800", "7"],
-    ["14", "5400", "10"],
-]
+_SECTION = {
+    "Tray 1 Fan 1": Fan(
+        state="4",
+        state_txt="operating normally",
+        speed="9700",
+    ),
+    "Tray 1 Fan 2": Fan(
+        state="5",
+        state_txt="reached upper non-critical limit",
+        speed="5600",
+    ),
+    "Tray 1 Fan 3": Fan(
+        state="7",
+        state_txt="reached upper non-recoverable limit",
+        speed="9800",
+    ),
+    "Tray 1 Fan 4": Fan(
+        state="10",
+        state_txt="Invalid",
+        speed="5400",
+    ),
+}
 
 
 @pytest.fixture(name="datapower_fan_plugin")
@@ -43,7 +60,7 @@ def test_discover_datapower_fan(datapower_fan_plugin: CheckPlugin) -> None:
             "Tray 1 Fan 1",
             Result(
                 state=State.OK,
-                summary="9700 rpm",
+                summary="operating normally, 9700 rpm",
             ),
             id="normal",
         ),
@@ -51,7 +68,7 @@ def test_discover_datapower_fan(datapower_fan_plugin: CheckPlugin) -> None:
             "Tray 1 Fan 3",
             Result(
                 state=State.CRIT,
-                summary="reached upper non-recoverable limit: 9800 rpm",
+                summary="reached upper non-recoverable limit, 9800 rpm",
             ),
             id="upper critical limit",
         ),

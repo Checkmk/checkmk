@@ -12399,6 +12399,10 @@ msgstr "ダッシュボードのプロパティ"
 msgid "Dashboard element"
 msgstr "ダッシュボード要素"
 
+#, fuzzy, python-format
+msgid "Dashboard of user %s"
+msgstr "ダッシュボードのプロパティ"
+
 msgid "Dashboards"
 msgstr "ダッシュボード"
 
@@ -39121,23 +39125,6 @@ msgstr "%s 未満のホストを検索"
 msgid "Search for ineffective rules (not matching any host or service)"
 msgstr "効果のないルールを検索する(ホストまたはサービスと一致しない)"
 
-#, fuzzy
-msgid ""
-"Search for menu entries, hosts, services or host- and servicegroups.\n"
-"You can use the following filters:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Host group\n"
-"sg: Service group\n"
-"ad: Address\n"
-"al: Alias\n"
-"tg: Host tag\n"
-"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-"sl: Service label (e.g. sl: cmk/os_family:linux)"
-msgstr ""
-"メニューエントリ、ホスト、サービス、またはホストグループとサービスグループを"
-"検索します"
-
 msgid "Search for menu entries, settings, hosts and rulesets."
 msgstr "メニューエントリ、設定、ホスト、およびルールセットを検索します"
 
@@ -39225,6 +39212,27 @@ msgstr "時間グラフの検索"
 
 msgid "Search whole subtree below the base DN"
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Search with regular expressions for menu entries, \n"
+"hosts, services or host- and servicegroups.\n"
+"\n"
+"You can use the following filters:\n"
+"h: Host\n"
+"s: Service\n"
+"hg: Host group\n"
+"sg: Service group\n"
+"ad: Address\n"
+"al: Alias\n"
+"tg: Host tag\n"
+"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+"sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+"\n"
+"Note that for simplicity '*' will be substituted with '.*'."
+msgstr ""
+"メニューエントリ、ホスト、サービス、またはホストグループとサービスグループを"
+"検索します"
 
 msgid "Search<nobr> </nobr>in"
 msgstr "<nobr> </nobr>で検索"

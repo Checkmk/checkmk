@@ -23,6 +23,7 @@ import cmk.gui.plugins.sidebar.search
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, response, theme, user
 from cmk.gui.i18n import _
@@ -73,8 +74,6 @@ sidebar_snapins: Dict[str, Dict] = {}
 
 def load_plugins(force):
     global loaded_with_language
-    _register_custom_snapins()
-
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
@@ -783,6 +782,8 @@ def _register_custom_snapins():
     CustomSnapins.load()
     snapin_registry.register_custom_snapins(CustomSnapins.instances_sorted())
 
+
+register_post_config_load_hook(_register_custom_snapins)
 
 # .
 #   .--Add Snapin----------------------------------------------------------.

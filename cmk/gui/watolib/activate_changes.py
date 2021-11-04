@@ -37,6 +37,7 @@ import werkzeug.urls
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils
+import cmk.utils.agent_registration as agent_registration
 import cmk.utils.daemon as daemon
 import cmk.utils.license_usage.samples as license_usage_samples
 import cmk.utils.paths
@@ -1922,6 +1923,7 @@ def execute_activate_changes(domains: List[ConfigDomainName]) -> ConfigWarnings:
         results[domain] = warnings or []
 
     _add_extensions_for_license_usage()
+    _update_links_for_agent_receiver()
 
     return results
 
@@ -1936,6 +1938,14 @@ def _add_extensions_for_license_usage():
             ntop=is_ntop_configured(),
         )
         store.save_bytes_to_file(extensions_filepath, extensions.serialize())
+
+
+def _update_links_for_agent_receiver() -> None:
+    uuid_link_manager = agent_registration.UUIDLinkManager(
+        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+    )
+    uuid_link_manager.update_links(cmk.gui.watolib.collect_all_hosts())
 
 
 def confirm_all_local_changes() -> None:

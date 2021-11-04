@@ -136,20 +136,14 @@ T = TypeVar("T")
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-loaded_with_language: Union[bool, None, str] = False
 title_functions: List[Callable] = []
 
 
-def load_plugins(force):
-    global loaded_with_language, title_functions
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    global title_functions
     title_functions = []
-
     utils.load_web_plugins("visuals", globals())
-
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # TODO: This has been obsoleted by pagetypes.py

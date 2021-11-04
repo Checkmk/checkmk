@@ -59,26 +59,14 @@ from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DEF_VALUE, DropdownChoice, TextInput, ValueSpec, ValueSpecHelp
 
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language: Union[bool, None, str] = False
-
 auth_logger = logger.getChild("auth")
 
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
 
-# Load all userdb plugins
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("userdb", globals())
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # The saved configuration for user connections is a bit inconsistent, let's fix

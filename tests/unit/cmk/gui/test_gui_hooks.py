@@ -145,7 +145,7 @@ def test_builtin_vs_plugin_hooks():
     hooks.register_from_plugin("blub", lambda: True)
     assert hooks.registered("blub") is True
 
-    hooks.load_plugins(force=True)
+    hooks.load_plugins()
 
     assert hooks.registered("bla") is True
     assert hooks.registered("blub") is False

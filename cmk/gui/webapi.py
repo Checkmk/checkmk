@@ -8,7 +8,7 @@ import json
 import pprint
 import traceback
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Callable, Dict, Tuple, Union
+from typing import Any, Callable, Dict, Tuple
 
 import dicttoxml  # type: ignore[import]
 
@@ -43,20 +43,10 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     validate_host_attributes,
 )
 
-loaded_with_language: Union[bool, None, str] = False
 
-
-def load_plugins(force):
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("webapi", globals())
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 permission_registry.register(

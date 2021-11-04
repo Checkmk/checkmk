@@ -231,9 +231,6 @@ from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language: Union[bool, None, str] = False
-
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
 multisite_painter_options: Dict[str, Any] = {}
@@ -1197,13 +1194,8 @@ class GUIViewRenderer(ABCViewRenderer):
         pass
 
 
-# Load all view plugins
-def load_plugins(force):
-    global loaded_with_language
-
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
@@ -1241,11 +1233,6 @@ def load_plugins(force):
     # TODO: Kept for compatibility with pre 1.6 plugins
     for ident, spec in multisite_sorters.items():
         register_sorter(ident, spec)
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
     visuals.declare_visual_permissions("views", _("views"))
 

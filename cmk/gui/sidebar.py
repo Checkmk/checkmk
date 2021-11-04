@@ -65,26 +65,14 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     write_snapin_exception,
 )
 
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language: Union[bool, None, str] = False
-
 # TODO: Kept for pre 1.6 plugin compatibility
 sidebar_snapins: Dict[str, Dict] = {}
 
 
-def load_plugins(force):
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("sidebar", globals())
-
     transform_old_dict_based_snapins()
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # Pre Checkmk 1.5 the snapins were declared with dictionaries like this:

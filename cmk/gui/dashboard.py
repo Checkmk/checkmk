@@ -295,25 +295,13 @@ class PermissionSectionDashboard(PermissionSection):
         return True
 
 
-# Load plugins in web/plugins/dashboard and declare permissions,
-# note: these operations produce language-specific results and
-# thus must be reinitialized everytime a language-change has
-# been detected.
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     utils.load_web_plugins("dashboard", globals())
 
     _transform_old_dict_based_dashlets()
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
     visuals.declare_visual_permissions("dashboards", _("dashboards"))
 
@@ -833,7 +821,7 @@ def _get_mandatory_filters(
 
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
-        for info, _ in visuals.visual_info_registry[info_key]().single_spec:
+        for info, _unused in visuals.visual_info_registry[info_key]().single_spec:
             yield info
 
     # Get required context filters set in the dashboard config

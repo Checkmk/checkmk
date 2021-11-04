@@ -8,7 +8,6 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Union
 
-import cmk.gui.i18n
 from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
 
@@ -20,24 +19,12 @@ class Hook(NamedTuple):
 
 hooks: Dict[str, List[Hook]] = {}
 
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language: Union[bool, None, str] = False
 
-
-# Load all login plugins
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     # Cleanup all plugin hooks. They need to be renewed by load_plugins()
     # of the other modules
     unregister_plugin_hooks()
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 def unregister_plugin_hooks() -> None:

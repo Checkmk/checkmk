@@ -15,7 +15,7 @@ from cmk.gui.sidebar import UserSidebarSnapin
 # TODO: Can be removed once all snapins have been refactored
 # to class based snapins
 sidebar._register_custom_snapins = lambda: None
-sidebar.load_plugins(True)
+sidebar.load_plugins()
 
 
 @pytest.fixture(scope="function", autouse=True)

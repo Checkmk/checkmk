@@ -1,0 +1,17 @@
+Title: Fix 'Request-URI Too Long' error on rule search
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1636040069
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p16
+
+The rule search could produce a 'Request-URI Too Long' exception because all
+variables of the search form were submitted.
+
+This problem could occur, for example, in installations with a large number of
+host tags.
+
+We now filter out all unused variables to avoid exceeding the server capacity.

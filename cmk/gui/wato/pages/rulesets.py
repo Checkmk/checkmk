@@ -375,6 +375,42 @@ class ModeRuleSearch(ABCRulesetMode):
             )
         super().page()
 
+    def action(self):
+        forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
+        return redirect(makeuri(request, []))
+
+
+def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
+    """
+    Example for hosttags:
+    'search_p_rule_hosttags_USE':'on'
+
+    We have to keep auxtags, if not 'ignored':
+    'search_p_rule_hosttags_auxtag_ip-v4': 'ignore'/'is'/'is not'
+
+    and tags with an own tagvalue variable, if not 'ignored':
+    'search_p_rule_hosttags_tag_address_family' : 'ignore'/'is'/'is not'
+    'search_p_rule_hosttags_tagvalue_address_family' : 'ip-v4-only'
+    """
+    if "_auxtag_" in varname and value != "ignore":
+        return False
+
+    if "_hosttags_tag_" in varname and value != "ignore":
+        tagvalue_varname = "%s_hosttags_tagvalue_%s" % (
+            form_prefix,
+            varname.split("_hosttags_tag_")[1],
+        )
+        if html.request.var(tagvalue_varname):
+            return False
+
+    if "_hosttags_tagvalue_" in varname:
+        tag_varname = "%s_hosttags_tag_%s" % (form_prefix, varname.split("_hosttags_tagvalue_")[1])
+        tag_value = html.request.var(tag_varname)
+        if tag_value and tag_value != "ignore":
+            return False
+
+    return True
+
 
 def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[PageMenuEntry]:
     for search_title, search_emblem, search_term in [
@@ -1266,8 +1302,8 @@ class ModeRuleSearchForm(WatoMode):
         )
         return menu
 
-    def page(self) -> None:
-        html.begin_form("rule_search", method="GET")
+    def page(self):
+        html.begin_form("rule_search", method="POST")
         html.hidden_field("mode", self.back_mode, add_var=True)
 
         valuespec = self._valuespec()

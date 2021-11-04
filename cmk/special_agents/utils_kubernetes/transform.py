@@ -14,7 +14,7 @@ from __future__ import annotations
 import datetime
 import time
 from collections import defaultdict
-from typing import Dict, List, NewType, Optional, Sequence, Union
+from typing import Dict, List, NewType, Optional, Sequence
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
@@ -87,7 +87,7 @@ def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> api.MetaData:
     )
 
 
-def parse_pod_info(pod: client.V1Pod) -> api.PodInfo:
+def parse_pod_info(pod: client.V1Pod) -> api.PodSpec:
     info = {}
     if pod.spec:
         info.update({"node": pod.spec.node_name, "host_network": pod.spec.host_network})
@@ -100,7 +100,7 @@ def parse_pod_info(pod: client.V1Pod) -> api.PodInfo:
                 "qos_class": pod.status.qos_class.lower(),
             }
         )
-    return api.PodInfo(**info)
+    return api.PodSpec(**info)
 
 
 def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
@@ -222,11 +222,13 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=pod.metadata.uid,
         metadata=parse_metadata(pod.metadata),
-        phase=api.Phase(pod.status.phase.lower()),
+        status=api.PodStatus(
+            conditions=pod_conditions(pod.status.conditions),
+            phase=api.Phase(pod.status.phase.lower()),
+        ),
         info=parse_pod_info(pod),
         resources=pod_resources(pod),
         containers=pod_containers(pod),
-        conditions=pod_conditions(pod.status.conditions),
     )
 
 

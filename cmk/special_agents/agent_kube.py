@@ -126,19 +126,18 @@ class Pod:
         self,
         uid: str,
         metadata: api.MetaData,
-        phase: api.Phase,
-        info: api.PodInfo,
+        status: api.PodStatus,
+        spec: api.PodSpec,
         resources: api.PodUsageResources,
         containers: Sequence[api.ContainerInfo],
-        conditions: Sequence[api.PodCondition],
     ) -> None:
         self.uid = PodUID(uid)
         self.metadata = metadata
-        self.node = info.node
-        self.phase = phase
+        self.node = spec.node
+        self.phase = status.phase
+        self.status_conditions = status.conditions
         self.resources = resources
         self.containers = containers
-        self.status_conditions = conditions
 
     def name(self, prepend_namespace=False) -> str:
         if not prepend_namespace:
@@ -230,11 +229,10 @@ class Cluster:
                 Pod(
                     pod.uid,
                     pod.metadata,
-                    pod.phase,
-                    pod.info,
+                    pod.status,
+                    pod.spec,
                     pod.resources,
                     pod.containers,
-                    pod.conditions,
                 )
             )
 
@@ -445,6 +443,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             api_client = make_api_client(arguments)
             api_server = APIServer.from_kubernetes(api_client)
+
             cluster = Cluster.from_api_server(api_server)
 
             # Sections based on API server

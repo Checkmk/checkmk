@@ -90,7 +90,7 @@ class PodUsageResources(BaseModel):
     memory: Resources
 
 
-class PodInfo(BaseModel):
+class PodSpec(BaseModel):
     node: str
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
@@ -134,14 +134,18 @@ class PodCondition(BaseModel):
         return v
 
 
+class PodStatus(BaseModel):
+    conditions: List[PodCondition]
+    phase: Phase
+
+
 class Pod(BaseModel):
     uid: str
     metadata: MetaData
-    phase: Phase
-    info: PodInfo
+    status: PodStatus
+    spec: PodSpec
     resources: PodUsageResources
     containers: List[ContainerInfo]
-    conditions: List[PodCondition]
 
 
 class ClusterInfo(BaseModel):

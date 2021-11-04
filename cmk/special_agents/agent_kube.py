@@ -165,6 +165,11 @@ class Pod:
             }
         )
 
+    def containers_infos(self) -> Optional[section.PodContainers]:
+        if not self.containers:
+            return None
+        return section.PodContainers(containers=self.containers)
+
 
 class Node:
     def __init__(
@@ -202,9 +207,9 @@ class Node:
         result = section.ContainerCount()
         for pod in self._pods:
             for container in pod.containers:
-                if container.state == api.ContainerState.RUNNING:
+                if container.state.type == "running":
                     result.running += 1
-                elif container.state == api.ContainerState.WAITING:
+                elif container.state.type == "waiting":
                     result.waiting += 1
                 else:
                     result.terminated += 1
@@ -288,10 +293,13 @@ class JsonProtocol(Protocol):
         ...
 
 
-def _write_sections(sections: Mapping[str, Callable[[], JsonProtocol]]) -> None:
+def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]) -> None:
     for section_name, section_call in sections.items():
         with SectionWriter(section_name) as writer:
-            writer.append(section_call().json())
+            section_output = section_call()
+            if not section_output:
+                continue
+            writer.append(section_output.json())
 
 
 def output_cluster_api_sections(cluster: Cluster) -> None:
@@ -322,6 +330,7 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
         sections = {
             "k8s_cpu_resources": cluster_pod.cpu_resources,
             "k8s_pod_condition_v1": cluster_pod.conditions,
+            "k8s_pod_containers_v1": cluster_pod.containers_infos,
         }
         _write_sections(sections)
 

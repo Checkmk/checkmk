@@ -14,7 +14,7 @@ from __future__ import annotations
 import datetime
 import time
 from collections import defaultdict
-from typing import Dict, List, NewType, Optional, Sequence
+from typing import Dict, List, NewType, Optional, Sequence, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
@@ -129,16 +129,41 @@ def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
 def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
     result = []
     for status in pod.status.container_statuses:
-        if status.state.terminated is not None:
-            state = api.ContainerState.TERMINATED
-        elif status.state.running is not None:
-            state = api.ContainerState.RUNNING
-        elif status.state.waiting is not None:
-            state = api.ContainerState.WAITING
+        state: Union[
+            api.ContainerTerminatedState, api.ContainerRunningState, api.ContainerWaitingState
+        ]
+        if (details := status.state.terminated) is not None:
+            state = api.ContainerTerminatedState(
+                type="terminated",
+                exit_code=details.exit_code,
+                start_time=details.started_at.timestamp(),
+                end_time=details.finished_at.timestamp(),
+                reason=details.reason,
+                detail=details.message,
+            )
+        elif (details := status.state.running) is not None:
+            state = api.ContainerRunningState(
+                type="running",
+                start_time=details.started_at.timestamp(),
+            )
+        elif (details := status.state.waiting) is not None:
+            state = api.ContainerWaitingState(
+                type="waiting",
+                reason=details.reason,
+                detail=details.message,
+            )
         else:
             raise AssertionError("Unknown contianer state {status.state}")
 
-        result.append(api.ContainerInfo(id=status.container_id, image=status.image, state=state))
+        result.append(
+            api.ContainerInfo(
+                id=status.container_id,
+                image=status.image,
+                ready=status.ready,
+                state=state,
+                restart_count=status.restart_count,
+            )
+        )
     return result
 
 
@@ -226,7 +251,7 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
             conditions=pod_conditions(pod.status.conditions),
             phase=api.Phase(pod.status.phase.lower()),
         ),
-        info=parse_pod_info(pod),
+        spec=parse_pod_info(pod),
         resources=pod_resources(pod),
         containers=pod_containers(pod),
     )

@@ -14,10 +14,11 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Dict, List, Literal, NewType, Optional, Protocol, Sequence
+from typing import Dict, List, Literal, NewType, Optional, Protocol, Sequence, Union
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
+from pydantic.fields import Field
 
 Labels = NewType("Labels", Dict[str, str])
 
@@ -99,17 +100,32 @@ class PodSpec(BaseModel):
     qos_class: Literal["burstable", "besteffort", "guaranteed"]
 
 
-class ContainerState(str, enum.Enum):
-    # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-states
-    RUNNING = "running"
-    WAITING = "waiting"
-    TERMINATED = "terminated"
+class ContainerRunningState(BaseModel):
+    type: str = Field("running", const=True)
+    start_time: int
+
+
+class ContainerWaitingState(BaseModel):
+    type: str = Field("waiting", const=True)
+    reason: str
+    detail: str
+
+
+class ContainerTerminatedState(BaseModel):
+    type: str = Field("terminated", const=True)
+    exit_code: int
+    start_time: int
+    end_time: int
+    reason: Optional[str]
+    detail: Optional[str]
 
 
 class ContainerInfo(BaseModel):
     id: Optional[str]  # id of non-ready container is None
     image: str
-    state: ContainerState
+    ready: bool
+    state: Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]
+    restart_count: int
 
 
 class ConditionType(str, enum.Enum):

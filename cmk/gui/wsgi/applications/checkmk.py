@@ -17,7 +17,7 @@ import cmk.utils.profile
 import cmk.utils.store
 
 from cmk.gui import config as config_module
-from cmk.gui import htmllib, http, pages, sites
+from cmk.gui import htmllib, http, modules, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
@@ -42,7 +42,6 @@ from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
     handle_unhandled_exception,
-    load_all_plugins,
     plain_error,
 )
 
@@ -232,7 +231,7 @@ def _process_request(
         # Make sure all plugins are available as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
-        load_all_plugins()
+        modules.load_all_plugins()
 
         page_handler = get_and_wrap_page(requested_file_name(request))
         resp = page_handler()

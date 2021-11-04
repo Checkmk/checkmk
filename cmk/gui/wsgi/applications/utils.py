@@ -12,7 +12,7 @@ import cmk.utils.profile
 import cmk.utils.store
 from cmk.utils.site import url_prefix
 
-from cmk.gui import login, modules, pages
+from cmk.gui import login, pages
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
 from cmk.gui.globals import g, request, response, theme, user
@@ -133,15 +133,6 @@ def _handle_not_authenticated() -> Response:
     login_page.handle_page()
 
     return response
-
-
-def load_all_plugins() -> None:
-    # Optimization: in case of the graph ajax call only check the metrics module. This
-    # improves the performance for these requests.
-    # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
-    # werkzeug.wrappers.Request.script_root would be helpful here, but we don't have that yet.
-    only_modules = ["metrics"] if requested_file_name(request) == "ajax_graph" else None
-    modules.load_all_plugins(only_modules=only_modules)
 
 
 def _localize_request() -> None:

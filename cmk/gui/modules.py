@@ -29,7 +29,7 @@ import errno
 import os
 import sys
 from types import ModuleType
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -81,35 +81,21 @@ def init_modules() -> None:
     _legacy_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
 
 
-g_all_modules_loaded = False
-
-
-def load_all_plugins(only_modules: Optional[List[str]] = None) -> None:
+def load_all_plugins() -> None:
     """Call the load_plugins() function in all modules"""
-    global g_all_modules_loaded
-    # Initially, we have to load all modules, regardless of any optimization.
-    if not g_all_modules_loaded:
-        only_modules = None
-
     need_plugins_reload = _local_web_plugins_have_changed()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
         # initial config is already loaded, do not load it again
         if module.__name__ == "cmk.gui.config":
             continue
-        if (only_modules is None or module.__name__ in only_modules) and hasattr(
-            module, "load_plugins"
-        ):
+        if hasattr(module, "load_plugins"):
             # hasattr above ensures the function is available. Mypy does not understand this.
             module.load_plugins(force=need_plugins_reload)  # type: ignore[attr-defined]
 
     # TODO: Clean this up once we drop support for the legacy plugins
     for path, page_func in pagehandlers.items():
         cmk.gui.pages.register_page_handler(path, page_func)
-
-    # Mark the modules as loaded after all plugins have been loaded. In case of exceptions
-    # we want them to occur again on subsequent requests too.
-    g_all_modules_loaded = True
 
 
 def _cmk_gui_top_level_modules() -> List[ModuleType]:

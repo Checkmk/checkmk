@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type
 
 import cmk.utils.plugin_registry
 
-from cmk.gui import config
+from cmk.gui import config, escaping, watolib
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
@@ -1087,3 +1087,49 @@ def EnumAttribute(self, name, title, help_txt, default_value, enumlist):
             "default_value": lambda self: self._default_value,
             "_enumlist": enumlist
         })
+
+
+# Check if the tag group exists and the tag value is valid
+def _validate_host_tags(host_tags):
+    for tag_group_id, tag_id in host_tags.items():
+        for tag_group in config.tags.tag_groups:
+            if tag_group.id == tag_group_id:
+                for grouped_tag in tag_group.tags:
+                    if grouped_tag.id == tag_id:
+                        break
+                else:
+                    raise MKUserError(None, _("Unknown tag %s") % escaping.escape_attribute(tag_id))
+                break
+        else:
+            raise MKUserError(None,
+                              _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id))
+
+
+def validate_host_attributes(attributes, new=False):
+    _validate_general_host_attributes(
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new)
+    _validate_host_tags(
+        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_")))
+
+
+# Check if the given attribute name exists, no type check
+def _validate_general_host_attributes(host_attributes, new):
+    # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
+    all_host_attribute_names = list(host_attribute_registry.keys()) + ["inventory_failed", "site"]
+    for name, value in host_attributes.items():
+        if name not in all_host_attribute_names:
+            raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))
+
+        # For real host attributes validate the values
+        try:
+            attr = watolib.host_attribute(name)
+        except KeyError:
+            attr = None
+
+        if attr is not None:
+            if attr.needs_validation("host", new):
+                attr.validate_input(value, "")
+
+        # The site attribute gets an extra check
+        if name == "site" and value not in config.allsites().keys():
+            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))

@@ -396,7 +396,6 @@ def test_all_check_variables_present(config_check_variables):
         'cpuload_default_levels',
         'cups_queues_default_levels',
         'datapower_cpu_default_levels',
-        'datapower_fan_ids',
         'datapower_mem_default_levels',
         'datapower_temp_default_levels',
         'db2_backup_default_levels',

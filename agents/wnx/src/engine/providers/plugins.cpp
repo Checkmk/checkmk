@@ -18,12 +18,12 @@
 #include "service_processor.h"
 #include "tools/_raii.h"
 
+using namespace std::literals;
+
 namespace cma::provider {
 
 bool PluginsProvider::isAllowedByCurrentConfig() const {
-    auto name = cfg_name_;
-    bool allowed = cma::cfg::groups::global.allowedSection(name);
-    return allowed;
+    return cfg::groups::global.allowedSection(cfg_name_);
 }
 
 static bool IsPluginRequiredType(const PluginEntry& plugin,
@@ -39,13 +39,10 @@ static bool IsPluginRequiredType(const PluginEntry& plugin,
             return true;
     }
 
-    // safety check: warning disabled and enum changed
     XLOG::l.bp(XLOG_FUNC + " input is unknown [{}], return true by default");
-
     return true;
 }
 
-// scans plugin map by criteria to  find MAX timeout
 // returns 0 on lack plugin entries
 int FindMaxTimeout(const cma::PluginMap& pm, PluginMode need_type) {
     int timeout = 0;
@@ -57,7 +54,7 @@ int FindMaxTimeout(const cma::PluginMap& pm, PluginMode need_type) {
     return timeout;
 }
 
-// scans for sync plugins max timeout and set this max
+// Scans for sync plugins max timeout and set this max
 // if timeout is too big, than set default from the max_wait
 void PluginsProvider::updateTimeout() {
     timeout_ = FindMaxTimeout(pm_, PluginMode::sync);
@@ -106,26 +103,25 @@ void PluginsProvider::updateCommandLine() {
 
 void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
                                              cma::srv::ServiceProcessor* sp) {
-    using namespace std::literals;
     for (auto& [name, entry] : pm) {
         XLOG::t.i("checking entry");
         entry.setCmdLine(L""sv);
-        if (entry.path().empty()) continue;  // skip empty files
+        if (entry.path().empty()) continue;
         XLOG::t.i("checking host");
 
-        if (sp == nullptr) continue;  // skip if no host(testing, etc)
+        if (sp == nullptr) continue;
 
         auto& mc = sp->getModuleCommander();
         auto fname = entry.path().u8string();
         XLOG::t.i("checking our script");
 
-        if (!mc.isModuleScript(fname)) continue;  // skip non-module
+        if (!mc.isModuleScript(fname)) continue;
 
         XLOG::t.i("building command line");
 
         auto cmd_line = mc.buildCommandLine(fname);
         if (!cmd_line.empty()) {
-            XLOG::d.i("A Module changes command line of the plugin '{}'",
+            XLOG::t.i("A Module changes command line of the plugin '{}'",
                       wtools::ToUtf8(cmd_line));
             entry.setCmdLine(cmd_line);
         }
@@ -159,9 +155,6 @@ std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
 }
 
 void PluginsProvider::loadConfig() {
-    XLOG::t(XLOG_FUNC + " entering '{}'", uniq_name_);
-
-    // this is a copy...
     auto folder_vector = local_ ? cfg::groups::localGroup.folders()
                                 : cfg::groups::plugins.folders();
 
@@ -194,10 +187,7 @@ void PluginsProvider::loadConfig() {
     UpdatePluginMap(pm_, local_, files, exe_units, true);
     XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
 
-    // We try to find command line among modules, if nothing leave it
     updateCommandLine();
-
-    // calculating timeout(may change in every kick)
     updateTimeout();
 }
 
@@ -225,7 +215,6 @@ void PluginsProvider::detachedStart() {
     RunDetachedPlugins(pm_, last_count);
 }
 
-// empty body empty
 void PluginsProvider::updateSectionStatus() {
     auto out = section::MakeEmptyHeader();
     gatherAllData(out);
@@ -239,7 +228,7 @@ namespace config {
 bool g_local_no_send_if_empty_body = true;
 bool g_local_send_empty_at_end = false;
 };  // namespace config
-// local body empty
+
 void LocalProvider::updateSectionStatus() {
     std::string body;
     gatherAllData(body);
@@ -257,10 +246,6 @@ void LocalProvider::updateSectionStatus() {
     section_last_output_ = out;
 }
 
-std::string PluginsProvider::makeBody() {
-    XLOG::t(XLOG_FUNC + " entering {} processed", last_count_);
-
-    return section_last_output_;
-}
+std::string PluginsProvider::makeBody() { return section_last_output_; }
 
 }  // namespace cma::provider

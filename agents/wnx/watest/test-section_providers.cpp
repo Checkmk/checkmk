@@ -37,11 +37,10 @@ public:
 
 TEST(SectionProviders, Basic) {
     Empty e;
-
-    EXPECT_TRUE(e.getHostSp() == nullptr);
-    cma::srv::ServiceProcessor sp;
-    e.host_sp_ = &sp;
-    EXPECT_EQ(e.getHostSp(), &sp);
+    EXPECT_EQ(e.errorCount(), 0);
+    EXPECT_EQ(e.timeout(), 0);
+    EXPECT_EQ(e.getUniqName(), "empty");
+    EXPECT_EQ(e.separator(), ' ');
 }
 
 TEST(SectionProviders, Construction) {

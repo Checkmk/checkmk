@@ -43,19 +43,12 @@ public:
     }
 
     void loadConfig() override;
-
     void updateSectionStatus() override;
-
     bool isAllowedByCurrentConfig() const override;
-
     void preStart() override;
-
     void detachedStart();
-
     void updateCommandLine();
-
     void updateTimeout();
-
     std::vector<std::string> gatherAllowedExtensions() const;
 
 protected:

@@ -320,21 +320,22 @@ def check_mem_windows(_no_item, params, section):
             )
             infotext += f", {infoadd}"
 
-            state, _infotext, perfadd = check_memory_element(
-                title,
-                used_mb * 1024 ** 2,
-                total,
-                levels_memory_element,
-                metric_name=paramname + "_avg",
-            )
-
-            perfdata.append(
-                (
-                    (averaged_metric := perfadd[0])[0],
-                    # the averaged metrics are expected to be in MB
-                    *(v / 1024 ** 2 if v is not None else None for v in averaged_metric[1:]),
+            if levels_type != "predictive":
+                state, _infotext, perfadd = check_memory_element(
+                    title,
+                    used_mb * 1024 ** 2,
+                    total,
+                    levels_memory_element,
+                    metric_name=paramname + "_avg",
                 )
-            )
+
+                perfdata.append(
+                    (
+                        (averaged_metric := perfadd[0])[0],
+                        # the averaged metrics are expected to be in MB
+                        *(v / 1024 ** 2 if v is not None else None for v in averaged_metric[1:]),
+                    )
+                )
 
         if levels_type == "predictive":
             state, infoadd, perfadd = _apply_predictive_levels(

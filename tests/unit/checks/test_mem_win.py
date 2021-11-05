@@ -231,11 +231,6 @@ _SECTION = {
                 Metric(
                     "memory_avg",
                     106831.04296875,
-                    boundaries=(0.0, 131071.421875),
-                ),
-                Metric(
-                    "memory_avg",
-                    106831.04296875,
                     levels=(90000.0, 110000.0),
                 ),
                 Metric(
@@ -254,11 +249,6 @@ _SECTION = {
                 Metric(
                     "pagefile_total",
                     150527.421875,
-                ),
-                Metric(
-                    "pagefile_avg",
-                    113542.24609375,
-                    boundaries=(0.0, 150527.421875),
                 ),
                 Metric(
                     "pagefile_avg",

@@ -237,29 +237,23 @@ def make_nodes(
 
 def fetch_all(
     *,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
+    sources: Iterable[Source],
     file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
 ) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    # TODO(ml): It is not clear to me in which case it is possible for the following to hold true
-    #           for any source in nodes:
-    #             - hostname != source.hostname
-    #             - ipaddress != source.ipaddress
-    #           If this is impossible, then we do not need the Tuple[HostName, HostAddress, ...].
-    for _hostname, _ipaddress, sources in nodes:
-        for source in sources:
-            console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+    for source in sources:
+        console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
-            source.file_cache_max_age = file_cache_max_age
+        source.file_cache_max_age = file_cache_max_age
 
-            with CPUTracker() as tracker:
-                raw_data = source.fetch(mode)
-            yield FetcherMessage.from_raw_data(
-                raw_data,
-                tracker.duration,
-                source.fetcher_type,
-            )
+        with CPUTracker() as tracker:
+            raw_data = source.fetch(mode)
+        yield FetcherMessage.from_raw_data(
+            raw_data,
+            tracker.duration,
+            source.fetcher_type,
+        )
 
 
 def _make_cluster_nodes(

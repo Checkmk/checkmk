@@ -308,6 +308,11 @@ def _collect_host_sections(
     """
     console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
+    # TODO(ml): It is not clear to me in which case it is possible for the following to hold true
+    #           for any source in nodes:
+    #             - hostname != source.hostname
+    #             - ipaddress != source.ipaddress
+    #           If this is impossible, then we do not need the Tuple[HostName, HostAddress, ...].
     flat_node_sources = [(hn, ip, src) for hn, ip, sources in nodes for src in sources]
 
     # TODO(lm): Can we somehow verify that this is correct?
@@ -391,7 +396,7 @@ def make_broker(
         #       This does not seem right.
         fetcher_messages = list(
             fetch_all(
-                nodes=nodes,
+                sources=(s for _hostname, _ipaddress, sources in nodes for s in sources),
                 file_cache_max_age=file_cache_max_age,
                 mode=mode,
             )

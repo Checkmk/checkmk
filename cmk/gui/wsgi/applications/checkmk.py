@@ -17,7 +17,7 @@ import cmk.utils.profile
 import cmk.utils.store
 
 from cmk.gui import config as config_module
-from cmk.gui import htmllib, http, modules, pages, sites
+from cmk.gui import htmllib, http, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
@@ -186,11 +186,6 @@ class CheckmkApp:
 
     def __init__(self, debug=False):
         self.debug = debug
-
-        # Make sure all plugins are initialized as early as possible. At least
-        # we need the plugins (i.e. the permissions declared in these) at the
-        # time before the first login for generating auth.php.
-        modules.call_load_plugins_hooks()
 
     def __call__(self, environ, start_response):
         req = http.Request(environ)

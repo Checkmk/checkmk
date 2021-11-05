@@ -14,6 +14,7 @@ import cmk.gui.modules as modules
 from cmk.gui.wsgi import make_app
 
 modules.init_modules()
+modules.call_load_plugins_hooks()
 
 DEBUG = False
 

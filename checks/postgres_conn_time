@@ -42,11 +42,10 @@ def parse_postgres_conn_time(info):
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
-        if instance_name:
-            try:
-                parsed.setdefault(instance_name, float(line[0]))
-            except (ValueError, IndexError):
-                parsed.setdefault(instance_name, INCONSISTENT_DATA)
+        try:
+            parsed.setdefault(instance_name, float(line[0]))
+        except (ValueError, IndexError):
+            parsed.setdefault(instance_name, INCONSISTENT_DATA)
     return parsed
 
 

@@ -1,0 +1,14 @@
+Title: <tt>postgres_conn_time</tt>: Fix stale service in case of one single database
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p28
+Date: 1636117053
+
+Since werk #13126, in case of one single database, the service
+created by the check plugin <tt>postgres_conn_time</tt> went
+stale.

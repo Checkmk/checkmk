@@ -6,7 +6,6 @@
 #include "TableLog.h"
 
 #include <bitset>
-#include <chrono>
 #include <cstdint>
 #include <map>
 #include <mutex>

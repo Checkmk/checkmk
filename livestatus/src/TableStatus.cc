@@ -20,7 +20,6 @@
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
 #include "mk_inventory.h"

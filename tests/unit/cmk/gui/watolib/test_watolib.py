@@ -192,6 +192,7 @@ def test_registered_configvars():
         "wato_upload_insecure_snapshots",
         "wato_use_git",
         "graph_timeranges",
+        "rest_api_etag_locking",
     ]
 
     if not cmk_version.is_raw_edition():
@@ -258,7 +259,6 @@ def test_registered_configvars():
             "reporting_view_limit",
             "site_liveproxyd",
             "ntop_connection",
-            "rest_api_etag_locking",
         ]
 
     registered = sorted(config_variable_registry.keys())

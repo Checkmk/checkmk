@@ -629,7 +629,7 @@ class ModeTimeperiodImportICal(WatoMode):
         now = time.strptime(str(time.localtime().tm_year - 1), "%Y")
         last = time.struct_time((horizon + 1, *now[1:]))
         for event in ical["raw_events"]:
-            if "recurrence" in event and event["start"] < now:
+            if "recurrence" in event and time.struct_time(event["start"]) < now:
                 rule = event["recurrence"]
                 freq = rule["FREQ"]
                 cur = now

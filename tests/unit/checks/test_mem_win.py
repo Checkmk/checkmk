@@ -41,16 +41,18 @@ _SECTION = {
             [
                 Result(
                     state=State.WARN,
-                    summary="RAM: 81.51% - 104.33 GB of 128.00 GB",
+                    summary="RAM: 81.51% - 104.33 GB of 128.00 GB (warn/crit at 80.00%/90.00% used)",
                 ),
                 Metric(
                     "mem_used",
                     112020467712.0,
+                    levels=(109950677811.20001, 123694512537.6),
                     boundaries=(0.0, 137438347264.0),
                 ),
                 Metric(
                     "mem_used_percent",
                     81.50597700132717,
+                    levels=(80.00000000000001, 90.00000000000001),
                     boundaries=(0.0, None),
                 ),
                 Metric(
@@ -59,11 +61,12 @@ _SECTION = {
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Commit charge: 75.43% - 110.88 GB of 147.00 GB",
+                    summary="Commit charge: 75.43% - 110.88 GB of 147.00 GB (warn/crit at 70.00%/90.00% used)",
                 ),
                 Metric(
                     "pagefile_used",
                     119057674240.0,
+                    levels=(110487609344.0, 142055497728.0),
                     boundaries=(0.0, 157839441920.0),
                 ),
                 Metric(
@@ -101,6 +104,8 @@ _SECTION = {
                 Metric(
                     "memory_avg",
                     106831.04296875,
+                    levels=(129071.421875, 130071.421875),
+                    boundaries=(0.0, 131071.421875),
                 ),
                 Result(
                     state=State.WARN,
@@ -118,6 +123,8 @@ _SECTION = {
                 Metric(
                     "pagefile_avg",
                     113542.24609375,
+                    levels=(100527.421875, 146527.421875),
+                    boundaries=(0.0, 150527.421875),
                 ),
             ],
             id="normal levels + averaging",
@@ -224,6 +231,7 @@ _SECTION = {
                 Metric(
                     "memory_avg",
                     106831.04296875,
+                    boundaries=(0.0, 131071.421875),
                 ),
                 Metric(
                     "memory_avg",
@@ -250,6 +258,7 @@ _SECTION = {
                 Metric(
                     "pagefile_avg",
                     113542.24609375,
+                    boundaries=(0.0, 150527.421875),
                 ),
                 Metric(
                     "pagefile_avg",

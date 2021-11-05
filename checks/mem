@@ -170,6 +170,8 @@ mem_extended_perfdata = None
 #   | nature of the page file.                                             |
 #   '----------------------------------------------------------------------'
 
+_MB = 1024**2
+
 # Special memory and page file check for Windows
 factory_settings["memory_win_default_levels"] = {
     "memory": (80.0, 90.0),
@@ -205,8 +207,8 @@ def _get_levels_type_and_value(levels_value):
             levels_type,
             levels_value if levels_type == "perc_used" else (
                 # absolute levels on free space come in MB, which cannot be changed easily
-                levels_value[0] * 1024**2,
-                levels_value[1] * 1024**2,
+                levels_value[0] * _MB,
+                levels_value[1] * _MB,
             ),
         ),
     )
@@ -217,23 +219,22 @@ def _do_averaging(
     average_horizon_min,
     paramname,
     used,
-    total_mb,
+    total,
 ):
-    used_kb = get_average(
-        "mem.win.%s" % paramname,
-        timestamp,
-        used / 1024.0,  # use kB for compatibility
-        average_horizon_min,
-        initialize_zero=False,
-    )
-    used_mb = used_kb / 1024.0
-    perc = 100.0 * used_mb / total_mb
+    used_avg = (
+        get_average(
+            "mem.win.%s" % paramname,
+            timestamp,
+            used / 1024.0,  # use kB for compatibility
+            average_horizon_min,
+            initialize_zero=False,
+        ) * 1024)
     return (
-        used_mb,
+        used_avg,
         "%d min average: %s (%s)" % (
             average_horizon_min,
-            get_percent_human_readable(perc),
-            get_bytes_human_readable(used_kb * 1024),
+            get_percent_human_readable(100.0 * used_avg / total),
+            get_bytes_human_readable(used_avg),
         ),
     )
 
@@ -242,7 +243,7 @@ def _apply_predictive_levels(
     params,
     paramname,
     title,
-    used_mb,
+    used,
 ):
     if "average" in params:
         titleinfo = title
@@ -252,7 +253,7 @@ def _apply_predictive_levels(
         dsname = paramname
 
     return check_levels(
-        used_mb,  # Current value stored in MB in RRDs
+        used / _MB,  # Current value stored in MB in RRDs
         dsname,
         params[paramname],
         unit="GB",  # Levels are specified in GB...
@@ -274,9 +275,6 @@ def check_mem_windows(_no_item, params, section):
             continue
         used = total - free
 
-        total_mb = total / 1024.0**2
-        free_mb = free / 1024.0**2
-        used_mb = total_mb - free_mb
         levels_type, levels_memory_element = _get_levels_type_and_value(params.get(paramname))
         do_averaging = "average" in params
 
@@ -289,26 +287,27 @@ def check_mem_windows(_no_item, params, section):
             create_percent_metric=title == "RAM",
         )
 
+        # Metrics for total mem and pagefile are expected in MB
         if prefix == "Mem":
-            perfdata.append(("mem_total", total_mb))
+            perfdata.append(("mem_total", total / _MB))
         elif prefix == "Page":
-            perfdata.append(("pagefile_total", total_mb))
+            perfdata.append(("pagefile_total", total / _MB))
 
         # Do averaging, if configured, just for matching the levels
         if do_averaging:
-            used_mb, infoadd = _do_averaging(
+            used, infoadd = _do_averaging(
                 now,
                 params["average"],
                 paramname,
                 used,
-                total_mb,
+                total,
             )
             infotext += f", {infoadd}"
 
             if levels_type != "predictive":
                 state, _infotext, perfadd = check_memory_element(
                     title,
-                    used_mb * 1024**2,
+                    used,
                     total,
                     levels_memory_element,
                     metric_name=paramname + "_avg",
@@ -317,7 +316,7 @@ def check_mem_windows(_no_item, params, section):
                 perfdata.append((
                     (averaged_metric := perfadd[0])[0],
                     # the averaged metrics are expected to be in MB
-                    *(v / 1024**2 if v is not None else None for v in averaged_metric[1:]),
+                    *(v / _MB if v is not None else None for v in averaged_metric[1:]),
                 ))
 
         if levels_type == "predictive":
@@ -325,7 +324,7 @@ def check_mem_windows(_no_item, params, section):
                 params,
                 paramname,
                 title,
-                used_mb,
+                used,
             )
             if infoadd:
                 infotext += ", " + infoadd

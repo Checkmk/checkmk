@@ -1561,7 +1561,6 @@ def config_configure_hook(
 
     if change:
         config_set_value(site, config_hooks, cast(str, hook["name"]), new_value)
-        site.conf[hook_name] = new_value
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
 

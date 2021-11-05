@@ -682,6 +682,13 @@ class SNMPCredentials(OneOfSchema):
         >>> schema.load(rv)
         ('authPriv', 'md5', 'foo', 'barbarbar', 'DES', 'barbaric')
 
+        >>> rv = schema.dump(('noAuthNoPriv', 'barbarbar'))
+        >>> rv
+        {'type': 'v3_no_auth_no_privacy', 'security_name': 'barbarbar'}
+
+        >>> schema.load(rv)
+        ('noAuthNoPriv', 'barbarbar')
+
     """
     type_schemas = {
         'v1_v2_community': SNMPCommunity,
@@ -694,7 +701,7 @@ class SNMPCredentials(OneOfSchema):
         if isinstance(obj, str):
             return "v1_v2_community"
         return {
-            'authNoAuthNoPriv': 'v3_no_auth_no_privacy',
+            'noAuthNoPriv': 'v3_no_auth_no_privacy',
             'authNoPriv': 'v3_auth_no_privacy',
             'authPriv': 'v3_auth_privacy',
         }[obj[0]]

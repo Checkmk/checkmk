@@ -184,7 +184,6 @@ _SECTION = {
                         ("mem_used", 112020467712, None, None, 0, 137438347264),
                         ("mem_used_percent", 81.50597700132717, None, None, 0.0, None),
                         ("mem_total", 131071.421875),
-                        ("memory_avg", 106831.04296875, None, None, 0.0, 131071.421875),
                         ("memory_avg", 106831.04296875, 90000, 110000),
                         ("predict_memory_avg", 100000),
                     ],
@@ -197,7 +196,6 @@ _SECTION = {
                     [
                         ("pagefile_used", 119057674240, None, None, 0, 157839441920),
                         ("pagefile_total", 150527.421875),
-                        ("pagefile_avg", 113542.24609375, None, None, 0.0, 150527.421875),
                         ("pagefile_avg", 113542.24609375, 90000, 110000),
                         ("predict_pagefile_avg", 100000),
                     ],

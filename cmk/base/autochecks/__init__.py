@@ -270,7 +270,7 @@ def save_autochecks_services(
                 parameters=s.parameters,
                 service_labels={l.name: l.value for l in s.service_labels.values()},
             )
-            for s in sorted(services)
+            for s in services
         ]
     )
 

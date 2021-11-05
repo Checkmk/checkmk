@@ -30,7 +30,7 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import _collect_host_sections
-from cmk.base.sources import make_nodes, make_sources, Source
+from cmk.base.sources import make_cluster_sources, Source
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import ProgramSource
@@ -124,44 +124,24 @@ class TestMakeHostSectionsHosts:
 
     def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
         host_sections = _collect_host_sections(
-            nodes=make_nodes(
-                config_cache,
-                host_config,
-                ipaddress,
-                sources=(),
-            ),
+            sources=(),
             file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=(),
             selected_sections=NO_SELECTION,
         )[0]
-        # The length is not zero because the function always sets,
-        # at least, a piggy back section.
-        assert len(host_sections) == 1
-
-        key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in host_sections
-
-        section = host_sections[key]
-
-        # Public attributes from HostSections:
-        assert not section.sections
+        assert not host_sections
 
     def test_one_snmp_source(self, hostname, ipaddress, config_cache, host_config):
         host_sections = _collect_host_sections(
-            nodes=make_nodes(
-                config_cache,
-                host_config,
-                ipaddress,
-                sources=[
-                    SNMPSource.snmp(
-                        hostname,
-                        ipaddress,
-                        selected_sections=NO_SELECTION,
-                        force_cache_refresh=False,
-                        on_scan_error=OnError.RAISE,
-                    ),
-                ],
-            ),
+            sources=[
+                SNMPSource.snmp(
+                    hostname,
+                    ipaddress,
+                    selected_sections=NO_SELECTION,
+                    force_cache_refresh=False,
+                    on_scan_error=OnError.RAISE,
+                ),
+            ],
             file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -199,12 +179,7 @@ class TestMakeHostSectionsHosts:
         assert source.source_type is SourceType.HOST
 
         host_sections = _collect_host_sections(
-            nodes=make_nodes(
-                config_cache,
-                host_config,
-                ipaddress,
-                sources=[source],
-            ),
+            sources=[source],
             file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -238,7 +213,7 @@ class TestMakeHostSectionsHosts:
         ]
 
         host_sections = _collect_host_sections(
-            nodes=make_nodes(config_cache, host_config, ipaddress, sources=sources),
+            sources=sources,
             file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -262,20 +237,17 @@ class TestMakeHostSectionsHosts:
             ["section_content"]
         ]
 
-    # shouldn't this be tested for a cluster?
     def test_multiple_sources_from_different_hosts(
         self, hostname, ipaddress, config_cache, host_config
     ):
         sources = [
-            ProgramSource.ds(hostname + "0", ipaddress, template=""),
-            TCPSource(hostname + "1", ipaddress),
-            TCPSource(hostname + "2", ipaddress),
+            ProgramSource.ds(HostName(f"{hostname}0"), ipaddress, template=""),
+            TCPSource(HostName(f"{hostname}1"), ipaddress),
+            TCPSource(HostName(f"{hostname}2"), ipaddress),
         ]
 
-        nodes = make_nodes(config_cache, host_config, ipaddress, sources=sources)
-
         host_sections = _collect_host_sections(
-            nodes=nodes,
+            sources=sources,
             file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -283,23 +255,21 @@ class TestMakeHostSectionsHosts:
                     Snapshot.null(),
                     source.fetcher_type,
                 )
-                for _h, _i, sources in nodes
                 for source in sources
             ],
             selected_sections=NO_SELECTION,
         )[0]
-        assert len(host_sections) == 1
 
-        key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in host_sections
+        assert set(host_sections) == {
+            HostKey(HostName(f"{hostname}0"), ipaddress, SourceType.HOST),
+            HostKey(HostName(f"{hostname}1"), ipaddress, SourceType.HOST),
+            HostKey(HostName(f"{hostname}2"), ipaddress, SourceType.HOST),
+        }
 
-        section = host_sections[key]
-
-        assert len(section.sections) == len(sources)
         for source in sources:
-            assert section.sections[SectionName("section_name_%s" % source.hostname)] == [
-                ["section_content"]
-            ]
+            assert host_sections[
+                HostKey(source.hostname, source.ipaddress, SourceType.HOST)
+            ].sections[SectionName(f"section_name_{source.hostname}")] == [["section_content"]]
 
 
 class TestMakeHostSectionsClusters:
@@ -373,10 +343,10 @@ class TestMakeHostSectionsClusters:
         assert host_config.nodes
 
     def test_no_sources(self, cluster, nodes, config_cache, host_config):
-        made_nodes = make_nodes(config_cache, host_config, None, sources=())
+        sources = make_cluster_sources(config_cache, host_config)
 
         host_sections = _collect_host_sections(
-            nodes=made_nodes,
+            sources=sources,
             file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 # We do not pass sources explicitly but still append Piggyback.
@@ -385,7 +355,7 @@ class TestMakeHostSectionsClusters:
                     Snapshot.null(),
                     FetcherType.PIGGYBACK,
                 )
-                for _n in made_nodes
+                for _s in sources
             ],
             selected_sections=NO_SELECTION,
         )[0]
@@ -413,7 +383,6 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
         HostName("host1"): "10.0.0.1",
         HostName("host2"): "10.0.0.2",
     }
-    address = "1.2.3.4"
     tags = {"agent": "no-agent"}
     section_name = SectionName("test_section")
     config_cache = make_scenario(hostname, tags).apply(monkeypatch)
@@ -449,15 +418,13 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    nodes = make_nodes(
+    sources = make_cluster_sources(
         config_cache,
         host_config,
-        address,
-        sources=make_sources(host_config, address),
     )
 
     host_sections = _collect_host_sections(
-        nodes=nodes,
+        sources=sources,
         file_cache_max_age=host_config.max_cachefile_age,
         fetcher_messages=[
             FetcherMessage.from_raw_data(
@@ -465,7 +432,6 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
                 Snapshot.null(),
                 source.fetcher_type,
             )
-            for _h, _i, sources in nodes
             for source in sources
         ],
         selected_sections=NO_SELECTION,

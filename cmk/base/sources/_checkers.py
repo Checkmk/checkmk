@@ -8,7 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Final, Iterable, Iterator, Optional, Sequence, Tuple
+from typing import Dict, Final, Iterable, Iterator, Optional, Sequence
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker
@@ -32,7 +32,7 @@ from .push_agent import PushAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
 
-__all__ = ["fetch_all", "make_sources", "make_nodes"]
+__all__ = ["fetch_all", "make_sources", "make_cluster_sources"]
 
 
 class _Builder:
@@ -224,17 +224,6 @@ def make_sources(
     ).sources
 
 
-def make_nodes(
-    config_cache: config.ConfigCache,
-    host_config: HostConfig,
-    ipaddress: Optional[HostAddress],
-    sources: Sequence[Source],
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
-    if host_config.nodes is None:
-        return [(host_config.hostname, ipaddress, sources)]
-    return _make_cluster_nodes(config_cache, host_config)
-
-
 def fetch_all(
     *,
     sources: Iterable[Source],
@@ -256,21 +245,19 @@ def fetch_all(
         )
 
 
-def _make_cluster_nodes(
+def make_cluster_sources(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
+) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
 
-    nodes = []
-    for hostname in host_config.nodes:
-        node_config = config_cache.get_host_config(hostname)
-        ipaddress = config.lookup_ip_address(node_config)
-        sources = make_sources(
-            HostConfig.make_host_config(hostname),
-            ipaddress,
+    return [
+        source
+        for host_name in host_config.nodes
+        for source in make_sources(
+            HostConfig.make_host_config(host_name),
+            config.lookup_ip_address(config_cache.get_host_config(host_name)),
             force_snmp_cache_refresh=False,
         )
-        nodes.append((hostname, ipaddress, sources))
-    return nodes
+    ]

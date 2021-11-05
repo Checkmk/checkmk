@@ -1,0 +1,13 @@
+Title: Fix error on uploading iCalendar with recurrence rules
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1636122509
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p16
+
+If an iCalendar with recurrence rules was uploaded, the error "Failed to parse
+file: '<' not supported between instances of 'list' and 'time.struct_time'"
+occured.

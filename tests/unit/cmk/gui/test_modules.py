@@ -50,8 +50,12 @@ def fixture_local_plugin(main_module_name):
 def test_load_local_plugin(main_module_name):
     main_module = importlib.import_module(f"cmk.gui.{main_module_name}")
     assert "ding" not in main_module.__dict__
-    modules.call_load_plugins_hooks()
-    assert main_module.ding == "dong"  # type: ignore[attr-defined]
+
+    try:
+        modules.call_load_plugins_hooks()
+        assert main_module.ding == "dong"  # type: ignore[attr-defined]
+    finally:
+        del main_module.__dict__["ding"]
 
 
 @pytest.fixture(

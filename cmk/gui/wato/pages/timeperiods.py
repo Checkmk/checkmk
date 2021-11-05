@@ -383,16 +383,20 @@ class ModeTimeperiodImportICal(WatoMode):
         return ModeTimeperiods
 
     def title(self):
+        if html.request.var("upload"):
+            return _("Add time period")
         return _("Import iCalendar File to create a time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            _("iCalendar"),
-            breadcrumb,
-            form_name="import_ical",
-            button_name="_save",
-            save_title=_("Import"),
-        )
+        if not html.request.var("upload"):
+            return make_simple_form_page_menu(
+                _("iCalendar"),
+                breadcrumb,
+                form_name="import_ical",
+                button_name="upload",
+                save_title=_("Import"),
+            )
+        return ModeEditTimeperiod().page_menu(breadcrumb)
 
     def _vs_ical(self):
         return Dictionary(
@@ -456,54 +460,6 @@ class ModeTimeperiodImportICal(WatoMode):
 
         if not content.startswith("END:VCALENDAR"):
             raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
-
-    def action(self) -> ActionResult:
-        if not transactions.check_transaction():
-            return None
-
-        vs_ical = self._vs_ical()
-        ical = vs_ical.from_html_vars("ical")
-        vs_ical.validate_value(ical, "ical")
-
-        filename, _ty, content = ical["file"]
-
-        try:
-            # TODO(ml): If we could open the file in text mode, we would not
-            #           need to `decode()` here.
-            data = self._parse_ical(content.decode("utf-8"), ical["horizon"])
-        except Exception as e:
-            if config.debug:
-                raise
-            raise MKUserError("ical_file", _("Failed to parse file: %s") % e)
-
-        get_vars = {
-            "timeperiod_p_alias": data.get("descr", data.get("name", filename)),
-        }
-
-        for day in defines.weekday_ids():
-            get_vars["%s_0_from" % day] = ""
-            get_vars["%s_0_until" % day] = ""
-
-        # Default to whole day
-        if not ical["times"]:
-            ical["times"] = [((0, 0), (24, 0))]
-
-        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(data["events"])
-        for index, event in enumerate(data["events"]):
-            index += 1
-            get_vars["timeperiod_p_exceptions_%d_0" % index] = event["date"]
-            get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
-
-            get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(ical["times"])
-            for n, time_spec in enumerate(ical["times"]):
-                n += 1
-                start_time = ":".join("%02d" % x for x in time_spec[0])
-                end_time = ":".join("%02d" % x for x in time_spec[1])
-                get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = start_time
-                get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = end_time
-                get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
-
-        return redirect(mode_url("edit_timeperiod", **get_vars))
 
     # Returns a dictionary in the format:
     # {
@@ -643,7 +599,13 @@ class ModeTimeperiodImportICal(WatoMode):
 
         return ical
 
-    def page(self):
+    def page(self) -> None:
+        if not html.request.var("upload"):
+            self._show_import_ical_page()
+        else:
+            self._show_add_timeperiod_page()
+
+    def _show_import_ical_page(self) -> None:
         html.p(
             _(
                 "This page can be used to generate a new timeperiod definition based "
@@ -658,6 +620,58 @@ class ModeTimeperiodImportICal(WatoMode):
         forms.end()
         html.hidden_fields()
         html.end_form()
+
+    def _show_add_timeperiod_page(self) -> None:
+        # If an ICalendar file is uploaded, we process the htmlvars here, to avoid
+        # "Request URI too long exceptions"
+        vs_ical = self._vs_ical()
+        ical = vs_ical.from_html_vars("ical")
+        vs_ical.validate_value(ical, "ical")
+
+        filename, _ty, content = ical["file"]
+
+        try:
+            # TODO(ml): If we could open the file in text mode, we would not
+            #           need to `decode()` here.
+            data = self._parse_ical(content.decode("utf-8"), ical["horizon"])
+        except Exception as e:
+            if config.debug:
+                raise
+            raise MKUserError("ical_file", _("Failed to parse file: %s") % e)
+
+        get_vars = {
+            "timeperiod_p_alias": data.get("descr", data.get("name", filename)),
+        }
+
+        for day in defines.weekday_ids():
+            get_vars["%s_0_from" % day] = ""
+            get_vars["%s_0_until" % day] = ""
+
+        # Default to whole day
+        if not ical["times"]:
+            ical["times"] = [((0, 0), (24, 0))]
+
+        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(data["events"])
+        for index, event in enumerate(data["events"]):
+            index += 1
+            get_vars["timeperiod_p_exceptions_%d_0" % index] = event["date"]
+            get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
+
+            get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(ical["times"])
+            for n, time_spec in enumerate(ical["times"]):
+                n += 1
+                start_time = ":".join("%02d" % x for x in time_spec[0])
+                end_time = ":".join("%02d" % x for x in time_spec[1])
+                get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = start_time
+                get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = end_time
+                get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
+
+        for var, val in get_vars.items():
+            html.request.set_var(var, val)
+
+        html.request.set_var("mode", "edit_timeperiod")
+
+        ModeEditTimeperiod().page()
 
 
 @mode_registry.register

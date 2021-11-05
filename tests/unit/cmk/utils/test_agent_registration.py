@@ -15,7 +15,7 @@ def test_uuid_link_manager_create_link(tmp_path):
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     receive_outputs_dir = Path(tmp_path).joinpath("receive_outputs")
-    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push_agents")
+    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push-agent")
 
     uuid_link_manager = UUIDLinkManager(
         receive_outputs_dir=receive_outputs_dir,
@@ -29,7 +29,7 @@ def test_uuid_link_manager_create_link(tmp_path):
     link = next(iter(uuid_link_manager))
 
     assert str(link.source) == "{0}/receive_outputs/{1}".format(tmp_path, raw_uuid)
-    assert str(link.target) == "{0}/data_source_cache/push_agents/{1}".format(tmp_path, hostname)
+    assert str(link.target) == "{0}/data_source_cache/push-agent/{1}".format(tmp_path, hostname)
 
 
 def test_uuid_link_manager_create_link_to_different_uuid(tmp_path):
@@ -38,7 +38,7 @@ def test_uuid_link_manager_create_link_to_different_uuid(tmp_path):
     raw_uuid_new = "db1ea77f-330e-4fb5-b59e-925f55290533"
 
     receive_outputs_dir = Path(tmp_path).joinpath("receive_outputs")
-    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push_agents")
+    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push-agent")
 
     uuid_link_manager = UUIDLinkManager(
         receive_outputs_dir=receive_outputs_dir,
@@ -53,7 +53,7 @@ def test_uuid_link_manager_create_link_to_different_uuid(tmp_path):
     link = next(iter(uuid_link_manager))
 
     assert str(link.source) == "{0}/receive_outputs/{1}".format(tmp_path, raw_uuid_new)
-    assert str(link.target) == "{0}/data_source_cache/push_agents/{1}".format(tmp_path, hostname)
+    assert str(link.target) == "{0}/data_source_cache/push-agent/{1}".format(tmp_path, hostname)
 
 
 def test_uuid_link_manager_update_links(tmp_path):
@@ -61,7 +61,7 @@ def test_uuid_link_manager_update_links(tmp_path):
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     receive_outputs_dir = Path(tmp_path).joinpath("receive_outputs")
-    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push_agents")
+    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push-agent")
 
     uuid_link_manager = UUIDLinkManager(
         receive_outputs_dir=receive_outputs_dir,
@@ -76,12 +76,12 @@ def test_uuid_link_manager_update_links(tmp_path):
     link = next(iter(uuid_link_manager))
 
     assert str(link.source) == "{0}/receive_outputs/{1}".format(tmp_path, raw_uuid)
-    assert str(link.target) == "{0}/data_source_cache/push_agents/{1}".format(tmp_path, hostname)
+    assert str(link.target) == "{0}/data_source_cache/push-agent/{1}".format(tmp_path, hostname)
 
 
 def test_uuid_link_manager_update_links_no_links_yet(tmp_path):
     receive_outputs_dir = Path(tmp_path).joinpath("receive_outputs")
-    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push_agents")
+    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push-agent")
 
     uuid_link_manager = UUIDLinkManager(
         receive_outputs_dir=receive_outputs_dir,
@@ -98,7 +98,7 @@ def test_uuid_link_manager_update_links_no_host(tmp_path):
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     receive_outputs_dir = Path(tmp_path).joinpath("receive_outputs")
-    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push_agents")
+    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push-agent")
 
     uuid_link_manager = UUIDLinkManager(
         receive_outputs_dir=receive_outputs_dir,
@@ -116,7 +116,7 @@ def test_uuid_link_manager_update_links_no_push_host(tmp_path):
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     receive_outputs_dir = Path(tmp_path).joinpath("receive_outputs")
-    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push_agents")
+    data_source_dir = Path(tmp_path).joinpath("data_source_cache/push-agent")
 
     uuid_link_manager = UUIDLinkManager(
         receive_outputs_dir=receive_outputs_dir,
@@ -131,4 +131,4 @@ def test_uuid_link_manager_update_links_no_push_host(tmp_path):
     link = next(iter(uuid_link_manager))
 
     assert str(link.source) == "{0}/receive_outputs/{1}".format(tmp_path, raw_uuid)
-    assert str(link.target) == "{0}/data_source_cache/push_agents/{1}".format(tmp_path, hostname)
+    assert str(link.target) == "{0}/data_source_cache/push-agent/{1}".format(tmp_path, hostname)

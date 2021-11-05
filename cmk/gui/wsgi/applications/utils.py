@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Callable
+from typing import Any, Callable, Dict
 
 import cmk.utils.paths
 import cmk.utils.profile
@@ -149,3 +149,27 @@ def handle_unhandled_exception() -> Response:
     )
     # This needs to be cleaned up.
     return response
+
+
+def load_gui_log_levels() -> Dict[str, int]:
+    """Load the GUI log level global setting from the WATO GUI config"""
+    return load_single_global_wato_setting("log_levels", {"cmk.web": 30})
+
+
+def load_single_global_wato_setting(varname: str, deflt: Any = None) -> Any:
+    """Load a single config option from WATO globals (Only for special use)
+
+    This is a small hack to get access to the current configuration without
+    the need to load the whole GUI config.
+
+    The problem is: The profiling setting is needed before the GUI config
+    is loaded regularly. This is needed, because we want to be able to
+    profile our whole WSGI app, including the config loading logic.
+
+    We only process the WATO written global settings file to get the WATO
+    settings. Which should be enough for the most cases.
+    """
+    settings = cmk.utils.store.load_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", default={}
+    )
+    return settings.get(varname, deflt)

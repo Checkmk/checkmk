@@ -12,7 +12,8 @@ from werkzeug.wrappers import Request
 
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.utils import store
+
+from cmk.gui.wsgi.applications.utils import load_single_global_wato_setting
 
 
 class ProfileSwitcher:
@@ -87,22 +88,8 @@ def _profiling_enabled(environ) -> bool:
 
 
 def _load_profiling_setting() -> Union[bool, Literal["enable_by_var"]]:
-    """Load the profiling global setting from the GUI config
-
-    This is a small hack to get access to the current configuration without
-    the need to load the whole GUI config.
-
-    The problem is: The profiling setting is needed before the GUI config
-    is loaded regularly. This is needed, because we want to be able to
-    profile our whole WSGI app, including the config loading logic.
-
-    We only process the WATO written global settings file to get the WATO
-    settings. Which should be enough for the most cases.
-    """
-    settings = store.load_mk_file(
-        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", default={}
-    )
-    return settings.get("profile", False)
+    """Load the profiling global setting from the WATO GUI config"""
+    return load_single_global_wato_setting("profile", deflt=False)
 
 
 __all__ = ["ProfileSwitcher"]

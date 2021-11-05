@@ -1801,7 +1801,6 @@ class BulkDeleteHost(BaseSchema):
 
 
 class BulkDeleteFolder(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         EXISTING_FOLDER,
         required=True,

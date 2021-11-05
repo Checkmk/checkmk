@@ -51,9 +51,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib import CREFolder
 
-# TODO: Remove all hard-coded response creation in favour of a generic one
-# TODO: Implement formal description (GET endpoint) of move action
-
 PATH_FOLDER_FIELD = {
     "folder": fields.FolderField(
         description=(

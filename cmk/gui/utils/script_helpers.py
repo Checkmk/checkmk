@@ -19,6 +19,7 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
+from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -47,6 +48,7 @@ def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> Request
         resp=resp,
         funnel=funnel,
         config_obj=make_config_object(get_default_config()),
+        user=LoggedInNobody(),
         html_obj=html(req, resp, funnel, output_format="html"),
         display_options=DisplayOptions(),
         timeout_manager=TimeoutManager(),

@@ -34,6 +34,7 @@ from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.json import patch_json
+from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -209,6 +210,7 @@ class CheckmkApp:
             resp=resp,
             funnel=funnel,
             config_obj=config_obj,
+            user=LoggedInNobody(),
             html_obj=htmllib.html(req, resp, funnel, output_format),
             timeout_manager=timeout_manager,
             display_options=DisplayOptions(),

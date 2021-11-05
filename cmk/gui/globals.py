@@ -15,7 +15,6 @@ from typing import Any, List, Optional, TYPE_CHECKING
 
 from werkzeug.local import LocalProxy, LocalStack
 
-from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.user_errors import UserErrors
 
 #####################################################################
@@ -30,6 +29,7 @@ if TYPE_CHECKING:
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.theme import Theme
     from cmk.gui.utils.timeout_manager import TimeoutManager
+    from cmk.gui.utils.transaction_manager import TransactionManager
 
 _sentinel = object()
 
@@ -157,6 +157,7 @@ class RequestContext:
         resp: http.Response,
         funnel: OutputFunnel,
         config_obj: Config,
+        user: LoggedInUser,  # pylint: disable=redefined-outer-name
         html_obj: Optional[htmllib.html] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
         theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
@@ -176,13 +177,7 @@ class RequestContext:
         self.response = resp
         self.output_funnel = funnel
         self.config = config_obj
-
-        # TODO: cyclical import with config -> globals -> config -> ...
-        from cmk.gui.utils.logged_in import LoggedInNobody
-
-        self._user: LoggedInUser = LoggedInNobody()
-        # TODO: This needs to be a helper of LoggedInUser
-        self.transactions = TransactionManager(req, self._user)
+        self._user = user
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = _PrependURLFilter()
@@ -195,7 +190,10 @@ class RequestContext:
     @user.setter
     def user(self, user_obj: LoggedInUser) -> None:
         self._user = user_obj
-        self.transactions = TransactionManager(request, user_obj)
+
+    @property
+    def transactions(self) -> TransactionManager:
+        return self._user.transactions
 
     def __enter__(self):
         _request_ctx_stack.push(self)

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.0.0p14
+Version: 2.0.0p16
 
 Some versions of mysqladmin issue a warning if the mysql.local.cfg
 file is missing. Now, the agent creates an empty file in that case

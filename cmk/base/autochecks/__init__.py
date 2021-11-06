@@ -15,12 +15,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
-from cmk.base.check_utils import (
-    AutocheckService,
-    deduplicate_autochecks,
-    LegacyCheckParameters,
-    Service,
-)
+from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
 from cmk.base.discovered_labels import ServiceLabel
 
 from .utils import AutocheckEntry, AutochecksStore
@@ -250,12 +245,29 @@ def set_autochecks_of_cluster(
         ]
 
         # write new autochecks file for that host
-        _save_autochecks_services(node, deduplicate_autochecks(new_autochecks))
+        _save_autochecks_services(node, _deduplicate(new_autochecks))
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
     AutochecksStore(hostname).clear()
+
+
+def _deduplicate(autochecks: Sequence[AutocheckService]) -> Sequence[AutocheckService]:
+    """Cleanup duplicates
+
+    (in particular versions pre 1.6.0p8 may have introduced some in the autochecks file)
+
+    The first service is kept:
+
+    >>> _deduplicate([
+    ...    AutocheckService(CheckPluginName('a'), None, "description 1", None),
+    ...    AutocheckService(CheckPluginName('a'), None, "description 2", None),
+    ... ])[0].description
+    'description 1'
+
+    """
+    return list({(a.check_plugin_name, a.item): a for a in reversed(autochecks)}.values())
 
 
 def _save_autochecks_services(

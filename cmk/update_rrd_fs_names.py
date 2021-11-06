@@ -206,16 +206,15 @@ def update_service_info(config_cache, hostnames):
 
     rename_journal = {}
     for hostname in hostnames:
-        for service in cmk.base.autochecks.parse_autochecks_services(
-            hostname,
-            config.service_description,
-        ):
-            if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
-                if cmc_capable:
-                    update_files(hostname, service.description, service.item, "cmc")
-                rename_journal.update(
-                    update_files(hostname, service.description, service.item, "pnp4nagios")
-                )
+        for entry in cmk.base.autochecks.AutochecksStore(hostname).read():
+            if entry.check_plugin_name not in CHECKS_USING_DF_INCLUDE:
+                continue
+
+            description = config.service_description(hostname, entry.check_plugin_name, entry.item)
+
+            if cmc_capable:
+                update_files(hostname, description, entry.item, "cmc")
+            rename_journal.update(update_files(hostname, description, entry.item, "pnp4nagios"))
 
     update_journal(rename_journal)
 

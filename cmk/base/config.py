@@ -11,7 +11,6 @@ import inspect
 import ipaddress
 import itertools
 import marshal
-import numbers
 import os
 import pickle
 import py_compile
@@ -1116,8 +1115,8 @@ def service_description(
         return "Unimplemented check %s" % check_plugin_name
 
     plugin_name_str = str(plugin.name)
-    # use user-supplied service description, if available
     add_item = True
+    # use user-supplied service description, if available
     descr_format = service_descriptions.get(plugin_name_str)
     if not descr_format:
         old_descr = _old_service_descriptions.get(plugin_name_str)
@@ -1134,10 +1133,8 @@ def service_description(
     # descr_format has type str? Exact type of service_descriptions seems unclear
     descr_format = ensure_str(descr_format)
 
-    if add_item and isinstance(item, (str, numbers.Integral)):
-        if "%s" not in descr_format:
-            descr_format += " %s"
-        descr = descr_format % (item,)
+    if add_item and item is not None:
+        descr = descr_format % item if "%s" in descr_format else f"{descr_format} {item}"
     else:
         descr = descr_format
 

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping, NamedTuple, Sequence
 
 import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import ObjectStore
 from cmk.utils.type_defs import CheckPluginName, HostName, Item
 
@@ -62,13 +63,19 @@ class AutochecksSerializer:
 
 class AutochecksStore:
     def __init__(self, host_name: HostName) -> None:
+        self._host_name = host_name
         self._store = ObjectStore(
             Path(cmk.utils.paths.autochecks_dir, f"{host_name}.mk"),
             serializer=AutochecksSerializer(),
         )
 
     def read(self) -> Sequence[AutocheckEntry]:
-        return self._store.read_obj(default=[])
+        try:
+            return self._store.read_obj(default=[])
+        except (ValueError, TypeError, KeyError, AttributeError, SyntaxError) as exc:
+            raise MKGeneralException(
+                f"Unable to parse autochecks of host {self._host_name}"
+            ) from exc
 
     def write(self, entries: Sequence[AutocheckEntry]) -> None:
         self._store.write_obj(

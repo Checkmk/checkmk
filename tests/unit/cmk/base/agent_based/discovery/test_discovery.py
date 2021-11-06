@@ -906,13 +906,8 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             arg_only_new=False,
         )
 
-    services = autochecks.parse_autochecks_services(testhost, config.service_description)
-    found = {
-        (s.check_plugin_name, s.item): {
-            label.name: label.value for label in s.service_labels.values()
-        }
-        for s in services
-    }
+    entries = autochecks.AutochecksStore(testhost).read()
+    found = {(e.check_plugin_name, e.item): e.service_labels for e in entries}
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)

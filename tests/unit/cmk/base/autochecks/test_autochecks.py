@@ -85,31 +85,6 @@ def test_manager_get_autochecks_of(
     assert test_config.get_autochecks_of(HostName("host")) == result
 
 
-@pytest.mark.usefixtures("fix_register")
-def test_parse_autochecks_services(
-    test_config: config.ConfigCache,
-) -> None:
-    autocheck_entries = [
-        autochecks.AutocheckEntry(CheckPluginName("chrony"), None, {}, {}),
-        autochecks.AutocheckEntry(CheckPluginName("df"), "/zzz", ["abc", "xyz"], {}),
-        autochecks.AutocheckEntry(
-            CheckPluginName("lnx_if"), "2", {"speed": 10000000, "state": ["1"]}, {}
-        ),
-    ]
-    autochecks.AutochecksStore(HostName("host")).write(autocheck_entries)
-
-    services = autochecks.parse_autochecks_services(
-        HostName("host"),
-        config.service_description,
-    )
-
-    assert [s.description for s in services] == [
-        "NTP Time",
-        "fs_/zzz",
-        "Interface 2",
-    ]
-
-
 def _service(name: str, params: Optional[Dict[str, str]] = None) -> AutocheckService:
     return AutocheckService(CheckPluginName(name), None, "", params or {})
 

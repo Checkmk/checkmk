@@ -9,9 +9,6 @@ import logging
 from contextlib import suppress
 from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence, Union
 
-import cmk.utils.debug
-import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
@@ -134,26 +131,6 @@ class AutochecksManager:
         return self._raw_autochecks_cache[hostname]
 
 
-def parse_autochecks_services(
-    hostname: HostName,
-    service_description: GetServiceDescription,
-) -> Sequence[AutocheckService]:
-    """Read autochecks, but do not compute final check parameters"""
-
-    try:
-        autocheck_entries = AutochecksStore(hostname).read()
-    except SyntaxError as e:
-        if cmk.utils.debug.enabled():
-            raise
-        raise MKGeneralException(f"Unable to parse autochecks of host {hostname}: {e}")
-
-    return [
-        service
-        for entry in autocheck_entries
-        if (service := parse_autocheck_service(hostname, entry, service_description)) is not None
-    ]
-
-
 def parse_autocheck_service(
     hostname: HostName,
     autocheck_entry: AutocheckEntry,
@@ -219,16 +196,19 @@ def set_autochecks_of_cluster(
     for node in nodes:
         new_autochecks = [
             existing
-            for existing in parse_autochecks_services(node, service_description)
-            if hostname != host_of_clustered_service(node, existing.description)
+            for existing in AutochecksStore(node).read()
+            if hostname
+            != host_of_clustered_service(
+                node, service_description(node, existing.check_plugin_name, existing.item)
+            )
         ] + [
-            discovered
+            _entrify(discovered)
             for discovered, found_on_nodes in new_services_with_nodes
             if node in found_on_nodes
         ]
 
         # write new autochecks file for that host
-        AutochecksStore(node).write([_entrify(s) for s in _deduplicate(new_autochecks)])
+        AutochecksStore(node).write(_deduplicate(new_autochecks))
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
@@ -236,7 +216,7 @@ def set_autochecks_of_cluster(
     AutochecksStore(hostname).clear()
 
 
-def _deduplicate(autochecks: Sequence[AutocheckService]) -> Sequence[AutocheckService]:
+def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntry]:
     """Cleanup duplicates
 
     (in particular versions pre 1.6.0p8 may have introduced some in the autochecks file)
@@ -268,16 +248,17 @@ def remove_autochecks_of_host(
     host_of_clustered_service: HostOfClusteredService,
     service_description: GetServiceDescription,
 ) -> int:
-    existing_services = parse_autochecks_services(hostname, service_description)
-    new_services = [
+    store = AutochecksStore(hostname)
+    existing_entries = store.read()
+    new_entries = [
         existing
-        for existing in existing_services
+        for existing in existing_entries
         if remove_hostname
         != host_of_clustered_service(
             hostname,
-            existing.description,
+            service_description(hostname, existing.check_plugin_name, existing.item),
         )
     ]
+    store.write(new_entries)
 
-    AutochecksStore(hostname).write([_entrify(s) for s in new_services])
-    return len(existing_services) - len(new_services)
+    return len(existing_entries) - len(new_entries)

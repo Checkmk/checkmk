@@ -284,12 +284,12 @@ def test_automation_set_autochecks(test_cfg, site):
         autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
         assert os.path.exists(autochecks_file)
 
-        data = autochecks.parse_autochecks_services(hostname, config.service_description)
+        data = autochecks.AutochecksStore(hostname).read()
         services = [
             (
                 (str(s.check_plugin_name), s.item),
                 s.parameters,
-                {label.name: label.value for label in s.service_labels.values()},
+                s.service_labels,
             )
             for s in data
         ]

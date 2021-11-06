@@ -191,12 +191,7 @@ def _consolidate_autochecks_of_real_hosts(
     existing_autochecks: Sequence[AutocheckEntry],
 ) -> Sequence[AutocheckEntry]:
     consolidated = {
-        discovered.id(): AutocheckEntry(
-            check_plugin_name=discovered.check_plugin_name,
-            item=discovered.item,
-            parameters=discovered.parameters,
-            service_labels={l.name: l.value for l in discovered.service_labels.values()},
-        )
+        discovered.id(): _entrify(discovered)
         for discovered, found_on_nodes in new_services_with_nodes
         if hostname in found_on_nodes
     }
@@ -233,7 +228,7 @@ def set_autochecks_of_cluster(
         ]
 
         # write new autochecks file for that host
-        _save_autochecks_services(node, _deduplicate(new_autochecks))
+        AutochecksStore(node).write([_entrify(s) for s in _deduplicate(new_autochecks)])
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
@@ -258,20 +253,12 @@ def _deduplicate(autochecks: Sequence[AutocheckService]) -> Sequence[AutocheckSe
     return list({(a.check_plugin_name, a.item): a for a in reversed(autochecks)}.values())
 
 
-def _save_autochecks_services(
-    hostname: HostName,
-    services: Sequence[AutocheckService],
-) -> None:
-    AutochecksStore(hostname).write(
-        [
-            AutocheckEntry(
-                check_plugin_name=s.check_plugin_name,
-                item=s.item,
-                parameters=s.parameters,
-                service_labels={l.name: l.value for l in s.service_labels.values()},
-            )
-            for s in services
-        ]
+def _entrify(service: AutocheckService) -> AutocheckEntry:
+    return AutocheckEntry(
+        check_plugin_name=service.check_plugin_name,
+        item=service.item,
+        parameters=service.parameters,
+        service_labels={l.name: l.value for l in service.service_labels.values()},
     )
 
 
@@ -292,5 +279,5 @@ def remove_autochecks_of_host(
         )
     ]
 
-    _save_autochecks_services(hostname, new_services)
+    AutochecksStore(hostname).write([_entrify(s) for s in new_services])
     return len(existing_services) - len(new_services)

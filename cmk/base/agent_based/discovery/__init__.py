@@ -412,7 +412,7 @@ def _get_post_discovery_autocheck_services(
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
 
-    Service in with the state "custom", "legacy", "active" and "manual" are currently not checked.
+    Service in with the state "custom", "active" and "manual" are currently not checked.
 
     Note:
 
@@ -421,7 +421,7 @@ def _get_post_discovery_autocheck_services(
     """
     post_discovery_services = []
     for check_source, discovered_services_with_nodes in services.items():
-        if check_source in ("custom", "legacy", "active", "manual"):
+        if check_source in ("custom", "active", "manual"):
             # This is not an autocheck or ignored and currently not
             # checked. Note: Discovered checks that are shadowed by manual
             # checks will vanish that way.
@@ -1126,7 +1126,7 @@ def _active_items(
 
 def _reclassify_disabled_items(
     host_name: HostName,
-    services: ServicesTable,
+    services: ServicesTable[_ServiceOrigin],
 ) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     """Handle disabled services -> 'ignored'"""
     yield from (
@@ -1136,7 +1136,7 @@ def _reclassify_disabled_items(
         # TODO: This needs to be cleaned up. The problem here is that service_description() can not
         # calculate the description of active checks and the active checks need to be put into
         # "[source]_ignored" instead of ignored.
-        if check_source not in {"legacy", "active", "custom"}
+        if check_source not in {"active", "custom"}
         and config.service_ignored(
             host_name, discovered_service.check_plugin_name, discovered_service.description
         )

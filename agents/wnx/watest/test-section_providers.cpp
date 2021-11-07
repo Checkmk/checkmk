@@ -43,20 +43,20 @@ TEST(SectionProviders, Basic) {
     EXPECT_EQ(e.separator(), '\0');
 }
 
-TEST(SectionProviders, Construction) {
+TEST(SectionProviders, PluginsProviderConstruction) {
     PluginsProvider plugins;
     EXPECT_EQ(plugins.getUniqName(), cma::section::kPlugins);
+}
 
+TEST(SectionProviders, LocalProviderConstruction) {
     LocalProvider local;
     EXPECT_EQ(local.getUniqName(), cma::section::kLocal);
 }
 
 TEST(SectionProviders, BasicUptime) {
-    using namespace cma::section;
-    using namespace cma::provider;
-
-    cma::srv::SectionProvider<UptimeSync> uptime_provider;
-    EXPECT_EQ(uptime_provider.getEngine().getUniqName(), kUptimeName);
+    cma::srv::SectionProvider<cma::provider::UptimeSync> uptime_provider;
+    EXPECT_EQ(uptime_provider.getEngine().getUniqName(),
+              cma::section::kUptimeName);
 
     auto& e3 = uptime_provider.getEngine();
     auto uptime = e3.generateContent(section_name);
@@ -69,11 +69,8 @@ TEST(SectionProviders, BasicUptime) {
 }
 
 TEST(SectionProviders, BasicDf) {
-    using namespace cma::section;
-    using namespace cma::provider;
-
-    cma::srv::SectionProvider<Df> df_provider;
-    EXPECT_EQ(df_provider.getEngine().getUniqName(), kDfName);
+    cma::srv::SectionProvider<cma::provider::Df> df_provider;
+    EXPECT_EQ(df_provider.getEngine().getUniqName(), cma::section::kDfName);
 
     auto& e2 = df_provider.getEngine();
     auto df = e2.generateContent(section_name);

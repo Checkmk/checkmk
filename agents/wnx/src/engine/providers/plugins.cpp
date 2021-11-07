@@ -39,7 +39,7 @@ static bool IsPluginRequiredType(const PluginEntry& plugin,
             return true;
     }
 
-    XLOG::l.bp(XLOG_FUNC + " input is unknown [{}], return true by default");
+    XLOG::l(XLOG_FUNC + " input is unknown [{}], return true by default");
     return true;
 }
 

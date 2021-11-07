@@ -73,7 +73,7 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
             module.topic,
             TopicMenuTopic(
                 name=module.topic.name,
-                title=module.topic.title,
+                title=str(module.topic.title),
                 icon=module.topic.icon_name,
                 items=[],
             ),

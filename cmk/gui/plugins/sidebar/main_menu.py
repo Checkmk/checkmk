@@ -81,7 +81,7 @@ class MainMenuRenderer:
             items.append(
                 MainMenuItem(
                     name=menu.name,
-                    title=menu.title,
+                    title=str(menu.title),
                     icon=menu.icon,
                     onopen=menu.search.onopen if menu.search else None,
                 )

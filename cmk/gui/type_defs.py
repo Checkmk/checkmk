@@ -25,6 +25,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import FinalizeRequest
+from cmk.gui.utils.speaklater import LazyString
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
 LivestatusQuery = str
@@ -190,7 +191,7 @@ class TopicMenuTopic(NamedTuple):
 
 class MegaMenu(NamedTuple):
     name: str
-    title: str
+    title: Union[str, LazyString]
     icon: Icon
     sort_index: int
     topics: Callable[[], List[TopicMenuTopic]]

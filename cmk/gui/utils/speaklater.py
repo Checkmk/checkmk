@@ -80,7 +80,7 @@ class LazyString:
     def __hash__(self) -> int:
         return hash(str(self))
 
-    def __mod__(self, other: str) -> str:
+    def __mod__(self, other: object) -> str:
         return str(self) % other
 
     def __rmod__(self, other: str) -> str:

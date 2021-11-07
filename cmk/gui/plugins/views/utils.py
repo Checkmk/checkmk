@@ -25,6 +25,7 @@ from typing import (
     Dict,
     Hashable,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -2184,7 +2185,7 @@ class Cell:
             assert isinstance(content, (str, HTML))
             tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
-            assert not isinstance(tooltip_content, dict)
+            assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
                 content = html.render_span(content, title=tooltip_text)

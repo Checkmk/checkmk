@@ -1393,7 +1393,7 @@ class MenuSearchResultsRenderer:
             mega_menu_registry.menu_setup(),
             mega_menu_registry.menu_monitoring(),
         ]:
-            mapping[menu.title] = (
+            mapping[str(menu.title)] = (
                 menu.icon + "_active" if isinstance(menu.icon, str) else default_icons[0],
                 menu.icon if menu.icon else default_icons[1],
             )

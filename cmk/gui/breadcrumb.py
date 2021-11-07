@@ -8,17 +8,18 @@
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
 
-from typing import Iterable, List, MutableSequence, NamedTuple, Optional, TYPE_CHECKING
+from typing import Iterable, List, MutableSequence, NamedTuple, Optional, TYPE_CHECKING, Union
 
 from cmk.gui.globals import html
 from cmk.gui.type_defs import MegaMenu
+from cmk.gui.utils.speaklater import LazyString
 
 if TYPE_CHECKING:
     from cmk.gui.pagetypes import PagetypeTopics
 
 
 class BreadcrumbItem(NamedTuple):
-    title: str
+    title: Union[str, LazyString]
     url: Optional[str]
 
 
@@ -52,9 +53,9 @@ class BreadcrumbRenderer:
 
         for item in breadcrumb:
             if item.url:
-                html.a(item.title, href=item.url)
+                html.a(str(item.title), href=item.url)
             else:
-                html.span(item.title)
+                html.span(str(item.title))
 
         html.close_div()
 

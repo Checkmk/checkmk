@@ -5,11 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Callable, List, Type
+from typing import Callable, List, Type, Union
 
 from six import ensure_str
 
 import cmk.utils.plugin_registry
+
+from cmk.gui.utils.speaklater import LazyString
 
 
 class PermissionSection(abc.ABC):
@@ -56,8 +58,8 @@ class Permission(abc.ABC):
         self,
         section: Type[PermissionSection],
         name: str,
-        title: str,
-        description: str,
+        title: Union[str, LazyString],
+        description: Union[str, LazyString],
         defaults: List[str],
     ) -> None:
         self._section = section
@@ -80,12 +82,12 @@ class Permission(abc.ABC):
     @property
     def title(self) -> str:
         """Display name representing the permission"""
-        return self._title
+        return str(self._title)
 
     @property
     def description(self) -> str:
         """Text to explain the purpose of this permission"""
-        return self._description
+        return str(self._description)
 
     @property
     def defaults(self) -> List[str]:

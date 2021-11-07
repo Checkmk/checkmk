@@ -44,12 +44,11 @@ def _(message: str, /) -> str:
     return str(message)
 
 
-def _l(string: str, /) -> str:
+def _l(string: str, /) -> LazyString:
     """Like _() but the string returned is lazy which means it will be translated when it is used as
     an actual string. Positional-only arguments to simplify additional linting of localized
     strings."""
-    # TODO: Cleanup typing in the next commit
-    return LazyString(_, string)  # type: ignore[return-value]
+    return LazyString(_, string)
 
 
 def ungettext(singular: str, plural: str, n: int, /) -> str:

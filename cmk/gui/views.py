@@ -1533,7 +1533,7 @@ def format_view_title(name, view):
 
     title_parts.append("%s (%s)" % (_u(view["title"]), name))
 
-    return " - ".join(title_parts)
+    return " - ".join(map(str, title_parts))
 
 
 def view_editor_options():

@@ -10,7 +10,6 @@ from dataclasses import asdict
 from pathlib import Path
 
 import pytest
-from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 from tests.testlib import is_enterprise_repo, is_managed_repo
 
@@ -26,6 +25,7 @@ from cmk.gui.permissions import (
     permission_registry,
     permission_section_registry,
 )
+from cmk.gui.utils.speaklater import LazyString
 
 
 def test_default_config_from_plugins():

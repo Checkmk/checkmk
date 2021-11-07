@@ -79,6 +79,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
 )
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
@@ -157,6 +158,9 @@ class ValueSpec:
 
         if self._help is None:
             return None
+
+        if isinstance(self._help, LazyString):
+            return str(self._help)
 
         assert isinstance(self._help, str)
         return self._help

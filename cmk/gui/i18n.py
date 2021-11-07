@@ -8,9 +8,9 @@ import gettext as gettext_module
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Tuple
 
-from flask_babel.speaklater import LazyString  # type: ignore[import]
-
 import cmk.utils.paths
+
+from cmk.gui.utils.speaklater import LazyString
 
 # .
 #   .--Gettext i18n--------------------------------------------------------.
@@ -48,7 +48,8 @@ def _l(string: str, /) -> str:
     """Like _() but the string returned is lazy which means it will be translated when it is used as
     an actual string. Positional-only arguments to simplify additional linting of localized
     strings."""
-    return LazyString(_, string)
+    # TODO: Cleanup typing in the next commit
+    return LazyString(_, string)  # type: ignore[return-value]
 
 
 def ungettext(singular: str, plural: str, n: int, /) -> str:

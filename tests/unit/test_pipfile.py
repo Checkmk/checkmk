@@ -215,7 +215,6 @@ def get_undeclared_dependencies() -> t.Iterable[ImportName]:
 
 
 CEE_UNUSED_PACKAGES = [
-    "Babel",
     "Cython",
     "Flask",
     "MarkupSafe",

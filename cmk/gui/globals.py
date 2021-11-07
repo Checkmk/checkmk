@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from cmk.gui import htmllib, http, userdb
     from cmk.gui.config import Config
     from cmk.gui.display_options import DisplayOptions
+    from cmk.gui.i18n import Translation
     from cmk.gui.utils.logged_in import LoggedInUser
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.theme import Theme
@@ -171,6 +172,7 @@ class RequestContext:
         self.display_options = display_options
         self.session: Optional[userdb.Session] = None
         self.flashes: Optional[List[str]] = None
+        self.translation: Optional[Translation] = None
         self._prefix_logs_with_url = prefix_logs_with_url
 
         self.request = req

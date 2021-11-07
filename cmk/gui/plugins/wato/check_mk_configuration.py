@@ -16,7 +16,6 @@ from cmk.utils.tags import TagGroup
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
@@ -59,7 +58,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupDiscoveryCheckParameters,
     RulespecGroupMonitoringConfiguration,
 )
-from cmk.gui.utils import show_mode_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -158,7 +156,7 @@ class ConfigVariableShowMoreMode(ConfigVariable):
                 "show more, so that the round button with the three dots is not "
                 "shown at all."
             ),
-            choices=show_mode_choices(),
+            choices=userdb_utils.show_mode_choices(),
         )
 
 
@@ -610,7 +608,7 @@ class ConfigVariableStartURL(ConfigVariable):
             ),
             size=80,
             allow_empty=False,
-            validate=utils.validate_start_url,
+            validate=userdb_utils.validate_start_url,
         )
 
 

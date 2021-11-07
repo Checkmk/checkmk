@@ -16,13 +16,13 @@ from cmk.utils.prediction import lq_logic
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
-import cmk.gui.utils
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.globals import config, html, request, response, user, user_errors
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.labels import encode_labels_for_livestatus
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import DualListChoice, Labels
 
 if cmk_version.is_managed_edition():
@@ -131,7 +131,7 @@ class FilterText(Filter):
 class FilterRegExp(FilterText):
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        cmk.gui.utils.validate_regex(value.get(htmlvar, ""), htmlvar)
+        validate_regex(value.get(htmlvar, ""), htmlvar)
 
 
 filter_registry.register(

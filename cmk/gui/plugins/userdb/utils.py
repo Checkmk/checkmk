@@ -16,11 +16,13 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.logged_in import LoggedInUser, save_user_file
 
 # count this up, if new user attributes are used or old are marked as
@@ -121,6 +123,25 @@ def new_user_template(connection_id: str) -> UserSpec:
 
 def add_internal_attributes(usr: UserSpec) -> UserSpec:
     return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
+
+
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]
+
+
+def validate_start_url(value: str, varprefix: str) -> None:
+    if not is_allowed_url(value):
+        raise MKUserError(
+            varprefix,
+            _(
+                "The given value is not allowed. You may only configure "
+                "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."
+            ),
+        )
 
 
 #   .--Connections---------------------------------------------------------.

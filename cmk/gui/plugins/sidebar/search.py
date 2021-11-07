@@ -44,6 +44,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
     Labels,
 )
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
 
@@ -88,7 +89,7 @@ def _to_regex(s):
     """Ensures the provided search string is a regex, does some basic conversion
     and then tries to verify it is a regex"""
     s = s.replace("*", ".*")
-    cmk.gui.utils.validate_regex(s, varname=None)
+    validate_regex(s, varname=None)
 
     return s
 

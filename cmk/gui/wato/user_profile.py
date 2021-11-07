@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, AjaxPageResult, Page, page_registry
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
+from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic, validate_start_url
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.sites import get_site_config, sitenames
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, UserSpec
@@ -198,7 +198,7 @@ class ModeAjaxSetStartURL(AjaxPage):
         try:
             name = request.get_str_input_mandatory("name")
             url = makeuri_contextless(request, [("name", name)], "dashboard.py")
-            cmk.gui.utils.validate_start_url(url, "")
+            validate_start_url(url, "")
             _set_user_attribute("start_url", repr(url))
         except Exception:
             raise MKUserError(None, _("Failed to set start URL"))

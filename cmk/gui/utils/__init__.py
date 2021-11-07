@@ -18,8 +18,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.paths
 
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
 
@@ -67,17 +65,6 @@ def is_allowed_url(url: str) -> bool:
         return False
 
     return True
-
-
-def validate_start_url(value: str, varprefix: str) -> None:
-    if not is_allowed_url(value):
-        raise MKUserError(
-            varprefix,
-            _(
-                "The given value is not allowed. You may only configure "
-                "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."
-            ),
-        )
 
 
 def cmp_version(a: Optional[str], b: Optional[str]) -> int:
@@ -179,29 +166,6 @@ def get_failed_plugins() -> List[Tuple[str, Exception]]:
     return list(itertools.chain(*list(_failed_plugins.values())))
 
 
-def validate_regex(value: str, varname: Optional[str]) -> None:
-    try:
-        re.compile(value)
-    except re.error:
-        raise MKUserError(
-            varname,
-            _(
-                "Your search statement is not valid. You need to provide a regular "
-                "expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> "
-                "if you like to search for a single backslash."
-            ),
-        )
-
-    # livestatus uses re2 and re can not validate posix pattern, so we have to
-    # check for lookaheads here
-    lookahead_pattern = r"\((\?!|\?=|\?<)"
-
-    if re.search(lookahead_pattern, value):
-        raise MKUserError(
-            varname, _("Your search statement is not valid. You can not use a lookahead here.")
-        )
-
-
 def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> str:
     used_names_set = set(used_names)
     nr = 1
@@ -210,11 +174,3 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
         if suggestion not in used_names_set:
             return suggestion
         nr += 1
-
-
-def show_mode_choices() -> List[Tuple[Optional[str], str]]:
-    return [
-        ("default_show_less", _("Default to show less")),
-        ("default_show_more", _("Default to show more")),
-        ("enforce_show_more", _("Enforce show more")),
-    ]

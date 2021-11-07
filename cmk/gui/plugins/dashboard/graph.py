@@ -55,7 +55,7 @@ from cmk.gui.visuals import get_singlecontext_vars
 
 def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
     metric_id = metric_or_graph_id.replace("METRIC_", "")
-    return metric_info.get(metric_id, {}).get("title", metric_id)
+    return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
 
 @autocompleter_registry.register

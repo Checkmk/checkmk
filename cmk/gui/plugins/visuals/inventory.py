@@ -14,7 +14,7 @@ import cmk.gui.inventory as inventory
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.visuals import (
     Filter,
     filter_registry,
@@ -533,7 +533,7 @@ class FilterHasInv(FilterTristate):
     def __init__(self) -> None:
         super().__init__(
             ident="has_inv",
-            title=_("Has Inventory Data"),
+            title=_l("Has Inventory Data"),
             sort_index=801,
             info="host",
             column="host_inventory",
@@ -564,7 +564,7 @@ class FilterInvHasSoftwarePackage(Filter):
         self._varprefix = "invswpac_host_"
         super().__init__(
             ident="invswpac",
-            title=_("Host has software package"),
+            title=_l("Host has software package"),
             sort_index=801,
             info="host",
             htmlvars=[

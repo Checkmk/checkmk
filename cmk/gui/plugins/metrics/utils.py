@@ -63,6 +63,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import (
     autocompleter_registry,
     DropdownChoiceValue,
@@ -89,20 +90,20 @@ class CheckMetricEntry(TypedDict, total=False):
 class MetricInfo(TypedDict, total=False):
     # title, unit and color should be required, but metric_info.get(xxx, {}) is
     # used and is not compatible with requied keys
-    title: str
+    title: Union[str, LazyString]
     unit: str
     color: str
-    help: str
+    help: Union[str, LazyString]
     render: Callable[[Union[float, int]], str]
 
 
 class MetricInfoExtended(TypedDict, total=False):
     # this is identical to MetricInfo except unit, but one can not override the
     # type of a field so we have to copy everything from MetricInfo
-    title: str
+    title: Union[str, LazyString]
     unit: UnitInfo
     color: str
-    help: str
+    help: Union[str, LazyString]
     render: Callable[[Union[float, int]], str]
 
 
@@ -450,7 +451,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
             "scalar": normalized["scalar"],
             "scale": normalized["scale"],
             "auto_graph": normalized["auto_graph"],
-            "title": mi["title"],
+            "title": str(mi["title"]),
             "unit": mi["unit"],
             "color": mi["color"],
         }
@@ -929,7 +930,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 
 def metric_title(metric_name: _MetricName) -> str:
-    return metric_info.get(metric_name, {}).get("title", metric_name.title())
+    return str(metric_info.get(metric_name, {}).get("title", metric_name.title()))
 
 
 def metric_recipe_and_unit(
@@ -1289,7 +1290,7 @@ def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Ch
         translated = perfvar_translation(perfvar, check_command)
         name = translated["name"]
         mi = metric_info.get(name, {})
-        yield name, mi.get("title", name.title())
+        yield name, str(mi.get("title", name.title()))
 
 
 def available_metrics(context: VisualContext) -> Iterator[Choice]:
@@ -1335,7 +1336,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         return [
             next(
                 (
-                    (metric_id, metric_detail["title"])
+                    (metric_id, str(metric_detail["title"]))
                     for metric_id, metric_detail in metric_info.items()
                     if metric_id == value
                 ),
@@ -1349,7 +1350,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         host, service = params.get("host", ""), params.get("service", "")
         if not any((host, service)):
             all_registered_metrics = (
-                (metric_id, metric_detail["title"])
+                (metric_id, str(metric_detail["title"]))
                 for metric_id, metric_detail in metric_info.items()
             )
             return keep_sorted_match(value, all_registered_metrics)

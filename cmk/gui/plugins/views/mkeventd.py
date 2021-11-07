@@ -927,7 +927,7 @@ class PainterHistoryWhat(Painter):
 
     def render(self, row, cell):
         what = row["history_what"]
-        return "", html.render_span(what, title=mkeventd.action_whats[what])
+        return "", html.render_span(what, title=str(mkeventd.action_whats[what]))
 
 
 @painter_registry.register

@@ -12,7 +12,7 @@ from cmk.utils.prediction import lq_logic
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.globals import config, html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice
@@ -122,7 +122,7 @@ class FilterWatoFolder(Filter):
 filter_registry.register(
     FilterWatoFolder(
         ident="wato_folder",
-        title=_("Folder"),
+        title=_l("Folder"),
         sort_index=10,
         info="host",
         htmlvars=["wato_folder"],
@@ -176,7 +176,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
 filter_registry.register(
     FilterMultipleWatoFolder(
         ident="wato_folders",
-        title=_("Multiple WATO Folders"),
+        title=_l("Multiple WATO Folders"),
         sort_index=20,
         info="host",
         htmlvars=["wato_folders"],

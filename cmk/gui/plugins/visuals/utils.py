@@ -19,7 +19,7 @@ import cmk.utils.plugin_registry
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, user_errors
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import (
@@ -405,10 +405,10 @@ class FilterTime(Filter):
     ):
         self.column = column
         self.ranges = [
-            (86400, _("days")),
-            (3600, _("hours")),
-            (60, _("min")),
-            (1, _("sec")),
+            (86400, _l("days")),
+            (3600, _l("hours")),
+            (60, _l("min")),
+            (1, _l("sec")),
         ]
         varnames = [
             ident + "_from",

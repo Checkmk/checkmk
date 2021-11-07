@@ -5226,7 +5226,8 @@ class AbstractPainterSpecificMetric(Painter):
     @request_memoize()
     def _metric_choices(cls) -> List[Tuple[str, str]]:
         return sorted(
-            [(k, v.get("title", k)) for k, v in metrics.metric_info.items()], key=lambda x: x[1]
+            [(k, str(v.get("title", k))) for k, v in metrics.metric_info.items()],
+            key=lambda x: x[1],
         )
 
     def _render(self, row, cell, perf_data_entries, check_command):

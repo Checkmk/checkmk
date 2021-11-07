@@ -247,7 +247,7 @@ class FilterHostnameOrAlias(FilterText):
             htmlvar="hostnameoralias",
             op="~~",
             negateable=False,
-            description=_("Search field allowing regular expressions and partial matches"),
+            description=_l("Search field allowing regular expressions and partial matches"),
         )
 
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -357,7 +357,7 @@ class FilterAddressFamily(Filter):
     def __init__(self):
         super().__init__(
             ident="address_family",
-            title=_("Host address family (Primary)"),
+            title=_l("Host address family (Primary)"),
             sort_index=103,
             info="host",
             htmlvars=["address_family"],
@@ -389,7 +389,7 @@ class FilterAddressFamilies(Filter):
     def __init__(self):
         super().__init__(
             ident="address_families",
-            title=_("Host address families"),
+            title=_l("Host address families"),
             sort_index=103,
             info="host",
             htmlvars=["address_families"],
@@ -778,12 +778,12 @@ class FilterHostgroupVisibility(Filter):
     def __init__(self):
         super().__init__(
             ident="hostgroupvisibility",
-            title=_("Empty Hostgroup Visibilitiy"),
+            title=_l("Empty Hostgroup Visibilitiy"),
             sort_index=102,
             info="hostgroup",
             htmlvars=["hostgroupshowempty"],
             link_columns=[],
-            description=_("You can enable this checkbox to show empty hostgroups"),
+            description=_l("You can enable this checkbox to show empty hostgroups"),
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -802,7 +802,7 @@ class FilterHostgroupProblems(Filter):
     def __init__(self):
         super().__init__(
             ident="hostsgroups_having_problems",
-            title=_("Hostgroups having certain problems"),
+            title=_l("Hostgroups having certain problems"),
             sort_index=103,
             info="hostgroup",
             htmlvars=[
@@ -1107,7 +1107,7 @@ class FilterHostsHavingServiceProblems(Filter):
     def __init__(self):
         super().__init__(
             ident="hosts_having_service_problems",
-            title=_("Hosts having certain service problems"),
+            title=_l("Hosts having certain service problems"),
             sort_index=120,
             info="host",
             htmlvars=[
@@ -1719,19 +1719,19 @@ filter_registry.register(
 class FilterLogClass(Filter):
     def __init__(self):
         self.log_classes = [
-            (0, _("Informational")),
-            (1, _("Alerts")),
-            (2, _("Program")),
-            (3, _("Notifications")),
-            (4, _("Passive checks")),
-            (5, _("Commands")),
-            (6, _("States")),
-            (8, _("Alert Handlers")),
+            (0, _l("Informational")),
+            (1, _l("Alerts")),
+            (2, _l("Program")),
+            (3, _l("Notifications")),
+            (4, _l("Passive checks")),
+            (5, _l("Commands")),
+            (6, _l("States")),
+            (8, _l("Alert Handlers")),
         ]
 
         super().__init__(
             ident="log_class",
-            title=_("Logentry class"),
+            title=_l("Logentry class"),
             sort_index=255,
             info="log",
             htmlvars=["logclass_filled"] + ["logclass%d" % l for l, _c in self.log_classes],
@@ -1752,7 +1752,7 @@ class FilterLogClass(Filter):
                 html.open_tr()
             html.open_td()
             html.checkbox("logclass%d" % l, bool(value.get("logclass%d" % l, checkbox_default)))
-            html.write_text(c)
+            html.write_text(str(c))
             html.close_td()
             if col == num_cols:
                 html.close_tr()
@@ -1882,18 +1882,18 @@ filter_registry.register(
 class FilterLogState(Filter):
     def __init__(self):
         self._items = [
-            ("h0", "host", 0, _("Up")),
-            ("h1", "host", 1, _("Down")),
-            ("h2", "host", 2, _("Unreachable")),
-            ("s0", "service", 0, _("OK")),
-            ("s1", "service", 1, _("Warning")),
-            ("s2", "service", 2, _("Critical")),
-            ("s3", "service", 3, _("Unknown")),
+            ("h0", "host", 0, _l("Up")),
+            ("h1", "host", 1, _l("Down")),
+            ("h2", "host", 2, _l("Unreachable")),
+            ("s0", "service", 0, _l("OK")),
+            ("s1", "service", 1, _l("Warning")),
+            ("s2", "service", 2, _l("Critical")),
+            ("s3", "service", 3, _l("Unknown")),
         ]
 
         super().__init__(
             ident="log_state",
-            title=_("Type of alerts of hosts and services"),
+            title=_l("Type of alerts of hosts and services"),
             sort_index=270,
             info="log",
             htmlvars=["log_state_filled"] + ["logst_" + e[0] for e in self._items],
@@ -1917,7 +1917,7 @@ class FilterLogState(Filter):
             html.checkbox(
                 "logst_" + varsuffix,
                 bool(value.get("logst_" + varsuffix, checkbox_default)),
-                label=text,
+                label=str(text),
             )
             if not mobile:
                 html.br()
@@ -1953,7 +1953,7 @@ class FilterLogNotificationPhase(FilterTristate):
     def __init__(self):
         super().__init__(
             ident="log_notification_phase",
-            title=_("Notification phase"),
+            title=_l("Notification phase"),
             sort_index=271,
             info="log",
             column="log_command_name",
@@ -1987,7 +1987,7 @@ class FilterAggrServiceUsed(FilterTristate):
     def __init__(self):
         super().__init__(
             ident="aggr_service_used",
-            title=_("Used in BI aggregate"),
+            title=_l("Used in BI aggregate"),
             sort_index=300,
             info="service",
             column=None,
@@ -2184,7 +2184,7 @@ class FilterHostAuxTags(Filter):
 
         super().__init__(
             ident="host_auxtags",
-            title=_("Host Auxiliary Tags"),
+            title=_l("Host Auxiliary Tags"),
             sort_index=302,
             info="host",
             htmlvars=htmlvars,
@@ -2544,13 +2544,13 @@ filter_registry.register(
 class FilterDiscoveryState(Filter):
     def __init__(self):
         self.__options = [
-            ("discovery_state_ignored", _("Hidden")),
-            ("discovery_state_vanished", _("Vanished")),
-            ("discovery_state_unmonitored", _("New")),
+            ("discovery_state_ignored", _l("Hidden")),
+            ("discovery_state_vanished", _l("Vanished")),
+            ("discovery_state_unmonitored", _l("New")),
         ]
         super().__init__(
             ident="discovery_state",
-            title=_("Discovery state"),
+            title=_l("Discovery state"),
             sort_index=601,
             info="discovery",
             htmlvars=[o[0] for o in self.__options],
@@ -2561,7 +2561,7 @@ class FilterDiscoveryState(Filter):
         html.begin_checkbox_group()
         checkbox_default = not any(value.values())  # everything by default
         for varname, title in self.__options:
-            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=title)
+            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=str(title))
         html.end_checkbox_group()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -2613,7 +2613,7 @@ class FilterAggrGroupTree(Filter):
         self.column = "aggr_group_tree"
         super().__init__(
             ident="aggr_group_tree",
-            title=_("Aggregation group tree"),
+            title=_l("Aggregation group tree"),
             sort_index=91,
             info="aggr_group",
             htmlvars=[self.column],
@@ -2753,12 +2753,12 @@ class FilterAggrHosts(Filter):
     def __init__(self):
         super().__init__(
             ident="aggr_hosts",
-            title=_("Affected hosts contain"),
+            title=_l("Affected hosts contain"),
             sort_index=130,
             info="aggr",
             htmlvars=["aggr_host_site", "aggr_host_host"],
             link_columns=[],
-            description=_(
+            description=_l(
                 "Filter for all aggregations that base on status information of that host. "
                 "Exact match (no regular expression)"
             ),
@@ -2794,12 +2794,12 @@ class FilterAggrService(Filter):
     def __init__(self):
         super().__init__(
             ident="aggr_service",
-            title=_("Affected by service"),
+            title=_l("Affected by service"),
             sort_index=131,
             info="aggr",
             htmlvars=["aggr_service_site", "aggr_service_host", "aggr_service_service"],
             link_columns=[],
-            description=_(
+            description=_l(
                 "Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"
             ),
         )
@@ -3080,7 +3080,7 @@ class FilterEventCount(Filter):
         name = "event_count"
         super().__init__(
             ident="event_count",
-            title=_("Message count"),
+            title=_l("Message count"),
             sort_index=205,
             info="event",
             htmlvars=[name + "_from", name + "_to"],
@@ -3122,7 +3122,7 @@ class EventFilterState(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         table: str,
-        choices: List[Tuple[str, str]],
+        choices: List[Tuple[str, Union[LazyString, str]]],
     ) -> None:
         varnames = [ident + "_" + c[0] for c in choices]
         super().__init__(
@@ -3140,7 +3140,7 @@ class EventFilterState(Filter):
         checkbox_default = not any(value.values())  # everything by default
         for name, title in self._choices:
             varname = self.ident + "_" + name
-            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=title)
+            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=str(title))
         html.end_checkbox_group()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -3159,10 +3159,10 @@ filter_registry.register(
         sort_index=206,
         table="event",
         choices=[
-            ("0", _("OK")),
-            ("1", _("WARN")),
-            ("2", _("CRIT")),
-            ("3", _("UNKNOWN")),
+            ("0", _l("OK")),
+            ("1", _l("WARN")),
+            ("2", _l("CRIT")),
+            ("3", _l("UNKNOWN")),
         ],
     )
 )
@@ -3305,7 +3305,7 @@ class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
         # TODO: Cleanup hierarchy here. The FilterGroupCombo constructor needs to be refactored
         super().__init__(
             ident="optevent_effective_contactgroup",
-            title=_("Contact group (effective)"),
+            title=_l("Contact group (effective)"),
             sort_index=212,
             what="event_effective_contact",
             enforce=False,

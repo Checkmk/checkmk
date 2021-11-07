@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
 # .
@@ -23,43 +23,43 @@ from cmk.gui.plugins.metrics import graph_info, metric_info
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 metric_info["vbuckets"] = {
-    "title": _("vBuckets"),
+    "title": _l("vBuckets"),
     "unit": "count",
     "color": "11/a",
 }
 
 metric_info["pending_vbuckets"] = {
-    "title": _("Pending vBuckets"),
+    "title": _l("Pending vBuckets"),
     "unit": "count",
     "color": "11/a",
 }
 
 metric_info["memused_couchbase_bucket"] = {
     "color": "#80ff40",
-    "title": _("Memory used"),
+    "title": _l("Memory used"),
     "unit": "bytes",
 }
 
 metric_info["mem_low_wat"] = {
-    "title": _("Low watermark"),
+    "title": _l("Low watermark"),
     "unit": "bytes",
     "color": "#7060b0",
 }
 
 metric_info["mem_high_wat"] = {
-    "title": _("High watermark"),
+    "title": _l("High watermark"),
     "unit": "bytes",
     "color": "23/b",
 }
 
 metric_info["docs_fragmentation"] = {
-    "title": _("Documents fragmentation"),
+    "title": _l("Documents fragmentation"),
     "unit": "%",
     "color": "21/a",
 }
 
 metric_info["views_fragmentation"] = {
-    "title": _("Views fragmentation"),
+    "title": _l("Views fragmentation"),
     "unit": "%",
     "color": "15/a",
 }
@@ -77,7 +77,7 @@ metric_info["views_fragmentation"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["couchbase_bucket_memory"] = {
-    "title": _("Bucket memory"),
+    "title": _l("Bucket memory"),
     "metrics": [
         ("memused_couchbase_bucket", "area"),
         ("mem_low_wat", "line"),
@@ -86,7 +86,7 @@ graph_info["couchbase_bucket_memory"] = {
 }
 
 graph_info["couchbase_bucket_fragmentation"] = {
-    "title": _("Fragmentation"),
+    "title": _l("Fragmentation"),
     "metrics": [
         ("docs_fragmentation", "area"),
         ("views_fragmentation", "stack"),

@@ -182,25 +182,34 @@ def inventory_mem_win(section):
         yield None, {}
 
 
-def _get_levels_on_used_mb(
-    levels,
-    total_mb,
-):
+def _get_levels_type(levels):
+    if levels is None:
+        return None
     if not isinstance(levels, tuple):
-        # Predictive levels have no level information in the performance data
-        return None, None
-
+        return "predictive"
     if isinstance(levels[0], float):
-        # float type means percent
-        warn = total_mb * levels[0] / 100
-    else:
-        # int means levels on *free* space
-        warn = total_mb - levels[0]
-    if isinstance(levels[1], float):
-        crit = total_mb * levels[1] / 100
-    else:
-        crit = total_mb - levels[1]
-    return warn, crit
+        return "perc_used"
+    return "abs_free"
+
+
+def _get_levels_type_and_value(levels_value):
+    levels_type = _get_levels_type(levels_value)
+    if levels_type is None or levels_type == "predictive":
+        return (
+            levels_type,
+            None,
+        )
+    return (
+        levels_type,
+        (
+            levels_type,
+            levels_value if levels_type == "perc_used" else (
+                # absolute levels on free space come in MB, which cannot be changed easily
+                levels_value[0] * 1024**2,
+                levels_value[1] * 1024**2,
+            ),
+        ),
+    )
 
 
 def _do_averaging(
@@ -268,14 +277,14 @@ def check_mem_windows(_no_item, params, section):
         total_mb = total / 1024.0**2
         free_mb = free / 1024.0**2
         used_mb = total_mb - free_mb
+        levels_type, levels_memory_element = _get_levels_type_and_value(params.get(paramname))
+        do_averaging = "average" in params
 
-        warn, crit = _get_levels_on_used_mb(params.get(paramname), total_mb)
-
-        _state, infotext, perfdata = check_memory_element(
+        state, infotext, perfdata = check_memory_element(
             title,
             used,
             total,
-            None,
+            None if do_averaging else levels_memory_element,
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
         )
@@ -286,7 +295,7 @@ def check_mem_windows(_no_item, params, section):
             perfdata.append(("pagefile_total", total_mb))
 
         # Do averaging, if configured, just for matching the levels
-        if "average" in params:
+        if do_averaging:
             used_mb, infoadd = _do_averaging(
                 now,
                 params["average"],
@@ -295,18 +304,22 @@ def check_mem_windows(_no_item, params, section):
                 total_mb,
             )
             infotext += f", {infoadd}"
-            perfdata.append((paramname + "_avg", used_mb))
 
-        # Now check the levels
-        if (warn, crit) != (None, None):
-            state = 0
-            if used_mb >= crit:
-                state = 2
-            elif used_mb >= warn:
-                state = 1
+            state, _infotext, perfadd = check_memory_element(
+                title,
+                used_mb * 1024**2,
+                total,
+                levels_memory_element,
+                metric_name=paramname + "_avg",
+            )
 
-        # Predictive levels
-        else:
+            perfdata.append((
+                (averaged_metric := perfadd[0])[0],
+                # the averaged metrics are expected to be in MB
+                *(v / 1024**2 if v is not None else None for v in averaged_metric[1:]),
+            ))
+
+        if levels_type == "predictive":
             state, infoadd, perfadd = _apply_predictive_levels(
                 params,
                 paramname,

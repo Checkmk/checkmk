@@ -2401,7 +2401,7 @@ class HostTagCondition(ValueSpec):
 
                 for tag_group in tag_groups_by_topic.get(topic_id, []):
                     html.open_tr()
-                    html.td("%s: &nbsp;" % _u(tag_group.title), class_="title")
+                    html.td("%s: &nbsp;" % _u(tag_group.title or ""), class_="title")
 
                     choices = tag_group.get_tag_choices()
                     default_tag, deflt = self._current_tag_setting(choices, tag_specs)

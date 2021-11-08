@@ -7,11 +7,11 @@
 
 import abc
 import re
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.type_defs import TaggroupID, TagID
+from cmk.utils.type_defs import TaggroupID, TaggroupIDToTagID, TagID
 
 
 def get_effective_tag_config(tag_config: Dict) -> "TagConfig":
@@ -297,9 +297,11 @@ class TagGroup:
             choices.append((tag.id, tag.title))
         return choices
 
-    def get_tag_group_config(self, value):
+    def get_tag_group_config(self, value: Optional[TagID]) -> TaggroupIDToTagID:
         """Return the set of tag groups which should be set for a host based on the given value"""
         tag_groups = {}
+
+        assert self.id is not None
 
         if value is not None:
             tag_groups[self.id] = value
@@ -351,8 +353,8 @@ class TagConfig:
 
         return sorted(list(names), key=lambda x: x[1])
 
-    def get_tag_groups_by_topic(self):
-        by_topic: Dict[str, List[str]] = {}
+    def get_tag_groups_by_topic(self) -> Sequence[Tuple[str, Sequence[TagGroup]]]:
+        by_topic: Dict[str, List[TagGroup]] = {}
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _("Tags")
             by_topic.setdefault(topic, []).append(tag_group)

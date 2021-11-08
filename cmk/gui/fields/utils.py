@@ -16,6 +16,7 @@ from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 from cmk.gui import fields, sites, watolib
 from cmk.gui.fields.base import BaseSchema
+from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.tags import load_tag_config
 
 
@@ -96,7 +97,7 @@ def collect_attributes(
         for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
             if not attr.is_visible(object_type, new):
                 continue
-            help_text: str = attr.help() or ""
+            help_text: str = strip_tags(attr.help()) or ""
             # TODO: what to do with attr.depends_on_tags()?
             attr_entry = Attr(
                 name=attr.name(),

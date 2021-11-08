@@ -10,7 +10,7 @@
 import abc
 import json
 from hashlib import md5
-from typing import Type
+from typing import Optional, Type
 
 import cmk.utils.plugin_registry
 
@@ -22,7 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.sites import allsites
 from cmk.gui.valuespec import Hostname
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import ABCHostAttribute, host_attribute_registry
 
 
 class APICallCollection(abc.ABC):
@@ -115,7 +115,7 @@ def _validate_general_host_attributes(host_attributes, new):
 
         # For real host attributes validate the values
         try:
-            attr = watolib.host_attribute(name)
+            attr: Optional[ABCHostAttribute] = watolib.host_attribute(name)
         except KeyError:
             attr = None
 

@@ -58,7 +58,7 @@ from cmk.utils.store.host_storage import (
     StandardHostsStorage,
     StorageFormat,
 )
-from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupIDToTagID
+from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupID, TaggroupIDToTagID, TagID
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -2523,7 +2523,7 @@ class CREHost(WithPermissions, WithAttributes):
         if self._cached_host_tags is not None:
             return self._cached_host_tags  # Cached :-)
 
-        tag_groups = {}
+        tag_groups: Dict[TaggroupID, TagID] = {}
         effective = self.effective_attributes()
         for attr in host_attribute_registry.attributes():
             value = effective.get(attr.name())

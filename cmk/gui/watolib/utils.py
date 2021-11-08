@@ -92,7 +92,7 @@ def convert_cgroups_from_tuple(
 
 
 # TODO: Find a better place later
-def host_attribute_matches(crit, value):
+def host_attribute_matches(crit: str, value: str) -> bool:
     if crit and crit[0] == "~":
         # insensitive infix regex match
         return re.search(crit[1:], value, re.IGNORECASE) is not None

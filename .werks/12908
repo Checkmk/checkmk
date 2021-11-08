@@ -72,6 +72,7 @@ were implicitly operating on:
       configuration. The options in the plugin specific rulesets
       are ignored.</li>
   <li>livestatus_status: <i>failover</i></li>
+  <li>mrpe: <i>best</i></li>
   <li>mssql_counters_cache_hits, mssql_counters_file_sizes,
       mssql_counters_locks, mssql_counters_locks_per_batch,
       mssql_counters_page_life_expectancy,

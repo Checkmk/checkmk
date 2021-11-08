@@ -2097,7 +2097,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "mounts",
         "moxa_iologik_register",
         "mq_queues",
-        "mrpe",
         "msexch_activesync",
         "msexch_autodiscovery",
         "msexch_availability",

@@ -56,6 +56,11 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
+def is_daily_build() -> bool:
+    # Daily build version format: YYYY.MM.DD or MAJOR.MINOR.PATCH-YYYY.MM.DD
+    return "-" in __version__ or len(__version__.split(".", maxsplit=1)[0]) == 4
+
+
 def edition_title():
     if is_enterprise_edition():
         return "CEE"

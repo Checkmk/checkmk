@@ -474,9 +474,9 @@
       span#messages_label,
       span#werks_label {
         position: absolute;
-        top: 2px;
+        top: 4px;
         right: 4px;
-        padding: 2px 4px 0;
+        padding: 2px 5px 1px;
         color: $font-color-white;
         background-color: $color-state-2-background;
         border-radius: 8px;

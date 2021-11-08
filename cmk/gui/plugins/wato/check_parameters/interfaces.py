@@ -789,7 +789,7 @@ def _transform_state_mappings(v: Dict[str, Any]) -> None:
     )
 
 
-PERC_ERROR_LEVELS = (0.01, 0.001)
+PERC_ERROR_LEVELS = (0.01, 0.1)
 PERC_PKG_LEVELS = (10.0, 20.0)
 
 

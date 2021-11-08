@@ -95,19 +95,32 @@ def _strip_unit_float(string: str) -> float:
             return float(string[:i])
         except ValueError:
             pass
-    # retrigger first ValueError:
-    return float(string)
+
+    raise ValueError(f"invalid metric value {string!r}")
 
 
-def _parse_nagios_perfstring(perfinfo: str) -> Optional[Metric]:
+def _output_metrics(perfdata: Sequence[str]) -> CheckResult:
+    for raw_metric in perfdata:
+        try:
+            yield _parse_nagios_perfstring(raw_metric)
+        except ValueError as exc:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"Undefined metric: {exc}",
+            )
+
+
+def _parse_nagios_perfstring(perfinfo: str) -> Metric:
     try:
         name, valuetxt = perfinfo.split("=", 1)
     except ValueError:
-        return None
+        raise ValueError(f"{perfinfo!r}")
+
     if valuetxt.startswith("U"):
         # Nagios perfstrings can start with a value 'U' to indicate an undefined value
         # see https://nagios-plugins.org/doc/guidelines.html#AEN200
-        return None
+        raise ValueError("Nagios style undefined value")
+
     values = valuetxt.split(";")
 
     # Levels in perfdata must not contain values with colons.
@@ -149,11 +162,7 @@ def check_mrpe(item: str, section: MRPESection) -> CheckResult:
         yield Result(state=State.OK, summary=cache_helper.render_cache_info(dataset.cache_info))
 
     yield Result(state=dataset.state, summary=output[0], details="\n".join(output))
-    yield from (
-        new_perf
-        for perfvalue in perfdata
-        if (new_perf := _parse_nagios_perfstring(perfvalue)) is not None
-    )
+    yield from _output_metrics(perfdata)
 
     # name of check command needed for PNP to choose the correct template
     if dataset.name:

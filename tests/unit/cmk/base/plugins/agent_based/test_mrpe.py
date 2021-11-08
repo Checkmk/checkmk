@@ -29,6 +29,12 @@ SECTION: Final = {
         ],
         cache_info=None,
     ),
+    "Invalid_Metric": PluginData(
+        name=None,
+        state=State.OK,
+        info=["I would be ok, if it wasn't for the metric|broken="],
+        cache_info=None,
+    ),
 }
 
 
@@ -51,6 +57,20 @@ def test_parsing():
                 "output|the_bar=42\x01the_gee=23",
                 "output|the_bad=U;0;;0;1",
             ],
+            [
+                "Invalid_Metric",
+                "0",
+                "I",
+                "would",
+                "be",
+                "ok,",
+                "if",
+                "it",
+                "wasn't",
+                "for",
+                "the",
+                "metric|broken=",
+            ],
         ]
     )
 
@@ -60,6 +80,7 @@ def test_discovery():
         Service(item="Bar_Extender"),
         Service(item="Foo_Application"),
         Service(item="Mutliliner"),
+        Service(item="Invalid_Metric"),
     ]
 
 
@@ -88,4 +109,21 @@ def test_check_mrpe():
         Metric("the_foo", 1, levels=(2, 3), boundaries=(4, 5)),
         Metric("the_bar", 42),
         Metric("the_gee", 23),
+        Result(
+            state=State.UNKNOWN,
+            summary="Undefined metric: Nagios style undefined value",
+        ),
+    ]
+
+
+def test_check_invalid_metric():
+    assert list(check_mrpe("Invalid_Metric", SECTION)) == [
+        Result(
+            state=State.OK,
+            summary="I would be ok, if it wasn't for the metric",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary="Undefined metric: invalid metric value ''",
+        ),
     ]

@@ -200,9 +200,9 @@ def parse_bluenet2_powerrail(info):
             inlet_id = ".".join(oidend.split(".")[:2])
             if inlet_id in pre_parsed:
                 pre_parsed[inlet_id][what][".".join([str(ord(x)) for x in identifier][:-1])] = {
-                        'id': name,
-                        'name': friendly_name
-                    }
+                    "id": name,
+                    "name": friendly_name
+                }
 
     parsed = {"phases": {}, "rcm_phases": {}, "sensors": {}, "sockets": {}, "fuses": {}}
     for oidend, ty, status, exponent_str, reading_str in info[3]:
@@ -219,12 +219,16 @@ def parse_bluenet2_powerrail(info):
                     parsed[phase_ty].setdefault(phase_name, inlet_info[phase_ty][identifier])
                     parsed[phase_ty][phase_name].setdefault(what, (reading, status_info))
                 if identifier in inlet_info["sockets"].keys():
-                    socket_name = "%s %s" % (inlet_id, inlet_info["sockets"][identifier]['id'])
+                    socket_name = "%s %s" % (inlet_id, inlet_info["sockets"][identifier]["id"])
                     parsed["sockets"].setdefault(socket_name, inlet_info["sockets"][identifier])
                     parsed["sockets"][socket_name].setdefault(what, (reading, status_info))
                 if identifier in inlet_info["fuses"].keys():
                     phase_id = identifier.split(".")[3]
-                    fuse_name = "%s.%s %s" % (inlet_id, phase_id, inlet_info["fuses"][identifier]['id'])
+                    fuse_name = "%s.%s %s" % (
+                        inlet_id,
+                        phase_id,
+                        inlet_info["fuses"][identifier]["id"]
+                    )
                     parsed["fuses"].setdefault(fuse_name, inlet_info["fuses"][identifier])
                     parsed["fuses"][fuse_name].setdefault(what, (reading, status_info))
 
@@ -343,7 +347,7 @@ check_info["bluenet2_powerrail.rcm"] = {
     "group": "el_inphase",
 }
 
-#.
+# .
 #   .--sockets-------------------------------------------------------------.
 #   |                                  _        _                          |
 #   |                   ___  ___   ___| | _____| |_ ___                    |
@@ -356,15 +360,14 @@ check_info["bluenet2_powerrail.rcm"] = {
 #   '----------------------------------------------------------------------'
 
 check_info["bluenet2_powerrail.sockets"] = {
-    'inventory_function': lambda parsed: inventory_elphase(parsed["sockets"]),
-    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["sockets"]
-                                                                ),
+    "inventory_function': lambda parsed: inventory_elphase(parsed["sockets"]),
+    "check_function': lambda item, params, parsed: check_elphase(item, params, parsed["sockets"]),
     "service_description": "Socket %s",
     "has_perfdata": True,
     "group": "ups_outphase",
 }
 
-#.
+# .
 #   .--fuses---------------------------------------------------------------.
 #   |                        __                                            |
 #   |                       / _|_   _ ___  ___  ___                        |
@@ -377,15 +380,14 @@ check_info["bluenet2_powerrail.sockets"] = {
 #   '----------------------------------------------------------------------'
 
 check_info["bluenet2_powerrail.fuses"] = {
-    'inventory_function': lambda parsed: inventory_elphase(parsed["fuses"]),
-    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["fuses"]
-                                                                ),
+    "inventory_function": lambda parsed: inventory_elphase(parsed["fuses"]),
+    "check_function": lambda item, params, parsed: check_elphase(item, params, parsed["fuses"]),
     "service_description": "Fuse %s",
     "has_perfdata": True,
     "group": "ups_outphase",
 }
 
-#.
+# .
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |

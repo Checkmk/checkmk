@@ -169,3 +169,18 @@ class StartTime(BaseModel):
     """section: k8s_start_time_v1"""
 
     start_time: int
+
+
+class PodCondition(BaseModel):
+    status: bool
+    reason: Optional[str]
+    detail: Optional[str]
+
+
+class PodConditions(BaseModel):
+    """section: k8s_pod_conditions_v1"""
+
+    initialized: Optional[PodCondition]
+    scheduled: PodCondition
+    containersready: Optional[PodCondition]
+    ready: Optional[PodCondition]

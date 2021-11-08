@@ -9,6 +9,8 @@ from cmk.base.plugins.agent_based.utils.k8s import ContainerCount as ContainerCo
 from cmk.base.plugins.agent_based.utils.k8s import KubeletInfo as KubeletInfoC
 from cmk.base.plugins.agent_based.utils.k8s import Memory as MemoryC
 from cmk.base.plugins.agent_based.utils.k8s import NodeCount as NodeCountC
+from cmk.base.plugins.agent_based.utils.k8s import PodCondition as PodConditionC
+from cmk.base.plugins.agent_based.utils.k8s import PodConditions as PodConditionsC
 from cmk.base.plugins.agent_based.utils.k8s import PodResources as PodResourcesC
 from cmk.base.plugins.agent_based.utils.k8s import (
     PodResourcesWithCapacity as PodResourcesWithCapacityC,
@@ -23,6 +25,8 @@ from cmk.special_agents.utils_kubernetes.schemata.api import StartTime as StartT
 from cmk.special_agents.utils_kubernetes.schemata.section import ContainerCount as ContainerCountA
 from cmk.special_agents.utils_kubernetes.schemata.section import Memory as MemoryA
 from cmk.special_agents.utils_kubernetes.schemata.section import NodeCount as NodeCountA
+from cmk.special_agents.utils_kubernetes.schemata.section import PodCondition as PodConditionA
+from cmk.special_agents.utils_kubernetes.schemata.section import PodConditions as PodConditionsA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodResources as PodResourcesA
 from cmk.special_agents.utils_kubernetes.schemata.section import (
     PodResourcesWithCapacity as PodResourcesWithCapacityA,
@@ -33,8 +37,10 @@ def test_schemata_did_not_diverge() -> None:
     assert ClusterInfoA.schema() == ClusterInfoC.schema()
     assert ContainerCountA.schema() == ContainerCountC.schema()
     assert KubeletInfoA.schema() == KubeletInfoC.schema()
-    assert MemoryC.schema() == MemoryA.schema()
+    assert MemoryA.schema() == MemoryC.schema()
     assert NodeCountA.schema() == NodeCountC.schema()
+    assert PodConditionA.schema() == PodConditionC.schema()
+    assert PodConditionsA.schema() == PodConditionsC.schema()
     assert PodResourcesA.schema() == PodResourcesC.schema()
     assert PodResourcesWithCapacityA.schema() == PodResourcesWithCapacityC.schema()
     assert ResourcesA.schema() == ResourcesC.schema()

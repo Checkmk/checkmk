@@ -6,7 +6,7 @@ use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{X509Name, X509Req};
 use reqwest;
 use reqwest::blocking::{Client, ClientBuilder};
-use reqwest::{Certificate, Identity};
+use reqwest::Certificate;
 use std::error::Error;
 use std::net::TcpStream;
 
@@ -31,17 +31,8 @@ pub fn make_csr(cn: &str) -> Result<(String, String), Box<dyn Error>> {
     ))
 }
 
-pub fn client(
-    client_chain: Option<Vec<u8>>,
-    root_cert: Option<Vec<u8>>,
-) -> Result<Client, Box<dyn Error>> {
+pub fn client(root_cert: Option<Vec<u8>>) -> Result<Client, Box<dyn Error>> {
     let client_builder = ClientBuilder::new();
-
-    let client_builder = if let Some(chain) = client_chain {
-        client_builder.identity(Identity::from_pem(&chain)?)
-    } else {
-        client_builder
-    };
 
     let client_builder = if let Some(cert) = root_cert {
         client_builder.add_root_certificate(Certificate::from_pem(&cert)?)

@@ -7,11 +7,11 @@ mod cli;
 mod config;
 mod marcv_api;
 mod monitoring_data;
-mod uuid;
 use config::RegistrationState;
 use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
+use uuid::Uuid;
 
 fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
     let marcv_addresses = config
@@ -22,6 +22,7 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
         .expect("Missing credentials for registration.");
 
     for marcv_address in marcv_addresses {
+        let uuid = Uuid::new_v4().to_string();
         // TODO: what if registration_state.contains_key(marcv_address) (already registered)?
         let root_cert = match &config.root_certificate {
             Some(cert) => cert.clone(),
@@ -31,7 +32,7 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
             },
         };
 
-        let (csr, private_key) = match certs::make_csr(&reg_state.uuid) {
+        let (csr, private_key) = match certs::make_csr(&uuid) {
             Ok(data) => data,
             Err(error) => panic!("Error creating CSR: {}", error),
         };
@@ -40,12 +41,12 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
             Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
         };
 
-        let client_chain = private_key + &certificate;
-
         reg_state.server_specs.insert(
             marcv_address,
             config::ServerSpec {
-                client_chain,
+                uuid,
+                private_key,
+                certificate,
                 root_cert,
             },
         );
@@ -59,12 +60,7 @@ fn push(config: config::Config, reg_state: config::RegistrationState) {
         Ok(mon_data) => {
             for (marcv_address, server_spec) in reg_state.server_specs.iter() {
                 // TODO: Find a way we don't have to clone the mon_data (lifetimes?)
-                match marcv_api::agent_data(
-                    &reg_state.uuid,
-                    marcv_address,
-                    server_spec,
-                    mon_data.clone(),
-                ) {
+                match marcv_api::agent_data(marcv_address, &server_spec.uuid, mon_data.clone()) {
                     Ok(message) => println!("{}", message),
                     Err(error) => panic!("Error pushing monitoring data: {}", error),
                 };

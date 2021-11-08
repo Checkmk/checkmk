@@ -3,7 +3,6 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::cli::Args;
-use super::uuid::make as make_uuid;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -68,15 +67,15 @@ impl Config {
 
 #[derive(Serialize, Deserialize)]
 pub struct RegistrationState {
-    #[serde(default = "make_uuid")]
-    pub uuid: String,
     #[serde(default)]
     pub server_specs: HashMap<String, ServerSpec>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ServerSpec {
-    pub client_chain: String,
+    pub uuid: String,
+    pub private_key: String,
+    pub certificate: String,
     pub root_cert: String,
 }
 

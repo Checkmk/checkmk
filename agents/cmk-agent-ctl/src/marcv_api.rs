@@ -3,7 +3,6 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::certs;
-use crate::config::ServerSpec;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -29,29 +28,24 @@ pub fn csr(
     csr: String,
     credentials: &str,
 ) -> Result<String, Box<dyn Error>> {
-    Ok(
-        certs::client(None, Some(String::from(root_cert).into_bytes()))?
-            .post(format!("https://{}/csr", server_address))
-            .header("authentication", format!("Bearer {}", credentials))
-            .json(&CSRBody { csr })
-            .send()?
-            .json::<CSRResponse>()?
-            .cert,
-    )
+    Ok(certs::client(Some(String::from(root_cert).into_bytes()))?
+        .post(format!("https://{}/csr", server_address))
+        .header("authentication", format!("Bearer {}", credentials))
+        .json(&CSRBody { csr })
+        .send()?
+        .json::<CSRResponse>()?
+        .cert)
 }
 
 pub fn agent_data(
-    uuid: &str,
     marcv_address: &str,
-    server_spec: &ServerSpec,
+    uuid: &str,
     monitoring_data: Vec<u8>,
 ) -> Result<String, Box<dyn Error>> {
-    let client_chain = String::from(&server_spec.client_chain).into_bytes();
-
     // TODO:
-    // - Send client cert in header instead of as TLS client cert (agent receiver isn't capable of extracting cert info)
+    // - Send client cert in header
     // - Use root cert
-    Ok(certs::client(Some(client_chain), None)?
+    Ok(certs::client(None)?
         .post(String::from(marcv_address) + "/agent-data")
         .multipart(
             reqwest::blocking::multipart::Form::new()

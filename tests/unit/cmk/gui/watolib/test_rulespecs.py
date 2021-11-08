@@ -1267,7 +1267,7 @@ def test_grouped_rulespecs():
 def _expected_rulespec_group_choices():
     expected = [
         ("activechecks", "HTTP, TCP, Email, ..."),
-        ("agent", "Access to Agents"),
+        ("agent", "Access to agents"),
         ("agent/check_mk_agent", "&nbsp;&nbsp;\u2319 Checkmk agent"),
         ("agent/general_settings", "&nbsp;&nbsp;\u2319 General Settings"),
         ("agents", "Agent rules"),

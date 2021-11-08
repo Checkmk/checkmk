@@ -4835,7 +4835,7 @@ class RulespecGroupAgent(RulespecGroup):
 
     @property
     def title(self):
-        return _("Access to Agents")
+        return _("Access to agents")
 
     @property
     def help(self):

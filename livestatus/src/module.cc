@@ -11,7 +11,6 @@
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
 
-#include <fcntl.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -451,19 +450,11 @@ bool open_unix_socket() {
         }
     }
 
-    g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM, 0);
+    g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
         generic_error ge("cannot create UNIX socket");
         Critical(fl_logger_nagios) << ge;
-        return false;
-    }
-
-    // Imortant: close on exec -> check plugins must not inherit it!
-    if (::fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) == -1) {
-        generic_error ge("cannot set close-on-exec bit on socket");
-        Alert(fl_logger_nagios) << ge;
-        ::close(g_unix_socket);
         return false;
     }
 

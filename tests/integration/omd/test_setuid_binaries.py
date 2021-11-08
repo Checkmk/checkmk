@@ -10,6 +10,8 @@ import subprocess
 
 import pytest
 
+from cmk.utils import version as cmk_version
+
 
 @pytest.mark.parametrize(
     "rel_path,expected_capability",
@@ -17,8 +19,16 @@ import pytest
         ("bin/mkeventd_open514", "cap_net_bind_service=ep"),
         ("lib/nagios/plugins/check_icmp", "cap_net_raw=ep"),
         ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw=ep"),
-        ("lib/cmc/icmpsender", "cap_net_raw=ep"),
-        ("lib/cmc/icmpreceiver", "cap_net_raw=ep"),
+        pytest.param(
+            "lib/cmc/icmpsender",
+            "cap_net_raw=ep",
+            marks=pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No cmc in raw edition"),
+        ),
+        pytest.param(
+            "lib/cmc/icmpreceiver",
+            "cap_net_raw=ep",
+            marks=pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No cmc in raw edition"),
+        ),
     ],
 )
 def test_binary_capability(site, rel_path, expected_capability):

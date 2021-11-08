@@ -16,7 +16,7 @@ from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import (
     CheckPluginName,
     HostName,
-    RuleSpec,
+    RuleConditionsSpec,
     RuleValue,
     ServiceName,
     TagCondition,
@@ -24,7 +24,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import ServiceLabel
 
 
 def test_ruleset_match_object_no_conditions() -> None:
@@ -571,7 +571,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
 )
 def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     monkeypatch: MonkeyPatch,
-    rule_spec: RuleSpec,
+    rule_spec: RuleConditionsSpec,
     expected_result: Sequence[RuleValue],
 ) -> None:
     ts = Scenario()
@@ -691,11 +691,11 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
                 None,
                 "CPU load",
                 "{}",
-                service_labels=DiscoveredServiceLabels(
-                    ServiceLabel("os", "linux"),
-                    ServiceLabel("abc", "xä"),
-                    ServiceLabel("hu", "ha"),
-                ),
+                service_labels={
+                    "os": ServiceLabel("os", "linux"),
+                    "abc": ServiceLabel("abc", "xä"),
+                    "hu": ServiceLabel("hu", "ha"),
+                },
             )
         ],
     )
@@ -709,7 +709,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
                 None,
                 "CPU load",
                 "{}",
-                service_labels=DiscoveredServiceLabels(),
+                service_labels={},
             ),
         ],
     )

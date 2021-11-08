@@ -6,8 +6,9 @@
 
 import logging
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List, Sequence
 from typing import Tuple as _Tuple
+from typing import Union
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
@@ -15,7 +16,6 @@ from cmk.utils.tags import TagGroup
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
@@ -58,7 +58,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupDiscoveryCheckParameters,
     RulespecGroupMonitoringConfiguration,
 )
-from cmk.gui.utils import show_mode_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -157,7 +156,7 @@ class ConfigVariableShowMoreMode(ConfigVariable):
                 "show more, so that the round button with the three dots is not "
                 "shown at all."
             ),
-            choices=show_mode_choices(),
+            choices=userdb_utils.show_mode_choices(),
         )
 
 
@@ -609,7 +608,7 @@ class ConfigVariableStartURL(ConfigVariable):
             ),
             size=80,
             allow_empty=False,
-            validate=utils.validate_start_url,
+            validate=userdb_utils.validate_start_url,
         )
 
 
@@ -1755,6 +1754,13 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
         )
 
 
+def _transform_trusted_certs(certs: Iterable[Union[str, bytes]]) -> Sequence[str]:
+    # In 2.0, the underlying config file ca-certificates.mk contained the trusted certificates
+    # either as bytes or as str, depending on how they were added (str via editing the global
+    # settings, bytes by pressing "Add to trusted CAs" in the livestatus encryption page)
+    return [cert.decode("ascii") if isinstance(cert, bytes) else cert for cert in certs]
+
+
 @config_variable_registry.register
 class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
     def group(self):
@@ -1797,9 +1803,12 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                 ),
                 (
                     "trusted_cas",
-                    ListOfCAs(
-                        title=_("Checkmk specific"),
-                        allow_empty=True,
+                    Transform(
+                        ListOfCAs(
+                            title=_("Checkmk specific"),
+                            allow_empty=True,
+                        ),
+                        forth=_transform_trusted_certs,
                     ),
                 ),
             ],
@@ -1807,6 +1816,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
         )
 
 
+@config_variable_registry.register
 class RestAPIETagLocking(ConfigVariable):
     def group(self):
         return ConfigVariableGroupSiteManagement

@@ -20,16 +20,28 @@ using minutes_d = std::chrono::duration<double, std::ratio<60>>;
 namespace mk {
 #if __cplusplus > 201703L
 using days = std::chrono::days;
+using weeks = std::chrono::weeks;
 #else
 using days = std::chrono::duration<int64_t, std::ratio<86400>>;
+using weeks = std::chrono::duration<int64_t, std::ratio<604800>>;
 #endif
+
+// Using std::chrono::duration.count() in an unrestricted way is a maintenance
+// nightmare: If you e.g. change the type of a member from seconds to
+// microseconds, the compiler will very probably still be happy, but all count()
+// use sites are wrong now! A much better alternative is to explicitly say in
+// which duration units you actually want the ticks.
+template <class ToDuration, class Rep, class Period>
+constexpr typename ToDuration::rep ticks(
+    const std::chrono::duration<Rep, Period> &d) {
+    return std::chrono::duration_cast<ToDuration>(d).count();
+}
+
 }  // namespace mk
 
 inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
-    return std::chrono::duration_cast<
-               std::chrono::duration<double, std::milli>>(
-               std::chrono::steady_clock::now() - then)
-        .count();
+    return mk::ticks<std::chrono::duration<double, std::milli>>(
+        std::chrono::steady_clock::now() - then);
 }
 
 inline tm to_tm(std::chrono::system_clock::time_point tp) {
@@ -72,11 +84,10 @@ inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
     // timeval fields. We can't use the correct POSIX types time_t and
     // suseconds_t because of the broken MinGW cross compiler, so we revert to
     // decltype.
-    tv.tv_sec = static_cast<decltype(tv.tv_sec)>(
-        std::chrono::duration_cast<std::chrono::seconds>(dur).count());
+    tv.tv_sec =
+        static_cast<decltype(tv.tv_sec)>(mk::ticks<std::chrono::seconds>(dur));
     tv.tv_usec = static_cast<decltype(tv.tv_usec)>(
-        std::chrono::duration_cast<std::chrono::microseconds>(dur % 1s)
-            .count());
+        mk::ticks<std::chrono::microseconds>(dur % 1s));
     return tv;
 }
 
@@ -93,8 +104,7 @@ inline std::chrono::system_clock::time_point parse_time_t(
 
 template <typename Dur>
 typename Dur::rep time_point_part(std::chrono::system_clock::time_point &tp) {
-    return std::chrono::duration_cast<Dur>(tp.time_since_epoch() % Dur(1000))
-        .count();
+    return mk::ticks<Dur>(tp.time_since_epoch() % Dur(1000));
 }
 
 struct FormattedTimePoint {

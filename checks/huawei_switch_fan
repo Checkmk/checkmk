@@ -10,7 +10,9 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.huawei_switch import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-HuaweiFanData = collections.namedtuple("HuaweiFanData", "fan_present fan_speed")
+HuaweiFanData = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "HuaweiFanData", "fan_present fan_speed"
+)
 
 
 def parse_huawei_switch_fan(info):

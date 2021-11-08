@@ -32,7 +32,7 @@ NO_BLOCKING_SESSIONS_MSG = "No blocking sessions"
 
 
 def parse_mssql_blocked_sessions(info):
-    db_instance = collections.namedtuple(
+    db_instance = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "DBInstance", ["session_id", "wait_type", "blocking_session_id", "wait_duration"]
     )
     parsed = {}

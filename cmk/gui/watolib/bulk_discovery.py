@@ -4,17 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, NamedTuple
+from typing import List, MutableSequence, NamedTuple
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import DiscoveryResult
+
+from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
-from cmk.gui.watolib.automations import AutomationDiscoveryResponse, execute_automation_discovery
 from cmk.gui.watolib.changes import add_service_change
+from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -201,24 +203,27 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _execute_discovery(
-        self, task, mode, do_scan, error_handling
-    ) -> AutomationDiscoveryResponse:
-        arguments = [mode] + task.host_names
-
-        if do_scan:
-            arguments = ["@scan"] + arguments
+    def _execute_discovery(self, task, mode, do_scan, error_handling) -> AutomationDiscoveryResult:
+        flags: MutableSequence[str] = []
         if not error_handling:
-            arguments = ["@raiseerrors"] + arguments
+            flags.append("@raiseerrors")
+        if do_scan:
+            flags.append("@scan")
 
-        timeout = request.request_timeout - 2
-
-        return execute_automation_discovery(
-            site_id=task.site_id, args=arguments, timeout=timeout, non_blocking_http=True
+        return discovery(
+            task.site_id,
+            mode,
+            flags,
+            task.host_names,
+            timeout=request.request_timeout - 2,
+            non_blocking_http=True,
         )
 
     def _process_discovery_results(
-        self, task, job_interface, response: AutomationDiscoveryResponse
+        self,
+        task,
+        job_interface,
+        response: AutomationDiscoveryResult,
     ) -> None:
         # The following code updates the host config. The progress from loading the WATO folder
         # until it has been saved needs to be locked.
@@ -226,9 +231,9 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
             Folder.invalidate_caches()
             folder = Folder.folder(task.folder_path)
             for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
-                self._process_service_counts_for_host(response.results[hostname])
+                self._process_service_counts_for_host(response.hosts[hostname])
                 msg = self._process_discovery_result_for_host(
-                    folder.host(hostname), response.results[hostname]
+                    folder.host(hostname), response.hosts[hostname]
                 )
                 job_interface.send_progress_update(
                     f"[{count}/{self._num_hosts_total}] {hostname}: {msg}"

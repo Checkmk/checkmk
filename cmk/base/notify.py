@@ -46,7 +46,19 @@ from cmk.utils.notify import (
     NotificationResultCode,
 )
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import EventRule
+from cmk.utils.type_defs import (
+    ContactName,
+    EventRule,
+    NotifyAnalysisInfo,
+    NotifyBulkParameters,
+    NotifyBulks,
+    NotifyPluginInfo,
+    NotifyPluginParams,
+    NotifyPluginParamsDict,
+    NotifyPluginParamsList,
+    NotifyRuleInfo,
+    UUIDs,
+)
 
 import cmk.base.config as config
 import cmk.base.core
@@ -66,23 +78,6 @@ logger = logging.getLogger("cmk.base.notify")
 
 _log_to_stdout = False
 notify_mode = "notify"
-
-ContactName = str
-
-NotifyPluginParamsList = List[str]
-NotifyPluginParamsDict = Dict[str, Any]  # TODO: Improve this
-NotifyPluginParams = Union[NotifyPluginParamsList, NotifyPluginParamsDict]
-NotifyBulkParameters = Dict[str, Any]  # TODO: Improve this
-NotifyRuleInfo = Tuple[str, EventRule, str]
-NotifyPluginName = str
-NotifyPluginInfo = Tuple[
-    ContactName, NotifyPluginName, NotifyPluginParams, Optional[NotifyBulkParameters]
-]
-NotifyAnalysisInfo = Tuple[List[NotifyRuleInfo], List[NotifyPluginInfo]]
-
-UUIDs = List[Tuple[float, str]]
-NotifyBulk = Tuple[str, float, Union[None, str, int], Union[None, str, int], int, UUIDs]
-NotifyBulks = List[NotifyBulk]
 
 NotificationPluginNameStr = str
 PluginContext = Dict[str, str]
@@ -342,7 +337,7 @@ def _complete_raw_context_with_notification_vars(raw_context: EventContext) -> N
 
 # Here we decide which notification implementation we are using.
 # Hopefully we can drop a couple of them some day
-# 1. Rule Based Notifiations  (since 1.2.5i1)
+# 1. Rule Based Notifications  (since 1.2.5i1)
 # 2. Flexible Notifications   (since 1.2.2)
 # 3. Plain email notification (refer to git log if you are really interested)
 def locally_deliver_raw_context(

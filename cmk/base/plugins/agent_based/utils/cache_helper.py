@@ -9,7 +9,7 @@ from ..agent_based_api.v1.render import percent, timespan
 
 
 class CacheInfo(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_CacheInfo",
         [
             ("age", float),

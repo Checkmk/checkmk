@@ -44,7 +44,6 @@ def test_registered_ac_tests():
     if not cmk_version.is_raw_edition():
         expected_ac_tests += [
             "ACTestSecureAgentUpdaterTransport",
-            "ACTestSecureNotificationSpoolerMessages",
         ]
 
     registered_plugins = sorted(watolib.ac_test_registry.keys())

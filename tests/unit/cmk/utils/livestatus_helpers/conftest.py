@@ -10,19 +10,21 @@ from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request, Response
+from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.gui.utils.script_helpers import DummyApplication
+from cmk.gui.utils.script_helpers import session_wsgi_app
 
 
 @pytest.fixture
 def with_request_context():
     environ = create_environ()
     resp = Response()
-    with AppContext(DummyApplication(environ, None)), RequestContext(
+    with AppContext(session_wsgi_app(debug=False)), RequestContext(
         req=Request(environ),
         resp=resp,
         funnel=OutputFunnel(resp),
         config_obj=make_config_object(get_default_config()),
+        user=LoggedInNobody(),
         display_options=DisplayOptions(),
     ):
         yield

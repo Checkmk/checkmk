@@ -5,11 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest
+import pytest
+
+from cmk.utils import version
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest
-def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_password(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -28,6 +33,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
                 "customer": "global",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -37,7 +43,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
         base + "/objects/password/fooz",
         params=json.dumps({"title": "foobu", "comment": "Something but nothing random"}),
         status=404,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -46,27 +52,29 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
         base + "/objects/password/foo",
         params=json.dumps({"title": "foobu", "comment": "Something but nothing random"}),
         status=200,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/password/foo",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json["extensions"] == {
         "comment": "Something but nothing random",
-        "docu_url": "",
+        "documentation_url": "",
         "password": "tt",
         "owned_by": None,
-        "shared_with": ["all"],
+        "shared": ["all"],
         "customer": "global",
     }
 
 
 @managedtest
-def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_password_admin(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -85,6 +93,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
                 "customer": "provider",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -92,12 +101,14 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
     _resp = wsgi_app.call_method(
         "get",
         base + "/objects/password/test",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
 
 @managedtest
-def test_openapi_password_customer(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_password_customer(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -116,6 +127,7 @@ def test_openapi_password_customer(wsgi_app, with_automation_user, suppress_auto
                 "customer": "provider",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -129,19 +141,22 @@ def test_openapi_password_customer(wsgi_app, with_automation_user, suppress_auto
                 "customer": "global",
             }
         ),
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/password/test",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
 
 @managedtest
-def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_password_delete(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -160,6 +175,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
                 "customer": "global",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -167,6 +183,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
     resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/password/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp.json_body["value"]) == 1
@@ -174,20 +191,25 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
     _resp = wsgi_app.call_method(
         "delete",
         base + "/objects/password/nothing",
+        headers={"Accept": "application/json"},
         status=404,
     )
 
     _resp = wsgi_app.call_method(
         "delete",
         base + "/objects/password/foo",
+        headers={"Accept": "application/json"},
         status=204,
     )
 
-    _resp = wsgi_app.call_method("get", base + "/objects/password/foo", status=404)
+    _resp = wsgi_app.call_method(
+        "get", base + "/objects/password/foo", headers={"Accept": "application/json"}, status=404
+    )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/domain-types/password/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp.json_body["value"]) == 0

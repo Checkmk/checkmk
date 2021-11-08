@@ -286,7 +286,6 @@ def show_downtimes(param):
             )
         }
     ],
-    convert_response=True,
     response_schema=response_schemas.DomainObject,
 )
 def show_downtime(params):

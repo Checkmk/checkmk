@@ -15,7 +15,7 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.fields.definitions import Integer, List, Nested, String, Timestamp
+from cmk.gui.fields.definitions import GroupField, Integer, List, Nested, String, Timestamp
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
 from cmk.gui.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
@@ -716,6 +716,13 @@ class SNMPCredentials(OneOfSchema):
         >>> schema.load(rv)
         ('authPriv', 'md5', 'foo', 'barbarbar', 'DES', 'barbaric')
 
+        >>> rv = schema.dump(('noAuthNoPriv', 'barbarbar'))
+        >>> rv
+        {'type': 'v3_no_auth_no_privacy', 'security_name': 'barbarbar'}
+
+        >>> schema.load(rv)
+        ('noAuthNoPriv', 'barbarbar')
+
     """
 
     type_schemas = {
@@ -729,18 +736,22 @@ class SNMPCredentials(OneOfSchema):
         if isinstance(obj, str):
             return "v1_v2_community"
         return {
-            "authNoAuthNoPriv": "v3_no_auth_no_privacy",
+            "noAuthNoPriv": "v3_no_auth_no_privacy",
             "authNoPriv": "v3_auth_no_privacy",
             "authPriv": "v3_auth_privacy",
         }[obj[0]]
 
 
 class IPMIParameters(BaseSchema):
+    cast_to_dict = True
+
     username = _fields.String(required=True)
     password = _fields.String(required=True)
 
 
 class MetaData(BaseSchema):
+    cast_to_dict = True
+
     created_at = Timestamp(
         description="When has this object been created.",
     )
@@ -749,4 +760,68 @@ class MetaData(BaseSchema):
     )
     created_by = String(
         description="The user id under which this object has been created.",
+    )
+
+
+class HostAttributeManagementBoardField(_fields.String):
+    def __init__(self) -> None:
+        super().__init__(
+            description=(
+                "The protocol used to connect to the management board.\n\n"
+                "Valid options are:\n\n"
+                " * `none` - No management board\n"
+                " * `snmp` - Connect using SNMP\n"
+                " * `ipmi` - Connect using IPMI\n"
+            ),
+            enum=["none", "snmp", "ipmi"],
+        )
+
+    def _deserialize(self, value, attr, data, **kwargs) -> typing.Any:
+        # get value from api, convert it to cmk/python
+        deserialized = super()._deserialize(value, attr, data, **kwargs)
+        if deserialized == "none":
+            return None
+        return deserialized
+
+    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+        # get value from cmk/python, convert it to api side
+        serialized = super()._serialize(value, attr, obj, **kwargs)
+        if serialized is None:
+            return "none"
+        return serialized
+
+
+class HostContactGroup(BaseSchema):
+    cast_to_dict = True
+
+    groups = List(
+        GroupField(
+            group_type="contact",
+            example="all",
+            required=True,
+        ),
+        required=True,
+        description="A list of contact groups.",
+    )
+    use = _fields.Boolean(
+        description="Add these contact groups to the host.",
+        missing=False,
+    )
+    use_for_services = _fields.Boolean(
+        description=(
+            "<p>Always add host contact groups also to its services.</p>"
+            "With this option contact groups that are added to hosts are always being added to "
+            "services, as well. This only makes a difference if you have assigned other contact "
+            "groups to services via rules in <i>Host & Service Parameters</i>. As long as you do "
+            "not have any such rule a service always inherits all contact groups from its host."
+        ),
+        missing=False,
+    )
+    recurse_use = _fields.Boolean(
+        description="Add these groups as contacts to all hosts in all sub-folders of this folder.",
+        missing=False,
+    )
+    recurse_perms = _fields.Boolean(
+        description="Give these groups also permission on all sub-folders.",
+        missing=False,
     )

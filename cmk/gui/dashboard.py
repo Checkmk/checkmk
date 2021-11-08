@@ -23,8 +23,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
 
@@ -297,25 +295,13 @@ class PermissionSectionDashboard(PermissionSection):
         return True
 
 
-# Load plugins in web/plugins/dashboard and declare permissions,
-# note: these operations produce language-specific results and
-# thus must be reinitialized everytime a language-change has
-# been detected.
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     utils.load_web_plugins("dashboard", globals())
 
     _transform_old_dict_based_dashlets()
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
     visuals.declare_visual_permissions("dashboards", _("dashboards"))
 
@@ -794,18 +780,12 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInpu
 
     with output_funnel.plugged():
         if isinstance(e, MKException):
-            # Unify different string types from exception messages to a unicode string
-            try:
-                exc_txt = str(e)
-            except UnicodeDecodeError:
-                exc_txt = ensure_str(str(e))
-
             html.show_error(
                 _(
                     "Problem while rendering dashboard element %d of type %s: %s. Have a look at "
                     "<tt>var/log/web.log</tt> for further information."
                 )
-                % (dashlet.dashlet_id, dashlet.type_name(), exc_txt)
+                % (dashlet.dashlet_id, dashlet.type_name(), str(e))
             )
             return output_funnel.drain()
 
@@ -841,7 +821,7 @@ def _get_mandatory_filters(
 
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
-        for info, _ in visuals.visual_info_registry[info_key]().single_spec:
+        for info, _unused in visuals.visual_info_registry[info_key]().single_spec:
             yield info
 
     # Get required context filters set in the dashboard config
@@ -952,6 +932,11 @@ def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
     yield PageMenuTopic(
         title=_("State"),
         entries=list(_dashboard_add_state_dashlet_entries(name)),
+    )
+
+    yield PageMenuTopic(
+        title=_("Inventory"),
+        entries=list(_dashboard_add_inventory_dashlet_entries(name)),
     )
 
     yield PageMenuTopic(
@@ -1261,6 +1246,33 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
         item=_dashboard_add_non_view_dashlet_link(name, "state_service"),
     )
 
+    yield PageMenuEntryCEEOnly(
+        title="Host state summary",
+        icon_name={
+            "icon": "host_state",
+            "emblem": "statistic",
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "host_state_summary"),
+    )
+
+    yield PageMenuEntryCEEOnly(
+        title="Service state summary",
+        icon_name={
+            "icon": "service_state",
+            "emblem": "statistic",
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "service_state_summary"),
+    )
+
+
+def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
+
+    yield PageMenuEntryCEEOnly(
+        title="Host Inventory",
+        icon_name="inventory",
+        item=_dashboard_add_non_view_dashlet_link(name, "inventory"),
+    )
+
 
 def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
@@ -1541,6 +1553,8 @@ def ajax_dashlet() -> None:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     board = _add_context_to_dashboard(board)
+    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board["context"] = board_context
 
     ident = request.get_integer_input_mandatory("id")
     dashlet_spec = next(
@@ -1827,7 +1841,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))
 
-    if request.var("save") and transactions.check_transaction():
+    if request.var("_save") and transactions.check_transaction():
         try:
             view_name = vs_view.from_html_vars("view")
             vs_view.validate_value(view_name, "view")
@@ -1864,7 +1878,11 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
 
 def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return make_simple_form_page_menu(
-        _("View"), breadcrumb, form_name="choose_view", button_name="save", save_title=_("Continue")
+        _("View"),
+        breadcrumb,
+        form_name="choose_view",
+        button_name="_save",
+        save_title=_("Continue"),
     )
 
 
@@ -1886,12 +1904,13 @@ class EditDashletPage(Page):
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"
-            title = _("Add element")
 
             try:
                 dashlet_type = dashlet_registry[type_name]
             except KeyError:
                 raise MKUserError("type", _("The requested element type does not exist."))
+
+            title = _("Add element: %s") % dashlet_type.title()
 
             # Initial configuration
             dashlet_spec: DashletConfig = {
@@ -1921,7 +1940,6 @@ class EditDashletPage(Page):
             dashlet_spec["single_infos"] = single_infos
         else:
             mode = "edit"
-            title = _("Edit element")
 
             try:
                 dashlet_spec = self._dashboard["dashlets"][self._ident]
@@ -1931,6 +1949,8 @@ class EditDashletPage(Page):
             type_name = dashlet_spec["type"]
             dashlet_type = dashlet_registry[type_name]
             single_infos = dashlet_spec["single_infos"]
+
+            title = _("Edit element: %s") % dashlet_type.title()
 
         breadcrumb = _dashlet_editor_breadcrumb(self._board, self._dashboard, title)
         html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
@@ -1974,7 +1994,7 @@ class EditDashletPage(Page):
                 properties_elements
             ), "Dashboard element settings and properties have a shared option name"
 
-        if request.var("save") and transactions.transaction_valid():
+        if request.var("_save") and transactions.transaction_valid():
             try:
                 general_properties = vs_general.from_html_vars("general")
                 vs_general.validate_value(general_properties, "general")
@@ -2030,7 +2050,7 @@ class EditDashletPage(Page):
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return make_simple_form_page_menu(
-        _("Element"), breadcrumb, form_name="dashlet", button_name="save"
+        _("Element"), breadcrumb, form_name="dashlet", button_name="_save"
     )
 
 

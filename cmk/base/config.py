@@ -11,7 +11,6 @@ import inspect
 import ipaddress
 import itertools
 import marshal
-import numbers
 import os
 import pickle
 import py_compile
@@ -39,6 +38,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 
@@ -63,6 +63,7 @@ from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_paramete
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
+from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.site import omd_site
@@ -88,6 +89,7 @@ from cmk.utils.type_defs import (
     LabelSources,
     Ruleset,
     RuleSetName,
+    Seconds,
     SectionName,
     ServicegroupName,
     ServiceName,
@@ -127,7 +129,7 @@ from cmk.base.api.agent_based.type_defs import (
     SectionPlugin,
     SNMPSectionPlugin,
 )
-from cmk.base.autochecks import ServiceWithNodes
+from cmk.base.autochecks import AutocheckServiceWithNodes
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
@@ -139,7 +141,18 @@ host_service_levels = []
 AllHosts = List[HostName]
 ShadowHosts = Dict[HostName, Dict]
 AllClusters = Dict[HostName, List[HostName]]
-RRDConfig = Dict[str, Any]
+
+
+class RRDConfig(TypedDict):
+    """RRDConfig
+    This typing might not be complete or even wrong, feel free to improve"""
+
+    cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
+    rras: List[Tuple[float, int, int]]
+    step: Seconds
+    format: Literal["pnp_multiple", "cmc_single"]
+
+
 CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
@@ -156,7 +169,7 @@ SpecialAgentInfoFunctionResult = Union[
     str, List[Union[str, int, float, Tuple[str, str, str]]], SpecialAgentConfiguration
 ]
 SpecialAgentInfoFunction = Callable[
-    [Dict[str, Any], str, Optional[str]], SpecialAgentInfoFunctionResult
+    [Mapping[str, Any], str, Optional[str]], SpecialAgentInfoFunctionResult
 ]
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
@@ -171,10 +184,6 @@ ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
 class _NestedExitSpec(ExitSpec, total=False):
     overall: ExitSpec
     individual: Dict[str, ExitSpec]
-
-
-class TimespecificParamList(list):
-    pass
 
 
 def get_variable_names() -> List[str]:
@@ -325,7 +334,7 @@ class SetFolderPathAbstract:
     def set_current_path(self, current_path: Optional[str]) -> None:
         self._current_path = current_path
 
-    def _set_folder_paths(self, new_hosts: List[str]) -> None:
+    def _set_folder_paths(self, new_hosts: Iterable[str]) -> None:
         if self._current_path is None:
             return
         for hostname in strip_tags(list(new_hosts)):
@@ -337,6 +346,11 @@ class SetFolderPathList(SetFolderPathAbstract, list):
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         return super().__iadd__(new_hosts)
+
+    # Extend
+    def extend(self, new_hosts: Iterable[Any]) -> None:
+        self._set_folder_paths(new_hosts)
+        super().extend(new_hosts)
 
     # Probably unused
     def __add__(self, new_hosts: Iterable[Any]) -> "SetFolderPathList":
@@ -1101,8 +1115,8 @@ def service_description(
         return "Unimplemented check %s" % check_plugin_name
 
     plugin_name_str = str(plugin.name)
-    # use user-supplied service description, if available
     add_item = True
+    # use user-supplied service description, if available
     descr_format = service_descriptions.get(plugin_name_str)
     if not descr_format:
         old_descr = _old_service_descriptions.get(plugin_name_str)
@@ -1116,13 +1130,11 @@ def service_description(
 
         else:
             descr_format = plugin.service_name
-
+    # descr_format has type str? Exact type of service_descriptions seems unclear
     descr_format = ensure_str(descr_format)
 
-    if add_item and isinstance(item, (str, numbers.Integral)):
-        if "%s" not in descr_format:
-            descr_format += " %s"
-        descr = descr_format % (item,)
+    if add_item and item is not None:
+        descr = descr_format % item if "%s" in descr_format else f"{descr_format} {item}"
     else:
         descr = descr_format
 
@@ -1168,34 +1180,25 @@ def active_check_service_description(
 
 def get_final_service_description(hostname: HostName, description: ServiceName) -> ServiceName:
     translations = get_service_translations(hostname)
-    if translations:
-        # Translate
-        description = cmk.utils.translations.translate_service_description(
-            translations, description
-        )
-
-    # Note: we strip the service description (remove spaces).
-    # One check defines "Pages %s" as a description, but the item
-    # can by empty in some cases. Nagios silently drops leading
+    # Note: at least strip the service description.
+    # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
     # and trailing spaces in the configuration file.
-    description = description.strip()
+    description = (
+        cmk.utils.translations.translate_service_description(translations, description).strip()
+        if translations
+        else description.strip()
+    )
 
-    # Sanitize; Remove illegal characters from a service description
+    # Sanitize: remove illegal characters from a service description
     cache = _config_cache.get("final_service_description")
-    try:
-        new_description = cache[description]
-    except KeyError:
-        if is_cmc():
-            new_description = "".join(
-                [c for c in description if c not in cmc_illegal_chars]
-            ).rstrip("\\")
-        else:
-            new_description = "".join(
-                [c for c in description if c not in nagios_illegal_chars]
-            ).rstrip("\\")
-        cache[description] = new_description
+    with contextlib.suppress(KeyError):
+        return cache[description]
 
-    return new_description
+    illegal_chars = cmc_illegal_chars if is_cmc() else nagios_illegal_chars
+
+    return cache.setdefault(
+        description, "".join(c for c in description if c not in illegal_chars).rstrip("\\")
+    )
 
 
 def service_ignored(
@@ -1243,17 +1246,19 @@ def resolve_service_dependencies(
     resolved: List[cmk.base.check_utils.Service] = []
     while unresolved:
         resolved_descriptions = {service.description for service in resolved}
-        newly_resolved = [
-            service for service, dependencies in unresolved if dependencies <= resolved_descriptions
-        ]
+        newly_resolved = {
+            service.id(): service
+            for service, dependencies in unresolved
+            if dependencies <= resolved_descriptions
+        }
         if not newly_resolved:
             problems = ", ".join(
                 f"{s.description!r} ({s.check_plugin_name} / {s.item})" for s, _ in unresolved
             )
             raise MKGeneralException(f"Cyclic service dependency of host {host_name}: {problems}")
 
-        unresolved = [(s, d) for s, d in unresolved if s not in newly_resolved]
-        resolved.extend(newly_resolved)
+        unresolved = [(s, d) for s, d in unresolved if s.id() not in newly_resolved]
+        resolved.extend(newly_resolved.values())
 
     return resolved
 
@@ -1325,7 +1330,7 @@ def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.Tra
 
 def get_service_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
     translations_cache = _config_cache.get("service_description_translations")
-    if hostname in translations_cache:
+    with contextlib.suppress(KeyError):
         return translations_cache[hostname]
 
     rules = get_config_cache().host_extra_conf(hostname, service_description_translation)
@@ -1338,8 +1343,7 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
             else:
                 translations[k] = v
 
-    translations_cache[hostname] = translations
-    return translations
+    return translations_cache.setdefault(hostname, translations)
 
 
 def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
@@ -2138,9 +2142,12 @@ def _extract_check_plugins(
         if check_info_dict.get("service_description") is None:
             continue
         try:
-            if agent_based_register.is_registered_check_plugin(
+            present_plugin = agent_based_register.get_check_plugin(
                 CheckPluginName(maincheckify(check_plugin_name))
-            ):
+            )
+            if present_plugin is not None and present_plugin.module is not None:
+                # module is not None => it's a new plugin
+                # (allow loading multiple times, e.g. update-config)
                 # implemented here instead of the agent based register so that new API code does not
                 # need to include any handling of legacy cases
                 raise ValueError(
@@ -2186,7 +2193,7 @@ def _get_plugin_parameters(
     default_parameters: Optional[ParametersTypeAlias],
     ruleset_name: Optional[RuleSetName],
     ruleset_type: Literal["all", "merged"],
-    rules_getter_function: Callable[[RuleSetName], List[Dict[str, Any]]],
+    rules_getter_function: Callable[[RuleSetName], Ruleset],
 ) -> Union[None, Parameters, List[Parameters]]:
     if default_parameters is None:
         # This means the function will not acctept any params.
@@ -2247,28 +2254,30 @@ def compute_check_parameters(
     plugin_name: CheckPluginName,
     item: Item,
     params: LegacyCheckParameters,
-    for_static_checks: bool = False,
-) -> Optional[LegacyCheckParameters]:
+    configured_parameters: Optional[TimespecificParameters] = None,
+) -> TimespecificParameters:
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
     plugin = agent_based_register.get_check_plugin(plugin_name)
     if plugin is None:  # handle vanished check plugin
-        return None
+        return TimespecificParameters()
 
-    if plugin.check_default_parameters is not None:
-        params = _update_with_default_check_parameters(plugin.check_default_parameters, params)
+    if configured_parameters is None:
+        configured_parameters = _get_configured_parameters(host, plugin, item)
 
-    if not for_static_checks:
-        params = _update_with_configured_check_parameters(host, plugin, item, params)
-
-    return params
+    return _update_with_configured_check_parameters(
+        _update_with_default_check_parameters(plugin.check_default_parameters, params),
+        configured_parameters,
+    )
 
 
 def _update_with_default_check_parameters(
-    check_default_parameters: ParametersTypeAlias,
+    check_default_parameters: Optional[ParametersTypeAlias],
     params: LegacyCheckParameters,
 ) -> LegacyCheckParameters:
+    if check_default_parameters is None:
+        return params
 
     # Handle case where parameter is None but the type of the
     # default value is a dictionary. This is for example the
@@ -2295,64 +2304,48 @@ def _update_with_default_check_parameters(
 
 
 def _update_with_configured_check_parameters(
-    host: HostName, plugin: CheckPlugin, item: Item, params: LegacyCheckParameters
-) -> LegacyCheckParameters:
-    descr = service_description(host, plugin.name, item)
-
-    config_cache = get_config_cache()
-
-    # Get parameters configured via checkgroup_parameters
-    entries = (
-        _get_checkgroup_parameters(
-            config_cache,
-            host,
-            str(plugin.check_ruleset_name),
-            item,
-            descr,
-        )
-        if plugin.check_ruleset_name is not None
-        else []
+    params: LegacyCheckParameters,
+    configured_parameters: TimespecificParameters,
+) -> TimespecificParameters:
+    return TimespecificParameters(
+        [
+            *configured_parameters.entries,
+            TimespecificParameterSet.from_parameters(params),
+        ]
     )
 
-    # Get parameters configured via check_parameters
-    entries += config_cache.service_extra_conf(host, descr, check_parameters)
 
-    if entries:
-        if has_timespecific_params(entries):
-            # some parameters include timespecific settings
-            # these will be executed just before the check execution
-            return set_timespecific_param_list(entries, params)
+def _get_configured_parameters(
+    host: HostName,
+    plugin: CheckPlugin,
+    item: Item,
+) -> TimespecificParameters:
+    config_cache = get_config_cache()
+    descr = service_description(host, plugin.name, item)
 
-        # loop from last to first (first must have precedence)
-        for entry in entries[::-1]:
-            if isinstance(params, dict) and isinstance(entry, dict):
-                params.update(entry)
-            else:
-                if isinstance(entry, dict):
-                    # The entry still has the reference from the rule..
-                    # If we don't make a deepcopy the rule might be modified by
-                    # a followup params.update(...)
-                    entry = copy.deepcopy(entry)
-                params = entry
-    return params
+    # parameters configured via check_parameters
+    extra = [
+        TimespecificParameterSet.from_parameters(p)
+        for p in config_cache.service_extra_conf(host, descr, check_parameters)
+    ]
 
+    if plugin.check_ruleset_name is None:
+        return TimespecificParameters(extra)
 
-def has_timespecific_params(entries: Any) -> bool:
-    if entries is None:
-        return False
-    if isinstance(entries, dict) and "tp_default_value" in entries:
-        return True
-    try:
-        for entry in entries:
-            if isinstance(entry, dict) and "tp_default_value" in entry:
-                return True
-    except TypeError:
-        return False
-    return False
-
-
-def set_timespecific_param_list(entries, params):
-    return TimespecificParamList(entries + [params])
+    return TimespecificParameters(
+        [
+            # parameters configured via checkgroup_parameters
+            TimespecificParameterSet.from_parameters(p)
+            for p in _get_checkgroup_parameters(
+                config_cache,
+                host,
+                str(plugin.check_ruleset_name),
+                item,
+                descr,
+            )
+        ]
+        + extra
+    )
 
 
 def _get_checkgroup_parameters(
@@ -2370,13 +2363,6 @@ def _get_checkgroup_parameters(
         # checks without an item
         if item is None and checkgroup not in service_rule_groups:
             return config_cache.host_extra_conf(host, rules)
-
-        # At the moment the items are not validated strictly, this means we can have
-        # integers or something else here. Convert them to unicode for easier handling
-        # in the following code.
-        # TODO: This should be strictly validated by the check API in 1.7.
-        if item is not None and not isinstance(item, str):
-            item = str(item)
 
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
@@ -3040,7 +3026,7 @@ class HostConfig:
     @property
     def static_checks(
         self,
-    ) -> List[Tuple[RulesetName, CheckPluginNameStr, Item, LegacyCheckParameters]]:
+    ) -> Sequence[Tuple[RulesetName, CheckPluginNameStr, Item, TimespecificParameterSet]]:
         """Returns a table of all "manual checks" configured for this host"""
         matched = []
         for checkgroup_name in static_checks:
@@ -3053,7 +3039,14 @@ class HostConfig:
                 else:
                     checktype, item, params = entry
 
-                matched.append((checkgroup_name, checktype, item, params))
+                matched.append(
+                    (
+                        RulesetName(checkgroup_name),
+                        CheckPluginNameStr(checktype),
+                        None if item is None else str(item),
+                        TimespecificParameterSet.from_parameters(params),
+                    )
+                )
 
         return matched
 
@@ -3262,7 +3255,7 @@ class HostConfig:
 
     def set_autochecks(
         self,
-        new_services: Sequence[ServiceWithNodes],
+        new_services: Sequence[AutocheckServiceWithNodes],
     ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:
@@ -3278,7 +3271,6 @@ class HostConfig:
             autochecks.set_autochecks_of_real_hosts(
                 self.hostname,
                 new_services,
-                service_description,  # top level function!
             )
 
     def remove_autochecks(self) -> int:
@@ -3454,11 +3446,14 @@ class ConfigCache:
         hostname: HostName,
         service_desc: ServiceName,
     ) -> Labels:
-        return self._autochecks_manager.discovered_labels_of(
-            hostname,
-            service_desc,
-            service_description,  # this is the global function!
-        ).to_dict()
+        return {
+            label.name: label.value
+            for label in self._autochecks_manager.discovered_labels_of(
+                hostname,
+                service_desc,
+                service_description,  # this is the global function!
+            ).values()
+        }
 
     def get_tag_to_group_map(self) -> TagIDToTaggroupID:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
@@ -3655,7 +3650,7 @@ class ConfigCache:
         hostname: HostName,
         description: ServiceName,
         check_plugin_name: Optional[CheckPluginName],
-        params: LegacyCheckParameters,
+        params: Union[LegacyCheckParameters, TimespecificParameters],
     ) -> List[str]:
         actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
 
@@ -3815,11 +3810,12 @@ class ConfigCache:
         self._cache_match_object_host[hostname] = match_object
         return match_object
 
-    def get_autochecks_of(self, hostname: HostName) -> List[cmk.base.check_utils.Service]:
+    def get_autochecks_of(self, hostname: HostName) -> Sequence[cmk.base.check_utils.Service]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,
             service_description,  # this is the global function!
+            self.host_of_clustered_service,
         )
 
     def section_name_of(self, section: CheckPluginNameStr) -> str:
@@ -3974,7 +3970,7 @@ class ConfigCache:
         part_of_clusters: Optional[List[HostName]] = None,
     ) -> HostName:
         """Return hostname to assign the service to
-        Determine weather a service (found on a physical host) is a clustered
+        Determine wether a service (found on a physical host) is a clustered
         service and - if yes - return the cluster host of the service. If no,
         returns the hostname of the physical host."""
         if part_of_clusters:
@@ -4045,37 +4041,19 @@ class ConfigCache:
 
     def get_clustered_service_node_keys(
         self,
-        hostname: HostName,
+        host_config: HostConfig,
         source_type: SourceType,
-        service_descr: Optional[ServiceName],
-    ) -> Optional[List[HostKey]]:
-        """Returns the node keys if a service is clustered, otherwise 'None' in order to
-        decide whether we collect section content of the host or the nodes.
-
-        For real hosts or nodes for which the service is not clustered we return 'None',
-        thus the caching works as before.
-
-        If a service is assigned to a cluster we receive the real nodename. In this
-        case we have to sort out data from the nodes for which the same named service
-        is not clustered (Clustered service for overlapping clusters).
-
-        We also use the result for the section cache.
-        """
-        if not service_descr:
-            return None
-
-        nodes = self.get_host_config(hostname).nodes
-        if nodes is None:
-            return None
-
+        service_descr: ServiceName,
+    ) -> Sequence[HostKey]:
+        """Returns the node keys if a service is clustered, otherwise an empty sequence"""
         return [
             HostKey(
                 nodename,
                 lookup_ip_address(self.get_host_config(nodename)),
                 source_type,
             )
-            for nodename in nodes
-            if hostname == self.host_of_clustered_service(nodename, service_descr)
+            for nodename in (host_config.nodes or ())
+            if host_config.hostname == self.host_of_clustered_service(nodename, service_descr)
         ]
 
     def get_piggybacked_hosts_time_settings(

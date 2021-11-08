@@ -5,7 +5,7 @@
 
 import socket
 from pathlib import Path
-from typing import Callable, Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch

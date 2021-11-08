@@ -15,9 +15,11 @@ import ast
 import copy
 import errno
 import gzip
+import hashlib
 import logging
 import multiprocessing
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path, PureWindowsPath
@@ -43,7 +45,7 @@ import cmk.base.autochecks
 import cmk.base.check_api
 import cmk.base.config
 from cmk.base.api.agent_based import register
-from cmk.base.check_utils import Service
+from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 
 import cmk.gui.config
 import cmk.gui.groups
@@ -68,6 +70,7 @@ from cmk.gui.plugins.userdb.utils import (
     USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views
+from cmk.gui.plugins.wato import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users
@@ -178,6 +181,7 @@ class UpdateConfig:
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
+            # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
@@ -185,6 +189,7 @@ class UpdateConfig:
             (self._set_user_scheme_serial, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
+            (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._transform_groups, "Rewriting host, service or contact groups"),
             (
@@ -213,6 +218,8 @@ class UpdateConfig:
 
     def _rewrite_wato_host_and_folder_config(self):
         root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()
+        if root_folder.title() == "Main directory":
+            root_folder.edit(new_title="Main", new_attributes=root_folder.attributes())
         root_folder.rewrite_folders()
         root_folder.rewrite_hosts_files()
 
@@ -250,6 +257,11 @@ class UpdateConfig:
         site_mgmt.save_sites(configured_sites, activate=False)
 
     def _update_global_config(self, global_config):
+        return self._transform_global_config_values(
+            self._update_removed_global_config_vars(global_config)
+        )
+
+    def _update_removed_global_config_vars(self, global_config):
         # Replace old settings with new ones
         for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
             if old_config_name in global_config:
@@ -268,9 +280,21 @@ class UpdateConfig:
         global_config = filter_unknown_settings(global_config)
         return global_config
 
+    def _transform_global_config_value(self, config_var, config_val):
+        return config_variable_registry[config_var]().valuespec().transform_value(config_val)
+
+    def _transform_global_config_values(self, global_config):
+        global_config.update(
+            {
+                config_var: self._transform_global_config_value(config_var, config_val)
+                for config_var, config_val in global_config.items()
+            }
+        )
+        return global_config
+
     def _rewrite_autochecks(self):
         check_variables = cmk.base.config.get_check_variables()
-        failed_hosts: List[str] = []
+        failed_hosts = []
 
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
@@ -278,9 +302,8 @@ class UpdateConfig:
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)
             try:
-                autochecks = cmk.base.autochecks.parse_autochecks_file(
-                    hostname,
-                    cmk.base.config.service_description,
+                autochecks = load_unmigrated_autocheck_entries(
+                    autocheck_file,
                     check_variables,
                 )
             except MKGeneralException as exc:
@@ -295,8 +318,8 @@ class UpdateConfig:
                 failed_hosts.append(hostname)
                 continue
 
-            autochecks = [self._fix_service(s, all_rulesets, hostname) for s in autochecks]
-            cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
+            autochecks = [self._fix_entry(s, all_rulesets, hostname) for s in autochecks]
+            cmk.base.autochecks.AutochecksStore(hostname).write(autochecks)
 
         if failed_hosts:
             msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)
@@ -366,31 +389,30 @@ class UpdateConfig:
 
         return None
 
-    def _fix_service(
+    def _fix_entry(
         self,
-        service: Service,
+        entry: cmk.base.autochecks.AutocheckEntry,
         all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
         hostname: str,
-    ) -> Service:
+    ) -> cmk.base.autochecks.AutocheckEntry:
         """Change names of removed plugins to the new ones and transform parameters"""
-        new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(service.check_plugin_name)
+        new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(entry.check_plugin_name)
         new_params = self._transformed_params(
-            new_plugin_name or service.check_plugin_name,
-            service.parameters,
+            new_plugin_name or entry.check_plugin_name,
+            entry.parameters,
             all_rulesets,
             hostname,
         )
 
         if new_plugin_name is None and new_params is None:
-            # don't create a new service if nothing has changed
-            return service
+            # don't create a new entry if nothing has changed
+            return entry
 
-        return Service(
-            check_plugin_name=new_plugin_name or service.check_plugin_name,
-            item=service.item,
-            description=service.description,
-            parameters=new_params or service.parameters,
-            service_labels=service.service_labels,
+        return cmk.base.autochecks.AutocheckEntry(
+            check_plugin_name=new_plugin_name or entry.check_plugin_name,
+            item=entry.item,
+            parameters=new_params or entry.parameters,
+            service_labels=entry.service_labels,
         )
 
     def _rewrite_wato_rulesets(self):
@@ -531,13 +553,27 @@ class UpdateConfig:
             if not rule.is_discovery_rule():
                 continue
 
-            rule.conditions.service_description = [
-                cmk.gui.watolib.rulesets.service_description_to_condition(
-                    unescape(s["$regex"].rstrip("$"))
-                )
-                for s in rule.conditions.service_description
-                if "$regex" in s
-            ]
+            if isinstance(
+                rule.conditions.service_description, dict
+            ) and rule.conditions.service_description.get("$nor"):
+                rule.conditions.service_description = {
+                    "$nor": [
+                        cmk.gui.watolib.rulesets.service_description_to_condition(
+                            unescape(s["$regex"].rstrip("$"))
+                        )
+                        for s in rule.conditions.service_description["$nor"]
+                        if "$regex" in s
+                    ]
+                }
+
+            else:
+                rule.conditions.service_description = [
+                    cmk.gui.watolib.rulesets.service_description_to_condition(
+                        unescape(s["$regex"].rstrip("$"))
+                    )
+                    for s in rule.conditions.service_description
+                    if "$regex" in s
+                ]
 
     def _validate_regexes_in_item_specs(self, all_rulesets):
         def format_error(msg: str):
@@ -980,6 +1016,46 @@ class UpdateConfig:
                         diff_text=None,
                     )
 
+    def _sanitize_audit_log(self):
+        # Use a file to determine if the sanitization was successfull. Otherwise it would be
+        # run on every update and we want to tamper with the audit log as little as possible.
+        log_dir = AuditLogStore.make_path().parent
+
+        update_flag = log_dir / ".werk-13330"
+        if update_flag.is_file():
+            self._logger.log(VERBOSE, "Skipping (already done)")
+            return
+
+        logs = list(log_dir.glob("wato_audit.*"))
+        if not logs:
+            self._logger.log(VERBOSE, "Skipping (nothing to do)")
+            update_flag.touch(mode=0o660)
+            return
+
+        backup_dir = Path.home() / "audit_log_backup"
+        backup_dir.mkdir(mode=0o750, exist_ok=True)
+        for l in logs:
+            shutil.copy(src=l, dst=backup_dir / l.name)
+        self._logger.info(
+            f"{tty.yellow}Wrote audit log backup to {backup_dir}. Please check if the audit log "
+            f"in the GUI works as expected. In case of problems you can copy the backup files back to "
+            f"{log_dir}. Please check the corresponding files in {log_dir} for any leftover passwords "
+            f"and remove them if necessary. If everything works as expected you can remove the "
+            f"backup. For further details please have a look at Werk #13330.{tty.normal}"
+        )
+
+        self._logger.log(VERBOSE, "Sanitizing log files: %s", ", ".join(map(str, logs)))
+        sanitizer = PasswordSanitizer()
+
+        for l in logs:
+            store = AuditLogStore(l)
+            entries = [sanitizer.replace_password(e) for e in store.read()]
+            store.write(entries)
+        self._logger.log(VERBOSE, "Finished sanitizing log files")
+
+        update_flag.touch(mode=0o660)
+        self._logger.log(VERBOSE, "Wrote sanitization flag file %s", update_flag)
+
     def _object_ref_from_linkinfo(self, linkinfo: str) -> Optional[ObjectRef]:
         if ":" not in linkinfo:
             return None
@@ -1101,6 +1177,126 @@ class UpdateConfig:
             notification_rules[index]["notify_plugin"] = (plugin_name, params)
 
         save_notification_rules(notification_rules)
+
+
+class PasswordSanitizer:
+    """
+    Due to a bug the audit log could contain clear text passwords. This class replaces clear text
+    passwords in audit log entries on a best-effort basis. This is no 100% solution! After Werk
+    #13330 no clear text passwords are written to the audit log anymore.
+    """
+
+    CHANGED_PATTERN = re.compile(
+        r'Value of "value/('
+        r"\[1\]auth/\[1|"
+        r"auth/\[1|"
+        r"auth_basic/password/\[1|"
+        r"\[2\]authentication/\[1|"
+        r"basicauth/\[1|"
+        r"basicauth/\[1]\[1|"
+        r"api_token\"|"
+        r"client_secret\"|"
+        r"\[0\]credentials/\[1\]\[1|"
+        r"credentials/\[1|"
+        r"credentials/\[1\]\[1|"
+        r"credentials/\[1\]\[1\]\[1|"
+        r"credentials/\[\d+\]\[3\]\[1\]\[1|"
+        r"credentials_sap_connect/\[1\]\[1|"
+        r"fetch/\[1\]auth/\[1\]\[1|"
+        r"imap_parameters/auth/\[1\]\[1|"
+        r"instance/api_key/\[1|"
+        r"instance/app_key/\[1|"
+        r"instances/\[0\]passwd\"|"
+        r"login/\[1|"
+        r"login/auth/\[1\]\[1|"
+        r"login_asm/auth/\[1\]\[1|"
+        r"login_exceptions/\[0\]\[1\]auth/\[1\]\[1|"
+        r"mode/\[1\]auth/\[1\]\[1|"
+        r"password\"|"
+        r"\[1\]password\"|"
+        r"password/\[1|"
+        r"proxy/auth/\[1\]\[1|"
+        r"proxy/proxy_protocol/\[1\]credentials/\[1|"
+        r"proxy_details/proxy_password/\[1|"
+        r"smtp_auth/\[1\]\[1|"
+        r"token/\[1|"
+        r"secret\"|"
+        r"secret/\[1|"
+        r"secret_access_key/\[1|"
+        r"passphrase\""
+        # Even if values contain double quotes the outer quotes remain double quotes.
+        # That .* is greedy is not a problem here since each change is on its own line.
+        r') changed from "(.*)" to "(.*)"\.'
+    )
+
+    _QUOTED_STRING = r"(\"(?:(?!(?<!\\)\").)*\"|'(?:(?!(?<!\\)').)*')"
+
+    NEW_NESTED_PATTERN = re.compile(
+        fr"'login': \({_QUOTED_STRING}, {_QUOTED_STRING}, {_QUOTED_STRING}\)|"
+        fr"\('password', {_QUOTED_STRING}\)|"
+        fr"'(auth|authentication|basicauth|credentials)': \({_QUOTED_STRING}, {_QUOTED_STRING}\)|"
+        fr"'(auth|credentials)': \('(explicit|configured)', \({_QUOTED_STRING}, {_QUOTED_STRING}\)\)"
+    )
+
+    NEW_DICT_ENTRY_PATTERN = (
+        r"'("
+        r"api_token|"
+        r"auth|"
+        r"authentication|"
+        r"client_secret|"
+        r"passphrase|"
+        r"passwd|"
+        r"password|"
+        r"secret"
+        fr")': {_QUOTED_STRING}"
+    )
+
+    def replace_password(self, entry: AuditLogStore.Entry) -> AuditLogStore.Entry:
+        if entry.diff_text and entry.action in ("edit-rule", "new-rule"):
+            diff_edit = re.sub(self.CHANGED_PATTERN, self._changed_match_function, entry.diff_text)
+            diff_nested = re.sub(
+                self.NEW_NESTED_PATTERN, self._new_nested_match_function, diff_edit
+            )
+            diff_text = re.sub(
+                self.NEW_DICT_ENTRY_PATTERN, self._new_single_key_match_function, diff_nested
+            )
+            return entry._replace(diff_text=diff_text)
+        return entry
+
+    def _changed_match_function(self, match: re.Match) -> str:
+        return 'Value of "value/%s changed from "hash:%s" to "hash:%s".' % (
+            match.group(1),
+            self._hash(match.group(2)),
+            self._hash(match.group(3)),
+        )
+
+    def _new_nested_match_function(self, match: re.Match) -> str:
+        if match.group(1):
+            return "'login': (%s, 'hash:%s', %s)" % (
+                match.group(1),
+                self._hash(match.group(2)[1:-1]),
+                match.group(3),
+            )
+        if match.group(4):
+            return "('password', 'hash:%s')" % self._hash(match.group(4)[1:-1])
+        if match.group(5):
+            return "'%s': (%s, 'hash:%s')" % (
+                match.group(5),
+                match.group(6),
+                self._hash(match.group(7)[1:-1]),
+            )
+        return "'%s': ('%s', (%s, 'hash:%s'))" % (
+            match.group(8),
+            match.group(9),
+            match.group(10),
+            self._hash(match.group(11)[1:-1]),
+        )
+
+    def _new_single_key_match_function(self, match: re.Match) -> str:
+        return "'%s': 'hash:%s'" % (match.group(1), self._hash(match.group(2)[1:-1]))
+
+    def _hash(self, password: str) -> str:
+        return hashlib.sha256(password.encode()).hexdigest()[:10]
 
 
 def _set_show_mode(users, user_id):

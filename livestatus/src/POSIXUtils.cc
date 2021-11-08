@@ -13,12 +13,10 @@
 
 #include "POSIXUtils.h"
 
-#include <fcntl.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <array>
 #include <ratio>
 #include <thread>
 

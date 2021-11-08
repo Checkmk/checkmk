@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 
 
 def test_escape_html() -> None:
@@ -40,7 +40,7 @@ def test_htmllib_integration():
         (1.1, "1.1"),
         ("<", "&lt;"),
         ("'", "&#x27;"),
-        (LazyString(lambda: "'"), "&#x27;"),
+        (LazyString(str, "'"), "&#x27;"),
     ],
 )
 def test_escape_attribute(inp, out):
@@ -112,7 +112,7 @@ def test_unescape_attribute(inp, out):
             "&lt;a href=&quot;javascript:alert(1)&quot;&gt;abc</a>",
         ),
         (
-            LazyString(lambda: '<a href="javascript:alert(1)">abc</a>'),
+            LazyString(str, '<a href="javascript:alert(1)">abc</a>'),
             "&lt;a href=&quot;javascript:alert(1)&quot;&gt;abc</a>",
         ),
     ],
@@ -129,7 +129,7 @@ def test_escape_text(inp, out):
         ("foo bar", "foo bar"),
         ("some <a>link</a> in text", "some link in text"),
         (HTML("some <a>link</a> in html text"), "some link in html text"),
-        (LazyString(lambda: "some <a>link</a> in lazy text"), "some link in lazy text"),
+        (LazyString(str, "some <a>link</a> in lazy text"), "some link in lazy text"),
     ],
 )
 def test_strip_tags(inp, out):

@@ -6,9 +6,11 @@
 
 # pylint: disable=redefined-outer-name
 
+import logging
 import os
+import re
 import subprocess
-import sys
+from pathlib import Path
 
 import pytest
 import requests
@@ -27,11 +29,13 @@ build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", "master")
 
+logger = logging.getLogger()
+
 
 def build_version():
     return testlib.CMKVersion(
-        version_spec=testlib.CMKVersion.DAILY,
-        edition=testlib.CMKVersion.CEE,
+        version_spec=os.environ.get("VERSION", testlib.CMKVersion.DAILY),
+        edition=os.environ.get("EDITION", testlib.CMKVersion.CEE),
         branch=branch_name,
     )
 
@@ -54,6 +58,17 @@ def _prepare_build():
     assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
 
 
+def _prepare_packages(version: testlib.CMKVersion):
+    """On Jenkins copies a previously built package to the build path."""
+    if "WORKSPACE" not in os.environ:
+        return
+
+    package_path = Path(os.environ["WORKSPACE"], "packages", version.version)
+    if package_path.exists():
+        for package in package_path.iterdir():
+            Path(build_path, package.name).write_bytes(package.read_bytes())
+
+
 def resolve_image_alias(alias):
     """Resolves given "Docker image alias" using the common `resolve.sh` and returns an image
     name which can be used with `docker run`
@@ -63,13 +78,16 @@ def resolve_image_alias(alias):
     return subprocess.check_output(
         [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"), alias],
         universal_newlines=True,
-    ).split("\n")[0]
+    ).split("\n", maxsplit=1)[0]
 
 
-def _build(request, client, version, add_args=None):
+def _build(request, client, version, prepare_package=True):
     _prepare_build()
 
-    print("Starting helper container for build secrets")
+    if prepare_package:
+        _prepare_packages(version)
+
+    logger.info("Starting helper container for build secrets")
     secret_container = client.containers.run(
         image="busybox",
         command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
@@ -79,7 +97,7 @@ def _build(request, client, version, add_args=None):
     )
     request.addfinalizer(lambda: secret_container.remove(force=True))
 
-    print("Building docker image: %s" % _image_name(version))
+    logger.info("Building docker image (or reuse existing): %s", _image_name(version))
     try:
         image, build_logs = client.images.build(
             path=build_path,
@@ -93,20 +111,21 @@ def _build(request, client, version, add_args=None):
             },
         )
     except docker.errors.BuildError as e:
-        sys.stdout.write("= Build log ==================\n")
+        logger.info("= Build log ==================")
         for entry in e.build_log:
             if "stream" in entry:
-                sys.stdout.write(entry["stream"])
+                logger.info(entry["stream"])
             elif "errorDetail" in entry:
                 continue  # Is already part of the exception message
             else:
-                sys.stdout.write("UNEXPECTED FORMAT: %r\n" % entry)
-        sys.stdout.write("= Build log ==================\n")
+                logger.info("UNEXPECTED FORMAT: %r", entry)
+        logger.info("= Build log ==================")
         raise
 
     # TODO: Enable this on CI system. Removing during development slows down testing
     # request.addfinalizer(lambda: client.images.remove(image.id, force=True))
 
+    logger.info("Built image: %s", image.short_id)
     attrs = image.attrs
     config = attrs["Config"]
 
@@ -155,7 +174,7 @@ def _pull(client, version):
     if version.edition() != "raw":
         raise Exception("Can only fetch raw edition at the moment")
 
-    print("Downloading docker image: checkmk/check-mk-raw:%s" % version.version)
+    logger.info("Downloading docker image: checkmk/check-mk-raw:%s", version.version)
     return client.images.pull("checkmk/check-mk-raw", tag=version.version)
 
 
@@ -178,6 +197,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
         ) from e
 
     c = client.containers.run(image=_image.id, detach=True, **kwargs)
+    logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
     try:
         site_id = kwargs.get("environment", {}).get("CMK_SITE_ID", "cmk")
@@ -197,7 +217,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
         assert "STARTING SITE" in output
         assert _exec_run(c, ["omd", "status"], user=site_id)[0] == 0
     finally:
-        sys.stdout.write("Log so far: %s\n" % c.logs().decode("utf-8"))
+        logger.debug("Log so far: %s", c.logs().decode("utf-8"))
 
     return c
 
@@ -207,16 +227,7 @@ def _exec_run(c, *args, **kwargs):
     return exit_code, output.decode("utf-8")
 
 
-# TODO: Test with all editions (daily for enterprise + last stable for raw/managed)
-@pytest.mark.parametrize(
-    "edition",
-    [
-        #    "raw",
-        "enterprise",
-        #    "managed",
-    ],
-)
-def test_start_simple(request, client, edition):
+def test_start_simple(request, client, version):
     c = _start(request, client)
 
     cmds = [p[-1] for p in c.top()["Processes"]]
@@ -233,10 +244,10 @@ def test_start_simple(request, client, edition):
     assert "APACHE_TCP_PORT: 5000" in output
     assert "MKEVENTD: on" in output
 
-    if edition != "raw":
-        assert "CORE: cmc" in output
-    else:
+    if version.is_raw_edition():
         assert "CORE: nagios" in output
+    else:
+        assert "CORE: cmc" in output
 
     # check sites uid/gid
     assert _exec_run(c, ["id", "-u", "cmk"])[1].rstrip() == "1000"
@@ -310,16 +321,27 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "buster")
-    pkg_path = os.path.join(build_path, package_name)
-    try:
-        with open(pkg_path, "w") as f:
-            f.write("")
+    package_name = f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
+    package_path = Path(build_path, package_name)
+    package_path.write_bytes(b"")
+    with pytest.raises(docker.errors.BuildError):
+        _build(request, client, version, prepare_package=False)
+    os.unlink(str(package_path))
 
-        with pytest.raises(docker.errors.BuildError):
-            _build(request, client, version)
-    finally:
-        os.unlink(pkg_path)
+
+# Test that the deb package from the download server is used.
+# Works only with daily enterprise builds.
+def test_build_using_package_from_download_server(request, client, version):
+    if not (
+        version.edition() == "enterprise" and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
+    ):
+        pytest.skip("only enterprise daily packages are available on the download server")
+    package_name = f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
+    package_path = Path(build_path, package_name)
+    # make sure no local package is used.
+    if package_path.exists():
+        os.unlink(str(package_path))
+    _build(request, client, version, prepare_package=False)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file

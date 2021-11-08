@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, Un
 from cmk.utils import version
 from cmk.utils.version import is_managed_edition
 
+from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.groups import GroupSpec, GroupSpecs, load_group_information
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors
@@ -100,16 +101,16 @@ def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
     return fetch_specific_groups(groups, group_type)
 
 
-def prepare_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def prepare_groups(group_type: GroupType, entries: List[Dict[str, Any]]) -> GroupSpecs:
     specific_existing_groups = load_group_information()[group_type]
-    groups: Dict[str, Dict[str, Any]] = {}
+    groups: GroupSpecs = {}
     already_existing = []
     for details in entries:
         name = details["name"]
         if name in specific_existing_groups:
             already_existing.append(name)
             continue
-        group_details = {"alias": details["alias"]}
+        group_details: GroupSpec = {"alias": details["alias"]}
         if version.is_managed_edition():
             group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
@@ -169,7 +170,7 @@ def _retrieve_group(
 @contextlib.contextmanager
 def may_fail(
     exc_type: Union[Type[Exception], Tuple[Type[Exception], ...]],
-    status: int,
+    status: Optional[int] = None,
 ):
     """Context manager to make Exceptions REST-API safe
 
@@ -179,9 +180,27 @@ def may_fail(
             ...          raise ValueError("Nothing to see here, move along.")
             ... except ProblemException as _exc:
             ...     _exc.to_problem().data
-            b'{"title": "The operation has failed.", \
-"status": 404, \
+            b'{"title": "The operation has failed.", "status": 404, \
 "detail": "Nothing to see here, move along."}'
+
+            >>> from cmk.gui.exceptions import MKUserError
+            >>> try:
+            ...     with may_fail(MKUserError):
+            ...        raise MKUserError(None, "There is an activation already running.",
+            ...                          status=409)
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 409, \
+"detail": "There is an activation already running."}'
+
+            >>> from cmk.gui.exceptions import MKAuthException
+            >>> try:
+            ...     with may_fail(MKAuthException, status=401):
+            ...        raise MKAuthException("These are not the droids that you are looking for.")
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 401, \
+"detail": "These are not the droids that you are looking for."}'
 
     """
 
@@ -194,6 +213,10 @@ def may_fail(
     try:
         yield
     except exc_type as exc:
+        if isinstance(exc, MKHTTPException):
+            status = exc.status
+        elif status is None:
+            status = 400
         raise ProblemException(
             status=status,
             title="The operation has failed.",
@@ -222,7 +245,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
     return attributes
 
 
-def group_edit_details(body):
+def group_edit_details(body) -> GroupSpec:
     group_details = {k: v for k, v in body.items() if k != "customer"}
 
     if version.is_managed_edition() and "customer" in body:
@@ -230,7 +253,7 @@ def group_edit_details(body):
     return group_details
 
 
-def updated_group_details(name, group_type, changed_details):
+def updated_group_details(name: GroupName, group_type: GroupType, changed_details) -> GroupSpec:
     """Updates the group details without saving
 
     Args:

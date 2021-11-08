@@ -32,7 +32,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -40,6 +40,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariable,
     ConfigVariableGroup,
 )
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
@@ -267,7 +268,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Setting"), breadcrumb, form_name="value_editor", button_name="save"
+            _("Setting"), breadcrumb, form_name="value_editor", button_name="_save"
         )
 
         reset_possible = self._config_variable.allow_reset() and self._is_configured()

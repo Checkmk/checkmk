@@ -6,8 +6,6 @@
 
 from typing import Iterable, MutableMapping, NamedTuple, Optional, Sequence, Tuple
 
-from six import ensure_str
-
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.translations import translate_hostname, TranslationOptions
@@ -39,6 +37,7 @@ class PiggybackMarker(NamedTuple):
         *,
         encoding_fallback: str,
     ) -> "PiggybackMarker":
+        # ? ensure_str called on a bytes object with different possible encodings
         raw_host_name = ensure_str_with_fallback(
             line.strip()[4:-4],
             encoding="utf-8",
@@ -94,7 +93,7 @@ class SectionMarker(NamedTuple):
         if not SectionMarker.is_header(headerline):
             raise ValueError(headerline)
 
-        headerparts = ensure_str(headerline[3:-3]).split(":")
+        headerparts = headerline[3:-3].decode().split(":")
         options = dict(parse_options(headerparts[1:]))
         cached: Optional[Tuple[int, int]]
         try:
@@ -153,6 +152,7 @@ class SectionMarker(NamedTuple):
         return None
 
     def parse_line(self, line: bytes) -> Sequence[str]:
+        # ? ensure_str called on a bytes object with different possible encodings
         line_str = ensure_str_with_fallback(
             line,
             encoding=self.encoding,

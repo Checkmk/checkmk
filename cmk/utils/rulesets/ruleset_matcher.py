@@ -8,6 +8,7 @@
 from typing import Any, cast, Dict, Generator, List, Optional, Pattern, Set, Tuple, TYPE_CHECKING
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
@@ -19,6 +20,10 @@ from cmk.utils.rulesets.tuple_rulesets import (
 from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import (
     HostName,
+    HostOrServiceConditions,
+    HostOrServiceConditionsSimple,
+    Labels,
+    RuleConditionsSpec,
     Ruleset,
     RuleValue,
     ServiceName,
@@ -53,7 +58,7 @@ class RulesetMatchObject:
         self,
         host_name: Optional[HostName] = None,
         service_description: Optional[ServiceName] = None,
-        service_labels: Optional[Dict[str, str]] = None,
+        service_labels: Optional[Labels] = None,
     ) -> None:
         super().__init__()
         self.host_name = host_name
@@ -64,7 +69,7 @@ class RulesetMatchObject:
             self._generate_service_labels_hash(self.service_labels),
         )
 
-    def _generate_service_labels_hash(self, service_labels: Optional[Dict[str, str]]) -> int:
+    def _generate_service_labels_hash(self, service_labels: Optional[Labels]) -> int:
         return hash(None if service_labels is None else frozenset(service_labels.items()))
 
     def to_dict(self) -> Dict:
@@ -113,9 +118,7 @@ class RulesetMatcher:
 
         self._service_match_cache: Dict = {}
 
-    def is_matching_host_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
-    ) -> bool:
+    def is_matching_host_ruleset(self, match_object: RulesetMatchObject, ruleset: Ruleset) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -127,17 +130,17 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_host_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
-    ) -> Dict:
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
+    ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
-        merged_dict: Dict = {}
-        for rule_dict in self.get_host_ruleset_values(match_object, ruleset, is_binary=False):
-            for key, value in rule_dict.items():
-                merged_dict.setdefault(key, value)
-        return merged_dict
+        merged = boil_down_parameters(
+            self.get_host_ruleset_values(match_object, ruleset, is_binary=False), {}
+        )
+        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
+        return merged
 
     def get_host_ruleset_values(
         self, match_object: RulesetMatchObject, ruleset: List, is_binary: bool
@@ -161,7 +164,7 @@ class RulesetMatcher:
             yield value
 
     def is_matching_service_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -174,17 +177,17 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_service_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: List[Dict]
-    ) -> Dict:
+        self, match_object: RulesetMatchObject, ruleset: Ruleset
+    ) -> Dict[str, Any]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
-        merged_dict: Dict = {}
-        for rule_dict in self.get_service_ruleset_values(match_object, ruleset, is_binary=False):
-            for key, value in rule_dict.items():
-                merged_dict.setdefault(key, value)
-        return merged_dict
+        merged = boil_down_parameters(
+            self.get_service_ruleset_values(match_object, ruleset, is_binary=False), {}
+        )
+        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
+        return merged
 
     def get_service_ruleset_values(
         self, match_object: RulesetMatchObject, ruleset: List, is_binary: bool
@@ -471,7 +474,9 @@ class RulesetOptimizer:
             )
         return new_rules
 
-    def _convert_pattern_list(self, patterns: List[str]) -> PreprocessedPattern:
+    def _convert_pattern_list(
+        self, patterns: Optional[HostOrServiceConditions]
+    ) -> PreprocessedPattern:
         """Compiles a list of service match patterns to a to a single regex
 
         Reducing the number of individual regex matches improves the performance dramatically.
@@ -480,10 +485,10 @@ class RulesetOptimizer:
         if not patterns:
             return False, regex("")  # Match everything
 
-        negate, patterns = parse_negated_condition_list(patterns)
+        negate, parsed_patterns = parse_negated_condition_list(patterns)
 
         pattern_parts = []
-        for p in patterns:
+        for p in parsed_patterns:
             if isinstance(p, dict):
                 pattern_parts.append(p["$regex"])
             else:
@@ -492,7 +497,7 @@ class RulesetOptimizer:
         return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
 
     def _all_matching_hosts(
-        self, condition: Dict[str, Any], with_foreign_hosts: bool
+        self, condition: RuleConditionsSpec, with_foreign_hosts: bool
     ) -> Set[HostName]:
         """Returns a set containing the names of hosts that match the given
         tags and hostlist conditions."""
@@ -580,22 +585,21 @@ class RulesetOptimizer:
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def matches_host_name(self, host_entries, hostname):
+    def matches_host_name(
+        self, host_entries: Optional[HostOrServiceConditions], hostname: HostName
+    ) -> bool:
         if not host_entries:
             return True
 
         negate, host_entries = parse_negated_condition_list(host_entries)
+        if hostname == "":  # -> generic agent host
+            return negate
 
         for entry in host_entries:
-            use_regex = isinstance(entry, dict)
-
-            if hostname is True:  # -> generic agent host
-                continue
-
-            if not use_regex and hostname == entry:
+            if not isinstance(entry, dict) and hostname == entry:
                 return not negate
 
-            if use_regex and regex(entry["$regex"]).match(hostname) is not None:
+            if isinstance(entry, dict) and regex(entry["$regex"]).match(hostname) is not None:
                 return not negate
 
         return negate
@@ -610,13 +614,14 @@ class RulesetOptimizer:
             for taggroup_id, tag_condition in required_tags.items()
         )
 
+    # TODO: improve and cleanup types
     def _condition_cache_id(
         self,
-        hostlist,
+        hostlist: Optional[HostOrServiceConditions],
         tag_conditions: TaggroupIDToTagCondition,
-        labels,
-        rule_path,
-    ):
+        labels: Any,
+        rule_path: Any,
+    ) -> Tuple[Tuple[str, ...], Tuple[Tuple[str, Any], ...], Tuple[Tuple[Any, Any], ...], Any]:
         host_parts: List[str] = []
 
         if hostlist is not None:
@@ -827,12 +832,14 @@ def matches_labels(object_labels, required_labels) -> bool:
     return True
 
 
-def parse_negated_condition_list(entries):
-    negate = False
+def parse_negated_condition_list(
+    entries: HostOrServiceConditions,
+) -> Tuple[bool, HostOrServiceConditionsSimple]:
     if isinstance(entries, dict) and "$nor" in entries:
-        negate = True
-        entries = entries["$nor"]
-    return negate, entries
+        return True, entries["$nor"]
+    if isinstance(entries, list):
+        return False, entries
+    raise ValueError("unsupported conditions")
 
 
 class RulesetToDictTransformer:

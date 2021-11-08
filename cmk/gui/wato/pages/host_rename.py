@@ -27,8 +27,9 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato import flash, mode_registry, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import (
@@ -111,7 +112,7 @@ class ModeBulkRenameHost(WatoMode):
             _("Hosts"),
             breadcrumb,
             form_name="bulk_rename_host",
-            button_name="_start",
+            button_name="_save",
             save_title=_("Bulk rename"),
         )
 
@@ -414,7 +415,7 @@ class ModeRenameHost(WatoMode):
         if not user.may("wato.rename_hosts"):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
-        self._host = watolib.Folder.current().host(host_name)
+        self._host = watolib.Folder.current().load_host(host_name)
         self._host.need_permission("write")
 
     def title(self):
@@ -428,7 +429,7 @@ class ModeRenameHost(WatoMode):
             _("Host"),
             breadcrumb,
             form_name="rename_host",
-            button_name="rename",
+            button_name="_save",
             save_title=_("Rename"),
         )
 

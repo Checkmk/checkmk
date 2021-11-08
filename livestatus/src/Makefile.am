@@ -11,7 +11,7 @@ RUN_CLANG_TIDY ?= \
     python3 $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
-VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30")
+VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30 --error-exitcode=42")
 INCLUDES_DIR := includes
 LIBS_DIR := libs
 
@@ -51,9 +51,11 @@ unixcat_LDADD = -lpthread
 test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/TableQueryHelper.cc \
+    test/test_AttributeListColumn.cc \
     test/test_BlobColumn.cc \
+    test/test_BoolColumn.cc \
     test/test_CrashReport.cc \
-    test/test_CustomVarsDictFilter.cc \
+    test/test_DictFilter.cc \
     test/test_DoubleColumn.cc \
     test/test_FileSystemHelper.cc \
     test/test_IntColumn.cc \
@@ -98,37 +100,27 @@ liblivestatus_a_LD_FLAGS = \
     $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
-        AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
         Average.cc \
-        BlobColumn.cc \
-        BoolColumn.cc \
         Column.cc \
         ColumnFilter.cc \
         CommentRenderer.cc \
         CountAggregator.cc \
         CrashReport.cc \
-        CustomVarsDictColumn.cc \
-        CustomVarsDictFilter.cc \
-        CustomVarsNamesColumn.cc \
-        CustomVarsValuesColumn.cc \
+        DictFilter.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
         DowntimeOrComment.cc \
-        DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \
-        HostListColumn.cc \
+        HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
         InputBuffer.cc \
-        IntColumn.cc \
         IntFilter.cc \
-        ListColumn.cc \
-        ListLambdaColumn.cc \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
@@ -153,7 +145,7 @@ liblivestatus_a_SOURCES = \
         RendererPython3.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \
-        ServiceListColumn.cc \
+        ServiceListRenderer.cc \
         ServiceListState.cc \
         StatsColumn.cc \
         Store.cc \

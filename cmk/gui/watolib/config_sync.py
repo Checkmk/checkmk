@@ -33,7 +33,7 @@ Command = List[str]
 
 
 class ReplicationPath(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "ReplicationPath",
         [
             ("ty", str),

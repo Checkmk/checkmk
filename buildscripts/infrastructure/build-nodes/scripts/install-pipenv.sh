@@ -25,17 +25,10 @@ else
     done
 fi
 
-PYTHON_DIR_NAME=Python-${PYTHON_VERSION}
+pip3 install pipenv==2021.5.29 virtualenv==20.7.2
 
-PIPENV_VERSION=2020.11.15
-ARCHIVE_NAME=v${PIPENV_VERSION}.tar.gz
-DIR_NAME=pipenv-${PIPENV_VERSION}
-TARGET_DIR=/opt
-
-cd "${TARGET_DIR}"
-mirrored_download "${ARCHIVE_NAME}" "https://github.com/pypa/pipenv/archive/${ARCHIVE_NAME}"
-tar xf "${ARCHIVE_NAME}"
-cd "${DIR_NAME}"
-pip3 install .
-
-ln -sf "${TARGET_DIR}/${PYTHON_DIR_NAME}/bin/pipenv"* /usr/bin
+# link pipenv to /usr/bin to be in PATH. Fallback to /opt/bin if no permissions for writting to /usr/bin.
+#   /opt/bin does not work as default, because `make -C omd deb` requires it to be in /usr/bin.
+#   only /usr/bin does not work, because GitHub Actions do not have permissions to write there.
+PIPENV_PATH="/opt/Python-${PYTHON_VERSION}/bin/pipenv"
+ln -sf "${PIPENV_PATH}"* /usr/bin || ln -sf "${PIPENV_PATH}"* /opt/bin

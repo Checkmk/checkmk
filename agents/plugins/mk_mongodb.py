@@ -35,22 +35,20 @@ import os
 import sys
 import time
 from collections import defaultdict
+from urllib.parse import quote_plus
 
 PY2 = sys.version_info[0] == 2
 
 try:
-    from typing import Any, Callable, Dict, Tuple, Union
+    from typing import Any, Callable, Dict, Iterable, Union
 except ImportError:
     pass
 
-if PY2:
-    from urllib import quote_plus  # pylint: disable=no-name-in-module
-else:
-    from urllib.parse import quote_plus
 
 try:
     import pymongo  # type: ignore[import] # pylint: disable=import-error
     import pymongo.errors  # type: ignore[import] # pylint: disable=import-error
+    from bson.json_util import dumps  # type: ignore[import]
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
@@ -59,9 +57,9 @@ except ImportError:
     )
     sys.exit(1)
 
-from bson.json_util import dumps  # type: ignore[import]
 
 MK_VARDIR = os.environ.get("MK_VARDIR")
+PYMONGO_VERSION = tuple(int(i) for i in pymongo.version.split("."))
 
 
 def get_database_info(client):
@@ -75,12 +73,25 @@ def get_database_info(client):
     databases = defaultdict(dict)  # type: Dict[str, Dict[str, Any]]
     for name in db_names:
         database = client[name]
-        databases[name]["collections"] = database.collection_names()
+        databases[name]["collections"] = list(get_collection_names(database))
         databases[name]["stats"] = database.command("dbstats")
         databases[name]["collstats"] = {}
         for collection in databases[name]["collections"]:
             databases[name]["collstats"][collection] = database.command("collstats", collection)
     return databases
+
+
+def get_collection_names(database):  # type:(pymongo.database.Database) -> Iterable[str]
+    if PYMONGO_VERSION <= (3, 6, 0):
+        collection_names = database.collection_names()
+    else:
+        collection_names = database.list_collection_names()
+
+    for collection_name in collection_names:
+        if "viewOn" in database[collection_name].options():
+            # we don't want to return views, as the command collstats can not be executed
+            continue
+        yield collection_name
 
 
 def section_instance(server_status):
@@ -91,18 +102,17 @@ def section_instance(server_status):
     repl_info = server_status.get("repl")
     if not repl_info:
         sys.stdout.write("mode\tSingle Instance\n")
-        return
 
-    if repl_info.get("ismaster"):
+    elif repl_info.get("isWritablePrimary") or repl_info.get("ismaster"):
         sys.stdout.write("mode\tPrimary\n")
-        return
 
-    if repl_info.get("secondary"):
+    elif repl_info.get("secondary"):
         sys.stdout.write("mode\tSecondary\n")
-        return
 
-    sys.stdout.write("mode\tArbiter\n")
-    if repl_info.get("me"):
+    else:
+        sys.stdout.write("mode\tArbiter\n")
+
+    if repl_info and repl_info.get("me"):
         sys.stdout.write("address\t%s\n" % repl_info.get("me", "n/a"))
 
 
@@ -217,7 +227,7 @@ def section_cluster(client, databases):
     # check if we run on mongos (router) node
     master_dict = client.admin.command("isMaster")
     if (
-        not master_dict.get("ismaster")
+        not (master_dict.get("isWritablePrimary") or master_dict.get("ismaster"))
         or "msg" not in master_dict
         or master_dict.get("msg") != "isdbgrid"
     ):
@@ -749,7 +759,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
     def read_from_filename(self, filename):
         LOGGER.debug("trying to read %r", filename)
         if not os.path.exists(filename):
-            LOGGER.warning("config file does not exist!")
+            LOGGER.warning("config file %s does not exist!", filename)
         else:
             with open(filename, "r") as cfg:
                 if PY2:
@@ -768,6 +778,11 @@ class MongoDBConfigParser(configparser.ConfigParser):
             return default
         return self.get(self.mongo_section, option)
 
+    def get_mongodb_int(self, option, *, default=None):
+        if not self.has_option(self.mongo_section, option):
+            return default
+        return self.getint(self.mongo_section, option)
+
 
 class Config:
     def __init__(self, config):
@@ -779,6 +794,7 @@ class Config:
         self.auth_source = config.get_mongodb_str("auth_source")
 
         self.host = config.get_mongodb_str("host")
+        self.port = config.get_mongodb_int("port")
         self.username = config.get_mongodb_str("username")
         self.password = config.get_mongodb_str("password")
 
@@ -807,6 +823,8 @@ class Config:
             pymongo_config["authSource"] = self.auth_source
         if self.host is not None:
             pymongo_config["host"] = self.host
+        if self.port is not None:
+            pymongo_config["port"] = self.port
 
         return pymongo_config
 
@@ -816,13 +834,7 @@ class PyMongoConfigTransformer:
         # type:(Config) -> None
         self._config = config
 
-    @staticmethod
-    def _get_pymongo_version():
-        # type:() -> Tuple[int, ...]
-        return tuple(int(i) for i in pymongo.version.split("."))
-
     def transform(self, pymongo_config):
-        pymongo_version = self._get_pymongo_version()
         version_transforms = [
             # apply the transform if the version of pymongo is lower than the
             # tuple defined here. For the oldest pymongo version, multiple
@@ -832,12 +844,12 @@ class PyMongoConfigTransformer:
         ]
 
         for version, transform_function in version_transforms:
-            if pymongo_version < version:
-                pymongo_config = transform_function(pymongo_config, pymongo_version)
+            if PYMONGO_VERSION < version:
+                pymongo_config = transform_function(pymongo_config)
         return pymongo_config
 
-    def _transform_tls_to_ssl(self, pymongo_config, pymongo_version):
-        # type:(Dict[str, Union[str, bool]], Tuple[int, ...]) -> Dict[str, Union[str, bool]]
+    def _transform_tls_to_ssl(self, pymongo_config):
+        # type:(Dict[str, Union[str, bool]]) -> Dict[str, Union[str, bool]]
         if pymongo_config.get("tlsInsecure") is True:
             sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
             sys.stdout.write(
@@ -845,7 +857,7 @@ class PyMongoConfigTransformer:
                     "error\tCan not use option 'tls_verify = False' with this pymongo version %s."
                     "This option is only available with pymongo > 3.9.0\n"
                 )
-                % str(pymongo_version)
+                % str(PYMONGO_VERSION)
             )
             sys.exit(3)
         pymongo_config.pop("tlsInsecure", None)
@@ -859,22 +871,21 @@ class PyMongoConfigTransformer:
                 pymongo_config[old_arg] = pymongo_config.pop(new_arg)
         return pymongo_config
 
-    def _transform_credentials_to_uri(self, pymongo_config, _pymongo_version):
-        # type:(Dict[str, Union[str, bool]], Tuple[int, ...]) -> Dict[str, Union[str, bool]]
+    def _transform_credentials_to_uri(self, pymongo_config):
+        # type:(Dict[str, Union[str, bool]]) -> Dict[str, Union[str, bool]]
         username = pymongo_config.pop("username", None)
         password = pymongo_config.pop("password", None)
         host = pymongo_config.pop("host", "localhost")
+        port = pymongo_config.pop("port", 27017)
         if username is not None:
             password_element = ""
             if password is not None:
                 password_element = ":{}".format(quote_plus(self._config.password))
-            uri = "mongodb://{}{}@{}".format(
-                quote_plus(self._config.username),
-                password_element,
-                host,
+            uri = "mongodb://{}{}@{}:{}".format(
+                quote_plus(self._config.username), password_element, host, port
             )
         else:
-            uri = "mongodb://{}".format(host)
+            uri = "mongodb://{}:{}".format(host, port)
         pymongo_config["host"] = uri
         return pymongo_config
 
@@ -888,8 +899,8 @@ def main(argv=None):
     LOGGER.debug("parsed args: %r", args)
     if LOGGER.isEnabledFor(logging.INFO):
         LOGGER.info("python version: %s", sys.version.replace("\n", " "))
-        if hasattr(pymongo, "version"):
-            LOGGER.info("pymongo version: %s", pymongo.version)
+        LOGGER.info("pymongo version: %s", PYMONGO_VERSION)
+        LOGGER.info("mk_mongodb version: %s", __version__)
 
     config_parser = MongoDBConfigParser()
     config_parser.read_from_filename(os.path.abspath(args.config_file))
@@ -919,7 +930,7 @@ def main(argv=None):
 
     section_instance(server_status)
     repl_info = server_status.get("repl")
-    if repl_info and not repl_info.get("ismaster"):
+    if repl_info and not (repl_info.get("isWritablePrimary") or repl_info.get("ismaster")):
         # this is a special case: replica set without master
         # this is detected here
         if "primary" in repl_info and not repl_info.get("primary"):

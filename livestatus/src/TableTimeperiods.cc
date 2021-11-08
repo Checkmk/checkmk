@@ -7,8 +7,8 @@
 
 #include <memory>
 
-#include "BoolColumn.h"
 #include "Column.h"
+#include "IntColumn.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
@@ -18,21 +18,22 @@
 
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn::Callback<timeperiod>>(
+    addColumn(std::make_unique<StringColumn<timeperiod>>(
         "name", "The name of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.name; }));
-    addColumn(std::make_unique<StringColumn::Callback<timeperiod>>(
+    addColumn(std::make_unique<StringColumn<timeperiod>>(
         "alias", "The alias of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.alias; }));
     // unknown timeperiod is assumed to be 24X7
-    addColumn(std::make_unique<BoolColumn::Callback<timeperiod, true>>(
+    addColumn(std::make_unique<BoolColumn<timeperiod, true>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
         [](const timeperiod& tp) {
             // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
             extern TimeperiodsCache* g_timeperiods_cache;
             return g_timeperiods_cache->inTimeperiod(&tp);
         }));
-    // TODO(mk): add days and exceptions
+    // TODO(sp): Missing columns: transitions, num_transitions,
+    // next_transition_id, next_transition
 }
 
 std::string TableTimeperiods::name() const { return "timeperiods"; }

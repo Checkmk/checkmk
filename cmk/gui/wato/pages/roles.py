@@ -50,7 +50,6 @@ from cmk.gui.permissions import (
     permission_section_registry,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     get_search_expression,
     make_action_link,
     make_confirm_link,
@@ -61,7 +60,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.sites import get_login_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import ActionResult, Choices
 
 
 class RoleManagement:
@@ -293,7 +292,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Role"), breadcrumb, form_name="role", button_name="save"
+            _("Role"), breadcrumb, form_name="role", button_name="_save"
         )
         menu.inpage_search = PageMenuSearch()
         return menu
@@ -302,10 +301,11 @@ class ModeEditRole(RoleManagement, WatoMode):
         if html.form_submitted("search"):
             return None
 
-        alias = request.get_unicode_input("alias")
+        alias = request.get_unicode_input_mandatory("alias")
 
         unique, info = watolib.is_alias_used("roles", self._role_id, alias)
         if not unique:
+            assert info is not None
             raise MKUserError("alias", info)
 
         new_id = request.get_ascii_input_mandatory("id")

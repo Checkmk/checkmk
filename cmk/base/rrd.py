@@ -50,6 +50,7 @@ def write_xml(element: ET.Element, filepath: str) -> None:
     with Path(filepath).open("w", encoding="utf-8") as fid:
         fid.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
         # TODO: Can be set to encoding="unicode" with Python3
+        # ? with UTF-8 encoding the argument of ensure_str seems to be of type bytes, with unicode encoding-str
         fid.write(ensure_str(ET.tostring(element, method="html", encoding="UTF-8")) + "\n")
 
 

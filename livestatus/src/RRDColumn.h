@@ -23,7 +23,7 @@
 #include "Object.h"
 #endif
 
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "overload.h"  // IWYU pragma: keep
 class ListRenderer;
 class MonitoringCore;
@@ -40,7 +40,7 @@ struct RRDColumnArgs {
 namespace detail {
 struct Data {
     using time_point = std::chrono::system_clock::time_point;
-    Data() : start{}, end{}, step{0}, values{} {}
+    Data() : step{0} {}
     Data(time_point s, time_point e, unsigned long d, std::vector<double> v)
         : start{s}, end{e}, step{d}, values{std::move(v)} {}
     time_point start;

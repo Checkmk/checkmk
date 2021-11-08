@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import enum
 import sys
 from collections.abc import Container
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
@@ -38,12 +40,58 @@ AgentRawData = NewType("AgentRawData", bytes)
 
 RulesetName = str
 RuleValue = Any  # TODO: Improve this type
-RuleSpec = Dict[str, Any]  # TODO: Improve this type
+
+# FIXME: A lot of signatures regarding rules and rule sets are simply lying:
+# They claim to expect a RuleConditionsSpec or Ruleset (from cmk.utils.type_defs), but
+# they are silently handling a very chaotic tuple-based structure, too. We
+# really, really need to fix all those signatures! Some test cases for tuples are in
+# test_tuple_rulesets.py. They contain some horrible hand-made types...
+
+
+# TODO: Improve this type
+class RuleConditionsSpec(TypedDict, total=False):
+    host_tags: Any
+    host_labels: Any
+    host_name: Optional[HostOrServiceConditions]
+    service_description: Optional[HostOrServiceConditions]
+    service_labels: Any
+    host_folder: Any
+
+
+# TODO: Improve this type
+class _RuleSpecBase(TypedDict):
+    id: str
+    # TODO: Make the TypedDict generic over the value once it is supported
+    # in mypy: https://github.com/python/mypy/issues/3863 (CMK-8632)
+    value: Any
+    condition: RuleConditionsSpec
+
+
+class RuleSpec(_RuleSpecBase, total=False):
+    options: RuleOptions
+
+
+HostOrServiceConditionRegex = TypedDict(
+    "HostOrServiceConditionRegex",
+    {"$regex": str},
+)
+HostOrServiceConditionsSimple = List[Union[HostOrServiceConditionRegex, str]]
+HostOrServiceConditionsNegated = TypedDict(
+    "HostOrServiceConditionsNegated",
+    {"$nor": HostOrServiceConditionsSimple},
+)
+
+HostOrServiceConditions = Union[
+    HostOrServiceConditionsSimple,
+    HostOrServiceConditionsNegated,
+]  # TODO: refine type
+
+RuleOptions = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
-Labels = Dict[str, str]
+Labels = Mapping[str, str]
 LabelSources = Dict[str, str]
 
 TagID = str
@@ -75,12 +123,6 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
 
-HostNameConditions = Union[
-    None, Dict[str, List[Union[Dict[str, str], str]]], List[Union[Dict[str, str], str]]
-]
-ServiceNameConditions = Union[
-    None, Dict[str, List[Union[Dict[str, str], str]]], List[Union[Dict[str, str], str]]
-]
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int
@@ -133,20 +175,6 @@ class DiscoveryResult:
 
     # An optional text to describe the services changed by the operation
     diff_text: Optional[str] = None
-
-
-@dataclass
-class AutomationDiscoveryResponse:
-    results: Dict[HostName, DiscoveryResult]
-
-    def serialize(self):
-        return {
-            "results": {k: asdict(v) for k, v in self.results.items()},
-        }
-
-    @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "AutomationDiscoveryResponse":
-        return cls(results={k: DiscoveryResult(**v) for k, v in serialized["results"].items()})
 
 
 UserId = NewType("UserId", str)
@@ -219,3 +247,27 @@ class ExitSpec(TypedDict, total=False):
     missing_sections: int
     specific_missing_sections: List[Tuple[str, int]]
     restricted_address_mismatch: int
+
+
+class HostLabelValueDict(TypedDict):
+    value: str
+    plugin_name: Optional[str]
+
+
+DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+
+CheckPreviewEntry = Tuple[
+    str,
+    CheckPluginNameStr,
+    Optional[RulesetName],
+    Item,
+    LegacyCheckParameters,
+    LegacyCheckParameters,
+    str,
+    Optional[int],
+    str,
+    List[MetricTuple],
+    Dict[str, str],
+    List[HostName],
+]
+CheckPreviewTable = Sequence[CheckPreviewEntry]

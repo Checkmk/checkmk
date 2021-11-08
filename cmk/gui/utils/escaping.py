@@ -10,9 +10,8 @@ from html import escape as html_escape
 from typing import Union
 from urllib.parse import urlparse
 
-from flask_babel.speaklater import LazyString  # type: ignore[import]
-
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 
 # .
 #   .--Escaper-------------------------------------------------------------.

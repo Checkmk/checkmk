@@ -96,6 +96,7 @@ div.dashlet {
 
   g.title a text,
   div.title a {
+    @include ellipsis-text-overflow;
     color: $font-color;
     text-decoration: none;
 
@@ -703,11 +704,12 @@ svg {
   .single_value,
   .state_component {
     fill: $font-color;
+
     text {
-      // because there is conflict with a general: svg text
-      stroke: none;
+      stroke: none; // there is conflict with a general: svg text
     }
   }
+
   .status_background {
     opacity: 0.6;
     fill: $dashlet-inner-bg-color;
@@ -721,39 +723,6 @@ svg {
     opacity: 0.3;
   }
 
-  .svcstate,
-  .hoststate {
-    // Default UX timeseries blue #008EFF, No variable yet, thus equal on themes
-    fill: rgb(0, 142, 255);
-    stroke: rgb(0, 142, 255);
-  }
-
-  .state0,
-  .hstate0 {
-    /* OK/UP */
-    fill: $success;
-    stroke: $success;
-  }
-
-  .state1 {
-    /* WARN */
-    fill: $color-state-1-background;
-    stroke: $color-state-1-background;
-  }
-
-  .state2,
-  .hstate1 {
-    /* CRIT/DOWN */
-    fill: $color-state-2-background;
-    stroke: $color-state-2-background;
-  }
-
-  .state3,
-  .hstate2 {
-    /* UNKNOWN/UNREACH */
-    fill: $color-state-3-background;
-    stroke: $color-state-3-background;
-  }
   // gauge
   .gauge_span {
     // TODO: Suitable for both themes. Darkgrey is rather in the middle grey.

@@ -1471,17 +1471,6 @@ def test_rulespec_get_host_groups():
         "host_monconf/host_checks",
         "host_monconf/host_notifications",
         "host_monconf/host_various",
-        "monconf/applications",
-        "monconf/environment",
-        "monconf/hardware",
-        "monconf/networking",
-        "monconf/service_checks",
-        "monconf/notifications",
-        "monconf/os",
-        "monconf/printers",
-        "monconf/storage",
-        "monconf/various",
-        "monconf/virtualization",
         "agent/general_settings",
         "agent/check_mk_agent",
         "agents/generic_options",
@@ -1837,7 +1826,7 @@ def test_match_item_generator_rules():
     ]
 
 
-def test_all_rulespec_groups_have_main_group(load_plugins):
+def test_all_rulespec_groups_have_main_group():
     for rulespec_group_name, rulespec_group_cls in rulespec_group_registry.items():
         if issubclass(rulespec_group_cls, RulespecGroup):
             main_module_from_rulespec_group_name(
@@ -1846,7 +1835,7 @@ def test_all_rulespec_groups_have_main_group(load_plugins):
             )
 
 
-def test_rulespec_groups_have_unique_names(load_plugins):
+def test_rulespec_groups_have_unique_names():
     # The title is e.g. shown in the mega menu search. With duplicate entries a user could not
     # distinguish where a rule is located in the menu hierarchy.
     main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]

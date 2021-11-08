@@ -81,6 +81,7 @@ def test_parse_arguments(argv, expected_non_default_args):
         ["--vm_piggyname", "MissPiggy"],
     ],
 )
-def test_parse_arguments_invalid(invalid_argv):
+def test_parse_arguments_invalid(invalid_argv, monkeypatch):
+    monkeypatch.setattr("cmk.special_agents.utils.vcrtrace", lambda **vcr_init_kwargs: None)
     with pytest.raises(SystemExit):
         agent_vsphere.parse_arguments(invalid_argv)

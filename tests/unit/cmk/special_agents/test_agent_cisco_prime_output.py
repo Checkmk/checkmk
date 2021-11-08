@@ -15,6 +15,7 @@ API_PATH = "webacs/api/v1/data"
 REQUESTS = (
     "AccessPoints.json?.full=true&.nocount=true&.maxResults=10000",
     "ClientCounts.json?.full=true&subkey=ROOT-DOMAIN&type=SSID",
+    "WlanControllers.json?.full=true",
 )
 
 
@@ -43,6 +44,8 @@ def test_agent_output(capsys, accept_requests):
         "<<<cisco_prime_wifi_access_points:sep(0)>>>\n"
         '{"authenticated": true, "user": "user"}\n'
         "<<<cisco_prime_wifi_connections:sep(0)>>>\n"
+        '{"authenticated": true, "user": "user"}\n'
+        "<<<cisco_prime_wlan_controller:sep(0)>>>\n"
         '{"authenticated": true, "user": "user"}\n',
         "",
     )

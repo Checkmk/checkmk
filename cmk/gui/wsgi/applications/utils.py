@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Callable
+from typing import Any, Callable, Dict
 
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 from cmk.utils.site import url_prefix
 
-from cmk.gui import login, modules, pages
+from cmk.gui import login, pages
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
 from cmk.gui.globals import g, request, response, theme, user
@@ -135,27 +135,10 @@ def _handle_not_authenticated() -> Response:
     return response
 
 
-def load_all_plugins() -> None:
-    # Optimization: in case of the graph ajax call only check the metrics module. This
-    # improves the performance for these requests.
-    # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
-    # werkzeug.wrappers.Request.script_root would be helpful here, but we don't have that yet.
-    only_modules = ["metrics"] if requested_file_name(request) == "ajax_graph" else None
-    modules.load_all_plugins(only_modules=only_modules)
-
-
 def _localize_request() -> None:
-    previous_language = cmk.gui.i18n.get_current_language()
     user_language = request.get_ascii_input("lang", user.language)
-
     set_language_cookie(request, response, user_language)
     cmk.gui.i18n.localize(user_language)
-
-    # All plugins might have to be reloaded due to a language change. Only trigger
-    # a second plugin loading when the user is really using a custom localized GUI.
-    # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
-    if cmk.gui.i18n.get_current_language() != previous_language:
-        load_all_plugins()
 
 
 def handle_unhandled_exception() -> Response:
@@ -166,3 +149,27 @@ def handle_unhandled_exception() -> Response:
     )
     # This needs to be cleaned up.
     return response
+
+
+def load_gui_log_levels() -> Dict[str, int]:
+    """Load the GUI log level global setting from the WATO GUI config"""
+    return load_single_global_wato_setting("log_levels", {"cmk.web": 30})
+
+
+def load_single_global_wato_setting(varname: str, deflt: Any = None) -> Any:
+    """Load a single config option from WATO globals (Only for special use)
+
+    This is a small hack to get access to the current configuration without
+    the need to load the whole GUI config.
+
+    The problem is: The profiling setting is needed before the GUI config
+    is loaded regularly. This is needed, because we want to be able to
+    profile our whole WSGI app, including the config loading logic.
+
+    We only process the WATO written global settings file to get the WATO
+    settings. Which should be enough for the most cases.
+    """
+    settings = cmk.utils.store.load_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", default={}
+    )
+    return settings.get(varname, deflt)

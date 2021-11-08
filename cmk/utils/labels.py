@@ -8,13 +8,13 @@
 import abc
 import os
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Mapping, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName, Labels, LabelSources, ServiceName
+from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, LabelSources, ServiceName
 
 UpdatedHostLabelsEntry = Tuple[str, float, str]
 
@@ -45,7 +45,7 @@ class LabelManager:
 
         Last one wins.
         """
-        labels: Labels = {}
+        labels: Dict[str, str] = {}
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(ruleset_matcher, hostname))
         labels.update(self._explicit_host_labels.get(hostname, {}))
@@ -94,7 +94,7 @@ class LabelManager:
 
         Last one wins.
         """
-        labels: Labels = {}
+        labels: Dict[str, str] = {}
         labels.update(self._discovered_labels_of_service(hostname, service_desc))
         labels.update(self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc))
 
@@ -136,15 +136,19 @@ class ABCDiscoveredLabelsStore(abc.ABC):
     def file_path(self) -> Path:
         raise NotImplementedError()
 
-    def load(self) -> Dict:
-        # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
+    def load(self) -> Mapping[str, HostLabelValueDict]:
+        # Skip labels discovered by the previous HW/SW inventory approach
+        # (which was addded+removed in 1.6 beta)
         return {
-            k: v
-            for k, v in store.load_object_from_file(str(self.file_path), default={}).items()
-            if isinstance(v, dict)
+            str(key): {
+                "value": str(val["value"]),
+                "plugin_name": str(val["plugin_name"]) if "plugin_name" in val else None,
+            }
+            for key, val in store.load_object_from_file(str(self.file_path), default={}).items()
+            if isinstance(val, dict)
         }
 
-    def save(self, labels: Dict) -> None:
+    def save(self, labels: Mapping[str, HostLabelValueDict]) -> None:
         if not labels:
             if self.file_path.exists():
                 self.file_path.unlink()
@@ -161,11 +165,11 @@ class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
 
     @property
     def file_path(self) -> Path:
-        return cmk.utils.paths.discovered_host_labels_dir / (self._hostname + ".mk")
+        return cmk.utils.paths.discovered_host_labels_dir / f"{self._hostname}.mk"
 
 
 class BuiltinHostLabelsStore:
-    def load(self):
+    def load(self) -> Mapping[str, HostLabelValueDict]:
         return {
             "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
         }

@@ -390,7 +390,12 @@ def _valuespec_datasource_programs():
             "via SSH."
         )
         + monitoring_macro_help()
-        + _('This option can only be used with the permission "Can add or modify executables".'),
+        + _('This option can only be used with the permission "Can add or modify executables".')
+        + _(
+            "<br> HINT: The individual program is called from the current working directory. "
+            "You should therefore specify absolute path names in scripts (by using environment variables like OMD_SITE) "
+            "to make the individual program call run correctly in all execution contexts (UI and console)."
+        ),
         label=_("Command line to execute"),
         empty_text=_("Access Checkmk Agent via TCP"),
         size=80,
@@ -774,6 +779,55 @@ def _valuespec_special_agents_kube():
                         'or the "IP Address" options are selected, the DNS hostname or IP address and '
                         "a secure protocol (HTTPS) are used."
                     ),
+                ),
+            ),
+            (
+                "cluster-agent",  # TODO: adjust help texts depending on ingress inclusion
+                Dictionary(
+                    elements=[
+                        (
+                            "node_ip",
+                            TextInput(
+                                title=_("IP address of Kubernetes node"),
+                                allow_empty=False,
+                                help=_(
+                                    "The IP address of any Kubernetes cluster node where a "
+                                    "kubelet is present. Valid nodes can be usually retrieved "
+                                    "using the 'kubectl get nodes -o wide' command."
+                                ),
+                            ),
+                        ),
+                        (
+                            "connection_port",
+                            Integer(
+                                title=_("Port of Kubernetes' checkmk-external service"),
+                                default_value=30035,
+                                help=_("The service port of the running checkmk-external service"),
+                            ),
+                        ),
+                        (
+                            "protocol",
+                            DropdownChoice(
+                                title=_("Protocol"),
+                                choices=[
+                                    ("http", "HTTP"),
+                                    ("https", "HTTPS"),
+                                ],
+                                help=_(
+                                    "The option should match the configured protocol of the "
+                                    "cluster agent."
+                                ),
+                            ),
+                        ),
+                    ],
+                    title=_("Cluster agent connection"),
+                    help=_(
+                        "The Checkmk Kubernetes monitoring setup should be deployed in your "
+                        "Kubernetes cluster. Checkmk needs some additional information in order "
+                        "to query the deployed agent. A guide on how to retrieve this information "
+                        "can be found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+                    ),
+                    optional_keys=[],
                 ),
             ),
             (
@@ -1852,17 +1906,75 @@ def _special_agents_ipmi_sensors_vs_freeipmi():
     return Dictionary(
         elements=_special_agents_ipmi_sensors_vs_ipmi_common_elements()
         + [
-            ("ipmi_driver", TextInput(title=_("IPMI driver"))),
-            ("driver_type", TextInput(title=_("IPMI driver type"))),
-            ("BMC_key", TextInput(title=_("BMC key"))),
-            ("quiet_cache", Checkbox(title=_("Quiet cache"), label=_("Enable"))),
-            ("sdr_cache_recreate", Checkbox(title=_("SDR cache recreate"), label=_("Enable"))),
-            ("interpret_oem_data", Checkbox(title=_("OEM data interpretation"), label=_("Enable"))),
-            ("output_sensor_state", Checkbox(title=_("Sensor state"), label=_("Enable"))),
-            ("output_sensor_thresholds", Checkbox(title=_("Sensor threshold"), label=_("Enable"))),
+            (
+                "ipmi_driver",
+                TextInput(
+                    title=_("IPMI driver"),
+                ),
+            ),
+            (
+                "driver_type",
+                TextInput(
+                    title=_("IPMI driver type"),
+                    help=_("Driver type to use instead of doing an auto selection"),
+                ),
+            ),
+            (
+                "BMC_key",
+                TextInput(
+                    title=_("BMC key"),
+                    help=_(
+                        "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
+                    ),
+                ),
+            ),
+            (
+                "quiet_cache",
+                Checkbox(
+                    title=_("Quiet cache"),
+                    label=_("Enable"),
+                    help=("Do not output information about cache creation/deletion"),
+                ),
+            ),
+            (
+                "sdr_cache_recreate",
+                Checkbox(
+                    title=_("SDR cache recreate"),
+                    label=_("Enable"),
+                    help=_("Automatically recreate the sensor data repository (SDR) cache"),
+                ),
+            ),
+            (
+                "interpret_oem_data",
+                Checkbox(
+                    title=_("OEM data interpretation"),
+                    label=_("Enable"),
+                    help=_("Attempt to interpret OEM data"),
+                ),
+            ),
+            (
+                "output_sensor_state",
+                Checkbox(
+                    title=_("Sensor state"),
+                    label=_("Enable"),
+                    help=_("Output sensor state"),
+                ),
+            ),
+            (
+                "output_sensor_thresholds",
+                Checkbox(
+                    title=_("Sensor threshold"),
+                    label=_("Enable"),
+                    help=_("Output sensor thresholds"),
+                ),
+            ),
             (
                 "ignore_not_available_sensors",
-                Checkbox(title=_("Suppress not available sensors"), label=_("Enable")),
+                Checkbox(
+                    title=_("Suppress not available sensors"),
+                    label=_("Enable"),
+                    help=_("Ignore not-available (i.e. N/A) sensors in output"),
+                ),
             ),
         ],
         optional_keys=[
@@ -1881,8 +1993,28 @@ def _special_agents_ipmi_sensors_vs_freeipmi():
 
 def _special_agents_ipmi_sensors_vs_ipmitool():
     return Dictionary(
-        elements=_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
-        optional_keys=[],
+        elements=[
+            *_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
+            (
+                "intf",
+                DropdownChoice(
+                    title=_("IPMI Interface"),
+                    help=_(
+                        "IPMI Interface to be used. If not specified, the default interface as set "
+                        "at compile time will be used."
+                    ),
+                    choices=[
+                        ("open", "open - Linux OpenIPMI Interface (default)"),
+                        ("imb", "imb - Intel IMB Interface"),
+                        ("lan", "lan - IPMI v1.5 LAN Interface"),
+                        ("lanplus", "lanplus - IPMI v2.0 RMCP+ LAN Interface"),
+                    ],
+                ),
+            ),
+        ],
+        optional_keys=[
+            "intf",
+        ],
     )
 
 
@@ -3747,7 +3879,7 @@ def _valuespec_special_agents_aws():
                                     size=32,
                                 ),
                             ),
-                            ("proxy_password", TextInput(title=_("Password"))),
+                            ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
                         ],
                         optional_keys=["proxy_port", "proxy_user", "proxy_password"],
                     ),
@@ -3796,7 +3928,11 @@ def _valuespec_special_agents_aws():
                                     totext=_("Monitor costs and usage"),
                                     title=_("Costs and usage (CE)"),
                                 ),
-                            )
+                            ),
+                            (
+                                "route53",
+                                FixedValue(None, totext=_("Monitor Route53"), title=_("Route53")),
+                            ),
                         ],
                     ),
                 ),

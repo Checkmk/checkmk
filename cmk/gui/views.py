@@ -231,9 +231,6 @@ from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language: Union[bool, None, str] = False
-
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
 multisite_painter_options: Dict[str, Any] = {}
@@ -354,8 +351,7 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
 
 def _has_children(struct_tree, invpath):
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
-    node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
-    if node is None or node.is_empty():
+    if (node := struct_tree.get_node(parsed_path)) is None or node.is_empty():
         return False
     return True
 
@@ -1198,18 +1194,11 @@ class GUIViewRenderer(ABCViewRenderer):
         pass
 
 
-# Load all view plugins
-def load_plugins(force):
-    global loaded_with_language
-
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        clear_alarm_sound_states()
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
-    clear_alarm_sound_states()
 
     transform_old_dict_based_icons()
 
@@ -1244,11 +1233,6 @@ def load_plugins(force):
     # TODO: Kept for compatibility with pre 1.6 plugins
     for ident, spec in multisite_sorters.items():
         register_sorter(ident, spec)
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
     visuals.declare_visual_permissions("views", _("views"))
 
@@ -1439,12 +1423,12 @@ def show_create_view_dialog(next_url=None):
             _("View"),
             breadcrumb,
             form_name="create_view",
-            button_name="save",
+            button_name="_save",
             save_title=_("Continue"),
         ),
     )
 
-    if request.var("save") and transactions.check_transaction():
+    if request.var("_save") and transactions.check_transaction():
         try:
             ds = vs_ds.from_html_vars("ds")
             vs_ds.validate_value(ds, "ds")
@@ -1549,7 +1533,7 @@ def format_view_title(name, view):
 
     title_parts.append("%s (%s)" % (_u(view["title"]), name))
 
-    return " - ".join(title_parts)
+    return " - ".join(map(str, title_parts))
 
 
 def view_editor_options():
@@ -2564,13 +2548,6 @@ def _do_table_join(
         row["JOIN"] = joininfo
 
 
-g_alarm_sound_states: Set[str] = set([])
-
-
-def clear_alarm_sound_states() -> None:
-    g_alarm_sound_states.clear()
-
-
 def save_state_for_playing_alarm_sounds(row: "Row") -> None:
     if not config.enable_sounds or not config.sounds:
         return
@@ -2591,11 +2568,14 @@ def save_state_for_playing_alarm_sounds(row: "Row") -> None:
         except KeyError:
             continue
 
-        g_alarm_sound_states.add(state_name)
+        g.setdefault("alarm_sound_states", set()).add(state_name)
 
 
 def play_alarm_sounds() -> None:
     if not config.enable_sounds or not config.sounds:
+        return
+
+    if "alarm_sound_states" not in g:
         return
 
     url = config.sound_url
@@ -2603,7 +2583,7 @@ def play_alarm_sounds() -> None:
         url += "/"
 
     for state_name, wav in config.sounds:
-        if not state_name or state_name in g_alarm_sound_states:
+        if not state_name or state_name in g.alarm_sound_states:
             html.play_sound(url + wav)
             break  # only one sound at one time
 
@@ -2848,13 +2828,12 @@ def _get_context_page_menu_topics(
 
         by_topic.setdefault(topic, []).append(entry)
 
-    availability_entry = _get_availability_entry(view, info, is_single_info)
-    if availability_entry:
-        by_topic.setdefault(topics["history"], []).append(availability_entry)
+    if user.may("pagetype_topic.history"):
+        if availability_entry := _get_availability_entry(view, info, is_single_info):
+            by_topic.setdefault(topics["history"], []).append(availability_entry)
 
-    combined_graphs_entry = _get_combined_graphs_entry(view, info, is_single_info)
-    if combined_graphs_entry:
-        by_topic.setdefault(topics["history"], []).append(combined_graphs_entry)
+        if combined_graphs_entry := _get_combined_graphs_entry(view, info, is_single_info):
+            by_topic.setdefault(topics["history"], []).append(combined_graphs_entry)
 
     # Return the sorted topics
     for topic, entries in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title())):

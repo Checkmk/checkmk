@@ -1874,3 +1874,11 @@ class ActivateChanges(BaseSchema):
         missing=False,
         example=False,
     )
+
+
+class X509ReqPEM(BaseSchema):
+    csr = fields.X509ReqPEMField(
+        required=True,
+        example="-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----\n",
+        description="PEM-encoded X.509 CSR.",
+    )

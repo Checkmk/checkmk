@@ -36,7 +36,7 @@ def test_match_item_generator_ec_rule_packs_and_rules():
     ) == [
         MatchItem(
             title="rule_pack_id (Rule pack)",
-            topic="Event Console rule packages",
+            topic="Event Console rule packs",
             url="wato.py?mode=mkeventd_rules&rule_pack=rule_pack_id",
             match_texts=["rule pack", "rule_pack_id"],
         ),
@@ -48,7 +48,7 @@ def test_match_item_generator_ec_rule_packs_and_rules():
         ),
         MatchItem(
             title="mkp_rule_pack_id (MKP Rule pack)",
-            topic="Event Console rule packages",
+            topic="Event Console rule packs",
             url="wato.py?mode=mkeventd_rules&rule_pack=mkp_rule_pack_id",
             match_texts=["mkp rule pack", "mkp_rule_pack_id"],
         ),

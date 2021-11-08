@@ -20,6 +20,7 @@ $warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
 $danger: rgb(255, 50, 50);
 $success: rgb(19, 211, 137);
 $success-dimmed: darken($success, 5%);
+$success-dimmed-2: darken($success, 15%);
 $info: rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
 $grey-1: rgb(250, 250, 250);
 $midgrey: rgb(220, 220, 220);
@@ -32,6 +33,7 @@ $grey-5: rgb(40, 40, 40);
 $grey-6: rgb(33, 33, 33);
 $green-1: rgb(170, 255, 187);
 $orange-1: rgb(255, 160, 66);
+$orange-2: darken($orange-1, 15%);
 $red-1: rgb(247, 197, 197);
 $red-2: rgb(130, 50, 50);
 
@@ -45,8 +47,6 @@ $font-family-courier: courier, monospace;
 
 $font-color-white: $white;
 $font-color-black: $black;
-$font-color-green: $success; // TODO: use a better color in the light theme?
-$font-color-orange: $orange-1; // TODO: use a better color in the light theme?
 $font-color-red: $danger;
 $font-color-blue-1: rgb(90, 103, 130);
 $font-color-blue-2: rgb(0, 0, 153);
@@ -72,7 +72,7 @@ $spacing-double: (2 * $spacing);
 $menu-item-spacing: (2.2 * $spacing);
 
 $theme-border-radius: 4px;
-$single-column-mega-menu-width: 340px;
+$single-column-mega-menu-width: 360px;
 $theme-snapin-width: 240px;
 $timerange-width: 800px;
 /* TODO: There are two implementations of toggle switches. One in _wato.scss

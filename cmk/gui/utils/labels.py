@@ -15,7 +15,8 @@ from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redi
 from cmk.utils.type_defs import Labels as _Labels
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import g, user
+from cmk.gui.globals import user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 
 if TYPE_CHECKING:
@@ -124,15 +125,17 @@ class LabelsCache:
                 all_labels.update(labels)
         return all_labels
 
-    def _livestatus_get_labels(self, only_sites: List[str]) -> List[Dict[SiteId, _Labels]]:
+    def _livestatus_get_labels(
+        self, only_sites: List[str]
+    ) -> Tuple[Mapping[SiteId, _Labels], Mapping[SiteId, _Labels]]:
         """Get labels for all sites that need an update and the user is authorized for"""
-        query: str = "GET services\n" "Cache: reload\n" "Columns: host_labels labels\n"  #  #
+        query: str = "GET services\n" "Cache: reload\n" "Columns: host_labels labels\n"
 
         with sites.prepend_site(), sites.only_sites(only_sites):
             rows = [(x[0], x[1], x[2]) for x in sites.live(user).query(query)]
 
-        host_labels: Dict[SiteId, _Labels] = {}
-        service_labels: Dict[SiteId, _Labels] = {}
+        host_labels: Dict[SiteId, Dict[str, str]] = {}
+        service_labels: Dict[SiteId, Dict[str, str]] = {}
         for row in rows:
             site_id = row[0]
             host_label = row[1]
@@ -144,7 +147,7 @@ class LabelsCache:
             for key, value in service_label.items():
                 service_labels.setdefault(site_id, {}).update({key: value})
 
-        return [host_labels, service_labels]
+        return (host_labels, service_labels)
 
     def _redis_update_labels(self, pipeline: Pipeline) -> None:
         """Set cache for all sites that need an update"""
@@ -158,7 +161,7 @@ class LabelsCache:
 
     def _redis_delete_old_and_set_new(
         self,
-        labels: Dict[SiteId, _Labels],
+        labels: Mapping[SiteId, _Labels],
         label_type: str,
         pipeline: Pipeline,
     ) -> None:
@@ -217,7 +220,6 @@ class LabelsCache:
         return IntegrityCheckResponse.USE
 
 
+@request_memoize()
 def get_labels_cache() -> LabelsCache:
-    if "labels_cache" not in g:
-        g.labels_cache = LabelsCache()
-    return g.labels_cache
+    return LabelsCache()

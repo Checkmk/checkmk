@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import typing
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import (
@@ -23,6 +23,9 @@ from typing import (
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import UserId
+
+from cmk.gui.exceptions import FinalizeRequest
+from cmk.gui.utils.speaklater import LazyString
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
 LivestatusQuery = str
@@ -71,7 +74,7 @@ PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
 
 class PainterSpec(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "PainterSpec",
         [
             ("painter_name", PainterNameSpec),
@@ -188,7 +191,7 @@ class TopicMenuTopic(NamedTuple):
 
 class MegaMenu(NamedTuple):
     name: str
-    title: str
+    title: Union[str, LazyString]
     icon: Icon
     sort_index: int
     topics: Callable[[], List[TopicMenuTopic]]
@@ -211,9 +214,38 @@ class SearchResult:
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
+
+
+class _UnitInfoRequired(TypedDict):
+    title: str
+    symbol: str
+    render: Callable[[Any], str]
+    js_render: str
+
+
+class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
+    id: str
+    stepping: str
+    color: str
+    graph_unit: Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
+    description: str
+    valuespec: Any  # TODO: better typing
+
+
+class TranslatedMetric(TypedDict):
+    orig_name: List[str]
+    value: float
+    scalar: Dict[str, float]
+    scale: List[float]
+    auto_graph: bool
+    title: str
+    unit: UnitInfo
+    color: str
+
+
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
-TranslatedMetrics = Dict[str, Dict[str, Any]]
+TranslatedMetrics = Dict[str, TranslatedMetric]
 PerfometerSpec = Dict[str, Any]
 PerfdataTuple = Tuple[
     str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]
@@ -229,6 +261,9 @@ class RenderableRecipe(NamedTuple):
     visible: bool
 
 
+ActionResult = Optional[FinalizeRequest]
+
+
 @dataclass
 class ViewProcessTracking:
     amount_unfiltered_rows: int = 0
@@ -237,3 +272,18 @@ class ViewProcessTracking:
     duration_fetch_rows: Snapshot = Snapshot.null()
     duration_filter_rows: Snapshot = Snapshot.null()
     duration_view_render: Snapshot = Snapshot.null()
+
+
+CustomAttr = typing.TypedDict(
+    "CustomAttr",
+    {
+        "title": str,
+        "help": str,
+        "name": str,
+        "topic": str,
+        "type": str,
+        "add_custom_macro": bool,
+        "show_in_table": bool,
+    },
+    total=True,
+)

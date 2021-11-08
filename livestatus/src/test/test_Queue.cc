@@ -124,7 +124,6 @@ public:
     class MoveOnly {
     public:
         explicit MoveOnly(std::string id) : id_{std::move(id)} {};
-        ~MoveOnly() = default;
         MoveOnly(const MoveOnly&) = delete;
         MoveOnly& operator=(const MoveOnly&) = delete;
         MoveOnly(MoveOnly&&) noexcept = default;

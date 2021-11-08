@@ -41,7 +41,6 @@ from cmk.gui.plugins.userdb.utils import (
     save_connection_config,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     add_change,
     IndividualOrStoredPassword,
     make_action_link,
@@ -53,6 +52,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.sites import get_login_sites
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (

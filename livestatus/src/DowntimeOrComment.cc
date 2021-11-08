@@ -18,8 +18,6 @@ DowntimeOrComment::DowntimeOrComment(host *hst, service *svc,
     , _comment(dt->comment_data)
     , _id(id) {}
 
-DowntimeOrComment::~DowntimeOrComment() = default;
-
 Downtime::Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt)
     : DowntimeOrComment(hst, svc, dt, dt->downtime_id)
     , _start_time{std::chrono::system_clock::from_time_t(dt->start_time)}

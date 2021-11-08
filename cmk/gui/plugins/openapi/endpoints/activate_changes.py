@@ -17,7 +17,7 @@ You can find an introduction to the configuration of Checkmk including activatio
 """
 
 from cmk.gui import fields, watolib
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
@@ -48,9 +48,15 @@ ACTIVATION_ID = {
         302: (
             "The activation is still running. Redirecting to the " "'Wait for completion' endpoint."
         ),
+        401: (
+            "The API user may not activate another users changes, "
+            "or the user may and activation was not forced explicitly."
+        ),
+        409: "Some sites could not be activated.",
         422: "There are no changes to be activated.",
+        423: "There is already an activation running.",
     },
-    additional_status_codes=[302, 422],
+    additional_status_codes=[302, 401, 409, 422, 423],
     request_schema=request_schemas.ActivateChanges,
     response_schema=response_schemas.DomainObject,
 )
@@ -58,10 +64,11 @@ def activate_changes(params):
     """Activate pending changes"""
     body = params["body"]
     sites = body["sites"]
-    with may_fail(MKUserError, status=400):
+    with may_fail(MKUserError), may_fail(MKAuthException, status=401):
         activation_id = watolib.activate_changes_start(
             sites, force_foreign_changes=body["force_foreign_changes"]
         )
+
     if body["redirect"]:
         wait_for = _completion_link(activation_id)
         response = Response(status=302)

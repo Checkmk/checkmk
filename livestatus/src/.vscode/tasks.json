@@ -1,0 +1,223 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "_Build_ Test",
+            "detail": "Build test_cmc",
+            "type": "shell",
+            "command": "make CXXFLAGS='-g -O0 -Wall -Wextra' ./test_cmc",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "_Exec_ Test",
+            "type": "shell",
+            "command": "./.f12",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/test"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "_Build_ DEBUG Core and _Copy_",
+            "type": "shell",
+            "command": "CORE_CXX_FLAGS='-g -O0 -Wall -Wextra' ONLY_COPY=1 ./.f12",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "_Build_ Core and _Copy_",
+            "type": "shell",
+            "command": "ONLY_COPY=1 ./.f12",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run IWYU",
+            "detail": "IWYU for the current file",
+            "type": "shell",
+            "command": "FILES_TO_CHECK=${file} make iwyu",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run All IWYU",
+            "detail": "IWYU for all changed files",
+            "type": "shell",
+            //"command": "git diff --name-only | grep .cc | while read in; do FILES_TO_CHECK=/home/sk/git/check_mk/${in} make iwyu; done",
+            "command": "git log --name-only --pretty=\"format:\"  HEAD^..HEAD | grep .cc | while read in; do FILES_TO_CHECK=/home/sk/git/check_mk/${in} make iwyu; done",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run cppcheck",
+            "detail": "cppcheck for project",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "cppcheck"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run TIDY",
+            "detail": "TIDY for the current file",
+            "type": "shell",
+            "command": "FILES_TO_CHECK=${file} make tidy",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run All TIDY",
+            "detail": "TIDY for All Changed Files",
+            "type": "shell",
+            //"command": "git diff --name-only | grep .cc | while read in; do FILES_TO_CHECK=/home/sk/git/check_mk/${in} make tidy; done",
+            "command": "git log --name-only --pretty=\"format:\"  HEAD^..HEAD  | grep .cc | while read in; do FILES_TO_CHECK=/home/sk/git/check_mk/${in} make tidy; done",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build and Run C++",
+            "type": "shell",
+            "command": "g++ -g -Wall -std=c++17 \"${fileDirname}/${fileBasename}\" -o \"    \" && \"${fileDirname}/${fileBasenameNoExtension}\"",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build and Run C++ (Multiple cpp files)",
+            "type": "shell",
+            "command": "g++ -g -Wall -std=c++17 \"${fileDirname}\"/*.cpp -o \"${fileDirname}/${fileBasenameNoExtension}\" && \"${fileDirname}/${fileBasenameNoExtension}\"",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build C++",
+            "type": "shell",
+            "command": "g++ -g -Wall -std=c++17 \"${fileDirname}/${fileBasename}\" -o \"${fileDirname}/${fileBasenameNoExtension}\"",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build C++ (Multiple cpp files)",
+            "type": "shell",
+            "command": "g++ -g -Wall -std=c++17 \"${fileDirname}/*.cpp\" -o \"${fileDirname}/${fileBasenameNoExtension}\"",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        }
+    ]
+}

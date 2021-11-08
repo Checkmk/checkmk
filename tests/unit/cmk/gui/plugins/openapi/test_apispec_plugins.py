@@ -3,12 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# yapf: disable
+from typing import Type
 
 import pytest
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import fields, post_load, Schema
+from marshmallow import fields, post_load, Schema, ValidationError
+from marshmallow.base import SchemaABC
 
-from cmk.gui.plugins.openapi.plugins import ValueTypedDictMarshmallowPlugin, ValueTypedDictSchema
+from cmk.gui.fields.base import ValueTypedDictSchema
+from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 
 
 class Movie:
@@ -29,14 +33,38 @@ class Movie:
 
 
 MOVIES = {
-    "Solyaris": {"director": "Andrei Tarkovsky", "year": 1972},
-    "Stalker": {"director": "Andrei Tarkovsky", "year": 1979},
+    'Solyaris': {
+        'title': 'Solyaris',
+        'director': 'Andrei Tarkovsky',
+        'year': 1972
+    },
+    'Stalker': {
+        'title': 'Stalker',
+        'director': 'Andrei Tarkovsky',
+        'year': 1979
+    },
 }
 
-EXPECTED_MOVIES = [
-    Movie(director="Andrei Tarkovsky", year=1972, title="Solyaris"),
-    Movie(director="Andrei Tarkovsky", year=1979, title="Stalker"),
-]
+BROKEN_MOVIE = {
+    'Plan 9 from Outer Space': {
+        'title': None,
+        'director': None,
+        'year': 1957,
+    },
+}
+
+EXPECTED_MOVIES = {
+    'Solyaris': Movie(**{
+        'title': 'Solyaris',
+        'director': 'Andrei Tarkovsky',
+        'year': 1972
+    }),
+    'Stalker': Movie(**{
+        'title': 'Stalker',
+        'director': 'Andrei Tarkovsky',
+        'year': 1979
+    }),
+}
 
 
 class MovieSchema(Schema):
@@ -49,45 +77,90 @@ class MovieSchema(Schema):
         return Movie(**data)
 
 
-class MoviesSchema(ValueTypedDictSchema):
-    key_name = "title"
-    keep_key = False
+class MovieDictSchema(ValueTypedDictSchema):
     value_type = MovieSchema
 
 
-@pytest.fixture(name="spec")
+class CustomTagDictSchema(ValueTypedDictSchema):
+    value_type = (fields.String(
+        description="Tag value here",
+        pattern="foo|bar",
+        required=True,
+    ),)
+
+
+class IntegerDictSchema(ValueTypedDictSchema):
+    value_type = (fields.Integer(),)
+
+
+class EmailSchema(ValueTypedDictSchema):
+    value_type = (fields.Email(),)
+
+
+@pytest.fixture(name="spec", scope='function')
 def spec_fixture():
-    return APISpec(
-        title="Sensationalist Witty Title",
-        version="1.0.0",
-        openapi_version="3.0.0",
-        plugins=[
-            ValueTypedDictMarshmallowPlugin(),
-        ],
-    )
+    return APISpec(title='Sensationalist Witty Title',
+                   version='1.0.0',
+                   openapi_version='3.0.0',
+                   plugins=[
+                       CheckmkMarshmallowPlugin(),
+                   ])
+
+
+def test_apispec_plugin_string_to_schema_dict(spec):
+    # Schema suffix of schemas gets stripped by library
+    spec.components.schema('MovieDict', schema=MovieDictSchema)
+
+    schemas = spec.to_dict()['components']['schemas']
+    assert schemas['MovieDict'] == {
+        u'type': u'object',
+        u'additionalProperties': {
+            '$ref': '#/components/schemas/Movie'
+        }
+    }
+
+
+def test_apispec_plugin_string_to_string_dict(spec):
+    # Schema suffix of schemas gets stripped by library
+    spec.components.schema('CustomTagDict', schema=CustomTagDictSchema)
+    schemas = spec.to_dict()['components']['schemas']
+    assert schemas['CustomTagDict'] == {
+        u'type': u'object',
+        u'additionalProperties': {
+            'type': 'string',
+            'description': 'Tag value here',
+            'pattern': 'foo|bar',
+            'required': True,
+        }
+    }
 
 
 def test_apispec_plugin_parameters(spec):
     # Different code paths are executed here. We need to make sure our plugin handles this.
-    spec.components.parameter("var", "path", {"description": "Some path variable"})
+    spec.components.parameter('var', 'path', {'description': "Some path variable"})
 
 
-def test_apispec_plugin_value_typed_dict(spec):
-    # Schema suffix of schemas gets stripped by library
-    spec.components.schema("Movies", schema=MoviesSchema)
+@pytest.mark.parametrize(
+    ['schema_class', 'in_data', 'expected_result'],
+    [
+        (MovieDictSchema, MOVIES, EXPECTED_MOVIES),
+        (IntegerDictSchema, {'foo': 1}, {'foo': 1}),
+        (EmailSchema, {'bob': 'bob@example.com'}, {'bob': 'bob@example.com'}),
+    ],
+)
+def test_typed_dictionary_success(schema_class: Type[SchemaABC], in_data, expected_result):
+    schema = schema_class()
+    result = schema.load(in_data)
+    assert result == expected_result
+    assert schema.dump(result) == in_data
 
-    schemas = spec.to_dict()["components"]["schemas"]
-    assert schemas["Movies"] == {
-        "type": "object",
-        "additionalProperties": {"$ref": "#/components/schemas/Movie"},
-    }
 
-
-def test_apispec_load():
-    result = MoviesSchema().load(MOVIES)
-    assert sorted(result) == sorted(EXPECTED_MOVIES)
-
-
-def test_apispec_dump():
-    result = MoviesSchema().dump(EXPECTED_MOVIES)
-    assert result == MOVIES
+@pytest.mark.parametrize(['schema_class', 'in_data'], [
+    (MovieDictSchema, BROKEN_MOVIE),
+    (IntegerDictSchema, {'bar': 'eins'}),
+    (EmailSchema, {'hans': 'foo'}),
+])
+def test_typed_dictionary_failed_validation(schema_class, in_data):
+    schema = schema_class()
+    with pytest.raises(ValidationError):
+        schema.load(in_data)

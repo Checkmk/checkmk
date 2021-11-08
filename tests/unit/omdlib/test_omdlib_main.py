@@ -7,8 +7,10 @@
 # pylint: disable=redefined-outer-name
 import os
 import re
+from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
 import omdlib
 import omdlib.main
@@ -22,12 +24,18 @@ def _strip_ansi(s):
     return ansi_escape.sub("", s)
 
 
-def test_initialize_site_ca(monkeypatch, tmp_path):
+def test_initialize_site_ca(
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> None:
     site_id = "tested"
     ca_path = tmp_path / site_id / "etc" / "ssl"
     ca_path.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch.setattr(omdlib.certs.CertificateAuthority, "ca_path", property(lambda x: ca_path))
+    mocker.patch(
+        "omdlib.main.cert_dir",
+        return_value=ca_path,
+    )
 
     omdlib.main.initialize_site_ca(omdlib.main.SiteContext(site_id))
     assert (ca_path / "ca.pem").exists()

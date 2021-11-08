@@ -13,7 +13,7 @@
 # node1 76123   123123
 # node2 7612311 123123
 
-NetappApiTimeEntry = collections.namedtuple(
+NetappApiTimeEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "NetappApiTimeEntry",
     [
         "agent_time",

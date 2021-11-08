@@ -14,14 +14,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 
 from cmk.base import item_state  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.checking_classes import (
-    CheckPlugin,
-    Metric,
-    Result,
-    Service,
-    ServiceLabel,
-    State,
-)
+from cmk.base.api.agent_based.checking_classes import CheckPlugin, Metric, Result, Service, State
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias
 
@@ -110,7 +103,7 @@ def _create_discovery_function(
                 yield Service(
                     item=element.item,
                     parameters=wrap_parameters(element.parameters or {}),
-                    labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
+                    # there used to be labels, but they are no longer supported
                 )
                 continue
 

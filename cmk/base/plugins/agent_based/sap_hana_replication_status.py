@@ -29,9 +29,9 @@ def parse_sap_hana_replication_status(string_table: StringTable) -> sap_hana.Par
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         inst = {}
         for line in lines:
-            if line[0] == "mode:":
+            if line[0].lower() == "mode:":
                 inst["mode"] = line[1]
-            elif line[0] == "systemReplicationStatus:":
+            elif line[0].lower() in ["systemreplicationstatus:", "returncode:"]:
                 inst["sys_repl_status"] = line[1]
         section.setdefault(sid_instance, inst)
 
@@ -46,8 +46,11 @@ register.agent_section(
 
 def discovery_sap_hana_replication_status(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for sid_instance, data in section.items():
-        if data["sys_repl_status"] != "10" and (
-            data.get("mode", "").lower() == "primary" or data.get("mode", "").lower() == "sync"
+        if not data or (
+            data["sys_repl_status"] != "10"
+            and (
+                data.get("mode", "").lower() == "primary" or data.get("mode", "").lower() == "sync"
+            )
         ):
             yield Service(item=sid_instance)
 

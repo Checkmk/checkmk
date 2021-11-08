@@ -133,6 +133,16 @@ def test_discovery_windows_services(params, discovered_services):
             ],
         ),
         (
+            "WSearch",
+            {
+                "else": 0,
+                "states": [],
+            },
+            [
+                Result(state=state.OK, summary="Windows Search: stopped (start type is demand)"),
+            ],
+        ),
+        (
             "NonExistent",
             {
                 "states": [(None, "demand", 1)],

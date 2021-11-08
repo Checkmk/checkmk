@@ -32,6 +32,7 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import get_labels
 
@@ -237,12 +238,12 @@ class Filter(abc.ABC):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         info: str,
         htmlvars: List[str],
         link_columns: List[ColumnName],
-        description: Optional[str] = None,
+        description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
     ) -> None:
         """
@@ -260,13 +261,21 @@ class Filter(abc.ABC):
                        service_description filters with exact match)
         """
         self.ident = ident
-        self.title = title
+        self._title = title
         self.sort_index = sort_index
         self.info = info
         self.htmlvars = htmlvars
         self.link_columns = link_columns
-        self.description = description
+        self._description = description
         self.is_show_more = is_show_more
+
+    @property
+    def title(self) -> str:
+        return str(self._title)
+
+    @property
+    def description(self) -> Optional[str]:
+        return str(self._description)
 
     def available(self) -> bool:
         """Some filters can be unavailable due to the configuration
@@ -337,7 +346,7 @@ class FilterTristate(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         info: str,
         column: Optional[str],
@@ -388,7 +397,7 @@ class FilterTime(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         info: str,
         column: Optional[str],

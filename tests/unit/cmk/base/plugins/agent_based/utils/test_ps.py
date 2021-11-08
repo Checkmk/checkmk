@@ -178,7 +178,7 @@ PROCESSES = [
         (
             PROCESSES,
             (
-                "name /bin/sh, user root, virtual size 1234kB,"
+                "name /bin/sh, user root, virtual size 1.21 MiB,"
                 " arguments --feen-gibt-es-nicht quark --invert\r\n"
             ),
             False,
@@ -187,7 +187,7 @@ PROCESSES = [
             PROCESSES,
             (
                 "<table><tr><th>name</th><th>user</th><th>virtual size</th><th>arguments</th></tr>"
-                "<tr><td>/bin/sh</td><td>root</td><td>1234kB</td>"
+                "<tr><td>/bin/sh</td><td>root</td><td>1.21 MiB</td>"
                 "<td>--feen-gibt-es-nicht quark --invert</td></tr></table>"
             ),
             True,

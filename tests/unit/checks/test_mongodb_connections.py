@@ -108,7 +108,7 @@ def test_check_function(
         check_used_percentage(check_result.subresults[1], state_expected_perc, info_expected_perc)
         # check_used_rate(check_result.subresults[2]....  we are not testing the get_rate function here assuming it works
     else:
-        assert False
+        raise AssertionError()
 
 
 def check_used_connection(

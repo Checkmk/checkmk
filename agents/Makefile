@@ -48,6 +48,11 @@ setversion:
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
+	pushd cmk-agent-ctl \
+	&& ../../scripts/run-cargo-command build --release \
+	&& popd \
+	&& mkdir -p linux \
+	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 

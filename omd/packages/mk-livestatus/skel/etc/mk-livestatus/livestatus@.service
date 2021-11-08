@@ -1,0 +1,9 @@
+[Unit]
+Description=Service for Livestatus Connection from %I
+
+[Service]
+; See `omdlib.contexts::SiteContext.replacements`.
+ExecStart=-###ROOT###/bin/unixcat ###ROOT###/tmp/run/live-tcp
+Type=oneshot
+StandardInput=socket
+LimitNPROC=500

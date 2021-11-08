@@ -67,8 +67,8 @@ def commit_id(directory) -> str:
 def cmk_branch(directory) -> str:
     return min(
         ("master", "2.0.0", "1.6.0", "1.5.0"),
-        key=lambda b: len(cmd_result(
-            f" git rev-list --max-count=1000 --count HEAD...origin/{b}", cwd=directory)))
+        key=lambda b: int(cmd_result(
+            f" git rev-list --max-count=1000 --count HEAD...origin/{b}", cwd=directory)[0]))
 
 
 def git_info():

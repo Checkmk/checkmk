@@ -90,6 +90,13 @@ RUN zypper ref -s \
     vim \
     && zypper clean -a
 
+# krb5-devel installs krb5-config which will be in $PATH when /etc/profile is sourced \
+# This is needed and expected by setup.py of pykerberos for properly linking against the needed libs.
+# However we're executing the make targets within the container in a "non-login" shell and /etc/profile is not sourced.
+# Sourcing this file during the container creation led to several other issues (no tty available etc.).
+# That's why, we're going this direct way now.
+ENV PATH="/usr/lib/mit/bin:${PATH}"
+
 # Install our standard tool chain for building
 # - gnu-toolchain is needed for compiling all the C++ stuff
 # - cmake is needed for e.g. building re2
@@ -112,7 +119,13 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
+
+# The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
+# using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can
+# simply solve this by pre-creating the empty file here.
+RUN touch /etc/fstab
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

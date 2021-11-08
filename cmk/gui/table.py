@@ -9,7 +9,6 @@ import re
 from contextlib import contextmanager, nullcontext
 from typing import (
     Any,
-    cast,
     ContextManager,
     Dict,
     Iterator,
@@ -22,8 +21,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
@@ -34,7 +31,7 @@ from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
 if TYPE_CHECKING:
-    from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
+    from cmk.gui.htmllib import HTMLContent
     from cmk.gui.type_defs import CSSSpec
 
 
@@ -56,13 +53,17 @@ class TableRow(NamedTuple):
     css: "CSSSpec"
     state: int
     fixed: bool
-    row_attributes: "HTMLTagAttributes"
+    id_: Optional[str]
+    onmouseover: Optional[str]
+    onmouseout: Optional[str]
 
 
 class GroupHeader(NamedTuple):
     title: str
     fixed: bool
-    row_attributes: "HTMLTagAttributes"
+    id_: Optional[str]
+    onmouseover: Optional[str]
+    onmouseout: Optional[str]
 
 
 TableRows = List[Union[TableRow, GroupHeader]]
@@ -71,7 +72,7 @@ TableRows = List[Union[TableRow, GroupHeader]]
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
-    title: "HTMLContent" = None,
+    title: Optional["HTMLContent"] = None,
     searchable: bool = True,
     sortable: bool = True,
     foldable: bool = False,
@@ -132,7 +133,7 @@ class Table:
     def __init__(
         self,
         table_id: Optional[str] = None,
-        title: "HTMLContent" = None,
+        title: Optional["HTMLContent"] = None,
         searchable: bool = True,
         sortable: bool = True,
         foldable: bool = False,
@@ -186,20 +187,24 @@ class Table:
 
     def row(
         self,
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
-        **attrs: Any,
+        id_: Optional[str] = None,
+        onmouseover: Optional[str] = None,
+        onmouseout: Optional[str] = None,
     ) -> None:
         self._finish_previous()
-        self.next_func = lambda: self._add_row(css, state, collect_headers, fixed, **attrs)
+        self.next_func = lambda: self._add_row(
+            css, state, collect_headers, fixed, id_, onmouseover, onmouseout
+        )
 
     def cell(
         self,
         title: "HTMLContent" = "",
         text: "HTMLContent" = "",
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -220,16 +225,26 @@ class Table:
 
     def _add_row(
         self,
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         state: int = 0,
         collect_headers: bool = True,
         fixed: bool = False,
-        **attrs: Any,
+        id_: Optional[str] = None,
+        onmouseover: Optional[str] = None,
+        onmouseout: Optional[str] = None,
     ) -> None:
         if self.next_header:
-            self.rows.append(GroupHeader(title=self.next_header, fixed=True, row_attributes=attrs))
+            self.rows.append(
+                GroupHeader(
+                    title=self.next_header,
+                    fixed=True,
+                    id_=id_,
+                    onmouseover=onmouseover,
+                    onmouseout=onmouseout,
+                )
+            )
             self.next_header = None
-        self.rows.append(TableRow([], css, state, fixed, attrs))
+        self.rows.append(TableRow([], css, state, fixed, id_, onmouseover, onmouseout))
         if collect_headers:
             if self.options["collect_headers"] is False:
                 self.options["collect_headers"] = True
@@ -244,7 +259,7 @@ class Table:
         self,
         title: "HTMLContent" = "",
         text: "HTMLContent" = "",
-        css: "CSSSpec" = None,
+        css: Optional["CSSSpec"] = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -364,7 +379,7 @@ class Table:
 
     def _evaluate_user_opts(self) -> Tuple[TableRows, bool, Optional[str]]:
         assert self.id is not None
-        table_id = ensure_str(self.id)
+        table_id = self.id
         rows = self.rows
 
         search_term = None
@@ -476,21 +491,14 @@ class Table:
             oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
 
-            if row.css:
-                if isinstance(row.css, list):
-                    class_.extend([c for c in row.css if c is not None])
-                else:
-                    class_.append(row.css)
-            else:
-                for k in ["class_", "class"]:
-                    if k in row.row_attributes:
-                        cls_spec = cast("CSSSpec", row.row_attributes.pop(k))
-                        if isinstance(cls_spec, list):
-                            class_.extend([c for c in cls_spec if c is not None])
-                        elif cls_spec is not None:
-                            class_.append(cls_spec)
+            if isinstance(row.css, list):
+                class_.extend([c for c in row.css if c is not None])
+            elif row.css is not None:
+                class_.append(row.css)
 
-            html.open_tr(class_=class_, **row.row_attributes)
+            html.open_tr(
+                class_=class_, id_=row.id_, onmouseover=row.onmouseover, onmouseout=row.onmouseout
+            )
             for col_index, cell in enumerate(row.cells):
                 if self.options["omit_empty_columns"] and empty_columns[col_index]:
                     continue

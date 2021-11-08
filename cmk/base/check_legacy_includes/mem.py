@@ -23,7 +23,11 @@ factory_settings["memory_default_levels"] = {
 }
 
 
-class MemBytes(NamedTuple("MemBytes", [("bytes", int), ("kb", float), ("mb", float)])):
+class MemBytes(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
+        "MemBytes", [("bytes", int), ("kb", float), ("mb", float)]
+    )
+):
     def __new__(cls, value):
         return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 

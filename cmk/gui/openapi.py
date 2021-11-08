@@ -15,10 +15,6 @@ from openapi_spec_validator import validate_spec  # type: ignore[import]
 from cmk.utils import version
 from cmk.utils.site import omd_site
 
-# NOTE
-# This import needs to be here, because the decorators populate the
-# ENDPOINT_REGISTRY. If this didn't happen, the SPEC would be incomplete.
-import cmk.gui.plugins.openapi  # pylint: disable=unused-import
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -34,7 +30,9 @@ if not version.is_raw_edition():
 
 def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, Any]:
     endpoint: Endpoint
+
     methods = ["get", "put", "post", "delete"]
+
     for endpoint in sorted(
         ENDPOINT_REGISTRY, key=lambda e: (e.func.__module__, methods.index(e.method))
     ):

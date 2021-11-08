@@ -23,7 +23,7 @@
 
   #mk_side_search_monitoring,
   #mk_side_search_setup {
-    max-width: 250px;
+    width: 250px;
     padding: (2 * $spacing) 0 (2 * $spacing) (2 * $spacing);
     box-sizing: border-box;
 
@@ -142,7 +142,7 @@
           padding: 2px 5px;
           color: $font-color-white;
           white-space: nowrap;
-          background-color: $danger;
+          background-color: $color-state-2-background;
           border-radius: $theme-border-radius;
         }
       }
@@ -163,6 +163,7 @@
       bottom: 0;
       left: 64px;
       z-index: 1000;
+      min-width: $single-column-mega-menu-width;
       padding-bottom: $megamenu-spacing-bottom;
       background-color: $base-color;
       border-right: $popup-border;
@@ -170,10 +171,6 @@
 
       &.min {
         left: 48px;
-      }
-
-      &.single_column {
-        width: $single-column-mega-menu-width;
       }
 
       a {
@@ -239,9 +236,7 @@
           width: $single-column-mega-menu-width;
 
           li a {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            @include ellipsis-text-overflow;
           }
         }
 
@@ -370,8 +365,11 @@
           }
 
           &.extended {
-            width: auto;
-            max-width: 100%;
+            &:not(.single_column) {
+              width: auto;
+              max-width: 100%;
+            }
+
             padding-top: 0;
             overflow-x: hidden;
             overflow-y: scroll;
@@ -480,7 +478,7 @@
         right: 4px;
         padding: 2px 4px 0;
         color: $font-color-white;
-        background-color: $danger;
+        background-color: $color-state-2-background;
         border-radius: 8px;
       }
     }

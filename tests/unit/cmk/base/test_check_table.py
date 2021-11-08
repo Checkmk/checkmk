@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Dict, List
+from typing import Dict, List, Mapping, Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -14,6 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 # No stub file
 from tests.testlib.base import Scenario
 
+from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -21,6 +22,43 @@ from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.check_table import HostCheckTable
 from cmk.base.check_utils import Service, ServiceID
+
+
+@pytest.mark.usefixtures("fix_register")
+def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
+
+    node = HostName("node")
+    cluster = HostName("cluster")
+
+    service_id = CheckPluginName("smart_temp"), "auto-clustered"
+
+    ts = Scenario()
+    ts.add_host("node")
+    ts.add_cluster("cluster", nodes=["node"])
+    ts.set_ruleset(
+        "clustered_services",
+        [([], ["node"], ["Temperature SMART auto-clustered$"])],
+    )
+    ts.set_autochecks("node", [Service(*service_id, "Temperature SMART auto-clustered", {})])
+    ts.apply(monkeypatch)
+
+    # a rule for the node:
+    monkeypatch.setattr(
+        config,
+        "_get_configured_parameters",
+        lambda host, plugin, item: (
+            TimespecificParameters(
+                (TimespecificParameterSet.from_parameters({"levels_for_node": (1, 2)}),)
+            )
+            if host == node
+            else TimespecificParameters()
+        ),
+    )
+
+    clustered_service = check_table.get_check_table(cluster)[service_id]
+    assert clustered_service.parameters.entries == (
+        TimespecificParameterSet.from_parameters({"levels": (35, 40)}),
+    )
 
 
 # TODO: This misses a lot of cases
@@ -230,7 +268,7 @@ def test_get_check_table_of_mgmt_boards(
     monkeypatch: MonkeyPatch, hostname_str: str, expected_result: List[ServiceID]
 ) -> None:
     hostname = HostName(hostname_str)
-    autochecks = {
+    autochecks: Mapping[str, Sequence[Service[LegacyCheckParameters]]] = {
         "mgmt-board-ipmi": [
             Service(
                 CheckPluginName("mgmt_ipmi_sensors"),
@@ -282,7 +320,7 @@ def test_get_check_table_of_mgmt_boards(
     "hostname_str,expected_result",
     [
         ("df_host", [(CheckPluginName("df"), "/snap/core/9066")]),
-        # old format, without TimespecificParamList
+        # old format, without TimespecificParameters
         ("df_host_1", [(CheckPluginName("df"), "/snap/core/9067")]),
         ("df_host_2", [(CheckPluginName("df"), "/snap/core/9068")]),
     ],
@@ -420,11 +458,10 @@ def test_check_table__get_static_check_entries(
     monkeypatch: MonkeyPatch, check_group_parameters: LegacyCheckParameters
 ) -> None:
     hostname = HostName("hostname")
-    static_parameters = {
-        "levels": (1, 2, 3, 4),
-    }
+
+    static_parameters_default = {"levels": (1, 2, 3, 4)}
     static_checks: Dict[str, List] = {
-        "ps": [(("ps", "item", static_parameters), [], [hostname], {})],
+        "ps": [(("ps", "item", static_parameters_default), [], [hostname], {})],
     }
 
     ts = Scenario().add_host(hostname)
@@ -460,7 +497,8 @@ def test_check_table__get_static_check_entries(
 
     host_config = config_cache.get_host_config(hostname)
     static_check_parameters = [
-        service.parameters for service in check_table._get_static_check_entries(host_config)
+        service.parameters
+        for service in check_table._get_static_check_entries(config_cache, host_config)
     ]
 
     entries = config._get_checkgroup_parameters(
@@ -476,4 +514,9 @@ def test_check_table__get_static_check_entries(
 
     assert len(static_check_parameters) == 1
     static_check_parameter = static_check_parameters[0]
-    assert static_check_parameter == static_parameters
+    assert static_check_parameter == TimespecificParameters(
+        (
+            TimespecificParameterSet(static_parameters_default, ()),
+            TimespecificParameterSet({}, ()),
+        )
+    )

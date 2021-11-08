@@ -21,9 +21,10 @@ import cmk.gui.permissions as permissions
 import cmk.gui.sites as sites
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, local
+from cmk.gui.globals import config, local, request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
+from cmk.gui.utils.transaction_manager import TransactionManager
 
 
 class LoggedInUser:
@@ -35,6 +36,7 @@ class LoggedInUser:
 
     def __init__(self, user_id: Optional[str]) -> None:
         self.id = UserId(user_id) if user_id else None
+        self.transactions = TransactionManager(request, self)
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)

@@ -149,7 +149,7 @@ class IsValidRegexp(Validator):
 HOST_NAME_RE = re.compile(f"^{HOST_NAME_REGEXP}$")
 
 
-class ValidateHostName:
+class ValidateHostName(Validator):
     def __call__(self, value, **kwargs):
         if HOST_NAME_RE.match(value):
             return True

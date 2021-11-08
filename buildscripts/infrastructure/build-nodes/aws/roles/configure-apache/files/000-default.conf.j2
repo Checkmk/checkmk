@@ -1,7 +1,11 @@
 <VirtualHost *:80>
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/html
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        Include /etc/apache2/sites-available/default_site.conf
 </VirtualHost>
 
 <VirtualHost _default_:443>
@@ -38,9 +42,6 @@
         # after it has been globally disabled with "a2disconf".
         #Include conf-available/serve-cgi-bin.conf
 
-        RewriteEngine On
-        RewriteCond %{SERVER_PORT} !^443$
-        RewriteRule (.*) https://%{HTTP_HOST}/$1 [L]
         RequestHeader set X-Forwarded-Proto https
         Include /etc/apache2/sites-available/default_site.conf
 </VirtualHost>

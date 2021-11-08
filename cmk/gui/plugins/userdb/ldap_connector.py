@@ -51,6 +51,7 @@ from six import ensure_str
 import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -90,6 +91,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
+if cmk_version.is_managed_edition():
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+else:
+    managed = None  # type: ignore[assignment]
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -384,7 +390,7 @@ class LDAPUserConnector(UserConnector):
 
     def _get_nearest_dc_from_cache(self) -> Optional[str]:
         try:
-            return ensure_str(self._nearest_dc_cache_filepath().open(encoding="utf-8").read())
+            return self._nearest_dc_cache_filepath().open(encoding="utf-8").read()
         except IOError:
             pass
         return None
@@ -427,7 +433,7 @@ class LDAPUserConnector(UserConnector):
             if "bind" in self._config:
                 self._bind(
                     self._replace_macros(self._config["bind"][0]),
-                    self._config["bind"][1],
+                    ("password", self._config["bind"][1][1]),
                     catch=False,
                     conn=conn,
                 )
@@ -447,8 +453,11 @@ class LDAPUserConnector(UserConnector):
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
         try:
+            # ? user_dn seems to have the type str
             conn.simple_bind_s(ensure_str(user_dn), password_store.extract(password))
             self._logger.info("  SUCCESS")
+        except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
+            raise
         except ldap.LDAPError as e:
             self._logger.info("  FAILED (%s: %s)" % (e.__class__.__name__, e))
             if catch:
@@ -501,9 +510,8 @@ class LDAPUserConnector(UserConnector):
     def _user_id_attr(self):
         return self._config.get("user_id", self.ldap_attr("user_id")).lower()
 
-    # TODO: Add .lower() here and remove at call sites
     def _member_attr(self):
-        return self._config.get("group_member", self.ldap_attr("member"))
+        return self._config.get("group_member", self.ldap_attr("member")).lower()
 
     def has_bind_credentials_configured(self):
         return self._config.get("bind", ("", ""))[0] != ""
@@ -565,7 +573,7 @@ class LDAPUserConnector(UserConnector):
         page_size = self._config.get("page_size", 1000)
 
         lc = SimplePagedResultsControl(size=page_size, cookie="")
-
+        # ? base and filt seem to have type str
         base = ensure_str(base)
         filt = ensure_str(filt)
 
@@ -576,7 +584,7 @@ class LDAPUserConnector(UserConnector):
             msgid = self._ldap_obj.search_ext(
                 _escape_dn(base), scope, filt, columns, serverctrls=[lc]
             )
-
+            # ? what is the type of python LDAPObject.result function
             unused_code, response, unused_msgid, serverctrls = self._ldap_obj.result3(
                 msgid=msgid, timeout=self._config.get("response_timeout", 5)
             )
@@ -778,7 +786,7 @@ class LDAPUserConnector(UserConnector):
         # Filter out users by the optional filter_group
         filter_group_dn = self._config.get("user_filter_group", None)
         if filter_group_dn:
-            member_attr = self._member_attr().lower()
+            member_attr = self._member_attr()
             is_member = False
             for member in self._get_filter_group_members(filter_group_dn):
                 if member_attr == "memberuid" and raw_user_id == member:
@@ -810,7 +818,7 @@ class LDAPUserConnector(UserConnector):
         # Create filter by the optional filter_group
         filter_group_dn = self._config.get("user_filter_group", None)
         if filter_group_dn:
-            member_attr = self._member_attr().lower()
+            member_attr = self._member_attr()
             # posixGroup objects use the memberUid attribute to specify the group memberships.
             # This is the username instead of the users DN. So the username needs to be used
             # for filtering here.
@@ -867,7 +875,7 @@ class LDAPUserConnector(UserConnector):
 
     # TODO: Use get_group_memberships()?
     def _get_filter_group_members(self, filter_group_dn):
-        member_attr = self._member_attr().lower()
+        member_attr = self._member_attr()
 
         try:
             group = self._ldap_search(
@@ -915,7 +923,7 @@ class LDAPUserConnector(UserConnector):
     def _get_direct_group_memberships(self, filters: List[str], filt_attr: str) -> GroupMemberships:
         groups: GroupMemberships = {}
         filt = self.ldap_filter("groups")
-        member_attr = self._member_attr().lower()
+        member_attr = self._member_attr()
 
         if self.is_active_directory() or filt_attr != "distinguishedname":
             if filters:
@@ -1001,6 +1009,16 @@ class LDAPUserConnector(UserConnector):
             # here which seemed to be a performance problem. Resolving the nesting involves more single
             # queries but performs much better.
             for dn, cn in matched_groups.items():
+                # Avoid double escaping:
+                # self._ldap_search escapes the 'dn' but here we've got already escaped 'dn', ie.
+                # >>> s = u'cn=#my cn,ou=my_groups,ou=my_u,dc=my_dc,dc=my_dc'
+                # >>> s = s.replace("#", r"\#")
+                # u'cn=\\#my cn,ou=my_groups,ou=my_u,dc=my_dc,dc=my_dc'
+                # >>> s = s.replace("#", r"\#")
+                # u'cn=\\\\#my cn,ou=my_groups,ou=my_u,dc=my_dc,dc=my_dc'
+                # => Results in 'No such object'
+                dn = _unescape_dn(dn)
+
                 # Try to get members from group cache
                 try:
                     groups[dn] = self._group_cache[True][dn]
@@ -1081,7 +1099,7 @@ class LDAPUserConnector(UserConnector):
     #
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, user_id, password: _Tuple[str, str]) -> CheckCredentialsResult:
+    def check_credentials(self, user_id, password: str) -> CheckCredentialsResult:
         self.connect()
 
         # Did the user provide an suffix with his user_id? This might enforce
@@ -1111,7 +1129,7 @@ class LDAPUserConnector(UserConnector):
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
-            self._bind(user_dn, password)
+            self._bind(user_dn, ("password", password))
             if not self._has_suffix():
                 result = user_id
             else:
@@ -1123,6 +1141,11 @@ class LDAPUserConnector(UserConnector):
                     result = user_id
                 else:
                     result = self._add_suffix(user_id)
+        except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
+            self._logger.warning(
+                "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
+            )
+            result = False
         except Exception:
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False
@@ -1189,6 +1212,10 @@ class LDAPUserConnector(UserConnector):
             else:
                 user = new_user_template(self.id())
                 mode_create = True
+
+            if cmk_version.is_managed_edition():
+                user["customer"] = self._config.get("customer", managed.default_customer_id())
+
             return mode_create, user
 
         # Remove users which are controlled by this connector but can not be found in
@@ -1630,8 +1657,10 @@ def get_connection_choices(add_this=True):
 
 # This is either the user id or the user distinguished name,
 # depending on the LDAP server to communicate with
+# OPENLDAP _member_attr() -> memberuid
+# AD _member_attr() -> member
 def get_group_member_cmp_val(connection, user_id, ldap_user):
-    return user_id if connection._member_attr().lower() == "memberuid" else ldap_user["dn"]
+    return user_id.lower() if connection._member_attr() == "memberuid" else ldap_user["dn"]
 
 
 def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):

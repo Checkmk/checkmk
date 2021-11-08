@@ -19,6 +19,9 @@ REGEX_HOST_NAME = r"^[%s]+$" % REGEX_HOST_NAME_CHARS
 REGEX_GENERIC_IDENTIFIER_CHARS = r"-0-9a-zA-Z_."
 REGEX_GENERIC_IDENTIFIER = r"^[%s]+$" % REGEX_GENERIC_IDENTIFIER_CHARS
 
+# Start with a char, and no dots
+REGEX_ID = r"^[^\d\W][-\w]*$"
+
 
 def regex(pattern: str, flags: int = 0) -> Pattern[str]:
     """Compile regex or look it up in already compiled regexes.

@@ -1,12 +1,10 @@
-from collections import namedtuple
-
 import pytest
 from freezegun import freeze_time
 
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils import fileinfo as fileinfo_utils
-from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem, MetricInfo
+from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
 
 pytestmark = pytest.mark.checks
 

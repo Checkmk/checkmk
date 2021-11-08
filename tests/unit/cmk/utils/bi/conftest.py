@@ -17,8 +17,8 @@ from cmk.utils.bi.bi_searcher import BISearcher
 from .bi_test_data import sample_config
 
 
-@pytest.fixture(scope="function")
-def bi_searcher():
+@pytest.fixture(scope="function", name="bi_searcher")
+def _bi_searcher():
     yield BISearcher()
 
 

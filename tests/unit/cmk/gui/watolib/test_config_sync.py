@@ -25,8 +25,6 @@ import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.utils as utils
 from cmk.gui.globals import config
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
-
 
 @pytest.fixture(name="mocked_responses")
 def fixture_mocked_responses():
@@ -311,7 +309,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
             "etc/check_mk/conf.d/wato/groups.mk",
             "etc/check_mk/mkeventd.d/wato/rules.mk",
             "etc/check_mk/multisite.d/customer.mk",
-            "etc/check_mk/multisite.d/wato/bi.mk",
+            "etc/check_mk/multisite.d/wato/bi_config.bi",
             "etc/check_mk/multisite.d/wato/customers.mk",
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
@@ -465,7 +463,7 @@ def test_generate_pre_17_site_snapshot(
                 "mkeventd.tar": ["rules.mk"],
                 "check_mk.tar": ["groups.mk", "contacts.mk"],
                 "multisite.tar": [
-                    "bi.mk",
+                    "bi_config.bi",
                     "customers.mk",
                     "global.mk",
                     "groups.mk",

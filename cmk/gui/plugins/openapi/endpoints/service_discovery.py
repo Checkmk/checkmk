@@ -88,7 +88,7 @@ DISCOVERY_ACTION = {
 )
 def show_services(params):
     """Show all services of specific phase"""
-    host = watolib.Host.host(params["host_name"])
+    host = watolib.Host.load_host(params["host_name"])
     discovery_request = StartDiscoveryRequest(
         host=host,
         folder=host.folder(),
@@ -150,7 +150,7 @@ class UpdateDiscoveryPhase(BaseSchema):
 def update_service_phase(params):
     """Update the phase of a service"""
     body = params["body"]
-    host = watolib.Host.host(params["host_name"])
+    host = watolib.Host.load_host(params["host_name"])
     target_phase = body["target_phase"]
     check_type = body["check_type"]
     service_item = body["service_item"]
@@ -222,7 +222,7 @@ class DiscoverServices(BaseSchema):
 )
 def execute(params):
     """Execute a service discovery on a host"""
-    host = watolib.Host.host(params["host_name"])
+    host = watolib.Host.load_host(params["host_name"])
     body = params["body"]
     discovery_request = StartDiscoveryRequest(
         host=host,

@@ -9,7 +9,7 @@
 import copy
 import os
 from functools import partial
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from six import ensure_str
 
@@ -17,7 +17,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import DiscoveryResult
+from cmk.utils.type_defs import DiscoveryResult, TagID
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
@@ -38,7 +38,7 @@ from cmk.gui.plugins.webapi import (
     validate_config_hash,
     validate_host_attributes,
 )
-from cmk.gui.watolib.automations import execute_automation_discovery
+from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
@@ -297,8 +297,7 @@ class APICallHosts(APICallCollection):
         cluster_nodes = request.get("nodes")
 
         check_hostname(hostname, should_exist=True)
-
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
 
         # Deprecated, but still supported
         # Nodes are now specified in an extra key
@@ -330,7 +329,7 @@ class APICallHosts(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
         host.need_permission("read")
         if bool(int(request.get("effective_attributes", "0"))):
             attributes = host.effective_attributes()
@@ -368,7 +367,7 @@ class APICallHosts(APICallCollection):
         hostname = request["hostname"]
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
         host.folder().delete_hosts([host.name()])
 
     def _delete_hosts(self, request):
@@ -666,6 +665,7 @@ class APICallRules(APICallCollection):
         return ruleset_dict
 
     def _get(self, request):
+        # ? type of request argument in both _get and _set functions is unclear
         ruleset_name = ensure_str(request["ruleset_name"])
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         response = {"ruleset": ruleset_dict}
@@ -882,8 +882,10 @@ class APICallHosttags(APICallCollection):
                     used_tags.add((attr_name[4:], value))
         return used_tags
 
-    def _get_used_tags_from_rules(self):
-        used_tags = set()
+    def _get_used_tags_from_rules(
+        self,
+    ) -> Set[Tuple[TagID, Optional[TagID]]]:
+        used_tags: Set[Tuple[TagID, Optional[TagID]]] = set()
 
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
@@ -891,17 +893,20 @@ class APICallHosttags(APICallCollection):
             for _folder, _rulenr, rule in ruleset.get_rules():
                 for tag_group_id, tag_spec in rule.conditions.host_tags.items():
                     if isinstance(tag_spec, dict):
+                        # NOTE: mypy cannot distinguish variants of a union of TypedDicts. It would
+                        # be possible via the tagged union pattern, but this would alter the dicts.
+                        # https://mypy.readthedocs.io/en/stable/more_types.html#unions-of-typeddicts
                         if "$ne" in tag_spec:
-                            used_tags.add((tag_group_id, tag_spec["$ne"]))
+                            used_tags.add((tag_group_id, tag_spec["$ne"]))  # type: ignore[typeddict-item]
                             continue
 
                         if "$or" in tag_spec:
-                            for tag_id in tag_spec["$or"]:
+                            for tag_id in tag_spec["$or"]:  # type: ignore[typeddict-item,misc]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 
                         if "$nor" in tag_spec:
-                            for tag_id in tag_spec["$nor"]:
+                            for tag_id in tag_spec["$nor"]:  # type: ignore[typeddict-item,misc]
                                 used_tags.add((tag_group_id, tag_id))
                             continue
 
@@ -1124,7 +1129,7 @@ class APICallOther(APICallCollection):
 
         check_hostname(hostname, should_exist=True)
 
-        host = watolib.Host.host(hostname)
+        host = watolib.Host.load_host(hostname)
 
         host_attributes = host.effective_attributes()
 
@@ -1132,27 +1137,35 @@ class APICallOther(APICallCollection):
             # This is currently the only way to get some actual discovery statitics.
             # Start a dry-run -> Get statistics
             # Do an actual discovery on the nodes -> data is written
-            try_result = watolib.check_mk_automation(
-                host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname]
+            try_result = try_discovery(
+                host_attributes.get("site"),
+                ["@scan"],
+                hostname,
             )
 
             new = 0
             old = 0
-            for entry in try_result["check_table"]:
+            for entry in try_result.check_table:
                 if entry[0] == "new":
                     new += 1
                 elif entry[0] == "old":
                     old += 1
 
             result = DiscoveryResult(self_new=new, self_kept=old, self_total=new + old)
-            watolib.check_mk_automation(
-                host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes()
+            discovery(
+                host_attributes.get("site"),
+                mode,
+                ["@scan"],
+                host.cluster_nodes(),
             )
         else:
-            response = execute_automation_discovery(
-                site_id=host_attributes.get("site"), args=["@scan", mode, hostname]
-            )
-            result = response.results[hostname]
+            result = discovery(
+                host_attributes.get("site"),
+                mode,
+                ["@scan"],
+                [hostname],
+                non_blocking_http=True,
+            ).hosts[hostname]
 
         if result.error_text:
             if not host.discovery_failed():

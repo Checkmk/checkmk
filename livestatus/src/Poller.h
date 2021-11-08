@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "BitMask.h"
+#include "ChronoUtils.h"
 #include "Logger.h"
 
 enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
@@ -34,13 +35,12 @@ public:
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
         // https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
         do {
-            auto millis =
-                std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+            auto millis = mk::ticks<std::chrono::milliseconds>(timeout);
             // The cast below is OK because int has at least 32 bits on all
             // platforms we care about: The timeout is then limited to 24.85
             // days, which should be more than enough for our needs.
             retval = ::poll(_pollfds.data(), _pollfds.size(),
-                            static_cast<int>(millis.count()));
+                            static_cast<int>(millis));
         } while (retval == -1 && errno == EINTR);
 
         return retval;

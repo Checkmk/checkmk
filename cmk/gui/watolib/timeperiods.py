@@ -9,7 +9,8 @@ from typing import Dict
 import cmk.utils.store as store
 from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec
 
-from cmk.gui.globals import config, g
+from cmk.gui.globals import config
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
@@ -32,13 +33,10 @@ def builtin_timeperiods() -> TimeperiodSpecs:
     }
 
 
+@request_memoize()
 def load_timeperiods() -> TimeperiodSpecs:
-    if "timeperiod_information" in g:
-        return g.timeperiod_information
     timeperiods = store.load_from_mk_file(wato_root_dir() + "timeperiods.mk", "timeperiods", {})
     timeperiods.update(builtin_timeperiods())
-
-    g.timeperiod_information = timeperiods
     return timeperiods
 
 
@@ -55,7 +53,7 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
         _filter_builtin_timeperiods(timeperiods),
         pprint_value=config.wato_pprint_config,
     )
-    g.timeperiod_information = timeperiods
+    load_timeperiods.cache_clear()
 
 
 def save_timeperiod(name, timeperiod) -> None:

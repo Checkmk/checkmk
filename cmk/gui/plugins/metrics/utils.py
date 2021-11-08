@@ -14,6 +14,7 @@ from itertools import chain
 from typing import (
     Any,
     Callable,
+    cast,
     Container,
     Dict,
     Iterable,
@@ -21,20 +22,22 @@ from typing import (
     List,
     Mapping,
     Optional,
+    overload,
+    Sequence,
     Set,
     Tuple,
+    TypedDict,
     TypeVar,
     Union,
 )
 
 from six import ensure_str
 
-import livestatus
-
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
-from cmk.utils.prediction import livestatus_lql
+from cmk.utils.plugin_registry import Registry
+from cmk.utils.prediction import livestatus_lql, TimeSeries
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
 from cmk.utils.type_defs import ServiceName
@@ -45,13 +48,19 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.plugins.views import data_source_registry, DataSourceLivestatus
+from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers, get_only_sites_from_context
 from cmk.gui.type_defs import (
+    Choice,
     Choices,
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,
     Row,
+    TranslatedMetric,
     TranslatedMetrics,
+    UnitInfo,
+    VisualContext,
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
@@ -59,6 +68,7 @@ from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
 )
+from cmk.gui.visuals import collect_filters
 
 LegacyPerfometer = Tuple[str, Any]
 Atom = TypeVar("Atom")
@@ -66,6 +76,48 @@ TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 GraphTemplate = Dict[str, Any]
 GraphRecipe = Dict[str, Any]
+RRDData = Dict[Tuple[str, str, str, str, str, str], TimeSeries]
+
+
+class CheckMetricEntry(TypedDict, total=False):
+    scale: float
+    name: str
+    auto_graph: bool
+    deprecated: str
+
+
+class MetricInfo(TypedDict, total=False):
+    # title, unit and color should be required, but metric_info.get(xxx, {}) is
+    # used and is not compatible with requied keys
+    title: str
+    unit: str
+    color: str
+    help: str
+    render: Callable[[Union[float, int]], str]
+
+
+class MetricInfoExtended(TypedDict, total=False):
+    # this is identical to MetricInfo except unit, but one can not override the
+    # type of a field so we have to copy everything from MetricInfo
+    title: str
+    unit: UnitInfo
+    color: str
+    help: str
+    render: Callable[[Union[float, int]], str]
+
+
+class NormalizedPerfData(TypedDict):
+    orig_name: List[str]
+    value: float
+    scalar: Dict[str, float]
+    scale: List[float]
+    auto_graph: bool
+
+
+class TranslationInfo(TypedDict):
+    name: str
+    scale: float
+    auto_graph: bool
 
 
 class AutomaticDict(OrderedDict):
@@ -83,9 +135,9 @@ class AutomaticDict(OrderedDict):
 
 
 # TODO: Refactor to plugin_registry structures
-unit_info: Dict[str, Any] = {}
-metric_info: Dict[str, Dict[str, Any]] = {}
-check_metrics: Dict[str, Dict[str, Any]] = {}
+unit_info: Dict[str, UnitInfo] = {}
+metric_info: Dict[str, MetricInfo] = {}
+check_metrics: Dict[str, Dict[str, CheckMetricEntry]] = {}
 perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
@@ -307,7 +359,7 @@ def _split_perf_data(perf_data_string: str) -> List[str]:
     return shlex.split(perf_data_string)
 
 
-def perfvar_translation(perfvar_name, check_command):
+def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInfo:
     """Get translation info for one performance var."""
     cm = check_metrics.get(check_command, {})
     translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
@@ -327,7 +379,7 @@ def perfvar_translation(perfvar_name, check_command):
     }
 
 
-def scalar_bounds(perfvar_bounds, scale):
+def scalar_bounds(perfvar_bounds, scale) -> Dict[str, float]:
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
@@ -340,10 +392,10 @@ def scalar_bounds(perfvar_bounds, scale):
     return scalars
 
 
-def normalize_perf_data(perf_data, check_command):
+def normalize_perf_data(perf_data, check_command) -> Tuple[str, NormalizedPerfData]:
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
-    new_entry = {
+    new_entry: NormalizedPerfData = {
         "orig_name": [perf_data[0]],
         "value": perf_data[1] * translation_entry["scale"],
         "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
@@ -355,11 +407,11 @@ def normalize_perf_data(perf_data, check_command):
     return translation_entry["name"], new_entry
 
 
-def get_metric_info(metric_name: str, color_index: int) -> Tuple[Dict[str, str], int]:
+def get_metric_info(metric_name: str, color_index: int) -> Tuple[MetricInfoExtended, int]:
 
     if metric_name not in metric_info:
         color_index += 1
-        mi = {
+        mi: MetricInfo = {
             "title": metric_name.title(),
             "unit": "",
             "color": get_palette_color_by_index(color_index),
@@ -367,10 +419,12 @@ def get_metric_info(metric_name: str, color_index: int) -> Tuple[Dict[str, str],
     else:
         mi = metric_info[metric_name].copy()
 
-    mi["unit"] = unit_info[mi["unit"]]
-    mi["color"] = parse_color_into_hexrgb(mi["color"])
+    mie: MetricInfoExtended = {}
+    mie.update(mi)  # type: ignore # https://github.com/python/mypy/issues/6462
+    mie["unit"] = unit_info[mi["unit"]]
+    mie["color"] = parse_color_into_hexrgb(mi["color"])
 
-    return mi, color_index
+    return mie, color_index
 
 
 def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetrics:
@@ -381,14 +435,25 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     Result for this example:
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
-    translated_metrics: Dict[str, Dict[str, Any]] = {}
+    translated_metrics: TranslatedMetrics = {}
     color_index = 0
     for entry in perf_data:
+        metric_name: str
 
-        metric_name, new_entry = normalize_perf_data(entry, check_command)
-
+        metric_name, normalized = normalize_perf_data(entry, check_command)
         mi, color_index = get_metric_info(metric_name, color_index)
-        new_entry.update(mi)
+        # https://github.com/python/mypy/issues/6462
+        # new_entry = normalized
+        new_entry: TranslatedMetric = {
+            "orig_name": normalized["orig_name"],
+            "value": normalized["value"],
+            "scalar": normalized["scalar"],
+            "scale": normalized["scale"],
+            "auto_graph": normalized["auto_graph"],
+            "title": mi["title"],
+            "unit": mi["unit"],
+            "color": mi["color"],
+        }
 
         if metric_name in translated_metrics:
             translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])
@@ -477,6 +542,22 @@ def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]
     return expression, explicit_unit_name, explicit_color
 
 
+@overload
+def evaluate(
+    expression: str,
+    translated_metrics: TranslatedMetrics,
+) -> Tuple[float, UnitInfo, str]:
+    ...
+
+
+@overload
+def evaluate(
+    expression: Union[int, float],
+    translated_metrics: TranslatedMetrics,
+) -> Tuple[Optional[float], UnitInfo, str]:
+    ...
+
+
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -490,7 +571,7 @@ def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]
 def evaluate(
     expression: Union[str, int, float],
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, Dict[str, Any], str]:
+) -> Tuple[Optional[float], UnitInfo, str]:
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
 
@@ -510,7 +591,7 @@ def evaluate(
 def _evaluate_rpn(
     expression: str,
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, Dict[str, Any], str]:
+) -> Tuple[float, UnitInfo, str]:
     # stack of (value, unit, color)
     return stack_resolver(
         expression.split(","),
@@ -610,7 +691,7 @@ def _operator_minmax(a, b, func):
 def _evaluate_literal(
     expression: Union[int, float, str],
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, Dict[str, Any], str]:
+) -> Tuple[Optional[float], UnitInfo, str]:
     if isinstance(expression, int):
         return float(expression), unit_info["count"], "#000000"
 
@@ -635,7 +716,7 @@ def _evaluate_literal(
         value = translated_metrics[varname]["value"]
         color = translated_metrics[varname]["color"]
 
-    if percent:
+    if percent and value is not None:
         maxvalue = translated_metrics[varname]["scalar"]["max"]
         if maxvalue != 0:
             value = 100.0 * float(value) / maxvalue
@@ -647,6 +728,30 @@ def _evaluate_literal(
 
     return value, unit, color
 
+
+ExpressionParams = Sequence[Any]
+ExpressionFunc = Callable[[ExpressionParams, RRDData], Sequence[TimeSeries]]
+
+
+class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
+    def plugin_name(self, instance):
+        return instance._ident
+
+    def register_expression(self, ident: str) -> Callable[[ExpressionFunc], ExpressionFunc]:
+        def wrap(plugin_func: ExpressionFunc) -> ExpressionFunc:
+            if not callable(plugin_func):
+                raise TypeError()
+
+            # We define the attribute here. for the `plugin_name` method.
+            plugin_func._ident = ident  # type: ignore[attr-defined]
+
+            self.register(plugin_func)
+            return plugin_func
+
+        return wrap
+
+
+time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 # .
 #   .--Graphs--------------------------------------------------------------.
@@ -679,7 +784,7 @@ def get_graph_range(graph_template, translated_metrics):
 def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
-    def eval_to_string(match):
+    def eval_to_string(match) -> str:
         expression = match.group()[2:-1]
         value, unit, _color = evaluate(expression, translated_metrics)
         if value is not None:
@@ -732,8 +837,7 @@ def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[Graph
 
 def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
     for graph_template in graph_info.values():
-        template = graph_template_for_metrics(graph_template, translated_metrics)
-        if template:
+        if template := graph_template_for_metrics(graph_template, translated_metrics):
             yield template
 
 
@@ -1138,49 +1242,60 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def find_host_services(
-    host_name: str, service_description: str = ""
-) -> Iterator[Tuple[str, str, Tuple[str, ...]]]:
-    if not host_name and not service_description:  # optimization: avoid query with empty result
-        return
-    # TODO: site hint!
+def find_metrics_of_query(
+    context: VisualContext,
+) -> Iterator[Tuple[ServiceName, str, Tuple[_MetricName, ...]]]:
+    datasource = cast(DataSourceLivestatus, data_source_registry["services"]())
+    filters = collect_filters(datasource.infos)
+    filterheaders = "".join(get_livestatus_filter_headers(context, filters))
+    selected_sites = get_only_sites_from_context(context)
 
+    # optimization: avoid query with unconstrained result
+    if not filterheaders and not selected_sites:
+        return
+    #
     # Also fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
-    query = (
-        "GET services\n"
-        "Columns: description check_command perf_data metrics host_check_command host_metrics \n"
-    )
-
-    if host_name:
-        query += "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
-
-    if service_description:
-        query += "Filter: service_description = %s\n" % livestatus.lqencode(service_description)
-
+    columns = [
+        "service_description",
+        "service_check_command",
+        "service_perf_data",
+        "service_metrics",
+        "host_check_command",
+        "host_metrics",
+    ]
     host_check_command, host_metrics = None, None
-    for (
-        svc_desc,
-        check_command,
-        perf_data,
-        rrd_metrics,
-        host_check_command,
-        host_metrics,
-    ) in sites.live().query(query):
-        parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
-        known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
-        yield svc_desc, check_command, tuple(known_metrics)
+    with sites.only_sites(selected_sites):
+        for (
+            svc_desc,
+            check_command,
+            perf_data,
+            rrd_metrics,
+            host_check_command,
+            host_metrics,
+        ) in sites.live().query(
+            "GET services\n" + "Columns: %s\n" % " ".join(columns) + filterheaders
+        ):
+            parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
+            known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
+            yield str(svc_desc), str(check_command), tuple(map(str, known_metrics))
 
     if host_check_command:
-        yield "_HOST_", host_check_command, tuple(host_metrics)
+        yield "_HOST_", str(host_check_command), tuple(map(str, host_metrics))
 
 
-def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tuple[str, str]]:
+def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         translated = perfvar_translation(perfvar, check_command)
         name = translated["name"]
         mi = metric_info.get(name, {})
         yield name, mi.get("title", name.title())
+
+
+def available_metrics(context: VisualContext) -> Iterator[Choice]:
+    options = set(find_metrics_of_query(context))
+    for _unused, check_command, metrics in options:
+        yield from metric_choices(check_command, metrics)
 
 
 @autocompleter_registry.register
@@ -1209,6 +1324,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         )
 
     def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
+        # ? DropdownChoiceValue is an alias for Any
         if value is not None and not self._regex.match(ensure_str(value)):
             raise MKUserError(varprefix, self._regex_error)
 
@@ -1230,23 +1346,28 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
     # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
     @classmethod
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-
-        def metrics():
-            options = set(find_host_services(params.get("host", ""), params.get("service", "")))
-            for _unused, check_command, metrics in options:
-                yield from metric_choices(check_command, metrics)
-
-        if not params.get("host") and not params.get("service"):
-            choices: Choices = [
+        host, service = params.get("host", ""), params.get("service", "")
+        if not any((host, service)):
+            all_registered_metrics = (
                 (metric_id, metric_detail["title"])
                 for metric_id, metric_detail in metric_info.items()
-            ]
-        else:
-            choices = list(set(metrics()))
+            )
+            return keep_sorted_match(value, all_registered_metrics)
 
-        return sorted(v for v in choices if value.lower() in v[1].lower())
+        params["context"] = {"host": {"host": host}, "service": {"service": service}}
+        return autocomplete_metric_choices(value, params)
+
+
+def keep_sorted_match(input_value: str, choices: Iterable[Choice]) -> Choices:
+
+    return sorted(v for v in choices if input_value.lower() in v[1].lower())
+
+
+def autocomplete_metric_choices(input_value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current field input_value and the completions_params to get the list of choices"""
+
+    return keep_sorted_match(input_value, set(available_metrics(params["context"])))
 
 
 # .

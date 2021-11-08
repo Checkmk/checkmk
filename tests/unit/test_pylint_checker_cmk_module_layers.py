@@ -6,7 +6,6 @@
 
 # pylint: disable=protected-access
 
-import itertools
 
 import pytest
 
@@ -48,8 +47,14 @@ def test__get_absolute_importee(
 
 
 @pytest.mark.parametrize("component", COMPONENT_LIST)
-def test_utils_import_ok(component):
-    for importee in ("cmk", "cmk.utils", "cmk.utils.anything"):
+def test_allowed_import_ok(component):
+    for importee in (
+        "cmk",
+        "cmk.utils",
+        "cmk.utils.anything",
+        "cmk.automations",
+        "cmk.automations.whatever",
+    ):
         is_ok = not _in_component(ModuleName(component), Component("cmk.base.plugins.agent_based"))
         assert is_ok is CHECKER._is_import_allowed(
             ModulePath("_not/relevant_"),
@@ -81,6 +86,12 @@ def test_utils_import_ok(component):
             "cmk.base.plugins.agent_based.bar",
             False,
         ),
+        # disallow import of `base` / `gui` in `automations`
+        ("cmk/automations", "cmk.automations.x", "cmk.base.a", False),
+        ("cmk/automations", "cmk.automations.y", "cmk.gui.b", False),
+        # alow import of `automations` in `base` / `gui`
+        ("cmk/base", "cmk.base.x", "cmk.automations.a", True),
+        ("cmk/gui", "cmk.gui.y", "cmk.automations.b", True),
     ],
 )
 def test__is_import_allowed(module_path, importer, importee, allowed):

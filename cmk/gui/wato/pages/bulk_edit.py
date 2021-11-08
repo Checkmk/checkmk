@@ -10,8 +10,6 @@ values."""
 from hashlib import sha256
 from typing import Optional, Type
 
-from six import ensure_binary
-
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
@@ -24,7 +22,8 @@ from cmk.gui.plugins.wato.utils import (
     get_hosts_from_checkboxes,
     mode_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
@@ -61,7 +60,7 @@ class ModeBulkEdit(WatoMode):
         changed_attributes = watolib.collect_attributes("bulk", new=False)
         host_names = get_hostnames_from_checkboxes()
         for host_name in host_names:
-            host = watolib.Folder.current().host(host_name)
+            host = watolib.Folder.current().load_host(host_name)
             host.update_attributes(changed_attributes)
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
@@ -73,7 +72,7 @@ class ModeBulkEdit(WatoMode):
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes()
         hosts = {host_name: watolib.Folder.current().host(host_name) for host_name in host_names}
-        current_host_hash = sha256(ensure_binary(repr(hosts))).hexdigest()
+        current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
         # and then another bulk edit has made, the attributes need to be reset before

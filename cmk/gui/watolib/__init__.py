@@ -123,12 +123,13 @@ from cmk.gui.watolib.analyze_configuration import (
 )
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
-    check_mk_automation,
-    check_mk_local_automation,
+    check_mk_local_automation_serialized,
     do_remote_automation,
     do_site_login,
     get_url,
+    local_automation_failure,
     MKAutomationException,
+    remote_automation_call_came_from_pre21,
 )
 from cmk.gui.watolib.changes import add_change, add_service_change, log_audit, make_diff_text
 from cmk.gui.watolib.config_domains import (

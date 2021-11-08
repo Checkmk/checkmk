@@ -22,7 +22,25 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
                 ["this", "system", "is", "not", "a", "system", "replication", "site"],
             ],
             {"HXE 90": {"sys_repl_status": "10", "mode": "primary"}},
-        )
+        ),
+        (
+            [
+                ["[[HXE", "90]]"],
+                ["Mode:", "primary"],
+                ["systemReplicationStatus:", "10"],
+                ["this", "system", "is", "not", "a", "system", "replication", "site"],
+            ],
+            {"HXE 90": {"sys_repl_status": "10", "mode": "primary"}},
+        ),
+        (
+            [
+                ["[[HXE", "90]]"],
+                ["mode:", "primary"],
+                ["ReturnCode:", "10"],
+                ["this", "system", "is", "not", "a", "system", "replication", "site"],
+            ],
+            {"HXE 90": {"sys_repl_status": "10", "mode": "primary"}},
+        ),
     ],
 )
 def test_parse_sap_hana_replication_status(fix_register, info, expected_result):
@@ -50,6 +68,12 @@ def test_parse_sap_hana_replication_status(fix_register, info, expected_result):
                 ["this", "system", "is", "not", "a", "system", "replication", "site"],
             ],
             [],
+        ),
+        (
+            [
+                ["[[HXE", "90]]"],
+            ],
+            [Service(item="HXE 90")],
         ),
     ],
 )

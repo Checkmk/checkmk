@@ -10,7 +10,7 @@ import time
 from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
-from cmk.gui import fields, userdb
+from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
@@ -20,15 +20,9 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
+from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib.users import delete_users, edit_users
-
-USERNAME = {
-    "username": fields.String(
-        description="The username to delete",
-        example="user",
-    )
-}
 
 TIMESTAMP_RANGE = Tuple[float, float]
 

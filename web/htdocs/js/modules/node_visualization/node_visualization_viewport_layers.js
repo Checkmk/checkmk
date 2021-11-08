@@ -27,7 +27,6 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
                 "Alpha: " +
                     node_visualization_layout_styles.force_simulation._simulation.alpha().toFixed(3)
             );
-        //        this._update_chunk_boundaries()
         if (this.overlay_active == this.viewport.layout_manager.edit_layout) return;
 
         if (this.viewport.layout_manager.edit_layout) this.enable_overlay();
@@ -68,26 +67,6 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
     enable_overlay() {
         this.overlay_active = true;
         this.anchor_info = this.selection.append("g").attr("transform", "translate(-50,-50)");
-        //        this.anchor_info.append("rect")
-        //            .attr("id", "horizontal")
-        //            .attr("x", -50)
-        //            .attr("height", 2)
-        //            .attr("fill", "black")
-        //        this.anchor_info.append("rect")
-        //            .attr("id", "vertical")
-        //            .attr("y", -50)
-        //            .attr("width", 2)
-        //            .attr("fill", "black")
-        //
-        //        this.anchor_info.append("text")
-        //            .attr("id", "horizontal_text")
-        //            .attr("x", -50)
-        //            .attr("y", -2)
-        //
-        //        this.anchor_info.append("text")
-        //            .attr("id", "vertical_text")
-        //            .attr("x", 2)
-        //            .attr("y", -42)
 
         this.div_selection
             .append("input")
@@ -861,8 +840,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         // Add optional click handler
         links.each((d, idx, nodes) => {
             if (d.on) {
-                d3.select(nodes[idx]).on("click", (event, d) => {
-                    d.on();
+                d3.select(nodes[idx]).on("click", event => {
+                    d.on(event);
                     this.remove_context_menu();
                 });
             }
@@ -890,4 +869,5 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 }
 
 node_visualization_utils.layer_registry.register(LayeredIconOverlay, 10);
+node_visualization_utils.layer_registry.register(LayeredDebugLayer, 20);
 node_visualization_utils.layer_registry.register(LayeredNodesLayer, 50);

@@ -28,58 +28,6 @@ def inventory_oracle_dataguard_stats(parsed):
         yield instance, {}
 
 
-def parsed_oracle_dataguard_stats(info):
-
-    parsed = {}
-
-    for line in info:
-        instance = {}
-        if len(line) >= 5:
-            db_name, db_unique_name, database_role, dgstat_parm, dgstat_value = line[:5]
-            instance = parsed.setdefault(
-                "%s.%s" % (db_name, db_unique_name),
-                {
-                    "database_role": database_role,
-                    "dgstat": {},
-                },
-            )
-            instance["dgstat"][dgstat_parm] = dgstat_value
-
-        if len(line) >= 6:
-            # new plugin output with switchover_status
-            instance["switchover_status"] = line[5]
-
-        if len(line) >= 13:
-            # new format for Broker and Observer information
-            instance.update(
-                {
-                    "broker_state": line[6],
-                    "protection_mode": line[7],
-                    "fs_failover_status": line[8],
-                    "fs_failover_observer_present": line[9],
-                    "fs_failover_observer_host": line[10],
-                    "fs_failover_target": line[11],
-                    "mrp_status": line[12],
-                }
-            )
-        if len(line) >= 14:
-            # new format with open_mode
-            instance.update(
-                {
-                    "broker_state": line[6],
-                    "protection_mode": line[7],
-                    "fs_failover_status": line[8],
-                    "fs_failover_observer_present": line[9],
-                    "fs_failover_observer_host": line[10],
-                    "fs_failover_target": line[11],
-                    "mrp_status": line[12],
-                    "open_mode": line[13],
-                }
-            )
-
-    return parsed
-
-
 def check_oracle_dataguard_stats(item, params, parsed):
     def get_seconds(timestamp):
         if not timestamp:
@@ -277,8 +225,8 @@ def check_oracle_dataguard_stats(item, params, parsed):
 
 
 check_info["oracle_dataguard_stats"] = {
+    # section is already migrated!
     "check_function": check_oracle_dataguard_stats,
-    "parse_function": parsed_oracle_dataguard_stats,
     "inventory_function": inventory_oracle_dataguard_stats,
     "service_description": "ORA %s Dataguard-Stats",
     "has_perfdata": True,

@@ -12,7 +12,6 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
@@ -144,7 +143,7 @@ PS_DISCOVERY_WATO_RULES = [
         "match": "~.*(fire)fox",
         "descr": "firefox is on %s",
         "user": None,
-        "label": DiscoveredHostLabels(HostLabel("marco", "polo"), HostLabel("peter", "pan")),
+        "label": {"marco": "polo", "peter": "pan"},
     },
     {
         "default_params": {
@@ -372,7 +371,7 @@ check_results = [
             notice=(
                 "<table><tr><th>name</th><th>user</th><th>virtual size</th>"
                 "<th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr>"
-                "<tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td>"
+                "<tr><td>emacs</td><td>on</td><td>1.00 GiB</td><td>296 MiB</td>"
                 "<td>Oct 23 2018 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
             ),
         ),
@@ -399,8 +398,8 @@ check_results = [
         Result(
             state=state.OK,
             notice=(
-                "name /usr/lib/firefox/firefox, user on, virtual size 2924232kB,"
-                " resident size 472252kB, creation time Oct 24 2018 04:38:07, pid 7912,"
+                "name /usr/lib/firefox/firefox, user on, virtual size 2.79 GiB,"
+                " resident size 461 MiB, creation time Oct 24 2018 04:38:07, pid 7912,"
                 " cpu usage 0.0%\r\n"
             ),
         ),
@@ -418,8 +417,8 @@ check_results = [
         Result(
             state=state.OK,
             notice=(
-                "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
-                " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
+                "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 10.9 MiB,"
+                " resident size 1.12 MiB, creation time Oct 24 2018 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\n"
             ),
         ),
@@ -440,10 +439,10 @@ check_results = [
         Result(
             state=state.OK,
             notice=(
-                "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
-                " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
+                "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 10.9 MiB,"
+                " resident size 1.12 MiB, creation time Oct 24 2018 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve,"
-                " virtual size 11180kB, resident size 1244kB, creation time Oct 24 2018 09:24:43, "
+                " virtual size 10.9 MiB, resident size 1.21 MiB, creation time Oct 24 2018 09:24:43, "
                 "pid 30136, cpu usage 0.0%\r\n"
             ),
         ),
@@ -461,8 +460,8 @@ check_results = [
         Result(
             state=state.OK,
             notice=(
-                "name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB,"
-                " resident size 1244kB, creation time Oct 24 2018 09:24:43, pid 30136,"
+                "name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 10.9 MiB,"
+                " resident size 1.21 MiB, creation time Oct 24 2018 09:24:43, pid 30136,"
                 " cpu usage 0.0%\r\n"
             ),
         ),
@@ -905,13 +904,13 @@ def test_cpu_util_single_process_levels(cpu_cores):
             state=state.OK,
             notice="\r\n".join(
                 [
-                    "name firefox, user on, virtual size 2275004kB, resident size 434008kB,"
+                    "name firefox, user on, virtual size 2.17 GiB, resident size 424 MiB,"
                     " creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%",
-                    "name firefox, user on, virtual size 1869920kB, resident size 359836kB,"
+                    "name firefox, user on, virtual size 1.78 GiB, resident size 351 MiB,"
                     " creation time Jan 01 1970 00:54:03, pid 25664, cpu usage 0.0%",
-                    "name firefox, user on, virtual size 7962644kB, resident size 229660kB,"
+                    "name firefox, user on, virtual size 7.59 GiB, resident size 224 MiB,"
                     " creation time Jan 01 1970 00:34:04, pid 25758, cpu usage 0.0%",
-                    "name firefox, user on, virtual size 1523536kB, resident size 83064kB,"
+                    "name firefox, user on, virtual size 1.45 GiB, resident size 81.1 MiB,"
                     " creation time Jan 01 1970 00:34:05, pid 25898, cpu usage %.1f%%\r\n"
                     % cpu_util,
                 ]

@@ -58,7 +58,7 @@ ETAG_IF_MATCH_HEADER = {
             "stored ETag needs to be the same as the one sent. The content of the ETag can "
             "potentially be anything and should be treated as semantically opaque."
         ),
-        example="a20ceacf346041dc",
+        example='"a20ceacf346041dc"',
     ),
 }
 
@@ -71,7 +71,7 @@ ETAG_HEADER_PARAM = {
             "Please note that the actual ETag returned by some endpoints "
             "may look different than the one shown in this example."
         ),
-        example="a20ceacf346041dc",
+        example='"a20ceacf346041dc"',
     )
 }
 
@@ -99,3 +99,10 @@ SITES = List(
     description="Restrict the query to this particular site.",
     missing=[],
 )
+
+USERNAME = {
+    "username": String(
+        description="A username.",
+        example="user",
+    )
+}

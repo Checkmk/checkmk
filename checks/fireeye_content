@@ -33,7 +33,7 @@ def parse_fireeye_content(info):
     except ValueError:
         update_time_seconds = None
 
-    SecurityContent = collections.namedtuple(
+    SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "SecurityContent", "version update_status update_time_str update_time_seconds"
     )
     return SecurityContent(version, update_status, update_time_str, update_time_seconds)

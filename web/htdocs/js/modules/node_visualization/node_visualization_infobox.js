@@ -116,9 +116,9 @@ class InfoboxNodeFormatter extends AbstractInfoboxFormatter {
             .each(function (d) {
                 d3.select(this).classed("state" + d.state, true);
             })
-            .on("click", d => this._zoom_node(d.name))
-            .on("mouseover", d => this._highlight_node(d.name, true))
-            .on("mouseout", d => this._highlight_node(d.name, false));
+            .on("click", (event, d) => this._zoom_node(d.name))
+            .on("mouseover", (event, d) => this._highlight_node(d.name, true))
+            .on("mouseout", (event, d) => this._highlight_node(d.name, false));
     }
 
     _highlight_node(node_id, highlight) {

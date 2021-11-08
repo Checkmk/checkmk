@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
 
 def _parameter_valuespec_fcp():
     return Dictionary(
+        ignored_keys=["inv_speed", "inv_state"],
         elements=[
             (
                 "speed",
@@ -100,7 +101,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fcp",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Port specification"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Port"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fcp,
         title=lambda: _("Fibrechannel Interfaces"),

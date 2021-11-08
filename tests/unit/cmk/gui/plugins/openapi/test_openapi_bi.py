@@ -12,7 +12,10 @@ def test_openapi_get_bi_packs(wsgi_app, with_automation_user):
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
-    response = wsgi_app.get(base + "/domain-types/bi_pack/collections/all")
+    response = wsgi_app.get(
+        base + "/domain-types/bi_pack/collections/all",
+        headers={"Accept": "application/json"},
+    )
     packs = json.loads(response.text)
     assert packs["domainType"] == "bi_pack"
     assert len(packs["value"]) == 1
@@ -25,7 +28,9 @@ def test_openapi_get_bi_pack(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_id = "default"
-    response = wsgi_app.get(base + "/objects/bi_pack/%s" % pack_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_pack/%s" % pack_id, headers={"Accept": "application/json"}, status=200
+    )
     pack = json.loads(response.text)
     assert pack["id"] == pack_id
     assert len(pack["members"]["rules"]["value"]) == 12
@@ -38,7 +43,11 @@ def test_openapi_get_bi_aggregation(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
-    response = wsgi_app.get(base + "/objects/bi_aggregation/%s" % aggr_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_aggregation/%s" % aggr_id,
+        headers={"Accept": "application/json"},
+        status=200,
+    )
     aggregation = json.loads(response.text)
     for required_key in [
         "aggregation_visualization",
@@ -59,7 +68,9 @@ def test_openapi_get_bi_rule(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
-    response = wsgi_app.get(base + "/objects/bi_rule/%s" % rule_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
+    )
     rule = json.loads(response.text)
     for required_key in [
         "computation_options",
@@ -80,7 +91,11 @@ def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
-    response = wsgi_app.get(base + "/objects/bi_aggregation/%s" % aggr_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_aggregation/%s" % aggr_id,
+        headers={"Accept": "application/json"},
+        status=200,
+    )
     aggregation = json.loads(response.text)
     assert aggregation["computation_options"]["disabled"]
     assert not aggregation["computation_options"]["escalate_downtimes_as_warn"]
@@ -92,11 +107,16 @@ def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
         base + "/objects/bi_aggregation/%s" % aggr_id,
         content_type="application/json",
         params=json.dumps(aggregation),
+        headers={"Accept": "application/json"},
         status=200,
     )
 
     # Verify changed configuration
-    response = wsgi_app.get(base + "/objects/bi_aggregation/%s" % aggr_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_aggregation/%s" % aggr_id,
+        headers={"Accept": "application/json"},
+        status=200,
+    )
     aggregation = json.loads(response.text)
     assert not aggregation["computation_options"]["disabled"]
     assert aggregation["computation_options"]["escalate_downtimes_as_warn"]
@@ -108,7 +128,9 @@ def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
-    response = wsgi_app.get(base + "/objects/bi_rule/%s" % rule_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
+    )
     rule = json.loads(response.text)
     rule["params"]["arguments"].append("OTHERARGUMENT")
 
@@ -118,10 +140,13 @@ def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
         content_type="application/json",
         params=json.dumps(rule),
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     # Verify changed configuration
-    response = wsgi_app.get(base + "/objects/bi_rule/%s" % rule_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
+    )
     rule = json.loads(response.text)
     assert "OTHERARGUMENT" in rule["params"]["arguments"]
 
@@ -132,7 +157,11 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
-    response = wsgi_app.get(base + "/objects/bi_aggregation/%s" % aggr_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_aggregation/%s" % aggr_id,
+        headers={"Accept": "application/json"},
+        status=200,
+    )
     aggr = json.loads(response.text)
 
     clone_id = "cloned_aggregation"
@@ -141,6 +170,7 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     wsgi_app.post(
         base + "/objects/bi_aggregation/%s" % aggr_id,
         content_type="application/json",
+        headers={"Accept": "application/json"},
         params=json.dumps(aggr),
         status=404,
     )
@@ -150,6 +180,7 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
         base + "/objects/bi_aggregation/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(aggr),
+        headers={"Accept": "application/json"},
         status=404,
     )
 
@@ -158,16 +189,23 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
         base + "/objects/bi_aggregation/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(aggr),
+        headers={"Accept": "application/json"},
         status=200,
     )
 
     # Verify cloned_rule configuration
-    response = wsgi_app.get(base + "/objects/bi_aggregation/%s" % clone_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_aggregation/%s" % clone_id,
+        headers={"Accept": "application/json"},
+        status=200,
+    )
     cloned_aggr = json.loads(response.text)
     assert cloned_aggr["id"] == clone_id
 
     # Verify changed pack size
-    response = wsgi_app.get(base + "/objects/bi_pack/default", status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_pack/default", headers={"Accept": "application/json"}, status=200
+    )
     pack = json.loads(response.text)
     assert len(pack["members"]["aggregations"]["value"]) == 2
 
@@ -178,7 +216,9 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
-    response = wsgi_app.get(base + "/objects/bi_rule/%s" % rule_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
+    )
     rule = json.loads(response.text)
 
     clone_id = "applications_clone"
@@ -188,6 +228,7 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
         base + "/objects/bi_rule/%s" % rule_id,
         content_type="application/json",
         params=json.dumps(rule),
+        headers={"Accept": "application/json"},
         status=404,
     )
 
@@ -196,6 +237,7 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
         base + "/objects/bi_rule/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(rule),
+        headers={"Accept": "application/json"},
         status=404,
     )
 
@@ -204,16 +246,21 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
         base + "/objects/bi_rule/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(rule),
+        headers={"Accept": "application/json"},
         status=200,
     )
 
     # Verify cloned_rule configuration
-    response = wsgi_app.get(base + "/objects/bi_rule/%s" % clone_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_rule/%s" % clone_id, headers={"Accept": "application/json"}, status=200
+    )
     cloned_rule = json.loads(response.text)
     assert cloned_rule["id"] == clone_id
 
     # Verify changed pack size
-    response = wsgi_app.get(base + "/objects/bi_pack/default", status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_pack/default", headers={"Accept": "application/json"}, status=200
+    )
     pack = json.loads(response.text)
     assert len(pack["members"]["rules"]["value"]) == 13
 
@@ -224,7 +271,9 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_id = "default"
-    response = wsgi_app.get(base + "/objects/bi_pack/%s" % pack_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_pack/%s" % pack_id, headers={"Accept": "application/json"}, status=200
+    )
     pack = json.loads(response.text)
 
     clone_id = "cloned_pack"
@@ -236,6 +285,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
         base + "/objects/bi_pack/%s" % pack_id,
         content_type="application/json",
         params=json.dumps(new_data),
+        headers={"Accept": "application/json"},
         status=404,
     )
 
@@ -244,11 +294,14 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
         base + "/objects/bi_pack/%s" % pack_id,
         content_type="application/json",
         params=json.dumps(new_data),
+        headers={"Accept": "application/json"},
         status=200,
     )
 
     # Verify that rules/aggregations remain unchanged
-    response = wsgi_app.get(base + "/objects/bi_pack/%s" % pack_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_pack/%s" % pack_id, headers={"Accept": "application/json"}, status=200
+    )
     pack = json.loads(response.text)
     assert len(pack["members"]["rules"]["value"]) == 12
     assert len(pack["members"]["aggregations"]["value"]) == 1
@@ -259,6 +312,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
         base + "/objects/bi_pack/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(new_data),
+        headers={"Accept": "application/json"},
         status=404,
     )
 
@@ -267,11 +321,14 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
         base + "/objects/bi_pack/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(new_data),
+        headers={"Accept": "application/json"},
         status=200,
     )
 
     # Verify cloned_pack configuration
-    response = wsgi_app.get(base + "/objects/bi_pack/%s" % clone_id, status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_pack/%s" % clone_id, headers={"Accept": "application/json"}, status=200
+    )
     cloned_pack = json.loads(response.text)
     assert cloned_pack["id"] == clone_id
 
@@ -297,19 +354,26 @@ def test_openapi_delete_pack(wsgi_app, with_automation_user):
         base + "/objects/bi_pack/test_pack",
         content_type="application/json",
         params=json.dumps(pack_data),
+        headers={"Accept": "application/json"},
         status=200,
     )
 
     # Verify creation
-    response = wsgi_app.get(base + "/objects/bi_pack/test_pack", status=200)
+    response = wsgi_app.get(
+        base + "/objects/bi_pack/test_pack", headers={"Accept": "application/json"}, status=200
+    )
     pack = json.loads(response.text)
     assert pack["title"] == "Test pack"
 
     # Delete pack
-    wsgi_app.delete(base + "/objects/bi_pack/test_pack", status=204)
+    wsgi_app.delete(
+        base + "/objects/bi_pack/test_pack", headers={"Accept": "application/json"}, status=204
+    )
 
     # Verify deletion
-    wsgi_app.get(base + "/objects/bi_pack/test_pack", status=404)
+    wsgi_app.get(
+        base + "/objects/bi_pack/test_pack", headers={"Accept": "application/json"}, status=404
+    )
 
 
 def test_openapi_delete_pack_forbidden(wsgi_app, with_automation_user):
@@ -318,4 +382,9 @@ def test_openapi_delete_pack_forbidden(wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
 
     # Check invalid POST request on existing id
-    wsgi_app.delete(base + "/objects/bi_pack/default", content_type="application/json", status=404)
+    wsgi_app.delete(
+        base + "/objects/bi_pack/default",
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        status=404,
+    )

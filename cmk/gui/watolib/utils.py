@@ -10,8 +10,6 @@ import pprint
 import re
 from typing import Any, Callable, List, Tuple, TypedDict, Union
 
-from six import ensure_binary, ensure_str
-
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 import cmk.utils.version as cmk_version
@@ -114,12 +112,12 @@ def format_config_value(value: Any) -> str:
 
 
 def mk_repr(x: Any) -> bytes:
-    return base64.b64encode(ensure_binary(repr(x)))
+    return base64.b64encode(repr(x).encode())
 
 
 def mk_eval(s: Union[bytes, str]) -> Any:
     try:
-        return ast.literal_eval(ensure_str(base64.b64decode(s)))
+        return ast.literal_eval(base64.b64decode(s).decode())
     except Exception:
         raise MKGeneralException(
             _("Unable to parse provided data: %s") % escape_html_permissive(repr(s))

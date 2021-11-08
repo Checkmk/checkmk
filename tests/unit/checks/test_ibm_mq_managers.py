@@ -11,6 +11,7 @@ import pytest
 from tests.testlib import Check
 
 from cmk.base.check_api import MKCounterWrapped  # noqa: F401 # pylint: disable=unused-import
+from cmk.base.plugins.agent_based.ibm_mq_managers import parse_ibm_mq_managers
 
 from .test_ibm_mq_include import parse_info
 
@@ -32,8 +33,7 @@ QMNAME(THE.SLEEPING.ONE)                                  STATUS(ENDED NORMALLY)
 QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTEDLY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation2) INSTPATH(/opt/mqm9) INSTVER(9.0.0.6) HA() DRROLE()
 """
     section = parse_info(lines, chr(10))
-    check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
     assert len(parsed) == 5
 
     attrs = parsed["THE.LOCAL.ONE"]
@@ -57,7 +57,7 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
 
     attrs = parsed["THE.LOCAL.ONE"]
     assert attrs["QMNAME"] == "THE.LOCAL.ONE"
@@ -82,7 +82,7 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
 
     attrs = parsed["THE.RDQM.ONE"]
     assert attrs["QMNAME"] == "THE.RDQM.ONE"
@@ -105,7 +105,8 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIV
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
+
     params: Dict[str, Any] = {}
     actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
@@ -119,7 +120,9 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIV
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.1)
 """
     section = parse_info(lines, chr(10))
-    parsed = check.run_parse(section)
+    check = Check(CHECK_NAME)
+    parsed = parse_ibm_mq_managers(section)
+
     actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
         (1, "Status: ENDED PRE-EMPTIVELY"),
@@ -135,7 +138,7 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
 
     # Factory defaults
     params: Dict[str, Any] = {}
@@ -177,7 +180,8 @@ QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAUL
 """
     section = parse_info(lines, chr(10))
     check = Check(CHECK_NAME)
-    parsed = check.run_parse(section)
+    parsed = parse_ibm_mq_managers(section)
+
     params: Dict[str, Any] = {}
     params.update({"version": (("at_least", "8.0"), 2)})
     actual = list(check.run_check("THE.RUNNING.ONE", params, parsed))

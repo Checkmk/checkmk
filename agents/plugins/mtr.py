@@ -171,8 +171,9 @@ def check_mtr_pid(pid):
     else:
         pid_cmdline = "/proc/%d/cmdline" % pid
         try:
-            return os.path.exists(pid_cmdline) and open(pid_cmdline).read().startswith(
-                "mtr\x00--report\x00--report-wide"
+            return (
+                os.path.exists(pid_cmdline)
+                and "mtr\x00--report\x00--report-wide" in open(pid_cmdline).read()
             )
         except Exception:
             return False  # any error
@@ -344,7 +345,7 @@ def start_mtr(host, mtr_binary, config, status):
         options.append("--tcp")
     if pingtype == "udp":
         options.append("--udp")
-    if port is not None:
+    if port:
         options.append("--port")
         options.append(str(port))
     if ipv4:
@@ -357,13 +358,13 @@ def start_mtr(host, mtr_binary, config, status):
     options.append(str(count))
     if not dns:
         options.append("--no-dns")
-    if not address is None:
+    if address:
         options.append("--address")
         options.append(str(address))
-    if not interval is None:
+    if interval:
         options.append("-i")
         options.append(str(interval))
-    if not timeout is None:
+    if timeout:
         options.append("--timeout")
         options.append(str(timeout))
 

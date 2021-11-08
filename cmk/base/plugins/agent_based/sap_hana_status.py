@@ -51,7 +51,7 @@ def _check_sap_hana_status_data(data):
         cur_state = state.CRIT
     else:
         cur_state = state.WARN
-    return cur_state, "Status: %s" % state_name
+    return cur_state, f"Status: {state_name}, Details: {data['message']}"
 
 
 def discovery_sap_hana_status(section: sap_hana.ParsedSection) -> DiscoveryResult:

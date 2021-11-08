@@ -111,7 +111,7 @@ def test_discovery_single(monkeypatch):
 
 def test_check_single(monkeypatch):
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
-    monkeypatch.setattr(logwatch, "_compile_params", lambda: [])
+    monkeypatch.setattr(logwatch, "_compile_params", lambda _item: [])
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
     assert list(logwatch.check_logwatch_node("empty.log", SECTION1)) == [
         Result(

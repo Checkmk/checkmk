@@ -95,6 +95,8 @@ disabled_packages_dir = Path(_omd_path("var/check_mk/disabled_packages"))
 _base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
 agent_based_plugins_dir = _base_plugins_dir / "agent_based"
 
+gui_plugins_dir = Path(lib_dir, "check_mk", "gui", "plugins")
+
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
@@ -111,6 +113,7 @@ local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
+local_gui_plugins_dir = _local_path(gui_plugins_dir)
 
 license_usage_dir = Path(var_dir, "license_usage")
 
@@ -120,6 +123,6 @@ def make_experimental_config_file() -> Path:
     Used to enable features which is "in development" and not good enough to be enabled by default.
     Example of experimental.mk:
     config_storage_format = "raw"
-    microcore_config_format = "pb"
+    microcore_config_format = "protobuf"
     """
     return Path(default_config_dir) / "experimental.mk"

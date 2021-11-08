@@ -4,7 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from tests.testlib import CMKWebSession
+
+from cmk.utils import version as cmk_version
 
 
 def test_www_dir(site):
@@ -68,6 +72,7 @@ def test_cmk_automation(site):
     assert response.text == "Missing secret for automation command."
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="agent deployment not supported on CRE")
 def test_cmk_deploy_agent(site):
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/deploy_agent.py" % site.id)

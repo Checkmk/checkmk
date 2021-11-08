@@ -165,7 +165,11 @@ class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
         if not row:
             raise MKUserError(
                 None,
-                _("Could not find the requested crash %s on site %s")
+                _(
+                    "Could not find the requested crash %s on site %s. "
+                    "Maybe the automatic cleanup found more than 200 crash reports "
+                    "below ~/var/check_mk/crashes and already deleted the requested crash report."
+                )
                 % (self._crash_id, self._site_id),
             )
         return row

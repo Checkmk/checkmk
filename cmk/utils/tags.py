@@ -26,12 +26,6 @@ def get_effective_tag_config(tag_config: Dict) -> "TagConfig":
     return tags
 
 
-def transform_pre_16_tags(tag_groups, aux_tags):
-    cfg = TagConfig()
-    cfg.parse_config((tag_groups, aux_tags))
-    return cfg.get_dict_format()
-
-
 def _parse_legacy_title(title):
     if "/" in title:
         return title.split("/", 1)

@@ -6,22 +6,34 @@
 
 import logging
 import time
-from typing import Any, Final, Mapping
+from pathlib import Path
+from typing import Any, Final, Mapping, NoReturn
 
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
 
-from .agent import AgentFetcher, DefaultAgentFileCache
+from .agent import AgentFetcher, AgentFileCache
 from .cache import FileCacheFactory, MaxAge
 from .type_defs import Mode
 
 
-class PushAgentFileCache(DefaultAgentFileCache):
+class PushAgentFileCache(AgentFileCache):
+    @staticmethod
+    def _from_cache_file(raw_data: bytes) -> AgentRawData:
+        return AgentRawData(raw_data)
+
+    @staticmethod
+    def _to_cache_file(raw_data) -> NoReturn:
+        raise NotImplementedError("trying to write to push agent cache")
+
     def write(self, raw_data: AgentRawData, mode) -> None:
         # we must not write to the cache, otherwise we update the mtime!
         return
+
+    def make_path(self, mode: Mode) -> Path:
+        return self.base_path / self.hostname / "agent_output"
 
 
 class PushAgentFileCacheFactory(FileCacheFactory[AgentRawData]):

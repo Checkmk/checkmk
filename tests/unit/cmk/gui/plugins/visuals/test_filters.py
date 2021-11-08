@@ -1063,7 +1063,6 @@ filter_table_tests = [
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
-@pytest.mark.usefixtures("load_plugins")
 def test_filters_filter_table(request_context, test, monkeypatch):
     # Needed for DeploymentTristateFilter test
     def deployment_states(host_name):

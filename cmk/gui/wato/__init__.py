@@ -85,8 +85,6 @@ from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
-from six import ensure_str
-
 import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -296,7 +294,6 @@ from cmk.gui.watolib import (
     ConfigDomainGUI,
     ConfigDomainOMD,
     declare_host_attribute,
-    init_wato_datastructures,
     LivestatusViaTCP,
     make_action_link,
     NagiosTextAttribute,
@@ -337,14 +334,9 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
 
 modes = {}
 
-loaded_with_language: Union[bool, None, str] = False
 
-
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     # Initialize watolib things which are needed before loading the WATO plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
@@ -356,8 +348,3 @@ def load_plugins(force: bool) -> None:
             _("Deprecated WATO modes found: %r. " "They need to be refactored to new API.")
             % list(modes.keys())
         )
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()

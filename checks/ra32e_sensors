@@ -99,7 +99,7 @@ def inventory_ra32e_sensors(parsed, quantity):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ra32e_sensors_temperature_defaultlevels"] = {
+factory_settings["ra32e_temp_defaultlevels"] = {
     "levels": (30.0, 35.0),
 }
 
@@ -195,7 +195,7 @@ check_info["ra32e_sensors.humidity"] = {
     "service_description": "Humidity %s",
     "has_perfdata": True,
     "group": "humidity",
-    "default_levels_variable": "ra32e_humidity_defaultlevels",
+    "default_levels_variable": "ra32e_sensors_humidity_defaultlevels",
 }
 
 # .

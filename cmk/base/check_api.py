@@ -120,7 +120,7 @@ from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     EvalableFloat as as_float,
 )
-from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.type_defs import HostName, MetricName, RuleConditionsSpec
 from cmk.utils.type_defs import Ruleset as _Ruleset
 from cmk.utils.type_defs import SectionName as _SectionName
 from cmk.utils.type_defs import (
@@ -139,8 +139,6 @@ import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
-from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels
-from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
 from cmk.base.plugin_contexts import check_type
 from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import
     host_name as _internal_host_name,
@@ -173,6 +171,16 @@ def HostLabel(*_a, **_kw):
 
 
 HostLabels = HostLabel
+
+
+def ServiceLabel(*_a, **_kw):
+    raise NotImplementedError(
+        "Creation of ServiceLabels in legacy plugins is no longer supported"
+        " (see https://checkmk.de/check_mk-werks.php?werk_id=13229)."
+    )
+
+
+ServiceLabels = ServiceLabel
 
 
 def get_check_api_context() -> _config.CheckContext:
@@ -255,7 +263,7 @@ def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, An
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-def all_matching_hosts(condition: Dict[str, Any], with_foreign_hosts: bool) -> Set[HostName]:
+def all_matching_hosts(condition: RuleConditionsSpec, with_foreign_hosts: bool) -> Set[HostName]:
     return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         condition, with_foreign_hosts
     )
@@ -790,11 +798,14 @@ class Service:
         self,
         item: Optional[str],
         parameters: Any = None,
-        service_labels: Optional[ServiceLabels] = None,
+        # ignored, but ServiceLabels are deprecated anyway.
+        # see Werk 13229
+        service_labels: Optional[Any] = None,
     ) -> None:
         self.item = item
         self.parameters = parameters
-        self.service_labels = service_labels or ServiceLabels()
+        if service_labels:
+            _ = ServiceLabels()  # raise
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

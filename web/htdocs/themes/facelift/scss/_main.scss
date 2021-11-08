@@ -348,12 +348,24 @@ div.foldable_wrapper {
     margin-bottom: 2 * $spacing;
   }
 
-  img.treeangle {
-    margin-left: $spacing;
-  }
+  div.foldable_header {
+    &[onclick] {
+      cursor: pointer;
+    }
 
-  h3 {
-    margin-top: 0;
+    img.treeangle {
+      float: left;
+      margin: $spacing $spacing 0;
+    }
+
+    b.treeangle.title {
+      margin: 6px 0;
+    }
+
+    h3 {
+      padding-left: 0;
+      margin-top: 0;
+    }
   }
 
   ul.treeangle {
@@ -428,7 +440,8 @@ div.really {
   }
 
   h3 {
-    padding-left: 0;
+    padding: 0;
+    margin: 0;
   }
 }
 
@@ -1005,90 +1018,45 @@ tr.data td.werkcomp {
 }
 
 table.data.werks {
-  td.werkclassfeature,
-  td.werkclassfix,
-  td.werklevel2,
-  td.werklevel3,
-  td.werkcompincomp_ack {
-    color: $font-color-light-bg;
-  }
-}
-
-table.data.werks {
-  tr {
-    &:nth-child(odd) {
-      td.werklevel2 {
-        background-color: $color-state-5-background;
-      }
-
-      td.werklevel3 {
-        background-color: $color-state-6-background;
-      }
-
-      td.werkclassfeature {
-        background-color: $color-state-success-background;
-      }
-
-      td.werkclassfix {
-        background-color: $yellow;
-      }
-
-      td.werkclasssecurity {
-        background-color: $color-state-2-background;
-      }
-
-      td.werkcompincomp_unack {
-        background-color: $color-state-7-background;
-      }
-
-      td.werkcompincomp_ack {
-        background-color: $color-state-8-background;
-      }
-    }
-
-    &:nth-child(even) {
-      td.werklevel2 {
-        background-color: $color-state-5-background;
-      }
-
-      td.werklevel3 {
-        background-color: $color-state-6-background;
-      }
-
-      td.werkclassfeature {
-        background-color: $color-state-success-background;
-      }
-
-      td.werkclassfix {
-        background-color: $yellow;
-      }
-
-      td.werkclasssecurity {
-        background-color: $color-state-2-background;
-      }
-
-      td.werkcompincomp_unack {
-        background-color: $color-state-7-background;
-      }
-
-      td.werkcompincomp_ack {
-        background-color: $color-state-8-background;
-      }
-    }
-  }
-
   td {
+    &.werkclassfeature,
+    &.werkclassfix,
+    &.werklevel2,
+    &.werklevel3,
+    &.werkcompincomp_ack {
+      color: $font-color-light-bg;
+    }
+
+    &.werklevel2 {
+      background-color: $color-state-5-background;
+    }
+
     &.werklevel3 {
       font-weight: bold;
+      background-color: $color-state-6-background;
+    }
+
+    &.werkclassfeature {
+      background-color: $color-state-success-background;
+    }
+
+    &.werkclassfix {
+      background-color: $color-state-1-background;
     }
 
     &.werkclasssecurity {
       font-weight: bold;
       color: $font-color-white;
+      background-color: $color-state-2-background;
     }
 
     &.werkcompincomp_unack {
       font-weight: bold;
+      background-color: $color-state-7-background;
+    }
+
+    &.werkcompincomp_ack {
+      background-color: $color-state-8-background;
     }
   }
 
@@ -1438,4 +1406,15 @@ div#row_info {
 /* Inside a foldable, we need a different color here in order to see a difference w.r.t. the title*/
 div.foldable div.success {
   background-color: $base-color;
+}
+
+input.hidden_submit {
+  display: none;
+}
+
+@mixin ellipsis-text-overflow {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -6,20 +6,12 @@
 """Mange custom attributes of users and hosts"""
 
 import abc
-import os
-import pprint
 import re
 from typing import Any, Dict, Iterable, Optional, Type
 
-import cmk.utils.store as store
-import cmk.utils.store.host_storage
-
 import cmk.gui.forms as forms
-import cmk.gui.plugins.watolib.utils
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
@@ -33,7 +25,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     add_change,
     make_confirm_link,
     mode_registry,
@@ -42,55 +33,15 @@ from cmk.gui.plugins.wato import (
     WatoMode,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.watolib.host_attributes import (
-    host_attribute_topic_registry,
-    transform_pre_16_host_topics,
+from cmk.gui.watolib.custom_attributes import (
+    load_custom_attrs_from_mk_file,
+    save_custom_attrs_to_mk_file,
+    update_host_custom_attrs,
+    update_user_custom_attrs,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
-
-
-def update_user_custom_attrs():
-    userdb.update_config_based_user_attributes()
-    userdb.rewrite_users()
-
-
-def _update_host_custom_attrs():
-    load_config()
-    Folder.invalidate_caches()
-    Folder.root_folder().rewrite_hosts_files()
-
-
-def load_custom_attrs_from_mk_file(lock):
-    filename = os.path.join(watolib.multisite_dir(), "custom_attrs.mk")
-    vars_ = store.load_mk_file(
-        filename,
-        {
-            "wato_user_attrs": [],
-            "wato_host_attrs": [],
-        },
-        lock=lock,
-    )
-
-    attrs = {}
-    for what in ["user", "host"]:
-        attributes = vars_.get("wato_%s_attrs" % what, [])
-        if what == "host":
-            attributes = transform_pre_16_host_topics(attributes)
-        attrs[what] = attributes
-    return attrs
-
-
-def save_custom_attrs_to_mk_file(attrs):
-    output = cmk.gui.plugins.watolib.utils.wato_fileheader()
-    for what in ["user", "host"]:
-        if what in attrs and len(attrs[what]) > 0:
-            output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
-            output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
-
-    store.mkdir(watolib.multisite_dir())
-    store.save_text_to_file(watolib.multisite_dir() + "custom_attrs.mk", output)
+from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 
 
 def custom_attr_types() -> Choices:
@@ -168,7 +119,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Attribute"), breadcrumb, form_name="attr", button_name="save"
+            _("Attribute"), breadcrumb, form_name="attr", button_name="_save"
         )
 
     def _add_extra_attrs_from_html_vars(self):
@@ -416,7 +367,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         )
 
     def _update_config(self):
-        _update_host_custom_attrs()
+        update_host_custom_attrs()
 
     def _show_in_table_option(self):
         self._render_table_option(
@@ -595,7 +546,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return "host"
 
     def _update_config(self):
-        _update_host_custom_attrs()
+        update_host_custom_attrs()
 
     def title(self):
         return _("Custom host attributes")

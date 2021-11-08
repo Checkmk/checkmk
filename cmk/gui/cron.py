@@ -6,7 +6,6 @@
 
 import time
 from pathlib import Path
-from typing import Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -29,22 +28,14 @@ from cmk.gui.utils.logged_in import SuperUserContext
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
-loaded_with_language: Union[bool, None, str] = False
-
 
 def _lock_file() -> Path:
     return Path(cmk.utils.paths.tmp_dir) / "cron.lastrun"
 
 
-# Load all view plugins
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("cron", globals())
-
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # Page called by some external trigger (usually cron job in OMD site)

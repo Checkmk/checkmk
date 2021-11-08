@@ -48,7 +48,7 @@ struct NagiosPaths {
 struct NagiosLimits {
     size_t _max_cached_messages{500000};
     size_t _max_lines_per_logfile{1000000};
-    size_t _max_response_size{100 * 1024 * 1024};
+    size_t _max_response_size{size_t{100} * 1024 * 1024};
 };
 
 struct NagiosAuthorization {

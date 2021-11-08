@@ -32,7 +32,11 @@ from cmk.gui.valuespec import (
     UserID,
 )
 from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text, ObjectRef, ObjectRefType
-from cmk.gui.watolib.user_scripts import user_script_choices, user_script_title
+from cmk.gui.watolib.user_scripts import (
+    declare_notification_plugin_permissions,
+    user_script_choices,
+    user_script_title,
+)
 
 
 def delete_users(users_to_delete):
@@ -456,6 +460,9 @@ def notification_script_title(name):
 
 
 def notification_script_choices():
+    # Ensure the required dynamic permissions are registered
+    declare_notification_plugin_permissions()
+
     choices = []
     for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)"))]:
         notificaton_plugin_name, _notification_plugin_title = choice

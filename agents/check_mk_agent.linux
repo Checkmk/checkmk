@@ -192,13 +192,17 @@ set_up_profiling() {
 preamble_5() {
     unset -v LANG
     if inpath locale && inpath paste; then
-        case "$(locale -a | paste -sd ' ' -)" in
-            *'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
-            *'C.utf8'*) LC_ALL="C.utf8" ;;
+        # The space at the beginning of " $(locale ...)" is important, since we also have a space in
+        # the conditions. We need this to also match C.UTF-8 and C.utf8 right at the beginning.
+        # Furthermore, we cannot simply use *'C.UTF-8'* (without the space), because this also
+        # matches e.g. es_EC.UTF-8.
+        case " $(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'*) LC_ALL="C.utf8" ;;
         esac
-        LC_ALL="${LC_ALL:-C}"
-        export LC_ALL
     fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 }
 
 read_python_version() {
@@ -1260,7 +1264,7 @@ section_fileinfo() {
 
 get_ntpq() {
     inpath ntpq || return 1
-    run_cached "ntp" 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+    run_cached "ntp" 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true" | sed 's/\(<<<ntp:cached(.*,\)30)>>>/\1120)>>>/'
 }
 
 section_timesyncd() {
@@ -1290,7 +1294,7 @@ section_ntp() {
     # First we try to identify if we're beholden to systemd
     if inpath systemctl; then
         # shellcheck disable=SC2016
-        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
+        if [ "$(systemctl | awk '/ntp.service|ntpd.service|ntpsec.service/{print $3; exit}')" = "active" ]; then
             # remove heading, make first column space separated
             get_ntpq
             return
@@ -1656,7 +1660,9 @@ run_plugins() {
         for script in ./*; do
             if is_valid_plugin "${script}"; then
                 if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                    _log_section_time "${plugin_interpreter} ${script}"
+                    # SC2086: We don't want to quote, interpreter is "nothing" if empty, not "''"
+                    # shellcheck disable=SC2086
+                    _log_section_time ${plugin_interpreter} "${script}"
                 fi
             fi
         done
@@ -1666,7 +1672,8 @@ run_plugins() {
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
             if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time "${plugin_interpreter}" "${script}"
+                # shellcheck disable=SC2086
+                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time ${plugin_interpreter} "${script}"
             fi
         fi
     done

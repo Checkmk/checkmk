@@ -31,7 +31,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecText,
 )
-from cmk.gui.watolib.automations import check_mk_local_automation
+from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import ABCMainModule, ModuleRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -167,9 +167,11 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
         return [name for name in self._entries if name == group_name]
 
     def get_host_rulespec_group_names(self) -> List[str]:
-        """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
+        """Collect all rulesets that apply to hosts, except those specifying new active or static
+        checks and except all server monitoring rulesets. Usually, the needed context for service
+        monitoring rulesets is not given when the host rulesets are requested."""
         names: List[str] = []
-        hidden_groups = ("static", "activechecks")
+        hidden_groups = ("static", "activechecks", "monconf")
         hidden_main_groups = ("host_monconf", "monconf", "agents", "agent")
         for g_class in self.values():
             group = g_class()
@@ -1113,7 +1115,7 @@ class CheckTypeGroupSelection(ElementSelection):
         self._checkgroup = checkgroup
 
     def get_elements(self):
-        checks = check_mk_local_automation("get-check-information")
+        checks = get_check_information().plugin_infos
         elements = {
             cn: "%s - %s" % (cn, c["title"])
             for (cn, c) in checks.items()
@@ -1273,6 +1275,15 @@ class TimeperiodValuespec(ValueSpec):
 
     def transform_value(self, value: Any) -> Any:
         return self._get_used_valuespec(value).transform_value(value)
+
+    def value_to_json(self, value: Any) -> Any:
+        return self._get_used_valuespec(value).value_to_json(value)
+
+    def value_from_json(self, json_value: Any) -> Any:
+        return self._get_used_valuespec(json_value).value_from_json(json_value)
+
+    def value_to_json_safe(self, value: Any) -> Any:
+        return self._get_used_valuespec(value).value_to_json_safe(value)
 
 
 def main_module_from_rulespec_group_name(

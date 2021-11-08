@@ -18,6 +18,7 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -36,7 +37,7 @@ import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import ParsedSectionName, SNMPSectionPlugin
 from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import ServiceLabel
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1181,8 +1182,8 @@ def test_host_config_custom_checks(
         (
             "testhost2",
             [
-                ("checkgroup", "checktype1", "item1", {"param1": 1}),
-                ("checkgroup", "checktype2", "item2", {"param2": 2}),
+                ("checkgroup", "checktype1", "item1", TimespecificParameterSet({"param1": 1}, ())),
+                ("checkgroup", "checktype2", "item2", TimespecificParameterSet({"param2": 2}, ())),
             ],
         ),
     ],
@@ -2230,23 +2231,11 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    # regardless of config: descr == None -> return None
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            HostName("cluster.test"),
-            SourceType.HOST,
-            None,
-        )
-        is None
-    )
-    # still None, we have no cluster:
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            HostName("cluster.test"),
-            SourceType.HOST,
-            "Test Service",
-        )
-        is None
+    # empty, we have no cluster:
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(HostName("cluster.test")),
+        SourceType.HOST,
+        "Test Service",
     )
 
 
@@ -2263,23 +2252,18 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    # None for a node:
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            HostName("node1.test"),
-            SourceType.HOST,
-            "Test Service",
-        )
-        is None
+    # empty for a node:
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(HostName("node1.test")),
+        SourceType.HOST,
+        "Test Service",
     )
-    # empty list for cluster (we have not clustered the service)
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            cluster_test,
-            SourceType.HOST,
-            "Test Service",
-        )
-        == []
+
+    # empty for cluster (we have not clustered the service)
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(cluster_test),
+        SourceType.HOST,
+        "Test Service",
     )
 
 
@@ -2310,7 +2294,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
     )
     assert config_cache.get_clustered_service_node_keys(
-        cluster,
+        config_cache.get_host_config(cluster),
         SourceType.HOST,
         "Test Service",
     ) == [
@@ -2322,22 +2306,10 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         "lookup_ip_address",
         lambda host_config, *, family=None: "dummy.test.ip.0",
     )
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            cluster,
-            SourceType.HOST,
-            "Test Unclustered",
-        )
-        == []
-    )
-    # regardless of config: descr == None -> return None
-    assert (
-        config_cache.get_clustered_service_node_keys(
-            cluster,
-            SourceType.HOST,
-            None,
-        )
-        is None
+    assert [] == config_cache.get_clustered_service_node_keys(
+        config_cache.get_host_config(cluster),
+        SourceType.HOST,
+        "Test Unclustered",
     )
 
 
@@ -2356,9 +2328,9 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
                 None,
                 "CPU load",
                 "{}",
-                service_labels=DiscoveredServiceLabels(
-                    ServiceLabel("abc", "xä"),
-                ),
+                service_labels={
+                    "abc": ServiceLabel("abc", "xä"),
+                },
             )
         ],
     )
@@ -2713,31 +2685,6 @@ class TestPackedConfigStore:
 
         assert precompiled_check_config.exists()
         assert store.read() == {"abc": 1}
-
-
-@pytest.mark.parametrize(
-    "params, expected_result",
-    [
-        (None, False),
-        ({}, False),
-        (
-            {"x": "y"},
-            False,
-        ),
-        ([1, (2, 3)], False),
-        (4, False),
-        (
-            {"tp_default_value": 1, "tp_values": [("24X7", 2)]},
-            True,
-        ),
-        (
-            ["abc", {"tp_default_value": 1, "tp_values": [("24X7", 2)]}],
-            True,
-        ),
-    ],
-)
-def test_has_timespecific_params(params: Optional[Any], expected_result: bool) -> None:
-    assert config.has_timespecific_params(params) is expected_result
 
 
 def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:

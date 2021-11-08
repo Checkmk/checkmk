@@ -29,7 +29,7 @@ import errno
 import os
 import sys
 from types import ModuleType
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Set
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -37,7 +37,8 @@ import cmk.utils.version as cmk_version
 import cmk.gui.pages
 import cmk.gui.plugins.main_modules
 import cmk.gui.utils as utils
-from cmk.gui.globals import g
+from cmk.gui.hooks import request_memoize
+from cmk.gui.log import logger
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module
@@ -52,6 +53,8 @@ pagehandlers: Dict[Any, Any] = {}
 # function load_plugins() is called for all these modules to
 # initialize them.
 _legacy_modules: List[ModuleType] = []
+
+_plugins_loaded_for: Set[str] = set()
 
 
 def register_handlers(handlers: Dict) -> None:
@@ -81,35 +84,61 @@ def init_modules() -> None:
     _legacy_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
 
 
-g_all_modules_loaded = False
+def call_load_plugins_hooks() -> None:
+    """Call the load_plugins() function in all main modules
 
+    Have a look at our Wiki: /books/concepts/page/how-cmkgui-is-organised
 
-def load_all_plugins(only_modules: Optional[List[str]] = None) -> None:
-    """Call the load_plugins() function in all modules"""
-    global g_all_modules_loaded
-    # Initially, we have to load all modules, regardless of any optimization.
-    if not g_all_modules_loaded:
-        only_modules = None
+    Each main module has the option to declare a `load_plugins` hook function to realize it's own
+    logic that should be executed when initializing the main module.
 
-    need_plugins_reload = _local_web_plugins_have_changed()
+    Up to now this is executed during request processing. Like this:
+
+    1. During the first request in an just initialized interpreter the `load_plugins()` is
+       called.
+    2. The main module is doing it's initialization logic.
+    3. Some of the main modules then remember that they have loaded all plugins with a
+       `loaded_with_language` variable.
+    4. On subsequent requests the `load_plugins()` is executed and most main modules
+       immaculately return without performing another action.
+    5. Once any "local plugin" file has been modified (changed mtime), the all main modules are
+       called with `load_plugins()` to perform their initialization again.
+
+    This is done to automatically load/reload plugins after e.g. an MKP installation.
+
+    Note: Might be better to trigger our application in case something is changed to do a restart
+          from an external source like the MKP manager. In the moment we move the local plugins
+          to regulary modules this will be required anyways.
+    """
+    logger.debug("Executing load_plugin hooks")
+
+    if _local_web_plugins_have_changed():
+        logger.debug("A local GUI plugin has changed. Enforcing execution of all hooks")
+        _plugins_loaded_for.clear()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
-        # initial config is already loaded, do not load it again
-        if module.__name__ == "cmk.gui.config":
-            continue
-        if (only_modules is None or module.__name__ in only_modules) and hasattr(
-            module, "load_plugins"
-        ):
-            # hasattr above ensures the function is available. Mypy does not understand this.
-            module.load_plugins(force=need_plugins_reload)  # type: ignore[attr-defined]
+        name = module.__name__
+
+        if name == "cmk.gui.config":
+            continue  # initial config is already loaded, nothing to do
+
+        if not hasattr(module, "load_plugins"):
+            continue  # has no load_plugins hook, nothing to do
+
+        if name in _plugins_loaded_for:
+            continue  # already loaded, nothing to do
+
+        logger.debug("Executing load_plugins hook for %s", name)
+
+        # hasattr above ensures the function is available. Mypy does not understand this.
+        module.load_plugins()  # type: ignore[attr-defined]
+
+        _plugins_loaded_for.add(name)
 
     # TODO: Clean this up once we drop support for the legacy plugins
     for path, page_func in pagehandlers.items():
         cmk.gui.pages.register_page_handler(path, page_func)
-
-    # Mark the modules as loaded after all plugins have been loaded. In case of exceptions
-    # we want them to occur again on subsequent requests too.
-    g_all_modules_loaded = True
+    logger.debug("Finished executing load_plugin hooks")
 
 
 def _cmk_gui_top_level_modules() -> List[ModuleType]:
@@ -153,18 +182,13 @@ def _find_local_web_plugins() -> Iterator[str]:
 _last_web_plugins_update = 0.0
 
 
+@request_memoize()
 def _local_web_plugins_have_changed() -> bool:
     global _last_web_plugins_update
-
-    if "local_web_plugins_have_changed" in g:
-        return g.local_web_plugins_have_changed
 
     this_time = 0.0
     for path in _find_local_web_plugins():
         this_time = max(os.stat(path).st_mtime, this_time)
     last_time = _last_web_plugins_update
     _last_web_plugins_update = this_time
-
-    have_changed = this_time > last_time
-    g.local_web_plugins_have_changed = have_changed
-    return have_changed
+    return this_time > last_time

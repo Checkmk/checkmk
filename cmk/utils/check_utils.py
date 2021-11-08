@@ -83,7 +83,10 @@ def wrap_parameters(parameters: Any) -> Mapping[str, Any]:
 
 # keep argument parameters in sync with ParametersTypeAlias
 def unwrap_parameters(parameters: Mapping[str, Any]) -> Any:
-    try:
+    if set(parameters) == {_PARAMS_WRAPPER_KEY}:
         return parameters[_PARAMS_WRAPPER_KEY]
-    except KeyError:
-        return parameters
+    # Note: having *both* the wrapper key and other keys can only happen, if we
+    # merge wrapped (non dict) legacy parameters with newer configured (dict) parameters.
+    # In this case the the plugin can deal with dicts, and will ignore the wrapper key anyway.
+    # Still: cleaning it up here is less confusing.
+    return {k: v for k, v in parameters.items() if k != _PARAMS_WRAPPER_KEY}

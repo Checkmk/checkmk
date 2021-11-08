@@ -199,12 +199,20 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             if ref is None:
                 ref = now
 
-            rate = get_rate("%s.%s" % (protocol, what), ref, int(data[what]) * scale)
-            yield 0, "%s %s: %s" % (
-                protoname,
-                perftext,
-                format_func(rate),  # pylint: disable=not-callable
-            ), [(perfname, rate)]
+            try:
+                rate = get_rate(
+                    f"{protocol}.{what}",
+                    ref,
+                    int(data[what]) * scale,
+                    onwrap=RAISE,
+                )
+                yield (
+                    0,
+                    f"{protoname} {perftext}: {format_func(rate)}",  # pylint: disable=not-callable
+                    [(perfname, rate)],
+                )
+            except MKCounterWrapped as exc:
+                yield (0, f"{protoname} {perftext}: -")
 
 
 check_info["netapp_api_vs_traffic"] = {

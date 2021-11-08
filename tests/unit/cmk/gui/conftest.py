@@ -12,7 +12,6 @@ import json
 import threading
 import urllib.parse
 from contextlib import contextmanager
-from functools import lru_cache
 from http.cookiejar import CookieJar
 from typing import Any, Dict, Generator, Iterator, Literal, NamedTuple, Optional
 
@@ -30,20 +29,17 @@ import cmk.utils.log
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import watolib
+from cmk.gui import modules, watolib
 from cmk.gui.globals import config
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
-from cmk.gui.wsgi import make_app
 
 SPEC_LOCK = threading.Lock()
 
 
-class Automation(NamedTuple):
+class RemoteAutomation(NamedTuple):
     automation: MagicMock
-    local_automation: MagicMock
-    remote_automation: MagicMock
     responses: Any
 
 
@@ -93,14 +89,10 @@ def load_config(request_context):
     cmk.utils.log.logger.setLevel(old_root_log_level)
 
 
-@pytest.fixture()
-def load_plugins(request_context, monkeypatch, tmp_path):
-    import cmk.gui.modules as modules
-
-    monkeypatch.setattr(config, "roles", {"user": {}, "admin": {}, "guest": {}})
-    modules.load_all_plugins()
-    yield
-    monkeypatch.undo()
+@pytest.fixture(scope="session", autouse=True)
+def load_plugins():
+    modules.init_modules()
+    modules.call_load_plugins_hooks()
 
 
 @pytest.fixture(name="patch_json", autouse=True)
@@ -136,38 +128,16 @@ def with_admin_login(with_admin):
 
 
 @pytest.fixture()
-def suppress_automation_calls(mocker):
-    """Stub out calls to the "automation" system
-
-    This is needed because in order for automation calls to work, the site needs to be set up
+def suppress_remote_automation_calls(mocker):
+    """Stub out calls to the remote automation system
+    This is needed because in order for remote automation calls to work, the site needs to be set up
     properly, which can't be done in an unit-test context."""
-    automation = mocker.patch("cmk.gui.watolib.automations.check_mk_automation")
-    mocker.patch("cmk.gui.watolib.check_mk_automation", new=automation)
-
-    local_automation = mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
-    mocker.patch("cmk.gui.watolib.check_mk_local_automation", new=local_automation)
-
     remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
     mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)
-
-    yield Automation(
-        automation=automation,
-        local_automation=local_automation,
-        remote_automation=remote_automation,
+    yield RemoteAutomation(
+        automation=remote_automation,
         responses=None,
     )
-
-
-@pytest.fixture()
-def inline_local_automation_calls(mocker):
-    # Only works from Python3 code.
-    def call_automation(cmd, args):
-        from cmk.base.automations import automations
-
-        return automations.execute(cmd, args)
-
-    mocker.patch("cmk.gui.watolib.automations.check_mk_automation", new=call_automation)
-    mocker.patch("cmk.gui.watolib.check_mk_automation", new=call_automation)
 
 
 @pytest.fixture()
@@ -335,14 +305,9 @@ class WebTestAppForCMK(webtest.TestApp):
         return self
 
 
-@lru_cache
-def _session_wsgi_callable(debug):
-    return make_app(debug=debug)
-
-
 def _make_webtest(debug):
     cookies = CookieJar()
-    return WebTestAppForCMK(_session_wsgi_callable(debug), cookiejar=cookies)
+    return WebTestAppForCMK(session_wsgi_app(debug), cookiejar=cookies)
 
 
 @pytest.fixture()
@@ -375,7 +340,7 @@ def logged_in_admin_wsgi_app(wsgi_app, with_admin):
 
 
 @pytest.fixture()
-def with_groups(request_context, with_admin_login, suppress_automation_calls):
+def with_groups(request_context, with_admin_login, suppress_remote_automation_calls):
     watolib.add_group("windows", "host", {"alias": "windows"})
     watolib.add_group("routers", "service", {"alias": "routers"})
     watolib.add_group("admins", "contact", {"alias": "admins"})
@@ -386,12 +351,20 @@ def with_groups(request_context, with_admin_login, suppress_automation_calls):
 
 
 @pytest.fixture()
-def with_host(request_context, with_admin_login, suppress_automation_calls):
+def with_host(
+    monkeypatch: pytest.MonkeyPatch,
+    request_context,
+    with_admin_login,
+):
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts(
         [(hostname, {}, None) for hostname in hostnames]
     )
     yield hostnames
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: None,
+    )
     hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
 
 

@@ -43,12 +43,13 @@ def foldable_container(
     container_id = foldable_container_id(treename, id_)
 
     html.open_div(class_=["foldable", "open" if isopen else "closed"])
+    html.open_div(class_="foldable_header", onclick=None if title_url else onclick)
 
     if isinstance(title, HTML):  # custom HTML code
         html.write_text(title)
 
     else:
-        html.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
+        html.open_b(class_=["treeangle", "title"])
 
         if title_url:
             html.a(title, href=title_url, target=title_target)
@@ -68,18 +69,17 @@ def foldable_container(
                 "open" if isopen else "closed",
             ],
             src=theme.detect_icon_path(icon, "icon_"),
-            onclick=onclick,
+            onclick=onclick if title_url else None,
         )
     else:
         html.img(
             id_=img_id,
             class_=["treeangle", "open" if isopen else "closed"],
             src=theme.url("images/tree_closed.svg"),
-            onclick=onclick,
+            onclick=onclick if title_url else None,
         )
 
-    if indent != "form" or not isinstance(title, HTML):
-        html.br()
+    html.close_div()
 
     indent_style = "padding-left: %dpx; " % (padding if indent else 0)
     if indent == "form":

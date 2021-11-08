@@ -17,8 +17,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, BinaryIO, Callable, cast, Dict, Final, Iterable, List, NamedTuple, Optional
 
-from six import ensure_binary, ensure_str
-
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
@@ -217,10 +215,10 @@ def write_file(
         tar.addfile(info, info_file)
 
     # add the regular info file (Python format)
-    add_file("info", ensure_binary(pprint.pformat(package)))
+    add_file("info", pprint.pformat(package).encode())
 
     # add the info file a second time (JSON format) for external tools
-    add_file("info.json", ensure_binary(json.dumps(package)))
+    add_file("info.json", json.dumps(package).encode())
 
     # Now pack the actual files into sub tars
     for part in package_parts() + config_parts():
@@ -518,7 +516,7 @@ def _get_package_info_from_package(file_object: BinaryIO) -> PackageInfo:
     package_info_file = tar.extractfile("info")
     if package_info_file is None:
         raise PackageException("Failed to open package info file")
-    return parse_package_info(ensure_str(package_info_file.read()))
+    return parse_package_info(package_info_file.read().decode())
 
 
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
@@ -646,7 +644,7 @@ def _get_package_infos(paths: List[Path]) -> Dict[str, PackageInfo]:
                 # Do not make broken files / packages fail the whole mechanism
                 logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
                 continue
-            optional[ensure_str(pkg_path.name)] = package_info
+            optional[pkg_path.name] = package_info
 
     return optional
 
@@ -759,7 +757,7 @@ def _package_exists(pacname: PackageName) -> bool:
 def write_package_info(package: PackageInfo) -> None:
     pkg_info_path = package_dir() / package["name"]
     with pkg_info_path.open("w", encoding="utf-8") as f:
-        f.write(ensure_str(pprint.pformat(package) + "\n"))
+        f.write(pprint.pformat(package) + "\n")
 
 
 def _remove_package_info(pacname: PackageName) -> None:

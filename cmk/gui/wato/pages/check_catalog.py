@@ -19,7 +19,6 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.type_defs import CheckPluginNameStr
 
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request
@@ -39,6 +38,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID
+from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
 
@@ -127,6 +127,7 @@ class ModeCheckPluginSearch(WatoMode):
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
             if isinstance(entry, dict):
+                # ? type of entry argument seems to be unclear.
                 name = ensure_str(entry.get("name", ""))
                 title = ensure_str(entry.get("title", ""))
                 if self._search in name.lower() or self._search in title.lower():
@@ -440,7 +441,7 @@ class ModeCheckManPage(WatoMode):
             raise MKUserError(None, _("There is no manpage for this check."))
         self._manpage = manpage
 
-        checks = watolib.check_mk_local_automation("get-check-information")
+        checks = get_check_information().plugin_infos
         if self._check_type in checks:
             self._manpage = {
                 "type": "check_mk",

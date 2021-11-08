@@ -21,7 +21,6 @@ import cmk.gui.watolib.utils
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +38,9 @@ def _expected_replication_paths():
         ReplicationPath("file", "htpasswd", "etc/htpasswd", []),
         ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
-        ReplicationPath("dir", "usersettings", "var/check_mk/web", ["*/report-thumbnails"]),
+        ReplicationPath(
+            "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
+        ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
     ]

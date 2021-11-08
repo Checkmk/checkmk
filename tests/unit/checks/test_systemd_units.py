@@ -94,6 +94,7 @@ class UnitEntry(NamedTuple):
                 ],
                 "static": [],
                 "activating": [],
+                "deactivating": [],
                 "reloading": [],
             },
         ),
@@ -164,6 +165,7 @@ class UnitEntry(NamedTuple):
                 ],
                 "static": [],
                 "activating": [],
+                "deactivating": [],
                 "reloading": [],
             },
         ),
@@ -2435,7 +2437,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 (0, "Total: 5"),
                 (0, "Disabled: 0"),
                 (0, "Failed: 2"),
-                (2, "2 services failed (bar, foo)"),
+                (2, "2 services failed (bar, foo)", []),
             ],
         ),
         # Ignored (see 'blacklist')
@@ -2463,7 +2465,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 (0, "\nIgnored: 1"),
             ],
         ),
-        # Activating
+        # (de)activating
         (
             {},
             {
@@ -2477,13 +2479,23 @@ def test_check_systemd_units_services(item, params, section, check_results):
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="unknown",
                     ),
+                    "actualbox": UnitEntry(
+                        name="actualbox",
+                        unit_type="service",
+                        loaded_status="loaded",
+                        active_status="deactivating",
+                        current_state="finished",
+                        description="A made up service for this test",
+                        enabled_status="unknown",
+                    ),
                 },
             },
             [
-                (0, "Total: 1"),
+                (0, "Total: 2"),
                 (0, "Disabled: 0"),
                 (0, "Failed: 0"),
-                (0, "Service 'virtualbox' activating for: 0.00 s", []),
+                (0, "\nService 'virtualbox' activating for: 0.00 s", []),
+                (0, "\nService 'actualbox' deactivating for: 0.00 s", []),
             ],
         ),
         # Activating + reloading
@@ -2506,7 +2518,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 (0, "Total: 1"),
                 (0, "Disabled: 0"),
                 (0, "Failed: 0"),
-                (0, "Service 'virtualbox' activating for: 0.00 s", []),
+                (0, "\nService 'virtualbox' activating for: 0.00 s", []),
             ],
         ),
         # Reloading
@@ -2529,7 +2541,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 (0, "Total: 1"),
                 (0, "Disabled: 0"),
                 (0, "Failed: 0"),
-                (0, "Service 'virtualbox' reloading for: 0.00 s", []),
+                (0, "\nService 'virtualbox' reloading for: 0.00 s", []),
             ],
         ),
         # Indirect
@@ -2578,7 +2590,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
                 (0, "Total: 1"),
                 (0, "Disabled: 0"),
                 (0, "Failed: 0"),
-                (2, "1 service somesystemdstate (virtualbox)"),
+                (2, "1 service somesystemdstate (virtualbox)", []),
             ],
         ),
     ],

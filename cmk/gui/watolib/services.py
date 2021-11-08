@@ -10,10 +10,12 @@ import os
 import sys
 import time
 from hashlib import sha256
-from typing import Any, Dict, List, NamedTuple, Set, Tuple
+from typing import Any, Iterable, List, NamedTuple, Sequence, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import SetAutochecksTable
+from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
+
+from cmk.automations.results import TryDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib as watolib
@@ -21,11 +23,8 @@ from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
-from cmk.gui.watolib.automations import (
-    check_mk_automation,
-    execute_automation_discovery,
-    sync_changes_before_remote_automation,
-)
+from cmk.gui.watolib.automations import MKAutomationException, sync_changes_before_remote_automation
+from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -88,7 +87,7 @@ class DiscoveryAction:
 
 
 CheckTableEntry = Tuple  # TODO: Improve this type
-CheckTable = List[CheckTableEntry]  # TODO: Improve this type
+CheckTable = Sequence[CheckTableEntry]  # TODO: Improve this type
 
 
 class DiscoveryResult(NamedTuple):
@@ -133,11 +132,13 @@ class Discovery:
             )
         self.do_discovery(discovery_result)
 
-    def do_discovery(self, discovery_result):
+    def do_discovery(self, discovery_result: DiscoveryResult):
         old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
-        remove_disabled_rule, add_disabled_rule, saved_services = set(), set(), set()
-        apply_changes = False
+        remove_disabled_rule: Set[str] = set()
+        add_disabled_rule: Set[str] = set()
+        saved_services: Set[str] = set()
+        apply_changes: bool = False
 
         for (
             table_source,
@@ -160,9 +161,6 @@ class Discovery:
             key = check_type, item
             value = descr, discovered_params, service_labels, found_on_nodes
 
-            if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
-                old_autochecks[key] = value
-
             if table_source != table_target:
                 if table_target == DiscoveryState.UNDECIDED:
                     user.need_permission("wato.service_discovery_to_undecided")
@@ -179,66 +177,20 @@ class Discovery:
 
                 apply_changes = True
 
-            if table_source == DiscoveryState.UNDECIDED:
-                if table_target == DiscoveryState.MONITORED:
-                    autochecks_to_save[key] = value
-                    saved_services.add(descr)
-                elif table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
+            _apply_state_change(
+                table_source,
+                table_target,
+                key,
+                value,
+                descr,
+                autochecks_to_save,
+                saved_services,
+                add_disabled_rule,
+                remove_disabled_rule,
+            )
 
-            elif table_source == DiscoveryState.VANISHED:
-                if table_target != DiscoveryState.REMOVED:
-                    autochecks_to_save[key] = value
-                    saved_services.add(descr)
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source == DiscoveryState.MONITORED:
-                if table_target in [
-                    DiscoveryState.MONITORED,
-                    DiscoveryState.IGNORED,
-                ]:
-                    autochecks_to_save[key] = value
-
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-                else:
-                    saved_services.add(descr)
-
-            elif table_source == DiscoveryState.IGNORED:
-                if table_target in [
-                    DiscoveryState.MONITORED,
-                    DiscoveryState.UNDECIDED,
-                    DiscoveryState.VANISHED,
-                ]:
-                    remove_disabled_rule.add(descr)
-                if table_target in [
-                    DiscoveryState.MONITORED,
-                    DiscoveryState.IGNORED,
-                ]:
-                    autochecks_to_save[key] = value
-                    saved_services.add(descr)
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
-
-            elif table_source in [
-                DiscoveryState.CLUSTERED_NEW,
-                DiscoveryState.CLUSTERED_OLD,
-            ]:
-                autochecks_to_save[key] = value
-                saved_services.add(descr)
-
-            elif table_source in [
-                DiscoveryState.CLUSTERED_VANISHED,
-                DiscoveryState.CLUSTERED_IGNORED,
-            ]:
-                # We keep vanished clustered services on the node with the following reason:
-                # If a service is mapped to a cluster then there are already operations
-                # for adding, removing, etc. of this service on the cluster. Therefore we
-                # do not allow any operation for this clustered service on the related node.
-                # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[key] = value
-                saved_services.add(descr)
+            if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
+                old_autochecks[key] = value
 
         if apply_changes:
             need_sync = False
@@ -274,14 +226,18 @@ class Discovery:
         site_id = self._host.site_id()
         site_status = states().get(site_id, SiteStatus({}))
         if is_pre_17_remote_site(site_status):
-            check_mk_automation(
+            # is this branch still needed?
+            set_autochecks(
                 site_id,
-                "set-autochecks",
-                [self._host.name()],
-                {x: y[1:3] for x, y in checks.items()},
+                self._host.name(),
+                {x: y[1:3] for x, y in checks.items()},  # type: ignore[misc]
             )
         else:
-            check_mk_automation(site_id, "set-autochecks", [self._host.name()], checks)
+            set_autochecks(
+                site_id,
+                self._host.name(),
+                checks,
+            )
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
@@ -311,7 +267,9 @@ class Discovery:
 
         modified_folders = []
 
-        service_patterns = [service_description_to_condition(s) for s in services]
+        service_patterns: HostOrServiceConditions = [
+            service_description_to_condition(s) for s in services
+        ]
         modified_folders += self._remove_from_rule_of_host(
             ruleset, service_patterns, value=not value
         )
@@ -349,7 +307,7 @@ class Discovery:
         return []
 
     def _update_rule_of_host(
-        self, ruleset: watolib.Ruleset, service_patterns: List[Dict[str, str]], value: Any
+        self, ruleset: watolib.Ruleset, service_patterns: HostOrServiceConditions, value: Any
     ) -> List[watolib.CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
@@ -423,6 +381,78 @@ class Discovery:
             not self._options.show_checkboxes
             or checkbox_id(check_type, item) in self._discovery_info["update_services"]
         )
+
+
+def _apply_state_change(
+    table_source: str,
+    table_target: str,
+    key: Tuple[Any, Any],
+    value: Tuple[Any, Any, Any, Any],
+    descr: str,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: Set[str],
+    add_disabled_rule: Set[str],
+    remove_disabled_rule: Set[str],
+):
+
+    if table_source == DiscoveryState.UNDECIDED:
+        if table_target == DiscoveryState.MONITORED:
+            autochecks_to_save[key] = value
+            saved_services.add(descr)
+        elif table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+
+    elif table_source == DiscoveryState.VANISHED:
+        if table_target == DiscoveryState.REMOVED:
+            pass
+        elif table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+            autochecks_to_save[key] = value
+        else:
+            autochecks_to_save[key] = value
+            saved_services.add(descr)
+
+    elif table_source == DiscoveryState.MONITORED:
+        if table_target in [
+            DiscoveryState.MONITORED,
+            DiscoveryState.IGNORED,
+        ]:
+            autochecks_to_save[key] = value
+
+        if table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+        else:
+            saved_services.add(descr)
+
+    elif table_source == DiscoveryState.IGNORED:
+        if table_target in [
+            DiscoveryState.MONITORED,
+            DiscoveryState.UNDECIDED,
+            DiscoveryState.VANISHED,
+        ]:
+            remove_disabled_rule.add(descr)
+        if table_target in [
+            DiscoveryState.MONITORED,
+            DiscoveryState.IGNORED,
+        ]:
+            autochecks_to_save[key] = value
+            saved_services.add(descr)
+        if table_target == DiscoveryState.IGNORED:
+            add_disabled_rule.add(descr)
+
+    elif table_source in [
+        DiscoveryState.CLUSTERED_NEW,
+        DiscoveryState.CLUSTERED_OLD,
+        DiscoveryState.CLUSTERED_VANISHED,
+        DiscoveryState.CLUSTERED_IGNORED,
+    ]:
+        # We keep VANISHED clustered services on the node with the following reason:
+        # If a service is mapped to a cluster then there are already operations
+        # for adding, removing, etc. of this service on the cluster. Therefore we
+        # do not allow any operation for this clustered service on the related node.
+        # We just display the clustered service state (OLD, NEW, VANISHED).
+        autochecks_to_save[key] = value
+        saved_services.add(descr)
 
 
 def _make_host_audit_log_object(checks: SetAutochecksTable) -> Set[str]:
@@ -567,13 +597,8 @@ def _get_check_table_from_remote(api_request):
             raise
 
         # Compatibility for pre 1.6 remote sites.
-        # TODO: Replace with helpful exception in 1.7.
         if api_request.options.action == DiscoveryAction.TABULA_RASA:
-            _counts, _failed_hosts = check_mk_automation(
-                api_request.host.site_id(),
-                "inventory",
-                ["@scan", "refresh", api_request.host.name()],
-            )
+            raise MKAutomationException(_("Tabula rasa not supported any more"))
 
         if api_request.options.action == DiscoveryAction.REFRESH:
             options = ["@scan"]
@@ -583,16 +608,16 @@ def _get_check_table_from_remote(api_request):
         if not api_request.options.ignore_errors:
             options.append("@raiseerrors")
 
-        options.append(api_request.host.name())
-
-        check_table = check_mk_automation(api_request.host.site_id(), "try-inventory", options)
-
         return DiscoveryResult(
             job_status={
                 "is_active": False,
                 "state": JobStatusStates.INITIALIZED,
             },
-            check_table=check_table,
+            check_table=try_discovery(
+                api_request.host.site_id(),
+                options,
+                api_request.host.name(),
+            ).check_table,
             check_table_created=int(time.time()),
             host_labels={},
             new_labels={},
@@ -624,7 +649,17 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             host_name=host_name,
             estimated_duration=last_job_status.get("duration"),
         )
-        self._pre_try_discovery: Tuple[int, Dict] = (0, {})
+        self._pre_try_discovery = (
+            0,
+            TryDiscoveryResult(
+                output="",
+                check_table=[],
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
+            ),
+        )
 
     def discover(
         self, api_request: StartDiscoveryRequest, job_interface: BackgroundProcessInterface
@@ -648,34 +683,39 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def _perform_service_scan(self, api_request):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        result = check_mk_automation(
-            api_request.host.site_id(), "try-inventory", self._get_automation_options(api_request)
+        sys.stdout.write(
+            try_discovery(
+                api_request.host.site_id(),
+                self._get_automation_flags(api_request),
+                api_request.host.name(),
+            ).output
         )
-        sys.stdout.write(result["output"])
 
     def _perform_automatic_refresh(self, api_request):
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
-        execute_automation_discovery(
-            site_id=api_request.host.site_id(), args=["@scan", "refresh", api_request.host.name()]
+        discovery(
+            api_request.host.site_id(),
+            "refresh",
+            ["@scan"],
+            api_request.host.name(),
+            non_blocking_http=True,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
         # message = _("Refreshed check configuration of host '%s' with %d services") % \
         #            (api_request.host.name(), count_added)
         # watolib.add_service_change(api_request.host, "refresh-autochecks", message)
 
-    def _get_automation_options(self, api_request: StartDiscoveryRequest) -> List[str]:
+    def _get_automation_flags(self, api_request: StartDiscoveryRequest) -> Iterable[str]:
         if api_request.options.action == DiscoveryAction.REFRESH:
-            options = ["@scan"]
+            flags = ["@scan"]
         else:
-            options = ["@noscan"]
+            flags = ["@noscan"]
 
         if not api_request.options.ignore_errors:
-            options.append("@raiseerrors")
+            flags.append("@raiseerrors")
 
-        options.append(api_request.host.name())
-
-        return options
+        return flags
 
     def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
@@ -692,24 +732,26 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         return DiscoveryResult(
             job_status=job_status,
             check_table_created=check_table_created,
-            check_table=result.get("check_table", []),
-            host_labels=result.get("host_labels", {}),
-            new_labels=result.get("new_labels", {}),
-            vanished_labels=result.get("vanished_labels", {}),
-            changed_labels=result.get("changed_labels", {}),
+            check_table=result.check_table,
+            host_labels=result.host_labels,
+            new_labels=result.new_labels,
+            vanished_labels=result.vanished_labels,
+            changed_labels=result.changed_labels,
         )
 
     @staticmethod
-    def _get_try_discovery(api_request: StartDiscoveryRequest) -> Tuple[int, Dict]:
+    def _get_try_discovery(
+        api_request: StartDiscoveryRequest,
+    ) -> Tuple[int, TryDiscoveryResult]:
         # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         return (
             int(time.time()),
-            check_mk_automation(
+            try_discovery(
                 api_request.host.site_id(),
-                "try-inventory",
-                ["@noscan", api_request.host.name()],
+                ["@noscan"],
+                api_request.host.name(),
             ),
         )
 

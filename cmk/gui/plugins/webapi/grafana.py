@@ -128,6 +128,11 @@ class APICallGrafanaConnector(APICallCollection):
         if presentation not in combined_graph_presentations:
             raise MKGeneralException(_("The requested item %s does not exist") % presentation)
 
+        # Because grafana connector <= 1.1.0 sends empty string when no site filter is
+        # applied, yet cmk takes takes context['site'] as enforced thus "" is an applied site filter
+        if "site" in request["context"] and not request["context"]["site"]:
+            request["context"].pop("site")
+
         # The grafana connector needs the template title for making them
         # selectable by the user. We extend the graph identification here.
         # Otherwise we would need more API calls
@@ -137,7 +142,6 @@ class APICallGrafanaConnector(APICallCollection):
             graph_title = dict(get_graph_template_choices()).get(
                 graph_template_id, graph_template_id
             )
-
             response.append(
                 {
                     "identification": graph_identification,

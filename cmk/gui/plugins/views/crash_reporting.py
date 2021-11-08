@@ -7,8 +7,6 @@
 import json
 from typing import Dict, List, Optional
 
-from six import ensure_str
-
 import livestatus
 from livestatus import SiteId
 
@@ -110,7 +108,7 @@ class CrashReportsRowTable(RowTable):
 
             try:
                 sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([SiteId(ensure_str(crash_info["site"]))])
+                sites.live().set_only_sites([SiteId(crash_info["site"])])
 
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"

@@ -37,15 +37,13 @@ def get_branch(scm) {
 
 def get_cmk_version(scm, VERSION) {
     def BRANCH = get_branch(scm)
-    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
-    def DATE = new Date()
 
     if (BRANCH == 'master' && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE) // Regular daily build of master branch
+        return get_date() // Regular daily build of master branch
     } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE) + '-' + BRANCH // Experimental builds
+        return get_date() + '-' + BRANCH // Experimental builds
     } else if (VERSION == 'daily') {
-        return BRANCH + '-' + DATE_FORMAT.format(DATE) // version branch dailies (e.g. 1.6.0)
+        return BRANCH + '-' + get_date() // version branch dailies (e.g. 1.6.0)
     } else {
         return VERSION
     }

@@ -114,6 +114,7 @@ from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
+from cmk.utils.certs import cert_dir
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
@@ -1285,12 +1286,14 @@ def initialize_site_ca(site: SiteContext) -> None:
     """Initialize the site local CA and create the default site certificate
     This will be used e.g. for serving SSL secured livestatus"""
     ca = omdlib.certs.CertificateAuthority(
-        ca_path=Path(site.dir) / "etc" / "ssl",
+        ca_path=cert_dir(Path(site.dir)),
         ca_name="Site '%s' local CA" % site.name,
     )
     ca.initialize()
-    if not ca.site_certificate_path(site.name).exists():
+    if not ca.site_certificate_exists(site.name):
         ca.create_site_certificate(site.name)
+    if not ca.marcv_certificate_exists:
+        ca.create_marcv_certificate()
 
 
 def config_change(version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks) -> None:
@@ -1558,7 +1561,6 @@ def config_configure_hook(
 
     if change:
         config_set_value(site, config_hooks, cast(str, hook["name"]), new_value)
-        site.conf[hook_name] = new_value
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
 

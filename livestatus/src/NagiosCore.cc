@@ -7,8 +7,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <map>
-#include <memory>
 #include <utility>
 
 #include "Logger.h"

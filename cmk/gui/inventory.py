@@ -36,7 +36,8 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.globals import config, g, html, request, response, user
+from cmk.gui.globals import config, html, request, response, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import TextInput, ValueSpec
@@ -264,18 +265,6 @@ def get_short_inventory_history_filepath(hostname: HostName, timestamp: str) -> 
     )
 
 
-def parent_path(invpath: SDRawPath) -> Optional[SDRawPath]:
-    """Gets the parent path by dropping the last component"""
-    if invpath == ".":
-        return None  # No parent
-
-    if invpath[-1] in ".:":  # drop trailing type specifyer
-        invpath = invpath[:-1]
-
-    last_sep = max(invpath.rfind(":"), invpath.rfind("."))
-    return invpath[: last_sep + 1]
-
-
 def vs_element_inventory_visible_raw_path() -> Tuple[str, ValueSpec]:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to
@@ -316,6 +305,7 @@ class LoadStructuredDataError(MKException):
     pass
 
 
+@request_memoize(maxsize=None)
 def _load_structured_data_tree(
     tree_type: Literal["inventory", "status_data"], hostname: Optional[HostName]
 ) -> Optional[StructuredDataNode]:
@@ -323,28 +313,22 @@ def _load_structured_data_tree(
     if not hostname:
         return None
 
-    inventory_tree_cache = g.setdefault(tree_type, {})
-    if hostname in inventory_tree_cache:
-        inventory_tree = inventory_tree_cache[hostname]
-    else:
-        if "/" in hostname:
-            # just for security reasons
-            return None
+    if "/" in hostname:
+        # just for security reasons
+        return None
 
-        tree_store = StructuredDataStore(
-            Path(cmk.utils.paths.inventory_output_dir)
-            if tree_type == "inventory"
-            else Path(cmk.utils.paths.status_data_dir)
-        )
+    tree_store = StructuredDataStore(
+        Path(cmk.utils.paths.inventory_output_dir)
+        if tree_type == "inventory"
+        else Path(cmk.utils.paths.status_data_dir)
+    )
 
-        try:
-            inventory_tree = tree_store.load(host_name=hostname)
-        except Exception as e:
-            if config.debug:
-                html.show_warning("%s" % e)
-            raise LoadStructuredDataError()
-        inventory_tree_cache[hostname] = inventory_tree
-    return inventory_tree
+    try:
+        return tree_store.load(host_name=hostname)
+    except Exception as e:
+        if config.debug:
+            html.show_warning("%s" % e)
+        raise LoadStructuredDataError()
 
 
 def _load_status_data_tree(hostname: Optional[HostName], row: Row) -> Optional[StructuredDataNode]:
@@ -381,18 +365,16 @@ def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[Structur
     return struct_tree
 
 
+@request_memoize()
 def _get_permitted_inventory_paths():
     """
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.
     """
-    if "permitted_inventory_paths" in g:
-        return g.permitted_inventory_paths
 
     user_groups = [] if user.id is None else userdb.contactgroups_of_user(user.id)
 
     if not user_groups:
-        g.permitted_inventory_paths = None
         return None
 
     forbid_whole_tree = False
@@ -401,11 +383,9 @@ def _get_permitted_inventory_paths():
         inventory_paths = config.multisite_contactgroups.get(user_group, {}).get("inventory_paths")
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
-            g.permitted_inventory_paths = None
             return None
 
         if inventory_paths == "allow_all":
-            g.permitted_inventory_paths = None
             return None
 
         if inventory_paths == "forbid_all":
@@ -415,10 +395,8 @@ def _get_permitted_inventory_paths():
         permitted_paths.extend(inventory_paths[1])
 
     if forbid_whole_tree and not permitted_paths:
-        g.permitted_inventory_paths = []
         return []
 
-    g.permitted_inventory_paths = permitted_paths
     return permitted_paths
 
 

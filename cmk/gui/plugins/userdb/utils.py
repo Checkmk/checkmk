@@ -6,7 +6,6 @@
 
 import abc
 import os
-from contextlib import suppress
 from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
@@ -17,10 +16,13 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import config, g, user
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.logged_in import LoggedInUser, save_user_file
 
 # count this up, if new user attributes are used or old are marked as
@@ -123,6 +125,25 @@ def add_internal_attributes(usr: UserSpec) -> UserSpec:
     return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
 
 
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]
+
+
+def validate_start_url(value: str, varprefix: str) -> None:
+    if not is_allowed_url(value):
+        raise MKUserError(
+            varprefix,
+            _(
+                "The given value is not allowed. You may only configure "
+                "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."
+            ),
+        )
+
+
 #   .--Connections---------------------------------------------------------.
 #   |        ____                            _   _                         |
 #   |       / ___|___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
@@ -149,25 +170,18 @@ def cleanup_connection_id(connection_id: Optional[str]) -> str:
     return connection_id
 
 
+@request_memoize(maxsize=None)
 def get_connection(connection_id: Optional[str]) -> "Optional[UserConnector]":
     """Returns the connection object of the requested connection id
 
     This function maintains a cache that for a single connection_id only one object per request is
     created."""
-    if "user_connections" not in g:
-        g.user_connections = {}
-
-    if connection_id not in g.user_connections:
-        connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
-        # NOTE: We cache even failed lookups.
-        g.user_connections[connection_id] = connections_with_id[0] if connections_with_id else None
-
-    return g.user_connections[connection_id]
+    connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
+    return connections_with_id[0] if connections_with_id else None
 
 
 def clear_user_connection_cache() -> None:
-    with suppress(AttributeError):
-        del g.user_connections
+    get_connection.cache_clear()
 
 
 def active_connections() -> "List[Tuple[str, UserConnector]]":

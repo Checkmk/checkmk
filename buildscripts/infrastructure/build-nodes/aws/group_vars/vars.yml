@@ -25,4 +25,4 @@ servers:
       cmk_site: cmk
       vpc_subnet_id: subnet-1680ce6b
       instance_type: t2.medium
-      disk_volume: 15
+      disk_volume: 8

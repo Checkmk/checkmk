@@ -257,7 +257,6 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
                     .append("div")
                     .text(d => d.layer.name())
                     .attr("layer_id", d => d.layer.id())
-                    .classed("box", true)
                     .classed("noselect", true)
                     .classed("togglebox", true)
                     .style("pointer-events", "all")

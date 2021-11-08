@@ -32,6 +32,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
     HostAddress,
@@ -337,7 +338,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
     backup_path = None
     if os.path.exists(objects_file):
         backup_path = objects_file + ".save"
-        os.rename(objects_file, backup_path)
+        shutil.copy2(objects_file, backup_path)
 
     try:
         try:
@@ -541,7 +542,7 @@ def get_service_attributes(
     description: ServiceName,
     config_cache: ConfigCache,
     check_plugin_name: Optional[CheckPluginName] = None,
-    params: LegacyCheckParameters = None,
+    params: Union[LegacyCheckParameters, TimespecificParameters] = None,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
         hostname, description, config_cache, check_plugin_name, params
@@ -564,7 +565,7 @@ def _extra_service_attributes(
     description: ServiceName,
     config_cache: ConfigCache,
     check_plugin_name: Optional[CheckPluginName],
-    params: LegacyCheckParameters,
+    params: Union[LegacyCheckParameters, TimespecificParameters],
 ) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 

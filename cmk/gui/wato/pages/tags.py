@@ -28,7 +28,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     add_change,
     flash,
     make_action_link,
@@ -41,6 +40,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import Table, table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
@@ -657,7 +657,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Tag"), breadcrumb, form_name="aux_tag", button_name="save"
+            _("Tag"), breadcrumb, form_name="aux_tag", button_name="_save"
         )
 
     def action(self) -> ActionResult:
@@ -736,7 +736,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Tag group"), breadcrumb, form_name="tag_group", button_name="save"
+            _("Tag group"), breadcrumb, form_name="tag_group", button_name="_save"
         )
 
     def action(self) -> ActionResult:

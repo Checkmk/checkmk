@@ -6,17 +6,14 @@
 
 # pylint: disable=no-self-use
 
-import os
 from typing import Any, Dict
 
 import pytest
 
 from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_legacy_includes.ibm_mq import (
-    ibm_mq_check_version,
-    is_ibm_mq_service_vanished,
-    parse_runmqsc_display_output,
-)
+from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version, is_ibm_mq_service_vanished
+from cmk.base.plugins.agent_based.ibm_mq_channels import parse_ibm_mq_channels
+from cmk.base.plugins.agent_based.utils.ibm_mq import parse_ibm_mq
 
 pytestmark = pytest.mark.checks
 
@@ -83,7 +80,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")
+        parsed = parse_ibm_mq(section, "QUEUE")
         assert 2 + 2 == len(parsed)
 
         assert parsed["FOO.BAR"]["STATUS"] == "ENDED UNEXPECTEDLY"
@@ -146,7 +143,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")
+        parsed = parse_ibm_mq(section, "QUEUE")
         assert "QM.ONE:MY.QUEUE" in parsed
         assert "QM.TWO:MY.QUEUE" in parsed
         assert len(parsed["QM.ONE:MY.QUEUE"]) == 16
@@ -175,7 +172,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")
+        parsed = parse_ibm_mq(section, "QUEUE")
         attrs = parsed["MY.TEST:MY.QUEUE"]
         assert attrs["IPPROCS"] == "2"
         assert attrs["MSGAGE"] == ""
@@ -195,7 +192,7 @@ No commands have a syntax error.
 One valid MQSC command could not be processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "CHANNEL")
+        parsed = parse_ibm_mq_channels(section)
         assert "MY.TEST:HERE.TO.THERE.TWO" in parsed
         assert "STATUS" not in parsed["MY.TEST:HERE.TO.THERE.TWO"]
 
@@ -232,7 +229,7 @@ AMQ8417I: Display Channel Status details.
    STATUS(RUNNING)                         SUBSTATE(MQGET)
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "CHANNEL")
+        parsed = parse_ibm_mq_channels(section)
 
         attrs = parsed["MY.TEST"]
         assert attrs["STATUS"] == "RUNNING"

@@ -12,11 +12,6 @@ import cmk.gui.sidebar as sidebar
 from cmk.gui.globals import config, html, user
 from cmk.gui.sidebar import UserSidebarSnapin
 
-# TODO: Can be removed once all snapins have been refactored
-# to class based snapins
-sidebar._register_custom_snapins = lambda: None
-sidebar.load_plugins(True)
-
 
 @pytest.fixture(scope="function", autouse=True)
 def fixture_user(request_context, monkeypatch):

@@ -24,7 +24,6 @@ NOT_TESTED_YET = {
     "agent_hp_msa",
     "agent_ipmi_sensors",
     "agent_jolokia",
-    "agent_kube",  # TODO: change when WATO setting has been finalized
     "agent_prism",
     "agent_random",
     "agent_ruckus_spot",
@@ -91,6 +90,14 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "--api-server-endpoint",
         "ENDPOINT",
     ],
+    "agent_kube": [
+        "--token",
+        "TOKEN",
+        "--api-server-endpoint",
+        "ENDPOINT",
+        "--cluster-agent-endpoint",
+        "ENDPOINT",
+    ],
     "agent_prometheus": [],
     "agent_rabbitmq": [
         "-P",
@@ -110,10 +117,6 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     "agent_storeonce4x": ["USER", "PASSWORD", "HOST"],
     "agent_cisco_prime": ["--hostname", "HOSTNAME"],
     "agent_innovaphone": [
-        "--debug",
-        "--verbose",
-        "--vcrtrace",
-        "TRACEFILE",
         "User",
         "MyPass",
         "Hostname",

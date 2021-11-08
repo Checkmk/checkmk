@@ -13,7 +13,6 @@ from cmk.utils.defines import weekday_ids
 
 from cmk.gui import fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.plugins.openapi import plugins
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
@@ -243,10 +242,6 @@ class ObjectMember(OneOfSchema):
     }
 
 
-class ObjectMemberDict(plugins.ValueTypedDictSchema):
-    value_type = ObjectMember  # type: ignore[assignment]
-
-
 class ActionResultBase(Linkable):
     resultType: fields.Field = fields.String(
         enum=["object", "scalar"],
@@ -351,16 +346,6 @@ class HostExtensions(BaseSchema):
     )
 
 
-class HostObject(DomainObject):
-    domainType = fields.Constant(
-        "host_config", required=True, description="The domain type of the object."
-    )
-    extensions = fields.Nested(
-        HostExtensions,
-        description="All the data and metadata of this host.",
-    )
-
-
 class FolderMembers(BaseSchema):
     hosts = fields.Nested(
         ObjectCollectionMember(),
@@ -451,11 +436,15 @@ class HostMembers(BaseSchema):
     )
 
 
-class HostConfigSchema(Linkable):
-    domainType = fields.Constant("host_config", required=True)
-    id = fields.String()
-    title = fields.String()
+class HostConfigSchema(DomainObject):
+    domainType = fields.Constant(
+        "host_config", required=True, description="The domain type of the object."
+    )
     members = fields.Nested(HostMembers, description="All the members of the host object.")
+    extensions = fields.Nested(
+        HostExtensions,
+        description="All the data and metadata of this host.",
+    )
 
 
 class ObjectAction(Linkable):
@@ -503,6 +492,17 @@ class DomainObjectCollection(Linkable):
         many=True,
     )
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
+
+
+class HostConfigCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "host_config",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(HostConfigSchema()),
+        description="A list of host objects.",
+    )
 
 
 class FolderCollection(DomainObjectCollection):
@@ -579,7 +579,7 @@ class ConcreteTimePeriod(BaseSchema):
     )
 
 
-class ConcretePassword(BaseSchema):
+class PasswordExtension(BaseSchema):
     ident = fields.String(
         example="pass",
         description="The unique identifier for the password",
@@ -592,19 +592,17 @@ class ConcretePassword(BaseSchema):
         example="Kommentar",
         description="A comment for the password",
     )
-
     documentation_url = fields.String(
         example="localhost",
+        attribute="docu_url",
         description="The URL pointing to documentation or any other page.",
     )
-
     password = fields.String(
         required=True,
         example="password",
         description="The password string",
     )
-
-    owner = fields.String(
+    owned_by = fields.String(
         example="admin",
         description="The owner of the password who is able to edit, delete and use existing passwords.",
     )
@@ -615,7 +613,23 @@ class ConcretePassword(BaseSchema):
             description="The member the password is shared with",
         ),
         example=["all"],
+        attribute="shared_with",
         description="The list of members the password is shared with",
+    )
+    customer = fields.customer_field(
+        required=True,
+        should_exist=True,
+    )
+
+
+class PasswordObject(DomainObject):
+    domainType = fields.Constant(
+        "password",
+        description="The type of the domain-object.",
+    )
+    extensions = fields.Nested(
+        PasswordExtension,
+        description="All the attributes of the domain object.",
     )
 
 
@@ -673,3 +687,10 @@ class Version(LinkSchema):
         required=False,
     )
     additionalCapabilities = fields.Nested(VersionCapabilities)
+
+
+class X509PEM(BaseSchema):
+    cert = fields.Str(
+        required=True,
+        description="PEM-encoded X.509 certificate signed by local site CA.",
+    )

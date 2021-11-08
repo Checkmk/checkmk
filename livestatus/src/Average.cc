@@ -7,6 +7,8 @@
 
 #include <cmath>
 
+#include "ChronoUtils.h"
+
 namespace {
 constexpr double percentile = 0.50;
 constexpr double horizon = 10;  // seconds
@@ -17,16 +19,13 @@ const double weight_per_second = pow(1.0 - percentile, 1.0 / horizon);
 // Please look at check_mk_base.py:get_average for details on the averaging
 // algorithm. It's the same as here.
 void Average::update(double value) {
-    using std::chrono::duration;
-    using std::chrono::steady_clock;
-
-    auto now = steady_clock::now();
-
+    auto now = std::chrono::steady_clock::now();
     std::scoped_lock l(_lock);
-    if (_last_update == steady_clock::time_point()) {
+    if (_last_update == std::chrono::steady_clock::time_point{}) {
         _average = value;
     } else {
-        auto timedif = duration<double>(now - _last_update).count();
+        auto timedif =
+            mk::ticks<std::chrono::duration<double>>(now - _last_update);
         if (timedif == 0) {
             // Force at least half a second. Can happen e.g. for latency
             // updates

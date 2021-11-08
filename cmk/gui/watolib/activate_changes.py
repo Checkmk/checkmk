@@ -33,7 +33,6 @@ from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple, 
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
-from six import ensure_binary, ensure_str
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -59,9 +58,9 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.globals import config, g
+from cmk.gui.globals import config, html
 from cmk.gui.globals import request as _request
-from cmk.gui.globals import user
+from cmk.gui.globals import timeout_manager, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
@@ -212,7 +211,7 @@ def get_replication_paths() -> List[ReplicationPath]:
             "dir",
             "usersettings",
             os.path.relpath(cmk.utils.paths.var_dir + "/web", cmk.utils.paths.omd_root),
-            ["*/report-thumbnails"],
+            ["report-thumbnails", "session_info.mk"],
         ),
         ReplicationPath(
             "dir",
@@ -1435,8 +1434,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._detach_from_parent()
 
         # Cleanup existing livestatus connections (may be opened later when needed)
-        if g:
-            sites_disconnect()
+        sites_disconnect()
 
         self._close_apache_fds()
 
@@ -1959,15 +1957,19 @@ def apply_pre_17_sync_snapshot(
     site_id: SiteId, tar_content: bytes, base_dir: Path, components: List[ReplicationPath]
 ) -> bool:
     """Apply the snapshot received from a central site to the local site"""
-    extract_from_buffer(tar_content, base_dir, components)
+    try:
+        timeout_manager.disable_timeout()
+        extract_from_buffer(tar_content, base_dir, components)
 
-    _save_pre_17_site_globals_on_slave_site(tar_content)
+        _save_pre_17_site_globals_on_slave_site(tar_content)
 
-    # Create rule making this site only monitor our hosts
-    create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
+        # Create rule making this site only monitor our hosts
+        create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
 
-    _execute_post_config_sync_actions(site_id)
-    _execute_cmk_update_config()
+        _execute_post_config_sync_actions(site_id)
+        _execute_cmk_update_config()
+    finally:
+        timeout_manager.enable_timeout(html.request.request_timeout)
 
     return True
 
@@ -2263,11 +2265,11 @@ def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
 
     # Since we don't stream the archive to the remote site (we could probably do this) it should be
     # no problem to buffer it in memory for the moment
-    archive, stderr = p.communicate(b"\0".join(ensure_binary(f) for f in to_sync))
+    archive, stderr = p.communicate(b"\0".join(f.encode() for f in to_sync))
 
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr.decode())
         )
 
     return archive
@@ -2299,7 +2301,7 @@ def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
     stderr = p.communicate(sync_archive)[1]
     if p.returncode != 0:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr))
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr.decode())
         )
 
 
@@ -2374,7 +2376,11 @@ def _get_config_sync_file_infos(
                 if entry.is_dir() and not entry.is_symlink():
                     continue  # Do not add directories at all
 
-                if entry.parent.name in general_dir_excludes:
+                if (
+                    entry.parent.name in general_dir_excludes
+                    or entry.parent.name in replication_path.excludes
+                    or entry.name in replication_path.excludes
+                ):
                     continue
 
                 entry_site_path = entry.relative_to(base_dir)
@@ -2531,20 +2537,22 @@ def activate_changes_start(
     known_sites = allsites().keys()
     for site in sites:
         if site not in known_sites:
-            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
+            raise MKUserError(
+                None, _("Unknown site %s") % escaping.escape_attribute(site), status=400
+            )
 
     manager = ActivateChangesManager()
     manager.load()
     if manager.is_running():
-        raise MKUserError(None, _("There is an activation already running."))
+        raise MKUserError(None, _("There is an activation already running."), status=423)
 
     if not manager.has_changes():
-        raise MKUserError(None, _("Currently there are no changes to activate."))
+        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
     if not sites:
         dirty_sites = manager.dirty_sites()
         if not dirty_sites:
-            raise MKUserError(None, _("Currently there are no changes to activate."))
+            raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
         sites = manager.filter_not_activatable_sites(dirty_sites)
         if not sites:
@@ -2556,6 +2564,7 @@ def activate_changes_start(
                     "offline or not logged in)."
                 )
                 % ", ".join([site_id for site_id, _site in dirty_sites]),
+                status=409,
             )
 
     return manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)

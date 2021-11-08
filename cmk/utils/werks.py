@@ -42,6 +42,7 @@ class WerkTranslator:
             "livestatus": _("Livestatus"),
             "liveproxy": _("Livestatus proxy"),
             "inv": _("HW/SW inventory"),
+            "rest-api": _("REST API"),
             # CEE
             "cmc": _("The Checkmk Micro Core"),
             "setup": _("Setup, site management"),
@@ -82,6 +83,7 @@ class WerkTranslator:
 
     def component_of(self, werk):
         c = werk["component"]
+        # ? need knowledge, what type werk["component"] can have
         return self._components.get(c, c)
 
     def levels(self):
@@ -112,6 +114,7 @@ def load():
 
 
 def load_precompiled_werks_file(path):
+    # ? what is the content of these files, to which the path shows
     with path.open() as fp:
         return {int(werk_id): werk for werk_id, werk in json.load(fp).items()}
 
@@ -186,7 +189,7 @@ def _load_werk(path):
 
 def write_precompiled_werks(path, werks):
     with path.open("w", encoding="utf-8") as fp:
-        fp.write(ensure_str(json.dumps(werks, check_circular=False)))
+        fp.write(json.dumps(werks, check_circular=False))
 
 
 def write_as_text(werks, f, write_version=True):
@@ -221,7 +224,7 @@ def write_werk_as_text(f, werk):
         omit = "..."
     else:
         omit = ""
-
+    # ? exact type of werk is not known; it depends again on the werklist dictionary
     f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, ensure_str(werk["title"]), omit))
 
     if werk["compatible"] == "incomp":

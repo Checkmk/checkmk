@@ -35,10 +35,11 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import ActionResult, mode_registry, WatoMode
+from cmk.gui.plugins.wato import mode_registry, WatoMode
 from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 from cmk.gui.sites import activation_sites, get_site_config, site_is_local
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
     ACResult,
@@ -230,9 +231,7 @@ class ModeAnalyzeConfig(WatoMode):
                 css = "state state%d" % result.status
 
             table.cell(site_id, css=css)
-            html.open_div(title=result.text)
-            html.write_text(result.status_name())
-            html.close_div()
+            html.span(result.status_name(), title=result.text, class_="state_rounded_fill")
 
             table.cell("", css="buttons")
 
@@ -271,7 +270,7 @@ class ModeAnalyzeConfig(WatoMode):
                 html.write_text("")
 
         # Add toggleable notitication context
-        table.row(class_="ac_test_details hidden", id_="test_result_details_%s" % test_id)
+        table.row(css="ac_test_details hidden", id_="test_result_details_%s" % test_id)
         table.cell(colspan=2 + 2 * len(site_ids))
 
         html.write_text(test_results_by_site["test"]["help"])
@@ -290,7 +289,7 @@ class ModeAnalyzeConfig(WatoMode):
             html.close_table()
 
         # This dummy row is needed for not destroying the odd/even row highlighting
-        table.row(class_="hidden")
+        table.row(css="hidden")
 
     def _perform_tests(self):
         test_sites = self._analyze_sites()

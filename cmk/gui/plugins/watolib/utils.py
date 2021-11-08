@@ -10,8 +10,6 @@ import pprint
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
 
-from six import ensure_str
-
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
 
@@ -301,7 +299,7 @@ def register_configvar(
 
     # New API is to hand over the class via group argument
     if isinstance(group, str):
-        group = config_variable_group_registry[ensure_str(group)]
+        group = config_variable_group_registry[group]
 
     cls = type(
         "LegacyConfigVariable%s" % varname.title(),

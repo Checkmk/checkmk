@@ -20,8 +20,9 @@ def upload(Map args) {
 def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST) {
     stage('Download from shared storage') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+            sh("mkdir -p ${DOWNLOAD_DEST}")
             sh """
-                rsync -av \
+                rsync --recursive --links --perms --times --verbose \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
                     ${DOWNLOAD_SOURCE}/${CMK_VERSION}/* \
                     ${DOWNLOAD_DEST}/

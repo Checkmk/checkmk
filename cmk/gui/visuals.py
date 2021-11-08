@@ -136,20 +136,14 @@ T = TypeVar("T")
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-loaded_with_language: Union[bool, None, str] = False
 title_functions: List[Callable] = []
 
 
-def load_plugins(force):
-    global loaded_with_language, title_functions
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    global title_functions
     title_functions = []
-
     utils.load_web_plugins("visuals", globals())
-
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # TODO: This has been obsoleted by pagetypes.py
@@ -776,7 +770,7 @@ def page_create_visual(what, info_keys, next_url=None):
             visual_name.capitalize(),
             breadcrumb,
             form_name="create_visual",
-            button_name="save",
+            button_name="_save",
             save_title=_("Continue"),
         ),
     )
@@ -796,7 +790,7 @@ def page_create_visual(what, info_keys, next_url=None):
     )
     html.close_p()
 
-    if request.var("save") and transactions.check_transaction():
+    if request.var("_save") and transactions.check_transaction():
         try:
             single_infos = vs_infos.from_html_vars("single_infos")
             vs_infos.validate_value(single_infos, "single_infos")
@@ -1213,7 +1207,7 @@ def page_edit_visual(
         if request.var("save%d" % nr):
             save_and_go = pagename
 
-    if save_and_go or request.var("save") or request.var("save_and_view") or request.var("search"):
+    if save_and_go or request.var("_save") or request.var("save_and_view") or request.var("search"):
         try:
             general_properties = vs_general.from_html_vars("general")
 
@@ -1253,7 +1247,7 @@ def page_edit_visual(
 
             visual["context"] = process_context_specs(context_specs)
 
-            if request.var("save") or request.var("save_and_view") or save_and_go:
+            if request.var("_save") or request.var("save_and_view") or save_and_go:
                 if save_and_go:
                     back_url = makeuri_contextless(
                         request,
@@ -1360,6 +1354,8 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
     html.span(f.title)
     html.close_div()
     html.open_div(class_="content")
+    if f.description:
+        html.help(f.description)
     try:
         with output_funnel.plugged():
             f.display(value)

@@ -14,8 +14,6 @@ import traceback
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
 
-from six import ensure_binary, ensure_str
-
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -50,17 +48,18 @@ class ConfigDomainCore(ABCConfigDomain):
 
     def activate(self):
         # TODO: Cleanup
-        from cmk.gui.watolib.automations import check_mk_local_automation
+        from cmk.gui.watolib.check_mk_automations import reload, restart
 
-        return check_mk_local_automation(config.wato_activation_method)
+        return {
+            "restart": restart,
+            "reload": reload,
+        }[config.wato_activation_method]().config_warnings
 
     def default_globals(self):
         # TODO: Cleanup
-        from cmk.gui.watolib.automations import check_mk_local_automation
+        from cmk.gui.watolib.check_mk_automations import get_configuration
 
-        return check_mk_local_automation(
-            "get-configuration", [], self._get_global_config_var_names()
-        )
+        return get_configuration(*self._get_global_config_var_names()).result
 
 
 @config_domain_registry.register
@@ -207,7 +206,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     ]
 
     _PEM_RE = re.compile(
-        b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?" b"", re.DOTALL
+        "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
     )
 
     @classmethod
@@ -256,20 +255,20 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             ]
 
     def _update_trusted_cas(self, current_config):
-        trusted_cas: List[bytes] = []
+        trusted_cas: List[str] = []
         errors: List[str] = []
 
         if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
 
-        trusted_cas += [ensure_binary(e) for e in current_config["trusted_cas"]]
+        trusted_cas += current_config["trusted_cas"]
 
-        store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
+        store.save_text_to_file(self.trusted_cas_file, "\n".join(trusted_cas))
         return errors
 
-    def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[bytes], List[str]]:
-        trusted_cas: Set[bytes] = set()
+    def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[str], List[str]]:
+        trusted_cas: Set[str] = set()
         errors: List[str] = []
         for p in self.system_wide_trusted_ca_search_paths:
             cert_path = Path(p)
@@ -307,14 +306,18 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         return list(trusted_cas), errors
 
-    def _get_certificates_from_file(self, path: Path) -> List[bytes]:
+    def _get_certificates_from_file(self, path: Path) -> List[str]:
         try:
-            # This IO is done as binary IO, even if the files are text files. Since we work with
-            # arbitrary files here, we can not be sure about the encoding of these files. Since we
-            # only want to concatenate them to a Checkmk global file, it is OK to treat them all as
-            # binary.
-            with path.open("rb") as f:
-                return [match.group(0) for match in self._PEM_RE.finditer(f.read())]
+            # Some users use comments in certificate files e.g. to write the content of the
+            # certificate outside of encapsulation boundaries. We only want to extract the
+            # certificates between the encapsulation boundaries which have to be 7-bit ASCII
+            # characters.
+            with path.open("r", encoding="ascii", errors="surrogateescape") as f:
+                return [
+                    content
+                    for match in self._PEM_RE.finditer(f.read())
+                    if (content := match.group(0)).isascii()
+                ]
         except IOError as e:
             if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
@@ -409,7 +412,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         try:
             with file_path.open(encoding="utf-8") as f:
                 for line in f:
-                    line = ensure_str(line.strip())
+                    line = line.strip()
 
                     if line == "" or line.startswith("#"):
                         continue

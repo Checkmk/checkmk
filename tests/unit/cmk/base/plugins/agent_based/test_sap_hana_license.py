@@ -7,7 +7,6 @@
 import pytest
 
 import cmk.base.plugins.agent_based.sap_hana_license as sap_hana_license
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,

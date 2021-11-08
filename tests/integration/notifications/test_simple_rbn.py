@@ -12,6 +12,8 @@ import pytest
 from tests.testlib import WatchLog
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
+from cmk.utils import version as cmk_version
+
 
 @pytest.fixture(name="fake_sendmail")
 def fake_sendmail_fixture(site):
@@ -27,7 +29,12 @@ def fake_sendmail_fixture(site):
     name="test_log",
     params=[
         ("nagios", "var/log/nagios.log"),
-        ("cmc", "var/check_mk/core/history"),
+        pytest.param(
+            ("cmc", "var/check_mk/core/history"),
+            marks=pytest.mark.skipif(
+                cmk_version.is_raw_edition(), reason="CMC not supported on CRE"
+            ),
+        ),
     ],
 )
 def test_log_fixture(

@@ -68,6 +68,12 @@ def test_qualified_discovery():
     assert result.new == [3]
     assert result.present == [2, 3]
 
+    assert list(result.chain_with_qualifier()) == [
+        ("vanished", 1),
+        ("old", 2),
+        ("new", 3),
+    ]
+
 
 def test_qualified_discovery_keeps_old():
 

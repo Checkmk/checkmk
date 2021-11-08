@@ -7,7 +7,6 @@
 
 import argparse
 import collections
-import datetime
 import errno
 import json
 import re
@@ -15,17 +14,17 @@ import socket
 import sys
 import time
 from pathlib import Path
-from typing import Any, Counter, Dict, List
+from typing import Any, Counter, Dict, List, Sequence
 from xml.dom import minidom  # type: ignore[import]
 
+import dateutil.parser
 import requests
 import urllib3  # type: ignore[import]
-from dateutil import tz
 
 import cmk.utils.password_store
 import cmk.utils.paths
 
-from cmk.special_agents.utils import vcrtrace
+import cmk.special_agents.utils as utils
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -927,7 +926,7 @@ def parse_arguments(argv):
     parser.add_argument(
         "--vcrtrace",
         "--tracefile",
-        action=vcrtrace(before_record_request=ESXConnection.filter_request),
+        action=utils.vcrtrace(before_record_request=ESXConnection.filter_request),
     )
     parser.add_argument(
         "-t",
@@ -1644,19 +1643,17 @@ def get_section_snapshot_summary(vms):
     ]
 
 
-def get_section_systemtime(connection, opt):
+def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[str]:
     try:
         response = connection.query_server("systemtime")
-        elements = get_pattern("<returnval>(.*)</returnval>", response)
-        if elements:
-            naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
-            utc = naive.replace(tzinfo=tz.tzutc())
-            localtime = utc.astimezone(tz.tzlocal())
-            return ["<<<systemtime>>>", localtime.strftime("%s") + " " + str(time.time())]
-    except Exception:
-        if opt.debug:
+        raw_systime = get_pattern("<returnval>(.*)</returnval>", response)[0]
+    except (IndexError, Exception):
+        if debug:
             raise
-    return []
+        return []
+
+    systime = dateutil.parser.isoparse(raw_systime).timestamp()
+    return ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
 
 def is_placeholder_vm(devices):
@@ -1825,14 +1822,13 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     return vms, vm_esx_host
 
 
-def get_section_vm(vms, time_reference):
+def get_section_vm(vms):
     section_lines = []
     for vm_name, vm_data in sorted(vms.items()):
         if vm_data.get("name"):
             section_lines += [
                 "<<<<%s>>>>" % vm_name,
                 "<<<esx_vsphere_vm>>>",
-                "time_reference %d" % time_reference,
             ]
             section_lines.extend("%s %s" % entry for entry in sorted(vm_data.items()))
     section_lines += ["<<<<>>>>"]
@@ -1893,16 +1889,6 @@ def get_sections_clusters(connection, vm_esx_host, opt):
     return section_lines
 
 
-def _retrieve_system_time(connection):
-    response = connection.query_server("systemtime")
-    elements = get_pattern("<returnval>(.*)</returnval>", response)
-    return (
-        int(datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ").timestamp())
-        if elements
-        else 0
-    )
-
-
 def fetch_data(connection, opt):
     output = []
 
@@ -1945,9 +1931,8 @@ def fetch_data(connection, opt):
     # Virtual machines
     ###########################
     if "virtualmachine" in opt.modules:
-        time_reference = _retrieve_system_time(connection)
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output += get_section_vm(vms, time_reference)
+        output += get_section_vm(vms)
         output += get_section_virtual_machines(vms)
 
         if not opt.direct or opt.snapshots_on_host:
@@ -1965,7 +1950,7 @@ def fetch_data(connection, opt):
     if "hostsystem" in opt.modules:
         output += get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt)
 
-    output += get_section_systemtime(connection, opt)
+    output += get_section_systemtime(connection, bool(opt.debug))
 
     return output
 
@@ -2005,7 +1990,7 @@ def main(argv=None):
         if opt.debug:
             raise
         sys.stderr.write("%s\n" % exc)
-        return 0 if opt.agent else 1
+        return 1
 
     sys.stdout.writelines("%s\n" % line for line in vsphere_output)
 

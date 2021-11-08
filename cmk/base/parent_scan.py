@@ -18,14 +18,10 @@ import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import Gateways, HostAddress, HostName
 
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
-
-Gateways = List[
-    Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str, int, str]
-]
 
 
 def do_scan_parents(hosts: List[HostName]) -> None:

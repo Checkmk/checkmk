@@ -10,6 +10,8 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result
 
+from cmk.automations.results import DiagHostResult
+
 import cmk.base.automations.check_mk as check_mk
 from cmk.base.sources.tcp import TCPSource
 
@@ -42,4 +44,7 @@ class TestAutomationDiagHost:
     @pytest.mark.usefixtures("patch_fetch")
     def test_execute(self, hostname, ipaddress, raw_data):
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
-        assert check_mk.AutomationDiagHost().execute(args) == (0, raw_data)
+        assert check_mk.AutomationDiagHost().execute(args) == DiagHostResult(
+            0,
+            raw_data,
+        )

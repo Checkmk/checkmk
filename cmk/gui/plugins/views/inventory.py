@@ -65,7 +65,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
 )
 from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
-from cmk.gui.type_defs import ColumnName, FilterName, Row, Rows
+from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows
 from cmk.gui.utils.escaping import escape_html, escape_text
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary
@@ -98,29 +98,33 @@ def paint_host_inventory_tree(
         return "", ""
     assert isinstance(struct_tree, StructuredDataNode)
 
-    if column == "host_inventory":
-        painter_options = PainterOptions.get_instance()
-        tree_renderer: NodeRenderer = AttributeRenderer(
-            row["site"],
-            row["host_name"],
-            invpath,
-            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
-        )
-    else:
-        tree_id = "/" + str(row["invhist_time"])
-        tree_renderer = DeltaNodeRenderer(
-            row["site"],
-            row["host_name"],
-            invpath,
-            tree_id=tree_id,
-        )
+    tree_renderer = _get_tree_renderer(row, column, invpath)
 
     parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
+    child: Union[None, StructuredDataNode, Table, Attributes]
+
     if attribute_keys is None:
-        return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
-    return _paint_host_inventory_tree_value(
-        struct_tree, parsed_path, tree_renderer, invpath, attribute_keys
-    )
+        child = struct_tree.get_node(parsed_path)
+        td_class = "invtree"
+
+    elif attribute_keys == []:
+        child = struct_tree.get_table(parsed_path)
+        td_class = ""
+
+    elif attribute_keys:
+        child = _get_filtered_attributes(struct_tree, parsed_path, attribute_keys)
+        td_class = ""
+
+    else:
+        raise NotImplementedError()
+
+    if child is None:
+        return "", ""
+
+    with output_funnel.plugged():
+        child.show(tree_renderer)
+        code = HTML(output_funnel.drain())
+    return td_class, code
 
 
 def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
@@ -129,56 +133,33 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
         return [SiteId(r[0]) for r in sites.live().query(query_str)]
 
 
-def _paint_host_inventory_tree_children(
+def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> NodeRenderer:
+    if column == "host_inventory":
+        painter_options = PainterOptions.get_instance()
+        return AttributeRenderer(
+            row["site"],
+            row["host_name"],
+            invpath,
+            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+        )
+
+    tree_id = "/" + str(row["invhist_time"])
+    return DeltaNodeRenderer(
+        row["site"],
+        row["host_name"],
+        invpath,
+        tree_id=tree_id,
+    )
+
+
+def _get_filtered_attributes(
     struct_tree: StructuredDataNode,
-    parsed_path: SDPath,
-    tree_renderer: NodeRenderer,
-) -> CellSpec:
-    node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
-    if node is None:
-        return "", ""
-
-    with output_funnel.plugged():
-        node.show(tree_renderer)
-        code = HTML(output_funnel.drain())
-    return "invtree", code
-
-
-def _paint_host_inventory_tree_value(
-    struct_tree: StructuredDataNode,
-    parsed_path: SDPath,
-    tree_renderer: NodeRenderer,
-    invpath: SDRawPath,
-    attribute_keys: SDKeys,
-) -> CellSpec:
-    child: Optional[Union[Table, Attributes]]
-    if attribute_keys == []:
-        child = struct_tree.get_table(parsed_path)
-    else:
-        child = struct_tree.get_attributes(parsed_path)
-
-    if child is None:
-        return "", ""
-
-    with output_funnel.plugged():
-        if invpath.endswith(".") or invpath.endswith(":"):
-            invpath = invpath[:-1]
-
-        if attribute_keys == []:
-            # TODO parse instead of validate
-            assert isinstance(child, Table)
-            tree_renderer.show_table(child)
-
-        elif attribute_keys:
-            # In paint_host_inventory_tree we parse invpath and get
-            # a path and attribute_keys which may be either None, [], or ["KEY"].
-            # TODO parse instead of validate
-            assert isinstance(child, Attributes)
-            filtered = child.get_filtered_attributes(lambda key: key == attribute_keys[-1])
-            tree_renderer.show_attributes(filtered)
-
-        code = HTML(output_funnel.drain())
-    return "", code
+    path: SDPath,
+    keys: SDKeys,
+) -> Optional[Attributes]:
+    if (attributes := struct_tree.get_attributes(path)) is None:
+        return None
+    return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
 def _inv_filter_info():
@@ -787,11 +768,23 @@ def _inv_titleinfo(
 def _inv_titleinfo_long(invpath: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
     _icon, last_title = _inv_titleinfo(invpath)
-    parent = inventory.parent_path(invpath)
+    parent = _get_parent_from_invpath(invpath)
     if parent:
         _icon, parent_title = _inv_titleinfo(parent)
         return parent_title + " ➤ " + last_title
     return last_title
+
+
+def _get_parent_from_invpath(invpath: SDRawPath) -> Optional[SDRawPath]:
+    """Gets the parent path by dropping the last component"""
+    if invpath == ".":
+        return None  # No parent
+
+    if invpath[-1] in ".:":  # drop trailing type specifyer
+        invpath = invpath[:-1]
+
+    last_sep = max(invpath.rfind(":"), invpath.rfind("."))
+    return invpath[: last_sep + 1]
 
 
 def declare_inventory_columns() -> None:
@@ -978,6 +971,7 @@ def declare_invtable_view(
     invpath: SDRawPath,
     title_singular: str,
     title_plural: str,
+    icon: Optional[Icon] = None,
 ) -> None:
     _register_info_class(infoname, title_singular, title_plural)
 
@@ -1012,7 +1006,7 @@ def declare_invtable_view(
         painters.append((column, "", ""))
         filters.append(column)
 
-    _declare_views(infoname, title_plural, painters, filters, [invpath])
+    _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
 
 
 InventorySourceRows = Tuple[str, InventoryRows]
@@ -1162,6 +1156,7 @@ def _declare_views(
     painters: List[Tuple[str, str, str]],
     filters: List[FilterName],
     invpaths: List[SDRawPath],
+    icon: Optional[Icon] = None,
 ) -> None:
     is_show_more = True
     if len(invpaths) == 1:
@@ -1234,6 +1229,7 @@ def _declare_views(
         "hard_filters": [],
         "hard_filtervars": [],
         "hide_filters": ["host"],
+        "icon": icon,
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
 
@@ -1250,6 +1246,7 @@ declare_invtable_view(
     ".networking.interfaces:",
     _("Network interface"),
     _("Network interfaces"),
+    "networking",
 )
 
 declare_invtable_view(
@@ -1294,12 +1291,14 @@ declare_invtable_view(
     ".software.applications.check_mk.sites:",
     _("Checkmk site"),
     _("Checkmk sites"),
+    "checkmk",
 )
 declare_invtable_view(
     "invcmkversions",
     ".software.applications.check_mk.versions:",
     _("Checkmk version"),
     _("Checkmk versions"),
+    "checkmk",
 )
 declare_invtable_view(
     "invcontainer",
@@ -2190,10 +2189,10 @@ def ajax_inv_render_tree() -> None:
         return
 
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath or "")
-    node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
-    if node is None:
+    if (node := struct_tree.get_node(parsed_path)) is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path))
         )
-    else:
-        node.show(tree_renderer)
+        return
+
+    node.show(tree_renderer)

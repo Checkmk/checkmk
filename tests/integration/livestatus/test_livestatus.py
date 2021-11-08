@@ -13,12 +13,26 @@ import pytest
 
 from tests.testlib import create_linux_test_host, web  # noqa: F401 # pylint: disable=unused-import
 
+from cmk.utils import version as cmk_version
+
 
 class DefaultConfig(NamedTuple):
     core: str
 
 
-@pytest.fixture(name="default_cfg", scope="module", params=["nagios", "cmc"])
+@pytest.fixture(
+    name="default_cfg",
+    scope="module",
+    params=[
+        "nagios",
+        pytest.param(
+            "cmc",
+            marks=pytest.mark.skipif(
+                cmk_version.is_raw_edition(), reason="raw edition only supports nagios core."
+            ),
+        ),
+    ],
+)
 def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     site.ensure_running()
     config = DefaultConfig(core=request.param)

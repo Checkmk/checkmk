@@ -8,8 +8,6 @@
 import json
 from typing import List, Optional, Type
 
-from six import ensure_str
-
 import cmk.gui.forms as forms
 import cmk.gui.pages
 import cmk.gui.watolib as watolib
@@ -25,7 +23,8 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato import flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -36,6 +35,7 @@ from cmk.gui.valuespec import (
     Password,
 )
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.check_mk_automations import diag_host
 
 
 @mode_registry.register
@@ -66,7 +66,7 @@ class ModeDiagHost(WatoMode):
 
     def _from_vars(self):
         self._hostname = request.get_ascii_input_mandatory("host")
-        self._host = watolib.Folder.current().host(self._hostname)
+        self._host = watolib.Folder.current().load_host(self._hostname)
         self._host.need_permission("read")
 
         if self._host.is_cluster():
@@ -83,11 +83,11 @@ class ModeDiagHost(WatoMode):
                     title=_("Test"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Host properties"),
+                            title=_("Options"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Save & go to host properties"),
-                                    icon_name="save",
+                                    title=_("Run tests"),
+                                    icon_name="connection_tests",
                                     item=make_form_submit_link("diag_host", "_save"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -95,12 +95,12 @@ class ModeDiagHost(WatoMode):
                             ],
                         ),
                         PageMenuTopic(
-                            title=_("Options"),
+                            title=_("Host properties"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Run tests"),
-                                    icon_name="connection_tests",
-                                    item=make_form_submit_link("diag_host", "_try"),
+                                    title=_("Save & go to host properties"),
+                                    icon_name="save",
+                                    item=make_form_submit_link("diag_host", "go_to_properties"),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -109,8 +109,8 @@ class ModeDiagHost(WatoMode):
                     ],
                 ),
                 PageMenuDropdown(
-                    name="hosts",
-                    title=_("Hosts"),
+                    name="host",
+                    title=_("Host"),
                     topics=[
                         PageMenuTopic(
                             title=_("For this host"),
@@ -126,14 +126,14 @@ class ModeDiagHost(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        if request.var("_try"):
+        if request.var("_save"):
             try:
                 self._validate_diag_html_vars()
             except MKUserError as e:
                 user_errors.add(e)
             return None
 
-        if request.var("_save"):
+        if request.var("go_to_properties"):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
             new = vs_host.from_html_vars("vs_host")
@@ -216,7 +216,7 @@ class ModeDiagHost(WatoMode):
         # When clicking "Save & Test" on the "Edit host" page, this will be set
         # to immediately execute the tests using the just saved settings
         if request.has_var("_start_on_load"):
-            html.final_javascript("cmk.page_menu.form_submit('diag_host', '_try');")
+            html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
 
         html.hidden_fields()
         html.end_form()
@@ -227,7 +227,7 @@ class ModeDiagHost(WatoMode):
         self._show_diagnose_output()
 
     def _show_diagnose_output(self):
-        if not request.var("_try"):
+        if not request.var("_save"):
             html.show_message(
                 _(
                     "You can diagnose the connection to a specific host using this dialog. "
@@ -388,8 +388,6 @@ class ModeDiagHost(WatoMode):
 @page_registry.register_page("wato_ajax_diag_host")
 class ModeAjaxDiagHost(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 
@@ -463,9 +461,14 @@ class ModeAjaxDiagHost(AjaxPage):
             else:
                 args[9] = api_request.get("snmpv3_security_name", "")
 
-        result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
+        result = diag_host(
+            host.site_id(),
+            hostname,
+            _test,
+            *args,
+        )
         return {
             "next_transid": transactions.fresh_transid(),
-            "status_code": result[0],
-            "output": ensure_str(result[1], errors="replace"),
+            "status_code": result.return_code,
+            "output": result.response,
         }

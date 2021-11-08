@@ -27,7 +27,8 @@ import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui import sites
 from cmk.gui.exceptions import MKConfigError
-from cmk.gui.globals import config, g, html, output_funnel, request, theme, user
+from cmk.gui.globals import config, html, output_funnel, request, theme, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
@@ -760,6 +761,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
             html.open_tr()
 
             leaf_td = html.render_td(code, class_=["leaf", odd], style=td_style, colspan=colspan)
+            odd = "even" if odd == "odd" else "odd"
 
             tds = [leaf_td]
             for rowspan, c in parents:
@@ -967,24 +969,23 @@ class BIManager:
         return str(Path(watolib.multisite_dir()) / "bi_config.bi")
 
 
+@request_memoize()
 def get_cached_bi_packs() -> BIAggregationPacks:
-    if "bi_packs" not in g:
-        g.bi_packs = BIAggregationPacks(BIManager.bi_configuration_file())
-        g.bi_packs.load_config()
-    return g.bi_packs
+    bi_packs = BIAggregationPacks(BIManager.bi_configuration_file())
+    bi_packs.load_config()
+    return bi_packs
 
 
+@request_memoize()
 def get_cached_bi_manager() -> BIManager:
-    if "bi_manager" not in g:
-        g.bi_manager = BIManager()
-    return g.bi_manager
+    return BIManager()
 
 
+@request_memoize()
 def get_cached_bi_compiler() -> BICompiler:
-    if "bi_compiler" not in g:
-        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
-        g.bi_compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
-    return g.bi_compiler
+    return BICompiler(
+        BIManager.bi_configuration_file(), SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+    )
 
 
 def bi_livestatus_query(

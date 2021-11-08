@@ -44,6 +44,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
     Labels,
 )
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
 
@@ -88,7 +89,7 @@ def _to_regex(s):
     """Ensures the provided search string is a regex, does some basic conversion
     and then tries to verify it is a regex"""
     s = s.replace("*", ".*")
-    cmk.gui.utils.validate_regex(s, varname=None)
+    validate_regex(s, varname=None)
 
     return s
 
@@ -1392,7 +1393,7 @@ class MenuSearchResultsRenderer:
             mega_menu_registry.menu_setup(),
             mega_menu_registry.menu_monitoring(),
         ]:
-            mapping[menu.title] = (
+            mapping[str(menu.title)] = (
                 menu.icon + "_active" if isinstance(menu.icon, str) else default_icons[0],
                 menu.icon if menu.icon else default_icons[1],
             )
@@ -1505,7 +1506,8 @@ class MonitoringSearch(ABCMegaMenuSearch):
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
         tooltip = _(
-            "Search for menu entries, hosts, services or host- and servicegroups.\n"
+            "Search with regular expressions for menu entries, \n"
+            "hosts, services or host- and servicegroups.\n\n"
             "You can use the following filters:\n"
             "h: Host\n"
             "s: Service\n"
@@ -1515,7 +1517,8 @@ class MonitoringSearch(ABCMegaMenuSearch):
             "al: Alias\n"
             "tg: Host tag\n"
             "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-            "sl: Service label (e.g. sl: cmk/os_family:linux)"
+            "sl: Service label (e.g. sl: cmk/os_family:linux)\n\n"
+            "Note that for simplicity '*' will be substituted with '.*'."
         )
         html.input(
             id_=f"mk_side_search_field_{self.name}",

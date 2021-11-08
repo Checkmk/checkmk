@@ -3,6 +3,7 @@
 .bugs/.last
 .bugs/.my_ids
 .cache
+.cargo
 .coverage
 .coverage.*
 .directory
@@ -11,6 +12,7 @@
 .metadata
 .mypy_cache
 .mypy_cache/
+.cargo
 .ropeproject
 .syntastic
 .testmondata
@@ -18,14 +20,16 @@
 .venv-3.8
 .venv.lock
 .venv/
-.vscode/
-*.code-workspace
 *.cookie
 *.gcno
 *.gcov
 *.iml
 *.py.*.py
 *.pyc
+*_pb2.py
+*_pb2.pyi
+*.pb.cc
+*.pb.h
 *.timer
 **/launch.json
 *~
@@ -37,6 +41,7 @@ aclocal.m4
 ar-lib
 artefacts/
 autom4te.cache/
+build/
 ChangeLog
 check_mk-*.tar.gz
 check-mk-*.build
@@ -54,6 +59,8 @@ config.status
 config.sub
 configure
 depcomp
+marcv/dist/*
+agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 GPATH
@@ -61,13 +68,36 @@ GRTAGS
 GTAGS
 htmlcov/
 install-sh
+marcv/marcv.egg-info
+marcv/pyproject.toml
 missing
 mk-livestatus-*.tar.gz
 node_modules/
+pip-mirror-tmp
 RemoteSystemsTempFiles
+requirements.txt
+requirements-no-dev.txt
 stamp-h1
 tags
 tests/web/data/*
 tests/var/*
 web/htdocs/js/*_min.js.map
 /results
+/buildscripts/infrastructure/build-nodes/scripts/defines.make
+
+# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
+
+### VisualStudioCode ###
+.vscode/*
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode

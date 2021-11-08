@@ -34,7 +34,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     make_action_link,
     make_confirm_link,
     mode_registry,
@@ -43,6 +42,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
 )
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -390,7 +390,7 @@ class ModeTimeperiodImportICal(WatoMode):
             _("iCalendar"),
             breadcrumb,
             form_name="import_ical",
-            button_name="upload",
+            button_name="_save",
             save_title=_("Import"),
         )
 
@@ -710,7 +710,7 @@ class ModeEditTimeperiod(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Time period"), breadcrumb, form_name="timeperiod", button_name="save"
+            _("Time period"), breadcrumb, form_name="timeperiod", button_name="_save"
         )
 
     def _valuespec(self):
@@ -762,8 +762,10 @@ class ModeEditTimeperiod(WatoMode):
             )
 
     def _validate_alias(self, value, varprefix):
+        assert self._name is not None
         unique, message = watolib.is_alias_used("timeperiods", self._name, value)
         if not unique:
+            assert message is not None
             raise MKUserError("alias", message)
 
     def _vs_weekdays(self):

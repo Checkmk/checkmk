@@ -5,7 +5,6 @@
 
 #include "DynamicFileColumn.h"
 
-#include <filesystem>
 #include <stdexcept>
 #include <utility>
 
@@ -46,7 +45,8 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
                                  "': '" + f.string() + "' not in '" +
                                  basepath().string() + "'");
     }
-    return std::make_unique<typename BlobColumn::Callback<T>::File>(
-        name, _description, _offsets, _basepath,
-        [this, f](const T &r) { return _filepath(r, f); });
+    return std::make_unique<BlobColumn<T>>(
+        name, _description, _offsets,
+        BlobFileReader<T>{_basepath,
+                          [this, f](const T &r) { return _filepath(r, f); }});
 }

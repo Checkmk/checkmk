@@ -14,7 +14,12 @@ from cmk.gui.pages import Page, page_registry
 
 @pytest.fixture(autouse=True)
 def reset_hooks():
-    hooks.hooks.clear()
+    try:
+        old_hooks = hooks.hooks
+        hooks.hooks = {}
+        yield
+    finally:
+        hooks.hooks = old_hooks
 
 
 def test_request_memoize():
@@ -140,7 +145,7 @@ def test_builtin_vs_plugin_hooks():
     hooks.register_from_plugin("blub", lambda: True)
     assert hooks.registered("blub") is True
 
-    hooks.load_plugins(force=True)
+    hooks.load_plugins()
 
     assert hooks.registered("bla") is True
     assert hooks.registered("blub") is False

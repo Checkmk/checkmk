@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, MutableMapping
 
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, LegacyCheckParameters
 
 from cmk.base import plugin_contexts
 from cmk.base.check_utils import Service
@@ -155,7 +154,7 @@ def test_parse_diskstat_predictive(mocker: MockerFixture):
     mocker.patch(
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.1, 4.1, None, None))
     )
-    dummy_service = Service(
+    dummy_service: Service[LegacyCheckParameters] = Service(
         CheckPluginName("unittest_sd"),
         parameters={},
         item="item-nvme0n1",

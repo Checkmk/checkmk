@@ -65,48 +65,6 @@ def fixture_test_cfg() -> tags.TagConfig:
     return cfg
 
 
-def test_convert_pre_16_tags() -> None:
-    dict_config = tags.transform_pre_16_tags(
-        [
-            (
-                "criticality",
-                "Criticality",
-                [
-                    ("prod", "Productive system", ["bla"]),
-                ],
-            ),
-            (
-                "networking",
-                "Networking Segment",
-                [
-                    ("lan", "Local network (low latency)", []),
-                ],
-            ),
-        ],
-        [("bla", "blüb")],
-    )
-
-    assert dict_config == {
-        "aux_tags": [{"id": "bla", "title": "bl\xfcb"}],
-        "tag_groups": [
-            {
-                "id": "criticality",
-                "tags": [
-                    {"aux_tags": ["bla"], "id": "prod", "title": "Productive system"},
-                ],
-                "title": "Criticality",
-            },
-            {
-                "id": "networking",
-                "tags": [
-                    {"aux_tags": [], "id": "lan", "title": "Local network (low latency)"},
-                ],
-                "title": "Networking Segment",
-            },
-        ],
-    }
-
-
 def test_tag_config() -> None:
     cfg = tags.TagConfig()
     assert cfg.tag_groups == []

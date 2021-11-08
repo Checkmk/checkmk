@@ -13,7 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple, Union
 
-from six import ensure_binary, ensure_str
+from six import ensure_str
 from werkzeug.local import LocalProxy
 
 import cmk.utils.paths
@@ -136,7 +136,7 @@ def _load_secret() -> str:
 
 
 def _generate_secret() -> str:
-    return ensure_str(utils.get_random_string(256))
+    return utils.get_random_string(256)
 
 
 def _load_serial(username: UserId) -> int:
@@ -151,14 +151,14 @@ def _load_serial(username: UserId) -> int:
 
 
 def _generate_auth_hash(username: UserId, session_id: str) -> str:
-    return _generate_hash(username, ensure_str(username) + session_id)
+    return _generate_hash(username, username + session_id)
 
 
 def _generate_hash(username: UserId, value: str) -> str:
     """Generates a hash to be added into the cookie value"""
     secret = _load_secret()
     serial = _load_serial(username)
-    return sha256(ensure_binary(value + str(serial) + secret)).hexdigest()
+    return sha256((value + str(serial) + secret).encode()).hexdigest()
 
 
 def del_auth_cookie() -> None:
@@ -172,7 +172,7 @@ def del_auth_cookie() -> None:
 
 
 def _auth_cookie_value(username: UserId, session_id: str) -> str:
-    return ":".join([ensure_str(username), session_id, _generate_auth_hash(username, session_id)])
+    return ":".join([username, session_id, _generate_auth_hash(username, session_id)])
 
 
 def _invalidate_auth_session() -> None:
@@ -336,12 +336,12 @@ def _check_auth(req: Request) -> Optional[UserId]:
 
 def verify_automation_secret(user_id: UserId, secret: str) -> bool:
     if secret and user_id and "/" not in user_id:
-        path = Path(cmk.utils.paths.var_dir) / "web" / ensure_str(user_id) / "automation.secret"
+        path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
         if not path.is_file():
             return False
 
         with path.open(encoding="utf-8") as f:
-            return ensure_str(f.read()).strip() == secret
+            return f.read().strip() == secret
 
     return False
 
@@ -369,7 +369,7 @@ def _check_auth_http_header() -> Optional[UserId]:
     if not user_id:
         return None
 
-    user_id = UserId(ensure_str(user_id))
+    user_id = UserId(user_id)
     set_auth_type("http_header")
 
     return user_id
@@ -381,6 +381,7 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     The user may have configured (basic) authentication by the web server. In
     case a user is provided, we trust that user.
     """
+    # ? type of Request.remote_user attribute is unclear
     user_id = req.remote_user
     if user_id is not None:
         set_auth_type("web_server")
@@ -480,11 +481,11 @@ class LoginPage(Page):
             assert username_var is not None
             username = UserId(username_var.rstrip())
             if not username:
-                raise MKUserError("_username", _("No username given."))
+                raise MKUserError("_username", _("Missing username"))
 
             password = request.var("_password", "")
             if not password:
-                raise MKUserError("_password", _("No password given."))
+                raise MKUserError("_password", _("Missing password"))
 
             default_origtarget = url_prefix() + "check_mk/"
             origtarget = request.get_url_input("_origtarget", default_origtarget)
@@ -524,7 +525,7 @@ class LoginPage(Page):
                 raise HTTPRedirect(origtarget)
 
             userdb.on_failed_login(username)
-            raise MKUserError(None, _("Invalid credentials."))
+            raise MKUserError(None, _("Invalid login"))
         except MKUserError as e:
             user_errors.add(e)
 
@@ -556,11 +557,13 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
+        html.open_a(href="https://checkmk.com")
         html.img(
             src=theme.detect_icon_path(icon_name="logo", prefix="mk-"),
             id_="logo",
             class_="custom" if theme.has_custom_logo() else None,
         )
+        html.close_a()
 
         html.begin_form("login", method="POST", add_transid=False, action="login.py")
         html.hidden_field("_login", "1")
@@ -599,7 +602,7 @@ class LoginPage(Page):
         footer.append(
             HTML(
                 "&copy; %s"
-                % html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank")
+                % html.render_a("tribe29 GmbH", href="https://tribe29.com", target="_blank")
             )
         )
 

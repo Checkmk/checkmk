@@ -31,7 +31,7 @@ def test_parse_command_line():
             ["/path/to/executable", "mode", "msi", "param"]
         )
     except Exception as _:
-        assert False
+        raise AssertionError() from _
 
     assert mode == "mode"
     assert f == "msi"
@@ -40,7 +40,7 @@ def test_parse_command_line():
     try:
         mode, f, param = msi_patch.parse_command_line(["/path/to/executable", "mode", "msi"])
     except Exception as _:
-        assert False
+        raise AssertionError() from _
 
     assert mode == "mode"
     assert f == "msi"
@@ -48,7 +48,7 @@ def test_parse_command_line():
 
     try:
         msi_patch.parse_command_line(["/path/to/executable", "mode"])
-        assert False
+        raise AssertionError()
     except IndexError as _:
         assert True
 

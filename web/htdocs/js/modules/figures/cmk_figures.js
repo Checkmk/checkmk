@@ -489,7 +489,7 @@ export class FigureBase {
                 .attr("xlink:href", d => d.url || "#");
         }
 
-        title_component
+        let text_element = title_component
             .selectAll("text")
             .data(d => [d])
             .join("text")
@@ -498,12 +498,79 @@ export class FigureBase {
             .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");
+
+        const title_padding_left = parseInt(
+            utils
+                .get_computed_style(d3.select("div.dashlet div.title").node(), "padding-left")
+                .replace("px", "")
+        );
+
+        text_element.each((d, idx, nodes) => {
+            this._svg_text_overflow_ellipsis(
+                nodes[idx],
+                this.figure_size.width,
+                title_padding_left
+            );
+        });
+    }
+
+    /**
+     * Component to realize the css property text-overflow: ellipsis for svg text elements
+     * @param {DOMElement} text or tspan DOM element
+     * @param {number} width - Max width for the text/tspan element
+     * @param {number} padding - Padding for the text/tspan element
+     */
+    _svg_text_overflow_ellipsis(node, width, padding) {
+        let length = node.getComputedTextLength();
+        if (length <= width - padding) return;
+
+        const node_sel = d3.select(node);
+        let text = node_sel.text();
+        d3.select(node.parentNode)
+            .selectAll("title")
+            .data(d => [text])
+            .join("title")
+            .text(d => d)
+            .classed("svg_text_tooltip", true);
+
+        while (length > width - padding && text.length > 0) {
+            text = text.slice(0, -1);
+            node_sel.text(text + "...");
+            length = node.getComputedTextLength();
+        }
+        node_sel.attr("x", padding).attr("text-anchor", "left");
     }
 
     get_scale_render_function() {
+        // Create uniform behaviour with Graph dashlets: Display no unit at y-axis if value is 0
+        const f = render_function => v => Math.abs(v) < 10e-16 ? "0" : render_function(v);
         if (this._data.plot_definitions.length > 0)
-            return plot_render_function(this._data.plot_definitions[0]);
-        return plot_render_function({});
+            return f(plot_render_function(this._data.plot_definitions[0]));
+        return f(plot_render_function({}));
+    }
+}
+
+export class TextFigure extends FigureBase {
+    constructor(div_selector, fixed_size = null) {
+        super(div_selector, fixed_size);
+        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
+    }
+    initialize(debug) {
+        FigureBase.prototype.initialize.call(this, debug);
+        this.svg = this._div_selection.append("svg");
+        this.plot = this.svg.append("g");
+    }
+    resize() {
+        if (this._data.title) {
+            this.margin.top = 22; // magic number: title height
+        }
+        FigureBase.prototype.resize.call(this);
+        this.svg.attr("width", this.figure_size.width).attr("height", this.figure_size.height);
+        this.plot.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+    }
+    update_gui() {
+        this.resize();
+        this.render();
     }
 }
 
@@ -644,6 +711,7 @@ export class FigureTooltip {
  * @param {string} options.label - Text to draw in the label
  * @param {string} options.css_class - Css classes to append to the label
  * @param {boolean} options.visible - Whether to draw the label at all
+ * @param {string} options.font_size - Optional font size
  */
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(figurebase, options) {
@@ -653,7 +721,7 @@ export function state_component(figurebase, options) {
         return;
     }
     //hard fix for the moment
-    let font_size = 14;
+    let font_size = options.font_size ? options.font_size : 14;
     let state_component = figurebase.svg
         .selectAll(".state_component")
         .data([options])
@@ -685,7 +753,7 @@ export function state_component(figurebase, options) {
         .join("text")
         .attr("text-anchor", "middle")
         .attr("dx", font_size * 4)
-        .attr("dy", font_size * 1.2)
+        .attr("dy", font_size * 1.1)
         .style("font-size", font_size + "px")
         .style("fill", "black")
         .style("font-weight", "bold")
@@ -815,5 +883,55 @@ export function metric_value_component(selection, options) {
         .style("font-size", font_size / 2 + "px")
         .style("font-weight", "lighter")
         .text(d => d.unit);
-    if (options.value.unit !== "%") unit.attr("x", options.position.x).attr("dy", "1em");
+    if (options.value.unit !== "%") {
+        unit.attr("dx", font_size / 6 + "px").attr("dy", font_size / 8 + "px");
+    }
+}
+
+/**
+ * Function to provide default options for metric_value_component
+ * @param {Object} size - Size of container to draw to
+ * @param {number} size.width - Width of container
+ * @param {number} size.height - Height of container
+ * @param {Object} options - Configuration the values
+ * @param {number} options.font_size - Overwrite auto font_size (calculated by size)
+ * @param {boolean} options.visible - Overwrite auto visible (true)
+ * @param {Object} options.position - Overwrite a position value
+ * @param {number} options.position.y - Overwrite y position
+ *
+ * The function provides the following options in the result:
+ * * position
+ * * font_size
+ * * visible
+ */
+export function metric_value_component_options_big_centered_text(size, options) {
+    if (options == undefined) {
+        options = {};
+    }
+
+    let font_size = Math.min(size.width / 5, (size.height * 2) / 3);
+    if (options.font_size !== undefined) {
+        font_size = options.font_size;
+    }
+
+    let visible = true;
+    if (options.visible !== undefined) {
+        visible = options.visible;
+    }
+
+    const position_x = size.width / 2;
+
+    let position_y = size.height / 2;
+    if (options.position !== undefined && options.position.y !== undefined) {
+        position_y = options.position.y;
+    }
+
+    return {
+        position: {
+            x: position_x,
+            y: position_y,
+        },
+        font_size: font_size,
+        visible: visible,
+    };
 }

@@ -19,6 +19,7 @@ from cmk.ec.event import (
     create_event_from_line,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
+    parse_syslog_info,
     parse_syslog_message_structured_data,
     remove_leading_bom,
     split_syslog_structured_data_and_message,
@@ -343,6 +344,51 @@ def test_create_event_from_line(line, expected):
     logger = logging.getLogger("cmk.mkeventd")
     with on_time(1550000000.0, "CET"):
         assert create_event_from_line(line, address, logger, verbose=True) == expected
+
+
+@pytest.mark.parametrize(
+    "line, expected_result",
+    [
+        pytest.param(
+            "App42Blah[4711]: a message",
+            {
+                "application": "App42Blah",
+                "pid": 4711,
+                "text": "a message",
+            },
+            id="content with both application and pid",
+        ),
+        pytest.param(
+            "App42Blah: a message",
+            {
+                "application": "App42Blah",
+                "pid": 0,
+                "text": "a message",
+            },
+            id="content with application and without pid",
+        ),
+        pytest.param(
+            "App42Blah a message",
+            {
+                "application": "",
+                "pid": 0,
+                "text": "App42Blah a message",
+            },
+            id="content with neither application nor pid",
+        ),
+        pytest.param(
+            "C:/this/is/no/tag a message",
+            {
+                "application": "",
+                "pid": 0,
+                "text": "C:/this/is/no/tag a message",
+            },
+            id="content with Windows path at the beginning",
+        ),
+    ],
+)
+def test_parse_syslog_info(line: str, expected_result: Mapping[str, Any]) -> None:
+    assert parse_syslog_info(line) == expected_result
 
 
 @pytest.mark.parametrize(

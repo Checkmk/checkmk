@@ -14,8 +14,9 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "//": "COMMENT: Use the wrapper ./scripts/run-webpack-watch instead of 'npm run watch'",
-    "watch": "webpack --mode development --watch"
+    "//": "COMMENT: Process 'resolutions' key below",
+    "watch": "webpack --mode development --watch",
+    "preinstall": "npx npm-force-resolutions"
   },
   "repository": {
     "type": "git",
@@ -75,5 +76,9 @@
     "simplebar": "^5.2.0",
     "sweetalert2": "^10.14.0",
     "whatwg-fetch": "^3.0.0"
+  },
+  "resolutions": {
+    "//": "COMMENT: Ensure we get the desired version without dependency declaration",
+    "elliptic": ">=6.5.4"
   }
 }

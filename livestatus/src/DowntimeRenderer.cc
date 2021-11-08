@@ -7,6 +7,7 @@
 
 #include <chrono>
 
+#include "ChronoUtils.h"
 #include "Renderer.h"
 
 void DowntimeRenderer::output(ListRenderer& l,
@@ -32,9 +33,7 @@ void DowntimeRenderer::output(ListRenderer& l,
             s.output(downtime._start_time);
             s.output(downtime._end_time);
             s.output(downtime._fixed);
-            s.output(std::chrono::duration_cast<std::chrono::seconds>(
-                         downtime._duration)
-                         .count());
+            s.output(mk::ticks<std::chrono::seconds>(downtime._duration));
             s.output(downtime._recurring);
             s.output(downtime._pending);
             break;

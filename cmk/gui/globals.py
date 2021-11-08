@@ -15,7 +15,6 @@ from typing import Any, List, Optional, TYPE_CHECKING
 
 from werkzeug.local import LocalProxy, LocalStack
 
-from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.user_errors import UserErrors
 
 #####################################################################
@@ -26,10 +25,12 @@ if TYPE_CHECKING:
     from cmk.gui import htmllib, http, userdb
     from cmk.gui.config import Config
     from cmk.gui.display_options import DisplayOptions
+    from cmk.gui.i18n import Translation
     from cmk.gui.utils.logged_in import LoggedInUser
     from cmk.gui.utils.output_funnel import OutputFunnel
     from cmk.gui.utils.theme import Theme
     from cmk.gui.utils.timeout_manager import TimeoutManager
+    from cmk.gui.utils.transaction_manager import TransactionManager
 
 _sentinel = object()
 
@@ -157,6 +158,7 @@ class RequestContext:
         resp: http.Response,
         funnel: OutputFunnel,
         config_obj: Config,
+        user: LoggedInUser,  # pylint: disable=redefined-outer-name
         html_obj: Optional[htmllib.html] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
         theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
@@ -170,19 +172,14 @@ class RequestContext:
         self.display_options = display_options
         self.session: Optional[userdb.Session] = None
         self.flashes: Optional[List[str]] = None
+        self.translation: Optional[Translation] = None
         self._prefix_logs_with_url = prefix_logs_with_url
 
         self.request = req
         self.response = resp
         self.output_funnel = funnel
         self.config = config_obj
-
-        # TODO: cyclical import with config -> globals -> config -> ...
-        from cmk.gui.utils.logged_in import LoggedInNobody
-
-        self._user: LoggedInUser = LoggedInNobody()
-        # TODO: This needs to be a helper of LoggedInUser
-        self.transactions = TransactionManager(req, self._user)
+        self._user = user
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = _PrependURLFilter()
@@ -195,7 +192,10 @@ class RequestContext:
     @user.setter
     def user(self, user_obj: LoggedInUser) -> None:
         self._user = user_obj
-        self.transactions = TransactionManager(request, user_obj)
+
+    @property
+    def transactions(self) -> TransactionManager:
+        return self._user.transactions
 
     def __enter__(self):
         _request_ctx_stack.push(self)
@@ -203,6 +203,8 @@ class RequestContext:
         if self._prefix_logs_with_url:
             self._web_log_handler = logging.getLogger().handlers[0]
             self._web_log_handler.addFilter(self._prepend_url_filter)
+
+        _call_hook("request-context-enter")
 
         return self
 
@@ -213,7 +215,16 @@ class RequestContext:
         if self.timeout_manager is not None:
             self.timeout_manager.disable_timeout()
 
+        _call_hook("request-context-exit")
+
         _request_ctx_stack.pop()
+
+
+def _call_hook(name: str) -> None:
+    # TODO: cyclical import with hooks -> globals
+    from cmk.gui import hooks
+
+    hooks.call("request-context-exit")
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,

@@ -138,5 +138,5 @@ check_info["eltek_battery.supply"] = {
     "service_description": "Battery %s",
     "has_perfdata": True,
     "group": "el_inphase",
-    "default_levels_variable": "eltek_battery_temp_phase_variables",
+    "default_levels_variable": "eltek_battery_phase_default_variables",
 }

@@ -34,6 +34,7 @@ from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.json import patch_json
+from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -42,7 +43,6 @@ from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
     handle_unhandled_exception,
-    load_all_plugins,
     plain_error,
 )
 
@@ -210,6 +210,7 @@ class CheckmkApp:
             resp=resp,
             funnel=funnel,
             config_obj=config_obj,
+            user=LoggedInNobody(),
             html_obj=htmllib.html(req, resp, funnel, output_format),
             timeout_manager=timeout_manager,
             display_options=DisplayOptions(),
@@ -229,11 +230,6 @@ def _process_request(
     environ, start_response, debug=False
 ) -> Response:  # pylint: disable=too-many-branches
     try:
-        # Make sure all plugins are available as early as possible. At least
-        # we need the plugins (i.e. the permissions declared in these) at the
-        # time before the first login for generating auth.php.
-        load_all_plugins()
-
         page_handler = get_and_wrap_page(requested_file_name(request))
         resp = page_handler()
     except HTTPRedirect as e:

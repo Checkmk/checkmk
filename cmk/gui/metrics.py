@@ -93,21 +93,15 @@ RequiredMetricNames = Set[str]
 #   +----------------------------------------------------------------------+
 #   |  Typical code for loading Multisite plugins of this module           |
 #   '----------------------------------------------------------------------'
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language: Union[bool, None, str] = False
 
 
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("metrics", globals())
 
     fixup_graph_info()
     fixup_unit_info()
     fixup_perfometer_info()
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 def fixup_graph_info() -> None:

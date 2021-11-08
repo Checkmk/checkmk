@@ -16,7 +16,7 @@ import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
@@ -27,8 +27,8 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -200,7 +200,7 @@ class PageKeyManagement:
 
 
 class PageEditKey:
-    back_mode = "keys"
+    back_mode: str
 
     def __init__(self):
         self._minlen = None
@@ -213,7 +213,7 @@ class PageEditKey:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Key"), breadcrumb, form_name="key", button_name="create", save_title=_("Create")
+            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Create")
         )
 
     def action(self) -> ActionResult:
@@ -225,7 +225,15 @@ class PageEditKey:
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
-            return redirect(mode_url(self.back_mode))
+            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
+            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
+            #  is obviously a very simple module-layer violation. This whole module should either
+            #    * be moved into cmk.gui.cee.plugins.wato
+            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
+            #  Either way, this is outside my scope right now and shall be fixed.
+            from cmk.gui.plugins.wato.utils.base_modes import mode_url
+
+            return HTTPRedirect(mode_url(self.back_mode))
         return None
 
     def _create_key(self, value):
@@ -295,7 +303,7 @@ class PageEditKey:
 
 
 class PageUploadKey:
-    back_mode = "keys"
+    back_mode: str
 
     def load(self):
         raise NotImplementedError()
@@ -305,7 +313,7 @@ class PageUploadKey:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Key"), breadcrumb, form_name="key", button_name="upload", save_title=_("Upload")
+            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Upload")
         )
 
     def action(self) -> ActionResult:
@@ -327,7 +335,15 @@ class PageUploadKey:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
             self._upload_key(key_file, value)
-            return redirect(mode_url(self.back_mode))
+            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
+            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
+            #  is obviously a very simple module-layer violation. This whole module should either
+            #    * be moved into cmk.gui.cee.plugins.wato
+            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
+            #  Either way, this is outside my scope right now and shall be fixed.
+            from cmk.gui.plugins.wato.utils.base_modes import mode_url
+
+            return HTTPRedirect(mode_url(self.back_mode), code=302)
         return None
 
     def _get_uploaded(self, cert_spec, key):
@@ -432,7 +448,7 @@ class PageUploadKey:
 
 
 class PageDownloadKey:
-    back_mode = "keys"
+    back_mode: str
 
     def load(self):
         raise NotImplementedError()
@@ -442,7 +458,7 @@ class PageDownloadKey:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Key"), breadcrumb, form_name="key", button_name="download", save_title=_("Download")
+            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Download")
         )
 
     def action(self) -> ActionResult:

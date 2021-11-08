@@ -43,8 +43,6 @@ import json
 import operator
 from typing import Any, Dict, Iterable, List
 
-from werkzeug.datastructures import ETags
-
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import fields, watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -69,8 +67,7 @@ from cmk.gui.watolib.utils import try_bake_agents_for_hosts
     method="post",
     etag="output",
     request_schema=request_schemas.CreateHost,
-    convert_response=True,
-    response_schema=response_schemas.HostObject,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def create_host(params):
     """Create a host"""
@@ -80,7 +77,7 @@ def create_host(params):
     # is_cluster is defined as "cluster_hosts is not None"
     body["folder"].create_hosts([(host_name, body["attributes"], None)])
 
-    host = watolib.Host.host(host_name)
+    host = watolib.Host.load_host(host_name)
     return _serve_host(host, False)
 
 
@@ -90,8 +87,7 @@ def create_host(params):
     method="post",
     etag="output",
     request_schema=request_schemas.CreateClusterHost,
-    convert_response=True,
-    response_schema=response_schemas.HostObject,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def create_cluster_host(params):
     """Create a cluster host
@@ -103,8 +99,8 @@ def create_cluster_host(params):
 
     body["folder"].create_hosts([(host_name, body["attributes"], body["nodes"])])
 
-    host = watolib.Host.host(host_name)
-    return _serve_host(host, False)
+    host = watolib.Host.load_host(host_name)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -112,7 +108,7 @@ def create_cluster_host(params):
     "cmk/bulk_create",
     method="post",
     request_schema=request_schemas.BulkCreateHost,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostConfigCollection,
 )
 def bulk_create_hosts(params):
     """Bulk create hosts"""
@@ -144,7 +140,7 @@ def bulk_create_hosts(params):
             detail=f"Validated hosts were saved. The configurations for following hosts are faulty and "
             f"were skipped: {' ,'.join(failed_hosts)}.",
         )
-    hosts = [watolib.Host.host(entry["host_name"]) for entry in entries]
+    hosts = [watolib.Host.load_host(entry["host_name"]) for entry in entries]
     return host_collection(hosts)
 
 
@@ -152,7 +148,7 @@ def bulk_create_hosts(params):
     constructors.collection_href("host_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostConfigCollection,
 )
 def list_hosts(param):
     """Show all hosts"""
@@ -163,13 +159,7 @@ def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
     _hosts = {
         "id": "host",
         "domainType": "host_config",
-        "value": [
-            constructors.collection_item(
-                domain_type="host_config",
-                obj={"title": host.name(), "id": host.id()},
-            )
-            for host in hosts
-        ],
+        "value": [serialize_host(host, effective_attributes=False) for host in hosts],
         "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
     }
     return constructors.serve_json(_hosts)
@@ -196,8 +186,8 @@ def update_nodes(params):
     host_name = params["host_name"]
     body = params["body"]
     nodes = body["nodes"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    constructors.require_etag(etag_of_host(host))
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    _require_host_etag(host)
     host.edit(host.attributes(), nodes)
 
     return constructors.serve_json(
@@ -217,8 +207,7 @@ def update_nodes(params):
     path_params=[HOST_NAME],
     etag="both",
     request_schema=request_schemas.UpdateHost,
-    convert_response=True,
-    response_schema=response_schemas.HostObject,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def update_host(params):
     """Update a host"""
@@ -228,8 +217,8 @@ def update_host(params):
     update_attributes = body["update_attributes"]
     remove_attributes = body["remove_attributes"]
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    constructors.require_etag(etag_of_host(host))
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    _require_host_etag(host)
 
     if new_attributes:
         host.edit(new_attributes, None)
@@ -252,7 +241,7 @@ def update_host(params):
             detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
         )
 
-    return _serve_host(host, False)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -260,7 +249,7 @@ def update_host(params):
     "cmk/bulk_update",
     method="put",
     request_schema=request_schemas.BulkUpdateHost,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostConfigCollection,
 )
 def bulk_update_hosts(params):
     """Bulk update hosts
@@ -280,7 +269,7 @@ def bulk_update_hosts(params):
         update_attributes = update_detail["update_attributes"]
         remove_attributes = update_detail["remove_attributes"]
         check_hostname(host_name)
-        host: watolib.CREHost = watolib.Host.host(host_name)
+        host: watolib.CREHost = watolib.Host.load_host(host_name)
         if new_attributes:
             host.edit(new_attributes, None)
 
@@ -323,8 +312,7 @@ def bulk_update_hosts(params):
         422: "The host could not be renamed.",
     },
     request_schema=request_schemas.RenameHost,
-    convert_response=True,
-    response_schema=response_schemas.HostObject,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def rename_host(params):
     """Rename a host"""
@@ -335,10 +323,7 @@ def rename_host(params):
             detail="Please activate all pending changes before executing a host rename process",
         )
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    if host is None:
-        return _missing_host_problem(host_name)
-
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
     new_name = params["body"]["new_name"]
     _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
     if auth_problems:
@@ -347,7 +332,7 @@ def rename_host(params):
             title="Rename process failed",
             detail=f"It was not possible to rename the host {host_name} to {new_name}",
         )
-    return _serve_host(host, False)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -357,16 +342,13 @@ def rename_host(params):
     path_params=[HOST_NAME],
     etag="both",
     request_schema=request_schemas.MoveHost,
-    convert_response=True,
-    response_schema=response_schemas.HostObject,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def move(params):
     """Move a host to another folder"""
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    if host is None:
-        return _missing_host_problem(host_name)
-
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    _require_host_etag(host)
     current_folder = host.folder()
     target_folder: watolib.CREFolder = params["body"]["target_folder"]
     if target_folder is current_folder:
@@ -384,7 +366,7 @@ def move(params):
             title="Problem moving host",
             detail=exc.message,
         )
-    return _serve_host(host, False)
+    return _serve_host(host, effective_attributes=False)
 
 
 @Endpoint(
@@ -399,7 +381,7 @@ def delete(params):
     host_name = params["host_name"]
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
-    host: watolib.CREHost = watolib.Host.host(host_name)
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
     host.folder().delete_hosts([host.name()])
     return Response(status=204)
 
@@ -415,7 +397,7 @@ def bulk_delete(params):
     """Bulk delete hosts"""
     body = params["body"]
     for host_name in body["entries"]:
-        host = watolib.Host.host(host_name)
+        host = watolib.Host.load_host(host_name)
         host.folder().delete_hosts([host.name()])
     return Response(status=204)
 
@@ -440,27 +422,20 @@ def bulk_delete(params):
         }
     ],
     etag="output",
-    convert_response=True,
-    response_schema=response_schemas.HostObject,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def show_host(params):
     """Show a host"""
     host_name = params["host_name"]
-    host: watolib.CREHost = watolib.Host.host(host_name)
-    if host is None:
-        return problem(
-            404,
-            f'Host "{host_name}" is not known.',
-            "The host you asked for is not known. Please check for eventual misspellings.",
-        )
-    return _serve_host(host, params["effective_attributes"])
+    host: watolib.CREHost = watolib.Host.load_host(host_name)
+    return _serve_host(host, effective_attributes=params["effective_attributes"])
 
 
 def _serve_host(host, effective_attributes=False):
     response = Response()
     response.set_data(json.dumps(serialize_host(host, effective_attributes)))
     response.set_content_type("application/json")
-    etag = etag_of_host(host)
+    etag = constructors.etag_of_dict(_host_etag_values(host))
     response.headers.add("ETag", etag.to_header())
     return response
 
@@ -490,14 +465,6 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
     )
 
 
-def _missing_host_problem(host_name):
-    return problem(
-        404,
-        f'Host "{host_name}" is not known.',
-        "The host you asked for is not known. Please check for eventual misspellings.",
-    )
-
-
 def _except_keys(dict_: Dict[str, Any], exclude_keys: List[str]) -> Dict[str, Any]:
     """Removes some keys from a dict.
 
@@ -511,14 +478,20 @@ def _except_keys(dict_: Dict[str, Any], exclude_keys: List[str]) -> Dict[str, An
     return {key: value for key, value in dict_.items() if key not in exclude_keys}
 
 
-def etag_of_host(host: watolib.CREHost) -> ETags:
+def _require_host_etag(host):
+    etag_values = _host_etag_values(host)
+    constructors.require_etag(
+        constructors.etag_of_dict(etag_values),
+        error_details=etag_values,
+    )
+
+
+def _host_etag_values(host):
     # FIXME: Through some not yet fully explored effect, we do not get the actual persisted
     #        timestamp in the meta_data section but rather some other timestamp. This makes the
     #        reported ETag a different one than the one which is accepted by the endpoint.
-    return constructors.etag_of_dict(
-        {
-            "name": host.name(),
-            "attributes": _except_keys(host.attributes(), ["meta_data"]),
-            "cluster_nodes": host.cluster_nodes(),
-        }
-    )
+    return {
+        "name": host.name(),
+        "attributes": _except_keys(host.attributes(), ["meta_data"]),
+        "cluster_nodes": host.cluster_nodes(),
+    }

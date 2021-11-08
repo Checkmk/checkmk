@@ -24,7 +24,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.wato import (
     ABCMainModule,
-    ActionResult,
     main_module_registry,
     MainModuleTopicMaintenance,
     mode_registry,
@@ -32,6 +31,7 @@ from cmk.gui.plugins.wato import (
     redirect,
     WatoMode,
 )
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeuri_contextless
 
 

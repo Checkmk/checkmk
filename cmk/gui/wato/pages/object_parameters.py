@@ -24,6 +24,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
@@ -48,16 +49,17 @@ class ModeObjectParameters(WatoMode):
 
     def _from_vars(self):
         self._hostname = request.get_ascii_input_mandatory("host")
-        self._host = watolib.Folder.current().host(self._hostname)
-        if self._host is None:
+        host = watolib.Folder.current().host(self._hostname)
+        if host is None:
             raise MKUserError("host", _("The given host does not exist."))
+        self._host: watolib.CREHost = host
         self._host.need_permission("read")
 
         # TODO: Validate?
         self._service = request.get_unicode_input("service")
 
     def title(self):
-        title = _("Parameters of") + " " + self._hostname
+        title = _("Effective parameters of") + " " + self._hostname
         if self._service:
             title += " / " + self._service
         return title
@@ -66,8 +68,8 @@ class ModeObjectParameters(WatoMode):
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="hosts",
-                    title=_("Hosts"),
+                    name="host",
+                    title=_("Host"),
                     topics=[
                         PageMenuTopic(
                             title=_("For this host"),
@@ -131,21 +133,24 @@ class ModeObjectParameters(WatoMode):
         forms.end()
 
     def _show_host_info(self):
-        host_info = watolib.check_mk_automation(
-            self._host.site_id(), "analyse-host", [self._hostname]
+        host_info = analyse_host(
+            self._host.site_id(),
+            self._hostname,
         )
         if not host_info:
             return
 
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
-        self._show_labels(host_info["labels"], "host", host_info["label_sources"])
+        self._show_labels(host_info.labels, "host", host_info.label_sources)
 
     def _show_service_info(self, all_rulesets):
         assert self._service is not None
 
-        serviceinfo = watolib.check_mk_automation(
-            self._host.site_id(), "analyse-service", [self._hostname, self._service]
-        )
+        serviceinfo = analyse_service(
+            self._host.site_id(),
+            self._hostname,
+            self._service,
+        ).service_info
         if not serviceinfo:
             return
 

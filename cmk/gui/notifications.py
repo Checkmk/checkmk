@@ -14,11 +14,10 @@ import cmk.utils.render
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config, g, html, request, transactions, user
-from cmk.gui.i18n import _, _u
+from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_simple_link,
@@ -28,10 +27,15 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, page_registry
-from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.permissions import (
+    declare_dynamic_permissions,
+    permission_section_registry,
+    PermissionSection,
+)
 from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri
+from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
 
 
 class FailedNotificationTimes(NamedTuple):
@@ -64,17 +68,9 @@ class PermissionSectionNotificationPlugins(PermissionSection):
         return True
 
 
-# The permissions need to be loaded dynamically on each page load instead of
-# only when the plugins need to be loaded because the user may have placed
-# new notification plugins in the local hierarchy.
-def load_plugins(force: bool) -> None:
-    for name, attrs in watolib.load_notification_scripts().items():
-        if name[0] == ".":
-            continue
-
-        declare_permission(
-            "notification_plugin.%s" % name, _u(attrs["title"]), "", ["admin", "user"]
-        )
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    declare_dynamic_permissions(declare_notification_plugin_permissions)
 
 
 def _acknowledge_failed_notifications(timestamp: float, now: float) -> None:
@@ -202,8 +198,6 @@ class ClearFailedNotificationPage(Page):
             _acknowledge_failed_notifications(acktime, time.time())
 
             if user.authorized_login_sites():
-                watolib.init_wato_datastructures(with_wato_lock=True)
-
                 title = _("Replicate user profile")
                 breadcrumb = make_simple_page_breadcrumb(
                     mega_menu_registry.menu_monitoring(), title

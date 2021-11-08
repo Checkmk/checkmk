@@ -73,7 +73,7 @@ public:
     std::string _comment;
     unsigned long _id;
 
-    virtual ~DowntimeOrComment();
+    virtual ~DowntimeOrComment() = default;
 
 protected:
     DowntimeOrComment(host *hst, service *svc, nebstruct_downtime_struct *dt,

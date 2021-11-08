@@ -4,7 +4,7 @@ include $(REPO_PATH)/defines.make
 PYTHON := Python
 PYTHON_DIR := Python-$(PYTHON_VERSION)
 # Increase this to enforce a recreation of the build cache
-PYTHON_BUILD_ID := 5
+PYTHON_BUILD_ID := 6
 
 PYTHON_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-unpack
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build
@@ -83,7 +83,7 @@ $(PYTHON_COMPILE): $(PYTHON_UNPACK) $(OPENSSL_INTERMEDIATE_INSTALL)
 	        --with-ensurepip=install \
 	        --with-openssl=$(PACKAGE_OPENSSL_DESTDIR) \
 	        $(PYTHON_ENABLE_OPTIMIZATIONS) \
-	        LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_OPENSSL_LDFLAGS)"
+	        LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_OPENSSL_LDFLAGS)"
 	cd $(PYTHON_BUILD_DIR) ; \
 	    $(MAKE) -j2
 	$(TOUCH) $@

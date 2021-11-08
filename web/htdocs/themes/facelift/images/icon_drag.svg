@@ -1,21 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 24.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!-- Generator: Adobe Illustrator 25.4.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 5 11" style="enable-background:new 0 0 5 11;" xml:space="preserve">
+	 viewBox="0 0 11.2 11.2" style="enable-background:new 0 0 11.2 11.2;" xml:space="preserve">
 <style type="text/css">
-	.st0{fill:none;stroke:#505862;stroke-linecap:round;stroke-linejoin:round;}
+	.st0{fill:none;stroke:#1197C0;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;}
 </style>
 <desc>Created with Sketch.</desc>
-<g id="Master">
-	<g id="Tag" transform="translate(-75.000000, -317.000000)">
-		<g id="form" transform="translate(61.000000, 263.000000)">
-			<g id="row" transform="translate(10.000000, 34.000000)">
-				<g id="move" transform="translate(4.500000, 20.500000)">
-					<polyline id="Path-2" class="st0" points="4,2 2,0 0,2 					"/>
-					<polyline id="Path-2_1_" class="st0" points="0,8 2,10 4,8 					"/>
+<g id="Master_00000146461382580145412380000015076844971185505185_">
+	<g id="Tag_00000093897799270963739100000002776974159283264685_" transform="translate(-75.000000, -317.000000)">
+		<g id="form_00000113353322309385325340000008196938776289042076_" transform="translate(61.000000, 263.000000)">
+			<g id="row_00000032619626062191011120000017961435032217280693_" transform="translate(10.000000, 34.000000)">
+				<g id="move_00000152979473371794123790000001336196803826735285_" transform="translate(4.500000, 20.500000)">
+					<polyline id="Path-2_00000140720632561721125570000015025462480263927959_" class="st0" points="8.8,6.4 10.1,5.1 8.8,3.8 
+											"/>
 				</g>
 			</g>
 		</g>
 	</g>
 </g>
+<g id="Master_00000090286237105235824160000008340531177330915754_">
+	<g id="Tag_00000031195825732814521190000008609579453293128879_" transform="translate(-75.000000, -317.000000)">
+		<g id="form_00000161607492626163433610000010661122421771701917_" transform="translate(61.000000, 263.000000)">
+			<g id="row_00000176013370627835270600000016938673448352289158_" transform="translate(10.000000, 34.000000)">
+				<g id="move_00000173159696374812459310000000959717132458359732_" transform="translate(4.500000, 20.500000)">
+					<polyline id="Path-2_00000023984508840881463240000002325144498871031697_" class="st0" points="1.4,3.8 0.1,5.1 1.4,6.4 					
+						"/>
+				</g>
+			</g>
+		</g>
+	</g>
+</g>
+<g id="Master_00000157293071768436653440000017790913409088005249_">
+	<g id="Tag_00000119840013072017191230000018360932819958338707_" transform="translate(-75.000000, -317.000000)">
+		<g id="form_00000092438165911516249010000011969061709493289880_" transform="translate(61.000000, 263.000000)">
+			<g id="row_00000052797541364368646760000008873718565781762231_" transform="translate(10.000000, 34.000000)">
+				<g id="move_00000076595235796064197830000013431349502004498857_" transform="translate(4.500000, 20.500000)">
+					<polyline id="Path-2_00000176001901221034955810000003227035953236733317_" class="st0" points="3.8,8.8 5.1,10.1 6.4,8.8 
+											"/>
+				</g>
+			</g>
+		</g>
+	</g>
+</g>
+<g id="Master_00000124878633518733656630000018146741638191665057_">
+	<g id="Tag_00000057839568849557348210000006589920931420293518_" transform="translate(-75.000000, -317.000000)">
+		<g id="form_00000002363547800379002100000006141452717544711604_" transform="translate(61.000000, 263.000000)">
+			<g id="row_00000055690967737880828810000009356217040188342452_" transform="translate(10.000000, 34.000000)">
+				<g id="move_00000082366025948687064080000011833326551496227473_" transform="translate(4.500000, 20.500000)">
+					<polyline id="Path-2_00000016053060752113794400000006523347485169230724_" class="st0" points="6.4,1.4 5.1,0.1 3.8,1.4 					
+						"/>
+				</g>
+			</g>
+		</g>
+	</g>
+</g>
+<line class="st0" x1="10.6" y1="5.6" x2="0.6" y2="5.6"/>
+<line class="st0" x1="5.6" y1="10.6" x2="5.6" y2="0.6"/>
 </svg>

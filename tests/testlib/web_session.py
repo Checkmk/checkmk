@@ -1020,7 +1020,7 @@ class CMKOpenAPISession:
             return resp
         except Exception:
             if assertion:
-                assert False, f"REST API call failed: {resp.json()}"
+                raise AssertionError(f"REST API call failed: {resp.json()}") from Exception
             raise
 
     def add_host(self, host_name, folder="/", nodes=None, attributes=None, assertion=True):

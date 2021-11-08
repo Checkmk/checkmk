@@ -20,11 +20,10 @@
 import copy
 import json
 import os
+from contextlib import suppress
 from typing import Any, Dict, Iterator, List
 from typing import Optional as _Optional
 from typing import Tuple
-
-from six import ensure_str
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -952,28 +951,29 @@ class Overridable(Base):
             cls.add_instance(("", name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
-        for profile_path in cmk.utils.paths.profile_dir.iterdir():
-            user_id = UserId(ensure_str(profile_path.name))
-            try:
-                path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
-                if not path.exists():
-                    continue
+        with suppress(FileNotFoundError):
+            for profile_path in cmk.utils.paths.profile_dir.iterdir():
+                user_id = UserId(profile_path.name)
+                try:
+                    path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
+                    if not path.exists():
+                        continue
 
-                if not userdb.user_exists(user_id):
-                    continue
+                    if not userdb.user_exists(user_id):
+                        continue
 
-                user_pages = store.load_object_from_file(path, default={})
-                for name, page_dict in user_pages.items():
-                    page_dict["owner"] = user_id
-                    page_dict["name"] = name
-                    page_dict = cls._transform_old_spec(page_dict)
+                    user_pages = store.load_object_from_file(path, default={})
+                    for name, page_dict in user_pages.items():
+                        page_dict["owner"] = user_id
+                        page_dict["name"] = name
+                        page_dict = cls._transform_old_spec(page_dict)
 
-                    cls.add_instance((user_id, name), cls(page_dict))
+                        cls.add_instance((user_id, name), cls(page_dict))
 
-            except SyntaxError as e:
-                raise MKGeneralException(
-                    _("Cannot load %s from %s: %s") % (cls.type_name(), path, e)
-                )
+                except SyntaxError as e:
+                    raise MKGeneralException(
+                        _("Cannot load %s from %s: %s") % (cls.type_name(), path, e)
+                    )
 
         cls._load()
         cls._declare_instance_permissions()
@@ -1494,7 +1494,6 @@ def make_edit_form_page_menu(
                                 type_title,
                                 type_title_plural,
                                 form_name=form_name,
-                                button_name="save",
                             )
                         ),
                     ),
@@ -1539,17 +1538,17 @@ def _page_menu_entries_save(
     type_title: str,
     type_title_plural: str,
     form_name: str,
-    button_name: str,
 ) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
     yield PageMenuEntry(
         title=_("List of %s") % type_title_plural,
         icon_name="save",
-        item=make_form_submit_link(form_name, button_name),
+        item=make_form_submit_link(form_name, "_save"),
         is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
         shortcut_title=_("Save & go to list"),
+        css_classes=["submit"],
     )
 
     if dropdown_name in _save_pagetype_icons:

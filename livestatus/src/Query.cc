@@ -13,6 +13,7 @@
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 
 #include "Aggregator.h"
 #include "AndingFilter.h"
@@ -552,18 +553,16 @@ void Query::parseLocaltimeLine(char *line) {
     // different time zones. This would be a one-liner if we already had C++17's
     // std::chrono::round().
     using half_an_hour = std::chrono::duration<double, std::ratio<1800>>;
-    auto hah = std::chrono::duration_cast<half_an_hour>(diff);
-    auto rounded = half_an_hour(round(hah.count()));
+    auto rounded = half_an_hour(round(mk::ticks<half_an_hour>(diff)));
     auto offset = std::chrono::duration_cast<std::chrono::seconds>(rounded);
-    if (offset <= std::chrono::hours(-24) || offset >= std::chrono::hours(24)) {
+    if (std::chrono::abs(offset) >= 24h) {
         throw std::runtime_error(
             "timezone difference greater than or equal to 24 hours");
     }
 
     if (offset != 0s) {
         using hour = std::chrono::duration<double, std::ratio<3600>>;
-        Debug(_logger) << "timezone offset is "
-                       << std::chrono::duration_cast<hour>(offset).count()
+        Debug(_logger) << "timezone offset is " << mk::ticks<hour>(offset)
                        << "h";
     }
     _timezone_offset = offset;
@@ -584,9 +583,9 @@ bool Query::process() {
     start(q);
     _table.answerQuery(this);
     finish(q);
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+    auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
-    Informational(_logger) << "processed request in " << elapsed.count()
+    Informational(_logger) << "processed request in " << elapsed_ms
                            << " ms, replied with " << _output.os().tellp()
                            << " bytes";
     return _keepalive;
@@ -618,9 +617,7 @@ bool Query::timelimitReached() const {
         _output.setError(
             OutputBuffer::ResponseCode::payload_too_large,
             "Maximum query time of " +
-                std::to_string(
-                    std::chrono::duration_cast<std::chrono::seconds>(duration)
-                        .count()) +
+                std::to_string(mk::ticks<std::chrono::seconds>(duration)) +
                 " seconds exceeded!");
         return true;
     }

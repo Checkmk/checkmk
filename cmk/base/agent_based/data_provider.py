@@ -29,7 +29,6 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import (
     HostAddress,
     HostKey,
-    HostName,
     ParsedSectionName,
     result,
     SectionName,
@@ -42,7 +41,7 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
-from cmk.base.sources import fetch_all, make_nodes, make_sources
+from cmk.base.sources import fetch_all, make_cluster_sources, make_sources
 from cmk.base.sources.agent import AgentHostSections
 
 if TYPE_CHECKING:
@@ -291,7 +290,7 @@ class ParsedSectionsBroker:
 
 def _collect_host_sections(
     *,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
+    sources: Sequence[Source],
     file_cache_max_age: cache.MaxAge,
     fetcher_messages: Sequence[FetcherMessage],
     selected_sections: SectionNameCollection,
@@ -308,27 +307,25 @@ def _collect_host_sections(
     """
     console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
-    flat_node_sources = [(hn, ip, src) for hn, ip, sources in nodes for src in sources]
-
     # TODO(lm): Can we somehow verify that this is correct?
     # if fetcher_message["fetcher_type"] != source.id:
     #     raise LookupError("Checker and fetcher missmatch")
     # (mo): this is not enough, but better than nothing:
-    if len(flat_node_sources) != len(fetcher_messages):
+    if len(sources) != len(fetcher_messages):
         raise LookupError("Checker and fetcher missmatch")
 
     collected_host_sections: Dict[HostKey, HostSections] = {}
     results: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    for fetcher_message, (hostname, ipaddress, source) in zip(fetcher_messages, flat_node_sources):
+    for fetcher_message, source in zip(fetcher_messages, sources):
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
         source.file_cache_max_age = file_cache_max_age
 
-        host_key = HostKey(hostname, ipaddress, source.source_type)
+        host_key = HostKey(source.hostname, source.ipaddress, source.source_type)
         collected_host_sections.setdefault(
-            HostKey(hostname, ipaddress, source.source_type),
+            host_key,
             source.default_host_sections,
         )
 
@@ -343,13 +340,13 @@ def _collect_host_sections(
         else:
             console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
-    for hostname, ipaddress, _sources in nodes:
+    for source in sources:
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
         cmk.utils.piggyback.store_piggyback_raw_data(
-            hostname,
+            source.hostname,
             collected_host_sections.setdefault(
-                HostKey(hostname, ipaddress, SourceType.HOST),
+                HostKey(source.hostname, source.ipaddress, SourceType.HOST),
                 AgentHostSections(),
             ).piggybacked_raw_data,
         )
@@ -369,17 +366,19 @@ def make_broker(
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
-    nodes = make_nodes(
-        config_cache,
-        host_config,
-        ip_address,
+    sources = (
         make_sources(
             host_config,
             ip_address,
             selected_sections=selected_sections,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             on_scan_error=on_scan_error,
-        ),
+        )
+        if host_config.nodes is None
+        else make_cluster_sources(
+            config_cache,
+            host_config,
+        )
     )
 
     if not fetcher_messages:
@@ -391,14 +390,14 @@ def make_broker(
         #       This does not seem right.
         fetcher_messages = list(
             fetch_all(
-                nodes=nodes,
+                sources=sources,
                 file_cache_max_age=file_cache_max_age,
                 mode=mode,
             )
         )
 
     collected_host_sections, results = _collect_host_sections(
-        nodes=nodes,
+        sources=sources,
         file_cache_max_age=file_cache_max_age,
         fetcher_messages=fetcher_messages,
         selected_sections=selected_sections,

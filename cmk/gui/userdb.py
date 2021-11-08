@@ -33,7 +33,8 @@ import cmk.gui.plugins.userdb
 import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.globals import config, g, html, local, request, response, session
+from cmk.gui.globals import config, html, local, request, response, session
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
@@ -58,26 +59,14 @@ from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DEF_VALUE, DropdownChoice, TextInput, ValueSpec, ValueSpecHelp
 
-# Datastructures and functions needed before plugins can be loaded
-loaded_with_language: Union[bool, None, str] = False
-
 auth_logger = logger.getChild("auth")
 
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
 
-# Load all userdb plugins
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     utils.load_web_plugins("userdb", globals())
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # The saved configuration for user connections is a bit inconsistent, let's fix
@@ -689,21 +678,21 @@ def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
+@request_memoize()
 def load_users(lock: bool = False) -> Users:
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
         store.aquire_lock(_contacts_filepath())
 
-    if "users" in g:
-        return g.users
-
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
+    # ? exact type of keys and items returned from load_mk_file seems to be unclear
     contacts = load_contacts()
 
     # Now load information about users from the GUI config world
+    # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
     users = store.load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite
@@ -725,8 +714,6 @@ def load_users(lock: bool = False) -> Users:
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():
-        # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)
 
         if uid not in result:
             result[uid] = contact
@@ -752,7 +739,6 @@ def load_users(lock: bool = False) -> Users:
         line = line.strip()
         if ":" in line:
             uid, password = line.strip().split(":")[:2]
-            uid = ensure_str(uid)
             if password.startswith("!"):
                 locked = True
                 password = password[1:]
@@ -782,15 +768,13 @@ def load_users(lock: bool = False) -> Users:
         line = line.strip()
         if ":" in line:
             user_id, serial = line.split(":")[:2]
-            user_id = ensure_str(user_id)
             if user_id in result:
                 result[user_id]["serial"] = utils.saveint(serial)
 
     # Now read the user specific files
     directory = cmk.utils.paths.var_dir + "/web/"
-    for d in os.listdir(directory):
-        if d[0] != ".":
-            uid = ensure_str(d)
+    for uid in os.listdir(directory):
+        if uid[0] != ".":
 
             # read special values from own files
             if uid in result:
@@ -811,9 +795,9 @@ def load_users(lock: bool = False) -> Users:
             # read automation secrets and add them to existing
             # users or create new users automatically
             try:
-                user_secret_path = Path(directory) / d / "automation.secret"
+                user_secret_path = Path(directory) / uid / "automation.secret"
                 with user_secret_path.open(encoding="utf-8") as f:
-                    secret: Optional[str] = ensure_str(f.read().strip())
+                    secret: Optional[str] = f.read().strip()
             except IOError:
                 secret = None
 
@@ -826,21 +810,18 @@ def load_users(lock: bool = False) -> Users:
                         "automation_secret": secret,
                     }
 
-    # populate the users cache
-    g.users = result
-
     return result
 
 
 def custom_attr_path(userid: UserId, key: str) -> str:
-    return cmk.utils.paths.var_dir + "/web/" + ensure_str(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + userid + "/" + key + ".mk"
 
 
 def load_custom_attr(
     userid: UserId,
     key: str,
     conv_func: Callable[[str], Any],
-    default: Any = None,
+    default: Optional[Any] = None,
     lock: bool = False,
 ) -> Any:
     path = Path(custom_attr_path(userid, key))
@@ -897,8 +878,8 @@ def save_users(profiles: Users) -> None:
     # to be written (like during user syncs, wato, ...)
     release_users_lock()
 
-    # populate the users cache
-    g.users = updated_profiles
+    # Invalidate the users memoized data
+    load_users.cache_clear()
 
     # Call the users_saved hook
     hooks.call("users-saved", updated_profiles)
@@ -927,7 +908,7 @@ def _save_user_profiles(updated_profiles: Users) -> None:
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id)
+        user_dir = cmk.utils.paths.var_dir + "/web/" + user_id
         store.mkdir(user_dir)
 
         # authentication secret for local processes
@@ -987,7 +968,7 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
     ]
     directory = cmk.utils.paths.var_dir + "/web"
     for user_dir in os.listdir(cmk.utils.paths.var_dir + "/web"):
-        if user_dir not in [".", ".."] and ensure_str(user_dir) not in updated_profiles:
+        if user_dir not in [".", ".."] and user_dir not in updated_profiles:
             entry = directory + "/" + user_dir
             if not os.path.isdir(entry):
                 continue

@@ -6,9 +6,10 @@
 
 from typing import Dict as _Dict
 from typing import List as _List
+from typing import Literal as _Literal
 from typing import Optional as _Optional
 
-from cmk.utils.type_defs import TagsOfHosts
+from cmk.utils.type_defs import Ruleset, TagsOfHosts
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -112,7 +113,7 @@ inventory_check_interval = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
-inv_retention_intervals: _List[_Dict[str, int]] = []
+inv_retention_intervals: Ruleset = []
 # TODO: Remove this already deprecated option
 always_cleanup_autochecks = None  # For compatiblity with old configuration
 
@@ -134,7 +135,7 @@ generate_hostconf = True
 generate_dummy_commands = True
 dummy_check_commandline = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
 nagios_illegal_chars = "`;~!$%^&*|'\"<>?,="
-cmc_illegal_chars = "\t"  # Tab is an illegal character for CMC
+cmc_illegal_chars = ";\t"  # Tab is an illegal character for CMC and semicolon breaks metric system
 
 # Data to be defined in main.mk
 tag_config: _Dict[str, _List] = {
@@ -284,5 +285,5 @@ legacy_checks: _List = []
 
 logwatch_rules: _List = []
 
-config_storage_format = "standard"  # new in 2.1. Possible also: "raw"
-microcore_config_format = "bin"  # new in 2.1. Possible also: "pb"
+config_storage_format: _Literal["standard", "raw", "pickle"] = "pickle"  # new in 2.1.
+microcore_config_format: _Literal["binary", "protobuf"] = "binary"  # new in 2.1.

@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+Tests for legacy tuple rulesets.
+"""
+
 # pylint: disable=redefined-outer-name
 from typing import Dict, List, Tuple
 
@@ -15,12 +19,6 @@ import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
 
 import cmk.base.config as config
-
-# NOTE: A lot of signatures regarding rules and rule sets are simply lying:
-# They claim to expect a RuleSpec or Ruleset (from cmk.utils.type_defs), but
-# they are silently handling a very chaotic tuple-based structure, too. We
-# really, really need to fix all those signatures! For now, we just annotate
-# our test data below with horrible hand-made types...
 
 
 @pytest.fixture(autouse=True)

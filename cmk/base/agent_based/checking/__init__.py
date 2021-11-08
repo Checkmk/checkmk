@@ -5,9 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
-import copy
 from collections import defaultdict
-from typing import Any, Container, DefaultDict, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import (
+    Container,
+    DefaultDict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
@@ -15,6 +25,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -24,6 +35,7 @@ from cmk.utils.type_defs import (
     HostKey,
     HostName,
     MetricTuple,
+    ParsedSectionName,
     ServiceCheckResult,
     ServiceName,
     SourceType,
@@ -56,7 +68,13 @@ from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
 from . import _cluster_modes, _submit_to_core
-from .utils import AggregatedResult, CHECK_NOT_IMPLEMENTED, ITEM_NOT_FOUND, RECEIVED_NO_DATA
+from .utils import (
+    AggregatedResult,
+    CHECK_NOT_IMPLEMENTED,
+    cluster_received_no_data,
+    ITEM_NOT_FOUND,
+    RECEIVED_NO_DATA,
+)
 
 # .
 #   .--Checking------------------------------------------------------------.
@@ -409,8 +427,7 @@ def get_aggregated_result(
     ipaddress: Optional[HostAddress],
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
-    # missleading. These are prams that *may* be *partially* time specific
-    timespecific_parameters: LegacyCheckParameters,
+    timespecific_parameters: Union[LegacyCheckParameters, TimespecificParameters],
     *,
     value_store_manager: value_store.ValueStoreManager,
     persist_value_store_changes: bool,
@@ -441,71 +458,41 @@ def get_aggregated_result(
         if host_config.is_cluster
         else plugin.check_function
     )
-    source_type = (
-        SourceType.MANAGEMENT if service.check_plugin_name.is_management_name() else SourceType.HOST
-    )
-    try:
-        kwargs = (
-            get_section_cluster_kwargs(
-                parsed_sections_broker,
-                config_cache.get_clustered_service_node_keys(
-                    host_config.hostname,
-                    source_type,
-                    service.description,
-                )
-                or [],
-                plugin.sections,
-            )
-            if host_config.is_cluster
-            else get_section_kwargs(
-                parsed_sections_broker,
-                HostKey(host_config.hostname, ipaddress, source_type),
-                plugin.sections,
-            )
-        )
-        if not kwargs and not service.check_plugin_name.is_management_name():
-            # in 1.6 some plugins where discovered for management boards, but with
-            # the regular host plugins name. In this case retry with the source type
-            # forced to MANAGEMENT:
-            kwargs = (
-                get_section_cluster_kwargs(
-                    parsed_sections_broker,
-                    config_cache.get_clustered_service_node_keys(
-                        host_config.hostname,
-                        SourceType.MANAGEMENT,
-                        service.description,
-                    )
-                    or [],
-                    plugin.sections,
-                )
-                if host_config.is_cluster
-                else get_section_kwargs(
-                    parsed_sections_broker,
-                    HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
-                    plugin.sections,
-                )
-            )
-        if not kwargs:  # no data found
-            return AggregatedResult(
-                submit=False,
-                data_received=False,
-                result=RECEIVED_NO_DATA,
-                cache_info=None,
-            )
 
-        kwargs = {
-            **kwargs,
-            **({} if service.item is None else {"item": service.item}),
-            **(
-                {}
-                if plugin.check_default_parameters is None
-                else {"params": _final_read_only_check_parameters(timespecific_parameters)}
-            ),
-        }
+    section_kws, error_result = _get_monitoring_data_kwargs_handle_pre20_services(
+        parsed_sections_broker,
+        host_config,
+        config_cache,
+        ipaddress,
+        service,
+        plugin.sections,
+    )
+    if not section_kws:  # no data found
+        return AggregatedResult(
+            submit=False,
+            data_received=False,
+            result=error_result,
+            cache_info=None,
+        )
+
+    item_kw = {} if service.item is None else {"item": service.item}
+    params_kw = (
+        {}
+        if plugin.check_default_parameters is None
+        else {"params": _final_read_only_check_parameters(timespecific_parameters)}
+    )
+
+    try:
         with plugin_contexts.current_host(host_config.hostname), plugin_contexts.current_service(
             service
         ), value_store_manager.namespace(service.id()):
-            result = _aggregate_results(check_function(**kwargs))
+            result = _aggregate_results(
+                check_function(
+                    **item_kw,
+                    **params_kw,
+                    **section_kws,
+                )
+            )
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
@@ -527,7 +514,7 @@ def get_aggregated_result(
                 host_name=host_config.hostname,
                 service_name=service.description,
                 plugin_name=service.check_plugin_name,
-                plugin_kwargs=globals().get("kwargs", {}),
+                plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_manual=service.id() in table,
             ),
             [],
@@ -541,77 +528,97 @@ def get_aggregated_result(
     )
 
 
-def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:
+def _get_monitoring_data_kwargs_handle_pre20_services(
+    parsed_sections_broker: ParsedSectionsBroker,
+    host_config: config.HostConfig,
+    config_cache: config.ConfigCache,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    sections: Sequence[ParsedSectionName],
+) -> Tuple[Mapping[str, object], ServiceCheckResult]:
+    """Handle cases of missing data due to changed plugin names
+
+    In 1.6 some plugins where discovered for management boards, but with
+    the regular host plugins name. In this case retry with the source type
+    forced to MANAGEMENT
+    """
+    kwargs, err_result = _get_monitoring_data_kwargs(
+        parsed_sections_broker,
+        host_config,
+        config_cache,
+        ipaddress,
+        service,
+        sections,
+    )
+    if kwargs or service.check_plugin_name.is_management_name():
+        return kwargs, err_result
+
+    return _get_monitoring_data_kwargs(
+        parsed_sections_broker,
+        host_config,
+        config_cache,
+        ipaddress,
+        service,
+        sections,
+        SourceType.MANAGEMENT,
+    )
+
+
+def _get_monitoring_data_kwargs(
+    parsed_sections_broker: ParsedSectionsBroker,
+    host_config: config.HostConfig,
+    config_cache: config.ConfigCache,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    sections: Sequence[ParsedSectionName],
+    source_type: Optional[SourceType] = None,
+) -> Tuple[Mapping[str, object], ServiceCheckResult]:
+    if source_type is None:
+        source_type = (
+            SourceType.MANAGEMENT
+            if service.check_plugin_name.is_management_name()
+            else SourceType.HOST
+        )
+
+    if host_config.is_cluster:
+        nodes = config_cache.get_clustered_service_node_keys(
+            host_config,
+            source_type,
+            service.description,
+        )
+        return (
+            get_section_cluster_kwargs(
+                parsed_sections_broker,
+                nodes,
+                sections,
+            ),
+            cluster_received_no_data(nodes),
+        )
+
+    return (
+        get_section_kwargs(
+            parsed_sections_broker,
+            HostKey(host_config.hostname, ipaddress, source_type),
+            sections,
+        ),
+        RECEIVED_NO_DATA,
+    )
+
+
+def _final_read_only_check_parameters(
+    entries: Union[TimespecificParameters, LegacyCheckParameters]
+) -> Parameters:
     raw_parameters = (
-        time_resolved_check_parameters(entries)
-        if isinstance(entries, cmk.base.config.TimespecificParamList)
+        entries.evaluate(cmk.base.core.timeperiod_active)
+        if isinstance(entries, TimespecificParameters)
         else entries
     )
+
     # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
     # wrap_parameters is a no-op for dictionaries.
     # For auto-migrated plugins expecting tuples, they will be
     # unwrapped by a decorator of the original check_function.
     return Parameters(wrap_parameters(raw_parameters))
-
-
-def time_resolved_check_parameters(
-    entries: cmk.base.config.TimespecificParamList,
-) -> LegacyCheckParameters:
-    # Check if first entry is not dict based or if its dict based
-    # check if the tp_default_value is not a dict
-    if not isinstance(entries[0], dict) or not isinstance(
-        entries[0].get("tp_default_value", {}), dict
-    ):
-        # This rule is tuple based, means no dict-key merging
-        if not isinstance(entries[0], dict):
-            return entries[0]  # A tuple rule, simply return first match
-
-        return _evaluate_timespecific_entry(
-            entries[0]
-        )  # A timespecific rule, determine the correct tuple
-
-    # This rule is dictionary based, evaluate all entries and merge matching keys
-    timespecific_entries: Dict[str, Any] = {}
-    for entry in entries[::-1]:
-        if not isinstance(entry, dict):
-            # Ignore (old) default parameters like
-            #   'NAME_default_levels' = (80.0, 85.0)
-            # A rule with a timespecifc parameter settings always has an
-            # implicit default parameter set, even if no timeperiod matches.
-            continue
-        timespecific_entries.update(_evaluate_timespecific_entry(entry))
-
-    return timespecific_entries
-
-
-def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
-    # Dictionary entries without timespecific settings
-    if "tp_default_value" not in entry:
-        return entry
-
-    # Timespecific entry, start with default value and update with timespecific entry
-    # Note: This combined_entry may be a dict or tuple, so the update mechanism must handle this correctly
-    # A shallow copy is sufficient
-    combined_entry = copy.copy(entry["tp_default_value"])
-    for timeperiod_name, tp_entry in entry["tp_values"][::-1]:
-        try:
-            tp_active = cmk.base.core.timeperiod_active(timeperiod_name)
-        except Exception:
-            # Connection error
-            if cmk.utils.debug.enabled():
-                raise
-            break
-        if not tp_active:
-            continue
-
-        # If multiple timeperiods are active, their settings are also merged
-        # This follows the same logic than merging different rules
-        if isinstance(combined_entry, dict):
-            combined_entry.update(tp_entry)
-        else:
-            combined_entry = tp_entry
-
-    return combined_entry
 
 
 def _add_state_marker(

@@ -135,6 +135,7 @@ class LegacyDeprecatedMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
+        # ? type of values attribute and functions defined with it are unclear
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
@@ -172,6 +173,7 @@ class LegacyDeprecatedMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
+        # ? type of self.cookies argument is unclear
         value = self.cookies.get(varname, default)  # type: ignore[attr-defined]
         if value is not None:
             # Why would we want to do that? test_http.py requires it though.

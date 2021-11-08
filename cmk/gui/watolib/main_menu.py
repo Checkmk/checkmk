@@ -5,13 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Iterable, NamedTuple, Optional, Type
+from typing import Iterable, NamedTuple, Optional, Type, Union
 
 import cmk.utils.plugin_registry
 
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.globals import request, user
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -90,7 +91,7 @@ class MenuItem:
 
 class MainModuleTopic(NamedTuple):
     name: str
-    title: str
+    title: Union[str, LazyString]
     icon_name: str
     sort_index: int
 

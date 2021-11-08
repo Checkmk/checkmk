@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, LegacyCheckParameters
 
 from cmk.base.api.agent_based import utils
 from cmk.base.check_utils import Service
@@ -17,11 +17,12 @@ def test_check_levels_predictive_default_render_func(mocker):
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
     )
 
+    irrelevant_test_parameters: LegacyCheckParameters = {}
     service = Service(
         item=None,
         check_plugin_name=CheckPluginName("test_check"),
         description="unittest-service-description",
-        parameters={},
+        parameters=irrelevant_test_parameters,
     )
     with current_host("unittest"), current_service(service):
         result = next(utils.check_levels_predictive(42.42, metric_name="metric_name", levels={}))

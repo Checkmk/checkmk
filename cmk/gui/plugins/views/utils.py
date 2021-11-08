@@ -7,6 +7,8 @@
 
 # TODO: More feature related splitting up would be better
 
+from __future__ import annotations
+
 import abc
 import functools
 import hashlib
@@ -23,6 +25,7 @@ from typing import (
     Dict,
     Hashable,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -59,7 +62,8 @@ import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import config, display_options, g, html, request, response, theme, user
+from cmk.gui.globals import config, display_options, html, request, response, theme, user
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.log import logger
@@ -119,11 +123,10 @@ class PainterOptions:
     # TODO: We should have some View instance that uses an object of this class as helper instead,
     #       but this would be a bigger change involving a lot of view rendering code.
     @classmethod
-    def get_instance(cls) -> "PainterOptions":
-        """Use the request globals to prevent multiple instances during a request"""
-        if "painter_options" not in g:
-            g.painter_options = cls()
-        return g.painter_options
+    @request_memoize()
+    def get_instance(cls) -> PainterOptions:
+        """Return the request bound instance"""
+        return cls()
 
     def __init__(self) -> None:
         super().__init__()
@@ -1239,7 +1242,7 @@ def format_plugin_output(output: str, row: Row) -> HTML:
 
 
 def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpec) -> CellContent:
-    assert not isinstance(content, dict)
+    assert isinstance(content, (str, HTML))
     if display_options.disabled(display_options.I):
         return content
 
@@ -1718,11 +1721,10 @@ def render_cache_info(what: str, row: Row) -> str:
 
 class ViewStore:
     @classmethod
-    def get_instance(cls) -> "ViewStore":
-        """Use the request globals to prevent multiple instances during a request"""
-        if "view_store" not in g:
-            g.view_store = cls()
-        return g.view_store
+    @request_memoize()
+    def get_instance(cls) -> ViewStore:
+        """Return the request bound instance"""
+        return cls()
 
     def __init__(self) -> None:
         self.all = self._load_all_views()
@@ -2180,10 +2182,10 @@ class Cell:
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
-            assert not isinstance(content, dict)
+            assert isinstance(content, (str, HTML))
             tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
-            assert not isinstance(tooltip_content, dict)
+            assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
                 content = html.render_span(content, title=tooltip_text)
@@ -2212,7 +2214,7 @@ class Cell:
             css_classes, rendered_txt = self.render_content(row)
             if rendered_txt is None:
                 return css_classes, ""
-            assert not isinstance(rendered_txt, dict)
+            assert isinstance(rendered_txt, (str, HTML))
 
             txt: PDFCellContent = rendered_txt.strip()
 
@@ -2278,7 +2280,7 @@ class Cell:
 
     def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         tdclass, content = self.render(row)
-        assert not isinstance(content, dict)
+        assert isinstance(content, (str, HTML))
         html.td(content, class_=tdclass, colspan=colspan)
         return content != ""
 

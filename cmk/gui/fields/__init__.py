@@ -23,6 +23,8 @@ from marshmallow.fields import (
 )
 
 from cmk.gui.fields.attributes import (
+    HostAttributeManagementBoardField,
+    HostContactGroup,
     IPMIParameters,
     MetaData,
     NetworkScan,
@@ -48,6 +50,7 @@ from cmk.gui.fields.definitions import (
     SiteField,
     String,
     Timestamp,
+    X509ReqPEMField,
 )
 from cmk.gui.fields.validators import (
     ValidateAnyOfValidators,
@@ -73,6 +76,8 @@ __all__ = [
     "FOLDER_PATTERN",
     "Function",
     "GroupField",
+    "HostAttributeManagementBoardField",
+    "HostContactGroup",
     "HostField",
     "Int",
     "Integer",
@@ -100,4 +105,5 @@ __all__ = [
     "ValidateIPv4",
     "ValidateIPv4Network",
     "ValidateIPv6",
+    "X509ReqPEMField",
 ]

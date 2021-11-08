@@ -57,7 +57,7 @@ $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_PATCHING)
 	    ldd $(PROTOBUF_BUILD_DIR)/src/protoc | grep -v libstdc++ >/dev/null
 	$(TOUCH) $@
 
-$(PROTOBUF_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(PROTOBUF_BUILD_LIBRARY)
+$(PROTOBUF_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(PROTOBUF_BUILD_LIBRARY)
 	file $(PROTOBUF_BUILD_DIR)/src/protoc | grep ELF >/dev/null
 	ldd $(PROTOBUF_BUILD_DIR)/src/protoc | grep -v libstdc++ >/dev/null
 	cd $(PROTOBUF_BUILD_DIR)/python && \

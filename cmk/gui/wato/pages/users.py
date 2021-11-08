@@ -10,8 +10,6 @@ import time
 import traceback
 from typing import Iterator, List, Optional, overload, Tuple, Type, Union
 
-from six import ensure_str
-
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import timeperiod_spec_alias, UserId
@@ -43,7 +41,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import cleanup_connection_id, get_connection, UserAttribute
 from cmk.gui.plugins.wato import (
-    ActionResult,
     flash,
     make_action_link,
     make_confirm_link,
@@ -54,7 +51,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.sites import get_configured_site_choices
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices, UserSpec
+from cmk.gui.type_defs import ActionResult, Choices, UserSpec
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
@@ -342,7 +339,7 @@ class ModeUsers(WatoMode):
                 )
 
                 if uid != user.id:
-                    html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
+                    html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")).decode())
 
                 user_connection_id = cleanup_connection_id(user_spec.get("connector"))
                 connection = get_connection(user_connection_id)
@@ -629,7 +626,7 @@ class ModeEditUser(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("User"), breadcrumb, form_name="user", button_name="save"
+            _("User"), breadcrumb, form_name="user", button_name="_save"
         )
 
         action_dropdown = menu.dropdowns[0]

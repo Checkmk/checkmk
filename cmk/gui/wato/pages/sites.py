@@ -19,12 +19,8 @@ from typing import Type, Union
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-
-# mypy can't find x509 for some reason (is a c extension involved?)
-from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
-from OpenSSL import crypto  # type: ignore[import]
-from OpenSSL import SSL  # type: ignore[attr-defined]
-from six import ensure_binary, ensure_str
+from cryptography.x509.oid import ExtensionOID, NameOID
+from OpenSSL import crypto, SSL  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -50,11 +46,12 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariableGroup
 from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site, site_is_local, SiteStatus
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult, UserId
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import (
     make_confirm_link,
@@ -80,6 +77,7 @@ from cmk.gui.watolib.activate_changes import (
     clear_site_replication_status,
     get_trial_expired_message,
 )
+from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
 from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 
@@ -180,7 +178,7 @@ class ModeEditSite(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Connection"), breadcrumb, form_name="site", button_name="save"
+            _("Connection"), breadcrumb, form_name="site", button_name="_save"
         )
         if not self._new and isinstance(self._site_id, str):
             menu.dropdowns.insert(
@@ -648,7 +646,7 @@ class ModeDistributedMonitoring(WatoMode):
         error = None
         # Fetch name/password of admin account
         if request.has_var("_name"):
-            name = request.get_unicode_input_mandatory("_name", "").strip()
+            name = UserId(request.get_unicode_input_mandatory("_name", "").strip())
             passwd = request.get_ascii_input_mandatory("_passwd", "").strip()
             try:
                 if not html.get_checkbox("_confirm"):
@@ -660,7 +658,7 @@ class ModeDistributedMonitoring(WatoMode):
                         ),
                     )
 
-                secret = watolib.do_site_login(login_id, name, passwd)
+                secret = do_site_login(login_id, name, passwd)
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
@@ -1203,7 +1201,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
 
 class ChainVerifyResult(NamedTuple):
-    cert_pem: str
+    cert_pem: bytes
     error_number: int
     error_depth: int
     error_message: str
@@ -1291,14 +1289,14 @@ class ModeSiteLivestatusEncryption(WatoMode):
         )
         trusted_cas = trusted.setdefault("trusted_cas", [])
 
-        if cert_pem in trusted_cas:
+        if (cert_str := cert_pem.decode()) in trusted_cas:
             raise MKUserError(
                 None,
                 _('The CA is already a <a href="%s">trusted CA</a>.')
                 % "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities",
             )
 
-        trusted_cas.append(cert_pem)
+        trusted_cas.append(cert_str)
         global_settings["trusted_certificate_authorities"] = trusted
 
         watolib.add_change(
@@ -1328,7 +1326,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             )
 
         try:
-            cert_details = self._fetch_certificate_details()
+            cert_details = list(self._fetch_certificate_details())
         except Exception as e:
             logger.exception("Failed to fetch peer certificate")
             html.show_error(_("Failed to fetch peer certificate (%s)") % e)
@@ -1396,7 +1394,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def _cert_trusted_css_class(self, cert):
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
-    def _fetch_certificate_details(self) -> List[CertificateDetails]:
+    def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:
         """Creates a list of certificate details for the chain certs"""
         verify_chain_results = self._fetch_certificate_chain_verify_results()
         if not verify_chain_results:
@@ -1405,32 +1403,22 @@ class ModeSiteLivestatusEncryption(WatoMode):
         def get_name(name_obj):
             return name_obj.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
 
-        cert_details = []
         for result in verify_chain_results:
-            # use cryptography module over OpenSSL because it is easier to do the x509 parsing
-            crypto_cert = x509.load_pem_x509_certificate(
-                ensure_binary(result.cert_pem), default_backend()
+            crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
+            yield CertificateDetails(
+                issued_to=get_name(crypto_cert.subject),
+                issued_by=get_name(crypto_cert.issuer),
+                valid_from=str(crypto_cert.not_valid_before),
+                valid_till=str(crypto_cert.not_valid_after),
+                signature_algorithm=crypto_cert.signature_hash_algorithm.name,
+                digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
+                serial_number=crypto_cert.serial_number,
+                is_ca=self._is_ca_certificate(crypto_cert),
+                verify_result=result,
             )
 
-            cert_details.append(
-                CertificateDetails(
-                    issued_to=get_name(crypto_cert.subject),
-                    issued_by=get_name(crypto_cert.issuer),
-                    valid_from=str(crypto_cert.not_valid_before),
-                    valid_till=str(crypto_cert.not_valid_after),
-                    signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                    digest_sha256=ensure_str(
-                        binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256()))
-                    ),
-                    serial_number=crypto_cert.serial_number,
-                    is_ca=self._is_ca_certificate(crypto_cert),
-                    verify_result=result,
-                )
-            )
-
-        return cert_details
-
-    def _is_ca_certificate(self, crypto_cert: "SSL.Certificate") -> bool:
+    @staticmethod
+    def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
         try:
             key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
             use_key_for_signing = key_usage.value.key_cert_sign is True

@@ -12,8 +12,6 @@ import json
 from hashlib import md5
 from typing import Type
 
-from six import ensure_binary
-
 import cmk.utils.plugin_registry
 
 import cmk.gui.utils.escaping as escaping
@@ -41,7 +39,7 @@ class APICallCollectionRegistry(cmk.utils.plugin_registry.Registry[Type[APICallC
 api_call_collection_registry = APICallCollectionRegistry()
 
 # .
-#   .--API Helpers-------------------------------------------------------------.
+#   .--API Helpers---------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
 #   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
@@ -62,11 +60,10 @@ def check_hostname(hostname, should_exist=True):
         if not host:
             raise MKUserError(None, _("No such host"))
     else:
-        if watolib.Host.host_exists(hostname):
+        if (host := watolib.Host.host(hostname)) is not None:
             raise MKUserError(
                 None,
-                _("Host %s already exists in the folder %s")
-                % (hostname, watolib.Host.host(hostname).folder().path()),
+                _("Host %s already exists in the folder %s") % (hostname, host.folder().path()),
             )
 
 
@@ -91,7 +88,7 @@ def add_configuration_hash(response, configuration_object):
 def compute_config_hash(entity):
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
-        entity_hash = md5(ensure_binary(entity_encoded)).hexdigest()
+        entity_hash = md5(entity_encoded.encode()).hexdigest()
     except Exception as e:
         logger.error("Error %s", e)
         entity_hash = "0"

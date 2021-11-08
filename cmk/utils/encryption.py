@@ -17,7 +17,8 @@ from Cryptodome.Protocol.KDF import PBKDF2
 OPENSSL_SALTED_MARKER = "Salted__"
 
 
-class DigestType(enum.Enum):
+class TransportProtocol(enum.Enum):
+    PLAIN = b"<<"
     MD5 = b"00"
     SHA256 = b"02"
     PBKDF2 = b"03"
@@ -26,7 +27,7 @@ class DigestType(enum.Enum):
 
 def decrypt_by_agent_protocol(
     password: str,
-    protocol: DigestType,
+    protocol: TransportProtocol,
     encrypted_pkg: bytes,
 ) -> bytes:
     """select the decryption algorithm based on the agent header
@@ -39,13 +40,13 @@ def decrypt_by_agent_protocol(
         "99" for real-time check data means "unencrypted"!
     """
 
-    if protocol is DigestType.PBKDF2:
+    if protocol is TransportProtocol.PBKDF2:
         return decrypt_aes_256_cbc_pbkdf2(
             ciphertext=encrypted_pkg[len(OPENSSL_SALTED_MARKER) :],
             password=password,
         )
 
-    if protocol is DigestType.SHA256:
+    if protocol is TransportProtocol.SHA256:
         return decrypt_aes_256_cbc_legacy(
             ciphertext=encrypted_pkg,
             password=password,

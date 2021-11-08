@@ -6,11 +6,8 @@
 
 from collections import OrderedDict
 
-import pytest
-
 from tests.testlib import set_timezone
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inv_esx_vsphere_hostsystem import inv_esx_vsphere_hostsystem
 

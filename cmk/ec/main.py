@@ -1328,7 +1328,7 @@ class EventServer(ECServerThread):
         count_rules = 0
         count_unspecific = 0
 
-        # Loop through all rule packages and with through their rules
+        # Loop through all rule packs and with through their rules
         for rule_pack in rule_packs:
             if rule_pack["disabled"]:
                 count_disabled += len(rule_pack["rules"])

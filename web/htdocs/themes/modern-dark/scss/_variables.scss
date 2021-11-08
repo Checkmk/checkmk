@@ -36,11 +36,14 @@ $font-color: $white;
 $font-color-dimmed: rgba($white, 0.5);
 $font-color-light-bg: $grey-6;
 $font-color-light-grey: $midgrey;
+$font-color-green: $success;
+$font-color-orange: $orange-1;
 
 // -----------------------------------------------------------------------------
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
 $button-background-hover: lighten($grey-6, 10%);
+$default-submit-button-border-color: darken($success, 25%);
 
 $input-background-color: $ux-theme-5;
 $input-nested-background-color: rgb(63, 75, 93);
@@ -50,7 +53,7 @@ $input-dropdown-border-color: $ux-theme-6;
 // States
 // -----------------------------------------------------------------------------
 $color-state-1-background: $yellow;
-$color-state-2-background: $danger;
+$color-state-2-background: rgb(200, 50, 50);
 $color-state-3-background: rgb(255, 132, 0);
 $color-state-4-background: $darkgrey;
 $color-state-5-background: rgb(72, 203, 240);
@@ -140,21 +143,12 @@ $tag-hover-opacity: 0.8;
 // -----------------------------------------------------------------------------
 // Node visualization
 // -----------------------------------------------------------------------------
-$node-vis-darkgrey: rgb(169, 169, 169);
-$node-vis-togglebox-enabled: rgb(94, 93, 93);
-$node-vis-search-box-border: none;
-$node-vis-search-box-bg-color: transparent;
-$node-vis-search-field-border-color: $grey-3;
-$node-vis-box-shadow: none;
-$node-vis-box-border: 1px solid $grey-3;
-$node-vis-toggle-down-bg-color: null;
+$node-vis-darkgrey: $ux-theme-5;
+$node-vis-togglebox-enabled: $success;
 $node-vis-menu-bg-color: $ux-theme-1;
 $node-vis-history-bg-color: $grey-1;
 $node-vis-history-border-color: $grey-1;
 $node-vis-history-filter: invert(70%);
-$node-vis-growth-root-color: rgb(169, 169, 169);
-$topology-filter-bg-color: $ux-theme-1;
-$topology-filter-border-color: $grey-6;
 
 $agent-config-inner-title-bg-color: $ux-theme-1;
 
@@ -215,3 +209,4 @@ $hexagon-default-fill-opacity: 0.03;
 $hexagon-default-stroke-color: $white;
 $hexagon-default-stroke-opacity: 0.1;
 $host-hexagon-ok-stroke-color: rgb(58, 69, 80);
+$bi-box-border-color: $darkgrey;

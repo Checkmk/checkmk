@@ -15,19 +15,24 @@ def agent_kube_arguments(params, hostname, ipaddress):
     configured_endpoint_name, configured_endpoint = params["api-server-endpoint"]
     if configured_endpoint_name == "url_custom":
         args.append(configured_endpoint)
-        return args
+    else:
+        args.append(
+            "https://%s"
+            % {
+                "hostname": hostname,
+                "ipaddress": ipaddress,
+            }[configured_endpoint_name]
+        )
 
+        for arg_name, arg_value in configured_endpoint.items():
+            args.append(f"--{arg_name}")
+            args.append(str(arg_value))
+
+    agent_options = params["cluster-agent"]
+    args.append("--cluster-agent-endpoint")
     args.append(
-        "https://%s"
-        % {
-            "hostname": hostname,
-            "ipaddress": ipaddress,
-        }[configured_endpoint_name]
+        f'{agent_options["protocol"]}://{agent_options["node_ip"]}:{agent_options["connection_port"]}'
     )
-
-    for arg_name, arg_value in configured_endpoint.items():
-        args.append(f"--{arg_name}")
-        args.append(str(arg_value))
 
     return args
 

@@ -3,10 +3,26 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 
+import pytest
 
-def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automation_calls, with_host):
+from cmk.utils import version
+
+from cmk.automations.results import DeleteHostsResult, RenameHostsResult
+
+from cmk.gui.type_defs import CustomAttr
+from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_cluster_host(
+    wsgi_app,
+    with_automation_user,
+):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -17,6 +33,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
 
@@ -25,6 +42,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/domain-types/host_config/collections/clusters",
         params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type='application/json; charset="utf-8"',
     )
 
@@ -32,12 +50,14 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         "get",
         base + "/objects/host_config/bazfoozle",
         status=404,
+        headers={"Accept": "application/json"},
     )
 
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_config/bazfoo",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     wsgi_app.call_method(
@@ -45,7 +65,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["not_existing"]}',
         status=400,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -54,7 +74,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["example.com", "bazfoo"]}',
         status=400,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -63,7 +83,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["example.com"]}',
         status=200,
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
 
@@ -71,11 +91,17 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         "get",
         base + "/objects/host_config/bazfoo",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
-def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls):
+def test_openapi_hosts(
+    monkeypatch: pytest.MonkeyPatch,
+    wsgi_app,
+    with_automation_user,
+):
+
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -86,13 +112,17 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
+    assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
+    assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["updated_at"], str)
 
     resp = wsgi_app.follow_link(
         resp,
         "self",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     attributes = {
@@ -107,18 +137,18 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         ".../update",
         status=200,
         params=json.dumps({"attributes": attributes}),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
     got_attributes = resp.json["extensions"]["attributes"]
-    assert attributes.items() <= got_attributes.items()  # pylint: disable=dict-items-not-iterating
+    assert list(attributes.items()) <= list(got_attributes.items())
 
     resp = wsgi_app.follow_link(
         resp,
         ".../update",
         status=200,
         params='{"update_attributes": {"alias": "bar"}}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
     assert resp.json["extensions"]["attributes"]["alias"] == "bar"
@@ -128,18 +158,24 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         ".../update",
         status=200,
         params='{"remove_attributes": ["alias"]}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
-    assert (
-        resp.json["extensions"]["attributes"].items() >= {"ipaddress": "127.0.0.1"}.items()
-    )  # pylint: disable=dict-items-not-iterating
+    assert list(resp.json["extensions"]["attributes"].items()) >= list(
+        {"ipaddress": "127.0.0.1"}.items()
+    )
+    assert "alias" not in resp.json["extensions"]["attributes"]
 
     # make sure changes are written to disk:
-    resp = wsgi_app.follow_link(resp, "self", status=200)
-    assert (
-        resp.json["extensions"]["attributes"].items() >= {"ipaddress": "127.0.0.1"}.items()
-    )  # pylint: disable=dict-items-not-iterating
+    resp = wsgi_app.follow_link(
+        resp,
+        "self",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    assert list(resp.json["extensions"]["attributes"].items()) >= list(
+        {"ipaddress": "127.0.0.1"}.items()
+    )
 
     # also try to update with wrong attribute
     wsgi_app.follow_link(
@@ -147,23 +183,116 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         ".../update",
         status=400,
         params='{"attributes": {"foobaz": "bar"}}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
     )
 
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: DeleteHostsResult(),
+    )
     wsgi_app.follow_link(
         resp,
         ".../delete",
         status=204,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+
+def test_openapi_host_update_after_move(
+    wsgi_app,
+    with_automation_user,
+    with_host,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    wsgi_app.post(
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "bar", "parent": "/"}',
+        status=200,
+        content_type="application/json",
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    heute = wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute",
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute/actions/move/invoke",
+        params='{"target_folder": "/new_folder"}',
+        headers={
+            "If-Match": heute.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+        status=200,
+    )
+
+    example = wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com",
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    moved_example = wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/actions/move/invoke",
+        params='{"target_folder": "/new_folder"}',
+        headers={
+            "If-Match": example.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+        status=200,
+    )
+
+    moved_example_updated = wsgi_app.follow_link(
+        moved_example,
+        ".../update",
+        status=200,
+        params=json.dumps({"attributes": {"alias": "foo"}}),
+        headers={
+            "If-Match": moved_example.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+    )
+
+    wsgi_app.follow_link(
+        moved_example_updated,
+        ".../update",
+        status=200,
+        params=json.dumps({"attributes": {"alias": "foo"}}),
+        headers={
+            "If-Match": moved_example_updated.headers["ETag"],
+            "Accept": "application/json",
+        },
         content_type="application/json",
     )
 
 
 def test_openapi_bulk_hosts(
+    monkeypatch: pytest.MonkeyPatch,
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: DeleteHostsResult(),
+    )
+
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -192,6 +321,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
     assert len(resp.json["value"]) == 2
@@ -213,6 +343,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -221,6 +352,7 @@ def test_openapi_bulk_hosts(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["attributes"]["ipaddress"] == "192.168.1.1"
 
@@ -234,6 +366,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -242,6 +375,7 @@ def test_openapi_bulk_hosts(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert "ipaddress" not in resp.json["extensions"]["attributes"]
 
@@ -255,6 +389,7 @@ def test_openapi_bulk_hosts(
             }
         ),
         status=400,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -263,11 +398,13 @@ def test_openapi_bulk_hosts(
         base + "/domain-types/host_config/actions/bulk-delete/invoke",
         params=json.dumps({"entries": ["foobar", "sample"]}),
         status=204,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
 
-def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_bulk_simple(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -280,20 +417,124 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation
             {"entries": [{"host_name": "example.com", "folder": "/", "attributes": {}}]}
         ),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
+
+
+@pytest.fixture(name="custom_host_attribute")
+def _custom_host_attribute():
+    try:
+        attr: CustomAttr = {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "topic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+        save_custom_attrs_to_mk_file({"host": [attr]})
+        yield
+    finally:
+        save_custom_attrs_to_mk_file({})
+
+
+def test_openapi_host_custom_attributes(
+    wsgi_app,
+    with_automation_user,
+    with_host,
+    custom_host_attribute,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    # Known custom attribute
+
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/example.com",
+        status=200,
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/example.com",
+        status=200,
+        params='{"attributes": {"foo": "bar"}}',
+        headers={
+            "If-Match": resp.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+    )
+
+    # Unknown custom attribute
+
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/example.com",
+        status=200,
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/example.com",
+        status=400,
+        params='{"attributes": {"foo2": "bar"}}',
+        headers={
+            "If-Match": resp.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+    )
+
+
+def test_openapi_host_collection(
+    wsgi_app,
+    with_automation_user,
+    with_host,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/domain-types/host_config/collections/all",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    for host in resp.json["value"]:
+        # Check that all entries are domain objects
+        assert "extensions" in host
+        assert "links" in host
+        assert "members" in host
+        assert "title" in host
+        assert "id" in host
 
 
 def test_openapi_host_rename(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
+    monkeypatch.setattr(
+        "cmk.gui.watolib.host_rename.rename_hosts",
+        lambda *args, **kwargs: RenameHostsResult({}),
+    )
+
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
     wsgi_app.call_method(
@@ -301,6 +542,7 @@ def test_openapi_host_rename(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -308,6 +550,7 @@ def test_openapi_host_rename(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -315,21 +558,22 @@ def test_openapi_host_rename(
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
         status=200,
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
     )
 
     _resp = wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobaz",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_error_on_not_existing_host(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     monkeypatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
@@ -343,6 +587,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -350,6 +595,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -357,15 +603,15 @@ def test_openapi_host_rename_error_on_not_existing_host(
         base + "/objects/host_config/fooba/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=404,
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_on_invalid_hostname(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     monkeypatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
@@ -379,6 +625,7 @@ def test_openapi_host_rename_on_invalid_hostname(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -386,6 +633,7 @@ def test_openapi_host_rename_on_invalid_hostname(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -393,15 +641,15 @@ def test_openapi_host_rename_on_invalid_hostname(
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobar"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=400,
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_with_pending_activate_changes(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -413,6 +661,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -420,6 +669,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
@@ -427,87 +677,91 @@ def test_openapi_host_rename_with_pending_activate_changes(
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
         content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=409,
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_move(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.call_method(
+    resp = wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    wsgi_app.call_method(
         "post",
         base + "/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
         content_type="application/json",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     _resp = wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobar/actions/move/invoke",
         params='{"target_folder": "/new_folder"}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
         status=200,
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_move_to_non_valid_folder(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.call_method(
+    resp = wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    wsgi_app.call_method(
         "post",
         base + "/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
         content_type="application/json",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
-    _resp = wsgi_app.call_method(
+    wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobar/actions/move/invoke",
         params='{"target_folder": "/"}',
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
         status=400,
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_move_of_non_existing_host(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -520,13 +774,14 @@ def test_openapi_host_move_of_non_existing_host(
         params='{"target_folder": "/"}',
         content_type="application/json",
         status=404,
+        headers={"Accept": "application/json"},
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_update_invalid(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -538,6 +793,7 @@ def test_openapi_host_update_invalid(
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "example.com", "folder": "/"}',
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -552,6 +808,50 @@ def test_openapi_host_update_invalid(
                 "remove_attributes": ["tag_foobar"],
             }
         ),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         content_type="application/json",
+    )
+
+
+@managedtest
+def test_openapi_create_host_with_contact_group(
+    wsgi_app,
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    group = {"name": "code_monkeys", "alias": "banana team", "customer": "global"}
+    _resp = wsgi_app.call_method(
+        "post",
+        base + "/domain-types/contact_group_config/collections/all",
+        params=json.dumps(group),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )
+
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "ipaddress": "192.168.0.123",
+            "contactgroups": {
+                "groups": ["code_monkeys"],
+                "use": False,
+                "use_for_services": False,
+                "recurse_use": False,
+                "recurse_perms": False,
+            },
+        },
+    }
+    wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
     )

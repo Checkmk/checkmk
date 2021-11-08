@@ -291,7 +291,7 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
         (
             (3, 2, 0),
             {
-                "host": "mongodb://username:%2F%3F%21%2F@example.com",
+                "host": "mongodb://username:%2F%3F%21%2F@example.com:27017",
                 "ssl": True,
             },
         ),
@@ -305,15 +305,18 @@ def test_transform_config(pymongo_version, pymongo_config, mk_mongodb):
             self.tls_ca_file = None
             self.auth_mechanism = None
             self.auth_source = None
+            self.port = None
             self.host = "example.com"
             self.password = "/?!/"
             self.username = "username"
 
-    class TransformerMocked(mk_mongodb.PyMongoConfigTransformer):  # type: ignore[name-defined]
-        @staticmethod
-        def _get_pymongo_version():
-            return pymongo_version
-
     config = DummyConfig()
-    result = TransformerMocked(config).transform(config.get_pymongo_config())
+
+    original_pymongo_version = mk_mongodb.PYMONGO_VERSION
+    try:
+        mk_mongodb.PYMONGO_VERSION = pymongo_version
+        result = mk_mongodb.PyMongoConfigTransformer(config).transform(config.get_pymongo_config())
+    finally:
+        mk_mongodb.PYMONGO_VERSION = original_pymongo_version
+
     assert result == pymongo_config

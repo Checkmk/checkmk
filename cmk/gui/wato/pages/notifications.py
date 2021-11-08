@@ -44,9 +44,10 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     notification_parameter_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.sites import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     Age,
@@ -70,6 +71,11 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages.users import ModeEditUser
+from cmk.gui.watolib.check_mk_automations import (
+    notification_analyse,
+    notification_get_bulks,
+    notification_replay,
+)
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
@@ -605,8 +611,8 @@ class ModeNotifications(ABCNotificationsMode):
         elif request.has_var("_replay"):
             if transactions.check_transaction():
                 nr = request.get_integer_input_mandatory("_replay")
-                watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
-                flash(_("Replayed notifiation number %d") % (nr + 1))
+                notification_replay(nr)
+                flash(_("Replayed notification number %d") % (nr + 1))
                 return None
 
         else:
@@ -692,9 +698,7 @@ class ModeNotifications(ABCNotificationsMode):
             self._render_bulks(only_ripe=True)
 
     def _render_bulks(self, only_ripe):
-        bulks = watolib.check_mk_local_automation(
-            "notification-get-bulks", ["1" if only_ripe else "0"]
-        )
+        bulks = notification_get_bulks(only_ripe).result
         if not bulks:
             return False
 
@@ -711,7 +715,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Bulk ID"), bulk_id)
                 table.cell(_("Max. Age (sec)"), str(interval), css="number")
                 table.cell(_("Age (sec)"), str(age), css="number")
-                if interval and age >= interval:
+                if interval and age >= float(interval):
                     html.icon("warning", _("Age of oldest notification is over maximum age"))
                 table.cell(_("Timeperiod"), str(timeperiod))
                 table.cell(_("Max. Count"), str(maxcount), css="number")
@@ -816,7 +820,7 @@ class ModeNotifications(ABCNotificationsMode):
                 )
 
                 # Add toggleable notitication context
-                table.row(class_="notification_context hidden", id_="notification_context_%d" % nr)
+                table.row(css="notification_context hidden", id_="notification_context_%d" % nr)
                 table.cell(colspan=8)
 
                 html.open_table()
@@ -830,16 +834,15 @@ class ModeNotifications(ABCNotificationsMode):
                 html.close_table()
 
                 # This dummy row is needed for not destroying the odd/even row highlighting
-                table.row(class_="notification_context hidden")
+                table.row(css="notification_context hidden")
 
     # TODO: Refactor this
     def _show_rules(self):
         # Do analysis
+        analyse = None
         if request.var("analyse"):
             nr = request.get_integer_input_mandatory("analyse")
-            analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
-        else:
-            analyse = False
+            analyse = notification_analyse(nr).result
 
         start_nr = 0
         rules = self._get_notification_rules()
@@ -1606,7 +1609,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Notification rule"), breadcrumb, form_name="rule", button_name="save"
+            _("Notification rule"), breadcrumb, form_name="rule", button_name="_save"
         )
 
     def action(self) -> ActionResult:

@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.printer_alerts import (
 
 @pytest.mark.parametrize("info, expected_result", [([[["1", "2", "15", "3", ""]]], [Service()])])
 def test_zypper_discovery(info, expected_result):
-    section = parse_printer_alerts(info)
+    _section = parse_printer_alerts(info)
     result = discovery_printer_alerts(info)
     assert list(result) == expected_result
 

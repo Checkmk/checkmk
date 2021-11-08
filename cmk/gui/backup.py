@@ -32,7 +32,7 @@ from cmk.utils.schedule import next_scheduled_time
 import cmk.gui.forms as forms
 import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
@@ -44,8 +44,8 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, redirect
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import (
     make_confirm_link,
@@ -667,7 +667,7 @@ class PageBackup:
         action = request.var("_action")
 
         if not transactions.check_transaction():
-            return redirect(makeuri_contextless(request, [("mode", "backup")]))
+            return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
         if action == "delete" and self._may_edit_config():
             self._delete_job(job)
@@ -678,7 +678,7 @@ class PageBackup:
         elif action == "stop":
             self._stop_job(job)
 
-        return redirect(makeuri_contextless(request, [("mode", "backup")]))
+        return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def _delete_job(self, job) -> None:
         if job.is_running():
@@ -741,7 +741,7 @@ class PageEditBackupJob:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Job"), breadcrumb, form_name="edit_job", button_name="save"
+            _("Job"), breadcrumb, form_name="edit_job", button_name="_save"
         )
 
     def vs_backup_schedule(self):
@@ -896,7 +896,7 @@ class PageEditBackupJob:
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(makeuri_contextless(request, [("mode", "backup")]))
+            return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
         vs = self.vs_backup_job()
 
@@ -916,7 +916,7 @@ class PageEditBackupJob:
             job.from_config(self._job_cfg)
 
         jobs.save()
-        return redirect(makeuri_contextless(request, [("mode", "backup")]))
+        return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def page(self):
         html.begin_form("edit_job", method="POST")
@@ -1241,7 +1241,7 @@ class PageBackupTargets:
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
+            return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         ident = request.var("target")
         targets = self.targets()
@@ -1255,7 +1255,7 @@ class PageBackupTargets:
         targets.remove(target)
         targets.save()
         flash(_("The target has been deleted."))
-        return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
+        return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def _verify_not_used(self, target):
         job_titles = [j.title() for j in self.jobs().jobs_using_target(target)]
@@ -1303,7 +1303,7 @@ class PageEditBackupTarget:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Target"), breadcrumb, form_name="edit_target", button_name="save"
+            _("Target"), breadcrumb, form_name="edit_target", button_name="_save"
         )
 
     def vs_backup_target(self):
@@ -1365,7 +1365,7 @@ class PageEditBackupTarget:
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
-            return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
+            return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         vs = self.vs_backup_target()
 
@@ -1385,7 +1385,7 @@ class PageEditBackupTarget:
             target.from_config(self._target_cfg)
 
         targets.save()
-        return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
+        return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def page(self):
         html.begin_form("edit_target", method="POST")
@@ -1856,7 +1856,7 @@ class PageBackupRestore:
             return None  # Only choosen the target
 
         if not transactions.check_transaction():
-            return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
+            return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
         if action == "delete":
             self._delete_backup(backup_ident)
@@ -1870,7 +1870,7 @@ class PageBackupRestore:
         elif action == "stop":
             self._stop_restore(backup_ident)
 
-        return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
+        return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
     def _delete_backup(self, backup_ident) -> None:
         if self._restore_is_running():
@@ -1935,7 +1935,7 @@ class PageBackupRestore:
                     transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
                     flash(_("The restore has been started."))
-                    return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
+                    return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -1984,7 +1984,7 @@ class PageBackupRestore:
     def _start_unencrypted_restore(self, backup_ident) -> ActionResult:
         RestoreJob(self._target_ident, backup_ident).start()
         flash(_("The restore has been started."))
-        return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
+        return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
     def _stop_restore(self, backup_ident) -> None:
         RestoreJob(self._target_ident, backup_ident).stop()

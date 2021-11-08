@@ -41,6 +41,7 @@ from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.site import omd_site
+from cmk.utils.store import PickleSerializer
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
@@ -55,6 +56,7 @@ from cmk.utils.store.host_storage import (
     HostsStorageFieldsGenerator,
     make_experimental_hosts_storage,
     StandardHostsStorage,
+    StorageFormat,
 )
 from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupIDToTagID
 
@@ -71,8 +73,8 @@ from cmk.gui.sites import allsites, is_wato_slave_site
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.valuespec import Choices
-from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -130,6 +132,70 @@ class WithPermissions:
         raise NotImplementedError()
 
 
+class _ABCWATOInfoStorage:
+    def read(self, file_path: Path) -> Optional[Dict[str, Any]]:
+        raise NotImplementedError()
+
+    def write(self, file_path: Path, data: Dict[str, Any]) -> None:
+        raise NotImplementedError()
+
+
+class _StandardWATOInfoStorage(_ABCWATOInfoStorage):
+    def read(self, file_path: Path) -> Dict[str, Any]:
+        return store.load_object_from_file(file_path, default={})
+
+    def write(self, file_path: Path, data: Dict[str, Any]) -> None:
+        store.save_object_to_file(file_path, data)
+
+
+class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
+    def read(self, file_path: Path) -> Optional[Dict[str, Any]]:
+        pickle_path = self._add_suffix(file_path)
+        if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
+            return None
+        return store.ObjectStore(pickle_path, serializer=PickleSerializer()).read_obj(default={})
+
+    def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
+        # The experimental file must not be older than the corresponding .wato
+        # The file is also invalid if no matching .wato file exists
+        if not file_path.exists():
+            return False
+
+        return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
+
+    def write(self, file_path: Path, data: Dict[str, Any]) -> None:
+        pickle_store = store.ObjectStore(self._add_suffix(file_path), serializer=PickleSerializer())
+        with pickle_store.locked():
+            pickle_store.write_obj(data)
+
+    def _add_suffix(self, path: Path) -> Path:
+        return path.with_suffix(StorageFormat.PICKLE.extension())
+
+
+class _WATOInfoStorageManager:
+    """Handles read/write operations for the .wato file"""
+
+    def __init__(self):
+        self._write_storages = self._get_write_storages()
+        self._read_storages = list(reversed(self._write_storages))
+
+    def _get_write_storages(self) -> List[_ABCWATOInfoStorage]:
+        storages: List[_ABCWATOInfoStorage] = [_StandardWATOInfoStorage()]
+        if get_storage_format(config.config_storage_format) == StorageFormat.PICKLE:
+            storages.append(_PickleWATOInfoStorage())
+        return storages
+
+    def read(self, store_file: Path) -> Dict[str, Any]:
+        for storage in self._read_storages:
+            if (storage_data := storage.read(store_file)) is not None:
+                return storage_data
+        return {}
+
+    def write(self, store_file: Path, data: Dict[str, Any]) -> None:
+        for storage in self._write_storages:
+            storage.write(store_file, data)
+
+
 class WithUniqueIdentifier(abc.ABC):
     """Provides methods for giving Hosts and Folders unique identifiers."""
 
@@ -167,6 +233,12 @@ class WithUniqueIdentifier(abc.ABC):
             raise MKUserError(None, _("Folder %s not found.") % (identifier,))
         return folders[identifier]
 
+    @classmethod
+    def wato_info_storage_manager(cls):
+        if "wato_info_storage_manager" not in g:
+            g.wato_info_storage_manager = _WATOInfoStorageManager()
+        return g.wato_info_storage_manager
+
     def persist_instance(self) -> None:
         """Save the current state of the instance to a file."""
         if self._id is None:
@@ -177,7 +249,7 @@ class WithUniqueIdentifier(abc.ABC):
         data["attributes"] = update_metadata(data["attributes"])
         data["__id"] = self._id
         store.makedirs(os.path.dirname(self._store_file_name()))
-        store.save_object_to_file(self._store_file_name(), data)
+        self.wato_info_storage_manager().write(Path(self._store_file_name()), data)
 
     def load_instance(self) -> None:
         """Load the data of this instance and return it.
@@ -187,7 +259,8 @@ class WithUniqueIdentifier(abc.ABC):
         Returns:
             The loaded data.
         """
-        data = store.load_object_from_file(self._store_file_name(), default={})
+        data = self.wato_info_storage_manager().read(Path(self._store_file_name()))
+
         data = self._upgrade_keys(data)
         unique_id = data.get("__id")
         if self._id is None:
@@ -309,7 +382,13 @@ class BaseFolder:
     def host_names(self):
         return self.hosts().keys()
 
-    def host(self, host_name: str) -> CREHost:
+    def load_host(self, host_name: str) -> CREHost:
+        try:
+            return self.hosts()[host_name]
+        except KeyError:
+            raise MKUserError(None, f"The host {host_name} could not be found.")
+
+    def host(self, host_name: str) -> Optional[CREHost]:
         return self.hosts().get(host_name)
 
     def has_host(self, host_name):
@@ -1000,7 +1079,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             # intentionally.
             self._num_hosts = len(self._hosts or {})
 
-    def save(self):
+    def save(self) -> None:
         self.persist_instance()
         Folder.invalidate_caches()
         self.load_instance()
@@ -1022,7 +1101,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _fallback_title(self):
         if self.is_root():
-            return _("Main directory")
+            return _("Main")
         return self.name()
 
     def load_subfolders(self):
@@ -1040,7 +1119,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                     entry, subfolder_path, parent_folder=self, root_dir=self._root_dir
                 )
 
-    def wato_info_path(self):
+    def wato_info_path(self) -> str:
         return self.filesystem_path() + "/.wato"
 
     def hosts_file_path(self) -> str:
@@ -1049,7 +1128,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def hosts_file_path_without_extension(self) -> str:
         return self.filesystem_path() + "/hosts"
 
-    def rules_file_path(self):
+    def rules_file_path(self) -> str:
         return self.filesystem_path() + "/rules.mk"
 
     def add_to_dictionary(self, dictionary):
@@ -1057,7 +1136,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         for subfolder in self._subfolders.values():
             subfolder.add_to_dictionary(dictionary)
 
-    def drop_caches(self):
+    def drop_caches(self) -> None:
         super().drop_caches()
         self._choices_for_moving_host = None
 
@@ -1398,7 +1477,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
 
     @staticmethod
-    def find_host_by_lookup_cache(host_name):
+    def find_host_by_lookup_cache(host_name) -> Optional["CREHost"]:
         """This function tries to create a host object using its name from a lookup cache.
         If this does not work (cache miss), the regular search for the host is started.
         If the host was found by the regular search, the lookup cache is updated accordingly."""
@@ -1975,7 +2054,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
 
         for site_id, site_host_names in hosts_by_site.items():
-            check_mk_automation(site_id, "delete-hosts", site_host_names)
+            delete_hosts(
+                site_id,
+                site_host_names,
+            )
 
     def move_hosts(self, host_names, target_folder):
         # 1. Check preconditions
@@ -1989,7 +2071,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # 2. Actual modification
         for host_name in host_names:
-            host = self.host(host_name)
+            host = self.load_host(host_name)
 
             affected_sites = [host.site_id()]
 
@@ -1997,8 +2079,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             target_folder._add_host(host)
 
             affected_sites = list(set(affected_sites + [host.site_id()]))
-            old_folder_text = self.path() or _("Main directory")
-            new_folder_text = target_folder.path() or _("Main directory")
+            old_folder_text = self.path() or self.root_folder().title()
+            new_folder_text = target_folder.path() or self.root_folder().title()
             add_change(
                 "move-host",
                 _('Moved host from "%s" to "%s"') % (old_folder_text, new_folder_text),
@@ -2299,7 +2381,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     def _group_hostnames_by_folder(self, host_names):
         by_folder: Dict[str, List[CREHost]] = {}
         for host_name in host_names:
-            host = self.host(host_name)
+            host = self.load_host(host_name)
             by_folder.setdefault(host.folder().path(), []).append(host)
 
         return [
@@ -2353,15 +2435,22 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     @staticmethod
-    def host(host_name):
+    def load_host(host_name: str) -> "CREHost":
+        host = Host.host(host_name)
+        if host is None:
+            raise MKUserError(None, "Host could not be found.", status=404)
+        return host
+
+    @staticmethod
+    def host(host_name) -> Optional["CREHost"]:
         return Folder.find_host_by_lookup_cache(host_name)
 
     @staticmethod
-    def all():
+    def all() -> Dict[str, "CREHost"]:
         return Folder.root_folder().all_hosts_recursively()
 
     @staticmethod
-    def host_exists(host_name):
+    def host_exists(host_name) -> bool:
         return Host.host(host_name) is not None
 
     # .--------------------------------------------------------------------.
@@ -2986,7 +3075,7 @@ class CMEFolder(CREFolder):
         if target_customer_id != managed.default_customer_id():
             allowed_sites = managed.get_sites_of_customer(target_customer_id)
             for hostname in host_names:
-                host = self.host(hostname)
+                host = self.load_host(hostname)
                 host_site = host.attributes().get("site")
                 if not host_site:
                     continue
@@ -3149,7 +3238,7 @@ def make_action_link(vars_: HTTPVariables) -> str:
 
 def get_folder_title_path(path, with_links=False):
     """Return a list with all the titles of the paths'
-    components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]"""
+    components, e.g. "muc/north" -> [ "Main", "Munich", "North" ]"""
     # In order to speed this up, we work with a per HTML-request cache
     cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
     cache = g.setdefault(cache_name, {})

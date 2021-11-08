@@ -3,15 +3,18 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
+
+import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_list_all_downtimes(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
     with_host,
 ):
@@ -29,7 +32,10 @@ def test_openapi_list_all_downtimes(
 
     with live:
         resp = wsgi_app.call_method(
-            "get", base + "/domain-types/downtime/collections/all", status=200
+            "get",
+            base + "/domain-types/downtime/collections/all",
+            headers={"Accept": "application/json"},
+            status=200,
         )
         assert len(resp.json["value"]) == 1
 
@@ -78,6 +84,7 @@ def test_openapi_schedule_hostgroup_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -111,6 +118,7 @@ def test_openapi_schedule_host_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -164,6 +172,7 @@ def test_openapi_schedule_servicegroup_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -202,6 +211,7 @@ def test_openapi_schedule_service_downtime(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
@@ -230,10 +240,12 @@ def test_openapi_schedule_service_downtime_with_non_matching_query(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=422,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_schedule_host_downtime_with_non_matching_query(
     wsgi_app,
     with_automation_user,
@@ -258,6 +270,7 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
                     "end_time": "2020-01-02T00:00:00Z",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=422,
         )
 
@@ -265,7 +278,6 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
 def test_openapi_show_downtimes_with_query(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -313,15 +325,16 @@ def test_openapi_show_downtimes_with_query(
             "get",
             base
             + '/domain-types/downtime/collections/all?query={"op": "~", "left": "downtimes.host_name", "right": "heute"}',
+            headers={"Accept": "application/json"},
             status=200,
         )
     assert len(resp.json["value"]) == 1
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_show_downtime_with_params(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -370,15 +383,16 @@ def test_openapi_show_downtime_with_params(
         resp = wsgi_app.call_method(
             "get",
             base + "/domain-types/downtime/collections/all?host_name=example.com",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert resp.json_body["value"][0]["id"] == "124"
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_show_downtime_of_non_existing_host(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -427,14 +441,15 @@ def test_openapi_show_downtime_of_non_existing_host(
         _ = wsgi_app.call_method(
             "get",
             base + "/domain-types/downtime/collections/all?host_name=nothing",
+            headers={"Accept": "application/json"},
             status=200,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_create_host_downtime_with_query(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -508,14 +523,15 @@ def test_openapi_create_host_downtime_with_query(
                     "query": {"op": "~", "left": "hosts.name", "right": "heute"},
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_create_service_downtime_with_query(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -567,14 +583,15 @@ def test_openapi_create_service_downtime_with_query(
                     "query": {"op": "~", "left": "services.host_name", "right": "heute"},
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_create_service_downtime_with_non_matching_query(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -617,14 +634,15 @@ def test_openapi_create_service_downtime_with_non_matching_query(
                     },
                 }
             ),
+            headers={"Accept": "application/json"},
             status=422,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_delete_downtime_with_query(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -678,14 +696,15 @@ def test_openapi_delete_downtime_with_query(
                     "query": {"op": "~", "left": "downtimes.host_name", "right": "heute"},
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_delete_downtime_by_id(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -739,14 +758,15 @@ def test_openapi_delete_downtime_by_id(
                     "downtime_id": "123",
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_delete_downtime_with_params(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -807,14 +827,15 @@ def test_openapi_delete_downtime_with_params(
                     "service_descriptions": ["CPU load", "Memory"],
                 }
             ),
+            headers={"Accept": "application/json"},
             status=204,
         )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_non_existing_instance(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -831,14 +852,15 @@ def test_openapi_downtime_non_existing_instance(
                 "end_time": "2020-01-02T00:00:00Z",
             }
         ),
+        headers={"Accept": "application/json"},
         status=400,
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_non_existing_groups(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -855,14 +877,15 @@ def test_openapi_downtime_non_existing_groups(
                 "end_time": "2020-01-02T00:00:00Z",
             }
         ),
+        headers={"Accept": "application/json"},
         status=400,
     )
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_get_single(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -910,15 +933,16 @@ def test_openapi_downtime_get_single(
         resp = wsgi_app.call_method(
             "get",
             base + "/objects/downtime/123",
+            headers={"Accept": "application/json"},
             status=200,
         )
         assert resp.json_body["title"] == "Downtime for service: CPU load"
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_invalid_single(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -938,5 +962,6 @@ def test_openapi_downtime_invalid_single(
         _ = wsgi_app.call_method(
             "get",
             base + "/objects/downtime/123",
+            headers={"Accept": "application/json"},
             status=404,
         )

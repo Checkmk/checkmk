@@ -5,24 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes defining the check helper protocol.
 
-We call "message" a header followed by the corresponding payload.
-
-+---------------+----------------+---------------+----------------+
-| Layer         | Message type   | Header type   | Payload type   |
-+===============+================+===============+================+
-| CMC Layer     | CMCMessage     | CMCHeader     | CMCPayload     |
-+---------------+----------------+---------------+----------------+
-| Fetcher Layer | FetcherMessage | FetcherHeader | ResultMessage  |
-|               |                |               | + ResultStats  |
-+---------------+----------------+---------------+----------------+
-|               |                |      AgentResultMessage        |
-| Result Layer  | ResultMessage  |      SNMPResultMessage         |
-|               |                |      ErrorResultMessage        |
-+---------------+----------------+--------------------------------+
-
 .. uml::
 
+    package "CMC Layer" {
+    class CMCMessage
+    class CMCHeader
     abstract CMCPayload
+    class CMCLogging
+    class CMCEndOfReply
+    class CMCResults
+    }
+    package "Fetcher Layer" {
+    class FetcherResultsStats
+    class FetcherMessage
+    class FetcherHeader
+    abstract ResultMessage
+    class ResultStats
+    }
+    package "Result Layer" {
+    class AgentResultMessage
+    class SNMPResultMessage
+    class ErrorResultMessage
+    }
+
     CMCPayload <|-- CMCResults
     CMCPayload <|-- CMCLogging
     CMCPayload <|-- CMCEndOfReply
@@ -30,8 +35,8 @@ We call "message" a header followed by the corresponding payload.
     CMCMessage o-- CMCPayload
 
     CMCResults o-- "*" FetcherMessage
+    CMCResults o-- FetcherResultsStats
 
-    abstract ResultMessage
     ResultMessage <|-- AgentResultMessage
     ResultMessage <|-- SNMPResultMessage
     ResultMessage <|-- ErrorResultMessage
@@ -580,7 +585,7 @@ class CMCPayload(Protocol):
     pass
 
 
-class CMCResultsStats(Protocol):
+class FetcherResultsStats(Protocol):
     fmt = "!I"
     length = struct.calcsize(fmt)
 
@@ -603,7 +608,7 @@ class CMCResultsStats(Protocol):
         yield conf
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> CMCResultsStats:
+    def from_bytes(cls, data: bytes) -> FetcherResultsStats:
         conf_len = struct.unpack(cls.fmt, data[: cls.length])[0]
         conf = json.loads(data[cls.length : cls.length + conf_len].decode("ascii"))
         return cls(conf["timeout"], Snapshot.deserialize(conf["duration"]))
@@ -613,7 +618,11 @@ class CMCResults(CMCPayload):
     fmt = "!I"
     length = struct.calcsize(fmt)
 
-    def __init__(self, messages: Sequence[FetcherMessage], stats: CMCResultsStats) -> None:
+    def __init__(
+        self,
+        messages: Sequence[FetcherMessage],
+        stats: FetcherResultsStats,
+    ) -> None:
         self.messages: Final = messages
         self.stats: Final = stats
 
@@ -637,7 +646,7 @@ class CMCResults(CMCPayload):
             message = FetcherMessage.from_bytes(data[index:])
             messages.append(message)
             index += len(message)
-        return cls(messages, CMCResultsStats.from_bytes(data[index:]))
+        return cls(messages, FetcherResultsStats.from_bytes(data[index:]))
 
 
 class CMCLogging(CMCPayload):
@@ -712,7 +721,7 @@ class CMCMessage(Protocol):
     def result_answer(
         cls, messages: Sequence[FetcherMessage], timeout: int, duration: Snapshot
     ) -> CMCMessage:
-        payload = CMCResults(messages, CMCResultsStats(timeout, duration))
+        payload = CMCResults(messages, FetcherResultsStats(timeout, duration))
         return cls(
             CMCHeader(
                 name=CMCHeader.default_protocol_name(),

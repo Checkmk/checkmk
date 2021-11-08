@@ -10,8 +10,6 @@ import time
 from pathlib import Path
 from typing import Any, NamedTuple, Type
 
-from six import ensure_binary
-
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.store as store
@@ -607,8 +605,6 @@ class CEESiteManagement(SiteManagement):
                 "socket": siteconf["socket"],
             }
 
-            conf[siteid]["connect_timeout"] = siteconf.get("timeout", 2)
-
             if "tcp" in proxy_params:
                 conf[siteid]["tcp"] = proxy_params["tcp"]
 
@@ -789,7 +785,7 @@ class AutomationPushSnapshot(AutomationCommand):
         if not snapshot:
             raise MKGeneralException(_("Invalid call: The snapshot is missing."))
 
-        return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
+        return PushSnapshotRequest(site_id=site_id, tar_content=snapshot[2])
 
     def execute(self, api_request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():

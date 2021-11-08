@@ -7,12 +7,15 @@
 automation functions on slaves,"""
 
 import traceback
+from typing import Iterable
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
+
+from cmk.automations.results import result_type_registry, SerializedResult
 
 import cmk.gui.userdb as userdb
 import cmk.gui.utils
@@ -23,13 +26,14 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.watolib.automations import compatible_with_central_site
 
 
 @page_registry.register_page("automation_login")
 class ModeAutomationLogin(AjaxPage):
-    """Is executed by the central Check_MK site during creation of the WATO master/slave sync to
+    """Is executed by the central Checkmk site to get the site secret of the remote site
 
-    When the page method is execute a remote (master) site has successfully
+    When the page method is execute a remote (central) site has successfully
     logged in using valid credentials of an administrative user. The login is
     done be exchanging a login secret. If such a secret is not yet present it
     is created on the fly."""
@@ -44,19 +48,54 @@ class ModeAutomationLogin(AjaxPage):
             raise MKAuthException(_("This account has no permission for automation."))
 
         response.set_content_type("text/plain")
+        _set_version_headers()
 
+        # Parameter was added with 1.5.0p10
         if not request.has_var("_version"):
-            # Be compatible to calls from sites using versions before 1.5.0p10.
-            # Deprecate with 1.7 by throwing an exception in this situation.
-            resp = _get_login_secret(create_on_demand=True)
-        else:
-            resp = {
-                "version": cmk_version.__version__,
-                "edition_short": cmk_version.edition_short(),
-                "login_secret": _get_login_secret(create_on_demand=True),
-            }
+            raise MKGeneralException(_("Your central site is incompatible with this remote site"))
 
-        response.set_data(repr(resp))
+        # - _version and _edition_short were added with 1.5.0p10 to the login call only
+        # - x-checkmk-version and x-checkmk-edition were added with 2.0.0p1
+        # Prefer the headers and fall back to the request variables for now.
+        central_version = (
+            request.headers["x-checkmk-version"]
+            if "x-checkmk-version" in request.headers
+            else request.get_ascii_input_mandatory("_version")
+        )
+        central_edition_short = (
+            request.headers["x-checkmk-edition"]
+            if "x-checkmk-edition" in request.headers
+            else request.get_ascii_input_mandatory("_edition_short")
+        )
+
+        if not compatible_with_central_site(
+            central_version,
+            central_edition_short,
+            cmk_version.__version__,
+            cmk_version.edition_short(),
+        ):
+            raise MKGeneralException(
+                _(
+                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
+                    "remote site (Version: %s, Edition: %s)"
+                )
+                % (
+                    central_version,
+                    central_edition_short,
+                    cmk_version.__version__,
+                    cmk_version.edition_short(),
+                )
+            )
+
+        response.set_data(
+            repr(
+                {
+                    "version": cmk_version.__version__,
+                    "edition_short": cmk_version.edition_short(),
+                    "login_secret": _get_login_secret(create_on_demand=True),
+                }
+            )
+        )
 
 
 @page_registry.register_page("noauth:automation")
@@ -69,6 +108,8 @@ class ModeAutomation(AjaxPage):
 
     def _from_vars(self):
         self._authenticate()
+        _set_version_headers()
+        self._verify_compatibility()
         self._command = request.get_str_input_mandatory("command")
 
     def _authenticate(self):
@@ -79,6 +120,28 @@ class ModeAutomation(AjaxPage):
 
         if secret != _get_login_secret():
             raise MKAuthException(_("Invalid automation secret."))
+
+    def _verify_compatibility(self) -> None:
+        central_version = request.headers.get("x-checkmk-version", "")
+        central_edition_short = request.headers.get("x-checkmk-edition", "")
+        if not compatible_with_central_site(
+            central_version,
+            central_edition_short,
+            cmk_version.__version__,
+            cmk_version.edition_short(),
+        ):
+            raise MKGeneralException(
+                _(
+                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
+                    "remote site (Version: %s, Edition: %s)"
+                )
+                % (
+                    central_version,
+                    central_edition_short,
+                    cmk_version.__version__,
+                    cmk_version.edition_short(),
+                )
+            )
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
@@ -96,7 +159,6 @@ class ModeAutomation(AjaxPage):
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
         with store.lock_checkmk_configuration():
-            watolib.init_wato_datastructures(with_wato_lock=False)
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
                 self._execute_cmk_automation()
@@ -110,15 +172,48 @@ class ModeAutomation(AjaxPage):
                 raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
             self._execute_automation_command(automation_command)
 
+    @staticmethod
+    def _format_cmk_automation_result(
+        *,
+        serialized_result: SerializedResult,
+        cmk_command: str,
+        cmdline_cmd: Iterable[str],
+    ) -> str:
+        try:
+            return (
+                repr(result_type_registry[cmk_command].deserialize(serialized_result).to_pre_21())
+                if watolib.remote_automation_call_came_from_pre21()
+                else serialized_result
+            )
+        except SyntaxError as e:
+            raise watolib.local_automation_failure(
+                command=cmk_command,
+                cmdline=cmdline_cmd,
+                out=serialized_result,
+                exc=e,
+            )
+
     def _execute_cmk_automation(self):
         cmk_command = request.get_str_input_mandatory("automation")
         args = watolib.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib.mk_eval(request.get_str_input_mandatory("indata"))
         stdin_data = watolib.mk_eval(request.get_str_input_mandatory("stdin_data"))
         timeout = watolib.mk_eval(request.get_str_input_mandatory("timeout"))
-        result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
+        cmdline_cmd, serialized_result = watolib.check_mk_local_automation_serialized(
+            command=cmk_command,
+            args=args,
+            indata=indata,
+            stdin_data=stdin_data,
+            timeout=timeout,
+        )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
-        response.set_data(repr(result))
+        response.set_data(
+            self._format_cmk_automation_result(
+                serialized_result=SerializedResult(serialized_result),
+                cmk_command=cmk_command,
+                cmdline_cmd=cmdline_cmd,
+            )
+        )
 
     def _execute_push_profile(self):
         try:
@@ -166,6 +261,15 @@ class ModeAutomation(AjaxPage):
             if config.debug:
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
+
+
+def _set_version_headers() -> None:
+    """Add the x-checkmk-version, x-checkmk-edition headers to the HTTP response
+
+    Has been added with 2.0.0p13.
+    """
+    response.headers["x-checkmk-version"] = cmk_version.__version__
+    response.headers["x-checkmk-edition"] = cmk_version.edition_short()
 
 
 def _get_login_secret(create_on_demand=False):

@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, AjaxPageResult, Page, page_registry
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
+from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic, validate_start_url
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.sites import get_site_config, sitenames
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, UserSpec
@@ -75,7 +75,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
     quick_items = [
         TopicMenuItem(
             name="ui_theme",
-            title=_("Interface theme"),
+            title=_("Color theme"),
             url='javascript:cmk.sidebar.toggle_user_attribute("ajax_ui_theme.py")',
             target="",
             sort_index=10,
@@ -95,24 +95,24 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
 
     items = [
         TopicMenuItem(
-            name="change_password",
-            title=_("Change password"),
-            url="user_change_pw.py",
-            sort_index=10,
-            icon="topic_change_password",
-        ),
-        TopicMenuItem(
             name="user_profile",
             title=_("Edit profile"),
             url="user_profile.py",
-            sort_index=20,
+            sort_index=10,
             icon="topic_profile",
+        ),
+        TopicMenuItem(
+            name="change_password",
+            title=_("Change password"),
+            url="user_change_pw.py",
+            sort_index=30,
+            icon="topic_change_password",
         ),
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",
-            sort_index=30,
+            sort_index=40,
             icon="sidebar_logout",
         ),
     ]
@@ -124,7 +124,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
                 name="notification_rules",
                 title=_("Notification rules"),
                 url="wato.py?mode=user_notifications_p",
-                sort_index=30,
+                sort_index=20,
                 icon="topic_events",
             ),
         )
@@ -132,14 +132,13 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
     return [
         TopicMenuTopic(
             name="user",
-            title=_("Quick toggle"),
-            # TODO(rb): set correct icon
-            icon="topic_profile",
+            title=_("User interface"),
+            icon="topic_user_interface",
             items=quick_items,
         ),
         TopicMenuTopic(
             name="user",
-            title=_("Profile"),
+            title=_("User profile"),
             icon="topic_profile",
             items=items,
         ),
@@ -199,7 +198,7 @@ class ModeAjaxSetStartURL(AjaxPage):
         try:
             name = request.get_str_input_mandatory("name")
             url = makeuri_contextless(request, [("name", name)], "dashboard.py")
-            cmk.gui.utils.validate_start_url(url, "")
+            validate_start_url(url, "")
             _set_user_attribute("start_url", repr(url))
         except Exception:
             raise MKUserError(None, _("Failed to set start URL"))
@@ -323,8 +322,6 @@ class ABCUserProfilePage(Page):
         return menu
 
     def page(self) -> None:
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
@@ -365,8 +362,6 @@ class UserProfileReplicate(Page):
         return menu
 
     def page(self) -> None:
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))

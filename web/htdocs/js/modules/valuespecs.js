@@ -751,16 +751,18 @@ function select2_ajax_vs_autocomplete(elem, ident, params) {
         type: "POST",
         data: term =>
             "request=" +
-            JSON.stringify({
-                ident: ident,
-                params: params(elem),
-                value:
-                    term.term !== undefined
-                        ? term.term
-                        : ["hostname", "service"].find(el => ident.includes(el))
-                        ? elem.value
-                        : "",
-            }),
+            encodeURIComponent(
+                JSON.stringify({
+                    ident: ident,
+                    params: params(elem),
+                    value:
+                        term.term !== undefined
+                            ? term.term
+                            : ["hostname", "service"].find(el => ident.includes(el))
+                            ? elem.value
+                            : "",
+                })
+            ),
         processResults: resp => ({
             results: resp.result.choices.map(x => ({
                 id: x[0],

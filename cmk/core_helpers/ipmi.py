@@ -237,7 +237,7 @@ class IPMIFetcher(AgentFetcher):
             health_txt = self._handle_false_positive_warnings(reading)
         elif reading.health == ipmi_const.Health.Ok:
             health_txt = b"OK"
-
+        # ? would that be correct: SensorReading.name:str, SensorReading.type:str, SensorReading.units: bytes/str ?
         return [
             AgentRawData(_)
             for _ in (

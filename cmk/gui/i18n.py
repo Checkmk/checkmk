@@ -4,13 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import gettext as gettext_module
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple
-
-from flask_babel.speaklater import LazyString  # type: ignore[import]
+from typing import Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
 
 import cmk.utils.paths
+
+from cmk.gui.globals import local
+from cmk.gui.utils.speaklater import LazyString
+
+if TYPE_CHECKING:
+    from cmk.gui.globals import RequestContext
 
 # .
 #   .--Gettext i18n--------------------------------------------------------.
@@ -31,20 +37,29 @@ class Translation(NamedTuple):
     name: str
 
 
-# Current active translation object
-_translation: Optional[Translation] = None
+def _request_context() -> RequestContext:
+    return local
+
+
+def _translation() -> Optional[Translation]:
+    try:
+        return _request_context().translation
+    except RuntimeError:
+        # TODO: Once we cleaned up all wrong _() to _l(), we can clean this up
+        pass
+    return None
 
 
 def _(message: str, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings.
     """
-    if _translation:
-        return _translation.translation.gettext(message)
+    if translation := _translation():
+        return translation.translation.gettext(message)
     return str(message)
 
 
-def _l(string: str, /) -> str:
+def _l(string: str, /) -> LazyString:
     """Like _() but the string returned is lazy which means it will be translated when it is used as
     an actual string. Positional-only arguments to simplify additional linting of localized
     strings."""
@@ -55,16 +70,16 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings
     """
-    if _translation:
-        return _translation.translation.ngettext(singular, plural, n)
+    if translation := _translation():
+        return translation.translation.ngettext(singular, plural, n)
     if n == 1:
         return str(singular)
     return str(plural)
 
 
 def get_current_language() -> Optional[str]:
-    if _translation:
-        return _translation.name
+    if translation := _translation():
+        return translation.name
     return None
 
 
@@ -127,12 +142,10 @@ def get_languages() -> List[Tuple[str, str]]:
 
 
 def unlocalize() -> None:
-    global _translation
-    _translation = None
+    _request_context().translation = None
 
 
 def localize(lang: Optional[str]) -> None:
-    global _translation
     if lang is None:
         unlocalize()
         return
@@ -142,7 +155,7 @@ def localize(lang: Optional[str]) -> None:
         unlocalize()
         return
 
-    _translation = Translation(translation=gettext_translation, name=lang)
+    _request_context().translation = Translation(translation=gettext_translation, name=lang)
 
 
 def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
@@ -171,10 +184,6 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
     return translations[-1]
 
 
-def initialize() -> None:
-    unlocalize()
-
-
 # .
 #   .--User i18n-----------------------------------------------------------.
 #   |                _   _                 _ _  ___                        |
@@ -198,14 +207,11 @@ def _u(text: str) -> str:
         if current_language is None:
             return text
         return ldict.get(current_language, text)
-    if _translation:
-        return _translation.translation.gettext(text)
+    if translation := _translation():
+        return translation.translation.gettext(text)
     return text
 
 
 def set_user_localizations(localizations: Dict[str, Dict[str, str]]) -> None:
     _user_localizations.clear()
     _user_localizations.update(localizations)
-
-
-initialize()

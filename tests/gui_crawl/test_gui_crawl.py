@@ -165,6 +165,7 @@ class PageValidator:
     def check_logs(self, url: Url, logs: Iterable[str]):
         accepted_logs = [
             "Missing object for SimpleBar initiation.",
+            "Error with Feature-Policy header: Unrecognized feature:",
         ]
         for log in logs:
             if not any(accepted_log in log for accepted_log in accepted_logs):
@@ -490,6 +491,7 @@ class Crawler:
                         self.results.setdefault(event.url.url, CrawlResult()).setdefault(
                             "errors", []
                         ).append({"referer_url": event.url.referer_url, "message": event.message})
+                        logger.warning("page error: %s", event.url.url)
                     elif isinstance(event, SkipReference):
                         self.results.setdefault(event.url.url, CrawlResult())["skipped"] = {
                             "reason": event.reason,
@@ -500,6 +502,7 @@ class Crawler:
                             "duration"
                         ] = event.duration
                         progress.done(1)
+                        logger.info("page done in %.2f secs (%s)", event.duration, event.url.url)
                     else:
                         raise RuntimeError(f"unkown event: {type(event)}")
 

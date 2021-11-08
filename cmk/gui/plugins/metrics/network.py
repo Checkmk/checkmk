@@ -1405,7 +1405,7 @@ metric_info["read_b_op"] = {
     "title": _("Read size per operation"),
     "unit": "bytes/op",
     "color": "#4080c0",
-    "render": cmk.utils.render.fmt_bytes,
+    "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
 }
 
 metric_info["read_retrans"] = {
@@ -1442,7 +1442,7 @@ metric_info["write_b_op"] = {
     "title": _("Writes size per operation"),
     "unit": "bytes/op",
     "color": "#4080c0",
-    "render": cmk.utils.render.fmt_bytes,
+    "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
 }
 
 metric_info["write_avg_rtt_ms"] = {
@@ -1541,6 +1541,18 @@ metric_info["fortigate_blocking_rate"] = {
     "title": _("Blocking rate"),
     "unit": "1/s",
     "color": "42/a",
+}
+
+metric_info["ap_count"] = {
+    "title": _("Number of access points"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["clients_count"] = {
+    "title": _("Number of clients"),
+    "unit": "count",
+    "color": "22/a",
 }
 
 # .

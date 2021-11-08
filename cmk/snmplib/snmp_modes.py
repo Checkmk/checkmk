@@ -10,8 +10,6 @@ import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from six import ensure_str
-
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
@@ -81,7 +79,9 @@ def get_single_oid(
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value: Optional[SNMPDecodedString] = backend.config.ensure_str(value)
+        decoded_value: Optional[SNMPDecodedString] = backend.config.ensure_str(
+            value
+        )  # used ensure_str function with different possible encoding arguments
     else:
         decoded_value = value
 
@@ -127,7 +127,7 @@ def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk
         if should_be_encoded(value):
             new_rows.append((oid, hex_encode_value(value)))
         else:
-            new_rows.append((oid, ensure_str(value)))
+            new_rows.append((oid, value.decode()))
     return new_rows
 
 

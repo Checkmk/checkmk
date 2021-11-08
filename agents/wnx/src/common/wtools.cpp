@@ -2567,42 +2567,35 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
 }
 
 InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
-    uc::LdapControl primary_dc;
-
-    auto g = wtools::ToUtf8(group);
-
-    // Set up the LOCALGROUP_INFO_1 structure.
-    uc::Status add_group_status = uc::Status::exists;
-
-    if (add_group_status == uc::Status::error) return {};
-
     auto name = GenerateCmaUserNameInGroup(group);
-    if (name.empty()) return {};
-
-    auto n = wtools::ToUtf8(name);
+    if (name.empty()) {
+        XLOG::l("Failed to create user name");
+        return {};
+    }
 
     auto pwd = GenerateRandomString(12);
 
+    uc::LdapControl primary_dc;
     primary_dc.userDel(name);
     auto add_user_status = primary_dc.userAdd(name, pwd);
     if (add_user_status != uc::Status::success) {
-        XLOG::l("Can't add user '{}'", n);
-        if (add_group_status == uc::Status::success)
-            primary_dc.localGroupDel(group);
+        XLOG::l("Can't add user '{}'", wtools::ToUtf8(name));
         return {};
     }
 
     // Now add the user to the local group.
     auto add_user_to_group_status =
         primary_dc.localGroupAddMembers(group, name);
-    if (add_user_to_group_status != uc::Status::error) return {name, pwd};
+    if (add_user_to_group_status != uc::Status::error) {
+        return {name, pwd};
+    }
 
     // Fail situation processing
-    XLOG::l("Can't add user '{}' to group '{}'", n, g);
-    if (add_user_status == uc::Status::success) primary_dc.userDel(name);
-
-    if (add_group_status == uc::Status::success)
-        primary_dc.localGroupDel(group);
+    XLOG::l("Can't add user '{}' to group '{}'", wtools::ToUtf8(name),
+            wtools::ToUtf8(group));
+    if (add_user_status == uc::Status::success) {
+        primary_dc.userDel(name);
+    }
 
     return {};
 }

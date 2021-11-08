@@ -11,7 +11,9 @@ factory_settings["lvm_lvs_default_levels"] = {
     "levels_meta": (80.0, 90.0),
 }
 
-LvmLvsEntry = collections.namedtuple("LvmLvsEntry", ["data", "meta"])
+LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "LvmLvsEntry", ["data", "meta"]
+)
 
 
 def parse_lvm_lvs(info):

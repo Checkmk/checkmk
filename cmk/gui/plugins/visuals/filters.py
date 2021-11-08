@@ -16,13 +16,14 @@ from cmk.utils.prediction import lq_logic
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
-import cmk.gui.utils
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.globals import config, html, request, response, user, user_errors
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.labels import encode_labels_for_livestatus
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.regex import validate_regex
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, Labels
 
 if cmk_version.is_managed_edition():
@@ -47,7 +48,7 @@ class FilterText(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         info: str,
         column: Union[str, List[str]],
@@ -55,7 +56,7 @@ class FilterText(Filter):
         op: str,
         negateable: bool = False,
         show_heading: bool = True,
-        description: Optional[str] = None,
+        description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
     ):
         htmlvars = [htmlvar]
@@ -131,7 +132,7 @@ class FilterText(Filter):
 class FilterRegExp(FilterText):
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        cmk.gui.utils.validate_regex(value.get(htmlvar, ""), htmlvar)
+        validate_regex(value.get(htmlvar, ""), htmlvar)
 
 
 filter_registry.register(
@@ -266,7 +267,7 @@ class FilterIPAddress(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         htmlvars: List[str],
         link_columns: List[str],
@@ -440,10 +441,10 @@ class FilterMultigroup(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         group_type: str,
-        description: Optional[str] = None,
+        description: Union[None, str, LazyString] = None,
         is_show_more: bool = True,
     ):
         htmlvar = group_type + "groups"
@@ -523,11 +524,11 @@ class FilterGroupCombo(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         what: str,
         enforce: bool,
-        description: Optional[str] = None,
+        description: Union[None, str, LazyString] = None,
     ) -> None:
         self.enforce = enforce
         self.prefix = "opt" if not self.enforce else ""
@@ -702,10 +703,10 @@ class FilterGroupSelection(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        description: Optional[str] = None,
+        description: Union[None, str, LazyString] = None,
     ) -> None:
         super().__init__(
             ident=ident,
@@ -907,7 +908,7 @@ class FilterQueryDropdown(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         info: str,
         query: str,
@@ -964,7 +965,13 @@ filter_registry.register(
 
 class FilterServiceState(Filter):
     def __init__(
-        self, *, ident: str, title: str, sort_index: int, prefix: str, is_show_more: bool = False
+        self,
+        *,
+        ident: str,
+        title: Union[str, LazyString],
+        sort_index: int,
+        prefix: str,
+        is_show_more: bool = False,
     ) -> None:
         super().__init__(
             ident=ident,
@@ -1137,7 +1144,9 @@ class FilterHostsHavingServiceProblems(Filter):
 
 
 class FilterStateType(FilterTristate):
-    def __init__(self, *, ident: str, title: str, sort_index: int, info: str) -> None:
+    def __init__(
+        self, *, ident: str, title: Union[str, LazyString], sort_index: int, info: str
+    ) -> None:
         super().__init__(
             ident=ident,
             title=title,
@@ -1187,7 +1196,7 @@ class FilterNagiosExpression(FilterTristate):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         info: str,
         pos: Union[Callable[[], str], str],
@@ -1262,7 +1271,13 @@ filter_registry.register(
 
 class FilterNagiosFlag(FilterTristate):
     def __init__(
-        self, *, ident: str, title: str, sort_index: int, info: str, is_show_more: bool = False
+        self,
+        *,
+        ident: str,
+        title: Union[str, LazyString],
+        sort_index: int,
+        info: str,
+        is_show_more: bool = False,
     ) -> None:
         super().__init__(
             ident=ident,
@@ -1415,10 +1430,10 @@ class SiteFilter(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         enforce: bool,
-        description: Optional[str] = None,
+        description: Union[None, str, LazyString] = None,
         htmlvar: str = "site",
         is_show_more: bool = False,
     ) -> None:
@@ -1495,7 +1510,9 @@ filter_registry.register(
 # info: usually either "host" or "service"
 # column: a livestatus column of type int or float
 class FilterNumberRange(Filter):  # type is int
-    def __init__(self, *, ident: str, title: str, sort_index: int, info: str, column: str) -> None:
+    def __init__(
+        self, *, ident: str, title: Union[str, LazyString], sort_index: int, info: str, column: str
+    ) -> None:
         self.column = column
         varnames = [ident + "_from", ident + "_until"]
         super().__init__(
@@ -1735,7 +1752,7 @@ class FilterLogClass(Filter):
                 html.open_tr()
             html.open_td()
             html.checkbox("logclass%d" % l, bool(value.get("logclass%d" % l, checkbox_default)))
-            html.write(c)
+            html.write_text(c)
             html.close_td()
             if col == num_cols:
                 html.close_tr()
@@ -2010,7 +2027,14 @@ filter_registry.register(
 
 
 class TagFilter(Filter):
-    def __init__(self, *, ident: str, title: str, object_type: str, is_show_more: bool = False):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: Union[str, LazyString],
+        object_type: str,
+        is_show_more: bool = False,
+    ):
         self.count = 3
         self._object_type = object_type
 
@@ -2204,7 +2228,7 @@ class FilterHostAuxTags(Filter):
 
 
 class LabelFilter(Filter):
-    def __init__(self, *, ident: str, title: str, object_type: str) -> None:
+    def __init__(self, *, ident: str, title: Union[str, LazyString], object_type: str) -> None:
         self._object_type = object_type
         super().__init__(
             ident=ident,
@@ -2262,7 +2286,14 @@ filter_registry.register(
 
 
 class FilterCustomAttribute(Filter):
-    def __init__(self, *, ident: str, title: str, info: str, choice_func: Callable[[], Choices]):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: Union[str, LazyString],
+        info: str,
+        choice_func: Callable[[], Choices],
+    ):
         super().__init__(
             ident=ident,
             title=title,
@@ -2349,7 +2380,7 @@ filter_registry.register(
 
 # choices = [ (value, "readable"), .. ]
 class FilterECServiceLevelRange(Filter):
-    def __init__(self, *, ident: str, title: str, info: str) -> None:
+    def __init__(self, *, ident: str, title: Union[str, LazyString], info: str) -> None:
         self.lower_bound_varname = "%s_lower" % ident
         self.upper_bound_varname = "%s_upper" % ident
         super().__init__(
@@ -2434,7 +2465,9 @@ filter_registry.register(
 
 class FilterStarred(FilterTristate):
     # TODO: Rename "what"
-    def __init__(self, *, ident: str, title: str, sort_index: int, what: str) -> None:
+    def __init__(
+        self, *, ident: str, title: Union[str, LazyString], sort_index: int, what: str
+    ) -> None:
         super().__init__(
             ident=ident,
             title=title,
@@ -2640,7 +2673,7 @@ class BITextFilter(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         what: str,
         how: str = "regex",
@@ -2772,9 +2805,9 @@ class FilterAggrService(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.write(_("Host") + ": ")
+        html.write_text(_("Host") + ": ")
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""))
-        html.write(_("Service") + ": ")
+        html.write_text(_("Service") + ": ")
         html.text_input(self.htmlvars[2], default_value=value.get(self.htmlvars[2], ""))
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
@@ -2790,7 +2823,9 @@ class FilterAggrService(Filter):
 
 class BIStatusFilter(Filter):
     # TODO: Rename "what"
-    def __init__(self, ident: str, title: str, sort_index: int, what: str) -> None:
+    def __init__(
+        self, ident: str, title: Union[str, LazyString], sort_index: int, what: str
+    ) -> None:
         self.column = "aggr_" + what + "state"
         if what == "":
             self.code = "r"
@@ -3081,7 +3116,13 @@ class FilterEventCount(Filter):
 
 class EventFilterState(Filter):
     def __init__(
-        self, *, ident: str, title: str, sort_index: int, table: str, choices: List[Tuple[str, str]]
+        self,
+        *,
+        ident: str,
+        title: Union[str, LazyString],
+        sort_index: int,
+        table: str,
+        choices: List[Tuple[str, str]],
     ) -> None:
         varnames = [ident + "_" + c[0] for c in choices]
         super().__init__(
@@ -3192,7 +3233,7 @@ class EventFilterDropdown(Filter):
         self,
         *,
         ident: str,
-        title: str,
+        title: Union[str, LazyString],
         sort_index: int,
         choices: Union[Choices, Callable[[], Choices]],
         operator: str = "=",

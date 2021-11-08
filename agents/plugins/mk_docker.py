@@ -72,7 +72,7 @@ except ImportError:
         ' Please install it on the monitored system (%s install docker)."}\n'
         % ("pip3" if sys.version_info.major == 3 else "pip")
     )
-    sys.exit(1)
+    sys.exit(0)
 
 if int(docker.__version__.split(".", 1)[0]) < 2:
     sys.stdout.write(
@@ -82,7 +82,7 @@ if int(docker.__version__.split(".", 1)[0]) < 2:
         ' Please install it on the monitored system (%s install docker)."}\n'
         % ("pip3" if sys.version_info.major == 3 else "pip")
     )
-    sys.exit(1)
+    sys.exit(0)
 
 DEBUG = "--debug" in sys.argv[1:]
 
@@ -672,7 +672,7 @@ def main():
         if DEBUG:
             raise
         report_exception_to_server(exc, "MKDockerClient.__init__")
-        sys.exit(1)
+        sys.exit(0)
 
     set_version_info(client)
 

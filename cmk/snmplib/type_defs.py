@@ -121,7 +121,7 @@ class SNMPDetectSpec(_SNMPDetectBaseType):
 
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(
-    NamedTuple(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
         "SNMPHostConfig",
         [
             ("is_ipv6_primary", bool),
@@ -164,6 +164,7 @@ class SNMPHostConfig(
         cfg.update(**kwargs)
         return SNMPHostConfig(**cfg)
 
+    # ? ensure_str is used in function definition
     def ensure_str(self, value: AnyStr) -> str:
         if self.character_encoding:
             return ensure_str(value, self.character_encoding)

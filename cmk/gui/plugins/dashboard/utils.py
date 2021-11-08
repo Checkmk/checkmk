@@ -29,6 +29,8 @@ from typing import (
     Union,
 )
 
+from livestatus import LivestatusColumn, LivestatusResponse
+
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.site import omd_site
@@ -41,7 +43,8 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response
-from cmk.gui.globals import config, g, html, request
+from cmk.gui.globals import config, html, request
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
@@ -52,7 +55,7 @@ from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, VisualContext
+from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, TranslatedMetric, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
@@ -102,12 +105,12 @@ def macro_mapping_from_context(
     macro_mapping = {"$DEFAULT_TITLE$": default_title}
     macro_mapping.update(
         {
-            macro: str(context[key])
+            macro: context[key][key]
             for macro, key in (
                 ("$HOST_NAME$", "host"),
                 ("$SERVICE_DESCRIPTION$", "service"),
             )
-            if key in context and key in single_infos
+            if key in context and key in context[key] and key in single_infos
         }
     )
 
@@ -145,7 +148,7 @@ class Dashlet(abc.ABC):
     """Base class for all dashboard dashlet implementations"""
 
     # Minimum width and height of dashlets in raster units
-    minimum_size: DashletSize = (12, 10)
+    minimum_size: DashletSize = (12, 12)
 
     @classmethod
     @abc.abstractmethod
@@ -796,11 +799,10 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
 class DashboardStore:
     @classmethod
+    @request_memoize()
     def get_instance(cls):
-        """Use the request globals to prevent multiple instances during a request"""
-        if "dashboard_store" not in g:
-            g.dashboard_store = cls()
-        return g.dashboard_store
+        """Load dashboards only once for each request"""
+        return cls()
 
     def __init__(self):
         self.all = self._load_all()
@@ -932,8 +934,6 @@ def transform_stats_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.
 def _transform_builtin_dashboards() -> None:
-    if "builtin_dashboards_transformed" in g:
-        return  # Only do this once
     for name, dashboard in builtin_dashboards.items():
         # Do not transform dashboards which are already in the new format
         if "context" in dashboard:
@@ -1027,7 +1027,6 @@ def _transform_builtin_dashboards() -> None:
         dashboard.setdefault("context", {})
         dashboard.setdefault("topic", _("Overview"))
         dashboard.setdefault("description", dashboard.get("title", ""))
-    g.builtin_dashboards_transformed = True
 
 
 def copy_view_into_dashlet(
@@ -1048,7 +1047,7 @@ def copy_view_into_dashlet(
         # but we do this for the rare edge case during legacy dashboard conversion, so
         # this should be sufficient
         view = None
-        for (_u, n), this_view in get_all_views().items():
+        for (_unused, n), this_view in get_all_views().items():
             # take the first view with a matching name
             if view_name == n:
                 view = this_view
@@ -1104,7 +1103,9 @@ def service_table_query(properties, context, column_generator):
     return _table_query(properties, context, column_generator, "services", ["host", "service"])
 
 
-def _table_query(properties, context, column_generator, table: str, infos: List[str]):
+def _table_query(
+    properties, context, column_generator, table: str, infos: List[str]
+) -> Tuple[List[str], LivestatusResponse]:
     filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
     columns = column_generator(properties, context)
 
@@ -1154,7 +1155,12 @@ def create_service_view_url(context):
     )
 
 
-def create_data_for_single_metric(properties, context, column_generator):
+def create_data_for_single_metric(
+    properties,
+    context: VisualContext,
+    column_generator: Callable[[Any, VisualContext], List[str]],
+) -> Tuple[List[Dict[str, Any]], List[Tuple[str, TranslatedMetric, Dict[str, LivestatusColumn]]]]:
+    # TODO: should return live value and historic values as two different elements, for better typing support.
     columns, data_rows = service_table_query(properties, context, column_generator)
 
     data = []

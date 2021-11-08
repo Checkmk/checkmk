@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.utils.type_defs.result import *
+from cmk.utils.type_defs.result import Error, OK, Result
 
 
 class TestOk:

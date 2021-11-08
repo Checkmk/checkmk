@@ -147,12 +147,12 @@ def verified_result(
                 raise RuntimeError("Server responded %r, %r" % (data[0], data[1]))
             assert isinstance(data[1], list)
             return data[1]
-        assert False
-    elif isinstance(data, bytes):
+        raise AssertionError()
+    if isinstance(data, bytes):
         if not data.startswith(b"+OK"):
             raise RuntimeError("Server responded %r" % data)
         return []
-    assert False
+    raise AssertionError()
 
 
 class Mailbox:
@@ -209,7 +209,7 @@ class Mailbox:
             return "POP3"
         if isinstance(self._connection, (imaplib.IMAP4, imaplib.IMAP4_SSL)):
             return "IMAP4"
-        assert False, "connection must be POP3[_SSL] or IMAP4[_SSL]"
+        raise AssertionError("connection must be POP3[_SSL] or IMAP4[_SSL]")
 
     def folders(self) -> Iterable[str]:
         """Returns names of available mailbox folders"""
@@ -483,15 +483,13 @@ def _active_check_main_core(
     logging.debug("use protocol for fetching: %r", args.fetch_protocol)
     try:
         return check_fn(args)
-    except ConnectError as e:
-        return 3, str(e), None
-    except FetchMailsError as e:
-        return 3, str(e), None
-    except SendMailError as e:
-        return 3, str(e), None
-    except ForwardToECError as e:
+    except (ConnectError, FetchMailsError, SendMailError, ForwardToECError) as e:
+        if args.debug:
+            raise
         return 3, str(e), None
     except CleanupMailboxError as e:
+        if args.debug:
+            raise
         return 2, str(e), None
     except Exception as e:
         if args.debug:

@@ -24,28 +24,30 @@ URL = str
 
 DomainType = Literal[
     "acknowledge",
-    "agent",
     "activation_run",
-    "bi_rule",
+    "agent",
+    "agent_binary",
     "bi_aggregation",
     "bi_pack",
+    "bi_rule",
     "contact_group_config",
-    "folder_config",
     "downtime",
+    "folder_config",
     "host",
-    "hostgroup",
     "host_config",
+    "hostgroup",
     "host_group_config",
     "host_tag_group",
     "password",
-    "user_config",
     "service",
-    "servicegroup",
     "service_discovery",
+    "servicegroup",
     "service_group_config",
+    "sign_key",
     "time_period",
     "user",
-]
+    "user_config",
+]  # yapf: disable
 
 DomainObject = Dict[str, Any]
 
@@ -93,7 +95,7 @@ CmkEndpointName = Literal[
     "cmk/service.move-undecided",
     "cmk/service.move-ignored",
     "cmk/service.bulk-acknowledge",
-]
+]  # yapf: disable
 
 RestfulEndpointName = Literal[
     "describedby",  # sic
@@ -129,7 +131,7 @@ RestfulEndpointName = Literal[
     ".../user",
     ".../value",  # takes params
     ".../version",
-]
+]  # yapf: disable
 
 LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
 
@@ -154,7 +156,7 @@ PropertyFormat = Literal[
     # Non-string values
     "decimal",  # the number should be interpreted as a float-point decimal.
     "int",  # the number should be interpreted as an integer.
-]
+]  # yapf: disable
 CollectionItem = Dict[str, str]
 LocationType = Literal["path", "query", "header", "cookie"]
 ResultType = Literal["object", "list", "scalar", "void"]
@@ -304,13 +306,16 @@ ResponseType = TypedDict(
         "301": PathItem,
         "302": PathItem,
         "400": PathItem,
+        "401": PathItem,
         "403": PathItem,
         "404": PathItem,
         "405": PathItem,
+        "406": PathItem,
         "409": PathItem,
         "415": PathItem,
         "412": PathItem,
         "422": PathItem,
+        "423": PathItem,
         "428": PathItem,
     },
     total=False,
@@ -378,8 +383,27 @@ EndpointEntry = TypedDict(
 EndpointKey = Tuple[str, LinkRelation]
 ParameterKey = Tuple[str, ...]
 
-StatusCodeInt = Literal[200, 204, 301, 302, 400, 404, 405, 409, 412, 415, 422, 428]
-StatusCode = Literal["200", "204", "301", "302", "400", "404", "409", "412", "415", "422", "428"]
+StatusCodeInt = Literal[
+    200, 204, 301, 302, 400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428
+]
+StatusCode = Literal[
+    "200",
+    "204",
+    "301",
+    "302",
+    "400",
+    "401",
+    "403",
+    "404",
+    "405",
+    "406",
+    "409",
+    "412",
+    "415",
+    "422",
+    "423",
+    "428",
+]
 
 ContentType = str
 ContentObject = Dict[ContentType, Dict[str, Any]]

@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
 def get_parsed_section() -> oracle_rman.SectionOracleRman:
@@ -51,7 +52,7 @@ def get_parsed_section() -> oracle_rman.SectionOracleRman:
 @pytest.mark.parametrize(
     "string_table, parsed",
     [
-        (
+        pytest.param(
             [
                 [
                     "AFIS2",
@@ -83,10 +84,40 @@ def get_parsed_section() -> oracle_rman.SectionOracleRman:
                 ],
             ],
             get_parsed_section(),
-        )
+            id="normal case",
+        ),
+        pytest.param(
+            [
+                [
+                    "AFIS2",
+                    "COMPLETED",
+                    "2016-07-12_02:05:39",
+                    "2016-07-12_02:05:39",
+                    "DB_INCR",
+                    "0",
+                    "-5",
+                    "545791334",
+                ],
+            ],
+            {
+                "AFIS2.DB_INCR_0": {
+                    "backupage": 0,
+                    "backuplevel": "0",
+                    "backupscn": 545791334,
+                    "backuptype": "DB_INCR",
+                    "sid": "AFIS2",
+                    "status": "COMPLETED",
+                    "used_incr_0": False,
+                },
+            },
+            id="backupage < 0",
+        ),
     ],
 )
-def test_parse(string_table, parsed):
+def test_parse(
+    string_table: StringTable,
+    parsed: oracle_rman.SectionOracleRman,
+) -> None:
     assert oracle_rman.parse_oracle_rman(string_table) == parsed
 
 

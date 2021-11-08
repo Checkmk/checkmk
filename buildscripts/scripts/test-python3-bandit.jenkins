@@ -7,14 +7,13 @@ withFolderProperties{
     NODE = env.BUILD_NODE
 }
 
-// Cancel job when there is nothing logged to the console for 15 minutes
-timeout(activity: true, time: 15, unit: 'MINUTES') {
+timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         stage('checkout sources') {
             checkout(scm)
             notify = load 'buildscripts/scripts/lib/notify.groovy'
         }
-    
+
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
             // The commands are executed with the 1001:1000 UID:GID (non-root).
@@ -27,13 +26,14 @@ timeout(activity: true, time: 15, unit: 'MINUTES') {
                     stage('execute test') {
                         dir ('tests') {
                             def EXIT_CODE = sh(
-                                script: "BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make test-bandit",
-                                returnStatus: true
+                                script: "BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make test-bandit"
                             )
                             println("Exit code was: " + EXIT_CODE)
                         }
                     }
-    
+                } catch(Exception e) {
+                    notify.notify_error(e)
+                } finally {
                     stage('process results') {
                         archiveArtifacts("bandit_results.xml")
                         xunit([Custom(
@@ -45,8 +45,6 @@ timeout(activity: true, time: 15, unit: 'MINUTES') {
                             stopProcessingIfError: true
                         )])
                     }
-                } catch(Exception e) {
-                    notify.notify_error(e)
                 }
             }
         }

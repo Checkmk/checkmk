@@ -18,15 +18,15 @@ import cmk.gui.plugins.metrics.timeseries as ts
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name
+from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name, RRDData
 from cmk.gui.type_defs import ColumnName
 
 
-def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
+def fetch_rrd_data_for_graph(graph_recipe, graph_data_range) -> RRDData:
     needed_rrd_data = get_needed_sources(graph_recipe["metrics"])
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
-    rrd_data: Dict[Tuple[str, str, str, str, str, str], TimeSeries] = {}
+    rrd_data: RRDData = {}
     for (site, host_name, service_description), entries in by_service.items():
         try:
             for (perfvar, cf, scale), data in fetch_rrd_data(
@@ -44,7 +44,7 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
     return rrd_data
 
 
-def align_and_resample_rrds(rrd_data, cf):
+def align_and_resample_rrds(rrd_data: RRDData, cf):
     """RRDTool aligns start/end/step to its internal precision.
 
     This is returned as first 3 values in each RRD data row. Using that
@@ -78,7 +78,7 @@ def align_and_resample_rrds(rrd_data, cf):
 #
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
-def chop_last_empty_step(graph_data_range, rrd_data):
+def chop_last_empty_step(graph_data_range, rrd_data: RRDData):
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         step = sample_data.twindow[2]

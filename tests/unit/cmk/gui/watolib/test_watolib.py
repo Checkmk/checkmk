@@ -18,8 +18,6 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.valuespec import ValueSpec
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
-
 
 def test_registered_config_domains():
     expected_config_domains = [
@@ -194,6 +192,7 @@ def test_registered_configvars():
         "wato_upload_insecure_snapshots",
         "wato_use_git",
         "graph_timeranges",
+        "rest_api_etag_locking",
     ]
 
     if not cmk_version.is_raw_edition():
@@ -241,7 +240,6 @@ def test_registered_configvars():
             "dcd_web_api_connection",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
-            "mknotifyd_insecure_message_format",
             "notification_spooler_config",
             "notification_spooling",
             "reporting_date_format",

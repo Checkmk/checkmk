@@ -31,9 +31,9 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.valuespec import (
     Checkbox,
@@ -265,6 +265,7 @@ class ModeBulkImport(WatoMode):
                     "bulkinventory",
                     _bulk_inventory="1",
                     show_checkboxes="1",
+                    folder=folder_path,
                     selection=weblib.selection_id(),
                 )
             )

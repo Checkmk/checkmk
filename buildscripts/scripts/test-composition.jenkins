@@ -30,8 +30,7 @@ DISTRO_LIST = DISTRO_LIST - ['cma']
 
 currentBuild.description = '\nVersion: ' + VERSION + '\nEdition: ' + EDITION + '\nDistros: ' + DISTRO_LIST
 
-// Cancel job when there is nothing logged to the console for 15 minutes
-timeout(activity: true, time: 15, unit: 'MINUTES') {
+timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         stage('checkout sources') {
             checkout(scm)

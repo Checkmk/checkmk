@@ -8,10 +8,7 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.type_defs import CheckPluginName
-
 import cmk.base.plugins.agent_based.oracle_asm_diskgroup as oracle_asm_diskgroup
-from cmk.base.api.agent_based import value_store
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 

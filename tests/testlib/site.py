@@ -378,6 +378,7 @@ class Site:
             p = self.execute(
                 ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
             )
+            # ? content seems to have the type str
             p.communicate(ensure_str(content))
             p.stdin.close()
             if p.wait() != 0:
@@ -485,11 +486,14 @@ class Site:
             assert exit_code == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
-            self._set_number_of_helpers()
-            self._enabled_liveproxyd_debug_logging()
+            self._ensure_sample_config_is_present()
+            if not self.version.is_raw_edition():
+                self._set_number_of_helpers()
+                self._enable_cmc_core_dumps()
+                self._enable_cmc_debug_logging()
+                self._disable_cmc_log_rotation()
+                self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
-            self._enable_cmc_core_dumps()
-            self._enable_cmc_debug_logging()
             self._enable_gui_debug_logging()
             self._tune_nagios()
 
@@ -505,6 +509,28 @@ class Site:
         self._update_cmk_core_config()
 
         self.makedirs(self.result_dir())
+
+    def _ensure_sample_config_is_present(self):
+        if missing_files := self._missing_but_required_wato_files():
+            raise Exception(
+                "Sample config was not created by post create hook "
+                "01_create-sample-config.py (Missing files: %s)" % missing_files
+            )
+
+    def _missing_but_required_wato_files(self):
+        required_files = [
+            "etc/check_mk/conf.d/wato/rules.mk",
+            "etc/check_mk/multisite.d/wato/tags.mk",
+            "etc/check_mk/conf.d/wato/global.mk",
+            "var/check_mk/web/automation",
+            "var/check_mk/web/automation/automation.secret",
+        ]
+
+        missing = []
+        for f in required_files:
+            if not self.file_exists(f):
+                missing.append(f)
+        return missing
 
     def _update_with_f12_files(self):
         paths = [
@@ -604,7 +630,7 @@ class Site:
     def _enable_cmc_debug_logging(self):
         self.makedirs("etc/check_mk/conf.d")
         self.write_file(
-            "etc/check_mk/conf.d/cmc-logging.mk",
+            "etc/check_mk/conf.d/cmc-debug-logging.mk",
             "cmc_log_levels = %r\n"
             % {
                 "cmk.alert": 7,
@@ -618,6 +644,13 @@ class Site:
                 "cmk.influxdb": 7,
                 "cmk.smartping": 7,
             },
+        )
+
+    def _disable_cmc_log_rotation(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file(
+            "etc/check_mk/conf.d/cmc-log-rotation.mk",
+            "cmc_log_rotation_method = 4\ncmc_log_limit = 1073741824\n",
         )
 
     def _enable_gui_debug_logging(self):
@@ -636,15 +669,18 @@ class Site:
         )
 
     def _tune_nagios(self):
-        # We want nagios to process queued external commands as fast as possible.  Even if we
-        # set command_check_interval to -1, nagios is doing some sleeping in between the
-        # command processing. We reduce the sleep time here to make it a little faster.
         self.write_file(
             "etc/nagios/nagios.d/zzz-test-tuning.cfg",
+            # We need to observe these entries with WatchLog for our tests
             "log_passive_checks=1\n"
+            # We want nagios to process queued external commands as fast as possible.  Even if we
+            # set command_check_interval to -1, nagios is doing some sleeping in between the
+            # command processing. We reduce the sleep time here to make it a little faster.
             "service_inter_check_delay_method=n\n"
             "host_inter_check_delay_method=n\n"
-            "sleep_time=0.05\n",
+            "sleep_time=0.05\n"
+            # WatchLog is not able to handle log rotations. Disable the rotation during tests.
+            "log_rotation_method=n\n",
         )
 
     def _install_test_python_modules(self):
@@ -819,37 +855,10 @@ class Site:
 
     def prepare_for_tests(self):
         self.verify_cmk()
-        self.init_wato()
-
-    def init_wato(self):
-        if not self._missing_but_required_wato_files():
-            logger.info("WATO is already initialized -> Skipping initializiation")
-            return
-
-        logger.debug("Initializing WATO...")
 
         web = CMKWebSession(self)
         web.login()
-
-        # Call WATO once for creating the default WATO configuration
-        logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
-        response = web.get("wato.py?mode=sites").text
-        # logger.debug("Debug: %r" % response)
-        assert "site=%s" % web.site.id in response
-
-        logger.debug("Waiting for WATO files to be created...")
-        wait_time = 20.0
-        while self._missing_but_required_wato_files() and wait_time >= 0:
-            time.sleep(0.5)
-            wait_time -= 0.5
-
-        missing_files = self._missing_but_required_wato_files()
-        assert not missing_files, (
-            "Failed to initialize WATO data structures " "(Still missing: %s)" % missing_files
-        )
-
         web.enforce_non_localized_gui()
-
         self._add_wato_test_config(web)
 
     # Add some test configuration that is not test specific. These settings are set only to have a
@@ -874,21 +883,6 @@ class Site:
                 }
             },
         )
-
-    def _missing_but_required_wato_files(self):
-        required_files = [
-            "etc/check_mk/conf.d/wato/rules.mk",
-            "etc/check_mk/multisite.d/wato/tags.mk",
-            "etc/check_mk/conf.d/wato/global.mk",
-            "var/check_mk/web/automation",
-            "var/check_mk/web/automation/automation.secret",
-        ]
-
-        missing = []
-        for f in required_files:
-            if not self.file_exists(f):
-                missing.append(f)
-        return missing
 
     def open_livestatus_tcp(self, encrypted):
         """This opens a currently free TCP port and remembers it in the object for later use

@@ -7,17 +7,9 @@
 import abc
 import typing as t
 
-import pytest
-
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
-
-# those imports should not be here, but you need them if you want to run
-# this test via `pytest -T unit tests/unit/test_plugin_vs_wato.py`
-# `cd tests; make test-unit` works fine without them, because the files
-# are imported implicitly by running the doctests
-from cmk.base.check_legacy_includes import df, hwg
 
 from cmk.gui.plugins.wato.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -27,6 +19,12 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
     rulespec_registry,
 )
+
+# those imports should not be here, but you need them if you want to run
+# this test via `pytest -T unit tests/unit/test_plugin_vs_wato.py`
+# `cd tests; make test-unit` works fine without them, because the files
+# are imported implicitly by running the doctests
+
 
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)
@@ -264,7 +262,6 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:hw_single_temperature"),
         ("check", "checkgroup_parameters:hw_temperature"),
         ("check", "checkgroup_parameters:hw_temperature_single"),
-        ("check", "checkgroup_parameters:informix_tabextents"),
         ("check", "checkgroup_parameters:mailqueue_length"),
         ("check", "checkgroup_parameters:mssql_blocked_sessions"),
         ("check", "checkgroup_parameters:postgres_sessions"),
@@ -368,14 +365,8 @@ class ErrorReporter:
         ("discovery", "logwatch_groups", "logwatch_groups"),
         ("discovery", "logwatch", "logwatch_groups"),
         ("inventory", "inv_if", "inv_if"),
-        ("inventory", "k8s_assigned_pods", "k8s_assigned_pods"),
-        ("inventory", "lnx_if", "lnx_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
-        ("inventory", "solaris_addresses", "solaris_addresses"),
-        ("inventory", "solaris_routes", "solaris_routes"),
-        ("inventory", "statgrab_net", "statgrab_net"),
         ("inventory", "suseconnect", "suseconnect"),
-        ("inventory", "winperf_if", "winperf_if"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # type # plugin # wato

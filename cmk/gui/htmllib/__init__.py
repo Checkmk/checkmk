@@ -139,10 +139,10 @@ class ABCHTMLGenerator(abc.ABC):
 
     def write_html(self, content: HTML) -> None:
         """Write HTML code directly, without escaping."""
-        self.write(content)
+        self._write(content)
 
     @abc.abstractmethod
-    def write(self, text: HTMLContent) -> None:
+    def _write(self, text: HTMLContent) -> None:
         raise NotImplementedError()
 
     #
@@ -224,6 +224,8 @@ class ABCHTMLGenerator(abc.ABC):
         self.write_html(self.render_label(content, for_, **attrs))
 
     def render_input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
+        if type_ == "submit":
+            self.form_has_submit_button = True
         attrs["type_"] = type_
         attrs["name"] = name
         return render_start_tag("input", close_tag=True, **attrs)
@@ -828,6 +830,7 @@ class html(ABCHTMLGenerator):
         # Forms
         self.form_name: Optional[str] = None
         self.form_vars: List[str] = []
+        self.form_has_submit_button: bool = False
 
         # Register helpers
         self.output_funnel = output_funnel
@@ -844,7 +847,7 @@ class html(ABCHTMLGenerator):
     # output funnel
     #
 
-    def write(self, text: HTMLContent) -> None:
+    def _write(self, text: HTMLContent) -> None:
         if not text:
             return
 
@@ -914,13 +917,13 @@ class html(ABCHTMLGenerator):
     #
 
     def show_message(self, msg: HTMLMessageInput) -> None:
-        self.write(self._render_message(msg, "message"))
+        self._write(self._render_message(msg, "message"))
 
     def show_error(self, msg: HTMLMessageInput) -> None:
-        self.write(self._render_message(msg, "error"))
+        self._write(self._render_message(msg, "error"))
 
     def show_warning(self, msg: HTMLMessageInput) -> None:
-        self.write(self._render_message(msg, "warning"))
+        self._write(self._render_message(msg, "warning"))
 
     def render_message(self, msg: HTMLMessageInput) -> HTML:
         return self._render_message(msg, "message")
@@ -1011,7 +1014,7 @@ class html(ABCHTMLGenerator):
                 formatted = pprint.pformat(element)
             except UnicodeDecodeError:
                 formatted = repr(element)
-            self.write(self.render_pre(formatted))
+            self._write(self.render_pre(formatted))
 
     #
     # HTML heading and footer rendering
@@ -1067,10 +1070,10 @@ class html(ABCHTMLGenerator):
 
     def _add_custom_style_sheet(self) -> None:
         for css in self._plugin_stylesheets():
-            self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
+            self._write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
         if config.custom_style_sheet:
-            self.write(
+            self._write(
                 '<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet
             )
 
@@ -1276,10 +1279,12 @@ class html(ABCHTMLGenerator):
         onsubmit: Optional[str] = None,
         add_transid: bool = True,
     ) -> None:
+        self.form_name = name
         self.form_vars = []
+        self.form_has_submit_button = False
+
         if action is None:
             action = requested_file_name(self.request) + ".py"
-        self.current_form = name
         self.open_form(
             id_="form_%s" % name,
             name=name,
@@ -1296,9 +1301,10 @@ class html(ABCHTMLGenerator):
                 str(transactions.get()),
                 add_var=True,
             )
-        self.form_name = name
 
     def end_form(self) -> None:
+        if not self.form_has_submit_button:
+            self.input(name="_save", type_="submit", cssclass="hidden_submit")
         self.close_form()
         self.form_name = None
 
@@ -1488,10 +1494,10 @@ class html(ABCHTMLGenerator):
         )
 
     def empty_icon_button(self) -> None:
-        self.write(self.render_icon("trans", cssclass="iconbutton trans"))
+        self._write(self.render_icon("trans", cssclass="iconbutton trans"))
 
     def disabled_icon_button(self, icon: str) -> None:
-        self.write(self.render_icon(icon, cssclass="iconbutton"))
+        self._write(self.render_icon(icon, cssclass="iconbutton"))
 
     # TODO: Cleanup to use standard attributes etc.
     def jsbutton(
@@ -1881,11 +1887,11 @@ class html(ABCHTMLGenerator):
     def begin_radio_group(self, horizontal: bool = False) -> None:
         if self._mobile:
             attrs = {"data-type": "horizontal" if horizontal else None, "data-role": "controlgroup"}
-            self.write(render_start_tag("fieldset", close_tag=False, **attrs))
+            self._write(render_start_tag("fieldset", close_tag=False, **attrs))
 
     def end_radio_group(self) -> None:
         if self._mobile:
-            self.write(render_end_tag("fieldset"))
+            self._write(render_end_tag("fieldset"))
 
     def radiobutton(self, varname: str, value: str, checked: bool, label: Optional[str]) -> None:
         self.form_vars.append(varname)
@@ -1920,7 +1926,7 @@ class html(ABCHTMLGenerator):
         id_: Optional[str] = None,
         **add_attr: HTMLTagAttributeValue,
     ) -> None:
-        self.write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
+        self._write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
 
     def render_checkbox(
         self,

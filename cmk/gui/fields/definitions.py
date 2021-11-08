@@ -12,8 +12,9 @@ from datetime import datetime
 from typing import Any, Optional, Protocol, Tuple
 
 import pytz
+from cryptography.x509 import load_pem_x509_csr
 from marshmallow import fields as _fields
-from marshmallow import utils, ValidationError
+from marshmallow import post_load, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 import cmk.utils.version as version
@@ -28,10 +29,12 @@ from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 
 from cmk.gui import sites, watolib
-from cmk.gui.fields.base import BaseSchema
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
-from cmk.gui.groups import load_group_information
+from cmk.gui.groups import GroupName, GroupType, load_group_information
+from cmk.gui.plugins.webapi.utils import validate_host_attributes
 from cmk.gui.sites import allsites
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
@@ -911,8 +914,7 @@ class HostField(String):
             if not self._should_exist and host:
                 raise self.make_error("should_not_exist", host_name=value)
 
-        if self._should_be_cluster is not None:
-            host = watolib.Host.host(value)
+        if self._should_be_cluster is not None and (host := watolib.Host.host(value)) is not None:
             if self._should_be_cluster and not host.is_cluster():
                 raise self.make_error("should_be_cluster", host_name=value)
 
@@ -946,6 +948,28 @@ def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
 
 
+class CustomHostAttributes(ValueTypedDictSchema):
+    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+
+    @post_load
+    def _valid(self, data, **kwargs):
+        try:
+            validate_host_attributes(data, new=self.context["object_context"])
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
+class CustomFolderAttributes(ValueTypedDictSchema):
+    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+
+    @post_load
+    def _valid(self, data, **kwargs):
+        try:
+            validate_host_attributes(data, new=self.context["object_context"])
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
 def attributes_field(
     object_type: ObjectType,
     object_context: ObjectContext,
@@ -956,12 +980,50 @@ def attributes_field(
     many: bool = False,
     names_only: bool = False,
 ) -> _fields.Field:
+    """Build an Attribute Field
+
+    Args:
+        object_type:
+            May be one of 'folder', 'host' or 'cluster'.
+
+        object_context:
+            May be 'create' or 'update'. Deletion is considered as 'update'.
+
+        description:
+            A descriptive text of this field. Required.
+
+        example:
+            An example for the OpenAPI documentation. Required.
+
+        required:
+            Whether the field must be sent by the client or is option.
+
+        missing:
+        many:
+
+        names_only:
+            When set to True, the field will be a List of Strings which validate the tag names only.
+
+    Returns:
+
+    """
     if description is None:
-        # SPEC won't validate without description, though the error message is very obscure.
+        # SPEC won't validate without description, though the error message is very obscure, so we
+        # clarify this here by force.
         raise ValueError("description is necessary.")
+
+    custom_schema = {
+        "host": CustomHostAttributes,
+        "cluster": CustomHostAttributes,
+        "folder": CustomFolderAttributes,
+    }
     if not names_only:
-        return Nested(
-            attr_openapi_schema(object_type, object_context),
+        return MultiNested(
+            [
+                attr_openapi_schema(object_type, object_context),
+                custom_schema[object_type],
+            ],
+            context={"object_context": object_context},
             description=description,
             example=example,
             many=many,
@@ -1049,7 +1111,7 @@ class _CustomerField(_fields.String):
         return None if value == "global" else value
 
 
-def verify_group_exists(group_type: str, name):
+def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
     specific_existing_groups = load_group_information()[group_type]
     return name in specific_existing_groups
 
@@ -1266,10 +1328,36 @@ class Timestamp(_fields.DateTime):
         return datetime.timestamp(val)
 
 
+class X509ReqPEMField(_fields.String):
+    default_error_messages = {
+        "malformed": "Malformed CSR",
+        "invalid": "Invalid CSR (signature and public key do not match)",
+    }
+
+    def _validate(self, value):
+        if not value.is_signature_valid:
+            raise self.make_error("invalid")
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        try:
+            return load_pem_x509_csr(
+                super()
+                ._deserialize(
+                    value,
+                    attr,
+                    data,
+                    **kwargs,
+                )
+                .encode()
+            )
+        except ValueError:
+            raise self.make_error("malformed")
+
+
 __all__ = [
     "attributes_field",
-    "customer_field",
     "column_field",
+    "customer_field",
     "ExprSchema",
     "FolderField",
     "FOLDER_PATTERN",
@@ -1277,6 +1365,7 @@ __all__ = [
     "HostField",
     "Integer",
     "List",
+    "MultiNested",
     "Nested",
     "PasswordIdent",
     "PasswordOwner",
@@ -1285,4 +1374,5 @@ __all__ = [
     "SiteField",
     "String",
     "Timestamp",
+    "X509ReqPEMField",
 ]

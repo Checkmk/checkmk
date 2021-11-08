@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import tarfile
+import uuid
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -28,6 +30,8 @@ from cmk.utils.diagnostics import (
     serialize_wato_parameters,
 )
 
+from cmk.automations.results import CreateDiagnosticsDumpResult
+
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
@@ -42,8 +46,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, page_registry
-from cmk.gui.plugins.wato import ActionResult, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato import mode_registry, redirect, WatoMode
 from cmk.gui.sites import get_activation_site_choices, get_site_config, site_is_local
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -54,7 +59,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_remote_automation
-from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 _CHECKMK_FILES_NOTE = _(
@@ -444,20 +449,31 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
     ) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
+        chunks = serialize_wato_parameters(diagnostics_parameters)
+
         site = diagnostics_parameters["site"]
         timeout = request.request_timeout - 2
-        result = check_mk_automation(
-            site,
-            "create-diagnostics-dump",
-            args=serialize_wato_parameters(diagnostics_parameters),
-            timeout=timeout,
-            non_blocking_http=True,
-        )
+        results = []
+        for chunk in chunks:
+            chunk_result = create_diagnostics_dump(
+                site,
+                chunk,
+                timeout,
+            )
+            results.append(chunk_result)
 
-        job_interface.send_progress_update(result["output"])
+        if len(results) > 1:
+            result = _merge_results(results)
+        elif len(results) == 1:
+            result = results[0]
+        else:
+            job_interface.send_result_message(_("Got no result to create dump file"))
+            return
 
-        if result["tarfile_created"]:
-            tarfile_path = result["tarfile_path"]
+        job_interface.send_progress_update(result.output)
+
+        if result.tarfile_created:
+            tarfile_path = result.tarfile_path
             download_url = makeuri_contextless(
                 request,
                 [("site", site), ("tarfile_name", str(Path(tarfile_path).name))],
@@ -470,6 +486,38 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         else:
             job_interface.send_result_message(_("Creating dump file failed"))
+
+
+def _merge_results(results) -> CreateDiagnosticsDumpResult:
+    output: str = ""
+    tarfile_created: bool = False
+    tarfile_paths: List[str] = []
+    for result in results:
+        output += result.output
+        if result.tarfile_created:
+            tarfile_created = True
+            tarfile_paths.append(result.tarfile_path)
+
+    return CreateDiagnosticsDumpResult(
+        output=output,
+        tarfile_created=tarfile_created,
+        tarfile_path=_join_sub_tars(tarfile_paths),
+    )
+
+
+def _join_sub_tars(tarfile_paths: List[str]) -> str:
+    tarfile_path = str(
+        cmk.utils.paths.diagnostics_dir.joinpath(str(uuid.uuid4())).with_suffix(".tar.gz")
+    )
+    with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
+        for filepath in tarfile_paths:
+            with tarfile.open(name=filepath, mode="r:gz") as sub_tar:
+                sub_tar_members = [m for m in sub_tar.getmembers() if m.name != ""]
+                dest_members = [m.name for m in dest.getmembers() if m.name != ""]
+                for member in sub_tar_members:
+                    if member.name not in dest_members:
+                        dest.addfile(member, sub_tar.extractfile(member))
+    return tarfile_path
 
 
 @page_registry.register_page("download_diagnostics_dump")

@@ -17,6 +17,7 @@ from typing import (
     List,
     Literal,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -36,14 +37,15 @@ from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
-    CheckPluginNameStr,
+    CheckPreviewEntry,
+    CheckPreviewTable,
     DiscoveryResult,
     EVERYTHING,
     HostAddress,
     HostName,
-    Item,
     MetricTuple,
     RulesetName,
     ServiceName,
@@ -66,9 +68,8 @@ import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
-from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
+from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
 
@@ -83,27 +84,18 @@ _Transition = Union[
 ]
 _ServiceOrigin = Union[_Transition, Literal["active", "manual", "custom"]]
 
+
+class ServiceWithNodes(NamedTuple):
+    service: Service
+    nodes: Sequence[HostName]
+
+
 _L = TypeVar("_L", bound=str)
 
 ServicesTableEntry = Tuple[_L, Service, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
-ServicesByTransition = Dict[_ServiceOrigin, List[autochecks.ServiceWithNodes]]
+ServicesByTransition = Dict[_ServiceOrigin, List[ServiceWithNodes]]
 
-CheckPreviewEntry = Tuple[
-    str,
-    CheckPluginNameStr,
-    Optional[RulesetName],
-    Item,
-    LegacyCheckParameters,
-    LegacyCheckParameters,
-    str,
-    Optional[int],
-    str,
-    List[MetricTuple],
-    Dict[str, str],
-    List[HostName],
-]
-CheckPreviewTable = List[CheckPreviewEntry]
 
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -279,13 +271,14 @@ def _commandline_discovery_on_host(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
-        only_new=only_new,
+        forget_existing=not only_new,
+        keep_vanished=only_new,
         on_error=on_error,
     )
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
     # We should put the persisting in one place.
-    autochecks.save_autochecks_file(host_name, service_result.present)
+    autochecks.AutochecksStore(host_name).write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):
@@ -383,7 +376,7 @@ def automation_discovery(
         old_services = services.get("old", [])
 
         # Create new list of checks
-        new_services = _get_post_discovery_services(
+        new_services = _get_post_discovery_autocheck_services(
             host_name, services, service_filters or _ServiceFilters.accept_all(), result, mode
         )
         host_config.set_autochecks(new_services)
@@ -408,13 +401,13 @@ def automation_discovery(
     return result
 
 
-def _get_post_discovery_services(
+def _get_post_discovery_autocheck_services(
     host_name: HostName,
     services: ServicesByTransition,
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
     mode: DiscoveryMode,
-) -> List[autochecks.ServiceWithNodes]:
+) -> List[autochecks.AutocheckServiceWithNodes]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
@@ -426,7 +419,7 @@ def _get_post_discovery_services(
         Discovered checks that are shadowed by manual checks will vanish that way.
 
     """
-    post_discovery_services: List[autochecks.ServiceWithNodes] = []
+    post_discovery_services = []
     for check_source, discovered_services_with_nodes in services.items():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
@@ -439,7 +432,11 @@ def _get_post_discovery_services(
                 new = [
                     s
                     for s in discovered_services_with_nodes
-                    if service_filters.new(host_name, s.service)
+                    if service_filters.new(
+                        config.service_description(
+                            host_name, s.service.check_plugin_name, s.service.item
+                        )
+                    )
                 ]
                 result.self_new += len(new)
                 post_discovery_services.extend(new)
@@ -455,13 +452,13 @@ def _get_post_discovery_services(
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
             for entry in discovered_services_with_nodes:
-                if (
-                    mode
-                    in (
-                        DiscoveryMode.FIXALL,
-                        DiscoveryMode.REMOVE,
+                if mode in (
+                    DiscoveryMode.FIXALL,
+                    DiscoveryMode.REMOVE,
+                ) and service_filters.vanished(
+                    config.service_description(
+                        host_name, entry.service.check_plugin_name, entry.service.item
                     )
-                    and service_filters.vanished(host_name, entry.service)
                 ):
                     result.self_removed += 1
                 else:
@@ -481,7 +478,16 @@ def _get_post_discovery_services(
 
         raise MKGeneralException("Unknown check source '%s'" % check_source)
 
-    return post_discovery_services
+    # Note: this final filtering step should in fact be unnecessary.
+    # We're about to write these into the autochecks file, so hopefully
+    # these are only autochecks (and, in fact we skipped active and manual
+    # checks in the loop above.
+    # Currently it is not feasable to teach mypy about that.
+    return [
+        autochecks.AutocheckServiceWithNodes(service, nodes)
+        for service, nodes in post_discovery_services
+        if isinstance(service, AutocheckService)
+    ]
 
 
 # .
@@ -625,7 +631,11 @@ def _check_service_lists(
         for (discovered_service, _found_on_nodes) in t_services:
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
-            if not unfiltered and service_filter(host_name, discovered_service):
+            if not unfiltered and service_filter(
+                config.service_description(
+                    host_name, discovered_service.check_plugin_name, discovered_service.item
+                )
+            ):
                 unfiltered = True
 
             # TODO In service_filter:we use config.service_description(...)
@@ -1014,10 +1024,22 @@ def _get_node_services(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
-        only_new=False,
+        forget_existing=False,
+        keep_vanished=False,
         on_error=on_error,
     )
 
+    # TODO: see if we really need the service object. Can we just compute
+    # the description and keep using the AucheckEntry instances?
+    services = [
+        (check_source, service)
+        for check_source, autocheck_entry in service_result.chain_with_qualifier()
+        if (
+            service := autochecks.parse_autocheck_service(
+                host_name, autocheck_entry, config.service_description
+            )
+        )
+    ]
     return {
         service.id(): (
             _node_service_source(
@@ -1029,7 +1051,7 @@ def _get_node_services(
             service,
             [host_name],
         )
-        for check_source, service in chain_with_check_source(service_result)
+        for check_source, service in services
     }
 
 
@@ -1051,17 +1073,6 @@ def _node_service_source(
     if check_source == "old":
         return "clustered_old"
     return "clustered_new"
-
-
-def chain_with_check_source(
-    service_result: QualifiedDiscovery[Service],
-) -> Iterable[Tuple[_BasicTransition, Service]]:
-    for s in service_result.vanished:
-        yield "vanished", s
-    for s in service_result.old:
-        yield "old", s
-    for s in service_result.new:
-        yield "new", s
 
 
 def _manual_items(
@@ -1140,7 +1151,7 @@ def _group_by_transition(
         services_by_transition.setdefault(
             transition,
             [],
-        ).append(autochecks.ServiceWithNodes(service, found_on_nodes))
+        ).append(ServiceWithNodes(service, found_on_nodes))
     return services_by_transition
 
 
@@ -1163,16 +1174,28 @@ def _get_cluster_services(
         node_config = config_cache.get_host_config(node)
         node_ipaddress = config.lookup_ip_address(node_config)
 
-        services = analyse_discovered_services(
+        entries = analyse_discovered_services(
             host_name=node,
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
-            only_new=True,
+            forget_existing=False,
+            keep_vanished=True,
             on_error=on_error,
         )
 
-        for check_source, service in chain_with_check_source(services):
+        # TODO: see if we really need the service object. Can we just compute
+        # the description and keep using the AucheckEntry instances?
+        services = [
+            (check_source, service)
+            for check_source, autocheck_entry in entries.chain_with_qualifier()
+            if (
+                service := autochecks.parse_autocheck_service(
+                    node, autocheck_entry, config.service_description
+                )
+            )
+        ]
+        for check_source, service in services:
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,
@@ -1296,11 +1319,19 @@ def _check_preview_table_row(
     service: Service,
     check_source: _ServiceOrigin,
     parsed_sections_broker: ParsedSectionsBroker,
-    found_on_nodes: List[HostName],
+    found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
-    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
-    params = _preview_params(host_config.hostname, service, plugin, check_source)
+    preview_params = (
+        config.compute_check_parameters(
+            host_config.hostname,
+            service.check_plugin_name,
+            service.item,
+            service.parameters,
+        )
+        if isinstance(service, AutocheckService)
+        else service.parameters
+    )
 
     if check_source in {"active", "custom"}:
         exitcode = None
@@ -1308,6 +1339,7 @@ def _check_preview_table_row(
         ruleset_name: Optional[RulesetName] = None
     else:
 
+        plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
         ruleset_name = (
             str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
         )
@@ -1318,7 +1350,7 @@ def _check_preview_table_row(
             ip_address,
             service,
             plugin,
-            params,
+            preview_params,
             value_store_manager=value_store_manager,
             persist_value_store_changes=False,  # never during discovery
         ).result
@@ -1335,13 +1367,13 @@ def _check_preview_table_row(
         ruleset_name,
         service.item,
         _wrap_timespecific_for_preview(service.parameters),
-        _wrap_timespecific_for_preview(params),
+        _wrap_timespecific_for_preview(preview_params),
         service.description,
         exitcode,
         output,
         perfdata,
-        service.service_labels.to_dict(),
-        found_on_nodes,
+        {label.name: label.value for label in service.service_labels.values()},
+        list(found_on_nodes),
     )
 
 
@@ -1357,32 +1389,11 @@ def _preview_check_source(
     return check_source
 
 
-def _preview_params(
-    host_name: HostName,
-    service: Service,
-    plugin: Optional[checking_classes.CheckPlugin],
-    check_source: _ServiceOrigin,
-) -> Optional[LegacyCheckParameters]:
-
-    if check_source in {"active", "manual", "custom"}:
-        return service.parameters
-
-    return config.compute_check_parameters(
-        host_name,
-        service.check_plugin_name,
-        service.item,
-        service.parameters,
-    )
-
-
-def _wrap_timespecific_for_preview(params: LegacyCheckParameters) -> LegacyCheckParameters:
+def _wrap_timespecific_for_preview(
+    params: Union[LegacyCheckParameters, TimespecificParameters]
+) -> LegacyCheckParameters:
     return (
-        {
-            "tp_computed_params": {
-                "params": checking.time_resolved_check_parameters(params),
-                "computed_at": time.time(),
-            }
-        }
-        if isinstance(params, config.TimespecificParamList)
+        dict(params.preview(cmk.base.core.timeperiod_active))
+        if isinstance(params, TimespecificParameters)
         else params
     )

@@ -26,6 +26,7 @@ from six import ensure_str
 import cmk.utils.paths
 
 from cmk.gui.i18n import _u
+from cmk.gui.permissions import declare_permission
 
 
 def load_user_scripts(what):
@@ -83,6 +84,18 @@ def _load_user_scripts_from(adir):
 
 def load_notification_scripts():
     return load_user_scripts("notifications")
+
+
+# The permissions need to be loaded dynamically instead of only when the plugins are loaded because
+# the user may have placed new notification plugins in the local hierarchy.
+def declare_notification_plugin_permissions() -> None:
+    for name, attrs in load_notification_scripts().items():
+        if name[0] == ".":
+            continue
+
+        declare_permission(
+            "notification_plugin.%s" % name, _u(attrs["title"]), "", ["admin", "user"]
+        )
 
 
 def user_script_choices(what):

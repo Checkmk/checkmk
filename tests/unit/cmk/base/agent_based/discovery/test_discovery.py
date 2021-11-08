@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Literal, NamedTuple, Sequence, Set, Tuple, Union
+from typing import Dict, List, Literal, Mapping, NamedTuple, Sequence, Set, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -23,6 +23,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostKey,
     HostName,
+    LegacyCheckParameters,
     SectionName,
     SourceType,
 )
@@ -40,8 +41,8 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
-from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
+from cmk.base.check_utils import AutocheckService, Service
+from cmk.base.discovered_labels import HostLabel, ServiceLabel
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
 
@@ -52,27 +53,28 @@ def test_discovered_service_init() -> None:
     assert ser.item == "Item"
     assert ser.description == "ABC Item"
     assert ser.parameters is None
-    assert ser.service_labels.to_dict() == {}
+    assert ser.service_labels == {}
 
     ser = discovery.Service(
         CheckPluginName("abc"),
         "Item",
         "ABC Item",
         None,
-        DiscoveredServiceLabels(ServiceLabel("läbel", "lübel")),
+        {"läbel": ServiceLabel("läbel", "lübel")},
     )
-    assert ser.service_labels.to_dict() == {"läbel": "lübel"}
+
+    assert ser.service_labels == {"läbel": ServiceLabel("läbel", "lübel")}
 
     with pytest.raises(AttributeError):
         ser.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
 
 
 def test_discovered_service_eq() -> None:
-    ser1 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser2 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser3 = discovery.Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
-    ser4 = discovery.Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
-    ser5 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", [])
+    ser1: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
+    ser2: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
+    ser3: Service[LegacyCheckParameters] = Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
+    ser4: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
+    ser5: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", [""])
 
     assert ser1 == ser1  # pylint: disable=comparison-with-itself
     assert ser1 == ser2
@@ -143,8 +145,8 @@ def service_table() -> discovery.ServicesTable:
 def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
                     "Test Description New Item 1",
@@ -152,8 +154,8 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
                     "Test Description New Item 2",
@@ -163,8 +165,8 @@ def grouped_services() -> discovery.ServicesByTransition:
             ),
         ],
         "vanished": [
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
                     "Test Description Vanished Item 1",
@@ -172,8 +174,8 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            autochecks.ServiceWithNodes(
-                discovery.Service(
+            discovery.ServiceWithNodes(
+                AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",
                     "Test Description Vanished Item 2",
@@ -406,7 +408,7 @@ def test__get_post_discovery_services(
 
     new_item_names = [
         entry.service.item or ""
-        for entry in discovery._get_post_discovery_services(
+        for entry in discovery._get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
             service_filters,
@@ -892,8 +894,13 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             arg_only_new=False,
         )
 
-    services = autochecks.parse_autochecks_file(testhost, config.service_description)
-    found = {(s.check_plugin_name, s.item): s.service_labels.to_dict() for s in services}
+    services = autochecks.parse_autochecks_services(testhost, config.service_description)
+    found = {
+        (s.check_plugin_name, s.item): {
+            label.name: label.value for label in s.service_labels.values()
+        }
+        for s in services
+    }
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)
@@ -1612,7 +1619,7 @@ def test__perform_host_label_discovery_on_cluster(
 
 def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
 
-    services = {
+    services: Mapping[str, Service[LegacyCheckParameters]] = {
         discovery_status: Service(
             CheckPluginName(f"plugin_{discovery_status}"),
             None,
@@ -1627,8 +1634,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     }
 
     monkeypatch.setattr(
-        _discovered_services,
-        "_load_existing_services",
+        autochecks.AutochecksStore,
+        "read",
         lambda *args, **kwargs: [
             services["old"],
             services["vanished"],

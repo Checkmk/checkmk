@@ -13,13 +13,16 @@
 # - repo path is added to be able to import tests.conftest
 # - tests.conftest is again extending the sys.path to add the required paths
 init-hook=
-    import inspect, os, sys
+    import inspect
+    import os
+    import sys
     config_file = inspect.stack()[2][0].f_locals["linter"].config_file
     sys.path.insert(0, os.path.dirname(config_file))
     import tests.conftest
 load-plugins=
     tests.testlib.pylint_cmk,
     tests.testlib.pylint_checker_localization,
+    tests.testlib.pylint_checker_forbidden_functions,
     tests.testlib.pylint_checker_cmk_module_layers,
     pylint.extensions.bad_builtin
 jobs=0
@@ -161,6 +164,8 @@ disable=
     # this provide some micro speedups if fixed
     use-dict-literal,
     use-list-literal,
+    # pylint 2.11 enabled checks
+    consider-using-f-string
 
 
 

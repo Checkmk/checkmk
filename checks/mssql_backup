@@ -66,7 +66,9 @@ def parse_mssql_backup(info):
     }
 
     parsed = {}
-    Backup = collections.namedtuple("Backup", ["timestamp", "type", "state"])
+    Backup = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "Backup", ["timestamp", "type", "state"]
+    )
     for line in info:
         if len(line) <= 2:
             continue

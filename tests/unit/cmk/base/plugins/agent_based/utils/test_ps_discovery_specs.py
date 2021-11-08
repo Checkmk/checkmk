@@ -6,18 +6,14 @@
 
 import pytest
 
-from cmk.base.discovered_labels import DiscoveredHostLabels
-from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, type_defs
 from cmk.base.plugins.agent_based.utils import ps
 
 pytestmark = pytest.mark.checks
 
-TEST_LABELS = DiscoveredHostLabels.from_dict(
-    {
-        "marco": {"value": "polo", "plugin_name": None},
-        "peter": {"value": "pan", "plugin_name": None},
-    }
-)
+TEST_LABELS = {
+    "marco": "polo",
+    "peter": "pan",
+}
 
 
 def test_get_discovery_specs():
@@ -133,7 +129,7 @@ def test_get_discovery_specs():
             "~smss.exe",
             None,
             (None, False),
-            DiscoveredHostLabels(),
+            {},
             {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         ),
         (

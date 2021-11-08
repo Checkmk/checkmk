@@ -12,6 +12,7 @@ import cmk.utils.store
 from cmk.gui import config, hooks, http, sites
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 
 
@@ -27,6 +28,7 @@ def with_context_middleware(app):
             resp=resp,
             funnel=OutputFunnel(resp),
             config_obj=config.make_config_object(config.get_default_config()),
+            user=LoggedInNobody(),
             display_options=DisplayOptions(),
         ), cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
             config.initialize()

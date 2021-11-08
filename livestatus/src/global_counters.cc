@@ -11,6 +11,8 @@
 #include <ratio>
 #include <vector>
 
+#include "ChronoUtils.h"
+
 using namespace std::chrono_literals;
 
 namespace {
@@ -77,9 +79,9 @@ void do_statistics() {
     last_statistics_update = now;
     for (auto &c : counters) {
         std::lock_guard<std::mutex> lg(c.mutex);
-        auto age_secs = std::chrono::duration_cast<std::chrono::seconds>(age);
+        auto age_secs = mk::ticks<std::chrono::seconds>(age);
         double old_rate = c.rate;
-        double new_rate = (c.value - c.last_value) / age_secs.count();
+        double new_rate = (c.value - c.last_value) / age_secs;
         c.rate = lerp(old_rate, new_rate, old_rate == 0 ? 1 : rating_weight);
         c.last_value = c.value;
     }

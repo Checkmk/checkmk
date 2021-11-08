@@ -11,7 +11,9 @@ import collections
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-state_template = collections.namedtuple("state", "label value")
+state_template = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "state", "label value"
+)
 radio_unknown = state_template("not available", 3)
 radio_state_map = {"1": state_template("up", 0), "2": state_template("down", 2)}
 

@@ -17,12 +17,8 @@ from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato import (
-    ActionResult,
-    get_hostnames_from_checkboxes,
-    mode_registry,
-    WatoMode,
-)
+from cmk.gui.plugins.wato import get_hostnames_from_checkboxes, mode_registry, WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -48,7 +44,7 @@ class ModeBulkDiscovery(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._start = bool(request.var("_start"))
+        self._start = bool(request.var("_save"))
         self._all = bool(request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
@@ -95,7 +91,7 @@ class ModeBulkDiscovery(WatoMode):
             _("Discovery"),
             breadcrumb,
             form_name="bulkinventory",
-            button_name="_start",
+            button_name="_save",
             save_title=_("Start"),
         )
 
@@ -194,7 +190,7 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 if host_name in skip_hosts:
                     continue
-                host = Folder.current().host(host_name)
+                host = Folder.current().load_host(host_name)
                 host.need_permission("write")
                 hosts_to_discover.append(
                     DiscoveryHost(host.site_id(), host.folder().path(), host_name)

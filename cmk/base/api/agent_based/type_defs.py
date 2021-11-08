@@ -25,7 +25,11 @@ from typing import (
 from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
 
 
-class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):
+class PluginSuppliedLabel(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
+        "_LabelTuple", [("name", str), ("value", str)]
+    )
+):
     """A user friendly variant of our internally used labels
 
     This is a tiny bit redundant, but it helps decoupling API

@@ -17,6 +17,8 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 
+class TableEventConsoleReplication;
+
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
@@ -53,7 +55,12 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
             Alert(_mc->loggerLivestatus()) << err.what();
         }
     }
-    return std::make_unique<BlobColumn::Constant>(
-        name, "replication value",
-        std::vector<char>{std::begin(result), std::end(result)});
+    // TODO(sp) Using TableEventConsoleReplication here is a cruel hack,
+    // DynamicEventConsoleReplicationColumn should really be a template.
+    return std::make_unique<BlobColumn<TableEventConsoleReplication>>(
+        name, "replication value", _offsets,
+        [result =
+             std::move(result)](const TableEventConsoleReplication & /*r*/) {
+            return std::vector<char>{std::begin(result), std::end(result)};
+        });
 }

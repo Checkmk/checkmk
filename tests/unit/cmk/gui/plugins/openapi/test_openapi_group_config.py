@@ -10,7 +10,9 @@ import string
 
 import pytest
 
-from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest  # type: ignore[import]
+from cmk.utils import version
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest
@@ -30,6 +32,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         base + f"/domain-types/{group_type}_group_config/collections/all",
         params=json.dumps(group),
         status=200,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -37,12 +40,14 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         "get",
         base + f"/domain-types/{group_type}_group_config/collections/all",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     resp = wsgi_app.follow_link(
         resp,
         "self",
         status=200,
+        headers={"Accept": "application/json"},
     )
 
     update_group = {"alias": f"{alias} update"}
@@ -51,7 +56,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         resp,
         ".../update",
         params=json.dumps(update_group),
-        headers={"If-Match": "foo bar"},
+        headers={"If-Match": "foo bar", "Accept": "application/json"},
         status=412,
         content_type="application/json",
     )
@@ -60,7 +65,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         resp,
         ".../update",
         params=json.dumps(update_group),
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -69,6 +74,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         resp,
         ".../delete",
         status=204,
+        headers={"Accept": "application/json"},
         content_type="application/json",
     )
 
@@ -89,6 +95,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-create/invoke" % (group_type,),
         params=json.dumps({"entries": groups}),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -98,6 +105,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert resp.json_body["extensions"]["customer"] == "provider"
 
@@ -105,6 +113,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-create/invoke" % (group_type,),
         params=json.dumps({"entries": groups}),
+        headers={"Accept": "application/json"},
         status=400,
         content_type="application/json",
     )
@@ -121,6 +130,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         "put",
         base + "/domain-types/%s_group_config/actions/bulk-update/invoke" % (group_type,),
         params=json.dumps({"entries": update_groups}),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -129,6 +139,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
         status=200,
+        headers={"Accept": "application/json"},
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
@@ -146,6 +157,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         "put",
         base + "/domain-types/%s_group_config/actions/bulk-update/invoke" % (group_type,),
         params=json.dumps({"entries": partial_update_groups}),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -153,6 +165,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     resp = wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json_body["extensions"]["customer"] == "global"
@@ -161,6 +174,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-delete/invoke" % (group_type,),
         params=json.dumps({"entries": [f"{group['name']}" for group in groups]}),
+        headers={"Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -182,6 +196,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
         "post",
         base + "/domain-types/%s_group_config/collections/all" % (group_type,),
         params=json.dumps(group),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -189,6 +204,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
     resp = wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{name}",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json_body["extensions"]["customer"] == "global"
@@ -196,7 +212,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
     resp = wsgi_app.call_method(
         "put",
         base + f"/objects/{group_type}_group_config/{name}",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         params=json.dumps(
             {
                 "alias": f"{alias}+",
@@ -210,7 +226,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
     resp = wsgi_app.call_method(
         "put",
         base + f"/objects/{group_type}_group_config/{name}",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
         params=json.dumps({"alias": alias, "customer": "provider"}),
         status=200,
         content_type="application/json",

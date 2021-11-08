@@ -8,7 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Final, Iterable, Iterator, Optional, Sequence, Tuple
+from typing import Dict, Final, Iterable, Iterator, Optional, Sequence
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker
@@ -32,7 +32,7 @@ from .push_agent import PushAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
 
-__all__ = ["fetch_all", "make_sources", "make_nodes"]
+__all__ = ["fetch_all", "make_sources", "make_cluster_sources"]
 
 
 class _Builder:
@@ -224,59 +224,40 @@ def make_sources(
     ).sources
 
 
-def make_nodes(
-    config_cache: config.ConfigCache,
-    host_config: HostConfig,
-    ipaddress: Optional[HostAddress],
-    sources: Sequence[Source],
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
-    if host_config.nodes is None:
-        return [(host_config.hostname, ipaddress, sources)]
-    return _make_cluster_nodes(config_cache, host_config)
-
-
 def fetch_all(
     *,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
+    sources: Iterable[Source],
     file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
 ) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    # TODO(ml): It is not clear to me in which case it is possible for the following to hold true
-    #           for any source in nodes:
-    #             - hostname != source.hostname
-    #             - ipaddress != source.ipaddress
-    #           If this is impossible, then we do not need the Tuple[HostName, HostAddress, ...].
-    for _hostname, _ipaddress, sources in nodes:
-        for source in sources:
-            console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+    for source in sources:
+        console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
-            source.file_cache_max_age = file_cache_max_age
+        source.file_cache_max_age = file_cache_max_age
 
-            with CPUTracker() as tracker:
-                raw_data = source.fetch(mode)
-            yield FetcherMessage.from_raw_data(
-                raw_data,
-                tracker.duration,
-                source.fetcher_type,
-            )
+        with CPUTracker() as tracker:
+            raw_data = source.fetch(mode)
+        yield FetcherMessage.from_raw_data(
+            raw_data,
+            tracker.duration,
+            source.fetcher_type,
+        )
 
 
-def _make_cluster_nodes(
+def make_cluster_sources(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
+) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
 
-    nodes = []
-    for hostname in host_config.nodes:
-        node_config = config_cache.get_host_config(hostname)
-        ipaddress = config.lookup_ip_address(node_config)
-        sources = make_sources(
-            HostConfig.make_host_config(hostname),
-            ipaddress,
+    return [
+        source
+        for host_name in host_config.nodes
+        for source in make_sources(
+            HostConfig.make_host_config(host_name),
+            config.lookup_ip_address(config_cache.get_host_config(host_name)),
             force_snmp_cache_refresh=False,
         )
-        nodes.append((hostname, ipaddress, sources))
-    return nodes
+    ]

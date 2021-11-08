@@ -240,7 +240,7 @@ def scientific(v: float, precision: int = 3) -> str:
     mantissa, exponent = _frexp10(float(v))
     # Render small numbers without exponent
     if -3 <= exponent <= 4:
-        return "%.*f" % (max(0, precision - exponent), v)
+        return "%.*f" % (min(precision, max(0, precision - exponent)), v)
 
     return "%.*fe%+d" % (precision, mantissa, exponent)
 

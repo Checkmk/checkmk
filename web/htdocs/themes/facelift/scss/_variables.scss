@@ -36,11 +36,14 @@ $font-color: $grey-4;
 $font-color-dimmed: rgba($grey-4, 0.8);
 $font-color-light-bg: $grey-4;
 $font-color-light-grey: $grey-1;
+$font-color-green: $success-dimmed-2;
+$font-color-orange: $orange-2;
 
 // -----------------------------------------------------------------------------
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
 $button-background-hover: rgb(247, 247, 247);
+$default-submit-button-border-color: $success-dimmed;
 
 $input-background-color: $ux-theme-5;
 $input-nested-background-color: $ux-theme-3;
@@ -140,21 +143,12 @@ $tag-hover-opacity: 0.5;
 // -----------------------------------------------------------------------------
 // Node visualization
 // -----------------------------------------------------------------------------
-$node-vis-darkgrey: rgb(169, 169, 169);
-$node-vis-togglebox-enabled: rgb(255, 215, 0);
-$node-vis-search-box-border: null;
-$node-vis-search-box-bg-color: null;
-$node-vis-search-field-border-color: transparent;
-$node-vis-box-border: 1px solid rgb(204, 207, 219); // grey
-$node-vis-box-shadow: 2px 2px 2px $grey-3;
-$node-vis-toggle-down-bg-color: rgb(230, 230, 230); // light grey
-$node-vis-menu-bg-color: null;
+$node-vis-darkgrey: $ux-theme-5;
+$node-vis-togglebox-enabled: $success;
+$node-vis-menu-bg-color: $ux-theme-2;
 $node-vis-history-bg-color: null;
 $node-vis-history-border-color: null;
 $node-vis-history-filter: null;
-$node-vis-growth-root-color: rgb(25, 90, 230); // blue
-$topology-filter-bg-color: null;
-$topology-filter-border-color: null;
 
 $agent-config-inner-title-bg-color: $grey-1;
 
@@ -216,3 +210,4 @@ $hexagon-default-fill-opacity: 0.4;
 $hexagon-default-stroke-color: rgb(210, 212, 214);
 $hexagon-default-stroke-opacity: 1;
 $host-hexagon-ok-stroke-color: $grey-2;
+$bi-box-border-color: $grey-3;

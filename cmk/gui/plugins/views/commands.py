@@ -1495,21 +1495,16 @@ class CommandRemoveComments(Command):
     def _action(
         self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
     ) -> CommandActionResult:
-        if request.has_var("_remove_comments"):
-            commands = [("DEL_%s_COMMENT;%s" % (cmdtag, spec))]
-            if row.get("comment_entry_type") == 4:
-                if row.get("service_description"):
-                    commands.append(
-                        (
-                            "REMOVE_%s_ACKNOWLEDGEMENT;%s;%s"
-                            % (cmdtag, row["host_name"], row["service_description"])
-                        )
-                    )
-                else:
-                    commands.append(("REMOVE_%s_ACKNOWLEDGEMENT;%s" % (cmdtag, row["host_name"])))
-
-            return commands, ""
-        return None
+        if not request.has_var("_remove_comments"):
+            return None
+        if row.get("comment_entry_type") == 4:  # acknowledgement
+            spec = (
+                row["host_name"]
+                if cmdtag == "HOST"
+                else ("%s;%s" % (row["host_name"], row["service_description"]))
+            )
+            return ("REMOVE_%s_ACKNOWLEDGEMENT;%s" % (cmdtag, spec)), ""
+        return ("DEL_%s_COMMENT;%s" % (cmdtag, spec)), ""
 
 
 # .

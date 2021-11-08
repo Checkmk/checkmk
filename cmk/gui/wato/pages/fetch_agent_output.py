@@ -26,6 +26,7 @@ from cmk.gui.sites import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.check_mk_automations import get_agent_output
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -92,8 +93,6 @@ class AgentOutputPage(Page, abc.ABC):
             raise MKGeneralException(_("Invalid type specified."))
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
-
-        watolib.init_wato_datastructures(with_wato_lock=True)
 
         host = watolib.Folder.current().host(host_name)
         if not host:
@@ -273,19 +272,24 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
     def _fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
 
-        success, output, agent_data = watolib.check_mk_automation(
+        agent_output_result = get_agent_output(
             self._request.host.site_id(),
-            "get-agent-output",
-            [self._request.host.name(), self._request.agent_type],
+            self._request.host.name(),
+            self._request.agent_type,
         )
 
-        if not success:
-            job_interface.send_progress_update(_("Failed: %s") % output)
+        if not agent_output_result.success:
+            job_interface.send_progress_update(
+                _("Failed: %s") % agent_output_result.service_details
+            )
 
         preview_filepath = os.path.join(
             job_interface.get_work_dir(), AgentOutputPage.file_name(self._request)
         )
-        store.save_text_to_file(preview_filepath, agent_data)
+        store.save_text_to_file(
+            preview_filepath,
+            agent_output_result.raw_agent_data.decode("utf-8"),
+        )
 
         download_url = makeuri_contextless(
             request,

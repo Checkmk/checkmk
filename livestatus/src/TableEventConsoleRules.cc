@@ -5,8 +5,10 @@
 
 #include "TableEventConsoleRules.h"
 
+#include <memory>
+
 #include "Column.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "StringColumn.h"
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)

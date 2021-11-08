@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <utility>
 
+#include "ChronoUtils.h"
 #include "Row.h"
 
 TimeFilter::TimeFilter(Kind kind, std::string columnName,
@@ -64,7 +65,8 @@ std::optional<int32_t> TimeFilter::greatestLowerBoundFor(
     if (column_name != columnName()) {
         return {};  // wrong column
     }
-    int32_t ref_value = _ref_value - timezone_offset.count();
+    int32_t ref_value =
+        _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset);
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::greater_or_equal:
@@ -91,7 +93,8 @@ std::optional<int32_t> TimeFilter::leastUpperBoundFor(
     if (column_name != columnName()) {
         return {};  // wrong column
     }
-    int32_t ref_value = _ref_value - timezone_offset.count();
+    int32_t ref_value =
+        _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset);
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::less_or_equal:
@@ -120,7 +123,9 @@ std::optional<std::bitset<32>> TimeFilter::valueSetLeastUpperBoundFor(
     }
     std::bitset<32> result;
     for (int32_t bit = 0; bit < 32; ++bit) {
-        result[bit] = eval(bit, oper(), _ref_value - timezone_offset.count());
+        result[bit] =
+            eval(bit, oper(),
+                 _ref_value - mk::ticks<std::chrono::seconds>(timezone_offset));
     }
     return {result};
 }

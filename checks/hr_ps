@@ -20,7 +20,7 @@ hr_ps_status_map = {
     "4": ("invalid", "invalid", "not loaded"),
 }
 
-HRProcess = collections.namedtuple(
+HRProcess = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "HRProcess", ["name", "path", "state_key", "state_short", "state_long"]
 )
 

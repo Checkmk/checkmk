@@ -48,8 +48,8 @@ from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
-from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.check_mk_automations import active_check, update_host_labels
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
@@ -98,7 +98,9 @@ class ModeDiscovery(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._host = watolib.Folder.current().host(request.get_ascii_input_mandatory("host"))
+        self._host = watolib.Folder.current().load_host(
+            html.request.get_ascii_input_mandatory("host")
+        )
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -227,8 +229,6 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
 @page_registry.register_page("ajax_service_discovery")
 class ModeAjaxServiceDiscovery(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         user.need_permission("wato.hosts")
 
         api_request: AjaxDiscoveryRequest = self.webapi_request()
@@ -507,10 +507,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             len(discovery_result.host_labels),
         )
         watolib.add_service_change(self._host, "update-host-labels", message)
-        check_mk_automation(
+        update_host_labels(
             self._host.site_id(),
-            "update-host-labels",
-            [self._host.name()],
+            self._host.name(),
             discovery_result.host_labels,
         )
 
@@ -1430,14 +1429,15 @@ class ModeAjaxExecuteCheck(AjaxPage):
         self._item = request.get_unicode_input_mandatory("item")
 
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
         try:
-            state, output = check_mk_automation(
+            active_check_result = active_check(
                 self._site,
-                "active-check",
-                [self._host_name, self._check_type, self._item],
-                sync=False,
+                self._host_name,
+                self._check_type,
+                self._item,
             )
+            state = 3 if active_check_result.state is None else active_check_result.state
+            output = active_check_result.output
         except Exception as e:
             state = 3
             output = "%s" % e

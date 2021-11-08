@@ -8,8 +8,6 @@
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, List, MutableMapping, Optional, Set, Tuple
 
-from six import ensure_binary
-
 import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -53,6 +51,27 @@ class WalkCache(
         self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
         self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
 
+    @staticmethod
+    def _read_row(path: Path) -> SNMPRowInfo:
+        return store.load_object_from_file(path, default=None)
+
+    @staticmethod
+    def _write_row(path: Path, rowinfo: SNMPRowInfo) -> None:
+        return store.save_object_to_file(path, rowinfo, pretty=False)
+
+    @staticmethod
+    def _oid2name(fetchoid: str) -> str:
+        return f"OID{fetchoid}"
+
+    @staticmethod
+    def _name2oid(basename: str) -> str:
+        return basename[3:]
+
+    def _iterfiles(self) -> Iterable[Path]:
+        if not self._path.is_dir():
+            return ()
+        return self._path.iterdir()
+
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._store)
 
@@ -71,29 +90,41 @@ class WalkCache(
     def __len__(self) -> int:
         return self._store.__len__()
 
+    def clear(self) -> None:
+        for path in self._iterfiles():
+            path.unlink(missing_ok=True)
+
     def load(
         self,
         *,
         trees: Iterable[BackendSNMPTree],
     ) -> None:
         """Try to read the OIDs data from cache files"""
-        for tree in trees:
-            for oid in (o for o in tree.oids if o.save_to_cache):  # no point in reading otherwise
+        # Do not load the cached data if *any* plugin needs live data
+        do_not_load = {
+            f"{tree.base}.{oid.column}"
+            for tree in trees
+            for oid in tree.oids
+            if not oid.save_to_cache
+        }
 
-                fetchoid = f"{tree.base}.{oid.column}"
-                path = self._path / fetchoid
+        for path in self._iterfiles():
+            fetchoid = self._name2oid(path.name)
+            if fetchoid in do_not_load:
+                continue
 
-                console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
-                try:
-                    read_walk = store.load_object_from_file(path, default=None)
-                except Exception:
-                    console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
-                    if cmk.utils.debug.enabled():
-                        raise
-                    continue
+            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+            try:
+                read_walk = self._read_row(path)
+            except Exception:
+                console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                if cmk.utils.debug.enabled():
+                    raise
+                continue
 
-                if read_walk is not None:
-                    self._store[fetchoid] = (oid.save_to_cache, read_walk)  # (True, ...)
+            if read_walk is not None:
+                # 'False': no need to store this value: it is already stored!
+                self._store[fetchoid] = (False, read_walk)
 
     def save(self) -> None:
         self._path.mkdir(parents=True, exist_ok=True)
@@ -102,9 +133,9 @@ class WalkCache(
             if not save_flag:
                 continue
 
-            path = self._path / fetchoid
+            path = self._path / self._oid2name(fetchoid)
             console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
-            store.save_object_to_file(path, rowinfo, pretty=False)
+            self._write_row(path, rowinfo)
 
 
 def get_snmp_table(
@@ -175,9 +206,9 @@ def _make_index_rows(
     index_rows = []
     for o, _unused_value in max_column:
         if index_format is SpecialColumn.END:
-            val = ensure_binary(_extract_end_oid(fetchoid, o))
+            val = _extract_end_oid(fetchoid, o).encode()
         elif index_format is SpecialColumn.STRING:
-            val = ensure_binary(o)
+            val = o.encode()
         elif index_format is SpecialColumn.BIN:
             val = _oid_to_bin(o)
         elif index_format is SpecialColumn.END_BIN:
@@ -305,6 +336,7 @@ def _decode_column(
     column: List[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
 ) -> List[SNMPDecodedValues]:
     if value_encoding == "string":
+        # ? ensure_str is used with potentially different encodings
         decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
     else:
         decode = lambda v: list(bytearray(v))

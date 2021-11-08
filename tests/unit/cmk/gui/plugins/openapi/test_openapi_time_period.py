@@ -3,12 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
+
+import pytest
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
 
 
-def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_time_period(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -29,6 +33,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -44,6 +49,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -51,6 +57,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/foo",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json == {
@@ -63,7 +70,8 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
     }
 
 
-def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_time_period_collection(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -84,6 +92,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -91,6 +100,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress
     resp_col = wsgi_app.call_method(
         "get",
         base + "/domain-types/time_period/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp_col.json_body["value"]) == 2
@@ -98,7 +108,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress
     _ = wsgi_app.call_method(
         "delete",
         base + "/objects/time_period/foo",
-        headers={"If-Match": resp.headers["Etag"]},
+        headers={"If-Match": resp.headers["Etag"], "Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -106,25 +116,36 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress
     resp_col = wsgi_app.call_method(
         "get",
         base + "/domain-types/time_period/collections/all",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert len(resp_col.json_body["value"]) == 1
 
 
-def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user, suppress_automation_calls):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method("get", base + "/objects/time_period/24X7", status=200)
+    _resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/time_period/24X7",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
 
-    _ = wsgi_app.call_method("put", base + "/objects/time_period/24X7", status=405)
+    _ = wsgi_app.call_method(
+        "put",
+        base + "/objects/time_period/24X7",
+        headers={"Accept": "application/json"},
+        status=405,
+    )
 
 
-def test_openapi_timeperiod_unmodified_update(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -151,6 +172,7 @@ def test_openapi_timeperiod_unmodified_update(
                 "name": "test_all_8x5",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -158,6 +180,7 @@ def test_openapi_timeperiod_unmodified_update(
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json == {
@@ -221,6 +244,7 @@ def test_openapi_timeperiod_unmodified_update(
         "put",
         base + "/objects/time_period/test_all_8x5",
         params=json.dumps({}),
+        headers={"Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -228,6 +252,7 @@ def test_openapi_timeperiod_unmodified_update(
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json == {
@@ -288,9 +313,8 @@ def test_openapi_timeperiod_unmodified_update(
     }
 
 
-def test_openapi_timeperiod_complex_update(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -317,6 +341,7 @@ def test_openapi_timeperiod_complex_update(
                 "name": "test_all_8x5",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -341,6 +366,7 @@ def test_openapi_timeperiod_complex_update(
                 ],
             }
         ),
+        headers={"Accept": "application/json"},
         status=204,
         content_type="application/json",
     )
@@ -360,9 +386,8 @@ def test_openapi_timeperiod_complex_update(
     }
 
 
-def test_openapi_timeperiod_excluding_exclude(
-    wsgi_app, with_automation_user, suppress_automation_calls
-):
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_excluding_exclude(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
@@ -387,6 +412,7 @@ def test_openapi_timeperiod_excluding_exclude(
                 "name": "test_all_8x5",
             }
         ),
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -394,6 +420,7 @@ def test_openapi_timeperiod_excluding_exclude(
     resp = wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
+        headers={"Accept": "application/json"},
         status=200,
     )
     assert resp.json_body == {

@@ -6,7 +6,7 @@
 
 import abc
 import os
-from typing import Dict, Iterator
+from typing import Dict, Iterator, List, Optional, Tuple, Type
 
 import cmk.utils.paths
 
@@ -29,18 +29,19 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
-    ActionResult,
-    make_confirm_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
-from cmk.gui.table import table_element
+from cmk.gui.plugins.wato import make_confirm_link, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.table import Table, table_element
+from cmk.gui.type_defs import ActionResult, PermissionName, UserId
 from cmk.gui.utils.urls import makeactionuri
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice, ListOf, ListOfStrings
-from cmk.gui.watolib.groups import GroupType, load_contact_group_information
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    ListChoice,
+    ListChoiceChoicePairs,
+    ListOf,
+    ListOfStrings,
+)
+from cmk.gui.watolib.groups import GroupName, GroupSpec, GroupType, load_contact_group_information
 
 
 class ModeGroups(WatoMode, abc.ABC):
@@ -50,7 +51,7 @@ class ModeGroups(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _load_groups(self) -> Dict:
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -143,10 +144,10 @@ class ModeGroups(WatoMode, abc.ABC):
     def _page_no_groups(self) -> None:
         html.div(_("No groups are defined yet."), class_="info")
 
-    def _collect_additional_data(self):
+    def _collect_additional_data(self) -> None:
         pass
 
-    def _show_row_cells(self, table, name, group):
+    def _show_row_cells(self, table: Table, name: GroupName, group: GroupSpec) -> None:
         table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)]
@@ -185,37 +186,38 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _load_groups(self) -> Dict:
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         raise NotImplementedError()
 
-    def __init__(self):
-        self._name = None
+    def __init__(self) -> None:
+        self._name: Optional[GroupName] = None
         self._new = False
-        self.group = {}
-        self._groups = self._load_groups()
+        self.group: GroupSpec = {}
+        self._groups: Dict[GroupName, GroupSpec] = self._load_groups()
 
         super().__init__()
 
     def _from_vars(self) -> None:
-        self._name = request.get_ascii_input("edit")  # missing -> new group
+        edit_group = request.get_ascii_input("edit")  # missing -> new group
+        self._name = GroupName(edit_group) if edit_group else None
         self._new = self._name is None
 
         if self._new:
             clone_group = request.get_ascii_input("clone")
             if clone_group:
-                self._name = clone_group
-
+                self._name = GroupName(clone_group)
                 self.group = self._get_group(self._name)
             else:
                 self.group = {}
         else:
+            assert self._name is not None
             self.group = self._get_group(self._name)
 
         self.group.setdefault("alias", self._name)
 
-    def _get_group(self, group_name):
+    def _get_group(self, group_name: GroupName) -> GroupSpec:
         try:
-            return self._groups[self._name]
+            return self._groups[group_name]
         except KeyError:
             raise MKUserError(None, _("This group does not exist."))
 
@@ -235,16 +237,17 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
             self._name = request.get_ascii_input_mandatory("name").strip()
             watolib.add_group(self._name, self.type_name, self.group)
         else:
+            assert self._name is not None
             watolib.edit_group(self._name, self.type_name, self.group)
 
         return redirect(mode_url("%s_groups" % self.type_name))
 
-    def _show_extra_page_elements(self):
+    def _show_extra_page_elements(self) -> None:
         pass
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Group"), breadcrumb, form_name="group", button_name="save"
+            _("Group"), breadcrumb, form_name="group", button_name="_save"
         )
 
     def page(self) -> None:
@@ -278,21 +281,21 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 @mode_registry.register
 class ModeHostgroups(ModeGroups):
     @property
-    def type_name(self):
+    def type_name(self) -> GroupType:
         return "host"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "host_groups"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["groups"]
 
-    def _load_groups(self):
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         return load_host_group_information()
 
-    def title(self):
+    def title(self) -> str:
         return _("Host groups")
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
@@ -311,21 +314,21 @@ class ModeHostgroups(ModeGroups):
 @mode_registry.register
 class ModeServicegroups(ModeGroups):
     @property
-    def type_name(self):
+    def type_name(self) -> GroupType:
         return "service"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "service_groups"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["groups"]
 
-    def _load_groups(self):
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         return load_service_group_information()
 
-    def title(self):
+    def title(self) -> str:
         return _("Service groups")
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
@@ -344,22 +347,23 @@ class ModeServicegroups(ModeGroups):
 @mode_registry.register
 class ModeContactgroups(ModeGroups):
     @property
-    def type_name(self):
+    def type_name(self) -> GroupType:
         return "contact"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "contact_groups"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["users"]
 
-    def _load_groups(self):
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         return load_contact_group_information()
 
-    def title(self):
-        self._members = {}
+    def title(self) -> str:
+        # TODO: Move to constructor (incl. _collect_additional_data)
+        self._members: Dict[GroupName, List[Tuple[UserId, str]]] = {}
         return _("Contact groups")
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
@@ -374,7 +378,7 @@ class ModeContactgroups(ModeGroups):
             [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")]
         )
 
-    def _collect_additional_data(self):
+    def _collect_additional_data(self) -> None:
         users = userdb.load_users()
         self._members = {}
         for userid, user in users.items():
@@ -382,7 +386,7 @@ class ModeContactgroups(ModeGroups):
             for cg in cgs:
                 self._members.setdefault(cg, []).append((userid, user.get("alias", userid)))
 
-    def _show_row_cells(self, table, name, group):
+    def _show_row_cells(self, table: Table, name: GroupName, group: GroupSpec) -> None:
         super()._show_row_cells(table, name, group)
         table.cell(_("Members"))
         html.write_html(
@@ -403,25 +407,25 @@ class ModeContactgroups(ModeGroups):
 @mode_registry.register
 class ModeEditServicegroup(ABCModeEditGroup):
     @property
-    def type_name(self):
+    def type_name(self) -> GroupType:
         return "service"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_service_group"
 
     @classmethod
-    def parent_mode(cls):
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeServicegroups
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["groups"]
 
-    def _load_groups(self):
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         return load_service_group_information()
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add service group")
         return _("Edit service group")
@@ -430,25 +434,25 @@ class ModeEditServicegroup(ABCModeEditGroup):
 @mode_registry.register
 class ModeEditHostgroup(ABCModeEditGroup):
     @property
-    def type_name(self):
+    def type_name(self) -> GroupType:
         return "host"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_host_group"
 
     @classmethod
-    def parent_mode(cls):
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeHostgroups
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["groups"]
 
-    def _load_groups(self):
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         return load_host_group_information()
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add host group")
         return _("Edit host group")
@@ -457,30 +461,30 @@ class ModeEditHostgroup(ABCModeEditGroup):
 @mode_registry.register
 class ModeEditContactgroup(ABCModeEditGroup):
     @property
-    def type_name(self):
+    def type_name(self) -> GroupType:
         return "contact"
 
     @classmethod
-    def name(cls):
+    def name(cls) -> str:
         return "edit_contact_group"
 
     @classmethod
-    def parent_mode(cls):
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeContactgroups
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["users"]
 
-    def _load_groups(self):
+    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
         return load_contact_group_information()
 
-    def title(self):
+    def title(self) -> str:
         if self._new:
             return _("Add contact group")
         return _("Edit contact group")
 
-    def _determine_additional_group_data(self):
+    def _determine_additional_group_data(self) -> None:
         super()._determine_additional_group_data()
 
         permitted_inventory_paths = self._vs_inventory_paths_and_keys().from_html_vars(
@@ -497,7 +501,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
         if permitted_maps:
             self.group["nagvis_maps"] = permitted_maps
 
-    def _show_extra_page_elements(self):
+    def _show_extra_page_elements(self) -> None:
         super()._show_extra_page_elements()
 
         forms.header(_("Permissions"))
@@ -511,7 +515,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
             html.help(_("Configure access permissions to NagVis maps."))
             self._vs_nagvis_maps().render_input("nagvis_maps", self.group.get("nagvis_maps", []))
 
-    def _vs_inventory_paths_and_keys(self):
+    def _vs_inventory_paths_and_keys(self) -> CascadingDropdown:
         def vs_choices(title):
             return CascadingDropdown(
                 title=title,
@@ -558,14 +562,14 @@ class ModeEditContactgroup(ABCModeEditGroup):
             default_value="allow_all",
         )
 
-    def _vs_nagvis_maps(self):
+    def _vs_nagvis_maps(self) -> ListChoice:
         return ListChoice(
             title=_("NagVis Maps"),
             choices=self._get_nagvis_maps,
             toggle_all=True,
         )
 
-    def _get_nagvis_maps(self):
+    def _get_nagvis_maps(self) -> ListChoiceChoicePairs:
         # Find all NagVis maps in the local installation to register permissions
         # for each map. When no maps can be found skip this problem silently.
         # This only works in OMD environments.

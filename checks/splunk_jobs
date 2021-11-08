@@ -8,7 +8,9 @@
 # splunk-system-user, , 0.91, False, 61440, False
 # admin, search, 0.101, False, 69632, False
 
-JobCount = collections.namedtuple("JobCount", ["jobs", "failed", "zombies", "output"])
+JobCount = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "JobCount", ["jobs", "failed", "zombies", "output"]
+)
 
 
 def parse_splunk_jobs(info):

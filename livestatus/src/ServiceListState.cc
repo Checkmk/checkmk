@@ -8,8 +8,6 @@
 #ifdef CMC
 #include "Service.h"
 #include "State.h"
-#else
-#include "auth.h"
 #endif
 
 int32_t ServiceListState::operator()(const value_type &svcs,

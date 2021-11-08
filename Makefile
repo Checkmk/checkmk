@@ -4,6 +4,7 @@
 
 #
 include defines.make
+include buildscripts/infrastructure/pypi_mirror/pypi_mirror.make
 
 NAME               := check_mk
 PREFIX             := /usr
@@ -22,7 +23,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := python3 $(realpath scripts/iwyu_tool.py)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
-PIPENV             := scripts/run-pipenv
+PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple scripts/run-pipenv
 BLACK              := scripts/run-black
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
@@ -221,6 +222,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		CONTENTS \
 		mk-job* \
 		waitmax \
+		linux \
 		windows/cfg_examples \
 		windows/check_mk_agent.msi \
 		windows/python-3.8.cab \
@@ -335,6 +337,9 @@ optimize-images:
 # NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
 # called!" message, where the underlying reason seems to be quite obscure, see
 # https://npm.community/t/crash-npm-err-cb-never-called/858.
+#
+# NOTE 4: The sed call is to get the same "resolved" entries independent of the
+# used registry. The resolved entry is only a hint for npm.
 .INTERMEDIATE: .ran-npm
 node_modules/.bin/webpack: .ran-npm
 node_modules/.bin/redoc-cli: .ran-npm
@@ -353,6 +358,7 @@ node_modules/.bin/prettier: .ran-npm
 	    echo "Installing from public registry" ; \
         fi ; \
 	npm install --audit=false --unsafe-perm $$REGISTRY
+	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli node_modules/.bin/prettier
 
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
@@ -419,6 +425,7 @@ setup:
 	    clang-tidy-$(CLANG_VERSION) \
 	    clang-tools-$(CLANG_VERSION) \
 	    clangd-$(CLANG_VERSION) \
+	    cmake \
 	    lld-$(CLANG_VERSION) \
 	    lldb-$(CLANG_VERSION) \
 	    libclang-$(CLANG_VERSION)-dev \

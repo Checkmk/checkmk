@@ -71,6 +71,9 @@ def test_dashlet_registry_plugins():
             "single_timeseries",
             "state_service",
             "state_host",
+            "host_state_summary",
+            "service_state_summary",
+            "inventory",
         ]
 
     dashboard._transform_old_dict_based_dashlets()
@@ -132,8 +135,8 @@ def test_dashlet_refresh_intervals(
     assert dashlet.refresh_interval() == expected_refresh_interval
 
 
-@pytest.fixture
-def reset_dashlet_types():
+@pytest.fixture(name="reset_dashlet_types")
+def _reset_dashlet_types():
     default_entries = list(dashboard.dashlet_types)
     try:
         yield
@@ -304,7 +307,7 @@ def test_old_dashlet_position(mocker, registry_reset, reset_dashlet_types):
 @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
 def test_old_dashlet_size(mocker, registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_size() == (12, 10)
+    assert dashlet_type.initial_size() == (12, 12)
 
     dashlet_type = _legacy_dashlet_type({"size": (25, 10)})
     assert dashlet_type.initial_size() == (25, 10)

@@ -6,14 +6,11 @@
 
 import sys
 
-import pytest
-
 import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
 
 
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_pages():
     expected_pages = [
         "add_bookmark",

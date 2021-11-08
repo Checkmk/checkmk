@@ -95,6 +95,9 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def show_in_folder(self):
         return False
 
+    def openapi_field(self) -> fields.Field:
+        return fields.String(description=self.help())
+
 
 @host_attribute_registry.register
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
@@ -214,9 +217,6 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
-    def depends_on_tags(self):
-        return ["ip-v4"]
-
     def valuespec(self):
         return ListOf(
             HostAddress(
@@ -264,9 +264,6 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def show_in_folder(self):
         return False
-
-    def depends_on_tags(self):
-        return ["ip-v6"]
 
     def valuespec(self):
         return ListOf(
@@ -916,30 +913,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> fields.Field:
-        def to_disk(data):
-            val = data["management_protocol"]
-            if val == "none":
-                return None
-            return val
-
-        def from_disk(data):
-            val = data.get("management_protocol", None)
-            if val is None:
-                return "none"
-            return val
-
-        return fields.Function(
-            description=(
-                "The protocol used to connect to the management board.\n\n"
-                "Valid options are:\n\n"
-                " * `none` - No management board\n"
-                " * `snmp` - Connect using SNMP\n"
-                " * `ipmi` - Connect using IPMI\n"
-            ),
-            enum=["none", "snmp", "ipmi"],
-            serialize=from_disk,
-            deserialize=to_disk,
-        )
+        return fields.HostAttributeManagementBoardField()
 
 
 @host_attribute_registry.register

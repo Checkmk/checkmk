@@ -73,7 +73,6 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
-    ActionResult,
     add_change,
     config_variable_group_registry,
     config_variable_registry,
@@ -104,7 +103,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.sites import allsites, get_event_console_site_choices
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.urls import (
     make_confirm_link,
@@ -1283,7 +1282,7 @@ def vs_mkeventd_rule(customer=None):
 #   |      |_____\___/ \__,_|\__,_|  \___/\/ |____/ \__,_| \_/ \___|       |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Loading and saving of rule packages                                 |
+#   |  Loading and saving of rule packs                                    |
 #   '----------------------------------------------------------------------'
 
 
@@ -1512,7 +1511,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return ["mkeventd.edit"]
 
     def title(self):
-        return _("Event Console rule packages")
+        return _("Event Console rule packs")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -1624,7 +1623,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             flash(_("Copied rules from master"))
             return redirect(self.mode_url())
 
-        # Move rule packages
+        # Move rule packs
         elif request.has_var("_move"):
             from_pos = request.get_integer_input_mandatory("_move")
             to_pos = request.get_integer_input_mandatory("_index")
@@ -2009,7 +2008,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         self._rules = self._rule_pack["rules"]
 
     def title(self):
-        return _("Rule package %s") % self._rule_pack["title"]
+        return _("Rule pack %s") % self._rule_pack["title"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -2173,7 +2172,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         priorities = _deref(cmk.gui.mkeventd.syslog_priorities)
         facilities = dict(_deref(cmk.gui.mkeventd.syslog_facilities))
 
-        # Show content of the rule package
+        # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
@@ -2388,7 +2387,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Rule pack"), breadcrumb, form_name="rule_pack", button_name="save"
+            _("Rule pack"), breadcrumb, form_name="rule_pack", button_name="_save"
         )
         menu.dropdowns.insert(
             1,
@@ -2525,7 +2524,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Rule"), breadcrumb, form_name="rule", button_name="save"
+            _("Rule"), breadcrumb, form_name="rule", button_name="_save"
         )
         menu.dropdowns.insert(
             1,
@@ -3159,7 +3158,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             _("MIBs"),
             breadcrumb,
             form_name="upload_form",
-            button_name="upload_button",
+            button_name="_save",
             save_title=_("Upload"),
         )
         menu.dropdowns.insert(
@@ -4688,7 +4687,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
     @classmethod
     def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
         yield BreadcrumbItem(
-            title="Event Console rule packages",
+            title="Event Console rule packs",
             url=makeuri_contextless(
                 request,
                 [("mode", "mkeventd_rule_packs")],
@@ -4998,7 +4997,7 @@ rulespec_registry.register(
 #   +----------------------------------------------------------------------+
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
-def mkeventd_update_notifiation_configuration(hosts):
+def mkeventd_update_notification_configuration(hosts):
     contactgroup = config.mkeventd_notify_contactgroup
     remote_console = config.mkeventd_notify_remotehost
 
@@ -5046,7 +5045,7 @@ define command {
         )
 
 
-hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_configuration)
+hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
 
 #   .--Setup search--------------------------------------------------------.
 #   |     ____       _                                         _           |
@@ -5076,7 +5075,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
             rule_pack_id = rule_pack["id"]
             yield MatchItem(
                 title=f"{rule_pack_id} ({rule_pack_title})",
-                topic=_("Event Console rule packages"),
+                topic=_("Event Console rule packs"),
                 url=ModeEventConsoleRules.mode_url(rule_pack=rule_pack["id"]),
                 match_texts=[rule_pack_title, rule_pack_id],
             )

@@ -100,7 +100,7 @@ def create(params):
     ".../collection",
     method="get",
     path_params=[PATH_FOLDER_FIELD],
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostConfigCollection,
 )
 def hosts_of_folder(params):
     """Show all hosts in a folder"""
@@ -291,7 +291,6 @@ def move(params):
             ),
         }
     ],
-    convert_response=True,
     response_schema=response_schemas.FolderCollection,
 )
 def list_folders(params):

@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_wato_disabled_blocks_query(
     wsgi_app,
     with_automation_user,
-    suppress_automation_calls,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
@@ -23,6 +25,7 @@ def test_openapi_wato_disabled_blocks_query(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "neute", "folder": "/"}',
+        headers={"Accept": "application/json"},
         status=200,
         content_type="application/json",
     )
@@ -38,6 +41,7 @@ def test_openapi_wato_disabled_blocks_query(
     wsgi_app.call_method(
         "get",
         base + "/objects/host_config/neute",
+        headers={"Accept": "application/json"},
         status=200,
     )
 
@@ -47,6 +51,7 @@ def test_openapi_wato_disabled_blocks_query(
         wsgi_app.call_method(
             "get",
             base + "/objects/host_config/neute",
+            headers={"Accept": "application/json"},
             status=403,
         )
         with live:
@@ -54,5 +59,6 @@ def test_openapi_wato_disabled_blocks_query(
             wsgi_app.call_method(
                 "get",
                 base + "/domain-types/service/collections/all",
+                headers={"Accept": "application/json"},
                 status=200,
             )

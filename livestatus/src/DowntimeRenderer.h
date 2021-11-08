@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "ListLambdaColumn.h"
+#include "ListColumn.h"
 #include "MonitoringCore.h"
 class ListRenderer;
 

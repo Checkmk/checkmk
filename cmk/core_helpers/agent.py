@@ -821,7 +821,7 @@ class AgentSummarizerDefault(AgentSummarizer):
             if agent_version is None:
                 return False
 
-            if agent_version in ["(unknown)", "None"]:
+            if agent_version in ["(unknown)", "None", "unknown"]:
                 return False
 
             if isinstance(expected_version, str) and expected_version != agent_version:

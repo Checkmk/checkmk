@@ -18,7 +18,7 @@ from typing import List
 logger = logging.getLogger()
 
 
-def repo_path():
+def repo_path() -> str:
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
@@ -179,3 +179,7 @@ def add_python_paths():
     if not is_running_as_site_user():
         sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
         sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
+
+
+def package_hash_path(version: str, edition: str) -> Path:
+    return Path(f"/tmp/cmk_package_hash_{version}_{edition}")

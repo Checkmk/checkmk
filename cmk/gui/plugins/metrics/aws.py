@@ -885,6 +885,37 @@ metric_info["aws_lambda_memory_size_absolute"] = {
     "color": "44/a",
 }
 
+metric_info["aws_route53_child_health_check_healthy_count"] = {
+    "title": _("Health check healty count"),
+    "unit": "count",
+    "color": "41/a",
+}
+
+metric_info["aws_route53_connection_time"] = {
+    "title": _("Connection time"),
+    "unit": "s",
+    "color": "42/a",
+}
+
+metric_info["aws_route53_health_check_percentage_healthy"] = {
+    "title": _("Health check percentage healty"),
+    "unit": "%",
+    "color": "44/a",
+}
+
+metric_info["aws_route53_ssl_handshake_time"] = {
+    "title": _("SSL handshake time"),
+    "unit": "s",
+    "color": "45/a",
+}
+
+metric_info["aws_route53_time_to_first_byte"] = {
+    "title": _("Time to first byte"),
+    "unit": "s",
+    "color": "46/a",
+}
+
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

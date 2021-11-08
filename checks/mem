@@ -181,6 +181,8 @@ mem_extended_perfdata = None
 #   | nature of the page file.                                             |
 #   '----------------------------------------------------------------------'
 
+_MB = 1024 ** 2
+
 # Special memory and page file check for Windows
 factory_settings["memory_win_default_levels"] = {
     "memory": (80.0, 90.0),
@@ -193,26 +195,91 @@ def inventory_mem_win(section):
         yield None, {}
 
 
+def _get_levels_type(levels):
+    if levels is None:
+        return None
+    if not isinstance(levels, tuple):
+        return "predictive"
+    if isinstance(levels[0], float):
+        return "perc_used"
+    return "abs_free"
+
+
+def _get_levels_type_and_value(levels_value):
+    levels_type = _get_levels_type(levels_value)
+    if levels_type is None or levels_type == "predictive":
+        return (
+            levels_type,
+            None,
+        )
+    return (
+        levels_type,
+        (
+            levels_type,
+            levels_value
+            if levels_type == "perc_used"
+            else (
+                # absolute levels on free space come in MB, which cannot be changed easily
+                levels_value[0] * _MB,
+                levels_value[1] * _MB,
+            ),
+        ),
+    )
+
+
+def _do_averaging(
+    timestamp,
+    average_horizon_min,
+    paramname,
+    used,
+    total,
+):
+    used_avg = (
+        get_average(
+            "mem.win.%s" % paramname,
+            timestamp,
+            used / 1024.0,  # use kB for compatibility
+            average_horizon_min,
+            initialize_zero=False,
+        )
+        * 1024
+    )
+    return (
+        used_avg,
+        "%d min average: %s (%s)"
+        % (
+            average_horizon_min,
+            get_percent_human_readable(100.0 * used_avg / total),
+            get_bytes_human_readable(used_avg),
+        ),
+    )
+
+
+def _apply_predictive_levels(
+    params,
+    paramname,
+    title,
+    used,
+):
+    if "average" in params:
+        titleinfo = title
+        dsname = "%s_avg" % paramname
+    else:
+        titleinfo = title
+        dsname = paramname
+
+    return check_levels(
+        used / _MB,  # Current value stored in MB in RRDs
+        dsname,
+        params[paramname],
+        unit="GB",  # Levels are specified in GB...
+        scale=1024,  # ... in WATO ValueSpec
+        infoname=titleinfo,
+    )
+
+
 def check_mem_windows(_no_item, params, section):
     now = time.time()
-
-    def _get_levels_on_used_mb(param_key, total_mb):
-        levels = params.get(param_key)
-        if not isinstance(levels, tuple):
-            # Predictive levels have no level information in the performance data
-            return None, None
-
-        if isinstance(levels[0], float):
-            # float type means percent
-            warn = total_mb * levels[0] / 100
-        else:
-            # int means levels on *free* space
-            warn = total_mb - levels[0]
-        if isinstance(levels[1], float):
-            crit = total_mb * levels[1] / 100
-        else:
-            crit = total_mb - levels[1]
-        return warn, crit
 
     for title, prefix, paramname, metric_name in [
         ("RAM", "Mem", "memory", "mem_used"),
@@ -225,70 +292,58 @@ def check_mem_windows(_no_item, params, section):
             continue
         used = total - free
 
-        total_mb = total / 1024.0 ** 2
-        free_mb = free / 1024.0 ** 2
-        used_mb = total_mb - free_mb
-        perc = 100.0 * used / total
+        levels_type, levels_memory_element = _get_levels_type_and_value(params.get(paramname))
+        do_averaging = "average" in params
 
-        warn, crit = _get_levels_on_used_mb(paramname, total_mb)
-
-        status, infotext, perfdata = check_memory_element(
+        state, infotext, perfdata = check_memory_element(
             title,
             used,
             total,
-            None,
+            None if do_averaging else levels_memory_element,
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
         )
 
+        # Metrics for total mem and pagefile are expected in MB
         if prefix == "Mem":
-            perfdata.append(("mem_total", total_mb))
+            perfdata.append(("mem_total", total / _MB))
         elif prefix == "Page":
-            perfdata.append(("pagefile_total", total_mb))
+            perfdata.append(("pagefile_total", total / _MB))
 
         # Do averaging, if configured, just for matching the levels
-        if "average" in params:
-            average_min = params["average"]
-            used_kb = get_average(
-                "mem.win.%s" % paramname,
+        if do_averaging:
+            used, infoadd = _do_averaging(
                 now,
-                used / 1024.0,  # use kB for compatibility
-                average_min,
-                initialize_zero=False,
+                params["average"],
+                paramname,
+                used,
+                total,
             )
-            used_mb = used_kb / 1024.0
-            perc = 100.0 * used_mb / total_mb
-            infotext += ", %d min average: %s (%s)" % (
-                average_min,
-                get_percent_human_readable(perc),
-                get_bytes_human_readable(used_kb * 1024),
-            )
-            perfdata.append((paramname + "_avg", used_mb))
+            infotext += f", {infoadd}"
 
-        # Now check the levels
-        if (warn, crit) != (None, None):
-            state = 0
-            if used_mb >= crit:
-                state = 2
-            elif used_mb >= warn:
-                state = 1
+            if levels_type != "predictive":
+                state, _infotext, perfadd = check_memory_element(
+                    title,
+                    used,
+                    total,
+                    levels_memory_element,
+                    metric_name=paramname + "_avg",
+                )
 
-        # Predictive levels
-        else:
-            if "average" in params:
-                titleinfo = title
-                dsname = "%s_avg" % paramname
-            else:
-                titleinfo = title
-                dsname = paramname
+                perfdata.append(
+                    (
+                        (averaged_metric := perfadd[0])[0],
+                        # the averaged metrics are expected to be in MB
+                        *(v / _MB if v is not None else None for v in averaged_metric[1:]),
+                    )
+                )
 
-            state, infoadd, perfadd = check_levels(
-                used_mb,  # Current value stored in MB in RRDs
-                dsname,
-                params[paramname],
-                unit="GB",  # Levels are specified in GB...
-                scale=1024,  # ... in WATO ValueSpec
-                infoname=titleinfo,
+        if levels_type == "predictive":
+            state, infoadd, perfadd = _apply_predictive_levels(
+                params,
+                paramname,
+                title,
+                used,
             )
             if infoadd:
                 infotext += ", " + infoadd

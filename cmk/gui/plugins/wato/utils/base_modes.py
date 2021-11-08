@@ -11,16 +11,14 @@ from typing import Iterable, List, Optional, Type
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect
+from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
-from cmk.gui.type_defs import HTTPVariables, MegaMenu, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
-
-ActionResult = Optional[FinalizeRequest]
 
 
 class WatoMode(abc.ABC):

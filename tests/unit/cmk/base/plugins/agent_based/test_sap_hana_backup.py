@@ -14,13 +14,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 NOW_SIMULATED = "2019-05-17 00:00:00.000000"
 ITEM = "inst"
 SECTION = {
-    ITEM: {
-        "sys_end_time": 1557968743.0,
-        "backup_time_readable": "2019-01-01 00:00:00",
-        "state_name": "successful",
-        "comment": "",
-        "message": "<ok>",
-    }
+    ITEM: sap_hana_backup.Backup(
+        sys_end_time=1557968743,
+        backup_time_readable="2019-01-01 00:00:00",
+        state_name="successful",
+        comment="",
+        message="<ok>",
+    )
 }
 
 
@@ -44,20 +44,20 @@ SECTION = {
                 ],
             ],
             {
-                "Crap its broken - data snapshot": {
-                    "sys_end_time": None,
-                    "backup_time_readable": "?",
-                    "state_name": "failed",
-                    "comment": "",
-                    "message": "",
-                },
-                "Crap its broken - complete data backup": {
-                    "sys_end_time": None,
-                    "backup_time_readable": "2042-23-23 23:23:23",
-                    "state_name": "failed",
-                    "comment": "",
-                    "message": "[447] backup could not be completed, [110507] Backint exited with exit code 1 instead of 0. console output: No additional Information was received, [110203] Not all data could be written: Expected 4096 but transferred 0",
-                },
+                "Crap its broken - data snapshot": sap_hana_backup.Backup(
+                    sys_end_time=None,
+                    backup_time_readable="?",
+                    state_name="failed",
+                    comment="",
+                    message="",
+                ),
+                "Crap its broken - complete data backup": sap_hana_backup.Backup(
+                    sys_end_time=None,
+                    backup_time_readable="2042-23-23 23:23:23",
+                    state_name="failed",
+                    comment="",
+                    message="[447] backup could not be completed, [110507] Backint exited with exit code 1 instead of 0. console output: No additional Information was received, [110203] Not all data could be written: Expected 4096 but transferred 0",
+                ),
             },
         )
     ],

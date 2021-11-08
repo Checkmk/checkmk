@@ -266,7 +266,7 @@ def make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> 
 
 
 # .
-#   .--Structured DataNode-------------------------------------------------.
+#   .--StructuredDataNode--------------------------------------------------.
 #   |         ____  _                   _                      _           |
 #   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
 #   |        \___ \| __| '__| | | |/ __| __| | | | '__/ _ \/ _` |          |
@@ -629,7 +629,7 @@ class StructuredDataNode:
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer):
-        # TODO
+        # TODO: type hints
         if not self.attributes.is_empty():
             renderer.show_attributes(self.attributes)
 
@@ -649,6 +649,8 @@ class StructuredDataNode:
 #   |                        |_|\__,_|_.__/|_|\___|                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+# TODO Table: {IDENT: Attributes}?
 
 TableRetentions = Dict[SDRowIdent, RetentionIntervalsByKeys]
 
@@ -795,36 +797,40 @@ class Table:
     def update_from_previous(
         self,
         now: int,
-        other: Table,
+        other: object,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
+        if not isinstance(other, Table):
+            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         # TODO cleanup
 
         reasons = []
+        retentions: TableRetentions = {}
+
         compared_idents = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
         self.add_key_columns(other.key_columns)
 
         for ident in compared_idents.only_old:
             old_row: SDRow = {}
             for key, value in other._rows[ident].items():
-                previous_intervals = other.retentions.get(ident, {}).get(key)
-                if not previous_intervals:
-                    continue
-
+                # If a key is part of the row ident then retention info is not added.
+                # These keys are mandatory and added later if non-ident-key-values are found.
                 if (
-                    key not in self.key_columns
+                    key not in other.key_columns
                     and filter_func(key)
+                    and (previous_intervals := other.retentions.get(ident, {}).get(key))
                     and now <= previous_intervals.keep_until
                 ):
-                    self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
+                    retentions.setdefault(ident, {})[key] = previous_intervals
                     old_row.setdefault(key, value)
 
             if old_row:
+                # Update row with ident-key-values.
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
-                reasons.append("added row below %r" % ident)
+                reasons.append("added row below %r" % (ident,))
 
         for ident in compared_idents.both:
             compared_keys = _compare_dict_keys(
@@ -833,23 +839,23 @@ class Table:
 
             row: SDRow = {}
             for key in compared_keys.only_old:
-                previous_intervals = other.retentions.get(ident, {}).get(key)
-                if not previous_intervals:
-                    continue
-
+                # If a key is part of the row ident then retention info is not added.
+                # These keys are mandatory and added later if non-ident-key-values are found.
                 if (
                     key not in self.key_columns
                     and filter_func(key)
+                    and (previous_intervals := other.retentions.get(ident, {}).get(key))
                     and now <= previous_intervals.keep_until
                 ):
-                    self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
+                    retentions.setdefault(ident, {})[key] = previous_intervals
                     row.setdefault(key, other._rows[ident][key])
 
             for key in compared_keys.both.union(compared_keys.only_new):
                 if key not in self.key_columns and filter_func(key):
-                    self.retentions.setdefault(ident, {}).setdefault(key, inv_intervals)
+                    retentions.setdefault(ident, {})[key] = inv_intervals
 
             if row:
+                # Update row with ident-key-values.
                 row.update(
                     {
                         **{
@@ -865,15 +871,16 @@ class Table:
                     }
                 )
                 self.add_row(ident, row)
-                reasons.append("added row below %r" % ident)
+                reasons.append("added row below %r" % (ident,))
 
         for ident in compared_idents.only_new:
             for key in self._rows[ident]:
                 if key not in self.key_columns and filter_func(key):
-                    self.retentions.setdefault(ident, {}).setdefault(key, inv_intervals)
+                    retentions.setdefault(ident, {})[key] = inv_intervals
 
-        if self.retentions:
-            reasons.append("new retention intervals %r" % self.retentions)
+        if retentions:
+            self.set_retentions(retentions)
+            reasons.append("retention intervals %r" % retentions)
 
         return UpdateResult(
             save_tree=bool(reasons),
@@ -1002,7 +1009,7 @@ class Table:
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer):
-        # TODO
+        # TODO: type hints
         renderer.show_table(self)
 
 
@@ -1079,34 +1086,38 @@ class Attributes:
     def update_from_previous(
         self,
         now: int,
-        other: Attributes,
+        other: object,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
+        if not isinstance(other, Attributes):
+            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         reasons = []
+        retentions: RetentionIntervalsByKeys = {}
         compared_keys = _compare_dict_keys(old_dict=other.pairs, new_dict=self.pairs)
 
         pairs: SDPairs = {}
         for key in compared_keys.only_old:
-            previous_intervals = other.retentions.get(key)
-            if not previous_intervals:
-                continue
-
-            if filter_func(key) and now <= previous_intervals.keep_until:
-                self.retentions.setdefault(key, previous_intervals)
+            if (
+                filter_func(key)
+                and (previous_intervals := other.retentions.get(key))
+                and now <= previous_intervals.keep_until
+            ):
+                retentions[key] = previous_intervals
                 pairs.setdefault(key, other.pairs[key])
 
         for key in compared_keys.both.union(compared_keys.only_new):
             if filter_func(key):
-                self.retentions.setdefault(key, inv_intervals)
+                retentions[key] = inv_intervals
 
         if pairs:
             self.add_pairs(pairs)
             reasons.append("added pairs")
 
-        if self.retentions:
-            reasons.append("new retention intervals %r" % self.retentions)
+        if retentions:
+            self.set_retentions(retentions)
+            reasons.append("retention intervals %r" % retentions)
 
         return UpdateResult(
             save_tree=bool(reasons),
@@ -1195,7 +1206,7 @@ class Attributes:
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer):
-        # TODO
+        # TODO: type hints
         renderer.show_attributes(self)
 
 

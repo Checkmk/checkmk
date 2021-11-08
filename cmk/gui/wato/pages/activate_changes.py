@@ -38,9 +38,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.sites import activation_sites
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
@@ -628,19 +629,17 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
 @page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
-
+        # ? type of activate_until is unclear
         activate_until = api_request.get("activate_until")
         if not activate_until:
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = watolib.ActivateChangesManager()
         manager.load()
-
+        # ? type of api_request is unclear
         affected_sites_request = ensure_str(api_request.get("sites", "").strip())
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
@@ -667,7 +666,7 @@ class ModeAjaxStartActivation(AjaxPage):
         activation_id = manager.start(
             sites=affected_sites,
             activate_until=ensure_str(activate_until),
-            comment=None if comment is None else ensure_str(comment),
+            comment=comment,
             activate_foreign=activate_foreign,
         )
 
@@ -679,8 +678,6 @@ class ModeAjaxStartActivation(AjaxPage):
 @page_registry.register_page("ajax_activation_state")
 class ModeAjaxActivationState(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()

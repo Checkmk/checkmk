@@ -19,8 +19,10 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.wato import ActionResult, get_hosts_from_checkboxes, mode_registry, WatoMode
+from cmk.gui.plugins.wato import get_hosts_from_checkboxes, mode_registry, WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 
@@ -120,8 +122,10 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                 self._logger.exception(msg)
 
     def _execute_parent_scan(self, task: ParentScanTask, settings: ParentScanSettings) -> List:
-        params = list(
-            map(
+        return scan_parents(
+            task.site_id,
+            task.host_name,
+            *map(
                 str,
                 [
                     settings.timeout,
@@ -129,9 +133,8 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                     settings.max_ttl,
                     settings.ping_probes,
                 ],
-            )
-        )
-        return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
+            ),
+        ).gateways
 
     def _process_parent_scan_results(
         self, task: ParentScanTask, settings: ParentScanSettings, gateways: List

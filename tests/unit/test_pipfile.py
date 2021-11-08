@@ -179,7 +179,7 @@ def get_pipfile_libs(repopath: Path) -> t.Dict[PackageName, t.List[ImportName]]:
     parsed_pipfile = Pipfile.load(filename=repopath / "Pipfile")
     for name, details in parsed_pipfile.data["default"].items():
         if "path" in details:
-            # Ignoring some of our own sub-packages e.g. marcv
+            # Ignoring some of our own sub-packages e.g. agent-receiver
             continue
 
         if name in site_packages:

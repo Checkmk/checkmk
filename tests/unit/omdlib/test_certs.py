@@ -51,7 +51,7 @@ def test_create_certificates_ca_not_initialized(ca: certs.CertificateAuthority) 
     with pytest.raises(RuntimeError, match="Certificate authority is not initialized yet"):
         ca.create_site_certificate("xyz")
     with pytest.raises(RuntimeError, match="Certificate authority is not initialized yet"):
-        ca.create_marcv_certificate()
+        ca.create_agent_receiver_certificate()
 
 
 def _file_permissions_is_660(path: Path) -> bool:
@@ -82,15 +82,15 @@ def test_create_site_certificate(ca: certs.CertificateAuthority) -> None:
     )
 
 
-def test_write_marcv_certificate(ca: certs.CertificateAuthority) -> None:
+def test_write_agent_receiver_certificate(ca: certs.CertificateAuthority) -> None:
     ca.initialize()
-    assert not ca.marcv_certificate_exists
+    assert not ca.agent_receiver_certificate_exists
 
-    ca.create_marcv_certificate()
-    assert ca.marcv_certificate_exists
-    assert _file_permissions_is_660(ca._marcv_cert_path)
+    ca.create_agent_receiver_certificate()
+    assert ca.agent_receiver_certificate_exists
+    assert _file_permissions_is_660(ca._agent_receiver_cert_path)
 
-    cert, key = load_cert_and_private_key(ca._marcv_cert_path)
+    cert, key = load_cert_and_private_key(ca._agent_receiver_cert_path)
     assert check_cn(
         cert,
         "localhost",

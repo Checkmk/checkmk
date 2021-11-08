@@ -22,7 +22,7 @@ def test_init_scripts(site):
         "systemd",
         "stunnel",
         "redis",
-        "marcv",
+        "agent-receiver",
     ]
 
     if site.version.edition() == "enterprise":

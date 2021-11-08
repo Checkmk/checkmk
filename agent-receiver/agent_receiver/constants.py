@@ -9,5 +9,5 @@ from pathlib import Path
 
 OMD_ROOT = Path(os.environ.get("OMD_ROOT", ""))
 
-LOG_FILE = OMD_ROOT / "var/log/marcv/marcv.log"
-AGENT_OUTPUT_DIR = OMD_ROOT / "var/marcv/received_output"
+LOG_FILE = OMD_ROOT / "var/log/agent-receiver/agent-receiver.log"
+AGENT_OUTPUT_DIR = OMD_ROOT / "var/agent-receiver/received_output"

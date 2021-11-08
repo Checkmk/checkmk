@@ -52,7 +52,7 @@ class CertificateAuthority:
         super().__init__()
         self._ca_path = ca_path
         self._ca_name = ca_name
-        self._marcv_cert_path = ca_path / "marcv_cert.pem"
+        self._agent_receiver_cert_path = ca_path / "agent_receiver_cert.pem"
 
     @property
     def _root_cert_path(self) -> Path:
@@ -135,8 +135,8 @@ class CertificateAuthority:
         return self._site_certificate_path(site_id).exists()
 
     @property
-    def marcv_certificate_exists(self) -> bool:
-        return self._marcv_cert_path.exists()
+    def agent_receiver_certificate_exists(self) -> bool:
+        return self._agent_receiver_cert_path.exists()
 
     def initialize(self):
         """Initialize the root CA key / certficate in case it does not exist yet"""
@@ -152,9 +152,9 @@ class CertificateAuthority:
             *self._certificate_from_root(site_id),
         )
 
-    def create_marcv_certificate(self) -> None:
-        """Creates the key / certificate for marcv server"""
+    def create_agent_receiver_certificate(self) -> None:
+        """Creates the key / certificate for agent-receiver server"""
         self._write_cert_and_root(
-            self._marcv_cert_path,
+            self._agent_receiver_cert_path,
             *self._certificate_from_root("localhost"),
         )

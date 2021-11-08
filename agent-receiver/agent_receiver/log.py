@@ -6,7 +6,7 @@
 
 import logging
 
-from marcv.constants import LOG_FILE
+from agent_receiver.constants import LOG_FILE
 
 handler = logging.FileHandler(LOG_FILE, encoding="UTF-8")
 formatter = logging.Formatter(
@@ -14,6 +14,6 @@ formatter = logging.Formatter(
 )
 handler.setFormatter(formatter)
 
-logger = logging.getLogger("marcv")
+logger = logging.getLogger("agent-receiver")
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)

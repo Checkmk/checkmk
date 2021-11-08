@@ -7,12 +7,12 @@ REPO_PATH=$(dirname $(dirname $(realpath "$0")))
 "$REPO_PATH/scripts/run-pipenv" run python3 setup.py bdist_wheel
 
 if [ -z $ONLY_COPY ]; then
-    sudo omd stop $SITE marcv
+    sudo omd stop $SITE agent-receiver
 fi
 
-sudo "/omd/sites/$SITE/bin/python3" -m pip uninstall -y marcv
-sudo "/omd/sites/$SITE/bin/python3" -m pip install "$PWD/dist/marcv-0.0.0-py3-none-any.whl"
+sudo "/omd/sites/$SITE/bin/python3" -m pip uninstall -y agent-receiver
+sudo "/omd/sites/$SITE/bin/python3" -m pip install "$PWD/dist/agent_receiver-0.0.0-py3-none-any.whl"
 
 if [ -z $ONLY_COPY ]; then
-    sudo omd start $SITE marcv
+    sudo omd start $SITE agent-receiver
 fi

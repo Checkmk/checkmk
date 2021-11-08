@@ -14,9 +14,9 @@ from cryptography.x509.oid import NameOID
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from marcv.checkmk_rest_api import post_csr
-from marcv.constants import AGENT_OUTPUT_DIR
-from marcv.log import logger
+from agent_receiver.checkmk_rest_api import post_csr
+from agent_receiver.constants import AGENT_OUTPUT_DIR
+from agent_receiver.log import logger
 
 app = FastAPI()
 

@@ -7,7 +7,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="marcv",
+    name="agent-receiver",
     packages=find_packages(),
     include_package_data=True,
     install_requires=["fastapi==0.68", "python-multipart==0.0.*"],

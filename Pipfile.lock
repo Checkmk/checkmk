@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cf3734faccec11f21ff3624966ec57c446290542042c9ce003b3238bf8fe5416"
+            "sha256": "e57277400ccd91512dc7f03d93b241b46f7feba8dbf6f8fc616ae4f4efccf5fc"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,6 +23,10 @@
             ],
             "index": "pypi",
             "version": "==1.2.0"
+        },
+        "agent-receiver": {
+            "editable": true,
+            "path": "./agent-receiver"
         },
         "apispec": {
             "hashes": [
@@ -372,10 +376,6 @@
             ],
             "index": "pypi",
             "version": "==10.0.1"
-        },
-        "marcv": {
-            "editable": true,
-            "path": "./marcv"
         },
         "markupsafe": {
             "hashes": [
@@ -2969,7 +2969,7 @@
                 "sha256:29af5a53e9fb4e158f525367678b50053808ca6c21ba585754c77d790008c746",
                 "sha256:69e1f242c7f80273490d3403c3976f3ac3b26e289856936d1f620ed48f321897"
             ],
-            "markers": "python_full_version >= '3.6.0'",
+            "markers": "python_version >= '3.6'",
             "version": "==2.0.0"
         },
         "webob": {

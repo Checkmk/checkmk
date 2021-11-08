@@ -59,7 +59,7 @@ config.status
 config.sub
 configure
 depcomp
-marcv/dist/*
+agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
@@ -68,8 +68,8 @@ GRTAGS
 GTAGS
 htmlcov/
 install-sh
-marcv/marcv.egg-info
-marcv/pyproject.toml
+agent-receiver/agent_receiver.egg-info
+agent-receiver/pyproject.toml
 missing
 mk-livestatus-*.tar.gz
 node_modules/

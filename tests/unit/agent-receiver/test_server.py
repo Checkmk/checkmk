@@ -9,9 +9,8 @@ import os
 from pathlib import Path
 from unittest import mock
 
+from agent_receiver.server import app  # type: ignore[import]
 from fastapi.testclient import TestClient
-
-from marcv.server import app  # type: ignore[import]
 
 
 def test_agent_data_no_host() -> None:
@@ -32,8 +31,8 @@ def test_agent_data_success(tmp_path: Path) -> None:
     mock_file = io.StringIO("mock file")
 
     os.mkdir(tmp_path / "1234")
-    with mock.patch("marcv.server.AGENT_OUTPUT_DIR", tmp_path):
-        from marcv.server import app  # type: ignore[import]
+    with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path):
+        from agent_receiver.server import app  # type: ignore[import]
 
         client = TestClient(app)
         response = client.post(

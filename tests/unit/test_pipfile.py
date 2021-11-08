@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import logging
 import typing as t
+import warnings
 from functools import lru_cache
 from itertools import chain, permutations
 from pathlib import Path
@@ -55,6 +57,18 @@ def iter_sourcefiles(basepath: Path) -> t.Iterable[Path]:
             yield from iter_sourcefiles(sub_path)
 
 
+def prune_build_artifacts(basepath: Path, paths: t.Iterable[Path]) -> t.Iterable[Path]:
+    # TODO: Change to p.is_relative_to() with Python 3.9
+    def is_relative_to(p: Path, base_dir: Path) -> bool:
+        try:
+            p.relative_to(base_dir)
+            return True
+        except ValueError:
+            return False
+
+    yield from (p for p in paths if not is_relative_to(p, basepath.joinpath("omd/build")))
+
+
 def scan_for_imports(root_node: ast.Module) -> t.Iterable[ImportName]:
     """walk the tree and yield all imported packages"""
     for node in ast.walk(root_node):
@@ -98,19 +112,24 @@ def prune_imports(import_set: t.Set[ImportName]) -> t.Set[ImportName]:
 @lru_cache(maxsize=None)
 def get_imported_libs(repopath: Path) -> t.Set[ImportName]:
     """Scan the repo for import statements, return only non local ones"""
+    logger = logging.getLogger()
+
     imports: t.Set[ImportName] = set()
-    for source_path in iter_sourcefiles(repopath):
+    for source_path in prune_build_artifacts(repopath, iter_sourcefiles(repopath)):
         if source_path.name.startswith("."):
             continue
-        with source_path.open() as source_file:
+
+        # We don't care about warnings from 3rd party packages
+        with source_path.open("rb") as source_file, warnings.catch_warnings():
             try:
                 root = ast.parse(source_file.read(), source_path)  # type: ignore
                 imports.update(scan_for_imports(root))
-            except SyntaxError:
+            except SyntaxError as e:
                 # We have various py2 scripts which raise SyntaxErrors.
                 # e.g. agents/pugins/*_2.py also some google test stuff...
                 # If we should check them they would fail the unittests,
                 # providing a whitelist here is not really maintainable
+                logger.warning("Failed to read %r: %r", source_file, e)
                 continue
 
     return prune_imports(imports)

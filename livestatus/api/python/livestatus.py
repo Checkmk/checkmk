@@ -522,20 +522,26 @@ class SingleSiteConnection(Helpers):
             except KeyError:
                 pass
 
-    def receive_data(self, size: int) -> bytes:
+    def receive_data(self, size: int, timeout: Optional[float] = None) -> bytes:
         if self.socket is None:
             raise MKLivestatusSocketError("Socket to '%s' is not connected" % self.socketurl)
 
         data = BytesIO()
-        # Timeout is only honored when connecting
-        self.socket.settimeout(None)
+        self.socket.settimeout(timeout)
+        receive_start = time.time()
         while size > 0:
-            packet = self.socket.recv(size)
-            if not packet:
-                raise MKLivestatusSocketClosed(
-                    "Read zero data from socket, nagios server closed connection")
-            size -= len(packet)
-            data.write(packet)
+            readylist = self._socket_poller.poll(1000)
+            if readylist:
+                packet = self.socket.recv(size)
+                if not packet:
+                    raise MKLivestatusSocketClosed(
+                        "Read zero data from socket, remote peer closed connection.")
+                size -= len(packet)
+                data.write(packet)
+            if timeout is not None and (time.time() - receive_start) > timeout:
+                raise MKLivestatusSocketError(
+                    f"{timeout}s while reading data from socket. "
+                    "Received data: {data.getbuffer().nbytes}/{size} bytes")
 
         return data.getvalue()
 
@@ -602,7 +608,11 @@ class SingleSiteConnection(Helpers):
                     "Malformed output. Livestatus TCP socket might be unreachable or wrong"
                     "encryption settings are used.")
 
-            data = self.receive_data(length).decode("utf-8")
+            # Apply a lower timeout for the content because the data is already available
+            # in the socket. The liveproxyd (same system) has the complete data available
+            # while the data from a standard connection can still take some time.
+            # 30 seconds should be more than enough for the maximum telegram size of 100MB
+            data = self.receive_data(length, 30).decode("utf-8")
 
             if code == "200":
                 try:

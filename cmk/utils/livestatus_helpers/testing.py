@@ -14,9 +14,9 @@ import collections
 import datetime as dt
 import io
 import itertools
-import socket
 import operator
 import re
+import socket
 import statistics
 import time
 from typing import (

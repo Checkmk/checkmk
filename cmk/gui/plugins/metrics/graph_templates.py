@@ -15,6 +15,7 @@ from cmk.gui.plugins.metrics.utils import (
     evaluate,
     get_graph_data_from_livestatus,
     get_graph_range,
+    get_graph_template,
     get_graph_templates,
     GraphRecipe,
     GraphTemplate,
@@ -43,6 +44,16 @@ def matching_graph_templates(
         "graph_index"
     )  # can be None -> no restriction by index
     graph_id = graph_identification_info.get("graph_id")  # can be None -> no restriction by id
+
+    # Single metrics
+    if (
+        isinstance(graph_id, str)
+        and graph_id.startswith("METRIC_")
+        and graph_id[7:] in translated_metrics
+    ):
+        yield (0, get_graph_template(graph_id))
+        return
+
     yield from (
         (index, graph_template)
         for index, graph_template in enumerate(get_graph_templates(translated_metrics))

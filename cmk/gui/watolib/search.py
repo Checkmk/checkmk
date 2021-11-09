@@ -32,7 +32,7 @@ from cmk.utils.redis import get_redis_client
 
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import g, request, user
+from cmk.gui.globals import g, output_funnel, request, user
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
@@ -296,7 +296,9 @@ class URLChecker:
     def _try_page(file_name: str) -> None:
         page_handler = get_page_handler(file_name)
         if page_handler:
-            page_handler()
+            with output_funnel.plugged():
+                page_handler()
+                output_funnel.drain()
 
     # TODO: Find a better solution here. We treat hosts separately because calling the page takes
     #  very long in this case and is not necessary (the initializer already throws an exception).

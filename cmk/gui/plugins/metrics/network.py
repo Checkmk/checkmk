@@ -12,7 +12,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import (
     graph_info,
     indexed_color,
-    m,
     MAX_NUMBER_HOPS,
     metric_info,
     parse_color_into_hexrgb,
@@ -1741,7 +1740,6 @@ graph_info["time_to_connect"] = {
     "metrics": [
         ("connection_time", "area"),
     ],
-    "legend_scale": m,
 }
 
 graph_info["number_of_total_and_running_sessions"] = {
@@ -1750,7 +1748,6 @@ graph_info["number_of_total_and_running_sessions"] = {
         ("running_sessions", "line"),
         ("total_sessions", "line"),
     ],
-    "legend_precision": 0,
 }
 
 graph_info["tcp_connection_states"] = {

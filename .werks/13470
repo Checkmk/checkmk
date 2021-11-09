@@ -1,0 +1,11 @@
+Title: "Item not found" for cached local checks on clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636446359
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p16
+
+For cached local checks on a cluster, the service would report "UNKNOWN - Item not found in monitoring data" if the cache expired.

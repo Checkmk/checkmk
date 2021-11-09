@@ -23,6 +23,7 @@ from typing import (
     Mapping,
     NamedTuple,
     Optional,
+    Sequence,
     Tuple,
     Union,
 )
@@ -358,15 +359,19 @@ def cluster_check_local(
     item: str,
     params: Mapping[str, Any],
     section: Dict[str, LocalSection],
-) -> Generator[Union[Result, Metric], None, None]:
+) -> CheckResult:
 
     # collect the result instances and yield the rest
-    results_by_node: Dict[str, List[Union[Result, Metric]]] = {}
+    results_by_node = {}
+    collected_ignores: List[IgnoreResults] = []
     for node, node_section in section.items():
-        node_results = _effective_check_result(check_local(item, {}, node_section))
-        if node_results:
-            results_by_node[node] = node_results
+        effective_results, ignore_results = _effective_check_result(
+            check_local(item, {}, node_section))
+        collected_ignores.extend(ignore_results)
+        if effective_results and not ignore_results:
+            results_by_node[node] = effective_results
     if not results_by_node:
+        yield from collected_ignores
         return
 
     if params is None or params.get("outcome_on_cluster", "worst") == "worst":
@@ -376,17 +381,20 @@ def cluster_check_local(
 
 
 def _effective_check_result(
-    node_results: Iterable[Union[IgnoreResults, Metric, Result]],) -> List[Union[Result, Metric]]:
+    node_results: Iterable[Union[IgnoreResults, Metric, Result]],
+) -> Tuple[Sequence[Union[Result, Metric]], Sequence[IgnoreResults]]:
     result: List[Union[Result, Metric]] = []
-    for item in node_results:
-        if isinstance(item, IgnoreResults):
-            return []
-        result.append(item)
-    return result
+    ignores = []
+    for elem in node_results:
+        if isinstance(elem, IgnoreResults):
+            ignores.append(elem)
+        else:
+            result.append(elem)
+    return result, ignores
 
 
 def _aggregate_worst(
-    node_results: Dict[str, List[Union[Result, Metric]]],
+    node_results: Dict[str, Sequence[Union[Result, Metric]]],
 ) -> Generator[Union[Result, Metric], None, None]:
     node_states: Dict[State, str] = {}
     for node_name, results in node_results.items():
@@ -414,7 +422,7 @@ def _aggregate_worst(
 
 
 def _aggregate_best(
-    node_results: Dict[str, List[Union[Result, Metric]]],
+    node_results: Dict[str, Sequence[Union[Result, Metric]]],
 ) -> Generator[Union[Result, Metric], None, None]:
     node_states: Dict[State, str] = {}
     for node_name, results in node_results.items():

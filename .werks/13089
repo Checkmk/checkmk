@@ -1,6 +1,6 @@
 Title: Fixed logging with microsecond timestamps
 Knowledge: doc
-Level: 3
+Level: 1
 Component: cmc
 Class: fix
 Compatible: compat

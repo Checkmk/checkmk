@@ -369,7 +369,7 @@ def render_graph_pdf(
 
         for curve in graph_artwork["curves"]:
             legend_top -= legend_lineskip
-            texts = [curve["title"]]
+            texts = [str(curve["title"])]
             for scalar, title in scalars:
                 texts.append(curve["scalars"][scalar][1])
             paint_legend_line(parse_color(curve["color"]), texts)

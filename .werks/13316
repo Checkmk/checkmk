@@ -1,0 +1,12 @@
+Title: Checkmk now requires Appliance firmware 1.4.17 or newer
+Knowledge: doc
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p28
+Date: 1636452407
+
+

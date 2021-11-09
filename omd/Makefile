@@ -333,7 +333,7 @@ $(CMA_INSTALL): $(INSTALL_TARGETS)
 $(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
-	    MIN_VERSION=1.4.0 ; \
+	    MIN_VERSION=1.4.17 ; \
 	else \
 	    MIN_VERSION=1.1.2 ; \
 	fi ; \

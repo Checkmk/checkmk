@@ -32,6 +32,42 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
+# Ensure that the MK_OSSTR environment variable is set.
+# This imitates the 'OSTYPE' variable from bash
+# We use this variable later on for OS specific behaviour
+case $(uname -s) in
+    ("AIX")
+        MK_OSSTR=aix
+    ;;
+    ("Darwin")
+        MK_OSSTR=mac
+    ;;
+    ("FreeBSD")
+        MK_OSSTR=freebsd
+    ;;
+    ("HPUX")
+        MK_OSSTR=hpux
+    ;;
+    ("Linux"|"linux-gnu"|"GNU"*)
+        MK_OSSTR=linux
+        [ -e /etc/openwrt_release ] && MK_OSSTR=openwrt
+    ;;
+    ("NetBSD")
+        MK_OSSTR=netbsd
+    ;;
+    ("OpenBSD")
+        MK_OSSTR=openbsd
+    ;;
+    ("SunOS"|"solaris")
+        MK_OSSTR=solaris
+    ;;
+    (*)
+        printf -- '%s\n' "Unrecognized OS: $(uname -s)" >&2
+        exit 1
+    ;;
+esac
+readonly MK_OSSTR
+export MK_OSSTR
 
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]; then

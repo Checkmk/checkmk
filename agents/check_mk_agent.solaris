@@ -80,6 +80,43 @@ set_variable_defaults() {
     : "${MK_VARDIR:=/var/lib/check_mk_agent}"
     : "${MK_LOGDIR:=/var/log/check_mk_agent}"
 
+    # Ensure that the MK_OSSTR environment variable is set.
+    # This imitates the 'OSTYPE' variable from bash
+    # We use this variable later on for OS specific behaviour
+    case $(uname -s) in
+        ("AIX")
+            MK_OSSTR=aix
+        ;;
+        ("Darwin")
+            MK_OSSTR=mac
+        ;;
+        ("FreeBSD")
+            MK_OSSTR=freebsd
+        ;;
+        ("HPUX")
+            MK_OSSTR=hpux
+        ;;
+        ("Linux"|"linux-gnu"|"GNU"*)
+            MK_OSSTR=linux
+            [ -e /etc/openwrt_release ] && MK_OSSTR=openwrt
+        ;;
+        ("NetBSD")
+            MK_OSSTR=netbsd
+        ;;
+        ("OpenBSD")
+            MK_OSSTR=openbsd
+        ;;
+        ("SunOS"|"solaris")
+            MK_OSSTR=solaris
+        ;;
+        (*)
+            printf -- '%s\n' "Unrecognized OS: $(uname -s)" >&2
+            exit 1
+        ;;
+    esac
+    readonly MK_OSSTR
+    export MK_OSSTR
+
     # some 'booleans'
     [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
     [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true

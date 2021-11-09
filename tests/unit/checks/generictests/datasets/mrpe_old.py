@@ -8,7 +8,6 @@
 # type: ignore
 
 
-
 checkname = 'mrpe'
 
 
@@ -35,18 +34,25 @@ discovery = {
 checks = {
     '': [
         ('Bar_Extender', {}, [
-            (1, 'WARN - Bar extender overload 6.012', [
+            (1, 'WARN - Bar extender overload 6.012', []),
+            (0, '', [
                 ('bar_load', 6.012, None, None, None, None),
-            ])
+            ]),
         ]),
         ('Foo_Application', {}, [
             (0, 'OK - Foo server up and running', [])]),
         ('Mutliliner', {}, [
-            (3, u'Invalid plugin status \'§$%\'. Output is: MÖÖP - Output1\nmore output', [
+            (3, u'Invalid plugin status \'§$%\'. Output is: MÖÖP - Output1\nmore output', []),
+            (0, '', [
                 ('the_foo', 1, 2, 3, 4, 5),
+            ]),
+            (0, '', [
                 ('the_bar', 42, None, None, None, None),
+            ]),
+            (0, '', [
                 ('the_gee', 23, None, None, None, None),
             ]),
+            (3, 'Undefined metric: Nagios style undefined value', [])
         ]),
     ],
 }

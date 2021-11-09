@@ -66,19 +66,19 @@ def _strip_unit_float(string: str) -> float:
             return float(string[:i])
         except ValueError:
             pass
-    # retrigger first ValueError:
-    return float(string)
+
+    raise ValueError(f"invalid metric value {string!r}")
 
 
-def parse_nagios_perfstring(perfinfo: str) -> typing.Optional[LegacyMetricTuple]:
+def parse_nagios_perfstring(perfinfo: str) -> LegacyMetricTuple:
     try:
         name, valuetxt = perfinfo.split("=", 1)
     except ValueError:
-        return None
+        raise ValueError(f"{perfinfo!r}")
     if valuetxt.startswith("U"):
         # Nagios perfstrings can start with a value 'U' to indicate an undefined value
         # see https://nagios-plugins.org/doc/guidelines.html#AEN200
-        return None
+        raise ValueError("Nagios style undefined value")
     values = valuetxt.split(";")
 
     # for the migrator: the code above ^^^^^ should go to a separate function
@@ -96,6 +96,14 @@ def parse_nagios_perfstring(perfinfo: str) -> typing.Optional[LegacyMetricTuple]
         _opt_float(min_),
         _opt_float(max_),
     )
+
+
+def _output_metrics(perfdata: typing.Sequence[str]):
+    for raw_metric in perfdata:
+        try:
+            yield 0, "", [parse_nagios_perfstring(raw_metric)]
+        except ValueError as exc:
+            yield 3, f"Undefined metric: {exc}", []
 
 
 @get_parsed_item_data
@@ -125,13 +133,9 @@ def check_mrpe(_no_item, _no_params, data):
                 perfdata += parts[1].strip().split()
                 now_comes_perfdata = True
 
-    perf_parsed: typing.List[LegacyMetricTuple] = []
-    for perfvalue in perfdata:
-        new_perf = parse_nagios_perfstring(perfvalue)
-        if new_perf:
-            perf_parsed.append(new_perf)
+    yield dataset.state, "\n".join(output)
 
-    yield dataset.state, "\n".join(output), perf_parsed
+    yield from _output_metrics(perfdata)
 
     # name of check command needed for PNP to choose the correct template
     if dataset.name:

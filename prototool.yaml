@@ -1,5 +1,7 @@
 protoc:
   version: 3.12.4
+  includes:
+      - enterprise/protocols/checkmk/cmc/
 lint:
   group: uber2
   rules:

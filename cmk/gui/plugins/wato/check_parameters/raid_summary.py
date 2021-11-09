@@ -28,6 +28,21 @@ def _parameter_valuespec_raid_summary():
                 ),
             ),
         ],
+        ignored_keys=[
+            "available",
+            "broken",
+            "notavailable",
+            "notsupported",
+            "present",
+            "readying",
+            "recovering",
+            "partbroken",
+            "spare",
+            "formatting",
+            "unformated",
+            "notexist",
+            "copying",
+        ],
     )
 
 

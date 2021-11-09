@@ -21,11 +21,13 @@ from cryptography.x509 import (
     CertificateBuilder,
     CertificateSigningRequest,
     CertificateSigningRequestBuilder,
+    DNSName,
     KeyUsage,
     load_pem_x509_certificate,
     Name,
     NameAttribute,
     random_serial_number,
+    SubjectAlternativeName,
     SubjectKeyIdentifier,
 )
 from cryptography.x509.oid import NameOID
@@ -143,6 +145,7 @@ def sign_csr(
     signing_cert: Certificate,
     signing_private_key: RSAPrivateKeyWithSerialization,
 ) -> Certificate:
+    common_name = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
     return (
         _make_cert_builder(
             csr.subject,
@@ -150,6 +153,17 @@ def sign_csr(
             rsa_public_key_from_cert_or_csr(csr),
         )
         .issuer_name(signing_cert.issuer)
+        .add_extension(
+            SubjectAlternativeName([DNSName(common_name)]),
+            critical=False,
+        )
+        .add_extension(
+            BasicConstraints(
+                ca=False,
+                path_length=None,
+            ),
+            critical=True,
+        )
         .sign(
             signing_private_key,
             SHA256(),

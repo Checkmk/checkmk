@@ -243,7 +243,6 @@ def test_section_parse_function_does_something(fix_register):
         "win_dhcp_pools",
         "windows_broadcom_bonding",
         "windows_multipath",
-        "windows_updates",
         "winperf_mem",
         "winperf_ts_sessions",
         "wmic_process",
@@ -270,12 +269,12 @@ def test_section_parse_function_does_something(fix_register):
     for name, snmp_section in fix_register.snmp_sections.items():
         assert (str(name) not in legacy_exceptions_for_easier_migration) is (
             snmp_section.parse_function.__code__.co_code != noop_code
-        )
+        ), f"💚 The snmp section {name} now has a parse function! Remove it from the list above!"
 
     for name, agent_section in fix_register.agent_sections.items():
         assert (str(name) not in legacy_exceptions_for_easier_migration) is (
             agent_section.parse_function.__code__.co_code != noop_code
-        )
+        ), f"💚 The agent section {name} now has a parse function! Remove it from the list above!"
 
 
 def test_snmp_section_parse_function_deals_with_empty_input(fix_register):

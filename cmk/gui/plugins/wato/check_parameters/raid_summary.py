@@ -18,17 +18,36 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_raid_summary():
-    return Dictionary(elements=[
-        ("use_device_states",
-         DropdownChoice(
-             title=_("Use device states and overwrite expected status"),
-             choices=[
-                 (False, _("Ignore")),
-                 (True, _("Use device states")),
-             ],
-             default_value=True,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "use_device_states",
+                DropdownChoice(
+                    title=_("Use device states and overwrite expected status"),
+                    choices=[
+                        (False, _("Ignore")),
+                        (True, _("Use device states")),
+                    ],
+                    default_value=True,
+                ),
+            ),
+        ],
+        ignored_keys=[
+            "available",
+            "broken",
+            "notavailable",
+            "notsupported",
+            "present",
+            "readying",
+            "recovering",
+            "partbroken",
+            "spare",
+            "formatting",
+            "unformated",
+            "notexist",
+            "copying",
+        ],
+    )
 
 
 rulespec_registry.register(

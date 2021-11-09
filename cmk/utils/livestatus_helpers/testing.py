@@ -65,6 +65,9 @@ class FakeSocket:
     def send(self, data: bytes) -> None:
         return self.mock_live.socket_send(data)
 
+    def sendall(self, data: bytes) -> None:
+        return self.mock_live.socket_send(data)
+
 
 def _make_livestatus_response(response) -> str:
     """Build a (somewhat) convincing LiveStatus response

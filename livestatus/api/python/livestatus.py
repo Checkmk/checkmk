@@ -542,9 +542,7 @@ class SingleSiteConnection(Helpers):
             raise MKLivestatusSocketError("Socket to '%s' is not connected" % self.socketurl)
 
         try:
-            # TODO: Use socket.sendall()
-            # socket.send() only works with byte strings
-            self.socket.send(query.encode("utf-8") + b"\n\n")
+            self.socket.sendall(query.encode("utf-8") + b"\n\n")
             if getattr(self.collect_queries, 'active', False):
                 self.collect_queries.queries.append(query)
         except IOError as e:
@@ -688,7 +686,7 @@ class SingleSiteConnection(Helpers):
         assert self.socket is not None  # TODO: refactor to avoid assert
 
         try:
-            self.socket.send(command.encode('utf-8') + b"\n\n")
+            self.socket.sendall(command.encode('utf-8') + b"\n\n")
         except IOError as e:
             self.socket = None
             if self.persist:

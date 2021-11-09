@@ -9,6 +9,7 @@ import contextlib
 import json
 import os
 import re
+import select
 import socket
 import ssl
 import threading
@@ -387,6 +388,7 @@ class SingleSiteConnection(Helpers):
         self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket: Optional[socket.socket] = None
+        self._socket_poller: select.poll = select.poll()
         self.timeout: Optional[int] = None
         self.successful_persistence = False
         self._output_format = LivestatusOutputFormat.PYTHON
@@ -415,15 +417,24 @@ class SingleSiteConnection(Helpers):
         if self.socket:
             self.socket.settimeout(float(timeout))
 
-    def connect(self) -> None:
+    def _try_get_persisted_connection(self) -> Optional[socket.socket]:
         if self.persist and self.socketurl in persistent_connections:
-            self.socket = persistent_connections[self.socketurl]
             self.successful_persistence = True
-            return
+            return persistent_connections[self.socketurl]
+        return None
 
+    def connect(self) -> None:
+        if (site_socket := self._try_get_persisted_connection()) is None:
+            site_socket = self._create_new_socket_connection()
+            if self.persist:
+                persistent_connections[self.socketurl] = site_socket
+        self.socket = site_socket
+        self._socket_poller.register(self.socket, select.POLLIN)
+
+    def _create_new_socket_connection(self) -> socket.socket:
         self.successful_persistence = False
         family, address = _parse_socket_url(self.socketurl)
-        self.socket = self._create_socket(family, self.site_name)
+        site_socket = self._create_socket(family, self.site_name)
 
         # If a timeout is set, then we retry after a failure with mild
         # a binary backoff.
@@ -436,19 +447,19 @@ class SingleSiteConnection(Helpers):
         while True:
             try:
                 if self.timeout:
-                    self.socket.settimeout(sleep_interval)
+                    site_socket.settimeout(sleep_interval)
 
                 # In case of TLS it may happen that we are retrying after the connect succeeded
                 # and the handshake failed. In this case do not retry the connect.
                 try:
-                    self.socket.connect(address)
+                    site_socket.connect(address)
                 except ValueError as e:
                     if "attempt to connect already-connected SSLSocket" not in str(e):
                         raise
 
                 if self.tls:
                     # Mypy does not understand the SSL socket wrapping
-                    self.socket.do_handshake()  # type: ignore[attr-defined]
+                    site_socket.do_handshake()  # type: ignore[attr-defined]
 
                 break
             except Exception as e:
@@ -460,11 +471,13 @@ class SingleSiteConnection(Helpers):
                         sleep_interval *= 1.5
                         continue
 
-                self.socket = None
+                try:
+                    site_socket.close()
+                except OSError:
+                    pass
                 raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
 
-        if self.persist:
-            persistent_connections[self.socketurl] = self.socket
+        return site_socket
 
     # NOTE:
     # The site_name parameter is here to be able to create a mocked socket in the testing
@@ -488,8 +501,22 @@ class SingleSiteConnection(Helpers):
                                     do_handshake_on_connect=False)
 
     def disconnect(self) -> None:
-        self.socket = None
+        self._close_socket()
+
+    def _close_socket(self) -> None:
+        if self.socket is not None:
+            try:
+                self.socket.close()
+            except OSError:
+                pass
+
+            self.socket = None
+
+        # Setup a new poller, instead of unregistering previous fd(s)
+        self._socket_poller = select.poll()
+
         if self.persist:
+            self.successful_persistence = False
             try:
                 del persistent_connections[self.socketurl]
             except KeyError:
@@ -546,10 +573,7 @@ class SingleSiteConnection(Helpers):
             if getattr(self.collect_queries, 'active', False):
                 self.collect_queries.queries.append(query)
         except IOError as e:
-            if self.persist:
-                del persistent_connections[self.socketurl]
-                self.successful_persistence = False
-            self.socket = None
+            self._close_socket()
 
             if do_reconnect:
                 # Automatically try to reconnect in case of an error, but only once.
@@ -688,9 +712,7 @@ class SingleSiteConnection(Helpers):
         try:
             self.socket.sendall(command.encode('utf-8') + b"\n\n")
         except IOError as e:
-            self.socket = None
-            if self.persist:
-                del persistent_connections[self.socketurl]
+            self._close_socket()
             raise MKLivestatusSocketError(str(e))
 
     # Set user to be used in certain authorization domain

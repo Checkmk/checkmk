@@ -9,7 +9,6 @@ import colorsys
 import random
 import re
 import shlex
-from collections import OrderedDict
 from itertools import chain
 from typing import (
     Any,
@@ -19,8 +18,10 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Mapping,
     Optional,
+    OrderedDict,
     overload,
     Sequence,
     Set,
@@ -51,6 +52,8 @@ from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
+    MetricDefinition,
+    MetricExpression,
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,
@@ -72,8 +75,39 @@ LegacyPerfometer = Tuple[str, Any]
 Atom = TypeVar("Atom")
 TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
-GraphTemplate = Dict[str, Any]
+
+GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
+ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
+GraphConsoldiationFunction = Literal["max", "min"]
+
+
+GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
+GraphRange = Tuple[Optional[float], Optional[float]]
+
+
+class _GraphTemplateMandatory(TypedDict):
+    metrics: Sequence[MetricDefinition]
+
+
+class GraphTemplate(_GraphTemplateMandatory, total=False):
+    # The 'id' is not defined by the plugin, but derived from the graph_info key. But after the
+    # plugin loading we always have this field set. So we essentially want to have this:
+    # - In the plugins it is clear that the user should not define it
+    # - During runtime the field is always there and set
+    id: str
+    # All attributes here are optional
+    title: Union[str, LazyString]
+    scalars: Sequence[ScalarDefinition]
+    conflicting_metrics: Sequence[str]
+    optional_metrics: Sequence[str]
+    presentation: GraphPresentation
+    consolidation_function: GraphConsoldiationFunction
+    range: GraphRangeSpec
+    omit_zero_metrics: bool
+
+
 GraphRecipe = Dict[str, Any]
+GraphMetrics = Dict[str, Any]
 RRDData = Dict[Tuple[str, str, str, str, str, str], TimeSeries]
 
 
@@ -118,16 +152,18 @@ class TranslationInfo(TypedDict):
     auto_graph: bool
 
 
-class AutomaticDict(OrderedDict):
+class AutomaticDict(OrderedDict[str, GraphTemplate]):
     """Dictionary class with the ability of appending items like provided
     by a list."""
 
-    def __init__(self, list_identifier=None, start_index=None):
+    def __init__(
+        self, list_identifier: Optional[str] = None, start_index: Optional[int] = None
+    ) -> None:
         super().__init__(self)
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
 
-    def append(self, item):
+    def append(self, item: GraphTemplate) -> None:
         self["%s_%i" % (self._list_identifier, self._item_index)] = item
         self._item_index += 1
 
@@ -139,7 +175,7 @@ check_metrics: Dict[str, Dict[str, CheckMetricEntry]] = {}
 perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
-graph_info: "OrderedDict[str, GraphTemplate]" = AutomaticDict("manual_graph_template")
+graph_info = AutomaticDict("manual_graph_template")
 
 # .
 #   .--Constants-----------------------------------------------------------.
@@ -222,7 +258,7 @@ scale_symbols = {
 _COLOR_WHEEL_SIZE = 48
 
 
-def indexed_color(idx, total):
+def indexed_color(idx: int, total: int) -> str:
     if idx < _COLOR_WHEEL_SIZE:
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
@@ -461,7 +497,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     return translated_metrics
 
 
-def perf_data_string_from_metric_names(metric_names):
+def perf_data_string_from_metric_names(metric_names: List[_MetricName]) -> str:
     parts = []
     for var_name in metric_names:
         # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
@@ -528,7 +564,7 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 # TODO: Refactor evaluate and all helpers into single class
 
 
-def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]]:
+def split_expression(expression: MetricExpression) -> Tuple[str, Optional[str], Optional[str]]:
     explicit_color = None
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
@@ -542,7 +578,7 @@ def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]
 
 @overload
 def evaluate(
-    expression: str,
+    expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
 ) -> Tuple[float, UnitInfo, str]:
     ...
@@ -567,7 +603,7 @@ def evaluate(
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
 def evaluate(
-    expression: Union[str, int, float],
+    expression: Union[MetricExpression, int, float],
     translated_metrics: TranslatedMetrics,
 ) -> Tuple[Optional[float], UnitInfo, str]:
     if isinstance(expression, (float, int)):
@@ -587,7 +623,7 @@ def evaluate(
 
 
 def _evaluate_rpn(
-    expression: str,
+    expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
 ) -> Tuple[float, UnitInfo, str]:
     # stack of (value, unit, color)
@@ -732,8 +768,9 @@ ExpressionFunc = Callable[[ExpressionParams, RRDData], Sequence[TimeSeries]]
 
 
 class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
-    def plugin_name(self, instance):
-        return instance._ident
+    def plugin_name(self, instance: ExpressionFunc) -> str:
+        # mypy does not know this attribute
+        return instance._ident  # type: ignore[attr-defined]
 
     def register_expression(self, ident: str) -> Callable[[ExpressionFunc], ExpressionFunc]:
         def wrap(plugin_func: ExpressionFunc) -> ExpressionFunc:
@@ -766,7 +803,9 @@ time_series_expression_registry = TimeSeriesExpressionRegistry()
 #   '----------------------------------------------------------------------'
 
 
-def get_graph_range(graph_template, translated_metrics):
+def get_graph_range(
+    graph_template: GraphTemplate, translated_metrics: TranslatedMetrics
+) -> GraphRange:
     if "range" not in graph_template:
         return None, None  # Compute range of displayed data points
 
@@ -779,7 +818,7 @@ def get_graph_range(graph_template, translated_metrics):
         return None, None
 
 
-def replace_expressions(text, translated_metrics):
+def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
     def eval_to_string(match) -> str:
@@ -793,7 +832,7 @@ def replace_expressions(text, translated_metrics):
     return r.sub(eval_to_string, text)
 
 
-def get_graph_template_choices():
+def get_graph_template_choices() -> List[Tuple[str, str]]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
@@ -801,7 +840,7 @@ def get_graph_template_choices():
     )
 
 
-def get_graph_template(template_id):
+def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return generic_graph_template(template_id[7:])
     if template_id in graph_info:
@@ -812,6 +851,7 @@ def get_graph_template(template_id):
 def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
+        "title": _("Metric: %s") % metric_name,
         "metrics": [
             (metric_name, "area"),
         ],
@@ -859,14 +899,14 @@ def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
         yield from metrics_used_in_expression(metric_definition[0])
 
 
-def metrics_used_in_expression(metric_expression: str) -> Iterator[str]:
+def metrics_used_in_expression(metric_expression: MetricExpression) -> Iterator[str]:
     for part in split_expression(metric_expression)[0].split(","):
         metric_name = drop_metric_consolidation_advice(part)
         if metric_name not in rpn_operators:
             yield metric_name
 
 
-def drop_metric_consolidation_advice(expression: str) -> str:
+def drop_metric_consolidation_advice(expression: MetricExpression) -> str:
     if any(expression.endswith(cf) for cf in [".max", ".min", ".average"]):
         return expression.rsplit(".", 1)[0]
     return expression
@@ -875,11 +915,11 @@ def drop_metric_consolidation_advice(expression: str) -> str:
 def graph_template_for_metrics(
     graph_template: GraphTemplate,
     translated_metrics: TranslatedMetrics,
-) -> GraphTemplate:
+) -> Optional[GraphTemplate]:
     # Skip early on conflicting_metrics
     for var in graph_template.get("conflicting_metrics", []):
         if var in translated_metrics:
-            return {}
+            return None
 
     try:
         reduced_metrics = list(
@@ -890,17 +930,21 @@ def graph_template_for_metrics(
             )
         )
     except KeyError:
-        return {}
+        return None
 
     if reduced_metrics:
         reduced_graph_template = graph_template.copy()
         reduced_graph_template["metrics"] = reduced_metrics
         return reduced_graph_template
 
-    return {}
+    return None
 
 
-def _filter_renderable_graph_metrics(metric_definitions, translated_metrics, optional_metrics):
+def _filter_renderable_graph_metrics(
+    metric_definitions: Sequence[MetricDefinition],
+    translated_metrics: TranslatedMetrics,
+    optional_metrics: Sequence[str],
+) -> Iterator[MetricDefinition]:
     for metric_definition in metric_definitions:
         try:
             evaluate(metric_definition[0], translated_metrics)
@@ -954,7 +998,7 @@ def metric_recipe_and_unit(
 
 
 def horizontal_rules_from_thresholds(
-    thresholds: Iterable[Union[str, Tuple[str, str]]],
+    thresholds: Iterable[ScalarDefinition],
     translated_metrics: TranslatedMetrics,
 ):
     horizontal_rules = []

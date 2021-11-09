@@ -12,6 +12,7 @@ from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unus
     G,
     GB,
     graph_info,
+    GraphTemplate,
     indexed_color,
     K,
     KB,

@@ -17,6 +17,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_range,
     get_graph_template,
     get_graph_templates,
+    GraphMetrics,
     GraphRecipe,
     GraphTemplate,
     horizontal_rules_from_thresholds,
@@ -27,6 +28,7 @@ from cmk.gui.plugins.metrics.utils import (
     translated_metrics_from_row,
     TranslatedMetrics,
 )
+from cmk.gui.type_defs import MetricDefinition, Row
 
 RPNAtom = Tuple  # TODO: Improve this type
 
@@ -123,8 +125,10 @@ class GraphIdentificationTemplate(GraphIdentification):
 graph_identification_types.register(GraphIdentificationTemplate)
 
 
-def create_graph_recipe_from_template(graph_template, translated_metrics, row):
-    def _metrics(metric_definition):
+def create_graph_recipe_from_template(
+    graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
+) -> GraphRecipe:
+    def _metrics(metric_definition: MetricDefinition) -> GraphMetrics:
         return {
             **metric_unit_color(metric_definition[0], translated_metrics),
             "title": metric_line_title(metric_definition, translated_metrics),
@@ -238,9 +242,13 @@ def metric_expression_to_graph_recipe_expression(
     )
 
 
-def metric_line_title(metric_definition: Tuple, translated_metrics: Dict) -> str:
+def metric_line_title(
+    metric_definition: MetricDefinition, translated_metrics: TranslatedMetrics
+) -> str:
     if len(metric_definition) >= 3:
-        return metric_definition[2]
+        # mypy does not understand the variable length (Tuple index out of range)
+        metric_title = metric_definition[2]  # type: ignore[misc]
+        return str(metric_title)
 
     metric_name = next(metrics_used_in_expression(metric_definition[0]))
     return translated_metrics[metric_name]["title"]

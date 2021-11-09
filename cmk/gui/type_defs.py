@@ -246,6 +246,11 @@ class TranslatedMetric(TypedDict):
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
 TranslatedMetrics = Dict[str, TranslatedMetric]
+MetricExpression = str
+LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
+MetricDefinition = Union[
+    Tuple[MetricExpression, LineType], Tuple[MetricExpression, LineType, Union[str, LazyString]]
+]
 PerfometerSpec = Dict[str, Any]
 PerfdataTuple = Tuple[
     str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]

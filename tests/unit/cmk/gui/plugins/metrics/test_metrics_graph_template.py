@@ -8,6 +8,7 @@ import pytest
 
 import cmk.gui.metrics as metrics
 import cmk.gui.plugins.metrics.graph_templates as gt
+from cmk.gui.plugins.metrics.utils import GraphTemplate
 
 
 @pytest.mark.parametrize(
@@ -81,19 +82,21 @@ def test_rpn_stack(expression, result):
 def test_create_graph_recipe_from_template():
 
     metrics.fixup_unit_info()
-    graph_template = {
-        "metrics": [
-            ("fs_used", "area"),
-            ("fs_size,fs_used,-#e3fff9", "stack", "Free space"),
-            ("fs_size", "line"),
-        ],
-        "scalars": [
-            "fs_used:warn",
-            "fs_used:crit",
-        ],
-        "range": (0, "fs_used:max"),
-        "conflicting_metrics": ["fs_free"],
-    }
+    graph_template = GraphTemplate(
+        {
+            "metrics": [
+                ("fs_used", "area"),
+                ("fs_size,fs_used,-#e3fff9", "stack", "Free space"),
+                ("fs_size", "line"),
+            ],
+            "scalars": [
+                "fs_used:warn",
+                "fs_used:crit",
+            ],
+            "range": (0, "fs_used:max"),
+            "conflicting_metrics": ["fs_free"],
+        }
+    )
     translated_metrics = metrics.translate_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;", "check_mk-df"
     )

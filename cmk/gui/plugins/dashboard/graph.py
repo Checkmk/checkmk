@@ -101,9 +101,11 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 (
                     (
                         graph_id,
-                        graph_detail.get(
-                            "title",
-                            graph_id,
+                        str(
+                            graph_detail.get(
+                                "title",
+                                graph_id,
+                            )
                         ),
                     )
                     for graph_id, graph_detail in graph_info.items()
@@ -148,9 +150,11 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             choices: Iterable[TupleType[str, str]] = (
                 (
                     graph_id,
-                    graph_details.get(
-                        "title",
-                        graph_id,
+                    str(
+                        graph_details.get(
+                            "title",
+                            graph_id,
+                        )
                     ),
                 )
                 for graph_id, graph_details in graph_info.items()

@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
-
 import cmk.utils.render
 
 from cmk.gui.i18n import _
@@ -1878,21 +1876,21 @@ def register_hop_graphs():
 register_hop_graphs()
 
 
-def register_hop_response_graph():
-    new_graph: Dict[str, Any] = {
+def register_hop_response_graph() -> None:
+    graph_info["hop_response_time"] = {
         "title": _("Hop response times"),
-        "metrics": [],
-        "optional_metrics": [],
+        "metrics": [
+            (
+                "hop_%d_response_time%s"
+                % (idx, parse_color_into_hexrgb(indexed_color(idx, MAX_NUMBER_HOPS))),
+                "line",
+            )
+            for idx in range(1, MAX_NUMBER_HOPS)
+        ],
+        "optional_metrics": [
+            "hop_%d_response_time" % (idx + 1) for idx in range(1, MAX_NUMBER_HOPS) if idx > 0
+        ],
     }
-    for idx in range(1, MAX_NUMBER_HOPS):
-        color = indexed_color(idx, MAX_NUMBER_HOPS)
-        new_graph["metrics"].append(
-            ("hop_%d_response_time%s" % (idx, parse_color_into_hexrgb(color)), "line")
-        )
-        if idx > 0:
-            new_graph["optional_metrics"].append(("hop_%d_response_time" % (idx + 1)))
-
-    graph_info["hop_response_time"] = new_graph
 
 
 register_hop_response_graph()

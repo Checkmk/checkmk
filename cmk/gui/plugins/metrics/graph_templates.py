@@ -133,7 +133,7 @@ def create_graph_recipe_from_template(graph_template, translated_metrics, row):
             _("Cannot create graph with metrics of " "different units '%s'") % ", ".join(units)
         )
 
-    title = replace_expressions(graph_template.get("title", ""), translated_metrics)
+    title = replace_expressions(str(graph_template.get("title", "")), translated_metrics)
     if not title:
         title = next((m["title"] for m in metrics if m["title"]), "")
 

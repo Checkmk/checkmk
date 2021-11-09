@@ -14,22 +14,33 @@
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
 import time
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
-from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Tuple, Union, Iterable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from .agent_based_api.v1 import (
     check_levels,
-    Metric,
     get_value_store,
+    IgnoreResults,
+    Metric,
     register,
     Result,
     Service,
     State,
-    IgnoreResults,
 )
-from .agent_based_api.v1.render import timespan, datetime
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from .agent_based_api.v1.clusterize import make_node_notice_results
+from .agent_based_api.v1.render import datetime, timespan
 from .utils.cache_helper import CacheInfo, render_cache_info
 
 Perfdata = NamedTuple("Perfdata", [

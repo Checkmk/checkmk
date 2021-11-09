@@ -12,6 +12,7 @@ from typing import Union
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
+from cmk.utils.version import is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -215,8 +216,7 @@ class ConfigVariableLogLevels(ConfigVariable):
         )
 
     def _web_log_level_elements(self):
-        elements = []
-        for level_id, title, help_text in [
+        loggers = [
             (
                 "cmk.web",
                 _("Web"),
@@ -258,7 +258,22 @@ class ConfigVariableLogLevels(ConfigVariable):
                 ),
             ),
             ("cmk.web.slow-views", _("Slow views"), _slow_view_logging_help()),
-        ]:
+        ]
+
+        if not is_raw_edition():
+            loggers.append(
+                (
+                    "cmk.web.agent_registration",
+                    _("Agent registration"),
+                    _(
+                        "Log the agent registration process of incoming requests"
+                        " by the Checkmk agent controller registration command."
+                    ),
+                ),
+            )
+
+        elements = []
+        for level_id, title, help_text in loggers:
             elements.append(
                 (
                     level_id,

@@ -1,0 +1,15 @@
+Title: <tt>check_sftp</tt>: Fix password store usage
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1635859816
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p16
+
+The active check for FTP servers ("Check SFTP Service") reported
+"Connection failed!"
+and went CRIT when using the password store, even if the password
+was correct.

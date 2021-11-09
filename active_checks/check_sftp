@@ -11,6 +11,8 @@ import time
 
 import paramiko  # type: ignore[import]
 
+from cmk.utils.password_store import replace_passwords
+
 
 def usage():
     sys.stderr.write("""
@@ -285,6 +287,7 @@ def main(sys_args=None):
 
 
 if __name__ == "__main__":
+    replace_passwords()
     exitcode, info = main()
     output_check_result(info)
     sys.exit(exitcode)

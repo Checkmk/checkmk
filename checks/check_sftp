@@ -11,8 +11,7 @@ def check_sftp_arguments(params):
 
     args.append("--host=%s" % host)
     args.append("--user=%s" % user)
-    _choice, password = secret
-    args.append(passwordstore_get_cmdline("--secret=%s", password))
+    args.append(passwordstore_get_cmdline("--secret=%s", secret))
 
     if "port" in settings:
         args.append("--port=%s" % settings["port"])

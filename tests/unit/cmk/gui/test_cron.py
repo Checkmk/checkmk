@@ -23,6 +23,7 @@ def test_registered_jobs():
 
     if not cmk_version.is_raw_edition():
         expected += [
+            "cmk.gui.cee.plugins.wato.agent_registration.background_jobs.execute_host_registration_background_job",
             "cmk.gui.cee.reporting.cleanup_stored_reports",
             "cmk.gui.cee.reporting.do_scheduled_reports",
             "cmk.gui.cee.ntop.connector.ntop_instance_check",

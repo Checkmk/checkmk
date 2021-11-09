@@ -855,7 +855,6 @@ export function initialize_autocompleters(container) {
     service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);
-    autocompleter_with_host_service_hints("metric_with_source", container);
 }
 
 var vs_color_pickers = [];

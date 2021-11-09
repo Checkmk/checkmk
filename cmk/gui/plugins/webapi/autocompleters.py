@@ -94,25 +94,18 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
 
 @autocompleter_registry.register_expression("monitored_metrics")
 def metrics_autocompleter(value: str, params: Dict) -> Choices:
-    if context := params.get("context", {}):
+    context = params.get("context", {})
+    host = context.get("host", {}).get("host", "")
+    service = context.get("service", {}).get("service", "")
+    if params.get("strict") == "withSource" and not all((host, service)):
+        return []
+
+    if context:
         metrics = set(metrics_of_query(context))
     else:
         metrics = set(registered_metrics())
 
     return sorted((v for v in metrics if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
-
-
-@autocompleter_registry.register_expression("metric_with_source")
-def metrics_with_source_autocompleter(value: str, params: Dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    context = params.get("context", {})
-    host = context.get("host", {}).get("host", "")
-    service = context.get("service", {}).get("service", "")
-    if not all((host, service)):
-        return []
-
-    return metrics_autocompleter(value, params)
 
 
 def _graph_choices_from_livestatus_row(row) -> Iterable[Tuple[str, str]]:
@@ -137,7 +130,7 @@ def graph_templates_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
-    if not params.get("context"):
+    if not params.get("context") and params.get("strict", "False") == "False":
         choices: Iterable[Tuple[str, str]] = (
             (
                 graph_id,

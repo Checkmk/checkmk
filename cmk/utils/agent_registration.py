@@ -38,15 +38,15 @@ class UUIDLink(NamedTuple):
 
 
 class UUIDLinkManager:
-    def __init__(self, *, receive_outputs_dir: Path, data_source_dir: Path) -> None:
-        self._receive_outputs_dir = receive_outputs_dir
+    def __init__(self, *, received_outputs_dir: Path, data_source_dir: Path) -> None:
+        self._received_outputs_dir = received_outputs_dir
         self._data_source_dir = data_source_dir
 
     def __iter__(self) -> Iterator[UUIDLink]:
-        if not self._receive_outputs_dir.exists():
+        if not self._received_outputs_dir.exists():
             return
 
-        for source in self._receive_outputs_dir.iterdir():
+        for source in self._received_outputs_dir.iterdir():
             yield UUIDLink(
                 source=source,
                 # Since Python 3.9 pathlib provides Path.readlink()
@@ -62,8 +62,8 @@ class UUIDLinkManager:
         """
         self._may_cleanup_old_link(hostname, uuid)
 
-        self._receive_outputs_dir.mkdir(parents=True, exist_ok=True)
-        source = self._receive_outputs_dir.joinpath(str(uuid))
+        self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
+        source = self._received_outputs_dir.joinpath(str(uuid))
 
         target_dir = self._data_source_dir.joinpath(hostname)
         target_dir.mkdir(parents=True, exist_ok=True)

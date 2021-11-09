@@ -207,30 +207,6 @@ msgid ""
 "group."
 msgstr ""
 
-msgid "# Containers"
-msgstr ""
-
-msgid "# Containers paused"
-msgstr ""
-
-msgid "# Containers running"
-msgstr ""
-
-msgid "# Containers stopped"
-msgstr ""
-
-#, fuzzy
-msgid "# Hosts"
-msgstr "1 Element"
-
-#, fuzzy
-msgid "# Images"
-msgstr "Dimensiunea Maxima"
-
-#, fuzzy
-msgid "# Services"
-msgstr "servicii"
-
 msgid "%"
 msgstr ""
 
@@ -1618,13 +1594,6 @@ msgstr ""
 msgid "A BI pack with this ID already exists."
 msgstr "O regulă cu acest ID există deja."
 
-msgid ""
-"A Matrix of Performance data values from all hosts in a certain host group"
-msgstr ""
-
-msgid "A Matrix of performance data values, grouped by hosts and services"
-msgstr ""
-
 # TODO
 msgid "A Multisite view"
 msgstr "Un Multisite view"
@@ -1654,11 +1623,6 @@ msgstr "O descriere sau comentariu despre acest element"
 
 msgid ""
 "A compact dashboard which lists your unhandled host and service problems."
-msgstr ""
-
-msgid ""
-"A complete list of all host problems with a search form for selecting "
-"handled and unhandled"
 msgstr ""
 
 msgid ""
@@ -1705,9 +1669,6 @@ msgstr ""
 
 msgid "A folder with that name already exists."
 msgstr "Un director cu acest nume deja există."
-
-msgid "A form for searching hosts using flexible filters"
-msgstr "Un formular pentru cautarea elementelor folosind filtre flexibile"
 
 msgid "A frame around the page"
 msgstr "Un chenar în jurul paginii"
@@ -1853,22 +1814,9 @@ msgid "A service or host in this aggregation is in downtime."
 msgstr ""
 
 msgid ""
-"A short overview over all host groups, without an explicity listing of the "
-"actual hosts"
-msgstr ""
-
-msgid ""
-"A short overview over all service groups, without explicity listing of the "
-"actual hosts and services"
-msgstr ""
-
-msgid ""
 "A simple and yet practical snapin allowing to create bookmarks to views and "
 "other content in the main frame"
 msgstr ""
-
-msgid "A single host related aggregation"
-msgstr "O agregare legată de un singur element"
 
 msgid ""
 "A single thread fully utilizing a single core (potentially due to a bug) may "
@@ -1947,11 +1895,6 @@ msgstr ""
 
 #, python-format
 msgid "A view for the %s of one host"
-msgstr ""
-
-msgid ""
-"A voluntary context switch occurs when a thread blocks because it requires a "
-"resource that is unavailable"
 msgstr ""
 
 msgid "A/V Auth - Bad Requests Received"
@@ -2442,10 +2385,6 @@ msgstr "Accesează Agentul Check_MK via TCP"
 msgid "Access Point"
 msgstr "Punct de Acces"
 
-#, fuzzy
-msgid "Access Points"
-msgstr "Punct de Acces"
-
 msgid "Access point name"
 msgstr "Numele punctului de acces"
 
@@ -2545,9 +2484,6 @@ msgid "Acknowledgement of service problem"
 msgstr ""
 
 msgid "Act."
-msgstr ""
-
-msgid "Act. helper"
 msgstr ""
 
 msgid "Action"
@@ -2768,16 +2704,8 @@ msgid "Active TCP Sessions"
 msgstr "Conexiuni Active"
 
 #, fuzzy
-msgid "Active TLS Connections"
-msgstr "Conexiuni Active"
-
-#, fuzzy
 msgid "Active UDP sessions"
 msgstr "Conexiuni Active"
-
-#, fuzzy
-msgid "Active VMs"
-msgstr "Verificări active"
 
 #, fuzzy
 msgid "Active VPN Tunnels"
@@ -2820,16 +2748,8 @@ msgid "Active guest memory"
 msgstr "Memorie liberă exactă"
 
 #, fuzzy
-msgid "Active hosts"
-msgstr "Verificări active"
-
-#, fuzzy
 msgid "Active in timeperiod"
 msgstr "Perioada de timp Noua"
-
-#, fuzzy
-msgid "Active items"
-msgstr "Verificări active"
 
 #, fuzzy
 msgid "Active modems"
@@ -2863,10 +2783,6 @@ msgstr "Activare Schimbări!"
 #, fuzzy
 msgid "Active unit"
 msgstr "Conexiuni Active"
-
-#, fuzzy
-msgid "Activity log updates"
-msgstr "actualizare"
 
 #, fuzzy
 msgid "Actual traffic"
@@ -3324,6 +3240,18 @@ msgid "Add rule"
 msgstr "Adaugă o regulă de rol"
 
 #, fuzzy
+msgid "Add rule for current host"
+msgstr "Adaugă sau șterge directoare"
+
+#, python-format
+msgid "Add rule for current host and %s"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Add rule in folder %s"
+msgstr "Agregare noua"
+
+#, fuzzy
 msgid "Add rule pack"
 msgstr "Reguli"
 
@@ -3584,10 +3512,6 @@ msgid "Address ID errors"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "Address Type"
-msgstr "Adresă"
-
-#, fuzzy
 msgid "Address families"
 msgstr "Adresă"
 
@@ -3634,9 +3558,6 @@ msgstr "Întreruperi adhoc"
 msgid "Adhoc for %d minutes"
 msgstr "Adhoc pentru %d minute"
 
-msgid "Admin"
-msgstr ""
-
 #, fuzzy
 msgid "Admin state"
 msgstr "Nume Administrator:"
@@ -3651,10 +3572,6 @@ msgstr "Starea porturilor pentru inventariere"
 #, fuzzy
 msgid "Administration Tool (WATO)"
 msgstr "Login Administrator"
-
-#, fuzzy
-msgid "Administrative Status"
-msgstr "Stare adiministrativă"
 
 #, fuzzy
 msgid "Administrative port states to discover"
@@ -3703,15 +3620,9 @@ msgstr ""
 msgid "Aerohive HiveManager NG"
 msgstr ""
 
-msgid "Affected by service"
-msgstr "Afectat de serviciu"
-
 msgid ""
 "Affected folders with an explicit reference to this tag group and that are "
 "affected by the change"
-msgstr ""
-
-msgid "Affected hosts contain"
 msgstr ""
 
 #, fuzzy
@@ -3919,9 +3830,6 @@ msgstr "Conexiuni Active"
 msgid "Agent Updates are disabled for hostname %s because it is"
 msgstr ""
 
-msgid "Agent Version"
-msgstr ""
-
 #, fuzzy
 msgid "Agent access rules"
 msgstr "Ascude regulile de utilizator"
@@ -4011,12 +3919,6 @@ msgstr ""
 msgid "Aggregate"
 msgstr ""
 
-msgid "Aggregate PGA auto target"
-msgstr ""
-
-msgid "Aggregate PGA target parameter"
-msgstr ""
-
 msgid "Aggregated assumed state"
 msgstr ""
 
@@ -4070,9 +3972,6 @@ msgstr "Agregare noua"
 msgid "Aggregation group"
 msgstr ""
 
-msgid "Aggregation group tree"
-msgstr ""
-
 #, fuzzy
 msgid "Aggregation groups"
 msgstr "Agregare noua"
@@ -4104,12 +4003,6 @@ msgid "Aggregation: simplistic boxed layout"
 msgstr ""
 
 msgid "Aggregations"
-msgstr ""
-
-msgid "Aggregations Affected by Host"
-msgstr ""
-
-msgid "Aggregations Affected by Service"
 msgstr ""
 
 msgid "Air flow"
@@ -4174,9 +4067,6 @@ msgid "Alert handler execution, failed"
 msgstr ""
 
 msgid "Alert handler execution, successful"
-msgstr ""
-
-msgid "Alert handler executions"
 msgstr ""
 
 msgid "Alert handler failed"
@@ -4280,57 +4170,20 @@ msgstr ""
 msgid "All"
 msgstr ""
 
-msgid "All Aggregations"
-msgstr ""
-
 #, fuzzy
 msgid "All Alerted"
 msgstr "rapoarte"
 
-# georgem ##############
-#, fuzzy
-msgid "All CRIT services of a given site."
-msgstr "Grup nou"
-
 msgid "All Eventlogs"
-msgstr ""
-
-msgid "All OK services of a given site."
 msgstr ""
 
 #, fuzzy
 msgid "All SNMP sections"
 msgstr "Setari"
 
-msgid "All Services with a certain description"
-msgstr ""
-
-msgid "All Services with this description:"
-msgstr ""
-
-#, fuzzy
-msgid "All UNKNOWN services of a given site."
-msgstr "Grup nou"
-
-#, fuzzy
-msgid "All WARN services of a given site."
-msgstr "Grup nou"
-
 msgid ""
 "All absolute data shown on this page refer to the timeframe since this host "
 "was booted-up."
-msgstr ""
-
-msgid "All aggregations affected by a certain service"
-msgstr ""
-
-msgid "All aggregations that have a non-OK state (honoring state assumptions)"
-msgstr ""
-
-msgid "All aggregations the given host is part of"
-msgstr ""
-
-msgid "All alert handler executions."
 msgstr ""
 
 #, fuzzy
@@ -4358,10 +4211,6 @@ msgstr "Adaugă comentarii"
 msgid "All contacts of the notified object"
 msgstr ""
 
-#, fuzzy
-msgid "All crit services of a certain hostgroup"
-msgstr "Grup nou"
-
 msgid "All customers"
 msgstr ""
 
@@ -4383,42 +4232,6 @@ msgid "All even pages"
 msgstr ""
 
 msgid "All flows"
-msgstr ""
-
-msgid "All graphs for a certain host."
-msgstr ""
-
-msgid ""
-"All historic events concerning the state of a certain host (including "
-"services)"
-msgstr ""
-
-msgid ""
-"All historic events concerning the state of a certain host (without services)"
-msgstr ""
-
-msgid "All historic events concerning the state of a certain service"
-msgstr ""
-
-msgid "All historic events of hosts or services (alerts, downtimes, etc.)"
-msgstr ""
-
-msgid "All historic scheduled downtimes of a certain host"
-msgstr ""
-
-msgid "All historic scheduled downtimes of a certain service"
-msgstr ""
-
-msgid "All historic scheduled downtimes of hosts and services"
-msgstr ""
-
-msgid "All host- and service comments"
-msgstr ""
-
-msgid "All host- and service-downtimes"
-msgstr ""
-
-msgid "All host- and service-downtimes (including ids)"
 msgstr ""
 
 msgid "All hosts"
@@ -4446,9 +4259,6 @@ msgid ""
 "free to move the host to another folder after creation."
 msgstr ""
 
-msgid "All hosts of site"
-msgstr ""
-
 msgid "All log files"
 msgstr ""
 
@@ -4462,30 +4272,12 @@ msgstr "Adaugă acesta vedere la..."
 msgid "All must be online"
 msgstr ""
 
-msgid ""
-"All notification events concerning the state of a certain host (including "
-"services)"
-msgstr ""
-
-msgid "All notification events concerning the state of a certain service."
-msgstr ""
-
-msgid "All notification events of hosts or services."
-msgstr ""
-
-msgid "All notification events sent to"
-msgstr ""
-
 #, fuzzy
 msgid "All object types"
 msgstr "Conexiune Noua"
 
 msgid "All odd pages"
 msgstr ""
-
-#, fuzzy
-msgid "All ok services of a certain hostgroup"
-msgstr "Grup nou"
 
 msgid "All online users"
 msgstr ""
@@ -4501,25 +4293,10 @@ msgid "All parents are down"
 msgstr ""
 
 #, fuzzy
-msgid "All pending services of a certain hostgroup"
-msgstr "Grup nou"
-
-msgid "All pending services of a given site."
-msgstr ""
-
-#, fuzzy
 msgid "All ports"
 msgstr "rapoarte"
 
-msgid ""
-"All problem services of a given host. The host and site must be set via HTTP "
-"variables."
-msgstr ""
-
 msgid "All problematic logfiles"
-msgstr ""
-
-msgid "All problems of services not currently in a downtime."
 msgstr ""
 
 #, fuzzy
@@ -4546,53 +4323,6 @@ msgstr ""
 msgid "All services"
 msgstr ""
 
-msgid "All services grouped by hosts."
-msgstr ""
-
-msgid "All services of a certain hostgroup"
-msgstr ""
-
-msgid "All services of a given host that are PENDING"
-msgstr ""
-
-msgid "All services of a given host that are in state CRIT"
-msgstr ""
-
-msgid "All services of a given host that are in state OK"
-msgstr ""
-
-msgid "All services of a given host that are in state UNKNOWN"
-msgstr ""
-
-msgid "All services of a given host that are in state WARN"
-msgstr ""
-
-msgid ""
-"All services of a given host. The host and site must be set via HTML "
-"variables."
-msgstr ""
-
-msgid ""
-"All services of a given host. The host and site must be set via HTTP "
-"variables."
-msgstr ""
-
-msgid "All services of a given site."
-msgstr ""
-
-msgid "All services of hosts which match a name"
-msgstr ""
-
-msgid ""
-"All services ordered by their service check durations, grouped by their "
-"sites.\n"
-msgstr ""
-
-msgid ""
-"All single-host aggregations that are in non-OK state (honoring state "
-"assumptions)"
-msgstr ""
-
 msgid "All sites"
 msgstr ""
 
@@ -4613,19 +4343,11 @@ msgid ""
 "monitoring."
 msgstr ""
 
-#, fuzzy
-msgid "All unknown services of a certain hostgroup"
-msgstr "Grup nou"
-
 msgid "All users"
 msgstr ""
 
 msgid "All users with an email address"
 msgstr ""
-
-#, fuzzy
-msgid "All warn services of a certain hostgroup"
-msgstr "Grup nou"
 
 #, fuzzy
 msgid "Allocatable"
@@ -4749,11 +4471,6 @@ msgstr ""
 msgid "Allows you to use a sidebar element in the dashboard."
 msgstr ""
 
-msgid ""
-"Almost all available filters, used for searching services and maybe doing "
-"actions"
-msgstr ""
-
 msgid "Also bulk outside of timeperiod"
 msgstr ""
 
@@ -4772,10 +4489,6 @@ msgid ""
 "<i>not</i> notifications. New rules will enable this option automatically, "
 "existing rules have this disabled by default."
 msgstr ""
-
-#, fuzzy
-msgid "Altered"
-msgstr "Cluster nou"
 
 #, fuzzy
 msgid "Alternative Hostname"
@@ -4862,11 +4575,6 @@ msgstr "trimite notificare"
 msgid "Amount of mails in queues"
 msgstr "Numarul maxim de emailuri in coada"
 
-msgid ""
-"Amount of time that the application of redo data on the standby database "
-"lags behind the primary database"
-msgstr ""
-
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr ""
 
@@ -4939,12 +4647,6 @@ msgid ""
 "An internal error occurred while processing your request. You can report "
 "this issue to your Checkmk administrator. Detailed information can be found "
 "on the crash report page or in <tt>var/log/web.log</tt>."
-msgstr ""
-
-msgid ""
-"An involuntary context switch takes place when a thread executes for the "
-"duration of its time slice or when the system identifies a higher-priority "
-"thread to run"
 msgstr ""
 
 #, python-format
@@ -5075,9 +4777,6 @@ msgstr ""
 msgid "Apache process usage"
 msgstr ""
 
-msgid "Apache status"
-msgstr ""
-
 msgid "Apache webservers (Linux)"
 msgstr ""
 
@@ -5152,10 +4851,6 @@ msgstr ""
 #, fuzzy
 msgid "Application name"
 msgstr "Numele Aplicatiei"
-
-#, fuzzy
-msgid "Application pending requests"
-msgstr "cereri"
 
 #, fuzzy
 msgid "Applications"
@@ -5258,9 +4953,6 @@ msgstr ""
 msgid "April"
 msgstr ""
 
-msgid "Architecture"
-msgstr ""
-
 msgid "Archive Event"
 msgstr ""
 
@@ -5309,9 +5001,6 @@ msgid "Area"
 msgstr ""
 
 msgid "Arguments:"
-msgstr ""
-
-msgid "Arrays (Controllers)"
 msgstr ""
 
 #, fuzzy
@@ -5692,9 +5381,6 @@ msgstr ""
 msgid "Autoextend will be ignored"
 msgstr ""
 
-msgid "Autoextensible"
-msgstr ""
-
 msgid "Automatic"
 msgstr ""
 
@@ -5884,9 +5570,6 @@ msgstr ""
 msgid "Available options"
 msgstr "Optiuni tabel"
 
-msgid "Available physical processors in shared pool"
-msgstr ""
-
 #, fuzzy
 msgid "Available temp space"
 msgstr "Vizibilitatea Elementelor/Serviciilor"
@@ -5914,10 +5597,6 @@ msgstr ""
 
 msgid "Average check latency"
 msgstr ""
-
-#, fuzzy
-msgid "Average consumption"
-msgstr "APC consum de Curent"
 
 msgid "Average disk I/O-queue length"
 msgstr ""
@@ -5964,18 +5643,6 @@ msgstr ""
 msgid "Average latency for store requests"
 msgstr ""
 
-#, fuzzy
-msgid "Average latency of successful GetItem requests"
-msgstr "Vechimea maxima a backup-urilor"
-
-#, fuzzy
-msgid "Average latency of successful PutItem requests"
-msgstr "Vechimea maxima a backup-urilor"
-
-#, fuzzy
-msgid "Average latency of successful Query requests"
-msgstr "Vechimea maxima a backup-urilor"
-
 msgid "Average latency used by Azure Storage to process a successful request"
 msgstr ""
 
@@ -5985,14 +5652,7 @@ msgstr ""
 msgid "Average message count upper levels"
 msgstr ""
 
-#, fuzzy
-msgid "Average number of messages"
-msgstr "Numarul maxim de mesaje"
-
 msgid "Average pending tasks delta"
-msgstr ""
-
-msgid "Average processor speed"
 msgstr ""
 
 msgid "Average read request size"
@@ -6003,10 +5663,6 @@ msgstr ""
 
 msgid "Average request size"
 msgstr ""
-
-#, fuzzy
-msgid "Average requests per connection"
-msgstr "cereri/sec"
 
 msgid "Average resident size per process"
 msgstr ""
@@ -6040,22 +5696,6 @@ msgstr ""
 #, fuzzy
 msgid "Average time messages stay on queue"
 msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-msgid "Average usage"
-msgstr "% utilizare"
-
-#, python-format
-msgid "Average utilization core %d"
-msgstr ""
-
-#, fuzzy
-msgid "Average utilization per core"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
-msgid "Average value"
-msgstr "% utilizare"
 
 # georgem ##############
 #, fuzzy
@@ -6096,16 +5736,6 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 #, fuzzy
 msgid "Averaging for total CPU utilization"
 msgstr "Dezactiveaza Notificarile"
-
-msgid "Avg. rate of allowed requests"
-msgstr ""
-
-msgid "Avg. rate of blocked requests"
-msgstr ""
-
-#, fuzzy
-msgid "Avg. request rate"
-msgstr "cereri/sec"
 
 #, fuzzy
 msgid "Awaiting info"
@@ -6252,9 +5882,6 @@ msgstr "servicii"
 msgid "BI visualization"
 msgstr "Dezactiveaza Notificarile"
 
-msgid "BIOS"
-msgstr ""
-
 msgid "BMC key"
 msgstr ""
 
@@ -6276,10 +5903,6 @@ msgstr ""
 #, python-format
 msgid "Backend Conn. %s"
 msgstr ""
-
-#, fuzzy
-msgid "Backend connection errors"
-msgstr "Conexiune Noua"
 
 msgid "Background Job"
 msgstr ""
@@ -6572,9 +6195,6 @@ msgstr "Numarul maxim de mesaje"
 msgid "Bike"
 msgstr ""
 
-msgid "Bin Log Disk Usage"
-msgstr ""
-
 msgid "Binaries"
 msgstr ""
 
@@ -6591,10 +6211,6 @@ msgstr "Parola"
 msgid "Bind to source address"
 msgstr ""
 
-#, fuzzy
-msgid "Bit map updates"
-msgstr "actualizare"
-
 msgid "Bits"
 msgstr ""
 
@@ -6604,19 +6220,8 @@ msgstr ""
 msgid "Blacklist the following services"
 msgstr ""
 
-#, python-format
-msgid "Block Device %d"
-msgstr ""
-
-msgid "Block Devices"
-msgstr ""
-
 msgid "Block storage name"
 msgstr ""
-
-#, fuzzy
-msgid "Block store snapshots"
-msgstr "urca snapshot-uri nesigure"
 
 msgid "Blocked Packages/s"
 msgstr ""
@@ -6680,9 +6285,6 @@ msgid "Bookmark lists"
 msgstr "Adaugă bookmark"
 
 msgid "Bookmarks"
-msgstr ""
-
-msgid "Bootloader"
 msgstr ""
 
 msgid "Border width"
@@ -6755,19 +6357,12 @@ msgid "Bucket"
 msgstr "foloseste numele portului"
 
 #, fuzzy
-msgid "Bucket memory"
-msgstr "foloseste numele portului"
-
-#, fuzzy
 msgid "Bucket name"
 msgstr "foloseste numele portului"
 
 #, fuzzy
 msgid "Bucket names"
 msgstr "foloseste numele portului"
-
-msgid "Bucket size"
-msgstr ""
 
 msgid "Buckets"
 msgstr ""
@@ -6785,18 +6380,12 @@ msgstr ""
 msgid "Buckets only: Levels for number of items fetched from disk"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
-msgid "Buffer cache size"
-msgstr ""
-
 msgid "Buffered I/O"
 msgstr ""
 
 #, fuzzy
 msgid "Buffered memory"
 msgstr "Nivelurile maxime pentru voltaj"
-
-msgid "Bufferpool Hitratios"
-msgstr ""
 
 msgid "Bug fix"
 msgstr ""
@@ -6907,15 +6496,6 @@ msgstr ""
 msgid "Bulking"
 msgstr ""
 
-msgid "Burst Balance"
-msgstr ""
-
-msgid "Bus"
-msgstr ""
-
-msgid "Bus Speed"
-msgstr ""
-
 msgid "Business Intelligence"
 msgstr ""
 
@@ -6939,10 +6519,6 @@ msgstr ""
 #, fuzzy
 msgid "Busy servers"
 msgstr "servicii"
-
-#, fuzzy
-msgid "Busy threads"
-msgstr "fire"
 
 msgid "Busy workers"
 msgstr ""
@@ -7347,22 +6923,8 @@ msgid "Bytes per second"
 msgstr ""
 
 #, fuzzy
-msgid "Bytes processed"
-msgstr "Mesajul Text"
-
-#, fuzzy
-msgid "Bytes reclaimed by GC"
-msgstr "Memorie liberă exactă"
-
-msgid "Bytes reclaimed by GC rate"
-msgstr ""
-
-#, fuzzy
 msgid "Bytes rejected"
 msgstr "Sterge Elementul"
-
-msgid "Bytes sent"
-msgstr ""
 
 msgid "C"
 msgstr ""
@@ -7427,29 +6989,13 @@ msgstr ""
 msgid "CMA"
 msgstr ""
 
-#, fuzzy
-msgid "CMK helper"
-msgstr "Nivelurile maxime pentru voltaj"
-
 msgid "CPG member name"
 msgstr ""
 
 msgid "CPU"
 msgstr ""
 
-msgid "CPU Arch"
-msgstr ""
-
-msgid "CPU Architecture"
-msgstr ""
-
 msgid "CPU Averaging"
-msgstr ""
-
-msgid "CPU Credit Balance"
-msgstr ""
-
-msgid "CPU Load - %(load1:max@count) CPU Cores"
 msgstr ""
 
 msgid "CPU Load via WMI"
@@ -7459,20 +7005,7 @@ msgstr ""
 msgid "CPU Memory used"
 msgstr "% utilizare"
 
-msgid "CPU Model"
-msgstr ""
-
-msgid "CPU Time"
-msgstr ""
-
 msgid "CPU Utilization of Clusters"
-msgstr ""
-
-#, fuzzy
-msgid "CPU entitlement"
-msgstr "Adaugă element"
-
-msgid "CPU idle time"
 msgstr ""
 
 msgid "CPU in percent"
@@ -7494,15 +7027,6 @@ msgid ""
 "35 days"
 msgstr ""
 
-msgid "CPU load average of last 15 minutes"
-msgstr ""
-
-msgid "CPU load average of last 5 minutes"
-msgstr ""
-
-msgid "CPU load average of last minute"
-msgstr ""
-
 #, fuzzy
 msgid "CPU percentage usage"
 msgstr "spatiu utilizat"
@@ -7520,48 +7044,11 @@ msgstr ""
 msgid "CPU resources"
 msgstr ""
 
-msgid "CPU time"
-msgstr ""
-
-msgid "CPU time in operating system"
-msgstr ""
-
-msgid "CPU time in system space"
-msgstr ""
-
-msgid "CPU time in user space"
-msgstr ""
-
-msgid "CPU time spent for executing guest operating systems"
-msgstr ""
-
-msgid "CPU time spent in kernel space"
-msgstr ""
-
-msgid "CPU time spent in user space"
-msgstr ""
-
-msgid "CPU time spent in user space for niced processes"
-msgstr ""
-
-msgid "CPU time spent waiting for I/O"
-msgstr ""
-
-msgid "CPU time stolen by other operating systems"
-msgstr ""
-
-msgid "CPU total in ms"
-msgstr ""
-
 msgid "CPU usage critical at"
 msgstr ""
 
 msgid "CPU usage warning at"
 msgstr ""
-
-#, fuzzy
-msgid "CPU used"
-msgstr "(nefolosit)"
 
 msgid "CPU utilization"
 msgstr ""
@@ -7569,12 +7056,6 @@ msgstr ""
 #, fuzzy
 msgid "CPU utilization & Kernel performance"
 msgstr "Dezactiveaza Notificarile"
-
-msgid "CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"
-msgstr ""
-
-msgid "CPU utilization (average)"
-msgstr ""
 
 msgid "CPU utilization for Appliances"
 msgstr ""
@@ -7591,28 +7072,10 @@ msgid ""
 "CPU utilization."
 msgstr ""
 
-msgid "CPU utilization last 15 minutes"
-msgstr ""
-
-msgid "CPU utilization last 5 minutes"
-msgstr ""
-
-msgid "CPU utilization last five seconds"
-msgstr ""
-
-msgid "CPU utilization last minute"
-msgstr ""
-
-msgid "CPU utilization last second"
-msgstr ""
-
 msgid "CPU utilization of Devices with Modules"
 msgstr ""
 
 msgid "CPU utilization on Linux/UNIX"
-msgstr ""
-
-msgid "CPUs"
 msgstr ""
 
 msgid "CR"
@@ -7637,28 +7100,11 @@ msgstr ""
 msgid "CRIT Pattern"
 msgstr ""
 
-# georgem ##############
-#, fuzzy
-msgid "CRIT Services of Hostgroup"
-msgstr "Grup nou"
-
-# georgem ##############
-#, fuzzy
-msgid "CRIT Services of Site"
-msgstr "Grup nou"
-
-msgid "CRIT Services of host"
-msgstr ""
-
 msgid "CRIT at"
 msgstr ""
 
 msgid "CRITICAL"
 msgstr ""
-
-#, fuzzy
-msgid "CRITICAL services"
-msgstr "servicii"
 
 msgid "CRT/PEM File"
 msgstr ""
@@ -7688,9 +7134,6 @@ msgstr ""
 
 #, python-format
 msgid "Cache %s"
-msgstr ""
-
-msgid "Cache Size"
 msgstr ""
 
 msgid "Cache age for background checks"
@@ -7733,9 +7176,6 @@ msgstr ""
 #, fuzzy
 msgid "Call a rule"
 msgstr "Arata regulile de utilizator"
-
-msgid "Call legs"
-msgstr ""
 
 msgid "Call with the following parameters:"
 msgstr ""
@@ -8041,9 +7481,6 @@ msgstr "Conexiuni Active"
 msgid "Carbon monoxide"
 msgstr ""
 
-msgid "Card Name"
-msgstr ""
-
 msgid "Casa module: CPU temperature"
 msgstr ""
 
@@ -8057,9 +7494,6 @@ msgid "Case translation"
 msgstr ""
 
 msgid "Cash Register"
-msgstr ""
-
-msgid "Catalog"
 msgstr ""
 
 #, fuzzy
@@ -8461,9 +7895,6 @@ msgstr ""
 msgid "Check int."
 msgstr ""
 
-msgid "Check latency"
-msgstr ""
-
 msgid "Check logfile groups"
 msgstr ""
 
@@ -8626,10 +8057,6 @@ msgid "Checked"
 msgstr ""
 
 #, fuzzy
-msgid "Checker helper"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 msgid "Checker helper usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -8653,10 +8080,6 @@ msgstr ""
 #, python-format
 msgid "Checkmk Agent Port (<a href=\"%s\">Rules</a>)"
 msgstr ""
-
-#, fuzzy
-msgid "Checkmk Agent Version"
-msgstr "Perioada de timp Noua"
 
 msgid ""
 "Checkmk Agent, Number, version and edition of sites, Cluster host; Number of "
@@ -8738,9 +8161,6 @@ msgstr ""
 msgid "Checkmk check helpers"
 msgstr "Nivelurile maxime pentru voltaj"
 
-msgid "Checkmk check latency"
-msgstr ""
-
 msgid "Checkmk checker count"
 msgstr ""
 
@@ -8755,10 +8175,6 @@ msgstr "Activare Configurare"
 #, python-format
 msgid "Checkmk exception: %s"
 msgstr ""
-
-#, fuzzy
-msgid "Checkmk fetcher latency"
-msgstr "Statusul Serverului"
 
 #, fuzzy
 msgid "Checkmk fetcher usage"
@@ -8816,31 +8232,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Starea porturilor pentru inventariere"
 
-msgid "Checkmk: BI"
-msgstr ""
-
-#, fuzzy
-msgid "Checkmk: Dashboards"
-msgstr "rapoarte"
-
 #, fuzzy
 msgid "Checkmk: Notification"
 msgstr "Notificari"
-
-msgid "Checkmk: Other"
-msgstr ""
-
-#, fuzzy
-msgid "Checkmk: Sidebar elements"
-msgstr "Adaugă un snapin pe sidebar"
-
-#, fuzzy
-msgid "Checkmk: Views"
-msgstr "Privire de ansamblu"
-
-#, fuzzy
-msgid "Checkmk: WATO"
-msgstr "Privire de ansamblu"
 
 msgid "Checkpoint Firewall Connections"
 msgstr ""
@@ -9144,17 +8538,10 @@ msgstr ""
 msgid "Cisco quality of service"
 msgstr ""
 
-#, fuzzy
-msgid "Citrix"
-msgstr "Matrice"
-
 msgid "Citrix Desktops Registered"
 msgstr ""
 
 msgid "Citrix Licenses (Windows)"
-msgstr ""
-
-msgid "Citrix Load"
 msgstr ""
 
 msgid "Citrix Netscaler DNS counter rates"
@@ -9169,9 +8556,6 @@ msgstr ""
 msgid "Citrix Server load"
 msgstr ""
 
-msgid "Citrix Serverload"
-msgstr ""
-
 msgid "Citrix Terminal Server Sessions"
 msgstr ""
 
@@ -9181,10 +8565,6 @@ msgstr " pe siteul de monitorizare: "
 
 msgid "Citrix XenApp (Windows)"
 msgstr ""
-
-#, fuzzy
-msgid "Citrix licenses"
-msgstr "licente nefolosite"
 
 msgid "City name"
 msgstr ""
@@ -9271,9 +8651,6 @@ msgid "Client ID / Application ID"
 msgstr ""
 
 msgid "Client Secret"
-msgstr ""
-
-msgid "Client TLS errors"
 msgstr ""
 
 #, fuzzy
@@ -9392,10 +8769,6 @@ msgstr ""
 msgid "Closed"
 msgstr ""
 
-#, fuzzy
-msgid "Closing connection"
-msgstr "Conexiuni Active"
-
 msgid "Cloud Based Environments"
 msgstr ""
 
@@ -9408,17 +8781,7 @@ msgstr ""
 msgid "CloudWatch Alarms"
 msgstr ""
 
-msgid "CloudWatch alarms"
-msgstr ""
-
 msgid "Cluster"
-msgstr ""
-
-#, python-format
-msgid "Cluster %d"
-msgstr ""
-
-msgid "Cluster IP"
 msgstr ""
 
 #, fuzzy
@@ -9440,9 +8803,6 @@ msgid "Cluster behaviour"
 msgstr ""
 
 msgid "Cluster health"
-msgstr ""
-
-msgid "Cluster host"
 msgstr ""
 
 #, fuzzy
@@ -9502,18 +8862,7 @@ msgstr "Cluster nou"
 msgid "Cnt."
 msgstr ""
 
-#, fuzzy
-msgid "Code Size"
-msgstr "Dimensiunea Maxima"
-
-#, fuzzy
-msgid "Code Size in percent"
-msgstr "Nivelurile maxime pentru incarcare in procente"
-
 msgid "Codec that should be used to decode the matching files"
-msgstr ""
-
-msgid "Cold HDD space"
 msgstr ""
 
 #, fuzzy
@@ -9725,12 +9074,6 @@ msgstr ""
 msgid "Comments"
 msgstr ""
 
-msgid "Comments of host"
-msgstr ""
-
-msgid "Comments of service"
-msgstr ""
-
 #, fuzzy
 msgid "Commit Charge"
 msgstr "Nici o schimbare"
@@ -9869,14 +9212,6 @@ msgstr ""
 #, fuzzy
 msgid "Computing differences"
 msgstr "Opțiuni adiționale"
-
-#, fuzzy
-msgid "Concurrent executions"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Concurrent executions in percent"
-msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "Condition type"
@@ -10400,10 +9735,6 @@ msgid "Connections duration min"
 msgstr "Conexiune Noua"
 
 #, fuzzy
-msgid "Connections in use"
-msgstr "Conexiune Noua"
-
-#, fuzzy
 msgid "Connections per second"
 msgstr "cereri/sec"
 
@@ -10453,10 +9784,6 @@ msgid "Constant value %.2f"
 msgstr ""
 
 #, fuzzy
-msgid "Consumed Load Balancer Capacity Units"
-msgstr "Perioada de timp Noua"
-
-#, fuzzy
 msgid "Consumed capacity"
 msgstr "Capacitatea maxima"
 
@@ -10465,10 +9792,6 @@ msgstr ""
 
 msgid "Consumer Count is the size of connected consumers to a queue"
 msgstr ""
-
-#, fuzzy
-msgid "Consumers"
-msgstr "Atribute personalizate"
 
 msgid "Contact"
 msgstr ""
@@ -10483,9 +9806,6 @@ msgid "Contact Person"
 msgstr ""
 
 msgid "Contact Selection"
-msgstr ""
-
-msgid "Contact group (effective)"
 msgstr ""
 
 msgid "Contact groups"
@@ -10526,13 +9846,7 @@ msgstr ""
 msgid "Contacts"
 msgstr ""
 
-msgid "Container"
-msgstr ""
-
 msgid "Container - Display the information on container level"
-msgstr ""
-
-msgid "Container ID"
 msgstr ""
 
 #, fuzzy
@@ -10601,9 +9915,6 @@ msgstr ""
 msgid "Context sensitive help"
 msgstr ""
 
-msgid "Context switches"
-msgstr ""
-
 msgid "Continue"
 msgstr ""
 
@@ -10621,16 +9932,6 @@ msgid "Control group:"
 msgstr "Grup nou"
 
 msgid "Control plane nodes"
-msgstr ""
-
-msgid "Controller"
-msgstr ""
-
-#, python-format
-msgid "Controller %d"
-msgstr ""
-
-msgid "Controller Version"
 msgstr ""
 
 #, python-format
@@ -10717,15 +10018,6 @@ msgid "Core statistics"
 msgstr ""
 
 msgid "Core stopped"
-msgstr ""
-
-msgid "Cores"
-msgstr ""
-
-msgid "Cores per CPU"
-msgstr ""
-
-msgid "Corrected codewords"
 msgstr ""
 
 msgid "Corrupted"
@@ -11009,10 +10301,6 @@ msgstr ""
 msgid "Create %s"
 msgstr ""
 
-#, python-format
-msgid "Create %s specific rule for: "
-msgstr ""
-
 msgid "Create Conference Latency"
 msgstr ""
 
@@ -11200,10 +10488,6 @@ msgstr ""
 msgid "Create regular time-schedule for this report"
 msgstr ""
 
-#, fuzzy
-msgid "Create rule in folder"
-msgstr "Agregare noua"
-
 msgid "Create separate Service for DB-Time"
 msgstr ""
 
@@ -11368,19 +10652,11 @@ msgid "Creating scheduled report '%s'..."
 msgstr ""
 
 #, fuzzy
-msgid "Creation"
-msgstr "Conexiune Noua"
-
-#, fuzzy
 msgid "Creation / Locking"
 msgstr "Conexiune Noua"
 
 msgid "Creation of gateway hosts"
 msgstr ""
-
-#, fuzzy
-msgid "Creation time"
-msgstr "Conexiune Noua"
 
 msgid "Credentials"
 msgstr ""
@@ -11593,10 +10869,6 @@ msgstr ""
 msgid "Current date"
 msgstr "Parola"
 
-#, fuzzy
-msgid "Current events"
-msgstr "Parola"
-
 msgid "Current host check attempt"
 msgstr ""
 
@@ -11636,10 +10908,6 @@ msgstr ""
 
 msgid "Current setting"
 msgstr ""
-
-#, fuzzy
-msgid "Current size"
-msgstr "Parola"
 
 #, fuzzy
 msgid "Current state"
@@ -12236,9 +11504,6 @@ msgstr ""
 msgid "DNS hostname or IP address"
 msgstr ""
 
-msgid "DNS lookup"
-msgstr ""
-
 msgid "DNS name or IP address of proxy server"
 msgstr ""
 
@@ -12246,9 +11511,6 @@ msgid "DNS name or IP address of target notification spooler"
 msgstr ""
 
 msgid "DNS name or IP address of update server"
-msgstr ""
-
-msgid "DNS policy"
 msgstr ""
 
 msgid "DNS queries received for non-existent domain"
@@ -12270,9 +11532,6 @@ msgid "DNS successful responses"
 msgstr ""
 
 msgid "DOWN"
-msgstr ""
-
-msgid "DOWN hosts"
 msgstr ""
 
 msgid "DPI"
@@ -12299,10 +11558,6 @@ msgstr "fire"
 
 msgid "Daemon state and summarized count of containers and their states"
 msgstr ""
-
-#, fuzzy
-msgid "Daemon threads"
-msgstr "fire"
 
 msgid "Daily"
 msgstr ""
@@ -12361,9 +11616,6 @@ msgstr ""
 msgid "Data files size"
 msgstr "Nume tablespace"
 
-msgid "Data hitratio"
-msgstr ""
-
 msgid "Data ingress"
 msgstr ""
 
@@ -12414,9 +11666,6 @@ msgstr ""
 msgid ""
 "Data to send via HTTP POST method. Please make sure, that the data is URL-"
 "encoded."
-msgstr ""
-
-msgid "Data transfer cache size"
 msgstr ""
 
 msgid "Data type"
@@ -12480,9 +11729,6 @@ msgstr ""
 msgid "Database User Credentials"
 msgstr ""
 
-msgid "Database apply lag"
-msgstr ""
-
 #, fuzzy
 msgid "Database backup"
 msgstr "Nume tablespace"
@@ -12530,10 +11776,6 @@ msgstr ""
 msgid "Databases"
 msgstr "Nume tablespace"
 
-#, python-format
-msgid "Datacenter %d"
-msgstr ""
-
 #, fuzzy
 msgid "Datadog"
 msgstr "fire"
@@ -12556,9 +11798,6 @@ msgid "Datafile Sizes"
 msgstr ""
 
 msgid "Dataguard Statistics"
-msgstr ""
-
-msgid "Dataguard statistics"
 msgstr ""
 
 msgid "Datasource"
@@ -12632,14 +11871,7 @@ msgstr " Activează această opțiune"
 msgid "Deactivated"
 msgstr ""
 
-#, fuzzy
-msgid "Dead letter errors"
-msgstr "Ascude regulile de utilizator"
-
 msgid "Dead paths"
-msgstr ""
-
-msgid "Dead- and waitlocks"
 msgstr ""
 
 msgid "Deadlocks"
@@ -12689,9 +11921,6 @@ msgstr ""
 msgid "Declare monitored services as undecided"
 msgstr "nemonitorizat"
 
-msgid "Decoded traffic"
-msgstr ""
-
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr ""
 
@@ -12700,10 +11929,6 @@ msgstr ""
 
 msgid "Deduplication percent completed"
 msgstr ""
-
-#, fuzzy
-msgid "Deduplication rate"
-msgstr "Numele Aplicatiei"
 
 msgid "Deduplication remaining size"
 msgstr ""
@@ -12933,9 +12158,6 @@ msgid ""
 "Defines what information to query. You can choose to query license state and "
 "usage, Splunk system messages, Splunk jobs, shown in the job menu within "
 "Splunk. You can also query for component health and fired alerts."
-msgstr ""
-
-msgid "Degraded hosts"
 msgstr ""
 
 msgid "Degree Celsius"
@@ -13291,14 +12513,6 @@ msgstr ""
 #, fuzzy
 msgid "Delimiter for file grouping"
 msgstr "Nume nou"
-
-#, fuzzy
-msgid "Delivered message rate"
-msgstr "Adaugă model mesaj"
-
-#, fuzzy
-msgid "Delivered messages"
-msgstr "Adaugă model mesaj"
 
 msgid "Demonstration"
 msgstr ""
@@ -13679,10 +12893,6 @@ msgid "Desired number of nodes scheduled"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
-msgid "Desktop Group Name"
-msgstr "Numele Elementului"
-
-#, fuzzy
 msgid "Destination"
 msgstr " Activează această opțiune"
 
@@ -13790,9 +13000,6 @@ msgstr "Numele Elementului"
 msgid "Device unavailable"
 msgstr ""
 
-msgid "Devices"
-msgstr ""
-
 msgid "Devices to fetch information from"
 msgstr ""
 
@@ -13846,9 +13053,6 @@ msgstr "Numarul maxim de mesaje"
 msgid "Difference on total number of issues upper level"
 msgstr "Numarul maxim de mesaje"
 
-msgid "Differences to currently monitored services on a host."
-msgstr ""
-
 msgid ""
 "Different tags can be grouped in topics to make the visualization and "
 "selections in the GUI more comfortable."
@@ -13861,9 +13065,6 @@ msgid "Differential current DC"
 msgstr ""
 
 msgid "Digest (MD5)"
-msgstr ""
-
-msgid "Digests"
 msgstr ""
 
 #, fuzzy
@@ -14059,10 +13260,6 @@ msgstr "<b>dezactivează verificările active</b> pentru"
 msgid "Disabled agent updates"
 msgstr ""
 
-#, fuzzy
-msgid "Disabled alerts"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "Disabled checks"
 msgstr ""
 
@@ -14139,10 +13336,6 @@ msgid "Discover single interfaces"
 msgstr "servicii"
 
 #, fuzzy
-msgid "Discovered by plugin"
-msgstr "Nici o schimbare"
-
-#, fuzzy
 msgid "Discovered host label synchronization"
 msgstr "Nici o schimbare"
 
@@ -14198,19 +13391,12 @@ msgstr "Ascude regulile de utilizator"
 msgid "Discovery settings"
 msgstr "Statusul Serverului"
 
-#, fuzzy
-msgid "Discovery state"
-msgstr "Statusul Serverului"
-
 msgid "Disk"
 msgstr ""
 
 #, fuzzy
 msgid "Disk I/O operations"
 msgstr "Optiuni tabel"
-
-msgid "Disk ID"
-msgstr ""
 
 #, fuzzy
 msgid "Disk IO"
@@ -14505,12 +13691,6 @@ msgid ""
 "Displays a timeseries for a single metric of a specific host and service."
 msgstr ""
 
-msgid "Displays all BI aggregations."
-msgstr ""
-
-msgid "Displays all aggregations of a certain group."
-msgstr ""
-
 msgid "Displays amount of hosts in a selected state."
 msgstr ""
 
@@ -14521,9 +13701,6 @@ msgid "Displays an introduction and Checkmk logo."
 msgstr ""
 
 msgid "Displays either sites and states or hosts and states of a site"
-msgstr ""
-
-msgid "Displays entries from the logfile of the monitoring core."
 msgstr ""
 
 #, fuzzy
@@ -15256,10 +14433,6 @@ msgstr "doua nivele"
 msgid "Docker node disk usage"
 msgstr ""
 
-#, fuzzy
-msgid "Docker nodes"
-msgstr "licente nefolosite"
-
 msgid "Docsis Cable Modem Status"
 msgstr ""
 
@@ -15286,10 +14459,6 @@ msgstr "Acțiune"
 #, fuzzy
 msgid "Documentation files"
 msgstr "doua nivele"
-
-#, fuzzy
-msgid "Documents fragmentation"
-msgstr "Numele Elementului"
 
 #, python-format
 msgid "Does not ends with \"%s\"."
@@ -15490,10 +14659,6 @@ msgstr ""
 msgid "Downtime for host/service"
 msgstr ""
 
-#, fuzzy
-msgid "Downtime history"
-msgstr "Întreruperi adhoc"
-
 msgid "Downtime id"
 msgstr ""
 
@@ -15519,21 +14684,6 @@ msgid "Downtime will not start anymore after"
 msgstr ""
 
 msgid "Downtimes"
-msgstr ""
-
-msgid "Downtimes of host"
-msgstr ""
-
-msgid "Downtimes of service"
-msgstr ""
-
-msgid "Driver"
-msgstr ""
-
-msgid "Driver Date"
-msgstr ""
-
-msgid "Driver Version"
 msgstr ""
 
 msgid "Driver type to use instead of doing an auto selection"
@@ -15576,16 +14726,9 @@ msgstr ""
 msgid "Duration"
 msgstr ""
 
-msgid "Duration in percent of Lambda timeout"
-msgstr ""
-
 #, fuzzy
 msgid "Duration levels"
 msgstr "doua nivele"
-
-#, fuzzy
-msgid "Duration of Lambda functions"
-msgstr "Vechimea maxima a backup-urilor"
 
 #, fuzzy
 msgid "Duration of backup"
@@ -16174,9 +15317,6 @@ msgid ""
 "enabled."
 msgstr ""
 
-msgid "Elapsed time"
-msgstr ""
-
 msgid "Elastic Block Storage (EBS)"
 msgstr ""
 
@@ -16282,9 +15422,6 @@ msgstr "Adresă"
 msgid "Email address"
 msgstr ""
 
-msgid "Email sent"
-msgstr ""
-
 msgid "Email-Addresses to mail PDF reports to"
 msgstr ""
 
@@ -16307,9 +15444,6 @@ msgid "Emergency"
 msgstr ""
 
 msgid "Emergency: Repeat push notification in intervalls till expire time."
-msgstr ""
-
-msgid "Empty Hostgroup Visibilitiy"
 msgstr ""
 
 #, fuzzy
@@ -16803,13 +15937,6 @@ msgstr ""
 msgid "Entersekt Soap Service Errors"
 msgstr "Grup nou"
 
-msgid "Entitled capacity consumed"
-msgstr ""
-
-#, fuzzy
-msgid "Entitlement"
-msgstr "Adaugă element"
-
 msgid "Entity"
 msgstr ""
 
@@ -16827,10 +15954,6 @@ msgstr ""
 
 msgid "Episode 3: Monitoring Windows"
 msgstr ""
-
-#, fuzzy
-msgid "Epoch objects"
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Equal or more than"
 msgstr ""
@@ -16995,9 +16118,6 @@ msgstr ""
 msgid "Event Console enabled"
 msgstr "Acces la Consola de Evenimente"
 
-msgid "Event Console rule packages"
-msgstr ""
-
 #, fuzzy
 msgid "Event Console rule packs"
 msgstr "Acces la Consola de Evenimente"
@@ -17068,29 +16188,11 @@ msgstr "Acces la Consola de Evenimente"
 msgid "Event console rule"
 msgstr ""
 
-msgid "Event created by required count was not reached in time"
-msgstr ""
-
 #, fuzzy
 msgid "Event creations"
 msgstr "Numele Elementului"
 
 msgid "Event database"
-msgstr ""
-
-msgid "Event deleted because its livetime expired"
-msgstr ""
-
-msgid "Event deleted because required count had been reached"
-msgstr ""
-
-msgid "Event deleted in counting state because rule does not count anymore"
-msgstr ""
-
-msgid "Event deleted in counting state because rule was deleted."
-msgstr ""
-
-msgid "Event deleted manually by user"
 msgstr ""
 
 msgid "Event handlers"
@@ -17100,14 +16202,6 @@ msgid "Event history lifetime"
 msgstr ""
 
 msgid "Event history logfile rotation"
-msgstr ""
-
-msgid "Event information updated by user"
-msgstr ""
-
-msgid ""
-"Event opened because the delay time has elapsed before cancelling event "
-"arrived."
 msgstr ""
 
 #, fuzzy
@@ -17125,14 +16219,6 @@ msgstr "Statusul Serverului"
 #, fuzzy
 msgid "Event subscriptions"
 msgstr "foloseste descrierea"
-
-msgid ""
-"Event was archived because no rule matched and archiving is activated in "
-"global settings."
-msgstr ""
-
-msgid "Event was deleted automatically"
-msgstr ""
 
 msgid "Eventlog:"
 msgstr ""
@@ -17152,9 +16238,6 @@ msgid "Events of Host %s"
 msgstr ""
 
 msgid "Events of Monitored Host"
-msgstr ""
-
-msgid "Events of host"
 msgstr ""
 
 msgid "Events of host & services"
@@ -17270,9 +16353,6 @@ msgid "Exceptions (from weekdays)"
 msgstr ""
 
 msgid "Exceptions for piggybacked hosts (VMs, ...)"
-msgstr ""
-
-msgid "Exchanges"
 msgstr ""
 
 msgid "Exclude"
@@ -17683,9 +16763,6 @@ msgstr ""
 msgid "Export for API"
 msgstr "rapoarte"
 
-msgid "Express Servicecode"
-msgstr ""
-
 msgid "Extend downtimes by..."
 msgstr ""
 
@@ -17703,10 +16780,6 @@ msgid "Extensions in <tt>~/local/</tt> and MKPs"
 msgstr ""
 
 #, fuzzy
-msgid "Extents"
-msgstr "Adaugă Conținut"
-
-#, fuzzy
 msgid "External"
 msgstr "Adaugă Conținut"
 
@@ -17714,12 +16787,6 @@ msgid "External ID (optional)"
 msgstr ""
 
 msgid "External command"
-msgstr ""
-
-msgid "Extra bytes read/written"
-msgstr ""
-
-msgid "Extractors"
 msgstr ""
 
 msgid "Extracts DB-Time performance data into a separate service"
@@ -17760,10 +16827,6 @@ msgstr ""
 
 msgid "FCP"
 msgstr ""
-
-#, fuzzy
-msgid "FGPA utilization"
-msgstr "Dezactiveaza Notificarile"
 
 msgid "FIN_WAIT1"
 msgstr ""
@@ -17821,12 +16884,6 @@ msgstr ""
 msgid "Failed Notifications"
 msgstr "Dezactiveaza Notificarile"
 
-msgid "Failed TLS Client Handshake"
-msgstr ""
-
-msgid "Failed TLS Target Handshake"
-msgstr ""
-
 msgid "Failed calls caused by unexpected interaction from gateway"
 msgstr ""
 
@@ -17847,15 +16904,8 @@ msgstr ""
 msgid "Failed index operations"
 msgstr "Optiuni tabel"
 
-msgid "Failed notification events of hosts and services."
-msgstr ""
-
 #, fuzzy
 msgid "Failed notification horizon"
-msgstr "trimite notificare"
-
-#, fuzzy
-msgid "Failed notifications"
 msgstr "trimite notificare"
 
 #, fuzzy
@@ -18076,10 +17126,6 @@ msgstr ""
 msgid "Failed: %s"
 msgstr "Adăugat %s"
 
-#, fuzzy
-msgid "Failing collectors"
-msgstr "sesiuni"
-
 msgid "Failover (only one node should be active)"
 msgstr ""
 
@@ -18236,9 +17282,6 @@ msgid "Fetch with length"
 msgstr ""
 
 msgid "Fetch zero length"
-msgstr ""
-
-msgid "Fetcher helper"
 msgstr ""
 
 #, fuzzy
@@ -18409,9 +17452,6 @@ msgstr ""
 msgid "Filesystem"
 msgstr "Spațiu liber exact"
 
-msgid "Filesystem Node"
-msgstr ""
-
 msgid "Filesystem Writeback"
 msgstr ""
 
@@ -18495,16 +17535,6 @@ msgid "Filter files by not matching regular expression"
 msgstr ""
 
 msgid "Filter files by size"
-msgstr ""
-
-msgid ""
-"Filter for all aggregations that are affected by one specific service on a "
-"specific host (no regular expression)"
-msgstr ""
-
-msgid ""
-"Filter for all aggregations that base on status information of that host. "
-"Exact match (no regular expression)"
 msgstr ""
 
 #, fuzzy
@@ -18593,9 +17623,6 @@ msgstr ""
 msgid "Firewall connections"
 msgstr "Conexiune Noua"
 
-msgid "Firmware"
-msgstr ""
-
 msgid "First"
 msgstr ""
 
@@ -18645,10 +17672,6 @@ msgstr "% / gamă"
 msgid "Fixed rate"
 msgstr ""
 
-#, fuzzy
-msgid "Fixed size"
-msgstr "Dimensiunea Maxima"
-
 msgid "Fixed string to expect in the content"
 msgstr ""
 
@@ -18668,9 +17691,6 @@ msgid "Flapping"
 msgstr ""
 
 msgid "Flash Space Usage"
-msgstr ""
-
-msgid "Flashback"
 msgstr ""
 
 msgid "Flex. Duration"
@@ -19070,13 +18090,6 @@ msgstr ""
 msgid "Formula"
 msgstr ""
 
-#, fuzzy
-msgid "FortiGate HighAvailability"
-msgstr "Tabel cu macro-uri disponibile"
-
-msgid "FortiSandbox Software"
-msgstr ""
-
 msgid "Fortigate Active Sessions"
 msgstr ""
 
@@ -19219,10 +18232,6 @@ msgstr "Reguli"
 msgid "Fraction"
 msgstr "Acțiune"
 
-#, fuzzy
-msgid "Fragmentation"
-msgstr "Agregare noua"
-
 msgid "Frames"
 msgstr ""
 
@@ -19230,9 +18239,6 @@ msgid "Free DHCP leases"
 msgstr ""
 
 msgid "Free RAM"
-msgstr ""
-
-msgid "Free SGA memory available"
 msgstr ""
 
 #, fuzzy
@@ -19388,12 +18394,6 @@ msgstr ""
 msgid "GByte/s"
 msgstr ""
 
-msgid "GC runs"
-msgstr ""
-
-msgid "GC runs rate"
-msgstr ""
-
 msgid "GET/POST variables of this page"
 msgstr ""
 
@@ -19411,15 +18411,8 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Gamelan"
 msgstr ""
 
-#, fuzzy
-msgid "Garbage collections"
-msgstr "Numarul maxim de conexiuni paralele"
-
 #, python-format
 msgid "Garbled automation response: <pre>%s</pre>"
-msgstr ""
-
-msgid "Gateway"
 msgstr ""
 
 msgid "Gateway route"
@@ -19455,9 +18448,6 @@ msgid "General Permissions"
 msgstr ""
 
 msgid "General Properties"
-msgstr ""
-
-msgid "General Purpose SSD space"
 msgstr ""
 
 msgid "General Settings"
@@ -19521,9 +18511,6 @@ msgstr ""
 msgid "Generic check plugins"
 msgstr ""
 
-msgid "Generic helper usage"
-msgstr ""
-
 msgid "Generic numeric value"
 msgstr ""
 
@@ -19562,10 +18549,6 @@ msgstr ""
 
 msgid "Global Settings"
 msgstr ""
-
-#, fuzzy
-msgid "Global memory bound"
-msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Global notification rule"
 msgstr ""
@@ -19635,13 +18618,6 @@ msgstr ""
 
 msgid "Grab user from found processess"
 msgstr ""
-
-msgid "Gracefully finishing"
-msgstr ""
-
-#, fuzzy
-msgid "Granule size"
-msgstr "Dimensiunea Maxima"
 
 msgid "Graph"
 msgstr ""
@@ -19717,32 +18693,16 @@ msgstr "pornit"
 msgid "Graph visibility"
 msgstr ""
 
-#, python-format
-msgid "Graphic Card %d"
-msgstr ""
-
-msgid "Graphic Card Name"
-msgstr ""
-
-msgid "Graphic Cards"
-msgstr ""
-
 msgid "Graphs"
 msgstr ""
 
 msgid "Graphs are shown among each other"
 msgstr ""
 
-msgid "Graphs for all Services with a certain description"
-msgstr ""
-
 msgid "Graphs for averaged single-core utilizations"
 msgstr ""
 
 msgid "Graphs for individual cores"
-msgstr ""
-
-msgid "Graphs of services with description:"
 msgstr ""
 
 #, fuzzy
@@ -19919,16 +18879,10 @@ msgstr ""
 msgid "Guest operating system may have stopped responding."
 msgstr ""
 
-msgid "Guest operating systems"
-msgstr ""
-
 msgid "Guest user"
 msgstr ""
 
 msgid "H.Down"
-msgstr ""
-
-msgid "HA"
 msgstr ""
 
 msgid "HARD"
@@ -19976,20 +18930,8 @@ msgstr ""
 msgid "HTTP"
 msgstr ""
 
-#, python-format
-msgid "HTTP %s errors"
-msgstr ""
-
-#, fuzzy
-msgid "HTTP 3/4/5XX Errors"
-msgstr "afiseaza erori"
-
 msgid "HTTP 500 errors"
 msgstr ""
-
-#, fuzzy
-msgid "HTTP 500/2/3/4 Errors"
-msgstr "afiseaza erori"
 
 msgid "HTTP 5xx Responses"
 msgstr ""
@@ -20010,9 +18952,6 @@ msgstr ""
 msgid "HTTP Errors"
 msgstr ""
 
-msgid "HTTP Fixed Responses"
-msgstr ""
-
 msgid "HTTP Method"
 msgstr ""
 
@@ -20022,13 +18961,6 @@ msgstr ""
 #, fuzzy
 msgid "HTTP Parameters"
 msgstr "(fără parametri)"
-
-#, fuzzy
-msgid "HTTP Redirects"
-msgstr "(fără parametri)"
-
-msgid "HTTP Redirects URL Limit Exceeded"
-msgstr ""
 
 msgid "HTTP Timings"
 msgstr ""
@@ -20102,9 +19034,6 @@ msgid ""
 msgstr ""
 
 msgid "Handle nested group memberships (Active Directory only at the moment)"
-msgstr ""
-
-msgid "Handled Requests"
 msgstr ""
 
 #, fuzzy
@@ -20216,9 +19145,6 @@ msgstr ""
 msgid "Hardware/Software-Inventory (Linux, Windows, Solaris, AIX)"
 msgstr ""
 
-msgid "Has Inventory Data"
-msgstr ""
-
 msgid "Has changed"
 msgstr ""
 
@@ -20249,13 +19175,6 @@ msgid "Headings"
 msgstr ""
 
 msgid "Health"
-msgstr ""
-
-#, fuzzy
-msgid "Health check healty count"
-msgstr "Output adițional de la Plugin"
-
-msgid "Health check percentage healty"
 msgstr ""
 
 msgid "Heap and non-heap memory"
@@ -20944,15 +19863,9 @@ msgstr ""
 msgid "High (with escalation)"
 msgstr ""
 
-msgid "High alerts"
-msgstr ""
-
 #, fuzzy
 msgid "High utilization at "
 msgstr "Dezactiveaza Notificarile"
-
-msgid "High watermark"
-msgstr ""
 
 msgid "High: Push notification alerts bypass quiet hours"
 msgstr ""
@@ -20966,12 +19879,6 @@ msgstr ""
 #, fuzzy
 msgid "Historic Event Console Events"
 msgstr "Acces la Consola de Evenimente"
-
-msgid "Historic downtimes of host"
-msgstr ""
-
-msgid "Historic downtimes of service"
-msgstr ""
 
 msgid "Historic messages"
 msgstr ""
@@ -21055,10 +19962,6 @@ msgid "Host"
 msgstr ""
 
 #, python-format
-msgid "Host %s"
-msgstr ""
-
-#, python-format
 msgid "Host %s already exists in the folder %s"
 msgstr ""
 
@@ -21072,14 +19975,6 @@ msgstr ""
 #, python-format
 msgid "Host %s not known in ntopng"
 msgstr ""
-
-#, fuzzy
-msgid "Host & service events"
-msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
-msgid "Host & service history"
-msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "Host & service problems"
@@ -21096,9 +19991,6 @@ msgstr ""
 #, fuzzy
 msgid "Host Alert"
 msgstr "Numele Elementului"
-
-msgid "Host Auxiliary Tags"
-msgstr ""
 
 msgid "Host Check Command"
 msgstr ""
@@ -21122,28 +20014,8 @@ msgstr ""
 msgid "Host Group Name"
 msgstr "Numele Elementului"
 
-#, fuzzy
-msgid "Host Group of Down Hosts"
-msgstr "Grup nou"
-
-#, fuzzy
-msgid "Host Group of Pending"
-msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Host Group of Unreachable Hosts"
-msgstr "Grup nou"
-
-#, fuzzy
-msgid "Host Group of Up Hosts"
-msgstr "Grup nou"
-
 msgid "Host Groups"
 msgstr ""
-
-#, fuzzy
-msgid "Host IP"
-msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Host IPv4 address"
@@ -21211,9 +20083,6 @@ msgstr "Adaugă informații despre contact"
 msgid "Host alias"
 msgstr ""
 
-msgid "Host and Service Checks"
-msgstr ""
-
 msgid "Host and Service Events"
 msgstr ""
 
@@ -21247,9 +20116,6 @@ msgid "Host check duration"
 msgstr ""
 
 msgid "Host check latency"
-msgstr ""
-
-msgid "Host check rate"
 msgstr ""
 
 msgid "Host check type"
@@ -21328,9 +20194,6 @@ msgid "Host groups"
 msgstr "Grup nou"
 
 msgid "Host groups the host is member of"
-msgstr ""
-
-msgid "Host has software package"
 msgstr ""
 
 #, python-format
@@ -21437,9 +20300,6 @@ msgstr "(setat de câtre syslog)"
 msgid "Host name used for containers"
 msgstr ""
 
-msgid "Host network"
-msgstr ""
-
 msgid "Host notification number"
 msgstr ""
 
@@ -21475,9 +20335,6 @@ msgstr ""
 msgid "Host problem acknowledged"
 msgstr ""
 
-msgid "Host problems"
-msgstr ""
-
 #, fuzzy
 msgid "Host problems (all)"
 msgstr "(fără Nivel de serviciu)"
@@ -21486,18 +20343,12 @@ msgstr "(fără Nivel de serviciu)"
 msgid "Host problems (unhandled)"
 msgstr "Confirmă"
 
-msgid "Host problems for NagStaMon"
-msgstr ""
-
 #, fuzzy
 msgid "Host properties"
 msgstr "Grup nou"
 
 #, python-format
 msgid "Host properties of: %s"
-msgstr ""
-
-msgid "Host related aggregations"
 msgstr ""
 
 #, fuzzy
@@ -21623,9 +20474,6 @@ msgstr ""
 msgid "Hostgroups"
 msgstr ""
 
-msgid "Hostgroups having certain problems"
-msgstr ""
-
 msgid "Hostgroups, merged"
 msgstr ""
 
@@ -21634,10 +20482,6 @@ msgstr ""
 
 msgid "Hostname / IP address of Graphite server"
 msgstr ""
-
-#, fuzzy
-msgid "Hostname aggregations"
-msgstr "Agregare noua"
 
 msgid "Hostname matching"
 msgstr ""
@@ -21739,13 +20583,6 @@ msgstr ""
 msgid "Hosts grouped by host groups"
 msgstr ""
 
-msgid "Hosts having certain service problems"
-msgstr ""
-
-#, fuzzy
-msgid "Hosts in downtime"
-msgstr "de sus in jos"
-
 #, fuzzy, python-format
 msgid "Hosts in folder: %s"
 msgstr "(altul: %s)"
@@ -21769,9 +20606,6 @@ msgid "Hosts that downloaded an agent during the last 65 minutes"
 msgstr ""
 
 msgid "Hosts that have an up-to-date agent"
-msgstr ""
-
-msgid "Hosts that have not been checked for too long."
 msgstr ""
 
 msgid "Hosts that need an agent update"
@@ -21929,9 +20763,6 @@ msgstr ""
 msgid "Hyper-V VMs (Windows)"
 msgstr ""
 
-msgid "Hyperthreads per CPU"
-msgstr ""
-
 msgid "Hz"
 msgstr ""
 
@@ -21945,12 +20776,6 @@ msgid "I/O Database Writes (Attached) Average Latency"
 msgstr ""
 
 msgid "I/O Log Writes Average Latency"
-msgstr ""
-
-msgid "I/O-wait"
-msgstr ""
-
-msgid "IBM MQ"
 msgstr ""
 
 msgid "IBM MQ (Linux)"
@@ -22110,14 +20935,7 @@ msgstr ""
 msgid "IP Address of the Spectrum server receiving the SNMP trap"
 msgstr ""
 
-#, fuzzy
-msgid "IP Addresses"
-msgstr "Adresă"
-
 msgid "IP Network"
-msgstr ""
-
-msgid "IP Prefix"
 msgstr ""
 
 msgid "IP address"
@@ -22223,13 +21041,6 @@ msgid "IPv4"
 msgstr ""
 
 #, fuzzy
-msgid "IPv4 Address"
-msgstr "Adresă"
-
-msgid "IPv4 Subnet"
-msgstr ""
-
-#, fuzzy
 msgid "IPv4 address"
 msgstr "Adresă"
 
@@ -22249,17 +21060,6 @@ msgstr ""
 #, fuzzy
 msgid "IPv6 Address"
 msgstr "Adresă"
-
-#, fuzzy
-msgid "IPv6 Processed Bytes"
-msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "IPv6 Requests"
-msgstr "cereri"
-
-msgid "IPv6 Subnet"
-msgstr ""
 
 #, fuzzy
 msgid "IPv6 address"
@@ -22305,12 +21105,6 @@ msgstr ""
 msgid "Identity of an authorized key"
 msgstr ""
 
-msgid "Idle"
-msgstr ""
-
-msgid "Idle clean up of worker"
-msgstr ""
-
 #, fuzzy
 msgid "Idle connections"
 msgstr "Conexiune Noua"
@@ -22318,10 +21112,6 @@ msgstr "Conexiune Noua"
 #, fuzzy
 msgid "Idle servers"
 msgstr "servicii"
-
-#, fuzzy
-msgid "Idle threads"
-msgstr "fire"
 
 msgid "Idle timeout"
 msgstr ""
@@ -23279,17 +22069,6 @@ msgid "Ignored autostart services"
 msgstr ""
 
 #, fuzzy
-msgid "Image"
-msgstr "Dimensiunea Maxima"
-
-#, fuzzy
-msgid "Image ID"
-msgstr "Dimensiunea Maxima"
-
-msgid "Image pull policy"
-msgstr ""
-
-#, fuzzy
 msgid "Image size"
 msgstr "Dimensiunea Maxima"
 
@@ -23634,9 +22413,6 @@ msgid ""
 "highly recommended to change this password."
 msgstr ""
 
-msgid "In-memory area"
-msgstr ""
-
 msgid "In-memory cache for availability data"
 msgstr ""
 
@@ -23651,18 +22427,8 @@ msgid "Inactive (files)"
 msgstr "Reguli neaplicate"
 
 #, fuzzy
-msgid "Inactive hosts"
-msgstr "Verificări active"
-
-#, fuzzy
 msgid "Inactive sessions"
 msgstr "Reguli neaplicate"
-
-msgid "Inbound and Outbound Messages"
-msgstr ""
-
-msgid "Inbound messages"
-msgstr ""
 
 msgid "Incident"
 msgstr ""
@@ -23777,20 +22543,10 @@ msgid ""
 "resulting in better disk throughput."
 msgstr ""
 
-#, fuzzy
-msgid "Increment size"
-msgstr "Dimensiunea Maxima"
-
-msgid "Index"
-msgstr ""
-
 msgid "Index absolute levels"
 msgstr ""
 
 msgid "Index failure in the defined timerange upper levels"
-msgstr ""
-
-msgid "Index hitratio"
 msgstr ""
 
 msgid "Index percentage bloat levels"
@@ -23802,10 +22558,6 @@ msgstr "spatiu utilizat"
 
 msgid "Indexspace wasted"
 msgstr ""
-
-#, fuzzy
-msgid "Indices"
-msgstr "servicii"
 
 msgid "Indices to query"
 msgstr ""
@@ -23909,10 +22661,6 @@ msgid "Informix table extents"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
-msgid "Ingress"
-msgstr "Adresă"
-
-#, fuzzy
 msgid "Ingresses"
 msgstr "Adresă"
 
@@ -23921,10 +22669,6 @@ msgstr ""
 
 msgid "Inherited from "
 msgstr ""
-
-#, fuzzy
-msgid "Init duration"
-msgstr "Optiuni tabel"
 
 msgid "Init duration with absolute limits"
 msgstr ""
@@ -24018,16 +22762,8 @@ msgstr ""
 msgid "Input power"
 msgstr ""
 
-#, fuzzy
-msgid "Input traffic"
-msgstr "Numele Elementului"
-
 msgid "Input unicast packets"
 msgstr ""
-
-#, fuzzy
-msgid "Inputs"
-msgstr "Numele Elementului"
 
 msgid "Insert HTML section between body and table"
 msgstr ""
@@ -24045,9 +22781,6 @@ msgid "Inserts"
 msgstr ""
 
 msgid "Inside unique MACs"
-msgstr ""
-
-msgid "Install Date"
 msgstr ""
 
 msgid "Install Python automatically when configured plugins need it"
@@ -24151,9 +22884,6 @@ msgstr "Setari"
 msgid "Instances to monitor"
 msgstr ""
 
-msgid "Instantaneous CPU load"
-msgstr ""
-
 msgid ""
 "Instead of creating the user accounts during the regular sync, create the "
 "user on the first login."
@@ -24216,17 +22946,9 @@ msgstr "Grup nou"
 msgid "Interface id"
 msgstr ""
 
-# georgem ##############
-#, fuzzy
-msgid "Interface known in Ntop"
-msgstr "Grup nou"
-
 #, fuzzy
 msgid "Interface settings"
 msgstr "Setari"
-
-msgid "Interfaces"
-msgstr ""
 
 #, fuzzy
 msgid "Intermission"
@@ -24269,9 +22991,6 @@ msgid "Interpretation of failover cluster state"
 msgstr ""
 
 msgid "Interpretation of the device's own temperature status"
-msgstr ""
-
-msgid "Interrupt"
 msgstr ""
 
 msgid "Interval"
@@ -24717,13 +23436,6 @@ msgstr ""
 msgid "Invert matching"
 msgstr "Activare schimbări"
 
-#, fuzzy
-msgid "Invocations"
-msgstr "Conexiuni Active"
-
-msgid "Involuntary context switches"
-msgstr ""
-
 msgid "Ipmisensors"
 msgstr ""
 
@@ -24742,10 +23454,6 @@ msgstr ""
 
 msgid "Is currently not available"
 msgstr ""
-
-#, fuzzy
-msgid "Is default"
-msgstr "Reseteaza contoarele"
 
 #, fuzzy
 msgid "Is disabled"
@@ -24877,10 +23585,6 @@ msgid "Item match list"
 msgstr ""
 
 #, fuzzy
-msgid "Item memory"
-msgstr "Nume nou"
-
-#, fuzzy
 msgid "Item name"
 msgstr "Nume nou"
 
@@ -24902,13 +23606,6 @@ msgstr ""
 #, python-brace-format
 msgid "Item {val_t2} added."
 msgstr ""
-
-msgid "Items"
-msgstr ""
-
-#, fuzzy
-msgid "Iterator age"
-msgstr "Nume Administrator:"
 
 msgid "JIRA URL"
 msgstr ""
@@ -24957,10 +23654,6 @@ msgstr ""
 
 msgid "January"
 msgstr ""
-
-#, fuzzy
-msgid "Java pool size"
-msgstr "Dimensiunea Maxima"
 
 #, fuzzy
 msgid "Jenkins instance to query."
@@ -25126,9 +23819,6 @@ msgstr ""
 msgid "Keep special characters"
 msgstr ""
 
-msgid "Keepalive"
-msgstr ""
-
 msgid "Keepalived Parameters"
 msgstr ""
 
@@ -25139,16 +23829,6 @@ msgid "Kerberos"
 msgstr ""
 
 msgid "Kernel"
-msgstr ""
-
-msgid "Kernel Architecture"
-msgstr ""
-
-#, fuzzy
-msgid "Kernel Configuration (sysctl)"
-msgstr "Activare Configurare"
-
-msgid "Kernel Version"
 msgstr ""
 
 #, fuzzy
@@ -25376,24 +24056,13 @@ msgstr ""
 msgid "Lambda"
 msgstr ""
 
-#, fuzzy
-msgid "Lambda user errors"
-msgstr "Ascude regulile de utilizator"
-
 msgid "Lanes"
 msgstr ""
 
 msgid "Language"
 msgstr "Limba"
 
-#, fuzzy
-msgid "Large pool size"
-msgstr "Dimensiunea Maxima"
-
 msgid "Largest Free VMalloc Chunk"
-msgstr ""
-
-msgid "Largest bucket size"
 msgstr ""
 
 #, fuzzy
@@ -25408,10 +24077,6 @@ msgstr ""
 
 msgid "Largest free chunk"
 msgstr ""
-
-#, fuzzy
-msgid "Largest vault size"
-msgstr "Dimensiunea Maxima"
 
 msgid "Laser id"
 msgstr ""
@@ -25437,10 +24102,6 @@ msgstr ""
 #, fuzzy
 msgid "Last 6 months"
 msgstr "2 ore"
-
-#, fuzzy
-msgid "Last Change"
-msgstr "Nici o schimbare"
 
 msgid "Last Contact"
 msgstr ""
@@ -25551,25 +24212,10 @@ msgstr ""
 msgid "Latency"
 msgstr ""
 
-#, fuzzy
-msgid "Latency of GetItem requests"
-msgstr "Vechimea maxima a backup-urilor"
-
-#, fuzzy
-msgid "Latency of PutItem requests"
-msgstr "Vechimea maxima a backup-urilor"
-
-#, fuzzy
-msgid "Latency of Query requests"
-msgstr "Vechimea maxima a backup-urilor"
-
 msgid "Latest RTT completion time"
 msgstr ""
 
 msgid "Latest RTT state"
-msgstr ""
-
-msgid "Latest Service Pack"
 msgstr ""
 
 #, fuzzy
@@ -26276,10 +24922,6 @@ msgstr "Stare adiministrativă"
 msgid "License usage"
 msgstr "% utilizare"
 
-#, fuzzy
-msgid "Licenses"
-msgstr "licente nefolosite"
-
 msgid "Licensing Status"
 msgstr ""
 
@@ -26410,10 +25052,6 @@ msgstr ""
 msgid "Link"
 msgstr ""
 
-#, fuzzy
-msgid "Link Priority"
-msgstr "Prioritatea Syslog"
-
 msgid "Link State: ALPA_WAIT"
 msgstr ""
 
@@ -26485,15 +25123,6 @@ msgstr "(fără elemente)"
 msgid "Link to view"
 msgstr ""
 
-msgid "Link view showing all hosts of one site"
-msgstr ""
-
-msgid "Linkable view showing all comments of a specific host"
-msgstr ""
-
-msgid "Linkable view showing all comments of a specific service"
-msgstr ""
-
 msgid "Links"
 msgstr ""
 
@@ -26550,10 +25179,6 @@ msgid ""
 "answer will be host names, that end with a dot."
 msgstr ""
 
-#, fuzzy
-msgid "List crash reports of all sites"
-msgstr "Scaneaza toate elementele"
-
 msgid "List grouped interfaces instead"
 msgstr ""
 
@@ -26562,11 +25187,6 @@ msgstr ""
 
 #, python-format
 msgid "List of %s"
-msgstr ""
-
-msgid ""
-"List of all aggregations, containing the name of aggregations and state "
-"information"
 msgstr ""
 
 #, fuzzy
@@ -26603,49 +25223,9 @@ msgstr ""
 msgid "Listeners per load balancer"
 msgstr "Numele Aplicatiei"
 
-msgid "Lists all aggregations which only rely on information of one host."
-msgstr ""
-
-msgid "Lists all downtimes for services."
-msgstr ""
-
-msgid "Lists all host downtimes."
-msgstr ""
-
-msgid "Lists all services in state PENDING."
-msgstr ""
-
-msgid ""
-"Lists down members of a host group with the number of services in the "
-"different states."
-msgstr ""
-
-msgid ""
-"Lists members of a host group with the number of services in the different "
-"states."
-msgstr ""
-
-msgid ""
-"Lists members of a pending host group with the number of services in the "
-"different states."
-msgstr ""
-
-msgid ""
-"Lists members of an unreachable host group with the number of services in "
-"the different states."
-msgstr ""
-
-msgid ""
-"Lists up members of a host group with the number of services in the "
-"different states."
-msgstr ""
-
 #, fuzzy
 msgid "Liters per second"
 msgstr " secunde "
-
-msgid "Live helper"
-msgstr ""
 
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr ""
@@ -26662,9 +25242,6 @@ msgstr ""
 msgid "Livestatus"
 msgstr ""
 
-msgid "Livestatus Connects and Requests"
-msgstr ""
-
 msgid "Livestatus Proxy"
 msgstr ""
 
@@ -26673,12 +25250,6 @@ msgid "Livestatus Proxy default connection parameters"
 msgstr "Conexiuni Active"
 
 msgid "Livestatus Proxy logging"
-msgstr ""
-
-msgid "Livestatus Requests per Connection"
-msgstr ""
-
-msgid "Livestatus connects"
 msgstr ""
 
 #, fuzzy
@@ -26701,17 +25272,10 @@ msgstr ""
 msgid "Livestatus network traffic is unencrypted"
 msgstr ""
 
-#, fuzzy
-msgid "Livestatus overflows"
-msgstr "Conexiuni Active"
-
 msgid "Livestatus problem"
 msgstr ""
 
 msgid "Livestatus proxy"
-msgstr ""
-
-msgid "Livestatus requests"
 msgstr ""
 
 msgid "Livestatus usage"
@@ -26724,24 +25288,12 @@ msgstr "Conexiuni Active"
 msgid "Load"
 msgstr ""
 
-msgid "Load Balancer IP"
-msgstr ""
-
 msgid "Load Call Failure Index"
 msgstr ""
 
 #, fuzzy
 msgid "Load as new page (hide sidebar)"
 msgstr "Adaugă un snapin pe sidebar"
-
-msgid "Load balancer latency"
-msgstr ""
-
-msgid "Load balancer listeners"
-msgstr ""
-
-msgid "Load balancer registered instances"
-msgstr ""
 
 msgid "Load balancers"
 msgstr ""
@@ -26820,9 +25372,6 @@ msgstr "sesiuni"
 msgid "Local checks in Checkmk clusters"
 msgstr ""
 
-msgid "Local count requests"
-msgstr ""
-
 #, fuzzy
 msgid "Local destination"
 msgstr "Acțiune"
@@ -26885,10 +25434,6 @@ msgstr "Acțiune"
 
 msgid "Locally enabled"
 msgstr ""
-
-#, fuzzy
-msgid "Location"
-msgstr "Acțiune"
 
 msgid "Lock Requests / sec"
 msgstr ""
@@ -26966,9 +25511,6 @@ msgstr " pentru hostul %s"
 msgid "Log hits for rules in log of Event Console"
 msgstr ""
 
-msgid "Log latency"
-msgstr ""
-
 msgid "Log level"
 msgstr ""
 
@@ -26994,12 +25536,6 @@ msgid ""
 msgstr ""
 
 msgid "Log level for the processing of all incoming events"
-msgstr ""
-
-msgid "Log messages"
-msgstr ""
-
-msgid "Log mode"
 msgstr ""
 
 msgid "Log replication events"
@@ -27058,9 +25594,6 @@ msgid "Log: state of host/service at log time"
 msgstr ""
 
 msgid "Log: state type (DEPRECATED: Use \"state information\")"
-msgstr ""
-
-msgid "Logentry class"
 msgstr ""
 
 msgid "Logfile"
@@ -27132,16 +25665,10 @@ msgstr ""
 msgid "Logging of the notification mechanics"
 msgstr ""
 
-msgid "Logical CPUs"
-msgstr ""
-
 msgid "Logical Volume Pool"
 msgstr ""
 
 msgid "Logical Volume Pools (LVM)"
-msgstr ""
-
-msgid "Logical processor(s) utilization"
 msgstr ""
 
 msgid "Login"
@@ -27188,9 +25715,6 @@ msgid "Login username"
 msgstr "foloseste numele portului"
 
 msgid "Login with the following credentials"
-msgstr ""
-
-msgid "Logins"
 msgstr ""
 
 msgid "Logo"
@@ -27279,9 +25803,6 @@ msgid "Low"
 msgstr "rand"
 
 msgid "Low (without escalation"
-msgstr ""
-
-msgid "Low watermark"
 msgstr ""
 
 msgid "Low: No sound/vibration but show popup"
@@ -27464,10 +25985,6 @@ msgstr "Vechimea maxima"
 
 msgid "Lowest: No notification, update badge number"
 msgstr ""
-
-#, fuzzy
-msgid "MAC address"
-msgstr "Adresă"
 
 msgid "MB"
 msgstr ""
@@ -27701,9 +26218,6 @@ msgstr ""
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 
-msgid "Magnetic volumes space"
-msgstr ""
-
 msgid "Mail Receiving"
 msgstr ""
 
@@ -27797,9 +26311,6 @@ msgstr ""
 #, fuzzy
 msgid "Major change"
 msgstr "Renunț la modificări."
-
-msgid "Major page faults"
-msgstr ""
 
 #, fuzzy
 msgid "Major release"
@@ -27923,10 +26434,6 @@ msgstr "Adaugă element"
 msgid "Manager"
 msgstr "Statusul Serverului"
 
-#, fuzzy
-msgid "Managers"
-msgstr "Statusul Serverului"
-
 msgid "Manual"
 msgstr ""
 
@@ -27955,9 +26462,6 @@ msgid "Manually specify list of LDAP servers"
 msgstr ""
 
 msgid "Manually start this backup"
-msgstr ""
-
-msgid "Manufacturer"
 msgstr ""
 
 msgid "Map Attribute 'Frozen'"
@@ -28310,9 +26814,6 @@ msgstr "Matrice"
 msgid "Matrix layout"
 msgstr "Matrice"
 
-msgid "Matrix of Performance Data"
-msgstr ""
-
 #, fuzzy
 msgid "Max Cache Age"
 msgstr "Vechimea Maxima"
@@ -28320,12 +26821,6 @@ msgstr "Vechimea Maxima"
 #, fuzzy
 msgid "Max Cache Age (Interval)"
 msgstr "Vechimea Maxima"
-
-msgid "Max Depth"
-msgstr ""
-
-msgid "Max Length"
-msgstr ""
 
 msgid "Max Perm used"
 msgstr ""
@@ -28368,10 +26863,6 @@ msgstr "Numarul maxim de conexiuni"
 
 msgid "Max. parallel connections"
 msgstr "Numarul maxim de conexiuni paralele"
-
-#, fuzzy
-msgid "Max. size"
-msgstr "Dimensiunea Maxima"
 
 msgid "Max. time behind the master"
 msgstr ""
@@ -28443,9 +26934,6 @@ msgstr ""
 msgid "Maximum Age for RMAN backups"
 msgstr "Vechimea maxima a backup-urilor"
 
-msgid "Maximum Capacity"
-msgstr "Capacitatea maxima"
-
 msgid "Maximum Levels for Voltage"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -28454,17 +26942,6 @@ msgstr "Nivelurile maxime pentru incarcare in procente"
 
 msgid "Maximum Number of E-Mails in Queue"
 msgstr "Numarul maxim de emailuri in coada"
-
-#, fuzzy
-msgid "Maximum PGA allocated"
-msgstr "Timpul maxim permis pentru uptime"
-
-#, fuzzy
-msgid "Maximum PGA used for auto workareas"
-msgstr "Numarul maxim de mesaje"
-
-msgid "Maximum PGA used for manual workareas"
-msgstr ""
 
 #, fuzzy
 msgid "Maximum Rate of Accepted Packets"
@@ -28489,9 +26966,6 @@ msgstr "Vechimea maxima a backup-urilor"
 #, fuzzy
 msgid "Maximum Rate of Rejected Packets"
 msgstr "Vechimea maxima a backup-urilor"
-
-msgid "Maximum Speed"
-msgstr "Viteza Maxima"
 
 #, fuzzy
 msgid "Maximum accepted age of the reported data in seconds"
@@ -28590,18 +27064,6 @@ msgid "Maximum inodes"
 msgstr "Vechimea maxima"
 
 #, fuzzy
-msgid "Maximum latency of successful GetItem requests"
-msgstr "Vechimea maxima a backup-urilor"
-
-#, fuzzy
-msgid "Maximum latency of successful PutItem requests"
-msgstr "Vechimea maxima a backup-urilor"
-
-#, fuzzy
-msgid "Maximum latency of successful Query requests"
-msgstr "Vechimea maxima a backup-urilor"
-
-#, fuzzy
 msgid "Maximum levels if using magic factor"
 msgstr "Nivelurile maxime pentru incarcare in procente"
 
@@ -28680,14 +27142,6 @@ msgid "Maximum number of service outages"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
-msgid "Maximum number of threads"
-msgstr "Numarul maxim de mesaje"
-
-msgid ""
-"Maximum number of threads started at any given time during the JVM lifetime"
-msgstr ""
-
-#, fuzzy
 msgid "Maximum parallel connections"
 msgstr "Numarul maxim de conexiuni paralele"
 
@@ -28743,14 +27197,6 @@ msgstr ""
 
 msgid "Maximum run duration for last execution"
 msgstr ""
-
-#, fuzzy
-msgid "Maximum single-request consumption"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Maximum size"
-msgstr "Dimensiunea Maxima"
 
 msgid "Maximum size of all files on backup space"
 msgstr ""
@@ -28903,9 +27349,6 @@ msgstr "Eticheta de grup nou"
 msgid "Memory"
 msgstr ""
 
-msgid "Memory (RAM)"
-msgstr ""
-
 msgid "Memory Average"
 msgstr ""
 
@@ -28921,14 +27364,6 @@ msgstr ""
 
 msgid "Memory Pool Name"
 msgstr ""
-
-#, fuzzy
-msgid "Memory Size"
-msgstr "% utilizare"
-
-#, fuzzy
-msgid "Memory Size in percent"
-msgstr "Nivelurile maxime pentru incarcare in procente"
 
 msgid "Memory Usage"
 msgstr ""
@@ -29024,10 +27459,6 @@ msgstr "% utilizare"
 msgid "Memory used by caches"
 msgstr ""
 
-#, fuzzy
-msgid "Memory utilization"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "Memory warning at"
 msgstr ""
 
@@ -29059,10 +27490,6 @@ msgid "Message Count"
 msgstr "Mesajul Text"
 
 #, fuzzy
-msgid "Message Rate"
-msgstr "Mesajul Text"
-
-#, fuzzy
 msgid "Message averaging"
 msgstr "Mesajul Text"
 
@@ -29076,10 +27503,6 @@ msgid "Message for service alerts"
 msgstr ""
 
 #, fuzzy
-msgid "Message processing"
-msgstr "Mesajul Text"
-
-#, fuzzy
 msgid "Message text"
 msgstr "Mesajul Text"
 
@@ -29087,16 +27510,8 @@ msgstr "Mesajul Text"
 msgid "Message when rule result is %s"
 msgstr ""
 
-#, fuzzy
-msgid "Messages"
-msgstr "Mesajul Text"
-
 msgid "Messages are handled by logwatch."
 msgstr ""
-
-#, fuzzy
-msgid "Messages in queue"
-msgstr "Mesajul Text"
 
 msgid "Messages in text log files"
 msgstr ""
@@ -29308,10 +27723,6 @@ msgstr "Perioada de timp Noua"
 msgid "Minimum required uptime"
 msgstr ""
 
-#, fuzzy
-msgid "Minimum single-request consumption"
-msgstr "Numarul maxim de conexiuni"
-
 msgid "Minimum time between runs"
 msgstr ""
 
@@ -29475,16 +27886,6 @@ msgid "Mode found during inventory"
 msgstr ""
 
 msgid "Mode of the Check"
-msgstr ""
-
-msgid "Model"
-msgstr ""
-
-#, fuzzy
-msgid "Model Name"
-msgstr "Numele Elementului"
-
-msgid "Model Name - LEGACY, don't use"
 msgstr ""
 
 msgid "Model and revsion"
@@ -29739,9 +28140,6 @@ msgid "Monitor via SNMP"
 msgstr ""
 
 msgid "Monitored clustered services (located on cluster host)"
-msgstr ""
-
-msgid "Monitored hosts"
 msgstr ""
 
 #, fuzzy
@@ -30055,10 +28453,6 @@ msgstr ""
 msgid "Multiple RRDs per host/service (compatible with PNP4Nagios)"
 msgstr ""
 
-#, fuzzy
-msgid "Multiple WATO Folders"
-msgstr "Folder nou"
-
 msgid "Multiple graphs"
 msgstr ""
 
@@ -30185,15 +28579,6 @@ msgstr ""
 #, fuzzy
 msgid "NagVis maps"
 msgstr "Acces la Hărțile NagVis"
-
-msgid "NagVis: AJAX"
-msgstr ""
-
-msgid "NagVis: Other"
-msgstr ""
-
-msgid "NagVis: Sidebar element"
-msgstr ""
 
 msgid "Nagios 3"
 msgstr ""
@@ -30478,10 +28863,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Namespace"
-msgstr "spatiu utilizat"
-
-#, fuzzy
 msgid "Namespace prefix for hosts"
 msgstr "Cautare"
 
@@ -30608,18 +28989,6 @@ msgstr "Statusul Serverului"
 msgid "Network"
 msgstr "Adresă"
 
-#, python-format
-msgid "Network Adapter %d"
-msgstr ""
-
-#, fuzzy
-msgid "Network Adapters"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Network ID"
-msgstr "Adresă"
-
 msgid "Network Load Balancer Listeners"
 msgstr ""
 
@@ -30707,10 +29076,6 @@ msgstr "Adresă"
 msgid "Networking checks without agent"
 msgstr ""
 
-#, fuzzy
-msgid "Networks"
-msgstr "Adresă"
-
 msgid "Never analyzed/vacuumed tables"
 msgstr ""
 
@@ -30743,10 +29108,6 @@ msgid "New Action"
 msgstr ""
 
 #, fuzzy
-msgid "New Connections"
-msgstr "Conexiune Noua"
-
-#, fuzzy
 msgid "New Password"
 msgstr "Parola"
 
@@ -30756,10 +29117,6 @@ msgstr "Confirma Parola"
 
 msgid "New SLA"
 msgstr ""
-
-#, fuzzy
-msgid "New TLS Connections"
-msgstr "Conexiune Noua"
 
 #, python-format
 msgid "New agent signature key '%s' created"
@@ -30787,9 +29144,6 @@ msgstr "Adaungă un nou element"
 #, fuzzy
 msgid "New entries"
 msgstr "% întrări libere"
-
-msgid "New event created"
-msgstr ""
 
 #, fuzzy
 msgid "New feature"
@@ -30874,9 +29228,6 @@ msgid "Nginx Server"
 msgstr ""
 
 msgid "Nginx Status"
-msgstr ""
-
-msgid "Nice"
 msgstr ""
 
 #, fuzzy
@@ -31245,10 +29596,6 @@ msgstr "catre port:"
 msgid "Node ID"
 msgstr ""
 
-#, fuzzy
-msgid "Node Labels"
-msgstr "Numele Elementului"
-
 msgid "Node Path Matching"
 msgstr ""
 
@@ -31322,10 +29669,6 @@ msgstr ""
 #, fuzzy
 msgid "Non-heap memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-msgid "Non-resident items"
-msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Non-unicast packet rates"
 msgstr ""
@@ -31649,9 +29992,6 @@ msgstr "Notificari"
 msgid "Notification configuration"
 msgstr ""
 
-msgid "Notification events of hosts."
-msgstr ""
-
 #, fuzzy
 msgid "Notification log level"
 msgstr "Notificari"
@@ -31661,10 +30001,6 @@ msgstr ""
 
 msgid "Notification period for services"
 msgstr ""
-
-#, fuzzy
-msgid "Notification phase"
-msgstr "Notificari"
 
 #, fuzzy
 msgid "Notification plugin timeout"
@@ -31744,9 +30080,6 @@ msgid ""
 msgstr ""
 
 msgid "Notifications of contact"
-msgstr ""
-
-msgid "Notifications of host"
 msgstr ""
 
 msgid "Notifications of host & services"
@@ -31862,10 +30195,6 @@ msgstr "Numarul maxim de conexiuni"
 msgid "Number of ICMP sockets"
 msgstr ""
 
-#, fuzzy
-msgid "Number of IP sets"
-msgstr "licente nefolosite"
-
 msgid "Number of Inactive Sessions"
 msgstr ""
 
@@ -31880,9 +30209,6 @@ msgid "Number of Lotus Domino Users"
 msgstr ""
 
 msgid "Number of Mails in Queue"
-msgstr ""
-
-msgid "Number of Monitored Hosts and Services"
 msgstr ""
 
 msgid "Number of Nodes"
@@ -31910,10 +30236,6 @@ msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr ""
 
 #, fuzzy
-msgid "Number of Web ACLs"
-msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
 msgid "Number of access points"
 msgstr "Numarul maxim de conexiuni"
 
@@ -31933,10 +30255,6 @@ msgstr ""
 #, fuzzy
 msgid "Number of apache processes"
 msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-msgid "Number of archives"
-msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of available file descriptors"
@@ -32061,16 +30379,8 @@ msgstr ""
 msgid "Number of fan failures"
 msgstr ""
 
-#, fuzzy
-msgid "Number of fetched items"
-msgstr "Numarul maxim de conexiuni"
-
 msgid "Number of fibers"
 msgstr ""
-
-#, fuzzy
-msgid "Number of fired alerts"
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of folders to create in each level"
 msgstr ""
@@ -32110,16 +30420,8 @@ msgstr "Numarul maxim de conexiuni"
 msgid "Number of inactive sessions"
 msgstr ""
 
-#, fuzzy
-msgid "Number of increments"
-msgstr "Numarul maxim de conexiuni"
-
 msgid "Number of initializing shards"
 msgstr ""
-
-#, fuzzy
-msgid "Number of issues"
-msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of items"
@@ -32154,9 +30456,6 @@ msgstr ""
 msgid "Number of logged in users (Linux)"
 msgstr ""
 
-msgid "Number of logical CPUs"
-msgstr ""
-
 msgid "Number of logon failures to lock the account"
 msgstr ""
 
@@ -32172,10 +30471,6 @@ msgstr ""
 
 msgid "Number of messages in deferred state"
 msgstr ""
-
-#, fuzzy
-msgid "Number of messages in defined timespan"
-msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of messages in defined timespan lower level"
@@ -32214,10 +30509,6 @@ msgid "Number of notifications exceeds maximum allowed number"
 msgstr ""
 
 #, fuzzy
-msgid "Number of objects"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 msgid "Number of occurrances"
 msgstr "Numarul maxim de conexiuni"
 
@@ -32230,9 +30521,6 @@ msgstr ""
 msgid "Number of pending tasks"
 msgstr ""
 
-msgid "Number of physical CPUs"
-msgstr ""
-
 #, fuzzy
 msgid "Number of positve responses required for OK state"
 msgstr "Numarul maxim de procese cu statusul OK"
@@ -32242,14 +30530,6 @@ msgstr ""
 
 msgid "Number of problem alerts"
 msgstr ""
-
-#, fuzzy
-msgid "Number of problematic hosts"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Number of problematic services"
-msgstr "Numarul maxim de mesaje"
 
 msgid "Number of problems"
 msgstr ""
@@ -32262,10 +30542,6 @@ msgid "Number of recoveries"
 msgstr ""
 
 #, fuzzy
-msgid "Number of regex sets"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 msgid "Number of relocating shards"
 msgstr "Numarul maxim de conexiuni"
 
@@ -32274,10 +30550,6 @@ msgstr ""
 
 msgid "Number of retries (not counting the initial regular run)"
 msgstr ""
-
-#, fuzzy
-msgid "Number of rule groups"
-msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "Number of search results"
@@ -32343,10 +30615,6 @@ msgstr ""
 
 msgid "Number of shared and exclusive locks"
 msgstr ""
-
-#, fuzzy
-msgid "Number of signed-in users"
-msgstr "licente nefolosite"
 
 #, fuzzy
 msgid "Number of signed-in web users"
@@ -32419,10 +30687,6 @@ msgstr ""
 msgid "Number of users"
 msgstr "Numarul maxim de mesaje"
 
-#, fuzzy
-msgid "Number of vaults"
-msgstr "Numarul maxim de mesaje"
-
 msgid "Number of warnings"
 msgstr ""
 
@@ -32477,28 +30741,11 @@ msgstr ""
 msgid "OK Pattern"
 msgstr ""
 
-# georgem ##############
-#, fuzzy
-msgid "OK Services of Hostgroup"
-msgstr "Grup nou"
-
-# georgem ##############
-#, fuzzy
-msgid "OK Services of Site"
-msgstr "Grup nou"
-
-msgid "OK Services of host"
-msgstr ""
-
 msgid "OK area"
 msgstr ""
 
 msgid "OK if standby count is zero or equals active paths."
 msgstr ""
-
-#, fuzzy
-msgid "OK services"
-msgstr "servicii"
 
 msgid "OK/Up"
 msgstr ""
@@ -32657,9 +30904,6 @@ msgstr ""
 msgid "Object type"
 msgstr "Conexiune Noua"
 
-msgid "Objects"
-msgstr ""
-
 msgid "Observation period for temperature trend computation"
 msgstr ""
 
@@ -32679,10 +30923,6 @@ msgstr ""
 
 msgid "Offline"
 msgstr ""
-
-#, fuzzy
-msgid "Offline hosts"
-msgstr "(fără elemente)"
 
 msgid "Offline sequences in"
 msgstr ""
@@ -32709,13 +30949,6 @@ msgstr ""
 
 msgid "Older events"
 msgstr ""
-
-msgid "Oldest Replication Slot Lag Size"
-msgstr ""
-
-#, fuzzy
-msgid "Oldest age"
-msgstr "(selectează directorul)"
 
 #, fuzzy
 msgid "Oldest file"
@@ -33058,9 +31291,6 @@ msgstr "licente nefolosite"
 msgid "Open input/output handles"
 msgstr "Reseteaza contoarele"
 
-msgid "Open mode"
-msgstr ""
-
 msgid "Open network sockets"
 msgstr ""
 
@@ -33143,9 +31373,6 @@ msgid "Operation errors"
 msgstr ""
 
 msgid "Operation on selected metrics"
-msgstr ""
-
-msgid "Operational Status"
 msgstr ""
 
 #, fuzzy
@@ -33240,9 +31467,6 @@ msgid "Oracle"
 msgstr ""
 
 msgid "Oracle Custom SQLs"
-msgstr ""
-
-msgid "Oracle DB"
 msgstr ""
 
 msgid "Oracle Data-Guard Stats"
@@ -33402,9 +31626,6 @@ msgstr "Setari"
 msgid "Other entity"
 msgstr "Setari"
 
-msgid "Other hosts"
-msgstr ""
-
 #, fuzzy
 msgid "Other integrations"
 msgstr "Setari"
@@ -33471,9 +31692,6 @@ msgid "Outage count requirement"
 msgstr ""
 
 msgid "Outage statistics"
-msgstr ""
-
-msgid "Outbound messages"
 msgstr ""
 
 msgid "Outcome & Action"
@@ -33556,19 +31774,11 @@ msgstr ""
 msgid "Output text encoding settings for SNMP devices"
 msgstr ""
 
-#, fuzzy
-msgid "Output traffic"
-msgstr "Numele Elementului"
-
 msgid "Output unicast octets"
 msgstr ""
 
 msgid "Output unicast packets"
 msgstr ""
-
-#, fuzzy
-msgid "Outputs"
-msgstr "Numele Elementului"
 
 msgid "Outside these ranges the check will always be OK"
 msgstr ""
@@ -33585,43 +31795,14 @@ msgstr ""
 msgid "Overall state of a virtual machine (for example ESX VMs)"
 msgstr ""
 
-msgid ""
-"Overall state of all docker containers, with counts of services in the "
-"various states."
-msgstr ""
-
-msgid ""
-"Overall state of all docker nodes, with counts of services in the various "
-"states."
-msgstr ""
-
-msgid ""
-"Overall state of all hosts, with counts of services in the various states."
-msgstr ""
-
-msgid "Overall state of all vSphere based virtual machines."
-msgstr ""
-
-msgid ""
-"Overall state of all vSphere servers, with counts of services in the various "
-"states."
-msgstr ""
-
 #, fuzzy
 msgid "Overall status"
 msgstr "RAID: starea sistemului"
-
-#, fuzzy
-msgid "Overall utilization"
-msgstr "Dezactiveaza Notificarile"
 
 msgid "Overdue bulk notifications!"
 msgstr ""
 
 msgid "Overflows"
-msgstr ""
-
-msgid "Overprovisioned"
 msgstr ""
 
 msgid "Override automatic metric selection"
@@ -33692,10 +31873,6 @@ msgstr ""
 msgid "PASSIVE"
 msgstr ""
 
-#, fuzzy
-msgid "PCI Express IO utilization"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "PCIe flash module"
 msgstr ""
 
@@ -33709,16 +31886,6 @@ msgid "PDisk EID:Slot-Device"
 msgstr ""
 
 msgid "PEND"
-msgstr ""
-
-#, fuzzy
-msgid "PEND Services of Hostgroup"
-msgstr "Grup nou"
-
-msgid "PENDING Services of host"
-msgstr ""
-
-msgid "PGA Info"
 msgstr ""
 
 msgid "PID"
@@ -33794,9 +31961,6 @@ msgstr "Acces la Agenți"
 
 #, python-format
 msgid "Package %s"
-msgstr ""
-
-msgid "Package Version"
 msgstr ""
 
 msgid ""
@@ -33904,12 +32068,6 @@ msgstr ""
 msgid "Page Reads"
 msgstr ""
 
-msgid "Page Swap In"
-msgstr ""
-
-msgid "Page Swap Out"
-msgstr ""
-
 msgid "Page Writes"
 msgstr ""
 
@@ -33992,10 +32150,6 @@ msgstr ""
 #, fuzzy
 msgid "Parallelize core config creation"
 msgstr "Salveaza configuratia manuala a verificarilor"
-
-#, fuzzy
-msgid "Parameter"
-msgstr "(fără parametri)"
 
 msgid "Parameter rule set"
 msgstr ""
@@ -34201,10 +32355,6 @@ msgstr ""
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 
-#, fuzzy
-msgid "Paused"
-msgstr "(nefolosit)"
-
 msgid "Paused containers"
 msgstr ""
 
@@ -34221,14 +32371,6 @@ msgstr ""
 msgid "Peak value of active sessions"
 msgstr "Nivelurile maxime pentru voltaj"
 
-#, fuzzy
-msgid "Peer IP Address"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Peer Name"
-msgstr "Numele Elementului"
-
 msgid "Peers"
 msgstr ""
 
@@ -34239,50 +32381,17 @@ msgstr "cereri"
 msgid "Pending DHCP leases"
 msgstr ""
 
-#, fuzzy
-msgid "Pending Services of Site"
-msgstr "Afectat de serviciu"
-
 msgid "Pending changes"
 msgstr ""
 
 msgid "Pending memory"
 msgstr ""
 
-msgid "Pending normal updates"
-msgstr ""
-
-#, fuzzy
-msgid "Pending requests"
-msgstr "cereri"
-
-msgid "Pending security updates"
-msgstr ""
-
-#, fuzzy
-msgid "Pending service discovery"
-msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
-msgid "Pending services"
-msgstr "Afectat de serviciu"
-
 msgid "Pending tasks"
 msgstr ""
 
 msgid "Pending tasks delta"
 msgstr ""
-
-msgid "Pending updates"
-msgstr ""
-
-#, fuzzy
-msgid "Pending vBuckets"
-msgstr "Afectat de serviciu"
-
-#, fuzzy
-msgid "Per Core utilization"
-msgstr "Dezactiveaza Notificarile"
 
 msgid ""
 "Per default all plugins and local scripts are being run sequentially. You "
@@ -34399,22 +32508,6 @@ msgstr "trei nivele"
 msgid "Percentage levels of current thread count in threadpool"
 msgstr ""
 
-#, python-format
-msgid "Percentage of HTTP %s errors"
-msgstr ""
-
-#, fuzzy
-msgid "Percentage of HTTP 3/4/5XX Errors"
-msgstr "trei nivele"
-
-#, fuzzy
-msgid "Percentage of HTTP 500/2/3/4 Errors"
-msgstr "trei nivele"
-
-#, fuzzy
-msgid "Percentage of Lambda user errors"
-msgstr "trei nivele"
-
 #, fuzzy
 msgid "Percentage of Read I/O Operations per Latency Range"
 msgstr "Optiuni tabel"
@@ -34424,16 +32517,8 @@ msgid "Percentage of Write I/O Operations per Latency Range"
 msgstr "Optiuni tabel"
 
 #, fuzzy
-msgid "Percentage of allowed requests"
-msgstr "trei nivele"
-
-#, fuzzy
 msgid "Percentage of available cooling capacity"
 msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Percentage of blocked requests"
-msgstr "trei nivele"
 
 msgid "Percentage of current threads busy in threadpool"
 msgstr ""
@@ -34747,9 +32832,6 @@ msgstr "Arata regulile de utilizator"
 msgid "Personal settings"
 msgstr "Setari"
 
-msgid "Phantom interruptions received"
-msgstr ""
-
 msgid "Phase"
 msgstr ""
 
@@ -34798,34 +32880,8 @@ msgstr ""
 msgid "Physical"
 msgstr ""
 
-msgid "Physical Address (MAC)"
-msgstr ""
-
-#, fuzzy
-msgid "Physical CPU consumption"
-msgstr "APC consum de Curent"
-
-msgid "Physical Components"
-msgstr ""
-
 msgid "Physical Disks"
 msgstr ""
-
-#, fuzzy
-msgid "Physical Volume Free Partitions"
-msgstr "Nume nou"
-
-#, fuzzy
-msgid "Physical Volume Name"
-msgstr "Nume nou"
-
-#, fuzzy
-msgid "Physical Volume Status"
-msgstr "Nume nou"
-
-#, fuzzy
-msgid "Physical Volume Total Partitions"
-msgstr "Nume nou"
 
 msgid "Physical disks"
 msgstr ""
@@ -34838,10 +32894,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Physical port states to discover"
-msgstr "Starea porturilor pentru inventariere"
-
-#, fuzzy
-msgid "Physical processors consumed"
 msgstr "Starea porturilor pentru inventariere"
 
 msgid "Physical state of port"
@@ -34932,9 +32984,6 @@ msgid "Plaintext"
 msgstr ""
 
 msgid "Platform"
-msgstr ""
-
-msgid "Platform Firmware level"
 msgstr ""
 
 msgid "Play alarm sounds"
@@ -35408,13 +33457,7 @@ msgstr ""
 msgid "Plugins, local checks and MRPE for non-root users"
 msgstr ""
 
-msgid "Pod"
-msgstr ""
-
 msgid "Pod - Display the information for pod level"
-msgstr ""
-
-msgid "Pod IP"
 msgstr ""
 
 #, fuzzy
@@ -35451,9 +33494,6 @@ msgid "Port"
 msgstr ""
 
 msgid "Port Number"
-msgstr ""
-
-msgid "Port Usage"
 msgstr ""
 
 msgid "Port defaults to 443. In this mode the URL is not checked."
@@ -35505,13 +33545,6 @@ msgid "Port:"
 msgstr ""
 
 msgid "Portnumber"
-msgstr ""
-
-#, fuzzy
-msgid "Ports"
-msgstr "rapoarte"
-
-msgid "Ports available"
 msgstr ""
 
 msgid "Ports to open"
@@ -35578,9 +33611,6 @@ msgstr ""
 msgid "Power Presence Sensors"
 msgstr ""
 
-msgid "Power Supplies"
-msgstr ""
-
 msgid "Power Supply Unit"
 msgstr ""
 
@@ -35620,9 +33650,6 @@ msgstr "Eticheta de grup nou"
 msgid "Precision of float values"
 msgstr ""
 
-msgid "Precompiled"
-msgstr ""
-
 #, fuzzy
 msgid "Predefined condition"
 msgstr "Adaugă Condiție"
@@ -35641,9 +33668,6 @@ msgstr ""
 #, fuzzy
 msgid "Predefined searches"
 msgstr "Cautare noua"
-
-msgid "Predicted average for 15 minute CPU load"
-msgstr ""
 
 #, fuzzy
 msgid "Prediction"
@@ -35842,9 +33866,6 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Privilege Level"
 msgstr ""
 
-msgid "Privileged"
-msgstr ""
-
 #, fuzzy
 msgid "Prob."
 msgstr "Probleme"
@@ -35852,10 +33873,6 @@ msgstr "Probleme"
 #, python-format
 msgid "Problem %s"
 msgstr ""
-
-#, fuzzy
-msgid "Problem aggregations"
-msgstr "Agregare noua"
 
 #, fuzzy
 msgid "Problem alerts"
@@ -35892,9 +33909,6 @@ msgstr "Probleme"
 #, fuzzy
 msgid "Problems in total"
 msgstr "Probleme"
-
-msgid "Problems of host"
-msgstr ""
 
 msgid "Proceed"
 msgstr ""
@@ -35966,14 +33980,6 @@ msgstr ""
 msgid "Process stored SNMP walks with agent simulator"
 msgstr ""
 
-#, fuzzy
-msgid "Processed Bytes"
-msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Processes"
-msgstr "Numele Elementului"
-
 #, python-format
 msgid "Processing first site %s"
 msgstr ""
@@ -35990,21 +33996,6 @@ msgstr ""
 
 msgid "Processing time per message"
 msgstr ""
-
-msgid "Processor"
-msgstr ""
-
-#, fuzzy
-msgid "Processor Entitled Capacity"
-msgstr "Capacitatea maxima"
-
-#, fuzzy
-msgid "Processor Implementation Mode"
-msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Processor Max. Capacity"
-msgstr "Capacitatea maxima"
 
 msgid "Product"
 msgstr ""
@@ -36084,9 +34075,6 @@ msgstr ""
 msgid "Properties of host"
 msgstr ""
 
-msgid "Proportion of healthy host"
-msgstr ""
-
 msgid "Protocol"
 msgstr ""
 
@@ -36123,26 +34111,6 @@ msgid ""
 "Provide the base URL for docker API engine calls. By default we are trying "
 "to connect via the unix socket at %s."
 msgstr ""
-
-msgid "Provisioned IOPS SSD IO operations per second"
-msgstr ""
-
-msgid "Provisioned IOPS SSD space"
-msgstr ""
-
-#, fuzzy
-msgid "Provisioned concurrency executions"
-msgstr "Numarul maxim de conexiuni"
-
-msgid "Provisioned concurrency invocations"
-msgstr ""
-
-msgid "Provisioned concurrency spillover invocations"
-msgstr ""
-
-#, fuzzy
-msgid "Provisioned concurrency utilization"
-msgstr "Dezactiveaza Notificarile"
 
 msgid "Provisioned filesystem space"
 msgstr ""
@@ -36222,17 +34190,6 @@ msgstr ""
 msgid "Publish to other users"
 msgstr ""
 
-#, fuzzy
-msgid "Published message rate"
-msgstr "Adaugă model mesaj"
-
-#, fuzzy
-msgid "Published messages"
-msgstr "Adaugă model mesaj"
-
-msgid "Publisher"
-msgstr ""
-
 msgid "Pull: Checkmk server contacts the agent"
 msgstr ""
 
@@ -36291,9 +34248,6 @@ msgstr "Conexiuni Active"
 msgid "Python version for execution of python agent plugins"
 msgstr ""
 
-msgid "QOS class"
-msgstr ""
-
 msgid "Qmail: Mail Queue"
 msgstr ""
 
@@ -36307,9 +34261,6 @@ msgid "QoS outbound bits"
 msgstr ""
 
 msgid "Quantum Storage Status"
-msgstr ""
-
-msgid "Quarantine Usage"
 msgstr ""
 
 msgid "Queried Hostname or IP address"
@@ -36343,10 +34294,6 @@ msgstr "Nume nou"
 
 msgid "Queue Latency"
 msgstr ""
-
-#, fuzzy
-msgid "Queue Manager Name"
-msgstr "Nume nou"
 
 msgid "Queue Name"
 msgstr ""
@@ -36484,6 +34431,9 @@ msgid "RAM used %"
 msgstr "(nefolosit)"
 
 msgid "RCU"
+msgstr ""
+
+msgid "REST API"
 msgstr ""
 
 #, fuzzy
@@ -36701,10 +34651,6 @@ msgid "Read Average RTT (ms)"
 msgstr ""
 
 #, fuzzy
-msgid "Read Capacity"
-msgstr "Capacitatea maxima"
-
-#, fuzzy
 msgid "Read Capacity Units"
 msgstr "Perioada de timp Noua"
 
@@ -36767,10 +34713,6 @@ msgstr ""
 msgid "Read operations"
 msgstr "Optiuni tabel"
 
-#, fuzzy
-msgid "Read recovery latency"
-msgstr "Statusul Serverului"
-
 msgid "Read replica per master"
 msgstr ""
 
@@ -36817,10 +34759,6 @@ msgstr "Perioada de timp Noua"
 msgid "Reading connections"
 msgstr "Conexiune Noua"
 
-#, fuzzy
-msgid "Reading request"
-msgstr "cereri"
-
 msgid "Reads size /s"
 msgstr ""
 
@@ -36836,13 +34774,6 @@ msgstr ""
 #, fuzzy
 msgid "Ready containers"
 msgstr "Optiuni tabel"
-
-#, fuzzy
-msgid "Ready messages"
-msgstr "Mesajul Text"
-
-msgid "Ready replicas"
-msgstr ""
 
 msgid "Real Number (REAL)"
 msgstr ""
@@ -36919,9 +34850,6 @@ msgstr ""
 msgid "Recent notifications (for analysis)"
 msgstr ""
 
-msgid "Recently changed services"
-msgstr ""
-
 msgid "Recipient"
 msgstr ""
 
@@ -36966,10 +34894,6 @@ msgstr ""
 msgid "Recovery Status"
 msgstr "Statusul Serverului"
 
-#, fuzzy
-msgid "Recovery area"
-msgstr "Statusul Serverului"
-
 msgid "Recurring"
 msgstr ""
 
@@ -37003,9 +34927,6 @@ msgstr "Adaugă nume de senzor"
 #, fuzzy
 msgid "Redis server name"
 msgstr "Adaugă nume de senzor"
-
-msgid "Redo buffers"
-msgstr ""
 
 #, fuzzy
 msgid "Reenable this test"
@@ -37093,24 +35014,14 @@ msgstr "ieri"
 msgid "Registered agents"
 msgstr ""
 
-msgid "Registered desktops"
-msgstr ""
-
 msgid "Registered instances per load balancer"
 msgstr ""
 
 msgid "Registered modems"
 msgstr ""
 
-msgid "Registered phones"
-msgstr ""
-
 msgid "Registration and fallback"
 msgstr ""
-
-#, fuzzy
-msgid "Registry"
-msgstr "ieri"
 
 msgid "Registry Keys to search for software (Windows)"
 msgstr ""
@@ -37172,10 +35083,6 @@ msgstr ""
 
 msgid "Regular heartbeat"
 msgstr ""
-
-#, fuzzy
-msgid "Rejected Connections"
-msgstr "Conexiuni Active"
 
 #, fuzzy
 msgid "Rejected sessions"
@@ -37640,13 +35547,6 @@ msgid "Replayed notification number %d"
 msgstr "%d reguli de notificări globale"
 
 #, fuzzy
-msgid "Replica Lag"
-msgstr "Numele Aplicatiei"
-
-msgid "Replicas"
-msgstr ""
-
-#, fuzzy
 msgid "Replicate Event Console config"
 msgstr "Acces la Consola de Evenimente"
 
@@ -37664,9 +35564,6 @@ msgid "Replicate user profile"
 msgstr "Acces la Consola de Evenimente"
 
 msgid "Replication Partner"
-msgstr ""
-
-msgid "Replication Slot Disk Usage"
 msgstr ""
 
 msgid "Replication States"
@@ -37778,9 +35675,6 @@ msgstr ""
 msgid "Reports"
 msgstr ""
 
-msgid "Repository/Tag"
-msgstr ""
-
 msgid "Req. Version"
 msgstr ""
 
@@ -37791,9 +35685,6 @@ msgstr "cereri"
 #, fuzzy
 msgid "Request Method"
 msgstr "cereri/sec"
-
-msgid "Request latency"
-msgstr ""
 
 #, fuzzy
 msgid "Request metrics"
@@ -37921,10 +35812,6 @@ msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr ""
 
 #, fuzzy
-msgid "Resident items ratio"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 msgid "Resident memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -37980,10 +35867,6 @@ msgstr ""
 
 msgid "Restart"
 msgstr ""
-
-#, fuzzy
-msgid "Restart count"
-msgstr "Reseteaza contoarele"
 
 #, fuzzy
 msgid "Restart mode for Nagios"
@@ -38138,10 +36021,6 @@ msgstr ""
 
 msgid "Result of last synchronization process"
 msgstr ""
-
-#, fuzzy
-msgid "Result of summed up values"
-msgstr "Optiuni tabel"
 
 msgid "Resulting notifications"
 msgstr ""
@@ -38310,9 +36189,6 @@ msgstr ""
 msgid "Router that must or must not be used"
 msgstr ""
 
-msgid "Routes"
-msgstr ""
-
 msgid "Rows"
 msgstr ""
 
@@ -38336,10 +36212,6 @@ msgstr ""
 #, python-format
 msgid "Rule %d in Folder %s is affected"
 msgstr ""
-
-#, fuzzy
-msgid "Rule Evaluations"
-msgstr "Optiuni tabel"
 
 msgid "Rule ID"
 msgstr ""
@@ -38378,9 +36250,6 @@ msgstr ""
 msgid "Rule editor"
 msgstr "limita superioara"
 
-msgid "Rule efficiency"
-msgstr ""
-
 #, fuzzy
 msgid "Rule groups"
 msgstr "Grupuri RAID"
@@ -38399,16 +36268,16 @@ msgstr "limita superioara"
 msgid "Rule pack"
 msgstr "Reguli"
 
+#, fuzzy, python-format
+msgid "Rule pack %s"
+msgstr "Reguli"
+
 msgid "Rule pack ID"
 msgstr ""
 
 #, fuzzy
 msgid "Rule pack properties"
 msgstr "Proprietatile Folderului"
-
-#, python-format
-msgid "Rule package %s"
-msgstr ""
 
 #, fuzzy
 msgid "Rule packs"
@@ -38587,10 +36456,6 @@ msgid "Running as standby"
 msgstr "sesiuni"
 
 #, fuzzy
-msgid "Running collectors"
-msgstr "sesiuni"
-
-#, fuzzy
 msgid "Running containers"
 msgstr "sesiuni"
 
@@ -38618,10 +36483,6 @@ msgstr "sesiuni"
 #, fuzzy
 msgid "Runtime"
 msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Runtime run queue"
-msgstr "Numele elementului pentru eveniment"
 
 msgid "Rx"
 msgstr ""
@@ -38692,15 +36553,6 @@ msgid "SDM template mismatch"
 msgstr ""
 
 msgid "SDR cache recreate"
-msgstr ""
-
-msgid "SELECT Object Returned"
-msgstr ""
-
-msgid "SELECT Object Scanned"
-msgstr ""
-
-msgid "SGA Info"
 msgstr ""
 
 msgid "SHA-1 (SHA-96)"
@@ -38820,10 +36672,6 @@ msgstr ""
 msgid "SMB share to check"
 msgstr ""
 
-#, fuzzy
-msgid "SMT Threads"
-msgstr "fire"
-
 msgid "SMTP AUTH type to check (default none, only LOGIN supported)"
 msgstr ""
 
@@ -38859,10 +36707,6 @@ msgstr ""
 
 msgid "SNMP Context IDs"
 msgstr ""
-
-#, fuzzy
-msgid "SNMP Information"
-msgstr "Informații Adiționale"
 
 msgid "SNMP MIBs"
 msgstr ""
@@ -39008,9 +36852,6 @@ msgstr ""
 #, fuzzy
 msgid "SSL connections"
 msgstr "Conexiuni Active"
-
-msgid "SSL handshake time"
-msgstr ""
 
 #, fuzzy
 msgid "SSL/TLS"
@@ -39175,10 +37016,6 @@ msgstr "Întreruperi adhoc"
 msgid "Scheduled downtime depth"
 msgstr ""
 
-#, fuzzy
-msgid "Scheduled downtimes"
-msgstr "Întreruperi adhoc"
-
 msgid "Scheduled report title"
 msgstr ""
 
@@ -39229,15 +37066,9 @@ msgstr ""
 msgid "Script body"
 msgstr ""
 
-msgid "Script executed"
-msgstr ""
-
 #, fuzzy
 msgid "Script pattern"
 msgstr "Adaugă model/tipar"
-
-msgid "Scripts"
-msgstr ""
 
 msgid "Scripts to integrate Nagios plugis"
 msgstr ""
@@ -39255,9 +37086,6 @@ msgstr ""
 #, fuzzy
 msgid "Search all rules and rulesets"
 msgstr "Arata regulile de utilizator"
-
-msgid "Search field allowing regular expressions and partial matches"
-msgstr ""
 
 #, fuzzy
 msgid "Search filter"
@@ -39306,13 +37134,6 @@ msgstr ""
 msgid "Search for rulesets that have rules configured"
 msgstr ""
 
-msgid "Search for services and display their graphs"
-msgstr ""
-
-#, fuzzy
-msgid "Search history"
-msgstr "(selectează directorul)"
-
 #, fuzzy
 msgid "Search hosts"
 msgstr "Cautare"
@@ -39348,9 +37169,6 @@ msgstr ""
 #, fuzzy
 msgid "Search pattern"
 msgstr "Adaugă model/tipar"
-
-msgid "Search performance data"
-msgstr ""
 
 #, fuzzy
 msgid "Search result(s) preview"
@@ -39391,11 +37209,6 @@ msgstr "Cautare"
 #, fuzzy
 msgid "Search string"
 msgstr "Cautare"
-
-# georgem ##############
-#, fuzzy
-msgid "Search time graphs"
-msgstr "Grup nou"
 
 msgid "Search whole subtree below the base DN"
 msgstr ""
@@ -39704,10 +37517,6 @@ msgstr ""
 msgid "Selection of service instances"
 msgstr ""
 
-#, fuzzy
-msgid "Selectors"
-msgstr "(selectează directorul)"
-
 msgid "Selects how parallelizable scripts are executed"
 msgstr ""
 
@@ -39788,9 +37597,6 @@ msgstr ""
 msgid "Sending Power"
 msgstr ""
 
-msgid "Sending reply"
-msgstr ""
-
 msgid "Sends Timed-Out"
 msgstr ""
 
@@ -39845,12 +37651,6 @@ msgstr ""
 msgid "September"
 msgstr ""
 
-msgid "Serial Number"
-msgstr ""
-
-msgid "Serial Number - LEGACY, don't use"
-msgstr ""
-
 msgid "Serial number"
 msgstr ""
 
@@ -39898,10 +37698,6 @@ msgstr ""
 
 msgid "Service Comments"
 msgstr ""
-
-#, fuzzy
-msgid "Service Costs per Day"
-msgstr "Statusul Serverului"
 
 msgid "Service Description"
 msgstr ""
@@ -39965,12 +37761,6 @@ msgstr "Numele Elementului"
 msgid "Service Notifications"
 msgstr ""
 
-msgid "Service Pack"
-msgstr ""
-
-msgid "Service Packs"
-msgstr ""
-
 msgid "Service Perf-O-Meter"
 msgstr ""
 
@@ -40017,19 +37807,12 @@ msgstr ""
 msgid "Service check duration"
 msgstr ""
 
-#, fuzzy
-msgid "Service check durations"
-msgstr "Salveaza configuratia manuala a verificarilor"
-
 msgid "Service check latency"
 msgstr ""
 
 #, fuzzy
 msgid "Service check period"
 msgstr "trimite notificare"
-
-msgid "Service check rate"
-msgstr ""
 
 msgid "Service check timeout (Microcore)"
 msgstr ""
@@ -40129,11 +37912,6 @@ msgstr ""
 
 # georgem ##############
 #, fuzzy
-msgid "Service graphs of host"
-msgstr "Grup nou"
-
-# georgem ##############
-#, fuzzy
 msgid "Service groups"
 msgstr "Grup nou"
 
@@ -40229,9 +38007,6 @@ msgstr ""
 msgid "Service problem acknowledged"
 msgstr ""
 
-msgid "Service problems"
-msgstr ""
-
 #, fuzzy
 msgid "Service problems (all)"
 msgstr "(fără Nivel de serviciu)"
@@ -40239,9 +38014,6 @@ msgstr "(fără Nivel de serviciu)"
 #, fuzzy
 msgid "Service problems (unhandled)"
 msgstr "(fără Nivel de serviciu)"
-
-msgid "Service problems for NagStaMon"
-msgstr ""
 
 msgid "Service recovers to OK"
 msgstr ""
@@ -40305,9 +38077,6 @@ msgstr "Grup nou"
 msgid "Service tags (with titles)"
 msgstr "Numele Elementului"
 
-msgid "Service whose state changed in the last 60 minutes"
-msgstr ""
-
 msgid "Service-Level"
 msgstr ""
 
@@ -40355,33 +38124,6 @@ msgstr ""
 msgid "Services grouped by service groups"
 msgstr ""
 
-#, fuzzy
-msgid "Services in downtime"
-msgstr "Numele Elementului"
-
-msgid "Services not being monitored due to configuration."
-msgstr ""
-
-msgid "Services of Host"
-msgstr ""
-
-msgid "Services of Hostgroup"
-msgstr ""
-
-msgid "Services of Hosts"
-msgstr ""
-
-msgid "Services of Site"
-msgstr ""
-
-msgid "Services of a service group"
-msgstr ""
-
-# georgem ##############
-#, fuzzy
-msgid "Services of down hosts"
-msgstr "Grup nou"
-
 msgid "Services of host"
 msgstr ""
 
@@ -40400,11 +38142,6 @@ msgid ""
 "added to a host during discovery (automatic service detection). Services "
 "that already exist will continued to be monitored but be marked as obsolete "
 "in the service list of a host."
-msgstr ""
-
-msgid ""
-"Services that have not been checked for too long according to their "
-"configured check intervals."
 msgstr ""
 
 #, fuzzy
@@ -40887,9 +38624,6 @@ msgstr ""
 msgid "Shared Access Locks"
 msgstr ""
 
-msgid "Shared Processor Mode"
-msgstr ""
-
 msgid "Shared locks"
 msgstr ""
 
@@ -40902,9 +38636,6 @@ msgstr ""
 #, fuzzy
 msgid "Shared memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
-
-msgid "Shared pool size"
-msgstr ""
 
 msgid "Shared with"
 msgstr ""
@@ -41354,21 +39085,12 @@ msgstr "servicii"
 msgid "Show/Hide password"
 msgstr "Parola"
 
-msgid "Shows a single aggregation."
-msgstr ""
-
 msgid ""
 "Shows all graphs including timerange selections of a collection of services."
 msgstr ""
 
-msgid "Shows details of a host."
-msgstr ""
-
 msgid ""
 "Shows host graphs including timerange selections of a collection of hosts."
-msgstr ""
-
-msgid "Shows number of alerts grouped for each service."
 msgstr ""
 
 msgid "Shows the Checkmk logo."
@@ -41505,10 +39227,6 @@ msgstr ""
 msgid "Simple checks for BIOS/Hardware errors"
 msgstr ""
 
-msgid ""
-"Simple summary page of all BI aggregates that is used as a web services."
-msgstr ""
-
 msgid "Simulate for site"
 msgstr ""
 
@@ -41551,10 +39269,6 @@ msgstr ""
 msgid "Single"
 msgstr ""
 
-msgid ""
-"Single Aggregation for simple API calls. Contains the state and state output."
-msgstr ""
-
 msgid "Single Bit (BOOL)"
 msgstr ""
 
@@ -41566,14 +39280,6 @@ msgid "Single file"
 msgstr "(selectează directorul)"
 
 #, fuzzy
-msgid "Single host aggregations"
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-msgid "Single host problems"
-msgstr "Probleme"
-
-#, fuzzy
 msgid "Single metric"
 msgstr "Afectat de serviciu"
 
@@ -41582,13 +39288,6 @@ msgstr ""
 
 msgid "Single quotes are not allowed here."
 msgstr ""
-
-msgid "Single-Host Aggregations of Host"
-msgstr ""
-
-#, fuzzy
-msgid "Single-request consumption"
-msgstr "APC consum de Curent"
 
 msgid "Siren"
 msgstr ""
@@ -41753,10 +39452,6 @@ msgid "Size of extensions"
 msgstr ""
 
 #, fuzzy
-msgid "Size of license"
-msgstr "licente nefolosite"
-
-#, fuzzy
 msgid "Size of mails in queues"
 msgstr "Numarul maxim de emailuri in coada"
 
@@ -41848,9 +39543,6 @@ msgstr ""
 msgid "Slab (Various smaller caches)"
 msgstr ""
 
-msgid "Slave usage bytes across all pools"
-msgstr ""
-
 msgid ""
 "Slight gradient in the colors of the colored areas in the graphs. 0% turns "
 "off the gradient, 100% makes it the strongest possible."
@@ -41902,9 +39594,6 @@ msgid "Socket"
 msgstr ""
 
 msgid "Soft query limit"
-msgstr ""
-
-msgid "Software"
 msgstr ""
 
 msgid "Software package"
@@ -42158,18 +39847,11 @@ msgstr ""
 msgid "Sort index"
 msgstr ""
 
-msgid "Sort overflow"
-msgstr ""
-
 msgid "Sorting"
 msgstr ""
 
 msgid "Source"
 msgstr ""
-
-#, fuzzy
-msgid "Source IP Address"
-msgstr "Adresă"
 
 #, fuzzy
 msgid "Source NAT Name"
@@ -42648,9 +40330,6 @@ msgid ""
 "services with the same description otherwise."
 msgstr ""
 
-msgid "Speed"
-msgstr ""
-
 msgid "Speed of interface groups (Netapp only)"
 msgstr ""
 
@@ -42731,12 +40410,6 @@ msgid "Stacks"
 msgstr ""
 
 msgid "Stale"
-msgstr ""
-
-msgid "Stale hosts"
-msgstr ""
-
-msgid "Stale services"
 msgstr ""
 
 msgid "Staleness"
@@ -42866,14 +40539,7 @@ msgstr ""
 msgid "Starting site update: %s"
 msgstr ""
 
-#, fuzzy
-msgid "Starting up"
-msgstr "Setari"
-
 msgid "Starting with entry"
-msgstr ""
-
-msgid "Startup overhead in shared pool"
 msgstr ""
 
 msgid "State"
@@ -43128,9 +40794,6 @@ msgstr ""
 #, fuzzy
 msgid "State of case if recovery is set (predefined)"
 msgstr "Întreruperi adhoc"
-
-msgid "State of event changed by user"
-msgstr ""
 
 #, fuzzy
 msgid "State of host"
@@ -43537,15 +41200,9 @@ msgstr "trimite notificare"
 msgid "Status notifications enabled"
 msgstr "Notificari"
 
-msgid "Status of Host"
-msgstr ""
-
 #, fuzzy
 msgid "Status of OMD sites and Checkmk Notification spooler"
 msgstr "(Nu primi notificări)"
-
-msgid "Status of a single service, to be used for linking"
-msgstr ""
 
 msgid "Status of host"
 msgstr ""
@@ -43626,9 +41283,6 @@ msgstr ""
 msgid "Status: yellow"
 msgstr ""
 
-msgid "Steal"
-msgstr ""
-
 #, fuzzy
 msgid "Steelhead connections"
 msgstr "Conexiune Noua"
@@ -43695,10 +41349,6 @@ msgstr "Nume utilizator vSphere"
 msgid "Stopped acknowledgement"
 msgstr "Autorul Confirmației"
 
-#, fuzzy
-msgid "Stopped collectors"
-msgstr "(selectează directorul)"
-
 msgid "Stopped containers"
 msgstr ""
 
@@ -43711,13 +41361,7 @@ msgstr ""
 msgid "Stopping VMs"
 msgstr ""
 
-msgid "Storage"
-msgstr ""
-
 msgid "Storage Processor Utilization"
-msgstr ""
-
-msgid "Storage Processor utilization"
 msgstr ""
 
 #, fuzzy
@@ -43775,14 +41419,7 @@ msgstr "rapoarte"
 msgid "Straight"
 msgstr "dreapta"
 
-#, fuzzy
-msgid "Stream rules"
-msgstr "Cautare"
-
 msgid "Streams"
-msgstr ""
-
-msgid "Streams pool size"
 msgstr ""
 
 msgid "Street name"
@@ -43832,9 +41469,6 @@ msgstr ""
 #, fuzzy
 msgid "Style of connection lines"
 msgstr "Numarul maxim de conexiuni"
-
-msgid "Styles"
-msgstr ""
 
 msgid ""
 "Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available as "
@@ -44041,9 +41675,6 @@ msgstr "Adaugă informații despre contact"
 msgid "Suppress not available sensors"
 msgstr ""
 
-msgid "Surge queue length"
-msgstr ""
-
 msgid "Suspended"
 msgstr ""
 
@@ -44110,16 +41741,6 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Swap used"
 msgstr ""
 
-#, fuzzy
-msgid "Swarm Managers"
-msgstr "Statusul Serverului"
-
-msgid "Swarm Node ID"
-msgstr ""
-
-msgid "Swarm State"
-msgstr ""
-
 #, python-format
 msgid "Switch '%s' to '%s'"
 msgstr ""
@@ -44148,9 +41769,6 @@ msgid "Switched to %s mode"
 msgstr ""
 
 msgid "Switches, load balancers, storage, UPSes, environmental sensors, etc. "
-msgstr ""
-
-msgid "Switchover"
 msgstr ""
 
 msgid "Symantec Anti Virus (Linux)"
@@ -44296,10 +41914,6 @@ msgstr ""
 msgid "System Information for Inventory via dmidecode (Windows)"
 msgstr ""
 
-#, fuzzy
-msgid "System Location"
-msgstr "Acțiune"
-
 msgid "System MIBs"
 msgstr ""
 
@@ -44318,10 +41932,6 @@ msgstr ""
 
 #, fuzzy
 msgid "System messages"
-msgstr "Nume nou"
-
-#, fuzzy
-msgid "System name"
 msgstr "Nume nou"
 
 msgid "System time (time synchronization)"
@@ -44352,9 +41962,6 @@ msgstr "Afectat de serviciu"
 msgid "TCP"
 msgstr ""
 
-msgid "TCP Client Resets"
-msgstr ""
-
 msgid "TCP Connect"
 msgstr ""
 
@@ -44364,9 +41971,6 @@ msgstr "Conexiuni Active"
 
 #, python-format
 msgid "TCP Connection Timeout (<a href=\"%s\">Rules</a>)"
-msgstr ""
-
-msgid "TCP ELB Resets"
 msgstr ""
 
 #, fuzzy
@@ -44397,10 +42001,6 @@ msgstr ""
 
 msgid "TCP SYN"
 msgstr ""
-
-#, fuzzy
-msgid "TCP Target Resets"
-msgstr "Acces la Agenți"
 
 #, fuzzy
 msgid "TCP address to connect to"
@@ -44448,10 +42048,6 @@ msgstr "TCP-Port pentru Listener"
 
 msgid "TIME_WAIT"
 msgstr ""
-
-#, fuzzy
-msgid "TLS Processed Bytes"
-msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "TLS/SSL/Https disabled"
@@ -44644,10 +42240,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Tape utilization"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
-msgid "Tapes utilization"
 msgstr "Dezactiveaza Notificarile"
 
 msgid "Target"
@@ -46071,10 +43663,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The event was cancelled because the corresponding OK message was received"
-msgstr ""
-
-msgid ""
 "The ewon vpn routers can rely data from a secondary device via snmp. It "
 "doesn't however allow discovery of the device type relayed this way. To "
 "allow interpretation of the data you need to pick the device manually."
@@ -47207,9 +44795,6 @@ msgstr "Tagul Aplicatiei in syslog"
 msgid "The query returned no data."
 msgstr ""
 
-msgid "The rate of requests that were rejected (spillover)"
-msgstr ""
-
 #, python-format
 msgid "The read only mode is enabled until %s. "
 msgstr ""
@@ -47976,9 +45561,6 @@ msgstr ""
 msgid ""
 "The view '%s' using the layout '%s' can not be rendered because the layout "
 "does not exist."
-msgstr ""
-
-msgid "The view is intended for NagStaMon as web service."
 msgstr ""
 
 msgid ""
@@ -50728,9 +48310,6 @@ msgstr ""
 msgid "This view does not support cluster hosts."
 msgstr ""
 
-msgid "This view is intended for usage as web service for NagStaMon."
-msgstr ""
-
 msgid "This virtual host tree does not exist."
 msgstr ""
 
@@ -50869,21 +48448,6 @@ msgstr ""
 msgid "This year"
 msgstr ""
 
-#, fuzzy
-msgid "Thread creations per second"
-msgstr "cereri/sec"
-
-#, fuzzy
-msgid "Thread usage"
-msgstr "% utilizare"
-
-msgid "Threadpool"
-msgstr ""
-
-#, fuzzy
-msgid "Threads"
-msgstr "fire"
-
 msgid "Threshold for slow views"
 msgstr ""
 
@@ -50912,15 +48476,8 @@ msgid "Throttled requests"
 msgstr "cereri"
 
 #, fuzzy
-msgid "Throttles"
-msgstr "cereri"
-
-#, fuzzy
 msgid "Throughput"
 msgstr "Grup de Disk ASM"
-
-msgid "Throughput Optimized HDD space"
-msgstr ""
 
 msgid "Throughput levels"
 msgstr ""
@@ -51104,27 +48661,7 @@ msgstr ""
 msgid "Time specific check parameter #%d"
 msgstr ""
 
-#, fuzzy
-msgid "Time spent collecting garbage"
-msgstr "Numele elementului pentru eveniment"
-
 msgid "Time spent collecting garbage in percent"
-msgstr ""
-
-msgid "Time spent for various page types"
-msgstr ""
-
-msgid "Time spent in GC"
-msgstr ""
-
-#, fuzzy
-msgid "Time spent waiting for Checkmk agent"
-msgstr "Numele elementului pentru eveniment"
-
-msgid "Time spent waiting for SNMP responses"
-msgstr ""
-
-msgid "Time spent waiting for special agent"
 msgstr ""
 
 msgid "Time stamp format"
@@ -51133,9 +48670,6 @@ msgstr ""
 #, fuzzy
 msgid "Time to connect"
 msgstr "Portul TCP pentru conexiune"
-
-msgid "Time to first byte"
-msgstr ""
 
 #, fuzzy
 msgid "Time to negotiate SSL"
@@ -51162,9 +48696,6 @@ msgid ""
 msgstr ""
 
 msgid "Time until license expiration"
-msgstr ""
-
-msgid "Time usage by phase"
 msgstr ""
 
 msgid "Time warp - show BI aggregate during this time period"
@@ -51487,10 +49018,6 @@ msgstr "Adaugă filtre"
 msgid "Total"
 msgstr ""
 
-#, python-format
-msgid "Total %s vCPUs"
-msgstr ""
-
 #, fuzzy
 msgid "Total Active Sessions"
 msgstr "sesiuni"
@@ -51516,26 +49043,6 @@ msgid "Total Index Size"
 msgstr "sesiuni"
 
 msgid "Total Magnetic volumes space"
-msgstr ""
-
-msgid "Total Number of Cores"
-msgstr ""
-
-msgid "Total Number of Hyperthreads"
-msgstr ""
-
-#, fuzzy
-msgid "Total PGA allocated"
-msgstr "Timpul maxim permis pentru uptime"
-
-#, fuzzy
-msgid "Total PGA inuse"
-msgstr "sesiuni"
-
-msgid "Total PGA used for auto workareas"
-msgstr ""
-
-msgid "Total PGA used for manual workareas"
 msgstr ""
 
 msgid "Total Packets Maximum"
@@ -51634,19 +49141,9 @@ msgstr ""
 msgid "Total documents"
 msgstr "sesiuni"
 
-msgid "Total execution time"
-msgstr ""
-
 #, fuzzy
 msgid "Total file size"
 msgstr "sesiuni"
-
-#, fuzzy
-msgid "Total freeable PGA memory"
-msgstr "Memorie liberă exactă"
-
-msgid "Total hitratio"
-msgstr ""
 
 #, fuzzy
 msgid "Total host problems"
@@ -51664,10 +49161,6 @@ msgstr ""
 
 msgid "Total latency for all drives"
 msgstr ""
-
-#, fuzzy
-msgid "Total licenses"
-msgstr "sesiuni"
 
 msgid "Total log file size: Absolute upper levels"
 msgstr ""
@@ -51780,14 +49273,6 @@ msgid "Total number of extractor upper level"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
-msgid "Total number of failed jobs"
-msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-msgid "Total number of hosts"
-msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
 msgid "Total number of indexes lower level"
 msgstr "Numarul maxim de mesaje"
 
@@ -51817,10 +49302,6 @@ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Total number of issues upper level"
-msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-msgid "Total number of jobs"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
@@ -51860,10 +49341,6 @@ msgid "Total number of registered hosts"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
-msgid "Total number of services"
-msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
 msgid "Total number of stream rules lower level"
 msgstr "Numarul maxim de mesaje"
 
@@ -51895,25 +49372,10 @@ msgstr "Numarul maxim de mesaje"
 msgid "Total number of user upper level"
 msgstr "Numarul maxim de mesaje"
 
-#, fuzzy
-msgid "Total number of zombie jobs"
-msgstr "Numarul maxim de mesaje"
-
 msgid "Total printed pages"
 msgstr ""
 
 msgid "Total query timeout"
-msgstr ""
-
-#, fuzzy
-msgid "Total replicas"
-msgstr "sesiuni"
-
-#, python-format
-msgid "Total running On-Demand %s Instances"
-msgstr ""
-
-msgid "Total running On-Demand Instances"
 msgstr ""
 
 #, fuzzy
@@ -51933,10 +49395,6 @@ msgid "Total size of all indexes for the collection"
 msgstr "Dimensiunea maxima pentru cel mai mare fisier"
 
 #, fuzzy
-msgid "Total size of all vaults"
-msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
 msgid "Total size of log files"
 msgstr "Dimensiunea maxima pentru cel mai mare fisier"
 
@@ -51951,16 +49409,10 @@ msgstr "sesiuni"
 msgid "Total subscribed capacity"
 msgstr ""
 
-msgid "Total swap space"
-msgstr ""
-
 msgid "Total throughput per second"
 msgstr ""
 
 msgid "Total timeout of check"
-msgstr ""
-
-msgid "Total usable RAM"
 msgstr ""
 
 msgid "Total used memory"
@@ -51992,9 +49444,6 @@ msgid "Traffic Received"
 msgstr ""
 
 msgid "Traffic Sent"
-msgstr ""
-
-msgid "Transaction Logs Disk Usage"
 msgstr ""
 
 msgid "Transaction count"
@@ -52182,9 +49631,6 @@ msgstr "pornit"
 msgid "Tunnel Alias"
 msgstr ""
 
-msgid "Tunnel Interface"
-msgstr ""
-
 msgid "Tunnels which ignore levels"
 msgstr ""
 
@@ -52214,9 +49660,6 @@ msgstr ""
 msgid "Type of Database"
 msgstr ""
 
-msgid "Type of alerts of hosts and services"
-msgstr ""
-
 msgid "Type of check"
 msgstr ""
 
@@ -52227,9 +49670,6 @@ msgid "Type of query"
 msgstr ""
 
 msgid "Type of result"
-msgstr ""
-
-msgid "Type of route"
 msgstr ""
 
 msgid "Type of table"
@@ -52308,21 +49748,6 @@ msgstr ""
 msgid "UNKNOWN"
 msgstr ""
 
-#, fuzzy
-msgid "UNKNOWN Services of Hostgroup"
-msgstr "Grup nou"
-
-#, fuzzy
-msgid "UNKNOWN Services of Site"
-msgstr "Grup nou"
-
-msgid "UNKNOWN Services of host"
-msgstr ""
-
-#, fuzzy
-msgid "UNKNOWN services"
-msgstr "Grup nou"
-
 msgid "UNR."
 msgstr ""
 
@@ -52334,10 +49759,6 @@ msgstr ""
 
 msgid "UP"
 msgstr ""
-
-#, fuzzy
-msgid "UP hosts"
-msgstr "(fără elemente)"
 
 msgid "UPS Capacity"
 msgstr ""
@@ -52682,9 +50103,6 @@ msgstr ""
 msgid "Unable to upload image: %s"
 msgstr ""
 
-msgid "Unaccounted turbo cycles"
-msgstr ""
-
 #, python-format
 msgid "Unacknowledge this test result for site %s"
 msgstr ""
@@ -52693,12 +50111,6 @@ msgstr ""
 msgid "Unacknowledged incompatible Werks"
 msgstr "Confirmă Problemele"
 
-msgid "Unacknowledged messages"
-msgstr ""
-
-msgid "Unacknowledged requests"
-msgstr ""
-
 #, fuzzy
 msgid "Unallocated space"
 msgstr "spatiu utilizat"
@@ -52706,19 +50118,10 @@ msgstr "spatiu utilizat"
 msgid "Unassigned shards"
 msgstr ""
 
-msgid "Unblended costs"
-msgstr ""
-
 msgid "Unclassified"
 msgstr ""
 
-msgid "Uncommitted"
-msgstr ""
-
 msgid "Uncompressed size in memory"
-msgstr ""
-
-msgid "Uncorrectable codewords"
 msgstr ""
 
 msgid "Undecided clustered services"
@@ -52907,10 +50310,6 @@ msgid "Unmonitored"
 msgstr "nemonitorizat"
 
 #, fuzzy
-msgid "Unmonitored services"
-msgstr "nemonitorizat"
-
-#, fuzzy
 msgid "Unoptimized connections"
 msgstr "Conexiuni Active"
 
@@ -52921,23 +50320,11 @@ msgstr "Reguli neaplicate"
 msgid "Unreachable"
 msgstr ""
 
-#, fuzzy
-msgid "Unreachable hosts"
-msgstr "Sterge Elementul"
-
 msgid "Unreclaimable memory"
 msgstr ""
 
 msgid "Unregistered"
 msgstr ""
-
-#, fuzzy
-msgid "Unreserved concurrent executions"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Unreserved concurrent executions in percent"
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Unspecific backup"
 msgstr ""
@@ -54454,9 +51841,6 @@ msgstr ""
 msgid "Used CPU Memory"
 msgstr "Nivelurile maxime pentru voltaj"
 
-msgid "Used CPU Time"
-msgstr ""
-
 msgid "Used DHCP leases"
 msgstr ""
 
@@ -54495,9 +51879,6 @@ msgstr "Spațiu liber exact"
 msgid "Used host tags"
 msgstr ""
 
-msgid "Used in BI aggregate"
-msgstr ""
-
 #, fuzzy
 msgid "Used in rulesets"
 msgstr "licente nefolosite"
@@ -54518,10 +51899,6 @@ msgstr "Liber Exact"
 msgid "Used leases levels in percent"
 msgstr ""
 
-#, fuzzy
-msgid "Used licenses"
-msgstr "licente nefolosite"
-
 msgid "Used log files: Absolute or relative upper levels"
 msgstr ""
 
@@ -54531,10 +51908,6 @@ msgstr ""
 #, fuzzy
 msgid "Used quota: Absolute or relative upper levels"
 msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-msgid "Used size"
-msgstr "licente nefolosite"
 
 #, fuzzy
 msgid "Used size of log files"
@@ -54796,18 +52169,7 @@ msgid ""
 "otherwise. You can change this behaviour on a per-state-basis here."
 msgstr ""
 
-#, fuzzy
-msgid "Utilization"
-msgstr "Dezactiveaza Notificarile"
-
-#, python-format
-msgid "Utilization Core %d"
-msgstr ""
-
 msgid "V"
-msgstr ""
-
-msgid "V$SYSTEM_PARAMETER"
 msgstr ""
 
 msgid "VA"
@@ -54818,12 +52180,6 @@ msgid "VCenter authentication"
 msgstr "trimite notificare"
 
 msgid "VEEAM tape backup jobs"
-msgstr ""
-
-msgid "VLAN type"
-msgstr ""
-
-msgid "VLANs"
 msgstr ""
 
 #, fuzzy
@@ -55054,10 +52410,6 @@ msgid "Varnish Worker thread ratio"
 msgstr ""
 
 #, fuzzy
-msgid "Vault size"
-msgstr "Dimensiunea Maxima"
-
-#, fuzzy
 msgid "Vaults"
 msgstr "Dimensiunea Maxima"
 
@@ -55065,12 +52417,6 @@ msgid "Veeam Backup Status (Windows)"
 msgstr ""
 
 msgid "Veeam: Time since last Backup"
-msgstr ""
-
-msgid "Vendor"
-msgstr ""
-
-msgid "Vendor and Device ID"
 msgstr ""
 
 msgid "Venue ID"
@@ -55133,10 +52479,6 @@ msgstr ""
 
 msgid "Version of Server"
 msgstr ""
-
-#, fuzzy
-msgid "Versions"
-msgstr "sesiuni"
 
 #, fuzzy
 msgid "Vertical axis mirroring"
@@ -55225,10 +52567,6 @@ msgstr ""
 msgid "Views"
 msgstr ""
 
-#, fuzzy
-msgid "Views fragmentation"
-msgstr "Numele Elementului"
-
 msgid "Viprinet router"
 msgstr ""
 
@@ -55241,19 +52579,10 @@ msgstr ""
 msgid "Virtual Host Trees"
 msgstr ""
 
-msgid "Virtual Machine"
-msgstr ""
-
 msgid "Virtual Machine Snapshots"
 msgstr ""
 
 msgid "Virtual Machines"
-msgstr ""
-
-msgid "Virtual addresses for mapping"
-msgstr ""
-
-msgid "Virtual context switches"
 msgstr ""
 
 msgid ""
@@ -55359,19 +52688,12 @@ msgstr "Nume nou"
 msgid "Volume Group"
 msgstr "Nume nou"
 
-#, fuzzy
-msgid "Volume Group Name"
-msgstr "Numele Elementului"
-
 msgid "Volume Groups (LVM)"
 msgstr ""
 
 #, fuzzy
 msgid "Volume name"
 msgstr "Nume nou"
-
-msgid "Voluntary context switches"
-msgstr ""
 
 msgid "Vswitch bonding"
 msgstr ""
@@ -55400,17 +52722,6 @@ msgstr ""
 msgid "WARN Pattern"
 msgstr ""
 
-#, fuzzy
-msgid "WARN Services of Hostgroup"
-msgstr "Grup nou"
-
-#, fuzzy
-msgid "WARN Services of Site"
-msgstr "Grup nou"
-
-msgid "WARN Services of host"
-msgstr ""
-
 msgid "WARN at"
 msgstr ""
 
@@ -55419,10 +52730,6 @@ msgstr ""
 
 msgid "WARNING"
 msgstr ""
-
-#, fuzzy
-msgid "WARNING services"
-msgstr "servicii"
 
 msgid ""
 "WARNING: This Event Console is currently running as a replication slave. The "
@@ -55450,9 +52757,6 @@ msgstr ""
 msgid "WEB - Timed out Active Directory Requests"
 msgstr ""
 
-msgid "WLAN"
-msgstr ""
-
 msgid "WLAN errors, reset operations and transmission retries"
 msgstr ""
 
@@ -55477,9 +52781,6 @@ msgstr ""
 msgid "Wait until the other has finished"
 msgstr ""
 
-msgid "Waiting"
-msgstr ""
-
 #, fuzzy
 msgid "Waiting connections"
 msgstr "Conexiuni Active"
@@ -55491,9 +52792,6 @@ msgid "Waiting for other switches to come online"
 msgstr ""
 
 msgid "Waiting for replication to start"
-msgstr ""
-
-msgid "Waitlocks"
 msgstr ""
 
 msgid "Warn"
@@ -55725,10 +53023,6 @@ msgstr ""
 
 msgid "Web"
 msgstr ""
-
-#, fuzzy
-msgid "Web ACL Requests"
-msgstr "cereri"
 
 #, fuzzy
 msgid "Web ACL capacity units (WCUs)"
@@ -56910,10 +54204,6 @@ msgid "Write Avg exe (ms)"
 msgstr ""
 
 #, fuzzy
-msgid "Write Capacity"
-msgstr "Optiuni tabel"
-
-#, fuzzy
 msgid "Write Capacity Units"
 msgstr "Optiuni tabel"
 
@@ -57031,9 +54321,6 @@ msgstr ""
 
 #, python-format
 msgid "Wrong service level %d (need %d..%d)"
-msgstr ""
-
-msgid "XDA hitratio"
 msgstr ""
 
 msgid "XMPP Failed inbound stream establishes"
@@ -57353,9 +54640,6 @@ msgid ""
 "You can either specify individual conditions for this rule, or use a set of "
 "predefined conditions, which may be handy if you have to configure the same "
 "conditions in different rulesets."
-msgstr ""
-
-msgid "You can enable this checkbox to show empty hostgroups"
 msgstr ""
 
 msgid ""
@@ -58204,10 +55488,6 @@ msgstr ""
 msgid "YouTube"
 msgstr ""
 
-#, fuzzy
-msgid "Youngest age"
-msgstr "(selectează directorul)"
-
 #, python-format
 msgid "Your %s element has been saved."
 msgstr ""
@@ -58419,9 +55699,6 @@ msgstr ""
 msgid "access unrestricted"
 msgstr ""
 
-msgid "acknowledged"
-msgstr ""
-
 msgid "acknowledged events will not be honored"
 msgstr ""
 
@@ -58611,9 +55888,6 @@ msgstr ""
 msgid "clients"
 msgstr ""
 
-msgid "closed"
-msgstr ""
-
 msgid "collapsed"
 msgstr ""
 
@@ -58655,9 +55929,6 @@ msgid "contact groups: "
 msgstr ""
 
 msgid "count"
-msgstr ""
-
-msgid "counting"
 msgstr ""
 
 msgid "cp437"
@@ -58754,9 +56025,6 @@ msgid "degraded hosts"
 msgstr ""
 
 msgid "delay precompiling"
-msgstr ""
-
-msgid "delayed"
 msgstr ""
 
 msgid "demand"
@@ -59702,9 +56970,6 @@ msgstr ""
 msgid "only when the host is not in downtime"
 msgstr ""
 
-msgid "open"
-msgstr ""
-
 msgid "optional"
 msgstr ""
 
@@ -60248,19 +57513,7 @@ msgstr "utilizatori"
 msgid "users: "
 msgstr "utilizatori:"
 
-#, fuzzy
-msgid "vBuckets"
-msgstr "foloseste numele portului"
-
-#, fuzzy
-msgid "vSphere Servers"
-msgstr "Nume utilizator vSphere"
-
 msgid "vSphere User name"
-msgstr "Nume utilizator vSphere"
-
-#, fuzzy
-msgid "vSphere VMs"
 msgstr "Nume utilizator vSphere"
 
 msgid "vSphere secret"
@@ -60381,6 +57634,1246 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "# Hosts"
+#~ msgstr "1 Element"
+
+#, fuzzy
+#~ msgid "# Images"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "# Services"
+#~ msgstr "servicii"
+
+#~ msgid "A form for searching hosts using flexible filters"
+#~ msgstr "Un formular pentru cautarea elementelor folosind filtre flexibile"
+
+#~ msgid "A single host related aggregation"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Access Points"
+#~ msgstr "Punct de Acces"
+
+#, fuzzy
+#~ msgid "Active TLS Connections"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
+#~ msgid "Active VMs"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Active hosts"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Active items"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Activity log updates"
+#~ msgstr "actualizare"
+
+#, fuzzy
+#~ msgid "Address Type"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Administrative Status"
+#~ msgstr "Stare adiministrativă"
+
+#~ msgid "Affected by service"
+#~ msgstr "Afectat de serviciu"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "All CRIT services of a given site."
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "All UNKNOWN services of a given site."
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "All WARN services of a given site."
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "All crit services of a certain hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "All ok services of a certain hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "All pending services of a certain hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "All unknown services of a certain hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "All warn services of a certain hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Altered"
+#~ msgstr "Cluster nou"
+
+#, fuzzy
+#~ msgid "Application pending requests"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "Average consumption"
+#~ msgstr "APC consum de Curent"
+
+#, fuzzy
+#~ msgid "Average latency of successful GetItem requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Average latency of successful PutItem requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Average latency of successful Query requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Average number of messages"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Average requests per connection"
+#~ msgstr "cereri/sec"
+
+#, fuzzy
+#~ msgid "Average usage"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Average utilization per core"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Average value"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Avg. request rate"
+#~ msgstr "cereri/sec"
+
+#, fuzzy
+#~ msgid "Backend connection errors"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Bit map updates"
+#~ msgstr "actualizare"
+
+#, fuzzy
+#~ msgid "Block store snapshots"
+#~ msgstr "urca snapshot-uri nesigure"
+
+#, fuzzy
+#~ msgid "Bucket memory"
+#~ msgstr "foloseste numele portului"
+
+#, fuzzy
+#~ msgid "Busy threads"
+#~ msgstr "fire"
+
+#, fuzzy
+#~ msgid "Bytes processed"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
+#~ msgid "Bytes reclaimed by GC"
+#~ msgstr "Memorie liberă exactă"
+
+#, fuzzy
+#~ msgid "CMK helper"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "CPU entitlement"
+#~ msgstr "Adaugă element"
+
+#, fuzzy
+#~ msgid "CPU used"
+#~ msgstr "(nefolosit)"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "CRIT Services of Hostgroup"
+#~ msgstr "Grup nou"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "CRIT Services of Site"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "CRITICAL services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Checker helper"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Checkmk Agent Version"
+#~ msgstr "Perioada de timp Noua"
+
+#, fuzzy
+#~ msgid "Checkmk fetcher latency"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "Checkmk: Dashboards"
+#~ msgstr "rapoarte"
+
+#, fuzzy
+#~ msgid "Checkmk: Sidebar elements"
+#~ msgstr "Adaugă un snapin pe sidebar"
+
+#, fuzzy
+#~ msgid "Checkmk: Views"
+#~ msgstr "Privire de ansamblu"
+
+#, fuzzy
+#~ msgid "Checkmk: WATO"
+#~ msgstr "Privire de ansamblu"
+
+#, fuzzy
+#~ msgid "Citrix"
+#~ msgstr "Matrice"
+
+#, fuzzy
+#~ msgid "Citrix licenses"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Closing connection"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
+#~ msgid "Code Size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Code Size in percent"
+#~ msgstr "Nivelurile maxime pentru incarcare in procente"
+
+#, fuzzy
+#~ msgid "Concurrent executions"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Concurrent executions in percent"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Connections in use"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Consumed Load Balancer Capacity Units"
+#~ msgstr "Perioada de timp Noua"
+
+#, fuzzy
+#~ msgid "Consumers"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Creation"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Creation time"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Current events"
+#~ msgstr "Parola"
+
+#, fuzzy
+#~ msgid "Current size"
+#~ msgstr "Parola"
+
+#, fuzzy
+#~ msgid "Daemon threads"
+#~ msgstr "fire"
+
+#, fuzzy
+#~ msgid "Dead letter errors"
+#~ msgstr "Ascude regulile de utilizator"
+
+#, fuzzy
+#~ msgid "Deduplication rate"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Delivered message rate"
+#~ msgstr "Adaugă model mesaj"
+
+#, fuzzy
+#~ msgid "Delivered messages"
+#~ msgstr "Adaugă model mesaj"
+
+#, fuzzy
+#~ msgid "Desktop Group Name"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Disabled alerts"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Discovered by plugin"
+#~ msgstr "Nici o schimbare"
+
+#, fuzzy
+#~ msgid "Discovery state"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "Docker nodes"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Documents fragmentation"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Downtime history"
+#~ msgstr "Întreruperi adhoc"
+
+#, fuzzy
+#~ msgid "Duration of Lambda functions"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Entitlement"
+#~ msgstr "Adaugă element"
+
+#, fuzzy
+#~ msgid "Epoch objects"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Extents"
+#~ msgstr "Adaugă Conținut"
+
+#, fuzzy
+#~ msgid "FGPA utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Failed notifications"
+#~ msgstr "trimite notificare"
+
+#, fuzzy
+#~ msgid "Failing collectors"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Fixed size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "FortiGate HighAvailability"
+#~ msgstr "Tabel cu macro-uri disponibile"
+
+#, fuzzy
+#~ msgid "Fragmentation"
+#~ msgstr "Agregare noua"
+
+#, fuzzy
+#~ msgid "Garbage collections"
+#~ msgstr "Numarul maxim de conexiuni paralele"
+
+#, fuzzy
+#~ msgid "Global memory bound"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Granule size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "HTTP 3/4/5XX Errors"
+#~ msgstr "afiseaza erori"
+
+#, fuzzy
+#~ msgid "HTTP 500/2/3/4 Errors"
+#~ msgstr "afiseaza erori"
+
+#, fuzzy
+#~ msgid "HTTP Redirects"
+#~ msgstr "(fără parametri)"
+
+#, fuzzy
+#~ msgid "Health check healty count"
+#~ msgstr "Output adițional de la Plugin"
+
+#, fuzzy
+#~ msgid "Host & service events"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~ msgid "Host & service history"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~ msgid "Host Group of Down Hosts"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Host Group of Pending"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Host Group of Unreachable Hosts"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Host Group of Up Hosts"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Host IP"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Hostname aggregations"
+#~ msgstr "Agregare noua"
+
+#, fuzzy
+#~ msgid "Hosts in downtime"
+#~ msgstr "de sus in jos"
+
+#, fuzzy
+#~ msgid "IP Addresses"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "IPv4 Address"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "IPv6 Processed Bytes"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "IPv6 Requests"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "Idle threads"
+#~ msgstr "fire"
+
+#, fuzzy
+#~ msgid "Image"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Image ID"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Inactive hosts"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Increment size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Indices"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Ingress"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Init duration"
+#~ msgstr "Optiuni tabel"
+
+#, fuzzy
+#~ msgid "Input traffic"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Inputs"
+#~ msgstr "Numele Elementului"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Interface known in Ntop"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Invocations"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
+#~ msgid "Is default"
+#~ msgstr "Reseteaza contoarele"
+
+#, fuzzy
+#~ msgid "Item memory"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Iterator age"
+#~ msgstr "Nume Administrator:"
+
+#, fuzzy
+#~ msgid "Java pool size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Kernel Configuration (sysctl)"
+#~ msgstr "Activare Configurare"
+
+#, fuzzy
+#~ msgid "Lambda user errors"
+#~ msgstr "Ascude regulile de utilizator"
+
+#, fuzzy
+#~ msgid "Large pool size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Largest vault size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Last Change"
+#~ msgstr "Nici o schimbare"
+
+#, fuzzy
+#~ msgid "Latency of GetItem requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Latency of PutItem requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Latency of Query requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Licenses"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Link Priority"
+#~ msgstr "Prioritatea Syslog"
+
+#, fuzzy
+#~ msgid "List crash reports of all sites"
+#~ msgstr "Scaneaza toate elementele"
+
+#, fuzzy
+#~ msgid "Livestatus overflows"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
+#~ msgid "Location"
+#~ msgstr "Acțiune"
+
+#, fuzzy
+#~ msgid "MAC address"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Managers"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "Max. size"
+#~ msgstr "Dimensiunea Maxima"
+
+#~ msgid "Maximum Capacity"
+#~ msgstr "Capacitatea maxima"
+
+#, fuzzy
+#~ msgid "Maximum PGA allocated"
+#~ msgstr "Timpul maxim permis pentru uptime"
+
+#, fuzzy
+#~ msgid "Maximum PGA used for auto workareas"
+#~ msgstr "Numarul maxim de mesaje"
+
+#~ msgid "Maximum Speed"
+#~ msgstr "Viteza Maxima"
+
+#, fuzzy
+#~ msgid "Maximum latency of successful GetItem requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Maximum latency of successful PutItem requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Maximum latency of successful Query requests"
+#~ msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+#~ msgid "Maximum number of threads"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Maximum single-request consumption"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Maximum size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Memory Size"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Memory Size in percent"
+#~ msgstr "Nivelurile maxime pentru incarcare in procente"
+
+#, fuzzy
+#~ msgid "Memory utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Message Rate"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
+#~ msgid "Message processing"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
+#~ msgid "Messages"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
+#~ msgid "Messages in queue"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
+#~ msgid "Minimum single-request consumption"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Model Name"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Multiple WATO Folders"
+#~ msgstr "Folder nou"
+
+#, fuzzy
+#~ msgid "Namespace"
+#~ msgstr "spatiu utilizat"
+
+#, fuzzy
+#~ msgid "Network Adapters"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Network ID"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Networks"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "New Connections"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "New TLS Connections"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Node Labels"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Non-resident items"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~ msgid "Notification phase"
+#~ msgstr "Notificari"
+
+#, fuzzy
+#~ msgid "Number of IP sets"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Number of Web ACLs"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Number of archives"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Number of fetched items"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of fired alerts"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of increments"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of issues"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Number of messages in defined timespan"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Number of objects"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of problematic hosts"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of problematic services"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Number of regex sets"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of rule groups"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of signed-in users"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Number of vaults"
+#~ msgstr "Numarul maxim de mesaje"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "OK Services of Hostgroup"
+#~ msgstr "Grup nou"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "OK Services of Site"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "OK services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Offline hosts"
+#~ msgstr "(fără elemente)"
+
+#, fuzzy
+#~ msgid "Oldest age"
+#~ msgstr "(selectează directorul)"
+
+#, fuzzy
+#~ msgid "Output traffic"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Outputs"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Overall utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "PCI Express IO utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "PEND Services of Hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Parameter"
+#~ msgstr "(fără parametri)"
+
+#, fuzzy
+#~ msgid "Paused"
+#~ msgstr "(nefolosit)"
+
+#, fuzzy
+#~ msgid "Peer IP Address"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Peer Name"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Pending Services of Site"
+#~ msgstr "Afectat de serviciu"
+
+#, fuzzy
+#~ msgid "Pending requests"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "Pending service discovery"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~ msgid "Pending services"
+#~ msgstr "Afectat de serviciu"
+
+#, fuzzy
+#~ msgid "Pending vBuckets"
+#~ msgstr "Afectat de serviciu"
+
+#, fuzzy
+#~ msgid "Per Core utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Percentage of HTTP 3/4/5XX Errors"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Percentage of HTTP 500/2/3/4 Errors"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Percentage of Lambda user errors"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Percentage of allowed requests"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Percentage of blocked requests"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Physical CPU consumption"
+#~ msgstr "APC consum de Curent"
+
+#, fuzzy
+#~ msgid "Physical Volume Free Partitions"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Physical Volume Name"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Physical Volume Status"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Physical Volume Total Partitions"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Physical processors consumed"
+#~ msgstr "Starea porturilor pentru inventariere"
+
+#, fuzzy
+#~ msgid "Ports"
+#~ msgstr "rapoarte"
+
+#, fuzzy
+#~ msgid "Problem aggregations"
+#~ msgstr "Agregare noua"
+
+#, fuzzy
+#~ msgid "Processed Bytes"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Processes"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Processor Entitled Capacity"
+#~ msgstr "Capacitatea maxima"
+
+#, fuzzy
+#~ msgid "Processor Implementation Mode"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Processor Max. Capacity"
+#~ msgstr "Capacitatea maxima"
+
+#, fuzzy
+#~ msgid "Provisioned concurrency executions"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Provisioned concurrency utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Published message rate"
+#~ msgstr "Adaugă model mesaj"
+
+#, fuzzy
+#~ msgid "Published messages"
+#~ msgstr "Adaugă model mesaj"
+
+#, fuzzy
+#~ msgid "Queue Manager Name"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Read Capacity"
+#~ msgstr "Capacitatea maxima"
+
+#, fuzzy
+#~ msgid "Read recovery latency"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "Reading request"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "Ready messages"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
+#~ msgid "Recovery area"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "Registry"
+#~ msgstr "ieri"
+
+#, fuzzy
+#~ msgid "Rejected Connections"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
+#~ msgid "Replica Lag"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Resident items ratio"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Restart count"
+#~ msgstr "Reseteaza contoarele"
+
+#, fuzzy
+#~ msgid "Result of summed up values"
+#~ msgstr "Optiuni tabel"
+
+#, fuzzy
+#~ msgid "Rule Evaluations"
+#~ msgstr "Optiuni tabel"
+
+#, fuzzy
+#~ msgid "Running collectors"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Runtime run queue"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "SMT Threads"
+#~ msgstr "fire"
+
+#, fuzzy
+#~ msgid "SNMP Information"
+#~ msgstr "Informații Adiționale"
+
+#, fuzzy
+#~ msgid "Scheduled downtimes"
+#~ msgstr "Întreruperi adhoc"
+
+#, fuzzy
+#~ msgid "Search history"
+#~ msgstr "(selectează directorul)"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Search time graphs"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Selectors"
+#~ msgstr "(selectează directorul)"
+
+#, fuzzy
+#~ msgid "Service Costs per Day"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "Service check durations"
+#~ msgstr "Salveaza configuratia manuala a verificarilor"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Service graphs of host"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Services in downtime"
+#~ msgstr "Numele Elementului"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Services of down hosts"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Single host aggregations"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Single host problems"
+#~ msgstr "Probleme"
+
+#, fuzzy
+#~ msgid "Single-request consumption"
+#~ msgstr "APC consum de Curent"
+
+#, fuzzy
+#~ msgid "Size of license"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Source IP Address"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Starting up"
+#~ msgstr "Setari"
+
+#, fuzzy
+#~ msgid "Stopped collectors"
+#~ msgstr "(selectează directorul)"
+
+#, fuzzy
+#~ msgid "Stream rules"
+#~ msgstr "Cautare"
+
+#, fuzzy
+#~ msgid "Swarm Managers"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~ msgid "System Location"
+#~ msgstr "Acțiune"
+
+#, fuzzy
+#~ msgid "System name"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "TCP Target Resets"
+#~ msgstr "Acces la Agenți"
+
+#, fuzzy
+#~ msgid "TLS Processed Bytes"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Tapes utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Thread creations per second"
+#~ msgstr "cereri/sec"
+
+#, fuzzy
+#~ msgid "Thread usage"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Threads"
+#~ msgstr "fire"
+
+#, fuzzy
+#~ msgid "Throttles"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "Time spent collecting garbage"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "Time spent waiting for Checkmk agent"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "Total PGA allocated"
+#~ msgstr "Timpul maxim permis pentru uptime"
+
+#, fuzzy
+#~ msgid "Total PGA inuse"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Total freeable PGA memory"
+#~ msgstr "Memorie liberă exactă"
+
+#, fuzzy
+#~ msgid "Total licenses"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Total number of failed jobs"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Total number of hosts"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Total number of jobs"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Total number of services"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Total number of zombie jobs"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Total replicas"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Total size of all vaults"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "UNKNOWN Services of Hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "UNKNOWN Services of Site"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "UNKNOWN services"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "UP hosts"
+#~ msgstr "(fără elemente)"
+
+#, fuzzy
+#~ msgid "Unmonitored services"
+#~ msgstr "nemonitorizat"
+
+#, fuzzy
+#~ msgid "Unreachable hosts"
+#~ msgstr "Sterge Elementul"
+
+#, fuzzy
+#~ msgid "Unreserved concurrent executions"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Unreserved concurrent executions in percent"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Used licenses"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Used size"
+#~ msgstr "licente nefolosite"
+
+#, fuzzy
+#~ msgid "Utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Vault size"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Versions"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Views fragmentation"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Volume Group Name"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "WARN Services of Hostgroup"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "WARN Services of Site"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "WARNING services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Web ACL Requests"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "Write Capacity"
+#~ msgstr "Optiuni tabel"
+
+#, fuzzy
+#~ msgid "Youngest age"
+#~ msgstr "(selectează directorul)"
+
+#, fuzzy
+#~ msgid "vBuckets"
+#~ msgstr "foloseste numele portului"
+
+#, fuzzy
+#~ msgid "vSphere Servers"
+#~ msgstr "Nume utilizator vSphere"
+
+#, fuzzy
+#~ msgid "vSphere VMs"
+#~ msgstr "Nume utilizator vSphere"
 
 #, fuzzy
 #~ msgid "Interface theme"
@@ -60904,10 +59397,6 @@ msgstr ""
 #~ msgstr "Verificări active activate"
 
 #~ msgid "Add & remove folders"
-#~ msgstr "Adaugă sau șterge directoare"
-
-#, fuzzy
-#~ msgid "Add & remove hosts"
 #~ msgstr "Adaugă sau șterge directoare"
 
 #, fuzzy

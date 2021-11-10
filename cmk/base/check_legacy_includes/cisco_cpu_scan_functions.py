@@ -24,6 +24,7 @@ def snmp_scan_cisco_cpu(oid):
 #   ---fallback-------------------------------------------------------------
 
 
+# the follwoing function was duplicated to cmk/base/plugins/agent_based/cisco_cpu_multiitem.py
 def snmp_scan_cisco_cpu_multiitem(oid):
     return _is_cisco(oid) and not _is_cisco_nexus(oid) and _has_table_2(oid)
 

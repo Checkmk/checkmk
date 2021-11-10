@@ -11,7 +11,19 @@ from ..agent_based_api.v1 import all_of, any_of, contains, startswith
 from ..agent_based_api.v1.type_defs import StringTable
 
 
-class OperState(Enum):
+class SNMPEnum(Enum):
+    pass
+
+
+class TceHealthStatus(SNMPEnum):
+    unknown = "1"
+    normal = "2"
+    warning = "3"
+    degraded = "4"
+    faulted = "5"
+
+
+class OperState(SNMPEnum):
     enabled = "1"
     disabled = "2"
 

@@ -1,0 +1,12 @@
+Title: Add Temperature for Ciena 5142 & 5171
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1636624208
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The temperature together with status as reported by the device are monitored.
+

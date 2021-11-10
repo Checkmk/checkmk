@@ -26,7 +26,7 @@ import cmk.utils.werks
 from cmk.utils.exceptions import MKException
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
-from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.version import parse_check_mk_version
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

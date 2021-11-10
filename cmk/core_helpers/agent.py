@@ -39,7 +39,7 @@ from cmk.utils.type_defs import (
     ServiceState,
     state_markers,
 )
-from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.version import parse_check_mk_version
 
 from ._base import Fetcher, Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker

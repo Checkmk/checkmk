@@ -41,7 +41,7 @@ from cmk.utils.prediction import livestatus_lql, TimeSeries
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
 from cmk.utils.type_defs import ServiceName
-from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError

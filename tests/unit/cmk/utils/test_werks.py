@@ -35,7 +35,7 @@ import cmk.utils.werks
     ],
 )
 def test_parse_check_mk_version(version_str, expected):
-    assert cmk.utils.werks.parse_check_mk_version(version_str) == expected
+    assert cmk.utils.version.parse_check_mk_version(version_str) == expected
 
 
 @pytest.fixture(scope="function")
@@ -74,10 +74,10 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
 
 
 def test_werk_versions(precompiled_werks):
-    parsed_version = cmk.utils.werks.parse_check_mk_version(cmk_version.__version__)
+    parsed_version = cmk.utils.version.parse_check_mk_version(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
-        parsed_werk_version = cmk.utils.werks.parse_check_mk_version(werk["version"])
+        parsed_werk_version = cmk.utils.version.parse_check_mk_version(werk["version"])
 
         assert (
             parsed_werk_version <= parsed_version
@@ -103,7 +103,7 @@ def test_werk_versions_after_tagged(precompiled_werks):
         if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
             werk_tags = sorted(
                 _tags_containing_werk(werk_id),
-                key=lambda t: cmk.utils.werks.parse_check_mk_version(t[1:]),
+                key=lambda t: cmk.utils.version.parse_check_mk_version(t[1:]),
             )
             list_of_offenders.append(
                 (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-")

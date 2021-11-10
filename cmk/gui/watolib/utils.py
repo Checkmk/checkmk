@@ -14,7 +14,7 @@ import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import ContactgroupName, HostName
-from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.version import parse_check_mk_version
 
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.exceptions import MKGeneralException

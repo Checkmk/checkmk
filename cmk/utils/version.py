@@ -13,6 +13,7 @@ __version__ = "2.1.0i1"
 import enum
 import errno
 import os
+import re
 import subprocess
 import sys
 import time
@@ -109,6 +110,102 @@ def get_age_trial() -> int:
 
 def is_expired_trial() -> bool:
     return is_free_edition() and _get_expired_status() == TrialState.EXPIRED
+
+
+VERSION_PATTERN = re.compile(r"^([.\-a-z]+)?(\d+)")
+
+
+# Parses versions of Checkmk and converts them into comparable integers.
+def parse_check_mk_version(v: str) -> int:
+    """Figure out how to compare versions semantically.
+
+    Parses versions of Checkmk and converts them into comparable integers.
+
+    >>> p = parse_check_mk_version
+
+    All dailies are built equal.
+
+    >>> p("1.5.0-2019.10.10")
+    1050090000
+
+    >>> p("1.6.0-2019.10.10")
+    1060090000
+
+    >>> p("1.5.0-2019.10.24") == p("1.5.0-2018.05.05")
+    True
+
+    >>> p('1.2.4p1')
+    1020450001
+
+    >>> p('1.2.4')
+    1020450000
+
+    >>> p('1.2.4b1')
+    1020420100
+
+    >>> p('1.2.3i1p1')
+    1020310101
+
+    >>> p('1.2.3i1')
+    1020310100
+
+    >>> p('1.2.4p10')
+    1020450010
+
+    >>> p("1.5.0") > p("1.5.0p22")
+    False
+
+    >>> p("1.5.0-2019.10.10") > p("1.5.0p22")
+    True
+
+    >>> p("1.5.0p13") == p("1.5.0p13")
+    True
+
+    >>> p("1.5.0p13") > p("1.5.0p12")
+    True
+
+    """
+    parts = v.split(".", 2)
+
+    while len(parts) < 3:
+        parts.append("0")
+
+    var_map = {
+        # identifier: (base-val, multiplier)
+        "s": (0, 1),  # sub
+        "i": (10000, 100),  # innovation
+        "b": (20000, 100),  # beta
+        "p": (50000, 1),  # patch-level
+        "-": (90000, 0),  # daily
+        ".": (90000, 0),  # daily
+    }
+
+    def _extract_rest(_rest):
+        for match in VERSION_PATTERN.finditer(_rest):
+            _var_type = match.group(1) or "s"
+            _num = match.group(2)
+            return _var_type, int(_num), _rest[match.end() :]
+        # Default fallback.
+        return "p", 0, ""
+
+    major, minor, rest = parts
+    _, sub, rest = _extract_rest(rest)
+
+    if rest.startswith("-sandbox"):
+        return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, 0))
+
+    # Only add the base once, else we could do it in the loop.
+    var_type, num, rest = _extract_rest(rest)
+    base, multiply = var_map[var_type]
+    val = base
+    val += num * multiply
+
+    while rest:
+        var_type, num, rest = _extract_rest(rest)
+        _, multiply = var_map[var_type]
+        val += num * multiply
+
+    return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
 #   .--general infos-------------------------------------------------------.

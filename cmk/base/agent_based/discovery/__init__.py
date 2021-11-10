@@ -46,7 +46,6 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
     HostName,
-    MetricTuple,
     RulesetName,
     ServiceName,
     state_markers,
@@ -1335,7 +1334,7 @@ def _check_preview_table_row(
 
     if check_source in {"active", "custom"}:
         exitcode = None
-        output = "WAITING - %s check, cannot be done offline" % check_source.title()
+        output = ""
         ruleset_name: Optional[RulesetName] = None
     else:
 
@@ -1355,35 +1354,66 @@ def _check_preview_table_row(
             persist_value_store_changes=False,  # never during discovery
         ).result
 
-    # Service discovery never uses the perfdata in the check table. That entry
-    # is constantly discarded, yet passed around(back and forth) as part of the
-    # discovery result in the request elements. Some perfdata VALUES are not parsable
-    # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
-    perfdata: List[MetricTuple] = []
+    return _make_check_preview_entry(
+        host_name=host_config.hostname,
+        check_plugin_name=str(service.check_plugin_name),
+        item=service.item,
+        description=service.description,
+        check_source=check_source,
+        ruleset_name=ruleset_name,
+        parameters=service.parameters,
+        preview_params=preview_params,
+        exitcode=exitcode,
+        output=output,
+        found_on_nodes=found_on_nodes,
+        labels={l.name: l.value for l in service.service_labels.values()},
+    )
 
+
+def _make_check_preview_entry(
+    *,
+    host_name: HostName,
+    check_plugin_name: str,
+    item: Optional[str],
+    description: ServiceName,
+    check_source: _ServiceOrigin,
+    ruleset_name: Optional[RulesetName] = None,
+    parameters: Union[LegacyCheckParameters, TimespecificParameters] = None,
+    preview_params: LegacyCheckParameters = None,
+    exitcode: Optional[int] = None,
+    output: str = "",
+    found_on_nodes: Optional[Sequence[HostName]] = None,
+    labels: Optional[Dict[str, str]] = None,
+) -> CheckPreviewEntry:
+    if not output:
+        output = f"WAITING - {check_source.title()} check, cannot be done offline"
     return (
-        _preview_check_source(host_config.hostname, service, check_source),
-        str(service.check_plugin_name),
+        _preview_check_source(host_name, description, check_source),
+        check_plugin_name,
         ruleset_name,
-        service.item,
-        _wrap_timespecific_for_preview(service.parameters),
+        item,
+        _wrap_timespecific_for_preview(parameters),
         _wrap_timespecific_for_preview(preview_params),
-        service.description,
+        description,
         exitcode,
         output,
-        perfdata,
-        {label.name: label.value for label in service.service_labels.values()},
-        list(found_on_nodes),
+        # Service discovery never uses the perfdata in the check table. That entry
+        # is constantly discarded, yet passed around(back and forth) as part of the
+        # discovery result in the request elements. Some perfdata VALUES are not parsable
+        # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
+        [],
+        labels or {},
+        [host_name] if found_on_nodes is None else list(found_on_nodes),
     )
 
 
 def _preview_check_source(
     host_name: HostName,
-    service: Service,
+    description: ServiceName,
     check_source: _ServiceOrigin,
 ) -> str:
     if check_source in {"active", "custom"} and config.service_ignored(
-        host_name, None, service.description
+        host_name, None, description
     ):
         return "%s_ignored" % check_source
     return check_source

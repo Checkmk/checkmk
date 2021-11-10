@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# Start only if the socket is configured for this user.
-SOCKET="livestatus.socket"
-test -f "${OMD_ROOT}/.config/systemd/user/$SOCKET" || exit 5
+# Start only if at least one systemd-based service is activated.
+ls -A "${OMD_ROOT}/.config/systemd/user/*" > /dev/null 2>&1 || exit 5
 
 # Start only if LIVESTATUS_TCP is configured.
 # shellcheck source=/dev/null
@@ -12,6 +11,7 @@ if [ "$CONFIG_LIVESTATUS_TCP" != on ]; then
 fi
 
 SEMAPHORE="$OMD_ROOT/tmp/run/$OMD_SITE.lingering"
+SOCKET="livestatus.socket"
 SYSTEMCTL="systemctl --quiet --user"
 XDG_RUNTIME_DIR="/run/user/$(id -u "$OMD_SITE")"
 export XDG_RUNTIME_DIR

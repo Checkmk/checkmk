@@ -12,12 +12,9 @@
     command -v systemd > /dev/null && \
     systemd --version | perl -ne 'exit +((/^systemd (\d+)/)[0] < 235)'
 )
-USE_XINETD=$?
-
-if [ $USE_XINETD = 1 ] && ! command -v xinetd > /dev/null; then
-    echo "This feature requires either xinetd or systemd >= 235"
-    exit 1
-fi
+#USE_XINETD=$?
+# Force xinetd until the systemd bugs are fixed.
+USE_XINETD=1
 
 case "$1" in
     default)

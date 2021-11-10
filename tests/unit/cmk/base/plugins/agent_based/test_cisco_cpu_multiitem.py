@@ -6,16 +6,15 @@
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.cisco_cpu_multiitem import (
+    check_cisco_cpu_multiitem,
     discover_cisco_cpu_multiitem,
+    DISCOVERY_DEFAULT_PARAMETERS,
+    Params,
     parse_cisco_cpu_multiitem,
     Section,
 )
-
-from tests.unit.conftest import FixRegister
 
 
 @pytest.fixture(name="parsed_section")
@@ -25,25 +24,65 @@ def parsed_section_fixture() -> Section:
     )
 
 
-def test_check_cisco_cpu_multiitem(fix_register: FixRegister, parsed_section: Section) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("cisco_cpu_multiitem")]
-    params = {"levels": (80, 90)}
+def test_check_cisco_cpu_multiitem(parsed_section: Section) -> None:
+    params = Params({"levels": (80, 90)})
 
-    assert list(plugin.check_function(params=params, item="2", section=parsed_section)) == [
+    assert list(check_cisco_cpu_multiitem("2", params, parsed_section)) == [
         Result(state=State.OK, summary="Utilization in the last 5 minutes: 5.00%"),
         Metric("util", 5.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 
-    assert list(
-        plugin.check_function(params=params, item="another cpu 3", section=parsed_section)
-    ) == [
+    assert list(check_cisco_cpu_multiitem("another cpu 3", params, parsed_section)) == [
         Result(state=State.OK, summary="Utilization in the last 5 minutes: 10.00%"),
         Metric("util", 10.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 
-
-def test_discover_cisco_cpu_multiitem(parsed_section: Section) -> None:
-    assert list(discover_cisco_cpu_multiitem(parsed_section)) == [
-        Service(item="2"),
-        Service(item="another cpu 3"),
+    assert list(check_cisco_cpu_multiitem("average", params, parsed_section)) == [
+        Result(state=State.OK, summary="Utilization in the last 5 minutes: 7.50%"),
+        Metric("util", 7.5, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
+
+    assert list(check_cisco_cpu_multiitem("not_found", params, parsed_section)) == []
+
+
+@pytest.mark.parametrize(
+    "discovery_params, expected_discovery_result",
+    (
+        pytest.param(
+            DISCOVERY_DEFAULT_PARAMETERS,
+            [
+                Service(item="2"),
+                Service(item="another cpu 3"),
+            ],
+            id="default discovery params: individual only",
+        ),
+        pytest.param(
+            {"individual": False, "average": True},
+            [
+                Service(item="average"),
+            ],
+            id="discover average only",
+        ),
+        pytest.param(
+            {"individual": True, "average": True},
+            [
+                Service(item="2"),
+                Service(item="another cpu 3"),
+                Service(item="average"),
+            ],
+            id="discover both: average and individual",
+        ),
+        pytest.param(
+            {"individual": False, "average": False},
+            [],
+            id="discover none",
+        ),
+    ),
+)
+def test_discover_cisco_cpu_multiitem(
+    parsed_section: Section, discovery_params, expected_discovery_result
+) -> None:
+    assert (
+        list(discover_cisco_cpu_multiitem(discovery_params, parsed_section))
+        == expected_discovery_result
+    )

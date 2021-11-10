@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
+from statistics import mean
 from typing import Dict, List, NamedTuple, Tuple, TypedDict
 
 from .agent_based_api.v1 import (
@@ -21,6 +22,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
+DISCOVERY_DEFAULT_PARAMETERS = {"individual": True, "average": False}
+
 
 class CPUInfo(NamedTuple):
     util: float
@@ -31,6 +34,11 @@ Section = Dict[str, CPUInfo]
 
 class Params(TypedDict):
     levels: Tuple[float, float]
+
+
+class DiscoveryParams(TypedDict, total=False):
+    average: bool
+    individual: bool
 
 
 def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
@@ -45,18 +53,27 @@ def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
         name = ph_idx_to_desc.get(idx, idx)
         with suppress(ValueError):
             parsed[name] = CPUInfo(util=float(util))
+
+    if values := [data.util for data in parsed.values()]:
+        parsed["average"] = CPUInfo(util=mean(values))
     return parsed
 
 
-def discover_cisco_cpu_multiitem(section: Section) -> DiscoveryResult:
-    for item in section:
-        yield Service(item=item)
+def discover_cisco_cpu_multiitem(params: DiscoveryParams, section: Section) -> DiscoveryResult:
+    if params["individual"]:
+        for item in section:
+            if item == "average":
+                continue
+            yield Service(item=item)
+    if params["average"]:
+        yield Service(item="average")
 
 
 def check_cisco_cpu_multiitem(item: str, params: Params, section: Section) -> CheckResult:
-    value = section[item].util
+    if item not in section:
+        return None
     yield from check_levels(
-        value,
+        section[item].util,
         levels_upper=params["levels"],
         metric_name="util",
         render_func=render.percent,
@@ -96,6 +113,8 @@ register.check_plugin(
     name="cisco_cpu_multiitem",
     service_name="CPU utilization %s",
     discovery_function=discover_cisco_cpu_multiitem,
+    discovery_default_parameters=DISCOVERY_DEFAULT_PARAMETERS,
+    discovery_ruleset_name="cpu_utilization_multiitem_discovery",
     check_default_parameters={"levels": (80.0, 90.0)},
     check_ruleset_name="cpu_utilization_multiitem",
     check_function=check_cisco_cpu_multiitem,

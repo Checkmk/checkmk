@@ -76,3 +76,10 @@ class CpuLoad(BaseModel):
 
     cpu_cfs_throttled_time: int
     cpu_load_average: int
+
+
+class Memory(BaseModel):
+    """section: k8s_performance_memory_v1"""
+
+    memory_usage: float
+    memory_swap: float

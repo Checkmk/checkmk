@@ -21,6 +21,7 @@ from typing import (
     Callable,
     DefaultDict,
     Dict,
+    Iterable,
     Iterator,
     List,
     Mapping,
@@ -29,6 +30,7 @@ from typing import (
     Optional,
     Protocol,
     Sequence,
+    Type,
 )
 
 import requests
@@ -46,6 +48,7 @@ from cmk.special_agents.utils_kubernetes.schemata import api, section
 MetricName = NewType("MetricName", str)
 MetricValue = NewType("MetricValue", float)
 PodUID = NewType("PodUID", str)
+SectionName = NewType("SectionName", str)
 
 
 class LivePod(NamedTuple):
@@ -184,6 +187,9 @@ class Deployment:
             return self.metadata.name
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
+
+    def pod_uids(self) -> Sequence[PodUID]:
+        return [pod.uid for pod in self._pods]
 
     def add_pod(self, pod: Pod) -> None:
         self._pods.append(pod)
@@ -372,6 +378,8 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
 
 
 def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> None:
+    """Write the deployment relevant sections based on k8 API information"""
+
     def output_sections(cluster_deployment: Deployment) -> None:
         sections = {
             "k8s_deployment_pods_resources_v1": cluster_deployment.pod_resources,
@@ -399,32 +407,57 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
 
 
 def filter_outdated_pods(
-    live_pods: Sequence[LivePod], uid_piggyback_mappings: Mapping[PodUID, str]
+    live_pods: List[LivePod], uid_piggyback_mappings: Mapping[PodUID, str]
 ) -> Iterator[LivePod]:
     return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
 
 
-def pod_checkmk_sections(containers: List[LiveContainer]) -> None:
+def deployment_performance_sections(pods: List[LivePod]) -> None:
+    """Write deployment sections based on collected performance metrics"""
     sections = [
-        ("cpu_usage_total", section.CpuUsage, ("cpu_usage_total")),  # TODO: adjust check section
-        ("cpu_load", section.CpuLoad, ("cpu_cfs_throttled_time", "cpu_load_average")),
+        (SectionName("memory"), section.Memory, ("memory_usage", "memory_swap")),
     ]
     for section_name, section_model, metrics in sections:
-        with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
-            containers_sections = {}
-            for container in containers:
-                try:
-                    containers_sections[container.name] = section_model(
-                        **{
-                            metric: container.metrics[MetricName(metric)]
-                            for metric in metrics
-                            if metric in container.metrics
-                        }
-                    ).json()
-                except ValueError:  # TODO: decide if additional conditions are necessary
-                    continue
+        write_performance_section(
+            section_name,
+            [container for pod in pods for container in pod.containers],
+            metrics,
+            section_model,
+        )
 
-            writer.append(containers_sections)
+
+def pod_performance_sections(containers: List[LiveContainer]) -> None:
+    """Write pod sections based on collected performance metrics"""
+    sections = [
+        # TODO: adjust check section
+        (SectionName("cpu_usage_total"), section.CpuUsage, ("cpu_usage_total")),
+        (SectionName("cpu_load"), section.CpuLoad, ("cpu_cfs_throttled_time", "cpu_load_average")),
+    ]
+    for section_name, section_model, metrics in sections:
+        write_performance_section(section_name, containers, metrics, section_model)
+
+
+def write_performance_section(
+    section_name: SectionName,
+    containers: Sequence[LiveContainer],
+    metrics: Iterable[str],
+    section_model: Type[BaseModel],
+) -> None:
+    with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
+        containers_sections = {}
+        for container in containers:
+            try:
+                containers_sections[container.name] = section_model(
+                    **{
+                        metric: container.metrics[MetricName(metric)]
+                        for metric in metrics
+                        if metric in container.metrics
+                    }
+                ).json()
+            except ValueError:  # TODO: decide if additional conditions are necessary
+                continue
+
+        writer.append(containers_sections)
 
 
 class SetupError(Exception):
@@ -442,7 +475,7 @@ def collect_metrics_from_cluster_agent(cluster_url: str) -> List[str]:
     return cluster_resp.content.decode("utf-8").split("\n")
 
 
-def group_metrics_by_pods(nodes_metrics: List[str]) -> Sequence[LivePod]:
+def group_metrics_by_pods(nodes_metrics: List[str]) -> Mapping[PodUID, LivePod]:
     def group_by_pods(containers_collection) -> List[LivePod]:
         parsed_pods: Dict[str, List[LiveContainer]] = {}
 
@@ -462,10 +495,12 @@ def group_metrics_by_pods(nodes_metrics: List[str]) -> Sequence[LivePod]:
             for pod_uid, containers in parsed_pods.items()
         ]
 
-    pods: List[LivePod] = []
+    pods: Dict[PodUID, LivePod] = {}
     for collection in nodes_metrics:
         try:
-            pods.extend(group_by_pods(json.loads(collection)["containers"]))
+            pods.update(
+                {pod.uid: pod for pod in group_by_pods(json.loads(collection)["containers"])}
+            )
         except (KeyError, json.JSONDecodeError):
             continue
     return pods
@@ -521,13 +556,21 @@ def main(args: Optional[List[str]] = None) -> int:
             output_pods_api_sections(cluster.pods())  # TODO: make more explicit
 
             # Sections based on cluster agent live data
-            live_metrics = collect_metrics_from_cluster_agent(arguments.cluster_agent_endpoint)
-            live_pods = group_metrics_by_pods(live_metrics)
+            performance_metrics = collect_metrics_from_cluster_agent(
+                arguments.cluster_agent_endpoint
+            )
+            live_pods = group_metrics_by_pods(performance_metrics)
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
 
-            for pod in filter_outdated_pods(live_pods, uid_piggyback_mappings):
+            for pod in filter_outdated_pods(list(live_pods.values()), uid_piggyback_mappings):
                 with ConditionalPiggybackSection(uid_piggyback_mappings[pod.uid]):
-                    pod_checkmk_sections(pod.containers)
+                    pod_performance_sections(pod.containers)
+
+            for deployment in cluster.deployments():
+                with ConditionalPiggybackSection(deployment.name(prepend_namespace=True)):
+                    deployment_performance_sections(
+                        [live_pods[pod_uid] for pod_uid in deployment.pod_uids()]
+                    )
 
     except urllib3.exceptions.MaxRetryError as e:
         if arguments.debug:

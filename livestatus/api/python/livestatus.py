@@ -529,6 +529,7 @@ class SingleSiteConnection(Helpers):
         data = BytesIO()
         self.socket.settimeout(timeout)
         receive_start = time.time()
+
         while size > 0:
             readylist = self._socket_poller.poll(1000)
             if readylist:

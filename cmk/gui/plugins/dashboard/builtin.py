@@ -334,7 +334,7 @@ checkmk_host_dashlets = [
         "context": {"service": "Disk IO SUMMARY"},
         "background": True,
         "link_from": {},
-        "timerange": "1",
+        "timerange": "25h",
         "graph_render_options": {
             "font_size": 8.0,
             "show_time_axis": True,
@@ -361,7 +361,7 @@ checkmk_host_dashlets = [
         "context": {"service": "Kernel Performance"},
         "background": True,
         "link_from": {},
-        "timerange": "1",
+        "timerange": "25h",
         "graph_render_options": {
             "font_size": 8.0,
             "show_time_axis": True,
@@ -388,7 +388,7 @@ checkmk_host_dashlets = [
         "context": {"service": "Memory"},
         "link_from": {},
         "type": "pnpgraph",
-        "timerange": "1",
+        "timerange": "25h",
         "graph_render_options": {
             "font_size": 8.0,
             "show_time_axis": True,
@@ -417,7 +417,7 @@ checkmk_host_dashlets = [
         },
         "background": True,
         "link_from": {},
-        "timerange": "1",
+        "timerange": "25h",
         "graph_render_options": {
             "font_size": 8.0,
             "show_time_axis": True,
@@ -508,7 +508,7 @@ if cmk_version.is_raw_edition():
             "size": (0, 14),
             "sort_index": 99,
             "source": "cpu_load",
-            "timerange": "1",
+            "timerange": "25h",
             "topic": None,
             "type": "pnpgraph",
         },
@@ -537,7 +537,7 @@ if cmk_version.is_raw_edition():
             "size": (0, 14),
             "sort_index": 99,
             "source": "fs_used",
-            "timerange": "1",
+            "timerange": "25h",
             "topic": None,
             "type": "pnpgraph",
         },

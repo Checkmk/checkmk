@@ -933,22 +933,15 @@ def host_service_graph_dashlet_cmk(
 
     graph_render_options["size"] = (width, height)
 
-    # The timerange is specified in PNP like manner.
-    range_secs = {
-        "0": 4 * 3600,
-        "1": 25 * 3600,
-        "2": 7 * 86400,
-        "3": 31 * 86400,
-        "4": 366 * 86400,
-    }
+    timerange = json.loads(request.get_str_input_mandatory("timerange"))
 
-    secs_var = request.var("timerange")
-    if secs_var not in range_secs:
-        secs = 4 * 3600
+    if isinstance(timerange, list):
+        end_time = timerange[1]
+        start_time = timerange[0]
     else:
-        secs = range_secs[secs_var]
-    end_time = time.time()
-    start_time = end_time - secs
+        end_time = time.time()
+        start_time = end_time - float(timerange)
+
     graph_data_range = {
         "time_range": (start_time, end_time),
     }

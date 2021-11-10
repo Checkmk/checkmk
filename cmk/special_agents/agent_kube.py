@@ -171,6 +171,27 @@ class Pod:
         return section.PodContainers(containers=self.containers)
 
 
+class Deployment:
+    def __init__(self, metadata: api.MetaData) -> None:
+        self.metadata = metadata
+        self._pods: List[Pod] = []
+
+    def name(self, prepend_namespace: bool = False) -> str:
+        if not prepend_namespace:
+            return self.metadata.name
+
+        return f"{self.metadata.namespace}_{self.metadata.name}"
+
+    def add_pod(self, pod: Pod) -> None:
+        self._pods.append(pod)
+
+    def pod_resources(self) -> section.PodResources:
+        resources: DefaultDict[str, int] = defaultdict(int)
+        for pod in self._pods:
+            resources[pod.phase] += 1
+        return section.PodResources(**resources)
+
+
 class Node:
     def __init__(
         self,
@@ -241,15 +262,27 @@ class Cluster:
                 )
             )
 
+        for deployment in api_server.deployments():
+            cluster.add_deployment(Deployment(deployment.metadata), deployment.pods)
+
         return cluster
 
     def __init__(self, *, cluster_details: Optional[api.ClusterInfo] = None) -> None:
         self._nodes: Dict[str, Node] = {}
+        self._deployments: List[Deployment] = []
         self._pods: Dict[str, Pod] = {}
         self._cluster_details: Optional[api.ClusterInfo] = cluster_details
 
     def add_node(self, node: Node) -> None:
         self._nodes[node.name] = node
+
+    def add_deployment(self, deployment: Deployment, pod_uids: Sequence[api.PodUID]) -> None:
+        for pod_uid in pod_uids:
+            try:
+                deployment.add_pod(self._pods[pod_uid])
+            except KeyError:
+                raise KeyError(f"Pod {pod_uid} for deployment {deployment.name()} does not exist")
+        self._deployments.append(deployment)
 
     def add_pod(self, pod: Pod) -> None:
         try:
@@ -257,7 +290,7 @@ class Cluster:
         except KeyError:
             raise KeyError(f"Node {pod.node} of {pod.name} was not listed in the API")
         node.append(pod)
-        self._pods[pod.name(prepend_namespace=True)] = pod
+        self._pods[pod.uid] = pod
 
     def pod_resources(self) -> section.PodResources:
         resources: DefaultDict[str, int] = defaultdict(int)
@@ -271,6 +304,9 @@ class Cluster:
 
     def nodes(self) -> Sequence[Node]:
         return list(self._nodes.values())
+
+    def deployments(self) -> Sequence[Deployment]:
+        return self._deployments
 
     def node_count(self) -> section.NodeCount:
         worker = 0
@@ -323,6 +359,18 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
     for node in api_nodes:
         with ConditionalPiggybackSection(node.name):
             output_sections(node)
+
+
+def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> None:
+    def output_sections(cluster_deployment: Deployment) -> None:
+        sections = {
+            "k8s_deployment_pods_resources_v1": cluster_deployment.pod_resources,
+        }
+        _write_sections(sections)
+
+    for deployment in api_deployments:
+        with ConditionalPiggybackSection(deployment.name(prepend_namespace=True)):
+            output_sections(deployment)
 
 
 def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
@@ -458,6 +506,7 @@ def main(args: Optional[List[str]] = None) -> int:
             # Sections based on API server
             output_cluster_api_sections(cluster)
             output_nodes_api_sections(cluster.nodes())
+            output_deployments_api_sections(cluster.deployments())
             output_pods_api_sections(cluster.pods())  # TODO: make more explicit
 
             # Sections based on cluster agent live data

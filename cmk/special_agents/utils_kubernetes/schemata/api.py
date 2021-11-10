@@ -21,6 +21,7 @@ from pydantic.class_validators import validator
 from pydantic.fields import Field
 
 Labels = NewType("Labels", Dict[str, str])
+PodUID = NewType("PodUID", str)
 
 
 class MetaData(BaseModel):
@@ -71,6 +72,11 @@ class Node(BaseModel):
     control_plane: bool
     resources: Dict[str, NodeResources]
     kubelet_info: KubeletInfo
+
+
+class Deployment(BaseModel):
+    metadata: MetaData
+    pods: Sequence[PodUID]
 
 
 class Resources(BaseModel):
@@ -176,6 +182,9 @@ class API(Protocol):
         ...
 
     def pods(self) -> Sequence[Pod]:
+        ...
+
+    def deployments(self):
         ...
 
     def cluster_details(self) -> ClusterInfo:

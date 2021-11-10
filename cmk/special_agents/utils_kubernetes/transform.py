@@ -268,3 +268,12 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
             health=kubelet_health,
         ),
     )
+
+
+def deployment_from_client(
+    deployment: client.V1Deployment, pod_uids=Sequence[api.PodUID]
+) -> api.Deployment:
+    return api.Deployment(
+        metadata=parse_metadata(deployment.metadata),
+        pods=pod_uids,
+    )

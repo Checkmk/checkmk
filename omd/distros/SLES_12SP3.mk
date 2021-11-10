@@ -7,6 +7,7 @@ OS_PACKAGES    += apache2
 OS_PACKAGES    += bind-utils # check_dns
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
+OS_PACKAGES    += ed
 OS_PACKAGES    += gd
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += libpng12-0

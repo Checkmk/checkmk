@@ -420,7 +420,7 @@ def _get_post_discovery_autocheck_services(
     """
     post_discovery_services = []
     for check_source, discovered_services_with_nodes in services.items():
-        if check_source in ("custom", "active", "manual"):
+        if check_source == "manual":
             # This is not an autocheck or ignored and currently not
             # checked. Note: Discovered checks that are shadowed by manual
             # checks will vanish that way.
@@ -1002,8 +1002,6 @@ def _get_host_services(
         }
 
     services.update(_manual_items(host_config))
-    services.update(_custom_items(host_config))
-    services.update(_active_items(host_config))
     services.update(_reclassify_disabled_items(host_config.hostname, services))
 
     return _group_by_transition(services)
@@ -1083,62 +1081,15 @@ def _manual_items(
         yield service.id(), ("manual", service, [host_name])
 
 
-def _custom_items(
-    host_config: config.HostConfig,
-) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["custom"]]]]:
-    # Add custom checks -> "custom"
-    for entry in host_config.custom_checks:
-        yield (
-            (CheckPluginName("custom"), entry["service_description"]),
-            (
-                "custom",
-                Service(
-                    check_plugin_name=CheckPluginName("custom"),
-                    item=entry["service_description"],
-                    description=entry["service_description"],
-                    parameters=None,
-                ),
-                [host_config.hostname],
-            ),
-        )
-
-
-def _active_items(
-    host_config: config.HostConfig,
-) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["active"]]]]:
-    # Similar for 'active_checks', but here we have parameters
-    host_name = host_config.hostname
-    for plugin_name, entries in host_config.active_checks:
-        for params in entries:
-            descr = config.active_check_service_description(host_name, plugin_name, params)
-            yield (CheckPluginName(plugin_name), descr), (
-                "active",
-                Service(
-                    check_plugin_name=CheckPluginName(plugin_name),
-                    item=descr,
-                    description=descr,
-                    parameters=params,
-                ),
-                [host_name],
-            )
-
-
 def _reclassify_disabled_items(
     host_name: HostName,
     services: ServicesTable[_ServiceOrigin],
 ) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     """Handle disabled services -> 'ignored'"""
     yield from (
-        (discovered_service.id(), ("ignored", discovered_service, [host_name]))
-        for check_source, discovered_service, _found_on_nodes in services.values()
-        # These are ignored later in get_check_preview
-        # TODO: This needs to be cleaned up. The problem here is that service_description() can not
-        # calculate the description of active checks and the active checks need to be put into
-        # "[source]_ignored" instead of ignored.
-        if check_source not in {"active", "custom"}
-        and config.service_ignored(
-            host_name, discovered_service.check_plugin_name, discovered_service.description
-        )
+        (service.id(), ("ignored", service, [host_name]))
+        for check_source, service, _found_on_nodes in services.values()
+        if config.service_ignored(host_name, service.check_plugin_name, service.description)
     )
 
 
@@ -1294,7 +1245,7 @@ def get_check_preview(
     )
 
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:
-        table = [
+        passive_rows = [
             _check_preview_table_row(
                 host_config=host_config,
                 ip_address=ip_address,
@@ -1308,7 +1259,11 @@ def get_check_preview(
             for service, found_on_nodes in services_with_nodes
         ]
 
-    return table, host_labels
+    return [
+        *passive_rows,
+        *_active_check_preview_rows(host_config),
+        *_custom_check_preview_rows(host_config),
+    ], host_labels
 
 
 def _check_preview_table_row(
@@ -1332,27 +1287,19 @@ def _check_preview_table_row(
         else service.parameters
     )
 
-    if check_source in {"active", "custom"}:
-        exitcode = None
-        output = ""
-        ruleset_name: Optional[RulesetName] = None
-    else:
+    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
+    ruleset_name = str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
 
-        plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
-        ruleset_name = (
-            str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
-        )
-
-        exitcode, output, _perfdata = checking.get_aggregated_result(
-            parsed_sections_broker,
-            host_config,
-            ip_address,
-            service,
-            plugin,
-            preview_params,
-            value_store_manager=value_store_manager,
-            persist_value_store_changes=False,  # never during discovery
-        ).result
+    exitcode, output, _perfdata = checking.get_aggregated_result(
+        parsed_sections_broker,
+        host_config,
+        ip_address,
+        service,
+        plugin,
+        preview_params,
+        value_store_manager=value_store_manager,
+        persist_value_store_changes=False,  # never during discovery
+    ).result
 
     return _make_check_preview_entry(
         host_name=host_config.hostname,
@@ -1367,6 +1314,48 @@ def _check_preview_table_row(
         output=output,
         found_on_nodes=found_on_nodes,
         labels={l.name: l.value for l in service.service_labels.values()},
+    )
+
+
+def _custom_check_preview_rows(
+    host_config: config.HostConfig,
+) -> Sequence[CheckPreviewEntry]:
+    return list(
+        {
+            entry["service_description"]: _make_check_preview_entry(
+                host_name=host_config.hostname,
+                check_plugin_name="custom",
+                item=entry["service_description"],
+                description=entry["service_description"],
+                check_source="custom",
+            )
+            for entry in host_config.custom_checks
+        }.values()
+    )
+
+
+def _active_check_preview_rows(
+    host_config: config.HostConfig,
+) -> Sequence[CheckPreviewEntry]:
+    return list(
+        {
+            descr: _make_check_preview_entry(
+                host_name=host_config.hostname,
+                check_plugin_name=plugin_name,
+                item=descr,
+                description=descr,
+                check_source="active",
+                parameters=params,
+                preview_params=params,
+            )
+            for plugin_name, entries in host_config.active_checks
+            for params in entries
+            if (
+                descr := config.active_check_service_description(
+                    host_config.hostname, plugin_name, params
+                )
+            )
+        }.values()
     )
 
 

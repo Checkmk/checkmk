@@ -37,9 +37,9 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DictionaryEntry,
-    DropdownChoice,
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
+    Timerange,
     ValueSpec,
 )
 from cmk.gui.visuals import get_singlecontext_vars
@@ -176,7 +176,7 @@ class GraphDashlet(Dashlet):
 
         # New graphs which have been added via "add to visual" option don't have a timerange
         # configured. So we assume the default timerange here by default.
-        self._dashlet_spec.setdefault("timerange", "1")
+        self._dashlet_spec.setdefault("timerange", "25h")
 
         self._init_exception = None
         try:
@@ -249,19 +249,11 @@ class GraphDashlet(Dashlet):
 
     @staticmethod
     def _vs_timerange() -> DictionaryEntry:
-        # TODO: Cleanup: switch to generic Timerange() valuespec!
         return (
             "timerange",
-            DropdownChoice(
+            Timerange(
                 title=_("Timerange"),
-                default_value="1",
-                choices=[
-                    ("0", _("4 Hours")),
-                    ("1", _("25 Hours")),
-                    ("2", _("One Week")),
-                    ("3", _("One Month")),
-                    ("4", _("One Year")),
-                ],
+                default_value="25h",
             ),
         )
 
@@ -301,7 +293,7 @@ function dashboard_render_graph(nr, graph_identification, graph_render_options, 
 
     var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_identification))
                   + "&render=" + encodeURIComponent(JSON.stringify(graph_render_options))
-                  + "&timerange=" + encodeURIComponent(timerange)
+                  + "&timerange=" + encodeURIComponent(JSON.stringify(timerange))
                   + "&width=" + c_w
                   + "&height=" + c_h
                   + "&id=" + nr;
@@ -339,11 +331,11 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         ):
             return ""
 
-        return "dashboard_render_graph(%d, %s, %s, '%s')" % (
+        return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
             json.dumps(self._dashlet_spec["_graph_identification"]),
             json.dumps(self._dashlet_spec["graph_render_options"]),
-            self._dashlet_spec["timerange"],
+            json.dumps(Timerange.compute_range(self._dashlet_spec["timerange"]).range),
         )
 
     def show(self):

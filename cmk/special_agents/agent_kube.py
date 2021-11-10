@@ -151,6 +151,9 @@ class Pod:
             requests=self.resources.cpu.requests,
         )
 
+    def memory_resources(self) -> Resources:
+        return Resources(limit=self.resources.memory.limit, requests=self.resources.memory.requests)
+
     def conditions(self) -> section.PodConditions:
         # TODO: separate section for custom conditions
         return section.PodConditions(
@@ -190,6 +193,13 @@ class Deployment:
         for pod in self._pods:
             resources[pod.phase] += 1
         return section.PodResources(**resources)
+
+    def memory_resources(self) -> Resources:
+        resources: DefaultDict[str, float] = defaultdict(float)
+        for pod in self._pods:
+            for k, v in dict(pod.memory_resources()).items():
+                resources[k] += v
+        return Resources(**resources)
 
 
 class Node:
@@ -365,6 +375,7 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
     def output_sections(cluster_deployment: Deployment) -> None:
         sections = {
             "k8s_deployment_pods_resources_v1": cluster_deployment.pod_resources,
+            "k8s_memory_resources_v1": cluster_deployment.memory_resources,
         }
         _write_sections(sections)
 

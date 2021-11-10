@@ -3948,6 +3948,10 @@ msgstr "%sのエージェント(%s)"
 msgid "Agent output"
 msgstr "エージェント出力"
 
+#, fuzzy
+msgid "Agent pairing"
+msgstr "エージェントベーキング"
+
 msgid "Agent rules"
 msgstr "エージェントルール"
 
@@ -5532,6 +5536,11 @@ msgstr "自動ページリロード"
 msgid "Automatic page reload in %d seconds."
 msgstr "%d 秒での自動ページリロード"
 
+msgid ""
+"Automatic pairing will fail if some data is missing. TODO: Concept for "
+"handling this situation"
+msgstr ""
+
 msgid "Automatic takeover"
 msgstr "自動テイクオーバー"
 
@@ -5557,6 +5566,10 @@ msgid ""
 "Automatically execute a service discovery on all new hosts created by this "
 "connection. New services will be added to the monitoring in this step."
 msgstr ""
+
+#, fuzzy
+msgid "Automatically execute pairing"
+msgstr "変更を自動的にアクティブ化する"
 
 msgid "Automatically invalidate notification"
 msgstr "通知を自動的に無効にする"
@@ -5608,6 +5621,9 @@ msgstr "マシンアカウントの自動化の秘密"
 
 msgid "Automation user rejected"
 msgstr "自動化ユーザーが拒否されました"
+
+msgid "Automation user that is used to perform pairing."
+msgstr ""
 
 msgid "Autostart Services"
 msgstr "自動開始サービス"
@@ -14775,6 +14791,16 @@ msgid "Duration of last build"
 msgstr "最後のビルドの期間"
 
 msgid ""
+"During each run, the agent will fetch events which are at maximum this old. "
+"The agent memorizes events already fetched during the last run, s.t. no "
+"event will be sent to the event console multiple times. Setting this value "
+"lower than the check interval of the host will result in missing events. "
+"Also note that the Datadog API allows for creating new events which lie in "
+"the past. Such events will be missed by the agent if their age exceeds the "
+"value specified here."
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -20208,6 +20234,10 @@ msgstr "ホストアドレスファミリ"
 msgid "Host address family (Primary)"
 msgstr "ホストアドレスファミリ(プライマリ)"
 
+#, fuzzy
+msgid "Host address of the monitoring server"
+msgstr "監視サイトの名前"
+
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "ホストアドレス(IPv4/IPv6)"
 
@@ -22586,9 +22616,6 @@ msgstr "プロセス数にレベルを課す"
 msgid "Impose limits on the size of the database"
 msgstr "データベースのサイズに制限を課す"
 
-msgid "Imprint"
-msgstr "インプリント"
-
 msgid "In"
 msgstr "に"
 
@@ -24605,6 +24632,10 @@ msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、<tt> "
 "os:windows </tt>です。"
 
+#, fuzzy
+msgid "Labels to set on the paired hosts"
+msgstr "また、子ホストのダウンタイムを設定します"
+
 msgid "Lambda"
 msgstr ""
 
@@ -25374,7 +25405,8 @@ msgstr "ライセンス機能"
 msgid "License Usage"
 msgstr "ライセンスの使用法"
 
-msgid "License aggreement"
+#, fuzzy
+msgid "License agreement"
 msgstr "ライセンス契約"
 
 msgid "License state"
@@ -26699,9 +26731,6 @@ msgstr "メジャーページフォールト"
 msgid "Major change"
 msgstr "主な変更"
 
-msgid "Major release"
-msgstr "メジャーリリース"
-
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr "%s を表示して、他のユーザーが使用できるようにします。"
@@ -27329,6 +27358,10 @@ msgstr "ピギーバックファイルの最大経過時間"
 
 msgid "Maximum age of backups"
 msgstr "バックアップの最大経過時間"
+
+#, fuzzy
+msgid "Maximum age of fetched events"
+msgstr "受け入れられたパケットの最大レート"
 
 msgid "Maximum age of latest timemachine backup"
 msgstr "最新のタイムマシンバックアップの最大経過時間"
@@ -32251,6 +32284,14 @@ msgstr "1秒あたりのページ数"
 msgid "Painter %r returned invalid result: %r"
 msgstr "ペインター%rが無効な結果を返しました:%r"
 
+#, fuzzy
+msgid "Pair manually"
+msgstr "手動で指定する"
+
+#, fuzzy
+msgid "Pair on installation"
+msgstr "インストール"
+
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Altoアクティブセッション"
 
@@ -32431,9 +32472,6 @@ msgstr "パスワード"
 
 msgid "Paste PEM Content"
 msgstr "PEMコンテンツを貼り付けます"
-
-msgid "Patch release"
-msgstr "パッチリリース"
 
 msgid "Path"
 msgstr "パス"
@@ -42057,6 +42095,9 @@ msgstr "TLS/SSL/Httpsが無効になっています"
 msgid "TNS Alias %s"
 msgstr "TNSエイリアス"
 
+msgid "TODO"
+msgstr ""
+
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: SNMP経由で使用されたメモリ"
 
@@ -45489,6 +45530,11 @@ msgstr ""
 "選択した自動化ユーザーには、エージェントの登録とダウンロードの権限が必要で"
 "す。ユーザーが選択されていない場合、エージェントベーカリーは[自動化]自動化"
 "ユーザーを見つけようとします。"
+
+msgid ""
+"The selected automation user needs rights for pairing all agents. TODO: "
+"Provide details (ATM: We still need such a role)"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -57298,6 +57344,11 @@ msgstr "ダウンタイムについてコメントを提供する必要があり
 msgid "You need to supply a comment."
 msgstr "コメントを入力する必要があります。"
 
+msgid ""
+"You will have to configure the host address of the server which hosts the "
+"monitoring server of the host the agent is installed on."
+msgstr ""
+
 msgid "YouTube"
 msgstr "YouTube"
 
@@ -59376,8 +59427,18 @@ msgstr "昨日"
 msgid "z/OS"
 msgstr "z/OS"
 
-msgid "© 2020 tribe29 GmbH. All Rights Reserved."
+#, fuzzy, python-format
+msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Imprint"
+#~ msgstr "インプリント"
+
+#~ msgid "Major release"
+#~ msgstr "メジャーリリース"
+
+#~ msgid "Patch release"
+#~ msgstr "パッチリリース"
 
 #~ msgid "# Containers"
 #~ msgstr "# コンテナ"

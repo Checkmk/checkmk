@@ -4150,6 +4150,10 @@ msgstr "Agent pour %s (%s)"
 msgid "Agent output"
 msgstr "Sortie de l'agent"
 
+#, fuzzy
+msgid "Agent pairing"
+msgstr "Agent de cuisson"
+
 msgid "Agent rules"
 msgstr "Règlement des agents"
 
@@ -5795,6 +5799,11 @@ msgstr "Rechargement automatique des pages"
 msgid "Automatic page reload in %d seconds."
 msgstr "Rechargement automatique de la page dans %d secondes."
 
+msgid ""
+"Automatic pairing will fail if some data is missing. TODO: Concept for "
+"handling this situation"
+msgstr ""
+
 msgid "Automatic takeover"
 msgstr "Prise de contrôle automatique"
 
@@ -5823,6 +5832,10 @@ msgstr ""
 "Exécuter automatiquement une découverte de services sur tous les nouveaux "
 "hôtes créés par cette connexion. Les nouveaux services seront ajoutés à la "
 "surveillance dans cette étape."
+
+#, fuzzy
+msgid "Automatically execute pairing"
+msgstr "Services Détectés Automatiquement"
 
 msgid "Automatically invalidate notification"
 msgstr "Invalider automatiquement la notification"
@@ -5879,6 +5892,9 @@ msgstr "Secret d'automatisation pour les comptes machines"
 
 msgid "Automation user rejected"
 msgstr "Utilisateur de l'automatisation rejeté"
+
+msgid "Automation user that is used to perform pairing."
+msgstr ""
 
 msgid "Autostart Services"
 msgstr "Services de démarrage automatique"
@@ -15485,6 +15501,16 @@ msgid "Duration of last build"
 msgstr "Durée de la dernière construction"
 
 msgid ""
+"During each run, the agent will fetch events which are at maximum this old. "
+"The agent memorizes events already fetched during the last run, s.t. no "
+"event will be sent to the event console multiple times. Setting this value "
+"lower than the check interval of the host will result in missing events. "
+"Also note that the Datadog API allows for creating new events which lie in "
+"the past. Such events will be missed by the agent if their age exceeds the "
+"value specified here."
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -21193,6 +21219,10 @@ msgstr "Familles d'accueil"
 msgid "Host address family (Primary)"
 msgstr "Famille d'adresses de l'hôte (primaire)"
 
+#, fuzzy
+msgid "Host address of the monitoring server"
+msgstr "Nom du site de surveillance"
+
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "Adresses d'hôtes (IPv4/IPv6)"
 
@@ -23772,9 +23802,6 @@ msgstr "Imposer des niveaux sur le nombre de processus"
 msgid "Impose limits on the size of the database"
 msgstr "Imposer des limites à la taille de la base de données"
 
-msgid "Imprint"
-msgstr "Impression"
-
 msgid "In"
 msgstr "Sur"
 
@@ -25913,6 +25940,10 @@ msgstr ""
 "Les étiquettes doivent être au format <tt>[KEY] :[VALUE]</tt>. Par exemple "
 "<tt>os:windows</tt>."
 
+#, fuzzy
+msgid "Labels to set on the paired hosts"
+msgstr "Définir également le temps d'arrêt sur les hôtes enfants"
+
 msgid "Lambda"
 msgstr ""
 
@@ -26699,7 +26730,8 @@ msgstr "Caractéristique de la licence"
 msgid "License Usage"
 msgstr "Utilisation de la licence"
 
-msgid "License aggreement"
+#, fuzzy
+msgid "License agreement"
 msgstr "Accord de licence"
 
 msgid "License state"
@@ -28069,9 +28101,6 @@ msgstr "Défauts majeurs de la page"
 msgid "Major change"
 msgstr "Changement majeur"
 
-msgid "Major release"
-msgstr "Libération majeure"
-
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr "Rendre %s visible et utilisable pour les autres utilisateurs."
@@ -28717,6 +28746,10 @@ msgstr "Âge maximum pour les dossiers de ferroutage"
 
 msgid "Maximum age of backups"
 msgstr "Âge maximal des sauvegardes"
+
+#, fuzzy
+msgid "Maximum age of fetched events"
+msgstr "Taux maximum de paquets acceptés"
 
 msgid "Maximum age of latest timemachine backup"
 msgstr "Âge maximum de la dernière sauvegarde du timemachine"
@@ -33804,6 +33837,14 @@ msgstr "Pages par seconde"
 msgid "Painter %r returned invalid result: %r"
 msgstr "Le peintre %r a renvoyé un résultat invalide : %r"
 
+#, fuzzy
+msgid "Pair manually"
+msgstr "Spécifier manuellement"
+
+#, fuzzy
+msgid "Pair on installation"
+msgstr "Installation"
+
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto Active Sessions"
 
@@ -33990,9 +34031,6 @@ msgstr "Mots de passe"
 
 msgid "Paste PEM Content"
 msgstr "Coller le contenu du PEM"
-
-msgid "Patch release"
-msgstr "Publication d'un correctif"
 
 msgid "Path"
 msgstr "Chemin d'accès"
@@ -44086,6 +44124,9 @@ msgstr "TLS/SSL/Https désactivé"
 msgid "TNS Alias %s"
 msgstr "Alias TNS"
 
+msgid "TODO"
+msgstr ""
+
 msgid "TP Link: Used memory via SNMP"
 msgstr "Lien TP : Mémoire utilisée via SNMP"
 
@@ -47941,6 +47982,11 @@ msgstr ""
 "l'enregistrement et le téléchargement des agents. Si aucun utilisateur n'est "
 "sélectionné, la boulangerie des agents essaie de trouver un utilisateur "
 "d'automatisation \"automation\"."
+
+msgid ""
+"The selected automation user needs rights for pairing all agents. TODO: "
+"Provide details (ATM: We still need such a role)"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -60995,6 +61041,11 @@ msgstr "Vous devez fournir un commentaire pour votre temps d'arrêt."
 msgid "You need to supply a comment."
 msgstr "Vous devez fournir un commentaire."
 
+msgid ""
+"You will have to configure the host address of the server which hosts the "
+"monitoring server of the host the agent is installed on."
+msgstr ""
+
 msgid "YouTube"
 msgstr "YouTube"
 
@@ -63107,8 +63158,18 @@ msgstr "hier"
 msgid "z/OS"
 msgstr "z/OS"
 
-msgid "© 2020 tribe29 GmbH. All Rights Reserved."
+#, fuzzy, python-format
+msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Imprint"
+#~ msgstr "Impression"
+
+#~ msgid "Major release"
+#~ msgstr "Libération majeure"
+
+#~ msgid "Patch release"
+#~ msgstr "Publication d'un correctif"
 
 #~ msgid "# Containers"
 #~ msgstr "# Containers"
@@ -66652,9 +66713,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Automatic Refresh (Tabula Rasa)"
 #~ msgstr "Rafraîchissement Automatique (Tabula Rasa)"
-
-#~ msgid "Automatically Detected Services"
-#~ msgstr "Services Détectés Automatiquement"
 
 #~ msgid "Availability of "
 #~ msgstr "Disponibilité de "

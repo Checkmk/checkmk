@@ -3868,6 +3868,10 @@ msgid "Agent output"
 msgstr ""
 
 #, fuzzy
+msgid "Agent pairing"
+msgstr "actualizare"
+
+#, fuzzy
 msgid "Agent rules"
 msgstr "Editeaza regulile de loguri"
 
@@ -5419,6 +5423,11 @@ msgstr ""
 msgid "Automatic page reload in %d seconds."
 msgstr ""
 
+msgid ""
+"Automatic pairing will fail if some data is missing. TODO: Concept for "
+"handling this situation"
+msgstr ""
+
 msgid "Automatic takeover"
 msgstr ""
 
@@ -5446,6 +5455,10 @@ msgid ""
 "Automatically execute a service discovery on all new hosts created by this "
 "connection. New services will be added to the monitoring in this step."
 msgstr ""
+
+#, fuzzy
+msgid "Automatically execute pairing"
+msgstr "Activare Schimbări!"
 
 msgid "Automatically invalidate notification"
 msgstr ""
@@ -5498,6 +5511,9 @@ msgid "Automation secret for machine accounts"
 msgstr ""
 
 msgid "Automation user rejected"
+msgstr ""
+
+msgid "Automation user that is used to perform pairing."
 msgstr ""
 
 msgid "Autostart Services"
@@ -14739,6 +14755,16 @@ msgid "Duration of last build"
 msgstr "Vechimea maxima a backup-urilor"
 
 msgid ""
+"During each run, the agent will fetch events which are at maximum this old. "
+"The agent memorizes events already fetched during the last run, s.t. no "
+"event will be sent to the event console multiple times. Setting this value "
+"lower than the check interval of the host will result in missing events. "
+"Also note that the Datadog API allows for creating new events which lie in "
+"the past. Such events will be missed by the agent if their age exceeds the "
+"value specified here."
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -20070,6 +20096,10 @@ msgstr ""
 msgid "Host address family (Primary)"
 msgstr ""
 
+#, fuzzy
+msgid "Host address of the monitoring server"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Host addresses (IPv4/IPv6)"
 msgstr ""
 
@@ -22121,9 +22151,6 @@ msgstr ""
 msgid "Impose limits on the size of the database"
 msgstr ""
 
-msgid "Imprint"
-msgstr ""
-
 msgid "In"
 msgstr ""
 
@@ -24053,6 +24080,9 @@ msgid ""
 "os_family:linux</tt>."
 msgstr ""
 
+msgid "Labels to set on the paired hosts"
+msgstr ""
+
 msgid "Lambda"
 msgstr ""
 
@@ -24911,7 +24941,7 @@ msgid "License Usage"
 msgstr ""
 
 #, fuzzy
-msgid "License aggreement"
+msgid "License agreement"
 msgstr "% utilizare"
 
 #, fuzzy
@@ -26312,10 +26342,6 @@ msgstr ""
 msgid "Major change"
 msgstr "Renunț la modificări."
 
-#, fuzzy
-msgid "Major release"
-msgstr "Renunț la modificări."
-
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr ""
@@ -26978,6 +27004,10 @@ msgid "Maximum age for piggyback files"
 msgstr ""
 
 msgid "Maximum age of backups"
+msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+msgid "Maximum age of fetched events"
 msgstr "Vechimea maxima a backup-urilor"
 
 msgid "Maximum age of latest timemachine backup"
@@ -32120,6 +32150,13 @@ msgstr " secunde "
 msgid "Painter %r returned invalid result: %r"
 msgstr ""
 
+msgid "Pair manually"
+msgstr ""
+
+#, fuzzy
+msgid "Pair on installation"
+msgstr "Adaugă instanță NGINX"
+
 msgid "Palo Alto Active Sessions"
 msgstr ""
 
@@ -32292,9 +32329,6 @@ msgid "Passwords"
 msgstr "Parola"
 
 msgid "Paste PEM Content"
-msgstr ""
-
-msgid "Patch release"
 msgstr ""
 
 msgid "Path"
@@ -42057,6 +42091,9 @@ msgstr "Notificari"
 msgid "TNS Alias %s"
 msgstr "Arata in masa"
 
+msgid "TODO"
+msgstr ""
+
 msgid "TP Link: Used memory via SNMP"
 msgstr ""
 
@@ -45019,6 +45056,11 @@ msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the agent bakery tries to find an "
 "\"automation\" automation user."
+msgstr ""
+
+msgid ""
+"The selected automation user needs rights for pairing all agents. TODO: "
+"Provide details (ATM: We still need such a role)"
 msgstr ""
 
 #, python-format
@@ -55485,6 +55527,11 @@ msgstr ""
 msgid "You need to supply a comment."
 msgstr ""
 
+msgid ""
+"You will have to configure the host address of the server which hosts the "
+"monitoring server of the host the agent is installed on."
+msgstr ""
+
 msgid "YouTube"
 msgstr ""
 
@@ -57632,8 +57679,13 @@ msgstr "ieri"
 msgid "z/OS"
 msgstr ""
 
-msgid "© 2020 tribe29 GmbH. All Rights Reserved."
+#, python-format
+msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Major release"
+#~ msgstr "Renunț la modificări."
 
 #, fuzzy
 #~ msgid "# Hosts"
@@ -61060,10 +61112,6 @@ msgstr ""
 #~ msgid "Assignment of host & services to host, service and contacts groups. "
 #~ msgstr ""
 #~ "Arata doar elementele si serviciile pentru care utilizatorul este contact"
-
-#, fuzzy
-#~ msgid "Automatically Detected Services"
-#~ msgstr "Activare Schimbări!"
 
 #, fuzzy
 #~ msgid "Availability of "

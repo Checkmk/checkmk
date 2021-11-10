@@ -4108,6 +4108,10 @@ msgstr "Agent voor %s (%s)"
 msgid "Agent output"
 msgstr "Agent uitgang"
 
+#, fuzzy
+msgid "Agent pairing"
+msgstr "Agent bakken"
+
 msgid "Agent rules"
 msgstr "Agent regels"
 
@@ -5738,6 +5742,11 @@ msgstr "Automatisch herladen van pagina's"
 msgid "Automatic page reload in %d seconds."
 msgstr "Automatische pagina herladen in %d seconden."
 
+msgid ""
+"Automatic pairing will fail if some data is missing. TODO: Concept for "
+"handling this situation"
+msgstr ""
+
 msgid "Automatic takeover"
 msgstr "Automatische overname"
 
@@ -5766,6 +5775,10 @@ msgstr ""
 "Voer automatisch een service discovery uit op alle nieuwe hosts die door "
 "deze verbinding worden aangemaakt. Nieuwe diensten zullen in deze stap aan "
 "de bewaking worden toegevoegd."
+
+#, fuzzy
+msgid "Automatically execute pairing"
+msgstr "Automatisch wijzigingen activeren"
 
 msgid "Automatically invalidate notification"
 msgstr "Automatisch ongeldig maken kennisgeving"
@@ -5820,6 +5833,9 @@ msgstr "Automatiseringsgeheim voor machinerekeningen"
 
 msgid "Automation user rejected"
 msgstr "Automatisering gebruiker afgewezen"
+
+msgid "Automation user that is used to perform pairing."
+msgstr ""
 
 msgid "Autostart Services"
 msgstr "Autostart diensten"
@@ -15285,6 +15301,16 @@ msgid "Duration of last build"
 msgstr "Duur van laatste bouw"
 
 msgid ""
+"During each run, the agent will fetch events which are at maximum this old. "
+"The agent memorizes events already fetched during the last run, s.t. no "
+"event will be sent to the event console multiple times. Setting this value "
+"lower than the check interval of the host will result in missing events. "
+"Also note that the Datadog API allows for creating new events which lie in "
+"the past. Such events will be missed by the agent if their age exceeds the "
+"value specified here."
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -20919,6 +20945,10 @@ msgstr "Gastadres gezinnen"
 msgid "Host address family (Primary)"
 msgstr "Gastheeradres familie (Primair)"
 
+#, fuzzy
+msgid "Host address of the monitoring server"
+msgstr "Naam van de bewakingslocatie"
+
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "Hostadressen (IPv4/IPv6)"
 
@@ -23466,9 +23496,6 @@ msgstr "Niveaus opleggen voor het aantal processen"
 msgid "Impose limits on the size of the database"
 msgstr "Beperkingen opleggen aan de grootte van de database"
 
-msgid "Imprint"
-msgstr "Afdruk"
-
 msgid "In"
 msgstr "In"
 
@@ -25588,6 +25615,10 @@ msgstr ""
 "Labels moeten het formaat <tt>[KEY]:[VALUE]</tt> hebben. Bijvoorbeeld <tt>os:"
 "windows</tt>."
 
+#, fuzzy
+msgid "Labels to set on the paired hosts"
+msgstr "Stel ook downtime in op child hosts"
+
 msgid "Lambda"
 msgstr ""
 
@@ -26370,7 +26401,8 @@ msgstr "Licentie Eigenschap"
 msgid "License Usage"
 msgstr "Licentiegebruik"
 
-msgid "License aggreement"
+#, fuzzy
+msgid "License agreement"
 msgstr "Licentieovereenkomst"
 
 msgid "License state"
@@ -27722,9 +27754,6 @@ msgstr "Belangrijke pagina fouten"
 msgid "Major change"
 msgstr "Grote verandering"
 
-msgid "Major release"
-msgstr "Belangrijke release"
-
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr "Maak %s zichtbaar en bruikbaar voor andere gebruikers."
@@ -28362,6 +28391,10 @@ msgstr "Maximumleeftijd voor piggyback-bestanden"
 
 msgid "Maximum age of backups"
 msgstr "Maximale leeftijd van back-ups"
+
+#, fuzzy
+msgid "Maximum age of fetched events"
+msgstr "Maximale snelheid van geaccepteerde pakketten"
 
 msgid "Maximum age of latest timemachine backup"
 msgstr "Maximale leeftijd van de laatste timemachine back-up"
@@ -33386,6 +33419,14 @@ msgstr "Pagina's per seconde"
 msgid "Painter %r returned invalid result: %r"
 msgstr "Schilder %r gaf ongeldig resultaat: %r"
 
+#, fuzzy
+msgid "Pair manually"
+msgstr "Handmatig opgeven"
+
+#, fuzzy
+msgid "Pair on installation"
+msgstr "Installatie"
+
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto Actieve Sessies"
 
@@ -33568,9 +33609,6 @@ msgstr "Wachtwoorden"
 
 msgid "Paste PEM Content"
 msgstr "Plakken PEM-inhoud"
-
-msgid "Patch release"
-msgstr "Patch uitgave"
 
 msgid "Path"
 msgstr "Pad"
@@ -43525,6 +43563,9 @@ msgstr "TLS/SSL/Https uitgeschakeld"
 msgid "TNS Alias %s"
 msgstr "TNS Alias"
 
+msgid "TODO"
+msgstr ""
+
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: Gebruikt geheugen via SNMP"
 
@@ -47329,6 +47370,11 @@ msgstr ""
 "registreren en downloaden van agenten. Als geen gebruiker is geselecteerd, "
 "probeert de agent bakkerij een \"automatisering\" automatisering gebruiker "
 "te vinden."
+
+msgid ""
+"The selected automation user needs rights for pairing all agents. TODO: "
+"Provide details (ATM: We still need such a role)"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -60165,6 +60211,11 @@ msgstr "U moet een commentaar geven voor uw stilstand."
 msgid "You need to supply a comment."
 msgstr "Je moet een commentaar geven."
 
+msgid ""
+"You will have to configure the host address of the server which hosts the "
+"monitoring server of the host the agent is installed on."
+msgstr ""
+
 msgid "YouTube"
 msgstr "YouTube"
 
@@ -62267,8 +62318,18 @@ msgstr "gisteren"
 msgid "z/OS"
 msgstr "z/OS"
 
-msgid "© 2020 tribe29 GmbH. All Rights Reserved."
+#, fuzzy, python-format
+msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Imprint"
+#~ msgstr "Afdruk"
+
+#~ msgid "Major release"
+#~ msgstr "Belangrijke release"
+
+#~ msgid "Patch release"
+#~ msgstr "Patch uitgave"
 
 #~ msgid "# Containers"
 #~ msgstr "# Containers"

@@ -4103,6 +4103,10 @@ msgstr "Agente para %s (%s)"
 msgid "Agent output"
 msgstr "Saída do agente"
 
+#, fuzzy
+msgid "Agent pairing"
+msgstr "Agente de cozimento"
+
 msgid "Agent rules"
 msgstr "Regras dos agentes"
 
@@ -5730,6 +5734,11 @@ msgstr "Recarga automática da página"
 msgid "Automatic page reload in %d seconds."
 msgstr "Recarga automática da página em %d segundos."
 
+msgid ""
+"Automatic pairing will fail if some data is missing. TODO: Concept for "
+"handling this situation"
+msgstr ""
+
 msgid "Automatic takeover"
 msgstr "Aquisição automática"
 
@@ -5758,6 +5767,10 @@ msgstr ""
 "Executar automaticamente uma descoberta de serviço em todos os novos hosts "
 "criados por esta conexão. Novos serviços serão adicionados ao monitoramento "
 "nesta etapa."
+
+#, fuzzy
+msgid "Automatically execute pairing"
+msgstr "Ativar mudanças automaticamente"
 
 msgid "Automatically invalidate notification"
 msgstr "Invalidar automaticamente a notificação"
@@ -5812,6 +5825,9 @@ msgstr "Segredo de automação para contas de máquinas"
 
 msgid "Automation user rejected"
 msgstr "Utilizador de automação rejeitado"
+
+msgid "Automation user that is used to perform pairing."
+msgstr ""
 
 msgid "Autostart Services"
 msgstr "Serviços Autostart"
@@ -15286,6 +15302,16 @@ msgid "Duration of last build"
 msgstr "Duração da última construção"
 
 msgid ""
+"During each run, the agent will fetch events which are at maximum this old. "
+"The agent memorizes events already fetched during the last run, s.t. no "
+"event will be sent to the event console multiple times. Setting this value "
+"lower than the check interval of the host will result in missing events. "
+"Also note that the Datadog API allows for creating new events which lie in "
+"the past. Such events will be missed by the agent if their age exceeds the "
+"value specified here."
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -20918,6 +20944,10 @@ msgstr "Famílias de acolhimento"
 msgid "Host address family (Primary)"
 msgstr "Endereço da família anfitriã (Primária)"
 
+#, fuzzy
+msgid "Host address of the monitoring server"
+msgstr "Nome do local de monitoramento"
+
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "Endereços de anfitrião (IPv4/IPv6)"
 
@@ -23461,9 +23491,6 @@ msgstr "Impor níveis sobre o número de processos"
 msgid "Impose limits on the size of the database"
 msgstr "Impor limites ao tamanho da base de dados"
 
-msgid "Imprint"
-msgstr "Impresso"
-
 msgid "In"
 msgstr "Em"
 
@@ -25576,6 +25603,10 @@ msgstr ""
 "Os rótulos precisam estar no formato <tt>[KEY]:[VALUE]</tt>. Por exemplo "
 "<tt>os:windows</tt>."
 
+#, fuzzy
+msgid "Labels to set on the paired hosts"
+msgstr "Também é definido o tempo de inactividade das crianças hospedeiras"
+
 msgid "Lambda"
 msgstr ""
 
@@ -26360,7 +26391,8 @@ msgstr "Recurso da Licença"
 msgid "License Usage"
 msgstr "Licença de Uso"
 
-msgid "License aggreement"
+#, fuzzy
+msgid "License agreement"
 msgstr "Agregação de licenças"
 
 msgid "License state"
@@ -27720,9 +27752,6 @@ msgstr "Falhas Principais de Página"
 msgid "Major change"
 msgstr "Grande mudança"
 
-msgid "Major release"
-msgstr "Lançamento principal"
-
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr "Torne as %s visíveis e utilizáveis por outros utilizadores."
@@ -28364,6 +28393,10 @@ msgstr "Idade máxima para arquivos piggyback"
 
 msgid "Maximum age of backups"
 msgstr "Idade máxima dos backups"
+
+#, fuzzy
+msgid "Maximum age of fetched events"
+msgstr "Taxa Máxima de Pacotes Aceites"
 
 msgid "Maximum age of latest timemachine backup"
 msgstr "Idade máxima do backup da última máquina de tempo"
@@ -33396,6 +33429,14 @@ msgstr "Páginas por segundo"
 msgid "Painter %r returned invalid result: %r"
 msgstr "Pintor %r devolvido resultado inválido: %r"
 
+#, fuzzy
+msgid "Pair manually"
+msgstr "Especificar manualmente"
+
+#, fuzzy
+msgid "Pair on installation"
+msgstr "Instalação"
+
 msgid "Palo Alto Active Sessions"
 msgstr "Sessões Ativas de Palo Alto"
 
@@ -33580,9 +33621,6 @@ msgstr "Senhas"
 
 msgid "Paste PEM Content"
 msgstr "Colar Conteúdo PEM"
-
-msgid "Patch release"
-msgstr "Liberação de Patch"
 
 msgid "Path"
 msgstr "Caminho"
@@ -43543,6 +43581,9 @@ msgstr "TLS/SSL/Https desativado"
 msgid "TNS Alias %s"
 msgstr "TNS Alias"
 
+msgid "TODO"
+msgstr ""
+
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: Memória usada via SNMP"
 
@@ -47322,6 +47363,11 @@ msgstr ""
 "O usuário de automação selecionado precisa de direitos para o registro e "
 "download do agente. Se nenhum usuário for selecionado, a padaria do agente "
 "tenta encontrar um usuário de automação \"automação\"."
+
+msgid ""
+"The selected automation user needs rights for pairing all agents. TODO: "
+"Provide details (ATM: We still need such a role)"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -60100,6 +60146,11 @@ msgstr "Você precisa fornecer um comentário para o seu tempo parado."
 msgid "You need to supply a comment."
 msgstr "Você precisa fornecer um comentário."
 
+msgid ""
+"You will have to configure the host address of the server which hosts the "
+"monitoring server of the host the agent is installed on."
+msgstr ""
+
 msgid "YouTube"
 msgstr "YouTube"
 
@@ -62202,8 +62253,18 @@ msgstr "ontem"
 msgid "z/OS"
 msgstr "z/OS"
 
-msgid "© 2020 tribe29 GmbH. All Rights Reserved."
+#, fuzzy, python-format
+msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Imprint"
+#~ msgstr "Impresso"
+
+#~ msgid "Major release"
+#~ msgstr "Lançamento principal"
+
+#~ msgid "Patch release"
+#~ msgstr "Liberação de Patch"
 
 #~ msgid "# Containers"
 #~ msgstr "# Containers"

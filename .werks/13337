@@ -1,0 +1,16 @@
+Title: Add Monitoring for Ciena Switch 5171 and 5142
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1636529207
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Currently, the following properties are monitored:
+<ul>
+<li>Tunnels together with their statuses</li>
+<li>CFM services together with their statuses and byte transfer</li>
+<li>Ports together with their signal power</li>
+</ul>

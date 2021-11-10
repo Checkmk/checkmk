@@ -390,7 +390,7 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
     def output_sections(cluster_pod: Pod) -> None:
         sections = {
             "k8s_cpu_resources": cluster_pod.cpu_resources,
-            "k8s_pod_condition_v1": cluster_pod.conditions,
+            "k8s_pod_conditions_v1": cluster_pod.conditions,
             "k8s_pod_containers_v1": cluster_pod.containers_infos,
         }
         _write_sections(sections)

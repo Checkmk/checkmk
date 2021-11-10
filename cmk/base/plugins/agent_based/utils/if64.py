@@ -9,6 +9,7 @@ from typing import (
     List,
     Mapping,
     Union,
+    Optional,
 )
 from ..agent_based_api.v1 import (
     exists,
@@ -312,7 +313,16 @@ def fix_if_64_highspeed(highspeed: str) -> str:
     return str(interfaces.saveint(highspeed) * 1000000)
 
 
-def generic_parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
+def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:
+    return (f"maps to {port_map.get(name, '')}" if name in port_map else
+            f"belongs to {' and '.join(k for k, v in port_map.items() if v == name)}"
+            if name in port_map.values() else None)
+
+
+def generic_parse_if64(
+    string_table: List[type_defs.StringByteTable],
+    port_map: Optional[Mapping[str, str]] = None,
+) -> interfaces.Section:
     return [
         interfaces.Interface(
             index=str(line[0]),
@@ -335,6 +345,7 @@ def generic_parse_if64(string_table: List[type_defs.StringByteTable]) -> interfa
             out_qlen=interfaces.saveint(line[17]),
             alias=str(line[18]),
             phys_address=line[19],
+            extra_info=port_mapping(line[1], port_map) if port_map else None,
         ) for line in string_table[0]
     ]
 

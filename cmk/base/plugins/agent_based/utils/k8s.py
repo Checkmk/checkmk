@@ -123,3 +123,15 @@ class ClusterInfo(BaseModel):
     """section: k8s_cluster_details_v1"""
 
     api_health: APIHealth
+
+
+class PodResources(BaseModel):
+    """section: k8s_pods_resources"""
+
+    running: int = 0
+    pending: int = 0
+    succeeded: int = 0
+    failed: int = 0
+    unknown: int = 0
+    capacity: Optional[int] = None
+    allocatable: Optional[int] = None

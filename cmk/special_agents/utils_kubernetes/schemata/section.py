@@ -25,8 +25,8 @@ class PodResources(BaseModel):
     succeeded: int = 0
     failed: int = 0
     unknown: int = 0
-    capacity: int = 0
-    allocatable: int = 0
+    capacity: Optional[int] = None
+    allocatable: Optional[int] = None
 
 
 class PodCondition(BaseModel):

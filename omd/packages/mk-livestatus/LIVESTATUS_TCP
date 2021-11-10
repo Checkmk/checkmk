@@ -13,8 +13,13 @@
     systemd --version | perl -ne 'exit +((/^systemd (\d+)/)[0] < 235)'
 )
 #USE_XINETD=$?
-# Force xinetd until the systemd bugs are fixed.
+# Force xinetd until we are sure we are good on SLES15 as well.
 USE_XINETD=1
+
+if [ $USE_XINETD = 1 ] && ! command -v xinetd > /dev/null; then
+    echo "This feature requires either xinetd or systemd >= 235"
+    exit 1
+fi
 
 case "$1" in
     default)

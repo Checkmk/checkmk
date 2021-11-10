@@ -379,7 +379,7 @@ class Site:
                 ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
             )
             # ? content seems to have the type str
-            p.communicate(ensure_str(content))
+            p.communicate(ensure_str(content))  # pylint: disable= six-ensure-str-bin-call
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))

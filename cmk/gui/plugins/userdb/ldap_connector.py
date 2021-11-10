@@ -454,7 +454,10 @@ class LDAPUserConnector(UserConnector):
         self._logger.info("LDAP_BIND %s" % user_dn)
         try:
             # ? user_dn seems to have the type str
-            conn.simple_bind_s(ensure_str(user_dn), password_store.extract(password))
+            conn.simple_bind_s(
+                ensure_str(user_dn),  # pylint: disable= six-ensure-str-bin-call
+                password_store.extract(password),
+            )
             self._logger.info("  SUCCESS")
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise
@@ -574,8 +577,8 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie="")
         # ? base and filt seem to have type str
-        base = ensure_str(base)
-        filt = ensure_str(filt)
+        base = ensure_str(base)  # pylint: disable= six-ensure-str-bin-call
+        filt = ensure_str(filt)  # pylint: disable= six-ensure-str-bin-call
 
         results = []
         while True:
@@ -636,8 +639,18 @@ class LDAPUserConnector(UserConnector):
                         new_obj = {}
                         for key, val in obj.items():
                             # Convert all keys to lower case!
-                            new_obj[ensure_str(key).lower()] = [ensure_str(i) for i in val]
-                        result.append((ensure_str(dn).lower(), new_obj))
+                            new_obj[
+                                ensure_str(key).lower()  # pylint: disable= six-ensure-str-bin-call
+                            ] = [
+                                ensure_str(i)  # pylint: disable= six-ensure-str-bin-call
+                                for i in val
+                            ]
+                        result.append(
+                            (
+                                ensure_str(dn).lower(),  # pylint: disable= six-ensure-str-bin-call
+                                new_obj,
+                            )
+                        )
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(

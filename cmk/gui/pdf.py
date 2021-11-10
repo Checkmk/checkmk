@@ -178,7 +178,11 @@ class Document:
     def send(cls, pdf_source, sendas):
         # ? sendas seems to be used with type str
         response.set_content_type("application/pdf")
-        response.headers["Content-Disposition"] = "inline; filename=" + ensure_str(sendas)
+        response.headers[
+            "Content-Disposition"
+        ] = "inline; filename=" + ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            sendas
+        )
         response.set_data(pdf_source)
 
     # Methods dealing with manipulating the graphics state (font size, etc.)

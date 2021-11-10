@@ -10,9 +10,8 @@ from typing import AnyStr
 from six import ensure_str
 
 
-# ? function definition using ensure_str
 def ensure_str_with_fallback(value: AnyStr, *, encoding: str, fallback: str) -> str:
     try:
-        return ensure_str(value, encoding)
+        return ensure_str(value, encoding)  # pylint: disable= six-ensure-str-bin-call
     except UnicodeDecodeError:
-        return ensure_str(value, fallback)
+        return ensure_str(value, fallback)  # pylint: disable= six-ensure-str-bin-call

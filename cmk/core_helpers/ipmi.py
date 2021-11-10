@@ -242,10 +242,12 @@ class IPMIFetcher(AgentFetcher):
             AgentRawData(_)
             for _ in (
                 b"%d" % number,
-                ensure_binary(reading.name),
-                ensure_binary(reading.type),
+                ensure_binary(reading.name),  # pylint: disable= six-ensure-str-bin-call
+                ensure_binary(reading.type),  # pylint: disable= six-ensure-str-bin-call
                 (b"%0.2f" % reading.value) if reading.value else b"N/A",
-                ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
+                ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
+                if reading.units != b"\xc2\xb0C"
+                else b"C",
                 health_txt,
             )
         ]

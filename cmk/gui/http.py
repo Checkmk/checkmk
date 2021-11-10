@@ -136,7 +136,9 @@ class LegacyDeprecatedMixin:
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, ensure_str(values[-1]) if values else None
+                yield name, ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                    values[-1]
+                ) if values else None
 
     def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -147,7 +149,7 @@ class LegacyDeprecatedMixin:
             return default
 
         # Preserve previous behaviour
-        return ensure_str(values[-1])
+        return ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
 
     def has_var(self, varname: str) -> bool:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -174,7 +176,7 @@ class LegacyDeprecatedMixin:
         value = self.cookies.get(varname, default)  # type: ignore[attr-defined]
         if value is not None:
             # Why would we want to do that? test_http.py requires it though.
-            return ensure_str(value)
+            return ensure_str(value)  # pylint: disable= six-ensure-str-bin-call
         return None
 
     def get_request_header(self, key: str, default: Optional[str] = None) -> Optional[str]:

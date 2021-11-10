@@ -385,7 +385,7 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     user_id = req.remote_user
     if user_id is not None:
         set_auth_type("web_server")
-        return UserId(ensure_str(user_id))
+        return UserId(ensure_str(user_id))  # pylint: disable= six-ensure-str-bin-call
     return None
 
 

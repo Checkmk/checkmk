@@ -128,8 +128,10 @@ class ModeCheckPluginSearch(WatoMode):
         def get_matched_entry(entry):
             if isinstance(entry, dict):
                 # ? type of entry argument seems to be unclear.
-                name = ensure_str(entry.get("name", ""))
-                title = ensure_str(entry.get("title", ""))
+                name = ensure_str(entry.get("name", ""))  # pylint: disable= six-ensure-str-bin-call
+                title = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                    entry.get("title", "")
+                )
                 if self._search in name.lower() or self._search in title.lower():
                     return entry
 

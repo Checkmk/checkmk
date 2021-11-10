@@ -15,6 +15,7 @@ from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 def register(linter) -> None:
     linter.register_checker(CollectionsNamedTupleChecker(linter))
     linter.register_checker(TypingNamedTupleChecker(linter))
+    linter.register_checker(SixEnsureStrBinChecker(linter))
 
 
 class ForbiddenFunctionChecker(BaseChecker):
@@ -103,4 +104,17 @@ class CollectionsNamedTupleChecker(ForbiddenFunctionChecker):
             "collections-namedtuple-call",
             "NamedTuples should be declared using inheritance",
         ),
+    }
+
+
+class SixEnsureStrBinChecker(ForbiddenFunctionChecker):
+    name = "six-ensure-str-bin-call"
+    target_lib = "six"
+    target_functions = frozenset(["ensure_str", "ensure_binary"])
+    msgs = {
+        "E9110": (
+            "Called six.ensure_str or six.ensure_binary",
+            "six-ensure-str-bin-call",
+            "six.ensure_str and six.ensure_binary should not be used",
+        )
     }

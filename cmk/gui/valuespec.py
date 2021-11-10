@@ -705,7 +705,7 @@ class TextInput(ValueSpec[str]):
             )
         if value and self._regex:
             # ? removing ensure_str causes an error in unit tests despite the type of value being str in the function typization
-            if not self._regex.match(ensure_str(value)):
+            if not self._regex.match(ensure_str(value)):  # pylint: disable= six-ensure-str-bin-call
                 raise MKUserError(varprefix, self._regex_error)
 
         if self._minlen is not None and len(value) < self._minlen:
@@ -2270,7 +2270,9 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
         vs = ListOfMultiple(self._get_choices(api_request), "unused_dummy_page")
         with output_funnel.plugged():
             vs.show_choice_row(
-                ensure_str(api_request["varprefix"]), ensure_str(api_request["ident"]), {}
+                ensure_str(api_request["varprefix"]),  # pylint: disable= six-ensure-str-bin-call
+                ensure_str(api_request["ident"]),  # pylint: disable= six-ensure-str-bin-call
+                {},
             )
             return {"html_code": output_funnel.drain()}
 
@@ -6731,7 +6733,9 @@ class CAorCAChain(UploadOrPasteTextFile):
 
     def analyse_cert(self, value):
         # ? type of the value argument is unclear
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, ensure_binary(value))
+        cert = crypto.load_certificate(
+            crypto.FILETYPE_PEM, ensure_binary(value)  # pylint: disable= six-ensure-str-bin-call
+        )
         titles = {
             "C": _("Country"),
             "ST": _("State or Province Name"),

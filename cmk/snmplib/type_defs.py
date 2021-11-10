@@ -164,14 +164,15 @@ class SNMPHostConfig(
         cfg.update(**kwargs)
         return SNMPHostConfig(**cfg)
 
-    # ? ensure_str is used in function definition
     def ensure_str(self, value: AnyStr) -> str:
         if self.character_encoding:
-            return ensure_str(value, self.character_encoding)
+            return ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                value, self.character_encoding
+            )
         try:
-            return ensure_str(value, "utf-8")
+            return ensure_str(value, "utf-8")  # pylint: disable= six-ensure-str-bin-call
         except UnicodeDecodeError:
-            return ensure_str(value, "latin1")
+            return ensure_str(value, "latin1")  # pylint: disable= six-ensure-str-bin-call
 
     def serialize(self):
         serialized = self._asdict()

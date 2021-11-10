@@ -700,7 +700,7 @@ def load_users(lock: bool = False) -> Users:
     result = {}
     for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)
+        uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
 
         profile = contacts.get(uid, {})
         profile.update(user)
@@ -708,7 +708,9 @@ def load_users(lock: bool = False) -> Users:
 
         # Convert non unicode mail addresses
         if "email" in profile:
-            profile["email"] = ensure_str(profile["email"])
+            profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                profile["email"]
+            )
 
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as

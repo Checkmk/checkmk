@@ -83,7 +83,6 @@ class WerkTranslator:
 
     def component_of(self, werk):
         c = werk["component"]
-        # ? need knowledge, what type werk["component"] can have
         return self._components.get(c, c)
 
     def levels(self):
@@ -202,11 +201,11 @@ def write_as_text(werks, f, write_version=True):
     for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
         # write_version=False is used by the announcement mails
         if write_version:
-            f.write("%s:\n" % ensure_str(version))
+            f.write("%s:\n" % ensure_str(version))  # pylint: disable= six-ensure-str-bin-call
         for component, component_group in itertools.groupby(
             version_group, key=translator.component_of
         ):
-            f.write("    %s:\n" % ensure_str(component))
+            f.write("    %s:\n" % ensure_str(component))  # pylint: disable= six-ensure-str-bin-call
             for werk in component_group:
                 write_werk_as_text(f, werk)
             f.write("\n")
@@ -225,7 +224,15 @@ def write_werk_as_text(f, werk):
     else:
         omit = ""
     # ? exact type of werk is not known; it depends again on the werklist dictionary
-    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, ensure_str(werk["title"]), omit))
+    f.write(
+        "    * %04d%s %s%s\n"
+        % (
+            werk["id"],
+            prefix,
+            ensure_str(werk["title"]),  # pylint: disable= six-ensure-str-bin-call
+            omit,
+        )
+    )
 
     if werk["compatible"] == "incomp":
         f.write("            NOTE: Please refer to the migration notes!\n")

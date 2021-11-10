@@ -51,7 +51,12 @@ def write_xml(element: ET.Element, filepath: str) -> None:
         fid.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
         # TODO: Can be set to encoding="unicode" with Python3
         # ? with UTF-8 encoding the argument of ensure_str seems to be of type bytes, with unicode encoding-str
-        fid.write(ensure_str(ET.tostring(element, method="html", encoding="UTF-8")) + "\n")
+        fid.write(
+            ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                ET.tostring(element, method="html", encoding="UTF-8")
+            )
+            + "\n"
+        )
 
 
 def update_metric_pnp_xml_info_file(

@@ -53,7 +53,7 @@ def _load_user_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = ensure_str(entry)
+            entry = ensure_str(entry)  # pylint: disable= six-ensure-str-bin-call
             if entry == ".f12":
                 continue
             path = adir + "/" + entry

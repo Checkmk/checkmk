@@ -1354,7 +1354,11 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
     def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         # ? DropdownChoiceValue is an alias for Any
-        if value is not None and self._regex and not self._regex.match(ensure_str(value)):
+        if (
+            value is not None
+            and self._regex
+            and not self._regex.match(ensure_str(value))  # pylint: disable= six-ensure-str-bin-call
+        ):
             raise MKUserError(varprefix, self._regex_error)
 
     def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:

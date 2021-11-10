@@ -34,8 +34,6 @@ from typing import (
     Tuple,
 )
 
-import six
-
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -480,7 +478,6 @@ def check_logwatch_generic(
 
     header = time.strftime("<<<%Y-%m-%d %H:%M:%S UNKNOWN>>>\n")
     output_size += len(header)
-    header = six.ensure_str(header)
 
     # process new input lines - but only when there is some room left in the file
     block_collector.extend(

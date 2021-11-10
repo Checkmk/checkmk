@@ -402,7 +402,12 @@ def notify_mail(user_id, msg):
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
     # ? type of user_spec seems to be Dict[str,Any]
-    command = ["mail", "-s", subject, ensure_str(user_spec["email"])]
+    command = [
+        "mail",
+        "-s",
+        subject,
+        ensure_str(user_spec["email"]),  # pylint: disable= six-ensure-str-bin-call
+    ]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is

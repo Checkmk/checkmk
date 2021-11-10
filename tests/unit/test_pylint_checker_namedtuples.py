@@ -10,9 +10,10 @@ import astroid  # type: ignore[import]
 import pytest
 
 from tests.testlib.pylint_checker_forbidden_functions import (
-    TypingNamedTupleChecker,  # type: ignore[import]
+    ForbiddenFunctionChecker,
+    SixEnsureStrBinChecker,
+    TypingNamedTupleChecker,
 )
-from tests.testlib.pylint_checker_forbidden_functions import ForbiddenFunctionChecker
 
 
 @pytest.fixture(name="namedtuple_checker")
@@ -30,6 +31,11 @@ class _TestChecker(ForbiddenFunctionChecker):
 @pytest.fixture(name="test_checker")
 def test_checker_fixture() -> _TestChecker:
     return _TestChecker(None)
+
+
+@pytest.fixture(name="six_checker")
+def six_checker_fixture() -> SixEnsureStrBinChecker:
+    return SixEnsureStrBinChecker(None)
 
 
 @pytest.mark.parametrize(
@@ -201,3 +207,33 @@ def test_function_as_argument_name(
         if namedtuple_checker._called_with_library(arg) or namedtuple_checker._called_directly(arg):
             value = True
     assert value is ref_value
+
+
+@pytest.mark.parametrize(
+    "modules",
+    [
+        [
+            ("from six import ensure_str #@", """s =ensure_str("s") #@ """, True),
+            ("from six import ensure_str #@", """s =ensure_str("s") #@ """, True),
+            ("from six import ensure_binary  #@", """ s=ensure_binary("s") #@""", True),
+            ("from six import ensure_str #@", """ ensure_binary("s") #@""", False),
+            ("from six import ensure_str, ensure_binary #@", "ensure_binary(1) #@", True),
+            ("from six import ensure_str, ensure_binary #@", "ensure_str(1) #@", True),
+        ]
+    ],
+)
+def test_multiple_modules_multiple_functions(
+    six_checker: SixEnsureStrBinChecker, modules: Iterable[Tuple[str, str, bool]]
+) -> None:
+    for import_code, call_code, ref_value in modules:
+        node = astroid.extract_node(import_code)
+        node.parent = astroid.Module("module ", None)
+        six_checker.visit_module(node.parent)
+        six_checker.visit_importfrom(node)
+        node = astroid.extract_node(call_code)
+        assert (
+            six_checker._visit_call(
+                node.value if isinstance(node, astroid.node_classes.Assign) else node
+            )
+            is ref_value
+        )

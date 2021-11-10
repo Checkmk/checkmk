@@ -11,8 +11,6 @@ import pprint
 import traceback
 from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Type
 
-import six
-
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
@@ -1197,8 +1195,14 @@ class DiscoveryPageRenderer:
                     ("mode", "edit_ruleset"),
                     ("varname", ruleset_name),
                     ("host", self._host.name()),
-                    ("item", six.ensure_str(watolib.mk_repr(item))),
-                    ("service", six.ensure_str(watolib.mk_repr(descr))),
+                    (
+                        "item",
+                        watolib.mk_repr(item).decode(),
+                    ),
+                    (
+                        "service",
+                        watolib.mk_repr(descr).decode(),
+                    ),
                 ]
             )
 
@@ -1213,7 +1217,10 @@ class DiscoveryPageRenderer:
                     ("mode", "edit_ruleset"),
                     ("varname", "ignored_services"),
                     ("host", self._host.name()),
-                    ("item", six.ensure_str(watolib.mk_repr(descr))),
+                    (
+                        "item",
+                        watolib.mk_repr(descr).decode(),
+                    ),
                 ]
             ),
             _("Edit and analyze the disabled services rules"),

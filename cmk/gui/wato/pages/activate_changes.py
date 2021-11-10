@@ -640,7 +640,9 @@ class ModeAjaxStartActivation(AjaxPage):
         manager = watolib.ActivateChangesManager()
         manager.load()
         # ? type of api_request is unclear
-        affected_sites_request = ensure_str(api_request.get("sites", "").strip())
+        affected_sites_request = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            api_request.get("sites", "").strip()
+        )
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
@@ -665,7 +667,7 @@ class ModeAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
-            activate_until=ensure_str(activate_until),
+            activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
             comment=comment,
             activate_foreign=activate_foreign,
         )

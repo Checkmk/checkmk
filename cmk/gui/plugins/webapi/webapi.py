@@ -666,7 +666,9 @@ class APICallRules(APICallCollection):
 
     def _get(self, request):
         # ? type of request argument in both _get and _set functions is unclear
-        ruleset_name = ensure_str(request["ruleset_name"])
+        ruleset_name = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            request["ruleset_name"]
+        )
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         response = {"ruleset": ruleset_dict}
         add_configuration_hash(response, ruleset_dict)
@@ -675,7 +677,9 @@ class APICallRules(APICallCollection):
     def _set(self, request):
         # Py2: This encoding here should be kept Otherwise and unicode encoded text will be written
         # into the configuration file with unknown side effects
-        ruleset_name = ensure_str(request["ruleset_name"])
+        ruleset_name = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            request["ruleset_name"]
+        )
 
         # Future validation, currently the rule API actions are admin only, so the check is pointless
         # may_edit_ruleset(ruleset_name)

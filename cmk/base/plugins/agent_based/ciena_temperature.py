@@ -6,14 +6,13 @@ from typing import Mapping, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, OIDEnd, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171, SNMPEnum, TceHealthStatus
+from .utils.ciena_ces import (
+    DETECT_CIENA_5142,
+    DETECT_CIENA_5171,
+    LeoTempSensorState,
+    TceHealthStatus,
+)
 from .utils.temperature import check_temperature, TempParamType
-
-
-class LeoTempSensorState(SNMPEnum):
-    higher_than_threshold = "0"
-    normal = "1"
-    lower_than_threshold = "2"
 
 
 class TemperatureReading(NamedTuple):

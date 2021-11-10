@@ -12,7 +12,9 @@ from ..agent_based_api.v1.type_defs import StringTable
 
 
 class SNMPEnum(Enum):
-    pass
+    @classmethod
+    def good_value(cls) -> "SNMPEnum":
+        raise NotImplementedError
 
 
 class TceHealthStatus(SNMPEnum):
@@ -22,8 +24,72 @@ class TceHealthStatus(SNMPEnum):
     degraded = "4"
     faulted = "5"
 
+    @classmethod
+    def good_value(cls) -> "TceHealthStatus":
+        return cls.normal
 
-class OperState(SNMPEnum):
+
+class PowerSupplyState(SNMPEnum):
+    online = "1"
+    faulted = "2"
+    offline = "3"
+    uninstalled = "4"
+
+    @classmethod
+    def good_value(cls) -> "PowerSupplyState":
+        return cls.online
+
+
+class FanStatus(SNMPEnum):
+    ok = "1"
+    pending = "2"
+    rpmwarning = "3"
+    uninstalled = "4"
+    unknown = "9"
+
+    @classmethod
+    def good_value(cls) -> "FanStatus":
+        return cls.ok
+
+
+class LeoSystemState(SNMPEnum):
+    normal = "1"
+    warning = "2"
+    degraded = "3"
+    faulted = "4"
+
+    @classmethod
+    def good_value(cls) -> "LeoSystemState":
+        return cls.normal
+
+
+class LeoPowerSupplyState(SNMPEnum):
+    online = "1"
+    offline = "2"
+    faulted = "3"
+
+    @classmethod
+    def good_value(cls) -> "LeoPowerSupplyState":
+        return cls.online
+
+
+class LeoFanStatus(SNMPEnum):
+    ok = "1"
+    pending = "2"
+    failure = "3"
+
+    @classmethod
+    def good_value(cls) -> "LeoFanStatus":
+        return cls.ok
+
+
+class LeoTempSensorState(Enum):
+    higher_than_threshold = "0"
+    normal = "1"
+    lower_than_threshold = "2"
+
+
+class OperState(Enum):
     enabled = "1"
     disabled = "2"
 
@@ -42,7 +108,6 @@ def parse_ciena_oper_state(string_table: StringTable) -> OperStateSection:
      'TN_mz0100-mz0300_2_p': <OperState.enabled: '1'>,
      'TN_mz0100-mz04-02_p_B': <OperState.enabled: '1'>}
     """
-
     return {item: OperState(oper_state) for item, oper_state in string_table if oper_state}
 
 

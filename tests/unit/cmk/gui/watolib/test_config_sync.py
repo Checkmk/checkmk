@@ -605,8 +605,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 
     mocked_responses.add(
         method=responses.POST,
-        url=
-        "http://localhost/unit_remote_1/check_mk/automation.py?command=get-config-sync-state&debug=&secret=watosecret",
+        url="http://localhost/unit_remote_1/check_mk/automation.py?command=get-config-sync-state",
         body=repr(({
             'etc/check_mk/conf.d/wato/hosts.mk':
                 (33204, 15, None, '0fc4df48a03c3e972a86c9d573bc04f6e2a5d91aa368d7f4ce4ec5cd93ee5725'
@@ -621,8 +620,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 
     mocked_responses.add(
         method=responses.POST,
-        url=
-        "http://localhost/unit_remote_1/check_mk/automation.py?command=receive-config-sync&debug=&secret=watosecret",
+        url="http://localhost/unit_remote_1/check_mk/automation.py?command=receive-config-sync",
         body="True",
     )
 

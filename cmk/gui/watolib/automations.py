@@ -281,13 +281,17 @@ def do_remote_automation(site, command, vars_, files=None, timeout=None):
     if not secret:
         raise MKAutomationException(_("You are not logged into the remote site."))
 
-    url = (base_url + "automation.py?" +
-           URLEncoder().urlencode_vars([("command", command), ("secret", secret),
-                                        ("debug", config.debug and '1' or '')]))
+    url = (base_url + "automation.py?" + URLEncoder().urlencode_vars([("command", command)]))
+
+    post_data = dict(vars_)
+    post_data.update({
+        "secret": secret,
+        "debug": "1" if config.debug else "",
+    })
 
     response = get_url(url,
                        site.get('insecure', False),
-                       data=dict(vars_),
+                       data=post_data,
                        files=files,
                        timeout=timeout)
 

@@ -36,8 +36,11 @@ class EnvironmentProxyConfig:
 class NoProxyConfig:
     SERIALIZED = "NO_PROXY"
 
-    def to_requests_proxies(self) -> None:
-        return None
+    def to_requests_proxies(self) -> Mapping[str, str]:
+        return {
+            "http": "",
+            "https": "",
+        }
 
     def serialize(self) -> str:
         return self.SERIALIZED

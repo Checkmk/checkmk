@@ -39,6 +39,7 @@ def test_registered_ac_tests():
         "ACTestSizeOfExtensions",
         "ACTestTmpfs",
         "ACTestUnexpectedAllowedIPRanges",
+        "ACTestMknotifydCommunicationEncrypted",
     ]
 
     if not cmk_version.is_raw_edition():

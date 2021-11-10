@@ -61,6 +61,12 @@ import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.utils.http_proxy_config import (
+    EnvironmentProxyConfig,
+    ExplicitProxyConfig,
+    HTTPProxyConfig,
+    NoProxyConfig,
+)
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
@@ -1346,31 +1352,32 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
     return translations_cache.setdefault(hostname, translations)
 
 
-def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
-    """Returns proxy URL to be used for HTTP requests
+def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
+    """Returns a proxy config object to be used for HTTP requests
 
-    Pass a value configured by the user using the HTTPProxyReference valuespec to this function
-    and you will get back ether a proxy URL, an empty string to enforce no proxy usage or None
-    to use the proxy configuration from the process environment.
+    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
     if not isinstance(http_proxy, tuple):
-        return None
+        return EnvironmentProxyConfig()
 
     proxy_type, value = http_proxy
 
     if proxy_type == "environment":
-        return None
+        return EnvironmentProxyConfig()
 
-    if proxy_type == "global":
-        return http_proxies.get(value, {}).get("proxy_url", None)
+    if (
+        proxy_type == "global"
+        and (global_proxy := http_proxies.get(value, {}).get("proxy_url", None)) is not None
+    ):
+        return ExplicitProxyConfig(global_proxy)
 
     if proxy_type == "url":
-        return value
+        return ExplicitProxyConfig(value)
 
     if proxy_type == "no_proxy":
-        return ""
+        return NoProxyConfig()
 
-    return None
+    return EnvironmentProxyConfig()
 
 
 # .

@@ -20,6 +20,7 @@ import requests
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.notify import find_wato_folder
 from cmk.utils.store import load_text_from_file
 
@@ -302,8 +303,8 @@ def post_request(message_constructor, url=None, headers=None):
 
     if not url:
         url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
-    proxy_url = context.get("PARAMETER_PROXY_URL")
-    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+
+    serialized_proxy_config = context.get("PARAMETER_PROXY_URL")
 
     verify: bool = True
     if "PARAMETER_IGNORE_SSL" in context:
@@ -313,12 +314,12 @@ def post_request(message_constructor, url=None, headers=None):
         response = requests.post(
             url=url,
             json=message_constructor(context),
-            proxies=proxies,
+            proxies=deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies(),
             headers=headers,
             verify=verify,
         )
     except requests.exceptions.ProxyError:
-        sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
+        sys.stderr.write("Cannot connect to proxy: %s\n" % serialized_proxy_config)
         sys.exit(2)
 
     return response

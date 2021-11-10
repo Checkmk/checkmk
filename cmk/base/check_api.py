@@ -109,6 +109,7 @@ import cmk.utils.render as render
 # with an underscore. These names will be skipped when loading into the
 # check context.
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
     get_rule_options,
@@ -574,12 +575,10 @@ def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tup
     return ("store", pw[1], fmt)
 
 
-def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
-    """Returns proxy URL to be used for HTTP requests
+def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
+    """Returns a proxy config object to be used for HTTP requests
 
-    Pass a value configured by the user using the HTTPProxyReference valuespec to this function
-    and you will get back ether a proxy URL, an empty string to enforce no proxy usage or None
-    to use the proxy configuration from the process environment.
+    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
     return _config.get_http_proxy(http_proxy)
 

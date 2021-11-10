@@ -18,6 +18,12 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.http_proxy_config import (
+    EnvironmentProxyConfig,
+    ExplicitProxyConfig,
+    HTTPProxyConfig,
+    NoProxyConfig,
+)
 from cmk.utils.parameters import TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
@@ -1444,19 +1450,22 @@ def test_http_proxies() -> None:
 @pytest.mark.parametrize(
     "http_proxy,result",
     [
-        ("bla", None),
-        (("no_proxy", None), ""),
-        (("environment", None), None),
-        (("global", "not_existing"), None),
-        (("global", "http_blub"), "http://blub:8080"),
-        (("global", "https_blub"), "https://blub:8181"),
-        (("global", "socks5_authed"), "socks5://us%3Aer:s%40crit@socks.proxy:443"),
-        (("url", "http://8.4.2.1:1337"), "http://8.4.2.1:1337"),
+        ("bla", EnvironmentProxyConfig()),
+        (("no_proxy", None), NoProxyConfig()),
+        (("environment", None), EnvironmentProxyConfig()),
+        (("global", "not_existing"), EnvironmentProxyConfig()),
+        (("global", "http_blub"), ExplicitProxyConfig("http://blub:8080")),
+        (("global", "https_blub"), ExplicitProxyConfig("https://blub:8181")),
+        (
+            ("global", "socks5_authed"),
+            ExplicitProxyConfig("socks5://us%3Aer:s%40crit@socks.proxy:443"),
+        ),
+        (("url", "http://8.4.2.1:1337"), ExplicitProxyConfig("http://8.4.2.1:1337")),
     ],
 )
 def test_http_proxy(
     http_proxy: Union[str, Tuple[str, Optional[str]]],
-    result: Optional[str],
+    result: HTTPProxyConfig,
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(

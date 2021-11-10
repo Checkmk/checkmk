@@ -130,9 +130,6 @@ def _extract_scan_function_ast(tree: ast.AST, scan_function_name: str, plugin_na
         if (
             isinstance(s, ast.Assign)
             and isinstance(s.targets[0], ast.Subscript)
-            # TODO: in python 3.9 the 2 next lines seem to be
-            # and isinstance(s.targets[0].slice, ast.Constant)
-            # and s.targets[0].slice.value.split(".")[0] == plugin_name
             and isinstance(s.targets[0].slice, ast.Constant)
             and s.targets[0].slice.value.split(".")[0] == plugin_name
         )
@@ -158,7 +155,7 @@ def _get_expression_from_function(name: str, scan_func_ast: ast.AST) -> ast.AST:
     if isinstance(scan_func_ast, ast.Lambda):
         return body
 
-    if len(body) >= 2 and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Str):
+    if len(body) >= 2 and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
         # remove doc string!
         body = body[1:]
 
@@ -188,12 +185,12 @@ def _is_oid_function(expr: ast.AST) -> bool:
 
 
 def _ast_convert_to_str(arg: ast.AST) -> str:
-    if isinstance(arg, ast.Str):
+    if isinstance(arg, ast.Constant):
         return arg.s
     if isinstance(arg, ast.Call):
         if isinstance(arg.func, ast.Name) and arg.func.id == "oid":
-            assert isinstance(arg.args[0], ast.Str)
-            assert isinstance(arg.args[-1], ast.Str)
+            assert isinstance(arg.args[0], ast.Constant)
+            assert isinstance(arg.args[-1], ast.Constant)
             assert len(arg.args) == 1 or (len(arg.args) == 2 and arg.args[-1].s == "")
             return arg.args[0].s
         if isinstance(arg.func, ast.Attribute):
@@ -222,7 +219,7 @@ def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpecification:
                     )
                 )
 
-        if isinstance(comp_ast.left, ast.Str):
+        if isinstance(comp_ast.left, ast.Constant):
             assert _is_oid_function(comp_ast.comparators[0])
             return contains(
                 _ast_convert_to_str(comp_ast.comparators[0]),
@@ -232,7 +229,7 @@ def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpecification:
     if isinstance(comp_ast.ops[0], ast.Eq):
         assert isinstance(comp_ast.left, ast.Call)
         assert len(comp_ast.comparators) == 1
-        assert isinstance(comp_ast.comparators[0], ast.Str)
+        assert isinstance(comp_ast.comparators[0], ast.Constant)
         return equals(
             _ast_convert_to_str(comp_ast.left),
             comp_ast.comparators[0].s,
@@ -241,7 +238,7 @@ def _ast_convert_compare(comp_ast: ast.Compare) -> SNMPDetectSpecification:
     if isinstance(comp_ast.ops[0], ast.NotEq):
         assert isinstance(comp_ast.left, ast.Call)
         assert len(comp_ast.comparators) == 1
-        assert isinstance(comp_ast.comparators[0], ast.Str)
+        assert isinstance(comp_ast.comparators[0], ast.Constant)
         return not_equals(
             _ast_convert_to_str(comp_ast.left),
             comp_ast.comparators[0].s,

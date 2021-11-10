@@ -6,7 +6,7 @@ Date: 1635248811
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0p14
+Version: 2.0.0p16
 
 A timeout from a host being checked by smart ping could result in
 100% CPU usage for the process and the program would stop working

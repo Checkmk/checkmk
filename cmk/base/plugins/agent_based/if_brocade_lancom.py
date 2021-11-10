@@ -76,11 +76,10 @@ def _map_ports(ethernet_ports_assignment: StringByteTable) -> Mapping[str, str]:
     }
 
 
-def _fix_line(
+def _augment_name(
     line: StringByteLine,
     description: str,
     name_map: Mapping[str, str],
-    port_map: Mapping[str, str],
 ) -> StringByteLine:
     """This function changes contents of @line which each only apply to Lancom or Brocade
     routers. Since we have to split off @description anyway we apply both changes in
@@ -90,24 +89,11 @@ def _fix_line(
     name = str(name_raw)
     return [
         index,
-        # augment name - applies to Lancom routers only
-        "".join(
-            (
-                name,
-                (
-                    f" Logical {name_map.get(name, '')}"
-                    if description.startswith("Logical Network")
-                    else ""
-                ),
-                (
-                    f" maps to {port_map.get(name, '')}"
-                    if name in port_map
-                    else f" belongs to {', '.join(k for k, v in port_map.items() if v == name )}"
-                    if name in port_map.values()
-                    else ""
-                ),
-            )
-        ),
+        (  # augment name - applies to Lancom routers only
+            f"{name} Logical {name_map.get(name, '')}"  #
+            if description.startswith("Logical Network")
+            else name
+        ).strip(),
         type_str,
         if64.fix_if_64_highspeed(str(speed)),  # apllies to Brocade routers only
         *rest,
@@ -136,12 +122,13 @@ def parse_if_brocade_lancom(
     return if64.generic_parse_if64(
         [
             [
-                _fix_line(line, description, name_map, port_map)
+                _augment_name(line, description, name_map)
                 for *line, description in if_table
                 if isinstance(description, str)
                 if not any(description.startswith(d) for d in ignore_descriptions)
             ]
-        ]
+        ],
+        port_map,
     )
 
 

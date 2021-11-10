@@ -126,6 +126,7 @@ class Interface:
     node: Optional[str] = None
     admin_status: Optional[str] = None
     total_octets: float = 0
+    extra_info: Optional[str] = None
 
     def __post_init__(self) -> None:
         self.finalize()
@@ -1041,6 +1042,9 @@ def check_single_interface(
         interface=interface,
         use_discovered_states=use_discovered_state_and_speed,
     )
+
+    if interface.extra_info:
+        yield Result(state=State.OK, summary=interface.extra_info)
 
     yield from _interface_mac(interface=interface)
 

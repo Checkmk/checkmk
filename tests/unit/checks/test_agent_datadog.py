@@ -29,6 +29,10 @@ pytestmark = pytest.mark.checks
                     ),
                     "api_host": "api.datadoghq.eu",
                 },
+                "proxy": (
+                    "url",
+                    "abc:8567",
+                ),
                 "monitors": {
                     "tags": [
                         "t1",
@@ -59,6 +63,8 @@ pytestmark = pytest.mark.checks
                 "12345",
                 "powerg",
                 "api.datadoghq.eu",
+                "--proxy",
+                "abc:8567",
                 "--monitor_tags",
                 "t1",
                 "t2",

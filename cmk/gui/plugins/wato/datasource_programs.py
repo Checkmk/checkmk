@@ -23,7 +23,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroup,
     RulespecSubGroup,
 )
-from cmk.gui.plugins.wato.utils import PasswordFromStore
+from cmk.gui.plugins.wato.utils import HTTPProxyReference, PasswordFromStore
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -4822,6 +4822,10 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                 ),
             ),
             (
+                "proxy",
+                HTTPProxyReference(),
+            ),
+            (
                 "monitors",
                 Dictionary(
                     title=_("Fetch monitors"),
@@ -4976,7 +4980,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                 ),
             ),
         ],
-        optional_keys=["monitors", "events"],
+        optional_keys=["proxy", "monitors", "events"],
     )
 
 

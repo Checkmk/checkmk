@@ -41,7 +41,6 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
         r"\bbinstring_to_int\b",
         r"\bcheck_type\b",
         r"\bcore_state_names\b",
-        r"\bget_http_proxy\b",
         r"\bhosttags_match_taglist\b",
         r"\bin_extraconf_hostlist\b",
         r"\bis_cmc\b",

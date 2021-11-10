@@ -20,6 +20,7 @@ from typing import Any, Dict, FrozenSet, Iterable, Mapping, Optional, Sequence, 
 import requests
 
 from cmk.utils import paths, store
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
@@ -63,6 +64,16 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         type=str,
         metavar="ADDRESS",
         help="Datadog API host to connect to",
+    )
+    parser.add_argument(
+        "--proxy",
+        type=str,
+        default=None,
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the Datadog API. If not set, the environment settings "
+            "will be used."
+        ),
     )
     parser.add_argument(
         "--sections",
@@ -153,12 +164,14 @@ class DatadogAPI:
         api_host: str,
         api_key: str,
         app_key: str,
+        proxy: Optional[str] = None,
     ) -> None:
         self._query_heads = {
             "DD-API-KEY": api_key,
             "DD-APPLICATION-KEY": app_key,
         }
         self._api_url = api_host.rstrip("/") + "/api/v1"
+        self._proxy = deserialize_http_proxy_config(proxy)
 
     def get_request_json_decoded(
         self,
@@ -169,6 +182,7 @@ class DatadogAPI:
             f"{self._api_url}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
+            proxies=self._proxy.to_requests_proxies(),
         ).json()
 
 
@@ -413,6 +427,7 @@ def agent_datadog_main(args: Args) -> None:
         args.api_host,
         args.api_key,
         args.app_key,
+        proxy=args.proxy,
     )
     for section in args.sections:
         {"monitors": _monitors_section, "events": _events_section,}[section](

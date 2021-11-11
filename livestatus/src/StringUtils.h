@@ -85,7 +85,6 @@ std::string to_multi_line(const std::string &str);
 
 #ifdef CMC
 std::string ipv4ToString(in_addr_t ipv4_address);
-std::string portToString(in_port_t port);
 #endif
 }  // namespace mk
 

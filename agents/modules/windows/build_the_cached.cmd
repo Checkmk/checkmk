@@ -46,6 +46,7 @@ rem remove quotes from the result
 set git_hash=%git_hash:'=%
 
 set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
+set artifact_name=%arti_dir%\python-3.8.cab
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
 IF /I "!ERRORLEVEL!" NEQ "0" (
@@ -58,16 +59,17 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
     make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
   )
 
+ 
   powershell Write-Host "Checking the result of the build..." -Foreground cyan
-  if NOT exist %arti_dir%\python-%version%.cab (
-    powershell -Write-Host "The file %arti_dir%\python-%version%.cab absent, build failed" -Foreground red
+  if NOT exist %artifact_name% (
+    powershell -Write-Host "The file %artifact_name% absent, build failed" -Foreground red
     exit /B 14
   )
   powershell Write-Host "Build successful" -Foreground green
 
   :: UPLOADING to the Nexus Cache:
-  echo Uploading to cache %arti_dir%\python-%version%.cab ... %fname% ...
-  copy %arti_dir%\python-%version%.cab %fname%
+  echo Uploading to cache %artifact_name% ... %fname% ...
+  copy %artifact_name% %fname%
 
   powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white
   curl -sSf --user %creds% --upload-file %fname% %url%
@@ -83,7 +85,7 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
 ) else (
   :: Most probable case. We have the python cab in the cache, just copy cached file to the artifact folder
   powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green 
-  move /Y %fname% %arti_dir%/python-%version%.cab
+  move /Y %fname% %artifact_name%
   powershell Write-Host "[+] Downloaded successfully" -Foreground green
   exit /b 0
 )

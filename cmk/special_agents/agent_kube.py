@@ -445,17 +445,19 @@ def write_performance_section(
         containers_sections = {}
         for container in containers:
             try:
-                containers_sections[container.name] = section_model(
-                    **{
-                        metric: container.metrics[MetricName(metric)]
-                        for metric in metrics
-                        if metric in container.metrics
-                    }
-                ).json()
+                containers_sections[container.name] = dict(
+                    section_model(
+                        **{
+                            metric: container.metrics[MetricName(metric)]
+                            for metric in metrics
+                            if metric in container.metrics
+                        }
+                    )
+                )
             except ValueError:  # TODO: decide if additional conditions are necessary
                 continue
 
-        writer.append(containers_sections)
+        writer.append_json(containers_sections)
 
 
 class SetupError(Exception):

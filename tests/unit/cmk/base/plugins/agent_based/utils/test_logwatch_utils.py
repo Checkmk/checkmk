@@ -23,10 +23,6 @@ def test_logwatch_reclassify(monkeypatch):
 
     assert reclassify(counter, patterns, "fÖöbÄr", "0") == "0"
     assert reclassify(counter, patterns, "foobar", "0") == "2"
-    assert (
-        reclassify(counter, patterns, "\Error", "0") == "3"
-    )  # pylint: disable=anomalous-backslash-in-string
-    assert (
-        reclassify(counter, patterns, "\Error1337", "0") == "3"
-    )  # pylint: disable=anomalous-backslash-in-string
+    assert reclassify(counter, patterns, r"\Error", "0") == "3"
+    assert reclassify(counter, patterns, r"\Error1337", "0") == "3"
     assert reclassify(counter, patterns, "bla.blup.bob.exe)", "0") == "2"

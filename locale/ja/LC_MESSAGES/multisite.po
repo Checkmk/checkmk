@@ -27910,6 +27910,10 @@ msgstr ""
 "メトリック変換と、予測計算、集計、フィルタリングなどの組み合わせは、Checkmk "
 "Enterprise Editionsでのみ使用できます。"
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "メトリクス"
+
 msgid "Metrics"
 msgstr "メトリクス"
 
@@ -44193,6 +44197,10 @@ msgstr "グラフの仕様は"
 
 msgid "The graph specification is missing"
 msgstr "グラフの仕様がありません"
+
+#, fuzzy, python-format
+msgid "The graph template id '%s' is disabled"
+msgstr "グラフテンプレート %s にタイトルがありません"
 
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "

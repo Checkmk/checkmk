@@ -27606,6 +27606,10 @@ msgid ""
 "Editions"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "serviciu"
+
 msgid "Metrics"
 msgstr ""
 
@@ -43886,6 +43890,10 @@ msgstr ""
 msgid "The graph specification is missing"
 msgstr ""
 
+#, python-format
+msgid "The graph template id '%s' is disabled"
+msgstr ""
+
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
 "either deleting them or moving them to a subfolder. By default nothing is "
@@ -59098,10 +59106,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Fill color"
 #~ msgstr "sesiuni"
-
-#, fuzzy
-#~ msgid "Metric: "
-#~ msgstr "serviciu"
 
 #, fuzzy
 #~ msgid "Status border"

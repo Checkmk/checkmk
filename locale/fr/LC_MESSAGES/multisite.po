@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-10-13 05:21+0000\n"
-"Last-Translator: Phangorn <jean-philippe.barriere@univ-tlse2.fr>\n"
+"PO-Revision-Date: 2021-11-11 14:26+0000\n"
+"Last-Translator: Axel Copur <copur.axel@protonmail.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
 "Language: fr\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.3.2\n"
+"X-Generator: Weblate 4.8.1\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -28,7 +28,7 @@ msgstr " (%d temps)"
 
 #, python-format
 msgid " (%s left)"
-msgstr ""
+msgstr " (%s restant)"
 
 msgid " (Copy)"
 msgstr " (copie)"
@@ -280,11 +280,11 @@ msgstr "%% de %s"
 
 #, python-format
 msgid "%%d locked element"
-msgstr ""
+msgstr "%%d élément bloqué"
 
 #, python-format
 msgid "%%d locked elements"
-msgstr ""
+msgstr "%%d éléments bloqués"
 
 #, python-format
 msgid "%.1f mm"
@@ -368,11 +368,11 @@ msgstr "%d liens"
 
 #, python-format
 msgid "%d locked site"
-msgstr ""
+msgstr "%d site verrouillé"
 
 #, python-format
 msgid "%d locked sites"
-msgstr ""
+msgstr "%d sites verrouillés"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -394,11 +394,11 @@ msgstr "%d open werks incompatible"
 msgid "%d rows"
 msgstr "%d lignes"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
 msgstr[0] "Le site %d est %s."
-msgstr[1] ""
+msgstr[1] "Les sites %d sont %s."
 
 #, python-format
 msgid "%d sites %s: %s"
@@ -423,8 +423,8 @@ msgstr "%d traductions"
 #, fuzzy, python-format
 msgid "%d unacknowledged incompatible werk"
 msgid_plural "%d unacknowledged incompatible werks"
-msgstr[0] "%d unacknowledged incompatible werk"
-msgstr[1] ""
+msgstr[0] "%d werk incompatible non reconnu"
+msgstr[1] "%d werks incompatibles non reconnus"
 
 msgid "%m-%d"
 msgstr "%m-%d"
@@ -518,9 +518,9 @@ msgstr "%s pour %d hôtes a démarré (%s)..."
 msgid "%s for all hosts started..."
 msgstr "%s pour tous les hôtes a commencé..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s instances"
-msgstr "Instances de la base de données"
+msgstr "%s instances"
 
 #, python-format
 msgid "%s into %s"
@@ -720,7 +720,7 @@ msgstr "(Suggestions maximales atteintes, soyez plus précis)"
 
 #, fuzzy
 msgid "(No fallback email address configured!)"
-msgstr "<i>(Aucune adresse e-mail de repli configurée !)</i>."
+msgstr "(Aucune adresse de secours n'est configurée !)"
 
 #, python-format
 msgid "(SLA alert levels at %d%%/%d%% left)"
@@ -29321,6 +29321,10 @@ msgstr ""
 "prévisions, les agrégations et le filtrage ne sont disponibles qu'avec les "
 "éditions Checkmk Enterprise."
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "Statut du site"
+
 msgid "Metrics"
 msgstr "Métriques"
 
@@ -46465,6 +46469,10 @@ msgstr "La spécification du graphe est"
 
 msgid "The graph specification is missing"
 msgstr "La spécification du graphe est manquante"
+
+#, fuzzy, python-format
+msgid "The graph template id '%s' is disabled"
+msgstr "Il manque un titre au modèle graphique %s"
 
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
@@ -66150,10 +66158,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 #, fuzzy
 #~ msgid "Fill color"
 #~ msgstr "(pas de niveau de Service)"
-
-#, fuzzy
-#~ msgid "Metric: "
-#~ msgstr "Statut du site"
 
 #, fuzzy
 #~ msgid "Notification timeline"

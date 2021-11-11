@@ -28956,6 +28956,10 @@ msgstr ""
 "aggregaties en filtering zijn alleen beschikbaar met de Checkmk Enterprise "
 "Editions"
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "(Selecteer een waarde)"
+
 msgid "Metrics"
 msgstr "Metriek"
 
@@ -45882,6 +45886,10 @@ msgstr "De grafiekspecificatie is"
 
 msgid "The graph specification is missing"
 msgstr "De grafiekspecificatie ontbreekt"
+
+#, fuzzy, python-format
+msgid "The graph template id '%s' is disabled"
+msgstr "Grafieksjabloon %s mist een titel"
 
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
@@ -65260,10 +65268,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "(This service has no metrics)"
 #~ msgstr "(Deze service heeft geen statistieken)"
-
-#, fuzzy
-#~ msgid "Metric: "
-#~ msgstr "(Selecteer een waarde)"
 
 #~ msgid "%d site is not connected"
 #~ msgid_plural "%d sites are not connected"

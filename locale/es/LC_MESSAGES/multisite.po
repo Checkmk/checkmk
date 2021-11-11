@@ -29193,6 +29193,10 @@ msgstr ""
 "previsiones, las agregaciones y el filtrado, sólo están disponibles con las "
 "ediciones empresariales de Checkmk"
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "Métrica"
+
 msgid "Metrics"
 msgstr "Métrica"
 
@@ -46277,6 +46281,10 @@ msgstr "La especificación del gráfico es"
 
 msgid "The graph specification is missing"
 msgstr "Falta la especificación del gráfico"
+
+#, fuzzy, python-format
+msgid "The graph template id '%s' is disabled"
+msgstr "A la plantilla de gráfico %s le falta un título"
 
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "

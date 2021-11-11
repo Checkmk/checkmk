@@ -28984,6 +28984,10 @@ msgstr ""
 "Aggregationen und Filterungen sind nur mit den Checkmk Enterprise Editions "
 "verfügbar"
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "Metrik: "
+
 msgid "Metrics"
 msgstr "Metriken"
 
@@ -45927,6 +45931,10 @@ msgstr "Die Graph-Spezifikation ist"
 
 msgid "The graph specification is missing"
 msgstr "Die Graph-Spezifikation fehlt"
+
+#, fuzzy, python-format
+msgid "The graph template id '%s' is disabled"
+msgstr "Der Graphschablone %s fehlt ein Titel"
 
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
@@ -65570,9 +65578,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Follow theme default"
 #~ msgstr "Theme-Standard folgen"
-
-#~ msgid "Metric: "
-#~ msgstr "Metrik: "
 
 #, fuzzy
 #~ msgid "Status border"

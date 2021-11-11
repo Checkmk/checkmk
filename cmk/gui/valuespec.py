@@ -84,12 +84,18 @@ from cmk.gui.view_utils import render_labels
 
 seconds_per_day = 86400
 
+
+class _Sentinel:
+    pass
+
+
 # Some arbitrary object for checking whether or not default_value was set
-DEF_VALUE = object()
+DEF_VALUE = _Sentinel()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
 ValueSpecHelp = Union[str, HTML, Callable[[], Union[str, HTML]]]
 ValueSpecText = Union[str, HTML]
+JSONValue = Any
 
 C = TypeVar("C", bound="Comparable")
 
@@ -125,7 +131,10 @@ class Bounds(Generic[C]):
             )
 
 
-class ValueSpec:
+_VT = TypeVar("_VT")
+
+
+class ValueSpec(Generic[_VT]):
     """Abstract base class of all value declaration classes"""
 
     # TODO: Remove **kwargs once all valuespecs have been changed
@@ -134,15 +143,14 @@ class ValueSpec:
         self,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, _VT, Callable[[], Union[_Sentinel, _VT]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
         **kwargs,
     ):
         super().__init__()
         self._title = title
         self._help = help
-        if default_value is not DEF_VALUE:
-            self._default_value = default_value
+        self._default_value = default_value
         self._validate = validate
 
     def title(self) -> _Optional[str]:
@@ -168,7 +176,7 @@ class ValueSpec:
         """Whether the valuespec is allowed to be left empty."""
         return True
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: _VT) -> None:
         """Create HTML-form elements that represent a given
         value and let the user edit that value
 
@@ -182,25 +190,31 @@ class ValueSpec:
         HTML code previously rendered with render_input()"""
         html.set_focus(varprefix)
 
-    def canonical_value(self) -> Any:
+    # TODO: Investigate: The Optional here does not really fit the doc string. What to do with this?
+    def canonical_value(self) -> _Optional[_VT]:
         """Create a canonical, minimal, default value that matches the datatype
         of the value specification and fulfills also data validation."""
         return None
 
-    def default_value(self) -> Any:
+    def default_value(self) -> _Optional[_VT]:
         """Return a default value for this variable
 
         This is optional and only used in the value editor for same cases where
         the default value is known."""
-        try:
-            if callable(self._default_value):
-                return self._default_value()
-            return self._default_value
-        except Exception:
+        if callable(self._default_value):
+            try:
+                value = self._default_value()
+            except Exception:
+                value = DEF_VALUE
+        else:
+            value = self._default_value
+
+        if isinstance(value, _Sentinel):
             return self.canonical_value()
+        return value
 
     # TODO: Rename to value_to_html?
-    def value_to_text(self, value: Any) -> ValueSpecText:
+    def value_to_text(self, value: _VT) -> ValueSpecText:
         """Creates a text-representation of the value that can be
         used in tables and other contextes
 
@@ -212,24 +226,25 @@ class ValueSpec:
         layout in the GUI."""
         return repr(value)
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: _VT) -> JSONValue:
         raise NotImplementedError()
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> _VT:
         raise NotImplementedError()
 
-    def value_to_json_safe(self, value: Any) -> Any:
+    def value_to_json_safe(self, value: _VT) -> JSONValue:
         """Return a JSON compatible format without sensitive information like passwords"""
         return self.value_to_json(value)
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    @abc.abstractmethod
+    def from_html_vars(self, varprefix: str) -> _VT:
         """Create a value from the current settings of the HTML variables
 
         This function must also check the validity and may raise a MKUserError
         in case of invalid set variables."""
-        return None
+        raise NotImplementedError()
 
-    def validate_value(self, value: Any, varprefix: str) -> None:
+    def validate_value(self, value: _VT, varprefix: str) -> None:
         """Check if a given value is a valid structure for the current valuespec
 
         The validation is done in 3 phases:
@@ -252,17 +267,17 @@ class ValueSpec:
         if self._validate:
             self._validate(value, varprefix)
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: _VT, varprefix: str) -> None:
         """Check if a given value matches the datatype of described by this class."""
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: _VT, varprefix: str) -> None:
         """Override this method to implement custom validation functions for sub-valuespec types
 
         This function should assume that the data type is valid (either because
         it has been returned by from_html_vars() or because it has been checked
         with validate_datatype())."""
 
-    def transform_value(self, value: Any) -> Any:
+    def transform_value(self, value: _VT) -> _VT:
         """Transform the given value with the valuespecs transform logic and give it back"""
         return value
 
@@ -271,12 +286,12 @@ class ValueSpec:
         return False
 
 
-class FixedValue(ValueSpec):
+class FixedValue(ValueSpec[_VT]):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        value: Any,
+        value: _VT,
         totext: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -290,33 +305,33 @@ class FixedValue(ValueSpec):
     def canonical_value(self) -> Any:
         return self._value
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: _VT) -> None:
         html.write_text(self.value_to_text(value))
 
-    def value_to_text(self, value: Any) -> str:
+    def value_to_text(self, value: _VT) -> str:
         if self._totext is not None:
             return self._totext
         if isinstance(value, str):
             return value
         return str(value)
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: _VT) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> _VT:
         return json_value
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> _VT:
         return self._value
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: _VT, varprefix: str) -> None:
         if not self._value == value:
             raise MKUserError(
                 varprefix, _("Invalid value, must be '%r' but is '%r'") % (self._value, value)
             )
 
 
-class Age(ValueSpec):
+class Age(ValueSpec[Seconds]):
     """Time in seconds"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -394,10 +409,10 @@ class Age(ValueSpec):
             return " ".join(parts)
         return _("no time")
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: Seconds) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> Seconds:
         return json_value
 
     def validate_datatype(self, value: Seconds, varprefix: str) -> None:
@@ -460,7 +475,7 @@ class NumericRenderer:
         return text
 
 
-class Integer(ValueSpec):
+class Integer(ValueSpec[int]):
     """Editor for a single integer"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -476,7 +491,7 @@ class Integer(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, int] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -513,10 +528,10 @@ class Integer(ValueSpec):
     def value_to_text(self, value: int) -> str:
         return self._renderer.format_text(self._render_value(value))
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: int) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> int:
         return int(json_value)
 
     def validate_datatype(self, value: int, varprefix: str) -> None:
@@ -567,14 +582,14 @@ class Filesize(Integer):
         exp, count = self.get_exponent(value)
         return "%s %s" % (count, self._names[exp])
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: int) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> int:
         return json_value
 
 
-class TextInput(ValueSpec):
+class TextInput(ValueSpec[str]):
     """Editor for a line of text"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -599,7 +614,7 @@ class TextInput(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, str, Callable[[], str]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -628,7 +643,7 @@ class TextInput(ValueSpec):
         self._hidden = hidden
         self._placeholder = placeholder
 
-    def allow_empty(self):
+    def allow_empty(self) -> bool:
         return self._allow_empty
 
     def canonical_value(self) -> str:
@@ -702,10 +717,10 @@ class TextInput(ValueSpec):
                 varprefix, _("You must not provide more than %d characters.") % self._maxlen
             )
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: str) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> str:
         return json_value
 
 
@@ -1001,7 +1016,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Any = DEF_VALUE,
+    default_value: Union[_Sentinel, str] = DEF_VALUE,
 ) -> TextInput:
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
 
@@ -1060,7 +1075,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Any = DEF_VALUE,
+    default_value: Union[_Sentinel, str] = DEF_VALUE,
 ) -> TextInput:
     def _validate_value(value: str, varprefix: str):
         try:
@@ -1084,7 +1099,7 @@ def Hostname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Any = DEF_VALUE,
+    default_value: Union[_Sentinel, str] = DEF_VALUE,
 ):
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
@@ -1128,7 +1143,7 @@ class HostAddress(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1235,7 +1250,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Any = DEF_VALUE,
+    default_value: Union[_Sentinel, str] = DEF_VALUE,
     validate: _Optional[ValueSpecValidateFunc] = None,
 ) -> TextInput:
     return TextInput(
@@ -1277,7 +1292,7 @@ class Url(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1363,7 +1378,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Any = DEF_VALUE,
+    default_value: Union[_Sentinel, str] = DEF_VALUE,
 ):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
@@ -1383,7 +1398,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
 def CheckMKVersion(
     # ValueSpec
     title: _Optional[str] = None,
-    default_value: Any = DEF_VALUE,
+    default_value: Union[_Sentinel, str] = DEF_VALUE,
 ):
     return TextInput(
         regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
@@ -1420,7 +1435,7 @@ class TextAreaUnicode(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1517,7 +1532,7 @@ class Filename(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1596,12 +1611,12 @@ class ListOfStrings(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, List] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
-        self._valuespec = valuespec if valuespec is not None else TextInput(size=size)
+        self._valuespec: ValueSpec = valuespec if valuespec is not None else TextInput(size=size)
         self._vertical = orientation == "vertical"
         self._allow_empty = allow_empty
         self._empty_text = empty_text
@@ -1630,7 +1645,7 @@ class ListOfStrings(ValueSpec):
 
         return " ".join("%s" % t for t in help_texts if t)
 
-    def allow_empty(self):
+    def allow_empty(self) -> bool:
         return self._allow_empty
 
     def render_input(self, varprefix: str, value: List[str]) -> None:
@@ -1673,10 +1688,10 @@ class ListOfStrings(ValueSpec):
             )
         )
 
-    def canonical_value(self) -> List[str]:
+    def canonical_value(self) -> List[_VT]:
         return []
 
-    def value_to_text(self, value: List[str]) -> ValueSpecText:
+    def value_to_text(self, value: List[_VT]) -> ValueSpecText:
         if not value:
             return self._empty_text
 
@@ -1688,17 +1703,18 @@ class ListOfStrings(ValueSpec):
             return html.render_table(HTML().join(s))
         return HTML(", ").join(self._valuespec.value_to_text(v) for v in value)
 
-    def from_html_vars(self, varprefix: str) -> List[str]:
+    def from_html_vars(self, varprefix: str) -> List[_VT]:
         list_prefix = varprefix + "_"
         return [
             self._valuespec.from_html_vars(varname)
             for varname, value in request.itervars()
             if varname.startswith(list_prefix)
             and varname[len(list_prefix) :].isdigit()
+            and value is not None
             and value.strip()
         ]
 
-    def validate_datatype(self, value: List[str], varprefix: str) -> None:
+    def validate_datatype(self, value: List[_VT], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("Expected data type is list, but your type is %s.") % _type_name(value)
@@ -1706,7 +1722,7 @@ class ListOfStrings(ValueSpec):
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
-    def _validate_value(self, value: List[str], varprefix: str) -> None:
+    def _validate_value(self, value: List[_VT], varprefix: str) -> None:
         if len(value) == 0 and not self._allow_empty:
             if self._empty_text:
                 msg = self._empty_text
@@ -1742,7 +1758,7 @@ def NetworkPort(  # pylint: disable=redefined-builtin
     help: _Optional[str] = None,
     minvalue: int = 1,
     maxvalue: int = 65535,
-    default_value: Union[object, int] = DEF_VALUE,
+    default_value: Union[_Sentinel, int] = DEF_VALUE,
 ) -> Integer:
     return Integer(
         title=title,
@@ -2880,7 +2896,7 @@ def _sub_valuespec(choice: CascadingDropdownChoice) -> _Optional[ValueSpec]:
     raise Exception("invalid CascadingDropdownChoice %r" % (choice,))
 
 
-class CascadingDropdown(ValueSpec):
+class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
     """A Dropdown choice where the elements are ValueSpecs.
 
     The currently selected ValueSpec will be displayed.  The text
@@ -2917,7 +2933,7 @@ class CascadingDropdown(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, CascadingDropdownChoiceValue] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -5499,7 +5515,7 @@ class ElementSelection(ValueSpec):
             )
 
 
-class AutoTimestamp(FixedValue):
+class AutoTimestamp(FixedValue[float]):
     def canonical_value(self) -> float:
         return time.time()
 

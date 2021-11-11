@@ -58,7 +58,7 @@ class NodeCount(BaseModel):
 
 
 class ContainerCount(BaseModel):
-    """k8s_node_container_count_v1"""
+    """section: k8s_node_container_count_v1"""
 
     running: int = 0
     waiting: int = 0

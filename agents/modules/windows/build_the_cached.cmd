@@ -18,6 +18,7 @@ SETLOCAL EnableExtensions EnableDelayedExpansion
 if "%3"=="" powershell "Invalid parameters - url should be defined" && exit /B 9
 if "%4"=="" powershell "Invalid parameters - version should be defined" && exit /B 10
 if "%5"=="" powershell "Invalid parameters - subversion should be defined" && exit /B 10
+echo run: %0 %1 %2 %3 %4 %5
 
 :: Increase the value in file BUILD_NUM to rebuild master
 set /p BUILD_NUM=<BUILD_NUM
@@ -47,6 +48,12 @@ set git_hash=%git_hash:'=%
 
 set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
 set artifact_name=%arti_dir%\python-3.8.cab
+if "%version%" == "3.4" (
+set artifact_name=%arti_dir%\python-3.4.cab
+) else (
+set artifact_name=%arti_dir%\python-3.8.cab
+)
+echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
 IF /I "!ERRORLEVEL!" NEQ "0" (
@@ -60,9 +67,9 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   )
 
  
-  powershell Write-Host "Checking the result of the build..." -Foreground cyan
+  echo "Checking the result of the build..."
   if NOT exist %artifact_name% (
-    powershell -Write-Host "The file %artifact_name% absent, build failed" -Foreground red
+    echo "The file %artifact_name% absent, build failed"
     exit /B 14
   )
   powershell Write-Host "Build successful" -Foreground green

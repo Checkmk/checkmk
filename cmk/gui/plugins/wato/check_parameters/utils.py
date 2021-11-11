@@ -293,7 +293,7 @@ fs_inodes_elements = [
     ),
 ]
 
-fs_magic_elements = [
+fs_magic_elements: List[_Tuple[str, ValueSpec]] = [
     (
         "magic",
         Float(

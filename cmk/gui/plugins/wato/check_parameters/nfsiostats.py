@@ -23,8 +23,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Operations"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="1/s"),
-                        Float(title=_("Critical at"), default_value=None, unit="1/s"),
+                        Float(title=_("Warning at"), unit="1/s"),
+                        Float(title=_("Critical at"), unit="1/s"),
                     ],
                 ),
             ),
@@ -33,8 +33,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("RPC Backlog"),
                     elements=[
-                        Float(title=_("Warning below"), default_value=None, unit="queue"),
-                        Float(title=_("Critical below"), default_value=None, unit="queue"),
+                        Float(title=_("Warning below"), unit="queue"),
+                        Float(title=_("Critical below"), unit="queue"),
                     ],
                 ),
             ),
@@ -43,8 +43,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Read Operations /s"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="1/s"),
-                        Float(title=_("Critical at"), default_value=None, unit="1/s"),
+                        Float(title=_("Warning at"), unit="1/s"),
+                        Float(title=_("Critical at"), unit="1/s"),
                     ],
                 ),
             ),
@@ -53,8 +53,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Reads size /s"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="bytes/s"),
-                        Float(title=_("Critical at"), default_value=None, unit="bytes/s"),
+                        Float(title=_("Warning at"), unit="bytes/s"),
+                        Float(title=_("Critical at"), unit="bytes/s"),
                     ],
                 ),
             ),
@@ -63,8 +63,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Read bytes per operation"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="bytes/op"),
-                        Float(title=_("Critical at"), default_value=None, unit="bytes/op"),
+                        Float(title=_("Warning at"), unit="bytes/op"),
+                        Float(title=_("Critical at"), unit="bytes/op"),
                     ],
                 ),
             ),
@@ -73,8 +73,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Read Retransmissions"),
                     elements=[
-                        Percentage(title=_("Warning at"), default_value=None),
-                        Percentage(title=_("Critical at"), default_value=None),
+                        Percentage(title=_("Warning at")),
+                        Percentage(title=_("Critical at")),
                     ],
                 ),
             ),
@@ -83,8 +83,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Read Average RTT (ms)"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="ms"),
-                        Float(title=_("Critical at"), default_value=None, unit="ms"),
+                        Float(title=_("Warning at"), unit="ms"),
+                        Float(title=_("Critical at"), unit="ms"),
                     ],
                 ),
             ),
@@ -93,8 +93,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Read Average Executions (ms)"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="ms"),
-                        Float(title=_("Critical at"), default_value=None, unit="ms"),
+                        Float(title=_("Warning at"), unit="ms"),
+                        Float(title=_("Critical at"), unit="ms"),
                     ],
                 ),
             ),
@@ -103,8 +103,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Write Operations/s"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="1/s"),
-                        Float(title=_("Critical at"), default_value=None, unit="1/s"),
+                        Float(title=_("Warning at"), unit="1/s"),
+                        Float(title=_("Critical at"), unit="1/s"),
                     ],
                 ),
             ),
@@ -113,8 +113,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Write size /s"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="bytes/s"),
-                        Float(title=_("Critical at"), default_value=None, unit="bytes/s"),
+                        Float(title=_("Warning at"), unit="bytes/s"),
+                        Float(title=_("Critical at"), unit="bytes/s"),
                     ],
                 ),
             ),
@@ -123,8 +123,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Write bytes per operation"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="bytes/s"),
-                        Float(title=_("Critical at"), default_value=None, unit="bytes/s"),
+                        Float(title=_("Warning at"), unit="bytes/s"),
+                        Float(title=_("Critical at"), unit="bytes/s"),
                     ],
                 ),
             ),
@@ -133,8 +133,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Write Retransmissions"),
                     elements=[
-                        Percentage(title=_("Warning at"), default_value=None),
-                        Percentage(title=_("Critical at"), default_value=None),
+                        Percentage(title=_("Warning at")),
+                        Percentage(title=_("Critical at")),
                     ],
                 ),
             ),
@@ -143,8 +143,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Write Avg RTT (ms)"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="ms"),
-                        Float(title=_("Critical at"), default_value=None, unit="ms"),
+                        Float(title=_("Warning at"), unit="ms"),
+                        Float(title=_("Critical at"), unit="ms"),
                     ],
                 ),
             ),
@@ -153,8 +153,8 @@ def _parameter_valuespec_nfsiostats():
                 Tuple(
                     title=_("Write Avg exe (ms)"),
                     elements=[
-                        Float(title=_("Warning at"), default_value=None, unit="ms"),
-                        Float(title=_("Critical at"), default_value=None, unit="ms"),
+                        Float(title=_("Warning at"), unit="ms"),
+                        Float(title=_("Critical at"), unit="ms"),
                     ],
                 ),
             ),

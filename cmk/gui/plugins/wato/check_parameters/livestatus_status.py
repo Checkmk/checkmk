@@ -162,11 +162,11 @@ def _parameter_valuespec_livestatus_status():
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
-                            default_value="60",
+                            default_value=60,
                         ),
                         Percentage(
                             title=_("Critical at or above"),
-                            default_value="90",
+                            default_value=90,
                         ),
                     ],
                 ),
@@ -179,11 +179,11 @@ def _parameter_valuespec_livestatus_status():
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
-                            default_value="60",
+                            default_value=60,
                         ),
                         Percentage(
                             title=_("Critical at or above"),
-                            default_value="90",
+                            default_value=90,
                         ),
                     ],
                 ),
@@ -196,11 +196,11 @@ def _parameter_valuespec_livestatus_status():
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
-                            default_value="40",
+                            default_value=40,
                         ),
                         Percentage(
                             title=_("Critical at or above"),
-                            default_value="80",
+                            default_value=80,
                         ),
                     ],
                 ),
@@ -213,11 +213,11 @@ def _parameter_valuespec_livestatus_status():
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
-                            default_value="40",
+                            default_value=40,
                         ),
                         Percentage(
                             title=_("Critical at or above"),
-                            default_value="80",
+                            default_value=80,
                         ),
                     ],
                 ),
@@ -230,11 +230,11 @@ def _parameter_valuespec_livestatus_status():
                     elements=[
                         Percentage(
                             title=_("Warning at or above"),
-                            default_value="80",
+                            default_value=80,
                         ),
                         Percentage(
                             title=_("Critical at or above"),
-                            default_value="90",
+                            default_value=90,
                         ),
                     ],
                 ),
@@ -248,12 +248,12 @@ def _parameter_valuespec_livestatus_status():
                         Float(
                             title=_("Warning at or above"),
                             unit=_("/s"),
-                            default_value="0.01",
+                            default_value=0.01,
                         ),
                         Float(
                             title=_("Critical at or above"),
                             unit=_("/s"),
-                            default_value="0.02",
+                            default_value=0.02,
                         ),
                     ],
                 ),

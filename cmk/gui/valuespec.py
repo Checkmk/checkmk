@@ -2275,7 +2275,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
             return {"html_code": output_funnel.drain()}
 
 
-class Float(ValueSpec):
+class Float(ValueSpec[float]):
     """Same as Integer, but for floating point values"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -2294,7 +2294,7 @@ class Float(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, float, Callable[[], Union[_Sentinel, float]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2327,10 +2327,10 @@ class Float(ValueSpec):
         txt = self._renderer.format_text(self._render_value(value))
         return txt.replace(".", self._decimal_separator)
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: float) -> float:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: float) -> float:
         return json_value
 
     def validate_datatype(self, value: float, varprefix: str) -> None:
@@ -2366,7 +2366,7 @@ class Percentage(Float):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, float] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -2401,7 +2401,7 @@ class Percentage(Float):
             super().validate_datatype(value, varprefix)
 
 
-class Checkbox(ValueSpec):
+class Checkbox(ValueSpec[bool]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label: _Optional[str] = None,
@@ -2410,7 +2410,7 @@ class Checkbox(ValueSpec):
         onclick: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[_Sentinel, bool, Callable[[], Union[_Sentinel, bool]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2428,10 +2428,10 @@ class Checkbox(ValueSpec):
     def value_to_text(self, value: bool) -> str:
         return self._true_label if value else self._false_label
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: bool) -> bool:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: bool) -> bool:
         return json_value
 
     def from_html_vars(self, varprefix: str) -> bool:

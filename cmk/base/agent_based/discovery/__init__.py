@@ -80,7 +80,6 @@ _BasicTransition = Literal["old", "new", "vanished"]
 _Transition = Union[
     _BasicTransition, Literal["ignored", "clustered_old", "clustered_new", "clustered_vanished"]
 ]
-_ServiceOrigin = Union[_Transition, Literal["active", "manual", "custom"]]
 
 
 class ServiceWithNodes(NamedTuple):
@@ -92,7 +91,7 @@ _L = TypeVar("_L", bound=str)
 
 ServicesTableEntry = Tuple[_L, Service, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
-ServicesByTransition = Dict[_ServiceOrigin, List[ServiceWithNodes]]
+ServicesByTransition = Dict[_Transition, List[ServiceWithNodes]]
 
 
 #   .--Helpers-------------------------------------------------------------.
@@ -412,11 +411,6 @@ def _get_post_discovery_autocheck_services(
     """
     post_discovery_services = {}
     for check_source, discovered_services_with_nodes in services.items():
-        if check_source == "manual":
-            # This is not an autocheck or ignored and currently not
-            # checked. Note: Discovered checks that are shadowed by manual
-            # checks will vanish that way.
-            continue
 
         if check_source == "new":
             if mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH):
@@ -1014,7 +1008,7 @@ def _get_host_services(
     on_error: OnError,
 ) -> ServicesByTransition:
 
-    services: ServicesTable[_ServiceOrigin]
+    services: ServicesTable[_Transition]
     if host_config.is_cluster:
         services = {
             **_get_cluster_services(
@@ -1036,9 +1030,10 @@ def _get_host_services(
         }
 
     services.update(_reclassify_disabled_items(host_config.hostname, services))
-    services.update(_manual_items(host_config))
 
-    return _group_by_transition(services)
+    # remove the ones shadowed by manual services
+    manual_services = _manual_services(host_config)
+    return _group_by_transition({k: v for k, v in services.items() if k not in manual_services})
 
 
 # Do the actual work for a non-cluster host or node
@@ -1106,18 +1101,15 @@ def _node_service_source(
     return "clustered_new"
 
 
-def _manual_items(
+def _manual_services(
     host_config: config.HostConfig,
-) -> Iterable[Tuple[ServiceID, ServicesTableEntry[Literal["manual"]]]]:
-    # Find manual checks. These can override discovered checks -> "manual"
-    host_name = host_config.hostname
-    for service in check_table.get_check_table(host_name, skip_autochecks=True).values():
-        yield service.id(), ("manual", service, [host_name])
+) -> Mapping[ServiceID, Service]:
+    return check_table.get_check_table(host_config.hostname, skip_autochecks=True)
 
 
 def _reclassify_disabled_items(
     host_name: HostName,
-    services: ServicesTable[_ServiceOrigin],
+    services: ServicesTable[_Transition],
 ) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     """Handle disabled services -> 'ignored'"""
     yield from (
@@ -1128,7 +1120,7 @@ def _reclassify_disabled_items(
 
 
 def _group_by_transition(
-    transition_services: ServicesTable[_ServiceOrigin],
+    transition_services: ServicesTable[_Transition],
 ) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
     for transition, service, found_on_nodes in transition_services.values():
@@ -1291,6 +1283,17 @@ def get_check_preview(
             )
             for check_source, services_with_nodes in grouped_services.items()
             for service, found_on_nodes in services_with_nodes
+        ] + [
+            _check_preview_table_row(
+                host_config=host_config,
+                ip_address=ip_address,
+                service=service,
+                check_source="manual",
+                parsed_sections_broker=parsed_sections_broker,
+                found_on_nodes=[host_config.hostname],
+                value_store_manager=value_store_manager,
+            )
+            for service in _manual_services(host_config).values()
         ]
 
     return [
@@ -1305,7 +1308,7 @@ def _check_preview_table_row(
     host_config: config.HostConfig,
     ip_address: Optional[HostAddress],
     service: Service,
-    check_source: _ServiceOrigin,
+    check_source: Union[_Transition, Literal["manual"]],
     parsed_sections_broker: ParsedSectionsBroker,
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,

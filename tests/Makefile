@@ -29,7 +29,7 @@ SHELL_FILES := \
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
-PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
+PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 
 .PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \

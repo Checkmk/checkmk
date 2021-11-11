@@ -637,13 +637,12 @@ def HTTPProxyReference():
                    "that these variables must be defined as a site-user in ~/etc/environment and that "
                    "this might affect other notification methods which also use the requests module."
                   ),
-                 totext=_("Use proxy settings from the process environment"),
+                 totext=_("Use proxy settings from the process environment. This is the default."),
              )),
             ("no_proxy", _("Connect without proxy"),
              FixedValue(
                  None,
-                 totext=_("Connect directly to the destination instead of using a proxy. "
-                          "This is the default."),
+                 totext=_("Connect directly to the destination instead of using a proxy."),
              )),
             ("global", _("Use globally configured proxy"),
              DropdownChoice(

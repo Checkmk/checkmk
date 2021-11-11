@@ -302,7 +302,7 @@ def post_request(message_constructor, url=None, headers=None):
     if not url:
         url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
     proxy_url = context.get("PARAMETER_PROXY_URL")
-    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url is not None else None
 
     verify: bool = True
     if "PARAMETER_IGNORE_SSL" in context:

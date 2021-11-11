@@ -12,9 +12,18 @@
 # Description:    Start stunnel
 ### END INIT INFO
 
-# Start only if LIVESTATUS_TCP with LIVESTATUS_TCP_TLS is enabled
 . ###ROOT###/etc/omd/site.conf
-if [ "$CONFIG_CORE" = none -o "$CONFIG_LIVESTATUS_TCP" = off -o "$CONFIG_LIVESTATUS_TCP_TLS" = off ]; then
+
+livestatus_tcp_tls() {
+    [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" != off ] && [ "$CONFIG_LIVESTATUS_TCP_TLS" != off ]
+}
+
+encrypted_mknotifyd_connections() {
+    local conf_dir=###ROOT###/etc/check_mk/mknotifyd.d/wato
+    [ -d "$conf_dir" ] && grep -e "'upgradable'" -e "'encrypted'" -r "$conf_dir" >/dev/null 2>&1
+}
+
+if ! livestatus_tcp_tls && ! encrypted_mknotifyd_connections; then
     exit 5
 fi
 

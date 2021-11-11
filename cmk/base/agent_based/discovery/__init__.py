@@ -1001,8 +1001,8 @@ def _get_host_services(
             )
         }
 
-    services.update(_manual_items(host_config))
     services.update(_reclassify_disabled_items(host_config.hostname, services))
+    services.update(_manual_items(host_config))
 
     return _group_by_transition(services)
 

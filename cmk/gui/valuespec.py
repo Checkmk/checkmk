@@ -2964,37 +2964,42 @@ class CascadingDropdown(ValueSpec):
         return list(itertools.chain(self._preselected, self._choices()))
 
     def canonical_value(self) -> CascadingDropdownChoiceValue:
+        result = self._fallback_choice()
+        if isinstance(result, tuple):
+            return result[0], result[1].canonical_value()
+        return result
+
+    def default_value(self) -> CascadingDropdownChoiceValue:
+        try:
+            return super().default_value()
+        except Exception:
+            result = self._fallback_choice()
+            if isinstance(result, tuple):
+                return result[0], result[1].default_value()
+            return result
+
+    def _fallback_choice(
+        self,
+    ) -> Union[CascadingDropdownChoiceIdent, _Tuple[CascadingDropdownChoiceIdent, ValueSpec]]:
         choices = self.choices()
         if not choices:
             return None
+
         first_choice: CascadingDropdownCleanChoice = choices[0]
         value: CascadingDropdownChoiceValue = first_choice[0]
         vs: _Optional[ValueSpec] = first_choice[2]
         if vs is None:
             return value
+
         # TODO: What should we do when we have a complex value *and* a ValueSpec?
         # We can't nest things arbitrarily deep, so we just return the first part.
+        #
+        # Investigate if we can drop this case after we have finished adding the type hints
+        # here
         if isinstance(value, tuple):
             return value[0]
-        return value, vs.canonical_value()
 
-    def default_value(self) -> CascadingDropdownChoiceValue:
-        try:
-            return self._default_value
-        except Exception:
-            choices = self.choices()
-            if not choices:
-                return None
-            first_choice: CascadingDropdownCleanChoice = choices[0]
-            value: CascadingDropdownChoiceValue = first_choice[0]
-            vs: _Optional[ValueSpec] = first_choice[2]
-            if vs is None:
-                return value
-            # TODO: What should we do when we have a complex value *and* a ValueSpec?
-            # We can't nest things arbitrarily deep, so we just return the first part.
-            if isinstance(value, tuple):
-                return value[0]
-            return value, vs.default_value()
+        return value, vs
 
     def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:
         def_val = "0"

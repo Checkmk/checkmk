@@ -42,8 +42,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
@@ -496,7 +494,7 @@ def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None
     # Now they don't, and we have to translate all variables that may use them:
     if "service_descriptions" in global_dict:
         global_dict["service_descriptions"] = {
-            maincheckify(k): v for k, v in global_dict["service_descriptions"].items()
+            maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
         }
     if "use_new_descriptions_for" in global_dict:
         global_dict["use_new_descriptions_for"] = [
@@ -1022,7 +1020,9 @@ def _get_old_cmciii_temp_description(item: Item) -> Tuple[bool, ServiceName]:
     return False, "%s %s.%s-Temperature" % (parts[1], parts[0], parts[2])
 
 
-_old_service_descriptions = {
+_old_service_descriptions: Mapping[
+    str, Union[ServiceName, Callable[[Item], Tuple[bool, ServiceName]]]
+] = {
     "aix_memory": "Memory used",
     # While using the old description, don't append the item, even when discovered
     # with the new check which creates an item.
@@ -1121,7 +1121,7 @@ def service_description(
     plugin_name_str = str(plugin.name)
     add_item = True
     # use user-supplied service description, if available
-    descr_format = service_descriptions.get(plugin_name_str)
+    descr_format: Optional[ServiceName] = service_descriptions.get(plugin_name_str)
     if not descr_format:
         old_descr = _old_service_descriptions.get(plugin_name_str)
         # handle renaming for backward compatibility
@@ -1134,8 +1134,6 @@ def service_description(
 
         else:
             descr_format = plugin.service_name
-    # descr_format has type str? Exact type of service_descriptions seems unclear
-    descr_format = ensure_str(descr_format)
 
     if add_item and item is not None:
         descr = descr_format % item if "%s" in descr_format else f"{descr_format} {item}"

@@ -937,7 +937,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                     TextInput(
                         title=_("Set optional timeout for connections to JIRA"),
                         help=_("Here you can configure timeout settings."),
-                        default_value=10,
+                        default_value="10",
                     ),
                 ),
             ],
@@ -1009,7 +1009,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                     TextInput(
                         title=_("Set optional timeout for connections to ServiceNow"),
                         help=_("Here you can configure timeout settings in seconds."),
-                        default_value=10,
+                        default_value="10",
                         size=3,
                     ),
                 ),

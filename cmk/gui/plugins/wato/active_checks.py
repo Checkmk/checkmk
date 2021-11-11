@@ -1900,7 +1900,7 @@ def _valuespec_active_checks_smtp():
                                     size=5,
                                     minvalue=1,
                                     maxvalue=65535,
-                                    default_value="25",
+                                    default_value=25,
                                 ),
                                 forth=int,
                             ),

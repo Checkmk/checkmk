@@ -1312,7 +1312,6 @@ class ModeBIEditRule(ABCBIMode):
                                 state,
                                 TextInput(
                                     title=_("Message when rule result is %s") % name,
-                                    default_value=None,
                                     size=80,
                                 ),
                             )

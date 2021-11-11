@@ -1327,7 +1327,11 @@ def _custom_check_preview_rows(
                 check_plugin_name="custom",
                 item=entry["service_description"],
                 description=entry["service_description"],
-                check_source="custom",
+                check_source="ignored_custom"
+                if config.service_ignored(
+                    host_config.hostname, None, description=entry["service_description"]
+                )
+                else "custom",
             )
             for entry in host_config.custom_checks
         }.values()
@@ -1344,7 +1348,9 @@ def _active_check_preview_rows(
                 check_plugin_name=plugin_name,
                 item=descr,
                 description=descr,
-                check_source="active",
+                check_source="ignored_active"
+                if config.service_ignored(host_config.hostname, None, descr)
+                else "active",
                 parameters=params,
                 preview_params=params,
             )
@@ -1365,7 +1371,7 @@ def _make_check_preview_entry(
     check_plugin_name: str,
     item: Optional[str],
     description: ServiceName,
-    check_source: _ServiceOrigin,
+    check_source: str,
     ruleset_name: Optional[RulesetName] = None,
     parameters: Union[LegacyCheckParameters, TimespecificParameters] = None,
     preview_params: LegacyCheckParameters = None,
@@ -1374,10 +1380,8 @@ def _make_check_preview_entry(
     found_on_nodes: Optional[Sequence[HostName]] = None,
     labels: Optional[Dict[str, str]] = None,
 ) -> CheckPreviewEntry:
-    if not output:
-        output = f"WAITING - {check_source.title()} check, cannot be done offline"
     return (
-        _preview_check_source(host_name, description, check_source),
+        check_source,
         check_plugin_name,
         ruleset_name,
         item,
@@ -1385,7 +1389,7 @@ def _make_check_preview_entry(
         _wrap_timespecific_for_preview(preview_params),
         description,
         exitcode,
-        output,
+        output or f"WAITING - {check_source.split('_')[-1].title()} check, cannot be done offline",
         # Service discovery never uses the perfdata in the check table. That entry
         # is constantly discarded, yet passed around(back and forth) as part of the
         # discovery result in the request elements. Some perfdata VALUES are not parsable
@@ -1394,18 +1398,6 @@ def _make_check_preview_entry(
         labels or {},
         [host_name] if found_on_nodes is None else list(found_on_nodes),
     )
-
-
-def _preview_check_source(
-    host_name: HostName,
-    description: ServiceName,
-    check_source: _ServiceOrigin,
-) -> str:
-    if check_source in {"active", "custom"} and config.service_ignored(
-        host_name, None, description
-    ):
-        return "%s_ignored" % check_source
-    return check_source
 
 
 def _wrap_timespecific_for_preview(

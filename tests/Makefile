@@ -34,7 +34,7 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 .PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-format-python test-format-python-docker test-format-shell \
+	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
 	test-format-js test-format-js-docker test-format-css test-format-css-docker \
 	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
 	test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
@@ -58,6 +58,7 @@ help:
 	@echo "test-composition-docker             - Run composition tests in container"
 	@echo "test-composition-docker-debug       - Run test container for manual debugging"
 	@echo "test-docker                         - Run docker tests"
+	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
@@ -161,6 +162,9 @@ test-composition-docker:
 
 test-composition: prepare-node-modules
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
+
+test-docker-docker:
+	../scripts/run-in-docker.sh make --quiet test-docker
 
 test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint

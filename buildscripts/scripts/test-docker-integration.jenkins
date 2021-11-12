@@ -32,7 +32,7 @@ timeout(time: 12, unit: 'HOURS') {
 
             stage('test cmk-docker integration') {
                 dir ('tests') {
-                    sh "make test-docker EDITION='$EDITION' VERSION='$CMK_VERSION'"
+                    sh "make test-docker-docker EDITION='$EDITION' VERSION='$CMK_VERSION'"
                 }
             }
         }

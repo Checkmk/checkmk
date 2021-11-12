@@ -1,2 +1,2 @@
-source: artifacts.lan.tribe29.com:4000/ubuntu-20.04:sandbox-konstantin.baikov-master-py39bump-latest
-tag: artifacts.lan.tribe29.com:4000/ubuntu-20.04:sandbox-konstantin.baikov-master-py39bump-latest
+source: artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest
+tag: artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest-image-alias-master-0e79af9d2e

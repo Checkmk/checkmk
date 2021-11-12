@@ -370,7 +370,7 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
         _write_sections(sections)
 
     for node in api_nodes:
-        with ConditionalPiggybackSection(node.name):
+        with ConditionalPiggybackSection(f"node_{node.name}"):
             output_sections(node)
 
 
@@ -385,7 +385,7 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
         _write_sections(sections)
 
     for deployment in api_deployments:
-        with ConditionalPiggybackSection(deployment.name(prepend_namespace=True)):
+        with ConditionalPiggybackSection(f"deployment_{deployment.name(prepend_namespace=True)}"):
             output_sections(deployment)
 
 
@@ -400,7 +400,7 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
         _write_sections(sections)
 
     for pod in api_pods:
-        with ConditionalPiggybackSection(pod.name(prepend_namespace=True)):
+        with ConditionalPiggybackSection(f"pod_{pod.name(prepend_namespace=True)}"):
             output_sections(pod)
 
 
@@ -561,14 +561,19 @@ def main(args: Optional[List[str]] = None) -> int:
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
 
             for pod in filter_outdated_pods(list(live_pods.values()), uid_piggyback_mappings):
-                with ConditionalPiggybackSection(uid_piggyback_mappings[pod.uid]):
+                with ConditionalPiggybackSection(f"pod_{uid_piggyback_mappings[pod.uid]}"):
                     pod_performance_sections(pod.containers)
 
             for deployment in cluster.deployments():
-                with ConditionalPiggybackSection(deployment.name(prepend_namespace=True)):
-                    deployment_performance_sections(
-                        [live_pods[pod_uid] for pod_uid in deployment.pod_uids()]
-                    )
+                with ConditionalPiggybackSection(
+                    f"deployment_{deployment.name(prepend_namespace=True)}"
+                ):
+                    try:
+                        deployment_performance_sections(
+                            [live_pods[pod_uid] for pod_uid in deployment.pod_uids()]
+                        )
+                    except KeyError:
+                        continue
 
     except urllib3.exceptions.MaxRetryError as e:
         if arguments.debug:

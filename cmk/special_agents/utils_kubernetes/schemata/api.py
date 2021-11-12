@@ -102,7 +102,7 @@ class PodSpec(BaseModel):
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
     host_ip: Optional[str] = None
-    pod_ip: str
+    pod_ip: Optional[str] = None
     qos_class: Literal["burstable", "besteffort", "guaranteed"]
 
 
@@ -114,7 +114,7 @@ class ContainerRunningState(BaseModel):
 class ContainerWaitingState(BaseModel):
     type: str = Field("waiting", const=True)
     reason: str
-    detail: str
+    detail: Optional[str]
 
 
 class ContainerTerminatedState(BaseModel):

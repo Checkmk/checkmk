@@ -1,0 +1,12 @@
+title: Kubernetes: Memory
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the used memory relative to the configured memory limits of a
+ Kubernetes entity. If at least one container of a pod does not specify limits, then
+ only the raw usage value will be shown.
+
+discovery:
+ One service is created.

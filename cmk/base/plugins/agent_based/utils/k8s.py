@@ -6,7 +6,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List, Optional, TypedDict
+from typing import Dict, List, NewType, Optional, TypedDict
 
 from pydantic import BaseModel
 
@@ -93,6 +93,9 @@ class Subset:
 # agent_kube section schemas --------------------------------- #
 
 
+ContainerName = NewType("ContainerName", str)
+
+
 class NodeCount(BaseModel):
     """section: k8s_node_count_v1"""
 
@@ -148,3 +151,16 @@ class ContainerCount(BaseModel):
     running: int = 0
     waiting: int = 0
     terminated: int = 0
+
+
+class Memory(BaseModel):
+    """section: k8s_live_memory_v1"""
+
+    memory_usage: float
+    memory_swap: float
+
+
+class Resources(BaseModel):
+
+    limit: float
+    requests: float

@@ -65,7 +65,7 @@ def test_03_python_path(site):
     assert sys_path[0] == ""
     assert site.root + "/local/lib/python3" in sys_path
     assert site.root + "/lib/python3" in sys_path
-    assert site.root + "/lib/python3.8" in sys_path
+    assert site.root + "/lib/python3.9" in sys_path
 
     for p in sys_path:
         if p != "" and not p.startswith(site.root):
@@ -85,7 +85,7 @@ def test_02_pip_path(site):
 def test_03_pip_interpreter_version(site):
     p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("pip 21.1.1")
+    assert version.startswith("pip 21.2.4")
 
 
 @pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())

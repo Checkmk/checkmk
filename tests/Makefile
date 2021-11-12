@@ -164,7 +164,8 @@ test-composition: prepare-node-modules
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
 
 test-docker-docker:
-	../scripts/run-in-docker.sh make --quiet test-docker
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e HOME" \
+	    ../scripts/run-in-docker.sh make --quiet test-docker
 
 test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint

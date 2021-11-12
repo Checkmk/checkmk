@@ -48,6 +48,8 @@ pathlib_paths = [
     "site_config_dir",
     "license_usage_dir",
     "profile_dir",
+    "received_outputs_dir",
+    "data_source_push_agent_dir",
 ]
 
 

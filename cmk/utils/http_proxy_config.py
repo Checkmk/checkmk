@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping, Optional, Protocol
+from typing import Mapping, Optional, Protocol, Tuple
 
 
 class HTTPProxyConfig(Protocol):
@@ -82,3 +82,41 @@ def deserialize_http_proxy_config(serialized_config: Optional[str]) -> HTTPProxy
     if serialized_config == NoProxyConfig.SERIALIZED:
         return NoProxyConfig()
     return ExplicitProxyConfig(serialized_config)
+
+
+def http_proxy_config_from_user_setting(
+    rulespec_value: Tuple[str, Optional[str]],
+    http_proxies_global_settings: Mapping[str, Mapping[str, str]],
+) -> HTTPProxyConfig:
+    """Returns a proxy config object to be used for HTTP requests
+
+    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
+    """
+    # For legacy compatibility
+    if not isinstance(rulespec_value, tuple):
+        return EnvironmentProxyConfig()
+
+    proxy_type, value = rulespec_value
+
+    if proxy_type == "environment":
+        return EnvironmentProxyConfig()
+
+    if (
+        proxy_type == "global"
+        and (
+            global_proxy := http_proxies_global_settings.get(str(value), {},).get(
+                "proxy_url",
+                None,
+            )
+        )
+        is not None
+    ):
+        return ExplicitProxyConfig(global_proxy)
+
+    if proxy_type == "url":
+        return ExplicitProxyConfig(str(value))
+
+    if proxy_type == "no_proxy":
+        return NoProxyConfig()
+
+    return EnvironmentProxyConfig()

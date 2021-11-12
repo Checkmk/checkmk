@@ -61,12 +61,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
-from cmk.utils.http_proxy_config import (
-    EnvironmentProxyConfig,
-    ExplicitProxyConfig,
-    HTTPProxyConfig,
-    NoProxyConfig,
-)
+from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
@@ -1357,27 +1352,10 @@ def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
 
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
-    if not isinstance(http_proxy, tuple):
-        return EnvironmentProxyConfig()
-
-    proxy_type, value = http_proxy
-
-    if proxy_type == "environment":
-        return EnvironmentProxyConfig()
-
-    if (
-        proxy_type == "global"
-        and (global_proxy := http_proxies.get(value, {}).get("proxy_url", None)) is not None
-    ):
-        return ExplicitProxyConfig(global_proxy)
-
-    if proxy_type == "url":
-        return ExplicitProxyConfig(value)
-
-    if proxy_type == "no_proxy":
-        return NoProxyConfig()
-
-    return EnvironmentProxyConfig()
+    return http_proxy_config_from_user_setting(
+        http_proxy,
+        http_proxies,
+    )
 
 
 # .

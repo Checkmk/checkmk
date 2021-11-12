@@ -18,12 +18,6 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.http_proxy_config import (
-    EnvironmentProxyConfig,
-    ExplicitProxyConfig,
-    HTTPProxyConfig,
-    NoProxyConfig,
-)
 from cmk.utils.parameters import TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
@@ -1445,53 +1439,6 @@ def test_host_config_snmp_check_interval(
 
 def test_http_proxies() -> None:
     assert config.http_proxies == {}
-
-
-@pytest.mark.parametrize(
-    "http_proxy,result",
-    [
-        ("bla", EnvironmentProxyConfig()),
-        (("no_proxy", None), NoProxyConfig()),
-        (("environment", None), EnvironmentProxyConfig()),
-        (("global", "not_existing"), EnvironmentProxyConfig()),
-        (("global", "http_blub"), ExplicitProxyConfig("http://blub:8080")),
-        (("global", "https_blub"), ExplicitProxyConfig("https://blub:8181")),
-        (
-            ("global", "socks5_authed"),
-            ExplicitProxyConfig("socks5://us%3Aer:s%40crit@socks.proxy:443"),
-        ),
-        (("url", "http://8.4.2.1:1337"), ExplicitProxyConfig("http://8.4.2.1:1337")),
-    ],
-)
-def test_http_proxy(
-    http_proxy: Union[str, Tuple[str, Optional[str]]],
-    result: HTTPProxyConfig,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        config,
-        "http_proxies",
-        {
-            "http_blub": {
-                "ident": "blub",
-                "title": "HTTP blub",
-                "proxy_url": "http://blub:8080",
-            },
-            "https_blub": {
-                "ident": "blub",
-                "title": "HTTPS blub",
-                "proxy_url": "https://blub:8181",
-            },
-            "socks5_authed": {
-                "ident": "socks5",
-                "title": "HTTP socks5 authed",
-                "proxy_url": "socks5://us%3Aer:s%40crit@socks.proxy:443",
-            },
-        },
-    )
-
-    # config.get_hhtp_proxy only accepts Tuples, nonetheless it reacts to other types (return None)
-    assert config.get_http_proxy(http_proxy) == result  # type: ignore
 
 
 @pytest.fixture(name="service_list")

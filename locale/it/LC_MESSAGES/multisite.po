@@ -4704,6 +4704,14 @@ msgstr ""
 "Permette di definire livelli assoluti per tutti i contenitori, in "
 "esecuzione, in pausa e fermi."
 
+#, fuzzy
+msgid ""
+"Allows to define absolute levels for running, waiting, terminated and total  "
+"containers."
+msgstr ""
+"Permette di definire livelli assoluti per tutti i contenitori, in "
+"esecuzione, in pausa e fermi."
+
 msgid ""
 "Allows to define levels for the counts and size of Docker Containers, "
 "Images, Local Volumes, and the Build Cache."
@@ -10267,9 +10275,8 @@ msgstr "Timeout di connessione"
 msgid "Connect directly (not available in CRE)"
 msgstr "Collegarsi direttamente (non disponibile in CRE)"
 
-msgid ""
-"Connect directly to the destination instead of using a proxy. This is the "
-"default."
+#, fuzzy
+msgid "Connect directly to the destination instead of using a proxy."
 msgstr ""
 "Connettersi direttamente alla destinazione invece di usare un proxy. Questo "
 "è il valore predefinito."
@@ -25509,6 +25516,10 @@ msgid "Kubernetes Port"
 msgstr "Porta Kubernetes"
 
 #, fuzzy
+msgid "Kubernetes node container count"
+msgstr "Nodi Kubernetes"
+
+#, fuzzy
 msgid "Kubernetes node count"
 msgstr "Nodi Kubernetes"
 
@@ -30942,6 +30953,10 @@ msgstr "Errori No-TxCredits"
 msgid "Node"
 msgstr "Nodo"
 
+#, fuzzy
+msgid "Node Containers"
+msgstr "# Contenitori."
+
 msgid "Node Exporter"
 msgstr "Esportatore di nodi"
 
@@ -31929,6 +31944,10 @@ msgstr "Numero di tentativi"
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "Numero di tentativi (senza contare l'esecuzione regolare iniziale)"
 
+#, fuzzy
+msgid "Number of running containers"
+msgstr "Numero di contenitori"
+
 msgid "Number of search results"
 msgstr "Numero di risultati della ricerca"
 
@@ -32010,6 +32029,10 @@ msgstr "Numero di compiti bloccati"
 msgid "Number of tables"
 msgstr "Numero di tavoli"
 
+#, fuzzy
+msgid "Number of terminated containers"
+msgstr "Numero di contenitori"
+
 msgid "Number of the Rack"
 msgstr "Numero del rack"
 
@@ -32027,6 +32050,10 @@ msgstr "Numero di thread utilizzati per la scrittura dei file RRD"
 
 msgid "Number of total and running sessions"
 msgstr "Numero di sessioni totali e in corso"
+
+#, fuzzy
+msgid "Number of total containers"
+msgstr "Numero di contenitori"
 
 msgid "Number of unassigned shards"
 msgstr "Numero di frammenti non assegnati"
@@ -32054,6 +32081,10 @@ msgstr "Numero di stati utilizzati del motore PF di OpenBSD"
 
 msgid "Number of users"
 msgstr "Numero di utenti"
+
+#, fuzzy
+msgid "Number of waiting containers"
+msgstr "Numero di contenitori"
 
 msgid "Number of warnings"
 msgstr "Numero di avvertimenti"
@@ -37936,6 +37967,10 @@ msgstr "Contenitori in esecuzione livelli superiori"
 
 msgid "Running elsewhere"
 msgstr "Correre altrove"
+
+#, fuzzy
+msgid "Running node containers"
+msgstr "Contenitori in esecuzione"
 
 msgid "Running nodes by nodes type"
 msgstr "Esecuzione dei nodi per tipo di nodi"
@@ -44024,6 +44059,10 @@ msgstr "File system temporaneo montato"
 
 msgid "Tenant ID / Directory ID"
 msgstr "ID inquilino / ID elenco"
+
+#, fuzzy
+msgid "Terminated node containers"
+msgstr "Docker nodo e contenitori"
 
 msgid "Terse"
 msgstr "Terso"
@@ -53103,6 +53142,10 @@ msgstr "Conteggio totale dei messaggi livelli inferiori"
 msgid "Total message count upper levels"
 msgstr "Conteggio totale dei messaggi livelli superiori"
 
+#, fuzzy
+msgid "Total node containers"
+msgstr "Docker nodo e contenitori"
+
 msgid "Total number of Sessions"
 msgstr "Numero totale di sessioni"
 
@@ -55347,7 +55390,8 @@ msgstr "Usare una chiamata di procedura invece di una dichiarazione SQL"
 msgid "Use proxy"
 msgstr "Utilizzare il proxy"
 
-msgid "Use proxy settings from the process environment"
+#, fuzzy
+msgid "Use proxy settings from the process environment. This is the default."
 msgstr "Utilizzare le impostazioni proxy dall'ambiente di processo"
 
 #, fuzzy
@@ -56747,6 +56791,10 @@ msgstr "Aspettando che altri interruttori siano online"
 
 msgid "Waiting for replication to start"
 msgstr "In attesa dell'avvio della replica"
+
+#, fuzzy
+msgid "Waiting node containers"
+msgstr "Connessioni in attesa"
 
 msgid "Warn"
 msgstr "Avvertire"
@@ -62465,9 +62513,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Patch release"
 #~ msgstr "Rilascio della patch"
-
-#~ msgid "# Containers"
-#~ msgstr "# Contenitori."
 
 #~ msgid "# Containers paused"
 #~ msgstr "# Contenitori in pausa"

@@ -4526,6 +4526,14 @@ msgstr ""
 "実行中、一時停止中、および停止中のすべてのコンテナーの絶対レベルを定義できま"
 "す。"
 
+#, fuzzy
+msgid ""
+"Allows to define absolute levels for running, waiting, terminated and total  "
+"containers."
+msgstr ""
+"実行中、一時停止中、および停止中のすべてのコンテナーの絶対レベルを定義できま"
+"す。"
+
 msgid ""
 "Allows to define levels for the counts and size of Docker Containers, "
 "Images, Local Volumes, and the Build Cache."
@@ -9828,9 +9836,8 @@ msgstr "接続タイムアウト"
 msgid "Connect directly (not available in CRE)"
 msgstr "直接接続します(CREでは使用できません)"
 
-msgid ""
-"Connect directly to the destination instead of using a proxy. This is the "
-"default."
+#, fuzzy
+msgid "Connect directly to the destination instead of using a proxy."
 msgstr "プロキシを使用せずに、宛先に直接接続します。これがデフォルトです。"
 
 msgid "Connect directly, without Livestatus Proxy"
@@ -24485,6 +24492,10 @@ msgid "Kubernetes Port"
 msgstr "Kubernetesポート"
 
 #, fuzzy
+msgid "Kubernetes node container count"
+msgstr "Kubernetesノード"
+
+#, fuzzy
 msgid "Kubernetes node count"
 msgstr "Kubernetesノード"
 
@@ -29817,6 +29828,10 @@ msgstr "No-TxCreditsエラー"
 msgid "Node"
 msgstr "ノード"
 
+#, fuzzy
+msgid "Node Containers"
+msgstr "# コンテナ"
+
 msgid "Node Exporter"
 msgstr "ノードエクスポータ"
 
@@ -30759,6 +30774,10 @@ msgstr "再試行回数"
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "再試行回数(最初の通常の実行はカウントされません)"
 
+#, fuzzy
+msgid "Number of running containers"
+msgstr "コンテナの数"
+
 msgid "Number of search results"
 msgstr "検索結果の数"
 
@@ -30840,6 +30859,10 @@ msgstr "スタックしたタスクの数"
 msgid "Number of tables"
 msgstr "テーブルの数"
 
+#, fuzzy
+msgid "Number of terminated containers"
+msgstr "コンテナの数"
+
 msgid "Number of the Rack"
 msgstr "ラックの数"
 
@@ -30857,6 +30880,10 @@ msgstr "RRDファイルの書き込みに使用されるスレッドの数"
 
 msgid "Number of total and running sessions"
 msgstr "合計と実行中のセッション数"
+
+#, fuzzy
+msgid "Number of total containers"
+msgstr "コンテナの数"
 
 msgid "Number of unassigned shards"
 msgstr "割り当てられていないシャードの数"
@@ -30884,6 +30911,10 @@ msgstr "OpenBSD PFエンジンの使用状態の数"
 
 msgid "Number of users"
 msgstr "ユーザー数"
+
+#, fuzzy
+msgid "Number of waiting containers"
+msgstr "コンテナの数"
 
 msgid "Number of warnings"
 msgstr "警告の数"
@@ -36567,6 +36598,10 @@ msgstr "実行中のコンテナの上位レベル"
 
 msgid "Running elsewhere"
 msgstr "他の場所で実行"
+
+#, fuzzy
+msgid "Running node containers"
+msgstr "実行中のコンテナ"
 
 msgid "Running nodes by nodes type"
 msgstr "ノードタイプ別のノードの実行"
@@ -42432,6 +42467,10 @@ msgstr "一時ファイルシステムがマウントされました"
 
 msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
+
+#, fuzzy
+msgid "Terminated node containers"
+msgstr "Dockerノードとコンテナー"
 
 msgid "Terse"
 msgstr "簡潔"
@@ -50598,6 +50637,10 @@ msgstr "合計メッセージ数の下位レベル"
 msgid "Total message count upper levels"
 msgstr "合計メッセージ数の上位レベル"
 
+#, fuzzy
+msgid "Total node containers"
+msgstr "Dockerノードとコンテナー"
+
 msgid "Total number of Sessions"
 msgstr "セッションの総数"
 
@@ -52788,7 +52831,8 @@ msgstr "SQLステートメントの代わりにプロシージャコールを使
 msgid "Use proxy"
 msgstr "プロキシを使う"
 
-msgid "Use proxy settings from the process environment"
+#, fuzzy
+msgid "Use proxy settings from the process environment. This is the default."
 msgstr "プロセス環境からのプロキシ設定を使用する"
 
 #, fuzzy
@@ -54115,6 +54159,10 @@ msgstr "他のスイッチがオンラインになるのを待っています"
 
 msgid "Waiting for replication to start"
 msgstr "レプリケーションの開始を待機しています"
+
+#, fuzzy
+msgid "Waiting node containers"
+msgstr "接続を待機しています"
 
 msgid "Warn"
 msgstr "警告"
@@ -59447,9 +59495,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Patch release"
 #~ msgstr "パッチリリース"
-
-#~ msgid "# Containers"
-#~ msgstr "# コンテナ"
 
 #~ msgid "# Containers paused"
 #~ msgstr "# コンテナが一時停止しました"

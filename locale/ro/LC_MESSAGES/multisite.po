@@ -4452,6 +4452,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Allows to define absolute levels for running, waiting, terminated and total  "
+"containers."
+msgstr ""
+
+msgid ""
 "Allows to define levels for the counts and size of Docker Containers, "
 "Images, Local Volumes, and the Build Cache."
 msgstr ""
@@ -9578,9 +9583,7 @@ msgstr ""
 msgid "Connect directly (not available in CRE)"
 msgstr ""
 
-msgid ""
-"Connect directly to the destination instead of using a proxy. This is the "
-"default."
+msgid "Connect directly to the destination instead of using a proxy."
 msgstr ""
 
 msgid "Connect directly, without Livestatus Proxy"
@@ -23929,6 +23932,10 @@ msgid "Kubernetes Port"
 msgstr ""
 
 #, fuzzy
+msgid "Kubernetes node container count"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes node count"
 msgstr "Adresă"
 
@@ -29620,6 +29627,10 @@ msgid "Node"
 msgstr ""
 
 #, fuzzy
+msgid "Node Containers"
+msgstr "doua nivele"
+
+#, fuzzy
 msgid "Node Exporter"
 msgstr "catre port:"
 
@@ -30586,6 +30597,10 @@ msgid "Number of retries (not counting the initial regular run)"
 msgstr ""
 
 #, fuzzy
+msgid "Number of running containers"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
 msgid "Number of search results"
 msgstr "Numarul maxim de mesaje"
 
@@ -30672,6 +30687,10 @@ msgstr "Numarul maxim de mesaje"
 msgid "Number of tables"
 msgstr "Numarul maxim de mesaje"
 
+#, fuzzy
+msgid "Number of terminated containers"
+msgstr "Numarul maxim de conexiuni"
+
 msgid "Number of the Rack"
 msgstr ""
 
@@ -30689,6 +30708,10 @@ msgstr ""
 
 msgid "Number of total and running sessions"
 msgstr ""
+
+#, fuzzy
+msgid "Number of total containers"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of unassigned shards"
 msgstr ""
@@ -30720,6 +30743,10 @@ msgstr ""
 #, fuzzy
 msgid "Number of users"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Number of waiting containers"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of warnings"
 msgstr ""
@@ -36506,6 +36533,10 @@ msgstr ""
 #, fuzzy
 msgid "Running elsewhere"
 msgstr ", rulează nicăieri"
+
+#, fuzzy
+msgid "Running node containers"
+msgstr "sesiuni"
 
 msgid "Running nodes by nodes type"
 msgstr ""
@@ -42432,6 +42463,10 @@ msgstr ""
 
 msgid "Tenant ID / Directory ID"
 msgstr ""
+
+#, fuzzy
+msgid "Terminated node containers"
+msgstr "doua nivele"
 
 msgid "Terse"
 msgstr ""
@@ -49227,6 +49262,10 @@ msgstr "Numarul maxim de mesaje"
 msgid "Total message count upper levels"
 msgstr "Numarul maxim de mesaje"
 
+#, fuzzy
+msgid "Total node containers"
+msgstr "Optiuni tabel"
+
 msgid "Total number of Sessions"
 msgstr ""
 
@@ -51552,7 +51591,7 @@ msgstr ""
 msgid "Use proxy"
 msgstr ""
 
-msgid "Use proxy settings from the process environment"
+msgid "Use proxy settings from the process environment. This is the default."
 msgstr ""
 
 #, fuzzy
@@ -52843,6 +52882,10 @@ msgstr ""
 
 msgid "Waiting for replication to start"
 msgstr ""
+
+#, fuzzy
+msgid "Waiting node containers"
+msgstr "Conexiuni Active"
 
 msgid "Warn"
 msgstr ""

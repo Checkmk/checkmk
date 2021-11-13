@@ -4699,6 +4699,14 @@ msgstr ""
 "Maakt het mogelijk om absolute niveaus te definiëren voor alle, lopende, "
 "gepauzeerde en gestopte containers."
 
+#, fuzzy
+msgid ""
+"Allows to define absolute levels for running, waiting, terminated and total  "
+"containers."
+msgstr ""
+"Maakt het mogelijk om absolute niveaus te definiëren voor alle, lopende, "
+"gepauzeerde en gestopte containers."
+
 msgid ""
 "Allows to define levels for the counts and size of Docker Containers, "
 "Images, Local Volumes, and the Build Cache."
@@ -10237,9 +10245,8 @@ msgstr "Time-out verbinden"
 msgid "Connect directly (not available in CRE)"
 msgstr "Rechtstreeks verbinden (niet beschikbaar in CRE)"
 
-msgid ""
-"Connect directly to the destination instead of using a proxy. This is the "
-"default."
+#, fuzzy
+msgid "Connect directly to the destination instead of using a proxy."
 msgstr ""
 "Rechtstreeks verbinden met de bestemming in plaats van een proxy te "
 "gebruiken. Dit is de standaardinstelling."
@@ -25463,6 +25470,10 @@ msgid "Kubernetes Port"
 msgstr "Kubernetes Poort"
 
 #, fuzzy
+msgid "Kubernetes node container count"
+msgstr "Kubernetes knooppunten"
+
+#, fuzzy
 msgid "Kubernetes node count"
 msgstr "Kubernetes knooppunten"
 
@@ -30872,6 +30883,10 @@ msgstr "No-TxCredits fouten"
 msgid "Node"
 msgstr "Knooppunt"
 
+#, fuzzy
+msgid "Node Containers"
+msgstr "# Containers"
+
 msgid "Node Exporter"
 msgstr "Node uitvoerder"
 
@@ -31854,6 +31869,10 @@ msgstr "Aantal herhalingen"
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "Aantal herhalingen (de eerste reguliere poging niet meegerekend)"
 
+#, fuzzy
+msgid "Number of running containers"
+msgstr "Aantal containers"
+
 msgid "Number of search results"
 msgstr "Aantal zoekresultaten"
 
@@ -31935,6 +31954,10 @@ msgstr "Aantal vastgelopen taken"
 msgid "Number of tables"
 msgstr "Aantal tabellen"
 
+#, fuzzy
+msgid "Number of terminated containers"
+msgstr "Aantal containers"
+
 msgid "Number of the Rack"
 msgstr "Nummer van het rek"
 
@@ -31952,6 +31975,10 @@ msgstr "Aantal threads gebruikt voor het schrijven van RRD-bestanden"
 
 msgid "Number of total and running sessions"
 msgstr "Aantal totale en lopende sessies"
+
+#, fuzzy
+msgid "Number of total containers"
+msgstr "Aantal containers"
 
 msgid "Number of unassigned shards"
 msgstr "Aantal niet-toegewezen scherven"
@@ -31979,6 +32006,10 @@ msgstr "Aantal gebruikte toestanden van OpenBSD PF engine"
 
 msgid "Number of users"
 msgstr "Aantal gebruikers"
+
+#, fuzzy
+msgid "Number of waiting containers"
+msgstr "Aantal containers"
 
 msgid "Number of warnings"
 msgstr "Aantal waarschuwingen"
@@ -37824,6 +37855,10 @@ msgstr "Lopende containers bovenste niveaus"
 
 msgid "Running elsewhere"
 msgstr "Elders lopen"
+
+#, fuzzy
+msgid "Running node containers"
+msgstr "Lopende containers"
 
 msgid "Running nodes by nodes type"
 msgstr "Lopende knooppunten per knooppunttype"
@@ -43910,6 +43945,10 @@ msgstr "Tijdelijk bestandssysteem gemount"
 
 msgid "Tenant ID / Directory ID"
 msgstr "Huurder ID / Directory ID"
+
+#, fuzzy
+msgid "Terminated node containers"
+msgstr "Docker node en containers"
 
 msgid "Terse"
 msgstr "Terse"
@@ -52989,6 +53028,10 @@ msgstr "Totaal aantal berichten lagere niveaus"
 msgid "Total message count upper levels"
 msgstr "Totaal aantal berichten bovenste niveaus"
 
+#, fuzzy
+msgid "Total node containers"
+msgstr "Docker node en containers"
+
 msgid "Total number of Sessions"
 msgstr "Totaal aantal sessies"
 
@@ -55222,7 +55265,8 @@ msgstr "Gebruik procedure-aanroep in plaats van SQL-instructie"
 msgid "Use proxy"
 msgstr "Gebruik proxy"
 
-msgid "Use proxy settings from the process environment"
+#, fuzzy
+msgid "Use proxy settings from the process environment. This is the default."
 msgstr "Gebruik proxy-instellingen van de procesomgeving"
 
 #, fuzzy
@@ -56618,6 +56662,10 @@ msgstr "Wachten op andere wissels om online te komen"
 
 msgid "Waiting for replication to start"
 msgstr "Wachten op replicatie om te beginnen"
+
+#, fuzzy
+msgid "Waiting node containers"
+msgstr "Wachtende verbindingen"
 
 msgid "Warn"
 msgstr "Waarschuw"
@@ -62338,9 +62386,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Patch release"
 #~ msgstr "Patch uitgave"
-
-#~ msgid "# Containers"
-#~ msgstr "# Containers"
 
 #~ msgid "# Containers paused"
 #~ msgstr "# Gepauzeerde containers"

@@ -252,6 +252,7 @@ catalog_titles = {
     "generic": "Generic check plugins",
     "unsorted": "Uncategorized",
     "zertificon": "Zertificon",
+    "mqtt": "MQTT",
 }  # yapf: disable
 
 # TODO: Do we need a more generic place for this?

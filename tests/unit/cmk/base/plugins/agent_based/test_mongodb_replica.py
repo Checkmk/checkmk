@@ -11,12 +11,18 @@ import pytest
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.mongodb_replica import (
+    parse_mongodb_replica,
+    ReplicaSet,
+    Secondaries,
+)
 
 from tests.unit.conftest import FixRegister
 
 
 @pytest.mark.parametrize(
-    "section, expected_check_result",
+    "string_table, parsed_section",
     [
         pytest.param(
             [
@@ -33,20 +39,13 @@ from tests.unit.conftest import FixRegister
                     "idbv0069.xyz.de:27017",
                 ],
             ],
-            [
-                Result(
-                    state=State.OK,
-                    summary="Primary: idbv0068.xyz.de:27017",
+            ReplicaSet(
+                primary="idbv0068.xyz.de:27017",
+                secondaries=Secondaries(
+                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
                 ),
-                Result(
-                    state=State.OK,
-                    summary="Hosts: idbv0067.xyz:27017 idbv0068.xyz.de:27017",
-                ),
-                Result(
-                    state=State.OK,
-                    summary="Arbiters: idbv0069.xyz.de:27017",
-                ),
-            ],
+                arbiters="idbv0069.xyz.de:27017",
+            ),
             id="primary present",
         ),
         pytest.param(
@@ -64,6 +63,59 @@ from tests.unit.conftest import FixRegister
                     "idbv0069.xyz.de:27017",
                 ],
             ],
+            ReplicaSet(
+                primary=None,
+                secondaries=Secondaries(
+                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                ),
+                arbiters="idbv0069.xyz.de:27017",
+            ),
+            id="primary missing",
+        ),
+    ],
+)
+def test_parse_mongodb_replica(
+    string_table: StringTable,
+    parsed_section: ReplicaSet,
+) -> None:
+    assert parse_mongodb_replica(string_table) == parsed_section
+
+
+@pytest.mark.parametrize(
+    "section, expected_check_result",
+    [
+        pytest.param(
+            ReplicaSet(
+                primary="idbv0068.xyz.de:27017",
+                secondaries=Secondaries(
+                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                ),
+                arbiters="idbv0069.xyz.de:27017",
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Primary: idbv0068.xyz.de:27017",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Hosts: idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Arbiters: idbv0069.xyz.de:27017",
+                ),
+            ],
+            id="primary present",
+        ),
+        pytest.param(
+            ReplicaSet(
+                primary=None,
+                secondaries=Secondaries(
+                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                ),
+                arbiters="idbv0069.xyz.de:27017",
+            ),
             [
                 Result(
                     state=State.CRIT,
@@ -84,7 +136,7 @@ from tests.unit.conftest import FixRegister
 )
 def test_check_mongodb_replica(
     fix_register: FixRegister,
-    section,
+    section: ReplicaSet,
     expected_check_result: Sequence[Result],
 ) -> None:
     assert (

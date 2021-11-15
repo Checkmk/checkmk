@@ -84,8 +84,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         default=0,
         help="Verbose mode (for even more output use -vvv)",
     )
-    p.add_argument("--port", type=int, default=None, help="Port to connect to")
-    p.add_argument("--token", required=True, help="Token for that user")
+    p.add_argument("--token", help="Token for that user")
     p.add_argument(
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
     )
@@ -94,13 +93,8 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         required=True,
         help="Endpoint to query metrics from Kubernetes cluster agent",
     )
-    p.add_argument(
-        "--path-prefix",
-        default="",
-        action=PathPrefixAction,
-        help="Optional URL path prefix to prepend to Kubernetes API calls",
-    )
-    p.add_argument("--no-cert-check", action="store_true", help="Disable certificate verification")
+
+    p.add_argument("--verify-cert", action="store_true", help="Verify certificate")
     p.add_argument(
         "--profile",
         metavar="FILE",
@@ -464,8 +458,10 @@ class SetupError(Exception):
     pass
 
 
-def collect_metrics_from_cluster_agent(cluster_url: str) -> List[str]:
-    cluster_resp = requests.get(f"{cluster_url}/kmetrics")  # TODO: certificate validation
+def collect_metrics_from_cluster_agent(cluster_agent_url: str, verify: bool) -> List[str]:
+    cluster_resp = requests.get(
+        f"{cluster_agent_url}/kmetrics", verify=verify
+    )  # TODO: certificate validation
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
 
@@ -514,15 +510,12 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     config = client.Configuration()
 
     host = arguments.api_server_endpoint
-    if arguments.port is not None:
-        host = "%s:%s" % (host, arguments.port)
-    if arguments.path_prefix:
-        host = "%s%s" % (host, arguments.path_prefix)
     config.host = host
-    config.api_key_prefix["authorization"] = "Bearer"
-    config.api_key["authorization"] = arguments.token
+    if arguments.token:
+        config.api_key_prefix["authorization"] = "Bearer"
+        config.api_key["authorization"] = arguments.token
 
-    if arguments.no_cert_check:
+    if arguments.verify_cert:
         config.verify_ssl = False
     else:
         config.ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE")
@@ -543,7 +536,6 @@ def main(args: Optional[List[str]] = None) -> int:
         with cmk.utils.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
-
             api_client = make_api_client(arguments)
             api_server = APIServer.from_kubernetes(api_client)
 
@@ -557,7 +549,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Sections based on cluster agent live data
             performance_metrics = collect_metrics_from_cluster_agent(
-                arguments.cluster_agent_endpoint
+                arguments.cluster_agent_endpoint, arguments.verify_cert
             )
             live_pods = group_metrics_by_pods(performance_metrics)
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())

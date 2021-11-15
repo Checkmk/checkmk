@@ -750,35 +750,51 @@ def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
             (
-                "api-server-endpoint",
-                CascadingDropdown(
-                    choices=[
+                "kubernetes-api-server",
+                Dictionary(
+                    elements=[
                         (
-                            "hostname",
-                            _("Hostname"),
-                            Dictionary(elements=_kubernetes_connection_elements()),
+                            "endpoint",
+                            CascadingDropdown(
+                                choices=[
+                                    (
+                                        "hostname",
+                                        _("Hostname"),
+                                        _kube_connection_elements(),
+                                    ),
+                                    (
+                                        "ipaddress",
+                                        _("IP address"),
+                                        _kube_connection_elements(),
+                                    ),
+                                    (
+                                        "url_custom",
+                                        _("Custom URL"),
+                                        TextInput(
+                                            allow_empty=False,
+                                            size=80,
+                                        ),
+                                    ),
+                                ],
+                                orientation="horizontal",
+                                title=_("Server endpoint"),
+                                help=_(
+                                    'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
+                                    'or the "IP Address" options are selected, the DNS hostname or IP address and '
+                                    "a secure protocol (HTTPS) are used."
+                                ),
+                            ),
                         ),
                         (
-                            "ipaddress",
-                            _("IP address"),
-                            Dictionary(elements=_kubernetes_connection_elements()),
-                        ),
-                        (
-                            "url_custom",
-                            _("Custom URL"),
-                            TextInput(
+                            "token",
+                            IndividualOrStoredPassword(
+                                title=_("Token"),
                                 allow_empty=False,
-                                size=80,
                             ),
                         ),
                     ],
-                    orientation="horizontal",
-                    title=_("API server endpoint"),
-                    help=_(
-                        'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
-                        'or the "IP Address" options are selected, the DNS hostname or IP address and '
-                        "a secure protocol (HTTPS) are used."
-                    ),
+                    title=_("API server connection"),
+                    optional_keys=["token"],
                 ),
             ),
             (
@@ -813,6 +829,7 @@ def _valuespec_special_agents_kube():
                                     ("http", "HTTP"),
                                     ("https", "HTTPS"),
                                 ],
+                                default_value="https",
                                 help=_(
                                     "The option should match the configured protocol of the "
                                     "cluster agent."
@@ -831,20 +848,13 @@ def _valuespec_special_agents_kube():
                 ),
             ),
             (
-                "token",
-                IndividualOrStoredPassword(
-                    title=_("Token"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "no-cert-check",
+                "verify-cert",
                 Alternative(
                     title=_("SSL certificate verification"),
                     elements=[
-                        FixedValue(False, title=_("Verify the certificate"), totext=""),
+                        FixedValue(True, title=_("Verify the certificate"), totext=""),
                         FixedValue(
-                            True, title=_("Ignore certificate errors (unsecure)"), totext=""
+                            False, title=_("Ignore certificate errors (unsecure)"), totext=""
                         ),
                     ],
                     default_value=False,
@@ -853,6 +863,47 @@ def _valuespec_special_agents_kube():
         ],
         optional_keys=[],
         title=_("Kubernetes 2.0"),
+    )
+
+
+def _kube_connection_elements():
+    return Dictionary(
+        elements=[
+            (
+                "port",
+                Integer(
+                    title=_("Port"),
+                    help=_("If no port is given, a default value of 6443 will be used."),
+                    default_value=6443,
+                ),
+            ),
+            (
+                "path-prefix",
+                TextInput(
+                    title=_("Custom path prefix"),
+                    help=_(
+                        "Specifies a URL path prefix, which is prepended to API calls "
+                        "to the Kubernetes API. This is a useful option for Rancher "
+                        "installations (more information can be found in the manual). "
+                        "If this option is not relevant for your installation, "
+                        "please leave it unchecked."
+                    ),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "protocol",
+                DropdownChoice(
+                    title=_("Protocol"),
+                    choices=[
+                        ("http", "HTTP"),
+                        ("https", "HTTPS"),
+                    ],
+                    default_value="https",
+                ),
+            ),
+        ],
+        optional_keys=["port", "path-prefix"],
     )
 
 

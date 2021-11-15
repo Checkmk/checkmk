@@ -23,16 +23,15 @@ std::pair<std::string, std::string> GetNamesByVolumeId(
     std::string_view volume_id) {
     constexpr DWORD file_system_size = 128;
     constexpr DWORD volume_name_size = 512;
-    std::array<char, file_system_size> filesystem_name = {};  // zero init
-    std::array<char, volume_name_size> volume_name = {};      // zero init
+    std::array<char, file_system_size> filesystem_name = {};
+    std::array<char, volume_name_size> volume_name = {};
 
     DWORD flags = 0;
     if (::GetVolumeInformationA(volume_id.data(), volume_name.data(),
                                 volume_name_size, nullptr, nullptr, &flags,
                                 filesystem_name.data(),
                                 file_system_size) == FALSE) {
-        filesystem_name[0] =
-            '\0';  // May be necessary if partial information returned
+        filesystem_name[0] = '\0';  // if partial information returned
         XLOG::d("Information for volume '{}' is not available [{}]", volume_id,
                 ::GetLastError());
     }
@@ -163,7 +162,7 @@ std::string ProduceMountPointsOutput(std::string_view volume_id) {
     while (true) {
         auto combined_path = std::string{volume_id} + vmd.result();
         out += ProduceFileSystemOutput(combined_path);
-        out += ProduceMountPointsOutput(combined_path);  // recursion here
+        out += ProduceMountPointsOutput(combined_path);  // recursion! here
 
         if (!vmd.next()) {
             break;

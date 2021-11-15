@@ -4,15 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import List
-from .agent_based_api.v1 import (
-    all_of,
-    equals,
-    exists,
-    OIDEnd,
-    register,
-    SNMPTree,
-    type_defs,
-)
+
+from .agent_based_api.v1 import all_of, equals, exists, OIDEnd, register, SNMPTree, type_defs
 from .utils import interfaces
 
 
@@ -38,7 +31,8 @@ def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.
             oper_status="1",
             in_octets=int(frontend_info[1]),
             out_octets=int(frontend_info[2]),
-        ) for idx, frontend_info in enumerate(string_table[1] + string_table[2])
+        )
+        for idx, frontend_info in enumerate(string_table[1] + string_table[2])
     ]
 
 
@@ -77,5 +71,5 @@ register.snmp_section(
         equals(".1.3.6.1.2.1.1.1.0", ""),
         exists(".1.3.6.1.4.1.1139.21.2.2.8.1.*"),
     ),
-    supersedes=['if', 'if64'],
+    supersedes=["if", "if64"],
 )

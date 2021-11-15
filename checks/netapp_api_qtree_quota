@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_qtree_quota:sep(9)>>>
 # quota user01    quota-type user disk-limit 12288000 quota-users AD\aolov  volume vol_silber2_group_cifs   disk-used 0
 # quota user01    quota-type user disk-limit 12288000 quota-users AD\bva    volume vol_silber2_group_cifs   disk-used 0
@@ -48,17 +51,19 @@ def check_netapp_api_qtree_quota(item, params, qtree):
         inodes_total = None
         inodes_avail = None
 
-    return df_check_filesystem_single(item, size_total, size_avail, 0, inodes_total, inodes_avail,
-                                      params)
+    return df_check_filesystem_single(
+        item, size_total, size_avail, 0, inodes_total, inodes_avail, params
+    )
 
 
 check_info["netapp_api_qtree_quota"] = {
-    'check_function': check_netapp_api_qtree_quota,
-    'inventory_function': inventory_netapp_api_qtree_quota,
-    'parse_function': lambda info: netapp_api_parse_lines(info,
-                                                          custom_keys=["quota", "quota-users"]),
-    'service_description': 'Qtree %s',
-    'has_perfdata': True,
-    'group': "filesystem",
+    "check_function": check_netapp_api_qtree_quota,
+    "inventory_function": inventory_netapp_api_qtree_quota,
+    "parse_function": lambda info: netapp_api_parse_lines(
+        info, custom_keys=["quota", "quota-users"]
+    ),
+    "service_description": "Qtree %s",
+    "has_perfdata": True,
+    "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

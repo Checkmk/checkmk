@@ -8,22 +8,28 @@
 import abc
 import os
 from pathlib import Path
-from typing import Callable, List, Dict, Tuple
+from typing import Callable, Dict, List, Mapping, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import HostName, ServiceName, Labels, LabelSources
+from cmk.utils.site import omd_site
+from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, LabelSources, ServiceName
 
 UpdatedHostLabelsEntry = Tuple[str, float, str]
 
 
 class LabelManager:
     """Helper class to manage access to the host and service labels"""
-    def __init__(self, explicit_host_labels: Dict, host_label_rules: List,
-                 service_label_rules: List,
-                 discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]) -> None:
-        super(LabelManager, self).__init__()
+
+    def __init__(
+        self,
+        explicit_host_labels: Dict,
+        host_label_rules: List,
+        service_label_rules: List,
+        discovered_labels_of_service: Callable[[HostName, ServiceName], Labels],
+    ) -> None:
+        super().__init__()
         self._explicit_host_labels = explicit_host_labels
         self._host_label_rules = host_label_rules
         self._service_label_rules = service_label_rules
@@ -35,29 +41,35 @@ class LabelManager:
         1. Discovered labels
         2. Ruleset "Host labels"
         3. Explicit labels (via host/folder config)
+        4. Builtin labels
 
         Last one wins.
         """
-        labels: Labels = {}
+        labels: Dict[str, str] = {}
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(ruleset_matcher, hostname))
         labels.update(self._explicit_host_labels.get(hostname, {}))
+        labels.update(self._builtin_labels_of_host(hostname))
         return labels
 
-    def label_sources_of_host(self, ruleset_matcher: RulesetMatcher,
-                              hostname: HostName) -> LabelSources:
+    def label_sources_of_host(
+        self, ruleset_matcher: RulesetMatcher, hostname: HostName
+    ) -> LabelSources:
         """Returns the effective set of host label keys with their source
         identifier instead of the value Order and merging logic is equal to
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
+        labels.update({k: "discovered" for k in self._builtin_labels_of_host(hostname)})
         labels.update(
-            {k: "ruleset" for k in self._ruleset_labels_of_host(ruleset_matcher, hostname)})
+            {k: "ruleset" for k in self._ruleset_labels_of_host(ruleset_matcher, hostname)}
+        )
         labels.update({k: "explicit" for k in self._explicit_host_labels.get(hostname, {}).keys()})
         return labels
 
-    def _ruleset_labels_of_host(self, ruleset_matcher: RulesetMatcher,
-                                hostname: HostName) -> Labels:
+    def _ruleset_labels_of_host(
+        self, ruleset_matcher: RulesetMatcher, hostname: HostName
+    ) -> Labels:
         match_object = RulesetMatchObject(hostname, service_description=None)
         return ruleset_matcher.get_host_ruleset_merged_dict(match_object, self._host_label_rules)
 
@@ -67,8 +79,14 @@ class LabelManager:
             for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()
         }
 
-    def labels_of_service(self, ruleset_matcher: RulesetMatcher, hostname: HostName,
-                          service_desc: ServiceName) -> Labels:
+    def _builtin_labels_of_host(self, hostname: HostName) -> Labels:
+        return {
+            label_id: label["value"] for label_id, label in BuiltinHostLabelsStore().load().items()
+        }
+
+    def labels_of_service(
+        self, ruleset_matcher: RulesetMatcher, hostname: HostName, service_desc: ServiceName
+    ) -> Labels:
         """Returns the effective set of service labels from all available sources
 
         1. Discovered labels
@@ -76,49 +94,61 @@ class LabelManager:
 
         Last one wins.
         """
-        labels: Labels = {}
+        labels: Dict[str, str] = {}
         labels.update(self._discovered_labels_of_service(hostname, service_desc))
         labels.update(self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc))
 
         return labels
 
-    def label_sources_of_service(self, ruleset_matcher: RulesetMatcher, hostname: HostName,
-                                 service_desc: ServiceName) -> LabelSources:
+    def label_sources_of_service(
+        self, ruleset_matcher: RulesetMatcher, hostname: HostName, service_desc: ServiceName
+    ) -> LabelSources:
         """Returns the effective set of host label keys with their source
         identifier instead of the value Order and merging logic is equal to
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update(
-            {k: "discovered" for k in self._discovered_labels_of_service(hostname, service_desc)})
-        labels.update({
-            k: "ruleset"
-            for k in self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc)
-        })
+            {k: "discovered" for k in self._discovered_labels_of_service(hostname, service_desc)}
+        )
+        labels.update(
+            {
+                k: "ruleset"
+                for k in self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc)
+            }
+        )
 
         return labels
 
-    def _ruleset_labels_of_service(self, ruleset_matcher: RulesetMatcher, hostname: HostName,
-                                   service_desc: ServiceName) -> Labels:
+    def _ruleset_labels_of_service(
+        self, ruleset_matcher: RulesetMatcher, hostname: HostName, service_desc: ServiceName
+    ) -> Labels:
         match_object = RulesetMatchObject(hostname, service_description=service_desc)
-        return ruleset_matcher.get_service_ruleset_merged_dict(match_object,
-                                                               self._service_label_rules)
+        return ruleset_matcher.get_service_ruleset_merged_dict(
+            match_object, self._service_label_rules
+        )
 
 
-class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
+class ABCDiscoveredLabelsStore(abc.ABC):
     """Managing persistance of discovered labels"""
-    @abc.abstractproperty
+
+    @property
+    @abc.abstractmethod
     def file_path(self) -> Path:
         raise NotImplementedError()
 
-    def load(self) -> Dict:
-        # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
+    def load(self) -> Mapping[str, HostLabelValueDict]:
+        # Skip labels discovered by the previous HW/SW inventory approach
+        # (which was addded+removed in 1.6 beta)
         return {
-            k: v
-            for k, v in store.load_object_from_file(str(self.file_path), default={}).items()
-            if isinstance(v, dict)
+            str(key): {
+                "value": str(val["value"]),
+                "plugin_name": str(val["plugin_name"]) if "plugin_name" in val else None,
+            }
+            for key, val in store.load_object_from_file(str(self.file_path), default={}).items()
+            if isinstance(val, dict)
         }
 
-    def save(self, labels: Dict) -> None:
+    def save(self, labels: Mapping[str, HostLabelValueDict]) -> None:
         if not labels:
             if self.file_path.exists():
                 self.file_path.unlink()
@@ -129,13 +159,20 @@ class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
 
 
 class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname: str) -> None:
-        super(DiscoveredHostLabelsStore, self).__init__()
+    def __init__(self, hostname: HostName) -> None:
+        super().__init__()
         self._hostname = hostname
 
     @property
     def file_path(self) -> Path:
-        return cmk.utils.paths.discovered_host_labels_dir / (self._hostname + ".mk")
+        return cmk.utils.paths.discovered_host_labels_dir / f"{self._hostname}.mk"
+
+
+class BuiltinHostLabelsStore:
+    def load(self) -> Mapping[str, HostLabelValueDict]:
+        return {
+            "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
+        }
 
 
 def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:

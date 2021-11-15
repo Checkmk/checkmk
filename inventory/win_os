@@ -35,11 +35,11 @@ def inv_win_os(info):
 
         node["service_pack"] = line[4] + "." + line[5]
 
-        if '+' in line[6]:
-            datestr, tz = line[6].split('+')
+        if "+" in line[6]:
+            datestr, tz = line[6].split("+")
             tz = int(tz)
-        elif '-' in line[6]:
-            datestr, tz = line[6].split('-')
+        elif "-" in line[6]:
+            datestr, tz = line[6].split("-")
             tz = int(tz) * -1
         else:
             datestr, tz = line[6], 0
@@ -47,6 +47,6 @@ def inv_win_os(info):
         node["install_date"] = int(time.mktime(time.strptime(datestr, "%Y%m%d%H%M%S.%f"))) - tz * 60
 
 
-inv_info['win_os'] = {
+inv_info["win_os"] = {
     "inv_function": inv_win_os,
 }

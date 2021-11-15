@@ -13,8 +13,8 @@ def check_mailman_lists(item, params, info):
     for line in info:
         name, num_members = line[0], saveint(line[1])
         if name == item:
-            return (0, '%d members subscribed' % (num_members), [('count', num_members)])
-    return (3, 'List could not be found in agent output')
+            return (0, "%d members subscribed" % (num_members), [("count", num_members)])
+    return (3, "List could not be found in agent output")
 
 
 check_info["mailman_lists"] = {

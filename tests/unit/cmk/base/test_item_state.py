@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.base.api.agent_based import value_store
+
 from cmk.base import item_state
+from cmk.base.api.agent_based import value_store
 
 _TEST_KEY = ("check", "item", "user-key")
 

@@ -13,27 +13,27 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 
 def inventory_aws_ec2_security_groups(parsed):
     if parsed:
-        return [(None, "%r" % [group['GroupId'] for group in parsed])]
+        return [(None, "%r" % [group["GroupId"] for group in parsed])]
 
 
 def check_aws_ec2_security_groups(item, params, parsed):
     for group in parsed:
         state = 0
-        descr = group.get('Description')
+        descr = group.get("Description")
         if descr:
             prefix = "[%s] " % descr
         else:
             prefix = ""
-        infotext = "%s%s: %s" % (prefix, group['GroupName'], group['GroupId'])
-        if group['GroupId'] not in params:
+        infotext = "%s%s: %s" % (prefix, group["GroupName"], group["GroupId"])
+        if group["GroupId"] not in params:
             infotext += " (has changed)"
             state = 2
         yield state, infotext
 
 
-check_info['aws_ec2_security_groups'] = {
-    'parse_function': parse_aws,
-    'inventory_function': inventory_aws_ec2_security_groups,
-    'check_function': check_aws_ec2_security_groups,
-    'service_description': 'AWS/EC2 Security Groups',
+check_info["aws_ec2_security_groups"] = {
+    "parse_function": parse_aws,
+    "inventory_function": inventory_aws_ec2_security_groups,
+    "check_function": check_aws_ec2_security_groups,
+    "service_description": "AWS/EC2 Security Groups",
 }

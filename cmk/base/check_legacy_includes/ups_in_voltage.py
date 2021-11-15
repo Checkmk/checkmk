@@ -14,8 +14,7 @@ def check_ups_in_voltage(item, params, info):
         if line[0] == item:
             power = int(line[1])
             perfdata = [("in_voltage", power, warn, crit, 150)]
-            infotext = "in voltage: %dV, (warn/crit at %dV/%dV)" % \
-                 (power, warn, crit)
+            infotext = "in voltage: %dV, (warn/crit at %dV/%dV)" % (power, warn, crit)
 
             if power <= crit:
                 return (2, infotext, perfdata)

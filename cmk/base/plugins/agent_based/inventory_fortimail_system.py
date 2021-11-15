@@ -18,14 +18,20 @@ def parse_fortimail_system(string_table: StringTable) -> Optional[Section]:
     >>> parse_fortimail_system([["model 1a", "12345", "v5.4,build719,180328 (5.4.5 GA)"]])
     {'model': 'model 1a', 'serial': '12345', 'os': 'v5.4,build719,180328 (5.4.5 GA)'}
     """
-    return dict(zip(
-        [
-            "model",
-            "serial",
-            "os",
-        ],
-        string_table[0],
-    )) if string_table else None
+    return (
+        dict(
+            zip(
+                [
+                    "model",
+                    "serial",
+                    "os",
+                ],
+                string_table[0],
+            )
+        )
+        if string_table
+        else None
+    )
 
 
 register.snmp_section(

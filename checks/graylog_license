@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_license>>>
 # {"status": [{"violated": true,"expired": false,"expiration_upcoming":
 # false,"expired_since": "PT0S","expires_in": "PT550H17.849S","trial":
@@ -27,8 +28,6 @@ from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard
 # "PT240H"},"expired": false},"traffic_exceeded": false,"cluster_not_covered":
 # false,"nodes_exceeded": false,"remote_checks_failed": true,"valid": false}]}
 
-import json
-
 
 def inventory_graylog_license(parsed):
     license_state = parsed.get("status")
@@ -37,14 +36,14 @@ def inventory_graylog_license(parsed):
 
 
 factory_settings["graylog_license_default_levels"] = {
-    'no_enterprise': 0,
-    'valid': 2,
-    'cluster_not_covered': 1,
-    'traffic_exceeded': 1,
-    'violated': 2,
-    'nodes_exceeded': 1,
-    'expired': 2,
-    'remote_checks_failed': 1,
+    "no_enterprise": 0,
+    "valid": 2,
+    "cluster_not_covered": 1,
+    "traffic_exceeded": 1,
+    "violated": 2,
+    "nodes_exceeded": 1,
+    "expired": 2,
+    "remote_checks_failed": 1,
 }
 
 
@@ -88,10 +87,13 @@ def check_graylog_license(_no_item, params, parsed):
         timestamp = handle_iso_utc_to_localtimestamp(expires)
         time_to_expiration = int(timestamp) - time.time()
         warn, crit = params.get("expiration", (None, None))
-        yield check_levels(time_to_expiration,
-                           None, (None, None, warn, crit),
-                           human_readable_func=get_age_human_readable,
-                           infoname="Expires in")
+        yield check_levels(
+            time_to_expiration,
+            None,
+            (None, None, warn, crit),
+            human_readable_func=get_age_human_readable,
+            infoname="Expires in",
+        )
 
     for key in [
         ("subject"),

@@ -5,29 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _parameter_valuespec_oracle_rman():
-    return Dictionary(elements=[("levels",
-                                 Tuple(
-                                     title=_("Maximum Age for RMAN backups"),
-                                     elements=[
-                                         Age(title=_("warning if older than"), default_value=1800),
-                                         Age(title=_("critical if older than"), default_value=3600),
-                                     ],
-                                 ))],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Maximum Age for RMAN backups"),
+                    elements=[
+                        Age(title=_("warning if older than"), default_value=1800),
+                        Age(title=_("critical if older than"), default_value=3600),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_rman,
         title=lambda: _("Oracle RMAN Backups"),
-    ))
+    )
+)

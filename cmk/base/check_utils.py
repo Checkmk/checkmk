@@ -4,52 +4,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Final, Generic, Mapping, Optional, Tuple, TypeVar, Union
 
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
-from cmk.base.discovered_labels import DiscoveredServiceLabels
+from cmk.base.discovered_labels import ServiceLabel
 
 ServiceID = Tuple[CheckPluginName, Item]
-CheckTable = Dict[ServiceID, 'Service']
+CheckTable = Dict[ServiceID, "Service"]
 
 
-class Service:
-    __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
+_Params = TypeVar("_Params", bound=Union[LegacyCheckParameters, TimespecificParameters])
+
+
+class Service(Generic[_Params]):
+    __slots__ = ["check_plugin_name", "item", "description", "parameters", "service_labels"]
 
     def __init__(
         self,
         check_plugin_name: CheckPluginName,
         item: Item,
         description: str,
-        parameters: LegacyCheckParameters,
-        service_labels: Optional[DiscoveredServiceLabels] = None,
+        parameters: _Params,
+        service_labels: Optional[Mapping[str, ServiceLabel]] = None,
     ) -> None:
-        self._check_plugin_name = check_plugin_name
-        self._item = item
-        self._description = description
-        self._service_labels = service_labels or DiscoveredServiceLabels()
-        self._parameters = parameters
-
-    @property
-    def check_plugin_name(self) -> CheckPluginName:
-        return self._check_plugin_name
-
-    @property
-    def item(self) -> Item:
-        return self._item
-
-    @property
-    def description(self) -> str:
-        return self._description
-
-    @property
-    def parameters(self) -> LegacyCheckParameters:
-        return self._parameters
-
-    @property
-    def service_labels(self) -> DiscoveredServiceLabels:
-        return self._service_labels
+        self.check_plugin_name: Final = check_plugin_name
+        self.item: Final = item
+        self.description: Final = description
+        self.parameters: Final = parameters
+        self.service_labels: Final = service_labels or {}
 
     def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
@@ -62,8 +46,10 @@ class Service:
         """
         if not isinstance(other, Service):
             raise TypeError("Can only be compared with other Service objects")
-        return (self.check_plugin_name, self.item or "") < (other.check_plugin_name, other.item or
-                                                            "")
+        return (self.check_plugin_name, self.item or "") < (
+            other.check_plugin_name,
+            other.item or "",
+        )
 
     def __eq__(self, other: Any) -> bool:
         """Is used during service discovery list computation to detect and replace duplicates
@@ -79,20 +65,18 @@ class Service:
 
     def __repr__(self) -> str:
         return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_labels=%r)" % (
-            self._check_plugin_name, self._item, self._description, self._parameters,
-            self._service_labels)
-
-    def dump_autocheck(self) -> str:
-        return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (
-            str(self.check_plugin_name),
+            self.check_plugin_name,
             self.item,
+            self.description,
             self.parameters,
-            self.service_labels.to_dict(),
+            self.service_labels,
         )
 
 
-# Management board checks
-# These are only used in the legacy check_api.py and checking._legacy_mode.
-MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
+class AutocheckService(Service[LegacyCheckParameters]):
+    """Just a little bit more specific than any service
+
+    Autocheck services do not compute the effectice parameters, but only contain the discovered
+    ones.
+    More importantly: an general 'Service' instance may not be dumped into the autochecks file.
+    """

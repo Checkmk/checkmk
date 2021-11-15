@@ -14,9 +14,9 @@ You can find an introduction to services including service discovery in the
 import json
 from typing import List
 
-from cmk.gui import watolib
+from cmk.gui import fields, watolib
+from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.plugins.openapi.restful_objects.constructors import (
     collection_href,
@@ -25,7 +25,6 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
     object_property,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.utils import BaseSchema
 from cmk.gui.watolib.services import (
     checkbox_id,
     CheckTable,
@@ -52,7 +51,7 @@ SERVICE_DISCOVERY_PHASES = {
     "active_ignored": "active_ignored",
     "custom_ignored": "custom_ignored",
     "legacy": "legacy",
-    "legacy_ignored": "legacy_ignored"
+    "legacy_ignored": "legacy_ignored",
 }
 
 # param mode: can be one of "new", "remove", "fixall", "refresh", "only-host-labels"
@@ -65,32 +64,36 @@ DISCOVERY_ACTION = {
 }
 
 
-@Endpoint(collection_href("service", "services"),
-          '.../collection',
-          method='get',
-          response_schema=response_schemas.DomainObject,
-          tag_group='Setup',
-          query_params=[{
-              'host_name': fields.HostField(
-                  description='The host of the discovered services.',
-                  example='example.com',
-                  required=True,
-              ),
-              'discovery_phase': fields.String(
-                  description='The discovery phase of the services.',
-                  enum=sorted(SERVICE_DISCOVERY_PHASES.keys()),
-                  example='monitored',
-                  required=True,
-              ),
-          }])
+@Endpoint(
+    collection_href("service", "services"),
+    ".../collection",
+    method="get",
+    response_schema=response_schemas.DomainObject,
+    tag_group="Setup",
+    query_params=[
+        {
+            "host_name": fields.HostField(
+                description="The host of the discovered services.",
+                example="example.com",
+                required=True,
+            ),
+            "discovery_phase": fields.String(
+                description="The discovery phase of the services.",
+                enum=sorted(SERVICE_DISCOVERY_PHASES.keys()),
+                example="monitored",
+                required=True,
+            ),
+        }
+    ],
+)
 def show_services(params):
     """Show all services of specific phase"""
-    host = watolib.Host.host(params["host_name"])
+    host = watolib.Host.load_host(params["host_name"])
     discovery_request = StartDiscoveryRequest(
         host=host,
         folder=host.folder(),
         options=DiscoveryOptions(
-            action='',
+            action="",
             show_checkboxes=False,
             show_parameters=False,
             show_discovered_labels=False,
@@ -108,45 +111,49 @@ def show_services(params):
 
 class UpdateDiscoveryPhase(BaseSchema):
     check_type = fields.String(
-        description='The name of the check which this service uses.',
-        example='df',
+        description="The name of the check which this service uses.",
+        example="df",
         required=True,
     )
     service_item = fields.String(
-        description='The value uniquely identifying the service on a given host.',
-        example='/home',
+        description="The value uniquely identifying the service on a given host.",
+        example="/home",
         required=True,
     )
     target_phase = fields.String(
-        description='The target phase of the service.',
+        description="The target phase of the service.",
         enum=sorted(SERVICE_DISCOVERY_PHASES.keys()),
-        example='monitored',
+        example="monitored",
         required=True,
     )
 
 
-@Endpoint(constructors.object_action_href('host', '{host_name}', 'update_discovery_phase'),
-          '.../modify',
-          method='put',
-          output_empty=True,
-          tag_group='Setup',
-          path_params=[{
-              'host_name': fields.HostField(
-                  description='The host of the service which shall be updated.',
-                  example='example.com',
-              ),
-          }],
-          status_descriptions={
-              404: 'Host could not be found',
-          },
-          request_schema=UpdateDiscoveryPhase)
+@Endpoint(
+    constructors.object_action_href("host", "{host_name}", "update_discovery_phase"),
+    ".../modify",
+    method="put",
+    output_empty=True,
+    tag_group="Setup",
+    path_params=[
+        {
+            "host_name": fields.HostField(
+                description="The host of the service which shall be updated.",
+                example="example.com",
+            ),
+        }
+    ],
+    status_descriptions={
+        404: "Host could not be found",
+    },
+    request_schema=UpdateDiscoveryPhase,
+)
 def update_service_phase(params):
     """Update the phase of a service"""
-    body = params['body']
-    host = watolib.Host.host(params["host_name"])
+    body = params["body"]
+    host = watolib.Host.load_host(params["host_name"])
     target_phase = body["target_phase"]
-    check_type = body['check_type']
-    service_item = body['service_item']
+    check_type = body["check_type"]
+    service_item = body["service_item"]
     _update_single_service_phase(
         target_phase,
         host,
@@ -172,12 +179,14 @@ def _update_single_service_phase(
             show_plugin_names=False,
             ignore_errors=True,
         ),
-        request={
+        api_request={
             "update_target": target_phase,
-            "update_services": [checkbox_id(
-                check_type,
-                service_item,
-            )]
+            "update_services": [
+                checkbox_id(
+                    check_type,
+                    service_item,
+                )
+            ],
         },
     )
     discovery.execute_discovery()
@@ -185,27 +194,27 @@ def _update_single_service_phase(
 
 class DiscoverServices(BaseSchema):
     mode = fields.String(
-        description='''The mode of the discovery action. Can be one of:
+        description="""The mode of the discovery action. Can be one of:
 
  * `new` - Add unmonitored services and new host labels
  * `remove` - Remove vanished services
  * `fix_all` - Add unmonitored services and new host labels, remove vanished services
  * `refresh` - Refresh all services (tabula rasa), add new host labels
  * `only_host_labels` - Only discover new host labels
-''',
+""",
         enum=list(DISCOVERY_ACTION.keys()),
-        example='refresh',
-        missing='fix_all',
+        example="refresh",
+        missing="fix_all",
     )
 
 
 @Endpoint(
-    constructors.object_action_href('host', '{host_name}', 'discover_services'),
-    '.../update',
-    method='post',
-    tag_group='Setup',
+    constructors.object_action_href("host", "{host_name}", "discover_services"),
+    ".../update",
+    method="post",
+    tag_group="Setup",
     status_descriptions={
-        404: 'Host could not be found',
+        404: "Host could not be found",
     },
     path_params=[HOST_NAME],
     request_schema=DiscoverServices,
@@ -213,8 +222,8 @@ class DiscoverServices(BaseSchema):
 )
 def execute(params):
     """Execute a service discovery on a host"""
-    host = watolib.Host.host(params["host_name"])
-    body = params['body']
+    host = watolib.Host.load_host(params["host_name"])
+    body = params["body"]
     discovery_request = StartDiscoveryRequest(
         host=host,
         folder=host.folder(),
@@ -242,9 +251,10 @@ def _serve_services(
 ):
     response = Response()
     response.set_data(
-        json.dumps(serialize_service_discovery(host, discovered_services, discovery_phases)))
+        json.dumps(serialize_service_discovery(host, discovered_services, discovery_phases))
+    )
 
-    response.set_content_type('application/json')
+    response.set_content_type("application/json")
     return response
 
 
@@ -271,15 +281,27 @@ def serialize_service_discovery(
     members = {}
     host_name = host.name()
     for entry in discovered_services:
-        (table_source, check_type, _checkgroup, item, _discovered_params, _check_params, descr,
-         _service_phase, _output, _perfdata, _service_labels, _found_on_nodes) = entry
+        (
+            table_source,
+            check_type,
+            _checkgroup,
+            item,
+            _discovered_params,
+            _check_params,
+            descr,
+            _service_phase,
+            _output,
+            _perfdata,
+            _service_labels,
+            _found_on_nodes,
+        ) = entry
         if _in_phase(table_source, discovery_phases):
             service_phase = _lookup_phase_name(table_source)
             members[f"{check_type}-{item}"] = object_property(
                 name=descr,
                 title=f"The service is currently {service_phase!r}",
                 value=service_phase,
-                prop_format='string',
+                prop_format="string",
                 linkable=False,
                 extensions={
                     "host_name": host_name,
@@ -288,48 +310,48 @@ def serialize_service_discovery(
                     "service_item": item,
                     "service_phase": service_phase,
                 },
-                base='',
+                base="",
                 links=[
                     link_rel(
                         rel="cmk/service.move-monitored",
                         href=update_service_phase.path.format(host_name=host_name),
                         body_params={
-                            'target_phase': 'monitored',
-                            'check_type': check_type,
-                            'service_item': item,
+                            "target_phase": "monitored",
+                            "check_type": check_type,
+                            "service_item": item,
                         },
-                        method='put',
-                        title='Move the service to monitored',
+                        method="put",
+                        title="Move the service to monitored",
                     ),
                     link_rel(
                         rel="cmk/service.move-undecided",
                         href=update_service_phase.path.format(host_name=host_name),
                         body_params={
-                            'target_phase': 'undecided',
-                            'check_type': check_type,
-                            'service_item': item,
+                            "target_phase": "undecided",
+                            "check_type": check_type,
+                            "service_item": item,
                         },
-                        method='put',
-                        title='Move the service to undecided',
+                        method="put",
+                        title="Move the service to undecided",
                     ),
                     link_rel(
                         rel="cmk/service.move-ignored",
                         href=update_service_phase.path.format(host_name=host_name),
                         body_params={
-                            'target_phase': 'ignored',
-                            'check_type': check_type,
-                            'service_item': item,
+                            "target_phase": "ignored",
+                            "check_type": check_type,
+                            "service_item": item,
                         },
-                        method='put',
-                        title='Move the service to ignored',
+                        method="put",
+                        title="Move the service to ignored",
                     ),
                 ],
             )
 
     return domain_object(
-        domain_type='service_discovery',
-        identifier=f'{host_name}-services-wato',
-        title='Services discovery',
+        domain_type="service_discovery",
+        identifier=f"{host_name}-services-wato",
+        title="Services discovery",
         members=members,
         editable=False,
         deletable=False,

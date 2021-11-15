@@ -9,6 +9,6 @@ description:
  These problems are shown as warnings in the plugin output. A WATO rule allows you
  to down- or upgrade this warning to a different state.
 
-inventory:
+discovery:
   One service is created.
 

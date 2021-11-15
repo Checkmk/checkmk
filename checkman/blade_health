@@ -8,5 +8,5 @@ description:
  It's just one simple check saying OK, WARN or CRIT and does not
  show any details.
 
-inventory:
+discovery:
  One service is created for each blade center.

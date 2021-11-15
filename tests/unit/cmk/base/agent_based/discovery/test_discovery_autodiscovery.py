@@ -33,17 +33,17 @@ class TestAutodiscoveryQueue:
         assert not list(autodiscovery_queue.queued_hosts())
 
     def test_queued_populated(self, autodiscovery_queue, monkeypatch):
-        assert set(autodiscovery_queue.queued_hosts()) == {'most', 'lost'}
+        assert set(autodiscovery_queue.queued_hosts()) == {"most", "lost"}
 
     def test_add(self, autodiscovery_queue, monkeypatch):
         autodiscovery_queue = discovery._AutodiscoveryQueue()
         autodiscovery_queue.add("most")
-        assert list(autodiscovery_queue.queued_hosts()) == ['most']
+        assert list(autodiscovery_queue.queued_hosts()) == ["most"]
 
     def test_remove(self, autodiscovery_queue, monkeypatch):
         autodiscovery_queue.remove("lost")
-        assert list(autodiscovery_queue.queued_hosts()) == ['most']
+        assert list(autodiscovery_queue.queued_hosts()) == ["most"]
 
     def test_cleanup(self, autodiscovery_queue):
         autodiscovery_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)
-        assert list(autodiscovery_queue.queued_hosts()) == ['lost']
+        assert list(autodiscovery_queue.queued_hosts()) == ["lost"]

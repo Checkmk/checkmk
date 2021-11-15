@@ -6,8 +6,9 @@
 
 from __future__ import annotations
 
+import copy
 import logging
-from typing import Any, Dict, Final, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -21,13 +22,7 @@ from six import ensure_binary
 
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import (
-    AgentRawData,
-    HostAddress,
-    SectionName,
-    ServiceDetails,
-    ServiceState,
-)
+from cmk.utils.type_defs import AgentRawData, HostAddress, SectionName, ServiceDetails, ServiceState
 
 from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, DefaultAgentFileCache
 from .type_defs import Mode
@@ -43,6 +38,7 @@ class IPMIFetcher(AgentFetcher):
         here as well.
 
     """
+
     def __init__(
         self,
         file_cache: DefaultAgentFileCache,
@@ -58,21 +54,28 @@ class IPMIFetcher(AgentFetcher):
         self._command: Optional[ipmi_cmd.Command] = None
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{type(self.file_cache).__name__}",
-            f"address={self.address!r}",
-            f"username={self.username!r}",
-            f"password={self.password!r}",
-        )) + ")"
-
-    @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> IPMIFetcher:
-        return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            **serialized,
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"address={self.address!r}",
+                    f"username={self.username!r}",
+                    f"password={self.password!r}",
+                )
+            )
+            + ")"
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> IPMIFetcher:
+        serialized_ = copy.deepcopy(dict(serialized))
+        return cls(
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            **serialized_,
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "address": self.address,
@@ -95,6 +98,7 @@ class IPMIFetcher(AgentFetcher):
 
         # Performance: See header.
         import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
+
         try:
             self._command = ipmi_cmd.Command(
                 bmc=self.address,
@@ -120,6 +124,7 @@ class IPMIFetcher(AgentFetcher):
         # We also don't want to reuse sockets or other things from previous calls.
 
         import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import]
+
         ipmi_session.iothread.join()
         ipmi_session.iothread = None
         ipmi_session.iothreadready = False
@@ -148,6 +153,7 @@ class IPMIFetcher(AgentFetcher):
 
         # Performance: See header.
         import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
+
         try:
             sdr = ipmi_sdr.SDR(self._command)
         except NotImplementedError as e:
@@ -159,14 +165,13 @@ class IPMIFetcher(AgentFetcher):
         has_no_gpu = not self._has_gpu()
         for ident in sdr.get_sensor_numbers():
             sensor = sdr.sensors[ident]
-            rsp = self._command.raw_command(command=0x2d,
-                                            netfn=4,
-                                            rslun=sensor.sensor_lun,
-                                            data=(sensor.sensor_number,))
-            if 'error' in rsp:
+            rsp = self._command.raw_command(
+                command=0x2D, netfn=4, rslun=sensor.sensor_lun, data=(sensor.sensor_number,)
+            )
+            if "error" in rsp:
                 continue
 
-            reading = sensor.decode_sensor_reading(rsp['data'])
+            reading = sensor.decode_sensor_reading(rsp["data"])
             if reading is not None:
                 # sometimes (wrong) data for GPU sensors is reported, even if
                 # not installed
@@ -174,8 +179,10 @@ class IPMIFetcher(AgentFetcher):
                     continue
                 sensors.append(self._parse_sensor_reading(sensor.sensor_number, reading))
 
-        return AgentRawData(b"<<<ipmi_sensors:sep(124)>>>\n" +
-                            b"".join(b"|".join(sensor) + b"\n" for sensor in sensors))
+        return AgentRawData(
+            b"<<<ipmi_sensors:sep(124)>>>\n"
+            + b"".join(b"|".join(sensor) + b"\n" for sensor in sensors)
+        )
 
     def _firmware_section(self) -> AgentRawData:
         if self._command is None:
@@ -214,8 +221,9 @@ class IPMIFetcher(AgentFetcher):
 
         return any("GPU" in line for line in inventory_entries)
 
-    def _parse_sensor_reading(self, number: int,
-                              reading: ipmi_sdr.SensorReading) -> List[AgentRawData]:
+    def _parse_sensor_reading(
+        self, number: int, reading: ipmi_sdr.SensorReading
+    ) -> List[AgentRawData]:
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
@@ -229,9 +237,10 @@ class IPMIFetcher(AgentFetcher):
             health_txt = self._handle_false_positive_warnings(reading)
         elif reading.health == ipmi_const.Health.Ok:
             health_txt = b"OK"
-
+        # ? would that be correct: SensorReading.name:str, SensorReading.type:str, SensorReading.units: bytes/str ?
         return [
-            AgentRawData(_) for _ in (
+            AgentRawData(_)
+            for _ in (
                 b"%d" % number,
                 ensure_binary(reading.name),
                 ensure_binary(reading.type),
@@ -269,7 +278,7 @@ class IPMIFetcher(AgentFetcher):
         # just keep all the available info. It should be dealt with in
         # ipmi_sensors.include (freeipmi_status_txt_mapping),
         # where it will default to 2(CRIT)
-        return AgentRawData(b', '.join(states))
+        return AgentRawData(b", ".join(states))
 
 
 class IPMISummarizer(AgentSummarizer):

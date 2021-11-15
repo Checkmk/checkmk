@@ -13,5 +13,5 @@ description:
 item:
  Name of the virtual disk
 
-inventory:
+discovery:
  One service is created.

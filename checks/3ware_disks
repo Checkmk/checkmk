@@ -35,7 +35,7 @@ def inventory_3ware_disks(info):
     inventory = []
     for line in info:
         if len(line) > 0:
-            if line[1] == 'NOT-PRESENT':
+            if line[1] == "NOT-PRESENT":
                 continue
             disk = line[0]
             inventory.append((disk, None))
@@ -53,8 +53,14 @@ def check_3ware_disks(item, _no_params, info):
         size_type = line[4]
         disk_type = line[5]
         model = line[-1]
-        infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % \
-                   (status, unit_type, size, size_type, disk_type, model)
+        infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % (
+            status,
+            unit_type,
+            size,
+            size_type,
+            disk_type,
+            model,
+        )
         if status in ["OK", "VERIFYING"]:
             return (0, "disk status is " + infotext)
         if status in ["SMART_FAILURE"]:
@@ -67,8 +73,8 @@ def check_3ware_disks(item, _no_params, info):
 # declare the check to Checkmk
 
 check_info["3ware_disks"] = {
-    'check_function': check_3ware_disks,
-    'inventory_function': inventory_3ware_disks,
-    'service_description': 'RAID 3ware disk %s',
-    'group': 'raid_disk',
+    "check_function": check_3ware_disks,
+    "inventory_function": inventory_3ware_disks,
+    "service_description": "RAID 3ware disk %s",
+    "group": "raid_disk",
 }

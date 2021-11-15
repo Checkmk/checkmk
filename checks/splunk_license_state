@@ -11,14 +11,17 @@
 
 # expiration_time default is warn/crit 14d/7d
 
-SplunkLicenseState = collections.namedtuple("lcs", [
-    "max_violations",
-    "window_period",
-    "quota",
-    "expiration_time",
-    "time_to_expiration",
-    "status",
-])
+SplunkLicenseState = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "lcs",
+    [
+        "max_violations",
+        "window_period",
+        "quota",
+        "expiration_time",
+        "time_to_expiration",
+        "status",
+    ],
+)
 
 
 def parse_splunk_license_state(info):
@@ -30,10 +33,15 @@ def parse_splunk_license_state(info):
 
             time_to_expiration = float(expiration_time) - time.time()
             parsed.setdefault(label, []).append(
-                SplunkLicenseState(max_violations, window_period,
-                                   get_bytes_human_readable(int(quota)),
-                                   get_timestamp_human_readable(int(expiration_time)),
-                                   time_to_expiration, status))
+                SplunkLicenseState(
+                    max_violations,
+                    window_period,
+                    get_bytes_human_readable(int(quota)),
+                    get_timestamp_human_readable(int(expiration_time)),
+                    time_to_expiration,
+                    status,
+                )
+            )
 
         except (IndexError, ValueError):
             pass
@@ -69,14 +77,19 @@ def check_splunk_license_state(item, params, item_data):
             state = 1
 
         if state != 0:
-            infotext += " (expires in %s - Warn/Crit at %s/%s)" % (get_age_human_readable(
-                data.time_to_expiration), get_age_human_readable(warn),
-                                                                   get_age_human_readable(crit))
+            infotext += " (expires in %s - Warn/Crit at %s/%s)" % (
+                get_age_human_readable(data.time_to_expiration),
+                get_age_human_readable(warn),
+                get_age_human_readable(crit),
+            )
 
         yield state, infotext
 
     yield 0, "Max violations: %s within window period of %s Days, Quota: %s" % (
-        data.max_violations, data.window_period, data.quota)
+        data.max_violations,
+        data.window_period,
+        data.quota,
+    )
 
 
 check_info["splunk_license_state"] = {

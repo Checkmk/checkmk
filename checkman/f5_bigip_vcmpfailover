@@ -9,7 +9,7 @@ description:
  You can configure the expected behaviour via a WATO rule.
  It will issue a warning if the cluster setup differs from the expected setup.
 
-inventory:
+discovery:
  One service is created.
 
 cluster:

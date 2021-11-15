@@ -11,6 +11,6 @@ description:
 item:
  Index of power module
 
-inventory:
+discovery:
  One service is created for each power module.
 

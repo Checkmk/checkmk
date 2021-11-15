@@ -4,12 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextInput, Integer, MonitoredHostname, MonitoredServiceDescription
+from typing import List, Tuple
 
-from cmk.gui.plugins.visuals import (
-    VisualInfo,
-    visual_info_registry,
+from cmk.gui.i18n import _
+from cmk.gui.plugins.visuals import visual_info_registry, VisualInfo
+from cmk.gui.valuespec import (
+    Integer,
+    MonitoredHostname,
+    MonitoredServiceDescription,
+    TextInput,
+    ValueSpec,
 )
 
 
@@ -28,8 +32,8 @@ class VisualInfoHost(VisualInfo):
         return _("Hosts")
 
     @property
-    def single_spec(self):
-        return [('host', MonitoredHostname(title=_('Hostname'), strict="True"))]
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [("host", MonitoredHostname(title=_("Hostname"), strict="True"))]
 
     @property
     def multiple_site_filters(self):
@@ -55,9 +59,10 @@ class VisualInfoService(VisualInfo):
         return _("Services")
 
     @property
-    def single_spec(self):
-        return [('service',
-                 MonitoredServiceDescription(title=_('Service Description'), strict="True"))]
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [
+            ("service", MonitoredServiceDescription(title=_("Service Description"), strict="True"))
+        ]
 
     @property
     def multiple_site_filters(self):
@@ -83,8 +88,15 @@ class VisualInfoHostgroup(VisualInfo):
         return _("Host Groups")
 
     @property
-    def single_spec(self):
-        return [('hostgroup', TextInput(title=_('Host Group Name'),))]
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return [
+            (
+                "hostgroup",
+                TextInput(
+                    title=_("Host Group Name"),
+                ),
+            )
+        ]
 
     @property
     def single_site(self):
@@ -110,9 +122,14 @@ class VisualInfoServicegroup(VisualInfo):
         return _("Service Groups")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('servicegroup', TextInput(title=_('Service Group Name'),)),
+            (
+                "servicegroup",
+                TextInput(
+                    title=_("Service Group Name"),
+                ),
+            ),
         ]
 
     @property
@@ -132,15 +149,15 @@ class VisualInfoLog(VisualInfo):
 
     @property
     def title(self):
-        return _('Log Entry')
+        return _("Log Entry")
 
     @property
     def title_plural(self):
-        return _('Log Entries')
+        return _("Log Entries")
 
     @property
-    def single_spec(self):
-        return
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return []
 
 
 @visual_info_registry.register
@@ -151,16 +168,21 @@ class VisualInfoComment(VisualInfo):
 
     @property
     def title(self):
-        return _('Comment')
+        return _("Comment")
 
     @property
     def title_plural(self):
-        return _('Comments')
+        return _("Comments")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('comment_id', Integer(title=_('Comment ID'),)),
+            (
+                "comment_id",
+                Integer(
+                    title=_("Comment ID"),
+                ),
+            ),
         ]
 
 
@@ -172,16 +194,21 @@ class VisualInfoDowntime(VisualInfo):
 
     @property
     def title(self):
-        return _('Downtime')
+        return _("Downtime")
 
     @property
     def title_plural(self):
-        return _('Downtimes')
+        return _("Downtimes")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('downtime_id', Integer(title=_('Downtime ID'),)),
+            (
+                "downtime_id",
+                Integer(
+                    title=_("Downtime ID"),
+                ),
+            ),
         ]
 
 
@@ -193,16 +220,21 @@ class VisualInfoContact(VisualInfo):
 
     @property
     def title(self):
-        return _('Contact')
+        return _("Contact")
 
     @property
     def title_plural(self):
-        return _('Contacts')
+        return _("Contacts")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('log_contact_name', TextInput(title=_('Contact Name'),)),
+            (
+                "log_contact_name",
+                TextInput(
+                    title=_("Contact Name"),
+                ),
+            ),
         ]
 
 
@@ -214,16 +246,21 @@ class VisualInfoCommand(VisualInfo):
 
     @property
     def title(self):
-        return _('Command')
+        return _("Command")
 
     @property
     def title_plural(self):
-        return _('Commands')
+        return _("Commands")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('command_name', TextInput(title=_('Command Name'),)),
+            (
+                "command_name",
+                TextInput(
+                    title=_("Command Name"),
+                ),
+            ),
         ]
 
 
@@ -235,16 +272,21 @@ class VisualInfoBIAggregation(VisualInfo):
 
     @property
     def title(self):
-        return _('BI Aggregation')
+        return _("BI Aggregation")
 
     @property
     def title_plural(self):
-        return _('BI Aggregations')
+        return _("BI Aggregations")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('aggr_name', TextInput(title=_('Aggregation Name'),)),
+            (
+                "aggr_name",
+                TextInput(
+                    title=_("Aggregation Name"),
+                ),
+            ),
         ]
 
     @property
@@ -260,16 +302,21 @@ class VisualInfoBIAggregationGroup(VisualInfo):
 
     @property
     def title(self):
-        return _('BI Aggregation Group')
+        return _("BI Aggregation Group")
 
     @property
     def title_plural(self):
-        return _('BI Aggregation Groups')
+        return _("BI Aggregation Groups")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('aggr_group', TextInput(title=_('Aggregation group'),)),
+            (
+                "aggr_group",
+                TextInput(
+                    title=_("Aggregation group"),
+                ),
+            ),
         ]
 
     @property
@@ -285,15 +332,15 @@ class VisualInfoDiscovery(VisualInfo):
 
     @property
     def title(self):
-        return _('Discovery Output')
+        return _("Discovery Output")
 
     @property
     def title_plural(self):
-        return _('Discovery Outputs')
+        return _("Discovery Outputs")
 
     @property
-    def single_spec(self):
-        return None
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return []
 
 
 @visual_info_registry.register
@@ -304,16 +351,21 @@ class VisualInfoEvent(VisualInfo):
 
     @property
     def title(self):
-        return _('Event Console Event')
+        return _("Event Console Event")
 
     @property
     def title_plural(self):
-        return _('Event Console Events')
+        return _("Event Console Events")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('event_id', Integer(title=_('Event ID'),)),
+            (
+                "event_id",
+                Integer(
+                    title=_("Event ID"),
+                ),
+            ),
         ]
 
 
@@ -325,17 +377,27 @@ class VisualInfoEventHistory(VisualInfo):
 
     @property
     def title(self):
-        return _('Historic Event Console Event')
+        return _("Historic Event Console Event")
 
     @property
     def title_plural(self):
-        return _('Historic Event Console Events')
+        return _("Historic Event Console Events")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('event_id', Integer(title=_('Event ID'),)),
-            ('history_line', Integer(title=_('History Line Number'),)),
+            (
+                "event_id",
+                Integer(
+                    title=_("Event ID"),
+                ),
+            ),
+            (
+                "history_line",
+                Integer(
+                    title=_("History Line Number"),
+                ),
+            ),
         ]
 
 
@@ -347,14 +409,19 @@ class VisualInfoCrash(VisualInfo):
 
     @property
     def title(self):
-        return _('Crash report')
+        return _("Crash report")
 
     @property
     def title_plural(self):
-        return _('Crash reports')
+        return _("Crash reports")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
-            ('crash_id', TextInput(title=_('Crash ID'),)),
+            (
+                "crash_id",
+                TextInput(
+                    title=_("Crash ID"),
+                ),
+            ),
         ]

@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import signal
-import pytest  # type: ignore[import]
+import time
+
+import pytest
 from werkzeug.test import create_environ
 
-from cmk.gui.wsgi.applications.checkmk import CheckmkApp
-from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.globals import timeout_manager, request
 from cmk.gui.exceptions import RequestTimeout
+from cmk.gui.globals import request, timeout_manager
+from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 
 
 class CheckmkTestApp(CheckmkApp):

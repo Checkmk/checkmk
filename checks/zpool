@@ -9,11 +9,14 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
+
 # NAME    SIZE  ALLOC   FREE  CAP  HEALTH  ALTROOT
 # app02  39.8G  14.1G  25.6G  35%  ONLINE  -
 # rpool  39.8G  32.9G  6.81G  82%  ONLINE  -
@@ -42,7 +45,7 @@ def parse_zpool(info):
 
 
 def inventory_zpool(parsed):
-    return df_inventory(list(parsed))
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), list(parsed))
 
 
 def check_zpool(item, params, parsed):
@@ -56,17 +59,17 @@ def check_zpool(item, params, parsed):
         unit = val[idx:].lstrip().lower()
         unit = ["b", "k", "m", "g", "t", "p"].index(unit)
 
-        return num * (1024**(unit - 2))
+        return num * (1024 ** (unit - 2))
 
     fslist = []
     for pool, entry in parsed.items():
         if "patterns" in params or item == pool:
-            fslist.append((pool, mb(entry['size']), mb(entry['free']), 0))
+            fslist.append((pool, mb(entry["size"]), mb(entry["free"]), 0))
 
     return df_check_filesystem_list(item, params, fslist)
 
 
-check_info['zpool'] = {
+check_info["zpool"] = {
     "check_function": check_zpool,
     "inventory_function": inventory_zpool,
     "parse_function": parse_zpool,

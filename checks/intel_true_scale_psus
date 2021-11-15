@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.intel_true_scale import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.2.1 Power Supply 201 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.2.1
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.3.2 Power Supply 202 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.3.2
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.4.3 Power Supply 203 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.4.3
@@ -60,12 +62,14 @@ def parse_intel_true_scale_psus(info):
         name = descr.replace("Power Supply", "").strip()
 
         parsed.setdefault(
-            name, {
+            name,
+            {
                 "voltage": float(voltage_str),
                 "power": float(power_str),
                 "state": map_states[operstate],
-                "source": map_sources[source]
-            })
+                "source": map_sources[source],
+            },
+        )
 
     return parsed
 
@@ -79,19 +83,18 @@ def inventory_intel_true_scale_psus(parsed):
 def check_intel_true_scale_psus(item, params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
-        yield state, "Operational status: %s, Source: %s" % \
-                     (state_readable, parsed[item]["source"])
+        yield state, "Operational status: %s, Source: %s" % (state_readable, parsed[item]["source"])
 
         for res in check_elphase(item, params, parsed):
             yield res
 
 
-check_info['intel_true_scale_psus'] = {
-    'parse_function': parse_intel_true_scale_psus,
-    'inventory_function': inventory_intel_true_scale_psus,
-    'check_function': check_intel_true_scale_psus,
-    'service_description': 'Power supply %s',
-    'snmp_info': (
+check_info["intel_true_scale_psus"] = {
+    "parse_function": parse_intel_true_scale_psus,
+    "inventory_function": inventory_intel_true_scale_psus,
+    "check_function": check_intel_true_scale_psus,
+    "service_description": "Power supply %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.10222.2.1.4.7.1",
         [
             "2",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription
@@ -99,7 +102,8 @@ check_info['intel_true_scale_psus'] = {
             "4",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyInputSource
             "5",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyVoltage
             "6",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyOutputPower
-        ]),
-    'snmp_scan_function': scan_intel_true_scale,
-    'group': 'el_inphase',
+        ],
+    ),
+    "snmp_scan_function": scan_intel_true_scale,
+    "group": "el_inphase",
 }

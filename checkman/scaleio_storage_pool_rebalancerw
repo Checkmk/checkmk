@@ -11,5 +11,5 @@ description:
 item:
  The SP id
 
-inventory:
+discovery:
  One service is created for each SP.

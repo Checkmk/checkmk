@@ -6,18 +6,14 @@
 
 from typing import Dict
 
+from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 
 def parse_sap_hana_db_status(string_table: StringTable) -> Dict[str, str]:
     return {
-        sid_instance: lines[0][0]
+        sid_instance: lines[0][0] if lines else ""
         for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items()
     }
 
@@ -35,8 +31,9 @@ def discovery_sap_hana_db_status(section: sap_hana.ParsedSection) -> DiscoveryRe
 
 def check_sap_hana_db_status(item: str, section: Dict[str, str]) -> CheckResult:
     db_status = section.get(item)
-    if db_status is None:
-        return
+
+    if not db_status:
+        raise IgnoreResultsError("Login into database failed.")
 
     state = State.OK if db_status == "OK" else State.CRIT
     yield Result(state=state, summary=db_status)
@@ -47,5 +44,4 @@ register.check_plugin(
     service_name="SAP HANA Database Status %s",
     discovery_function=discovery_sap_hana_db_status,
     check_function=check_sap_hana_db_status,
-    cluster_check_function=sap_hana.get_cluster_check(check_sap_hana_db_status),
 )

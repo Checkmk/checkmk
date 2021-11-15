@@ -12,7 +12,7 @@ description:
  agent based check {mem.used}. Please refer to the man page
  of that check for details.
 
-inventory:
+discovery:
  One service is created for the target host if the needed information
  is available via SNMP.
 

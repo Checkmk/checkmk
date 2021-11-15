@@ -11,5 +11,5 @@ description:
  FortiAuthenticator Authentication Failures"). The default levels are 100,
  200 failures.
 
-inventory:
+discovery:
  One service is created per FortiAuthenticator device.

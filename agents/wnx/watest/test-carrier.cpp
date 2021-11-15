@@ -16,6 +16,10 @@
 using namespace std::chrono_literals;
 
 namespace cma::carrier {
+
+
+TEST(CarrierTest, NoMaiSlotTracing) { EXPECT_FALSE(IsMailApiTraced()); }
+
 class CarrierTestFixture : public ::testing::Test {
 protected:
     struct TestStorage {

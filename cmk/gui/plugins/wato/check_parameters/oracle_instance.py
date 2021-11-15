@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Transform,
-    Dictionary,
-    MonitoringState,
-    TextInput,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput, Transform
 
 
 def _oracle_instance_transform_oracle_instance_params(p):
@@ -30,52 +24,56 @@ def _oracle_instance_transform_oracle_instance_params(p):
 
 
 def _parameter_valuespec_oracle_instance():
-    return Transform(Dictionary(
-        title=_("Consider state of Archivelogmode: "),
-        elements=[
-            ('archivelog',
-             MonitoringState(
-                 default_value=0,
-                 title=_("State in case of Archivelogmode is enabled: "),
-             )),
-            (
-                'noarchivelog',
-                MonitoringState(
-                    default_value=1,
-                    title=_("State in case of Archivelogmode is disabled: "),
+    return Transform(
+        Dictionary(
+            title=_("Consider state of Archivelogmode: "),
+            elements=[
+                (
+                    "archivelog",
+                    MonitoringState(
+                        default_value=0,
+                        title=_("State in case of Archivelogmode is enabled: "),
+                    ),
                 ),
-            ),
-            (
-                'forcelogging',
-                MonitoringState(
-                    default_value=0,
-                    title=_("State in case of Force Logging is enabled: "),
+                (
+                    "noarchivelog",
+                    MonitoringState(
+                        default_value=1,
+                        title=_("State in case of Archivelogmode is disabled: "),
+                    ),
                 ),
-            ),
-            (
-                'noforcelogging',
-                MonitoringState(
-                    default_value=1,
-                    title=_("State in case of Force Logging is disabled: "),
+                (
+                    "forcelogging",
+                    MonitoringState(
+                        default_value=0,
+                        title=_("State in case of Force Logging is enabled: "),
+                    ),
                 ),
-            ),
-            (
-                'logins',
-                MonitoringState(
-                    default_value=2,
-                    title=_("State in case of logins are not possible: "),
+                (
+                    "noforcelogging",
+                    MonitoringState(
+                        default_value=1,
+                        title=_("State in case of Force Logging is disabled: "),
+                    ),
                 ),
-            ),
-            (
-                'primarynotopen',
-                MonitoringState(
-                    default_value=2,
-                    title=_("State in case of Database is PRIMARY and not OPEN: "),
+                (
+                    "logins",
+                    MonitoringState(
+                        default_value=2,
+                        title=_("State in case of logins are not possible: "),
+                    ),
                 ),
-            ),
-        ],
-    ),
-                     forth=_oracle_instance_transform_oracle_instance_params)
+                (
+                    "primarynotopen",
+                    MonitoringState(
+                        default_value=2,
+                        title=_("State in case of Database is PRIMARY and not OPEN: "),
+                    ),
+                ),
+            ],
+        ),
+        forth=_oracle_instance_transform_oracle_instance_params,
+    )
 
 
 rulespec_registry.register(
@@ -86,4 +84,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_instance,
         title=lambda: _("Oracle Instance"),
-    ))
+    )
+)

@@ -10,5 +10,5 @@ description:
 item:
  The appliance's host name.
 
-inventory:
+discovery:
  One service per appliance is created.

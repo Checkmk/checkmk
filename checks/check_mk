@@ -19,7 +19,9 @@ check_mk_only_from_default = None
 
 
 def check_only_from(_no_item, _no_params, _no_info):
-    return 3, '''This has been included in the service "Check_MK" (see long output for details).
+    return (
+        3,
+        """This has been included in the service "Check_MK" (see long output for details).
 The functionality of this service has been incorporated in the "Check_MK" service.
  The corresponding global config option "check_mk_only_from_default"
  will no longer work; please remove it from your main.mk file if
@@ -28,16 +30,17 @@ The functionality of this service has been incorporated in the "Check_MK" servic
  ruleset "Allowed IP addresses for agent access" - the same rule that
  will be used for the agent bakery (if available).
  The check state will be displayed as part of the "Check_MK" sercice.
-'''
+""",
+    )
 
 
 check_info["check_mk.only_from"] = {
-    'check_function': check_only_from,
-    'inventory_function': lambda info: [],
-    'service_description': 'Check_MK Agent Access',
+    "check_function": check_only_from,
+    "inventory_function": lambda info: [],
+    "service_description": "Check_MK Agent Access",
 }
 
-#.
+# .
 #   .--agent_update--------------------------------------------------------.
 #   |                           _                      _       _           |
 #   |     __ _  __ _  ___ _ __ | |_    _   _ _ __   __| | __ _| |_ ___     |
@@ -54,8 +57,10 @@ check_info["check_mk.only_from"] = {
 
 def _get_error_deployment_globally_disabled_state(params, error_text):
     default_state = 1
-    if error_text == "Agent Bakery: Agent deployment is currently globally disabled on the " \
-                     "deployment server.":
+    if (
+        error_text == "Agent Bakery: Agent deployment is currently globally disabled on the "
+        "deployment server."
+    ):
         return params.get("error_deployment_globally_disabled", default_state)
     return default_state
 
@@ -106,7 +111,8 @@ def check_cmk_agent_update(_no_item, params, info):
             else:
                 levels_text = ""
             yield state, "Last update check: " + get_timestamp_human_readable(
-                parsed["last_check"]) + levels_text
+                parsed["last_check"]
+            ) + levels_text
         except Exception:
             yield 1, "No successful connect to server yet"
 
@@ -128,8 +134,8 @@ def check_cmk_agent_update(_no_item, params, info):
 
 
 check_info["check_mk.agent_update"] = {
-    'check_function': check_cmk_agent_update,
-    'inventory_function': inventory_cmk_agent_update,
-    'service_description': 'Check_MK Agent',
-    'group': 'agent_update',
+    "check_function": check_cmk_agent_update,
+    "inventory_function": inventory_cmk_agent_update,
+    "service_description": "Check_MK Agent",
+    "group": "agent_update",
 }

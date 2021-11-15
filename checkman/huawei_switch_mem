@@ -14,5 +14,5 @@ description:
 item:
  The stack member number and the entity number seperated by a {{/}}
 
-inventory:
+discovery:
  One service is created for each stack member.

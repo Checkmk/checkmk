@@ -5,31 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_hw_psu():
-    return Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("PSU Capacity Levels"),
-             elements=[
-                 Percentage(title=_("Warning at"), default_value=80.0),
-                 Percentage(title=_("Critical at"), default_value=90.0),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("PSU Capacity Levels"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=80.0),
+                        Percentage(title=_("Critical at"), default_value=90.0),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -40,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hw_psu,
         title=lambda: _("Power Supply Unit"),
-    ))
+    )
+)

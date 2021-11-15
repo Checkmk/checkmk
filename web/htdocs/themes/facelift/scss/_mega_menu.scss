@@ -3,27 +3,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#side_footer {
-  height: auto;
-  padding: 0;
-  border-top: none;
-
-  div.copyright {
-    float: left;
-  }
-
-  div.copyright a {
-    font-weight: normal;
-    color: #808080;
-    text-transform: none;
-  }
-
-  div.username {
-    color: #808080;
-    text-align: right;
-  }
-}
-
 #main_menu {
   display: flex;
   flex-direction: column;
@@ -44,7 +23,7 @@
 
   #mk_side_search_monitoring,
   #mk_side_search_setup {
-    max-width: 250px;
+    width: 250px;
     padding: (2 * $spacing) 0 (2 * $spacing) (2 * $spacing);
     box-sizing: border-box;
 
@@ -62,6 +41,7 @@
     }
 
     input[type="text"] {
+      width: 175px;
       padding: 6px 0 6px $spacing;
       background: transparent;
       box-shadow: none;
@@ -113,7 +93,7 @@
       background-color: $popup-trigger-active-bg-color;
 
       a.popup_trigger {
-        color: $success;
+        color: $font-color-green;
 
         img:not(.active) {
           display: none;
@@ -160,9 +140,9 @@
       #messages_link_to {
         &:not(:empty) {
           padding: 2px 5px;
-          color: $white;
+          color: $font-color-white;
           white-space: nowrap;
-          background-color: $danger;
+          background-color: $color-state-2-background;
           border-radius: $theme-border-radius;
         }
       }
@@ -173,7 +153,7 @@
       padding: $spacing 0;
       margin: auto $spacing auto 0;
       line-height: 130%;
-      color: rgba($font-color, 0.7);
+      color: $font-color-dimmed;
       text-align: right;
     }
 
@@ -183,6 +163,7 @@
       bottom: 0;
       left: 64px;
       z-index: 1000;
+      min-width: $single-column-mega-menu-width;
       padding-bottom: $megamenu-spacing-bottom;
       background-color: $base-color;
       border-right: $popup-border;
@@ -190,10 +171,6 @@
 
       &.min {
         left: 48px;
-      }
-
-      &.single_column {
-        width: $single-column-mega-menu;
       }
 
       a {
@@ -230,6 +207,10 @@
             a.more {
               float: right;
             }
+
+            &.hidden {
+              display: none;
+            }
           }
         }
       }
@@ -252,12 +233,10 @@
         }
 
         &.search > div.topic {
-          width: $single-column-mega-menu;
+          width: $single-column-mega-menu-width;
 
           li a {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            @include ellipsis-text-overflow;
           }
         }
 
@@ -268,14 +247,14 @@
           box-sizing: border-box;
 
           &.single_column {
-            width: $single-column-mega-menu;
+            width: $single-column-mega-menu-width;
           }
 
           input[type="button"] {
             cursor: pointer;
 
             &:hover {
-              color: $success;
+              color: $font-color-green;
               text-decoration: none;
             }
 
@@ -323,7 +302,7 @@
           }
 
           ul a:hover {
-            color: $success;
+            color: $font-color-green;
             text-decoration: none;
           }
 
@@ -339,7 +318,7 @@
               }
 
               &.active {
-                color: $success;
+                color: $font-color-green;
               }
             }
 
@@ -367,9 +346,8 @@
               font-size: $font-size-small;
               line-height: 12px;
               letter-spacing: 0;
-              color: $hot-font-color;
+              color: $font-color-light-bg;
               background-color: $color-state-success-background;
-              border-color: $color-state-success-border;
             }
 
             &.show_all_items {
@@ -387,8 +365,11 @@
           }
 
           &.extended {
-            width: auto;
-            max-width: 100%;
+            &:not(.single_column) {
+              width: auto;
+              max-width: 100%;
+            }
+
             padding-top: 0;
             overflow-x: hidden;
             overflow-y: scroll;
@@ -415,13 +396,14 @@
             ul {
               display: flex;
               flex-flow: column wrap;
-              max-height: calc(100vh - 132px);
-              padding-bottom: 24px;
+              max-height: calc(100vh - 165px);
+              padding-bottom: $menu-item-spacing;
+              box-sizing: border-box;
             }
 
             li {
               width: auto;
-              max-width: $single-column-mega-menu - 60px;
+              max-width: $single-column-mega-menu-width - 60px;
               padding-left: 0;
 
               &.show_all_items {
@@ -475,16 +457,12 @@
     margin: 0;
     list-style: none;
 
-    &:nth-last-of-type(2) {
-      margin-top: auto; // place the help and user menu at the bottom
-    }
-
     a.popup_trigger {
       position: relative;
       display: block;
       padding: $spacing 4px $spacing 0;
       font-size: $font-size-small;
-      color: $font-color-sidebar;
+      color: $font-color;
       text-align: center;
       text-decoration: none;
       outline: none;
@@ -496,13 +474,17 @@
       span#messages_label,
       span#werks_label {
         position: absolute;
-        top: 2px;
+        top: 4px;
         right: 4px;
-        padding: 2px 4px 0;
-        color: $white;
-        background-color: $danger;
+        padding: 2px 5px 1px;
+        color: $font-color-white;
+        background-color: $color-state-2-background;
         border-radius: 8px;
       }
     }
+  }
+
+  > li:nth-last-of-type(2) {
+    margin-top: auto; // place the help and user menu at the bottom
   }
 }

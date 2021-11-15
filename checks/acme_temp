@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.acme import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.1 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.1
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.2 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.2
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.3 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.3
@@ -48,25 +50,28 @@ def check_acme_temp(item, params, info):
     for descr, value_str, state in info:
         if item == descr:
             dev_state, dev_state_readable = acme_environment_states[state]
-            return check_temperature(float(value_str),
-                                     params,
-                                     "acme_temp.%s" % item,
-                                     dev_status=dev_state,
-                                     dev_status_name=dev_state_readable)
+            return check_temperature(
+                float(value_str),
+                params,
+                "acme_temp.%s" % item,
+                dev_status=dev_state,
+                dev_status_name=dev_state_readable,
+            )
 
 
-check_info['acme_temp'] = {
-    'inventory_function': inventory_acme_temp,
-    'check_function': check_acme_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.9148.3.3.1.3.1.1',
+check_info["acme_temp"] = {
+    "inventory_function": inventory_acme_temp,
+    "check_function": check_acme_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9148.3.3.1.3.1.1",
         [
             "3",  # ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusDescr
             "4",  # ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusValue
             "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusState
-        ]),
-    'snmp_scan_function': scan_acme,
-    'group': 'temperature',
+        ],
+    ),
+    "snmp_scan_function": scan_acme,
+    "group": "temperature",
 }

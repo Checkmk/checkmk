@@ -8,25 +8,24 @@
 # TODO: More feature related splitting up would be better
 
 import abc
-from hashlib import md5
 import json
-from typing import Type
-
-from six import ensure_binary
+from hashlib import md5
+from typing import Optional, Type
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.config as config
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
-import cmk.gui.escaping as escaping
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.sites import allsites
 from cmk.gui.valuespec import Hostname
+from cmk.gui.watolib.host_attributes import ABCHostAttribute, host_attribute_registry
 
 
-class APICallCollection(metaclass=abc.ABCMeta):
+class APICallCollection(abc.ABC):
     @abc.abstractmethod
     def get_api_calls(self):
         raise NotImplementedError("This API collection does not register any API call")
@@ -39,8 +38,8 @@ class APICallCollectionRegistry(cmk.utils.plugin_registry.Registry[Type[APICallC
 
 api_call_collection_registry = APICallCollectionRegistry()
 
-#.
-#   .--API Helpers-------------------------------------------------------------.
+# .
+#   .--API Helpers---------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
 #   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
@@ -61,11 +60,11 @@ def check_hostname(hostname, should_exist=True):
         if not host:
             raise MKUserError(None, _("No such host"))
     else:
-        if watolib.Host.host_exists(hostname):
+        if (host := watolib.Host.host(hostname)) is not None:
             raise MKUserError(
                 None,
-                _("Host %s already exists in the folder %s") %
-                (hostname, watolib.Host.host(hostname).folder().path()))
+                _("Host %s already exists in the folder %s") % (hostname, host.folder().path()),
+            )
 
 
 def validate_config_hash(hash_value, entity):
@@ -73,10 +72,13 @@ def validate_config_hash(hash_value, entity):
     if hash_value != entity_hash:
         raise MKUserError(
             None,
-            _("The configuration has changed in the meantime. "
-              "You need to load the configuration and start another update. "
-              "If the existing configuration should not be checked, you can "
-              "remove the configuration_hash value from the request object."))
+            _(
+                "The configuration has changed in the meantime. "
+                "You need to load the configuration and start another update. "
+                "If the existing configuration should not be checked, you can "
+                "remove the configuration_hash value from the request object."
+            ),
+        )
 
 
 def add_configuration_hash(response, configuration_object):
@@ -86,7 +88,7 @@ def add_configuration_hash(response, configuration_object):
 def compute_config_hash(entity):
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
-        entity_hash = md5(ensure_binary(entity_encoded)).hexdigest()
+        entity_hash = md5(entity_encoded.encode()).hexdigest()
     except Exception as e:
         logger.error("Error %s", e)
         entity_hash = "0"
@@ -96,9 +98,11 @@ def compute_config_hash(entity):
 
 def validate_host_attributes(attributes, new=False):
     _validate_general_host_attributes(
-        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new)
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new
+    )
     _validate_host_tags(
-        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_")))
+        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_"))
+    )
 
 
 # Check if the given attribute name exists, no type check
@@ -111,7 +115,7 @@ def _validate_general_host_attributes(host_attributes, new):
 
         # For real host attributes validate the values
         try:
-            attr = watolib.host_attribute(name)
+            attr: Optional[ABCHostAttribute] = watolib.host_attribute(name)
         except KeyError:
             attr = None
 
@@ -120,7 +124,7 @@ def _validate_general_host_attributes(host_attributes, new):
                 attr.validate_input(value, "")
 
         # The site attribute gets an extra check
-        if name == "site" and value not in config.allsites().keys():
+        if name == "site" and value not in allsites().keys():
             raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))
 
 
@@ -136,5 +140,6 @@ def _validate_host_tags(host_tags):
                     raise MKUserError(None, _("Unknown tag %s") % escaping.escape_attribute(tag_id))
                 break
         else:
-            raise MKUserError(None,
-                              _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id))
+            raise MKUserError(
+                None, _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id)
+            )

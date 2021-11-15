@@ -4,21 +4,19 @@
 
 include $(abs_top_srcdir)/defines.make
 
-CPPCHECK ?= cppcheck
-CPPCHECK_NEB_RESULT ?= cppcheck-result.xml
 DOXYGEN ?= doxygen
 PLANTUTML_VERSION ?= 1.2020.16
-IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
+IWYU_TOOL ?= python3 $(abs_top_srcdir)/scripts/iwyu_tool.py
 RUN_CLANG_TIDY ?= \
-    $(abs_top_srcdir)/scripts/run-clang-tidy.py \
+    python3 $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
-VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30")
+VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30 --error-exitcode=42")
 INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-asio-1-18-0
+ASIO_VERSION := asio-asio-1-18-2
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.2
@@ -31,7 +29,7 @@ PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-f3ef7e173f
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation documentation-quick
+.PHONY: unit-test tidy iwyu documentation documentation-quick
 
 AM_CPPFLAGS = \
     -I.. \
@@ -53,9 +51,11 @@ unixcat_LDADD = -lpthread
 test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/TableQueryHelper.cc \
+    test/test_AttributeListColumn.cc \
     test/test_BlobColumn.cc \
+    test/test_BoolColumn.cc \
     test/test_CrashReport.cc \
-    test/test_CustomVarsDictFilter.cc \
+    test/test_DictFilter.cc \
     test/test_DoubleColumn.cc \
     test/test_FileSystemHelper.cc \
     test/test_IntColumn.cc \
@@ -100,45 +100,33 @@ liblivestatus_a_LD_FLAGS = \
     $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
-        AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
         Average.cc \
-        BlobColumn.cc \
-        BoolColumn.cc \
         Column.cc \
         ColumnFilter.cc \
-        CommentColumn.cc \
+        CommentRenderer.cc \
         CountAggregator.cc \
         CrashReport.cc \
-        CustomVarsDictColumn.cc \
-        CustomVarsDictFilter.cc \
-        CustomVarsNamesColumn.cc \
-        CustomVarsValuesColumn.cc \
+        DictFilter.cc \
         DoubleFilter.cc \
-        DowntimeColumn.cc \
+        DowntimeRenderer.cc \
         DowntimeOrComment.cc \
-        DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
-        DynamicRRDColumn.cc \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \
-        HostGroupsColumn.cc \
-        HostListColumn.cc \
+        HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
         InputBuffer.cc \
-        IntColumn.cc \
         IntFilter.cc \
-        ListColumn.cc \
-        ListLambdaColumn.cc \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
         Logfile.cc \
         Logger.cc \
-        LogwatchListColumn.cc \
+        LogwatchList.cc \
         MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \
@@ -157,7 +145,7 @@ liblivestatus_a_SOURCES = \
         RendererPython3.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \
-        ServiceListColumn.cc \
+        ServiceListRenderer.cc \
         ServiceListState.cc \
         StatsColumn.cc \
         Store.cc \
@@ -236,7 +224,7 @@ $(LIBS_DIR)/libgtest_main.a: $(LIBS_DIR)/libgtest.a
 
 $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
 	@cd $(GOOGLETEST_VERSION) && \
-	cmake -DCMAKE_CXX_COMPILER=$(CXX) \
+	cmake -DCMAKE_CXX_COMPILER=$$(echo "$(CXX)" | sed 's/ -.*//') \
         -DCMAKE_INSTALL_PREFIX=.. \
         -DCMAKE_INSTALL_INCLUDEDIR=$(GOOGLETEST_INCLUDE) \
         -DCMAKE_INSTALL_LIBDIR=libs \
@@ -278,15 +266,6 @@ iwyu: compile_commands.json
 	@echo include-what-you-use information end ======================================
 	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
-# NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
-cppcheck: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --error-exitcode=2
-
-# We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
-cppcheck-xml: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
-	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
-
 documentation: compile_commands.json doc/plantuml.jar
 	$(DOXYGEN) doc/Doxyfile
 	$(RM) '$$depbase.Tpo'
@@ -305,4 +284,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json $(CPPCHECK_NEB_RESULT) test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)
+	rm -rf *~ compile_commands.json test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)

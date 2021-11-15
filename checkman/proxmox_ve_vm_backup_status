@@ -10,5 +10,5 @@ description:
  after the last successful one.
  It shows date, age, size and bandwidth of the last successful backup.
 
-inventory:
+discovery:
  One service per system is created.

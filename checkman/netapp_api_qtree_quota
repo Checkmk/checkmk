@@ -28,7 +28,7 @@ description:
 item:
  Name of the qtree as defined in the system
 
-inventory:
+discovery:
  One service is created for each qtree with the quota-type {tree}.
  {User} and {group} quota types are not shown.
 

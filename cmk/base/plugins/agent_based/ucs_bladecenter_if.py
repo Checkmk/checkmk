@@ -4,18 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
-from .utils import (
-    interfaces,
-    ucs_bladecenter,
-)
+from typing import Dict, Union
+
+from .agent_based_api.v1 import register, type_defs
+from .utils import interfaces, ucs_bladecenter
 
 # <<ucs_bladecenter_if:sep(9)>>>
 # fcStats Dn sys/switch-A/slot-1/switch-fc/port-37/stats  BytesRx 2411057759048   BytesTx 1350394110752   Suspect no
@@ -95,39 +87,39 @@ from .utils import (
 # Specify which values are to put into the resulting interface
 _UCS_FIELDS_TO_IF_FIELDS = {
     "fibrechannel": {
-        'in_octets': [("fcStats", "BytesRx")],
-        'in_ucast': [("fcStats", "PacketsRx")],
-        'in_discards': [("fcErrStats", "DiscardRx")],
-        'in_errors': [("fcErrStats", "Rx"), ("fcErrStats", "CrcRx")],
-        'out_octets': [("fcStats", "BytesTx")],
-        'out_ucast': [("fcStats", "PacketsTx")],
-        'out_discards': [("fcErrStats", "DiscardTx")],
-        'out_errors': [("fcErrStats", "Tx")]
+        "in_octets": [("fcStats", "BytesRx")],
+        "in_ucast": [("fcStats", "PacketsRx")],
+        "in_discards": [("fcErrStats", "DiscardRx")],
+        "in_errors": [("fcErrStats", "Rx"), ("fcErrStats", "CrcRx")],
+        "out_octets": [("fcStats", "BytesTx")],
+        "out_ucast": [("fcStats", "PacketsTx")],
+        "out_discards": [("fcErrStats", "DiscardTx")],
+        "out_errors": [("fcErrStats", "Tx")],
     },
     "ethernet": {
-        'in_octets': [("etherRxStats", "TotalBytes")],
-        'in_ucast': [("etherRxStats", "UnicastPackets")],
-        'in_mcast': [("etherRxStats", "MulticastPackets")],
-        'in_bcast': [("etherRxStats", "BroadcastPackets")],
-        'in_errors': [("etherErrStats", "Rcv")],
-        'out_octets': [("etherTxStats", "TotalBytes")],
-        'out_ucast': [("etherTxStats", "UnicastPackets")],
-        'out_mcast': [("etherTxStats", "MulticastPackets")],
-        'out_bcast': [("etherTxStats", "BroadcastPackets")],
-        'out_discards': [("etherErrStats", "OutDiscard")],
+        "in_octets": [("etherRxStats", "TotalBytes")],
+        "in_ucast": [("etherRxStats", "UnicastPackets")],
+        "in_mcast": [("etherRxStats", "MulticastPackets")],
+        "in_bcast": [("etherRxStats", "BroadcastPackets")],
+        "in_errors": [("etherErrStats", "Rcv")],
+        "out_octets": [("etherTxStats", "TotalBytes")],
+        "out_ucast": [("etherTxStats", "UnicastPackets")],
+        "out_mcast": [("etherTxStats", "MulticastPackets")],
+        "out_bcast": [("etherTxStats", "BroadcastPackets")],
+        "out_discards": [("etherErrStats", "OutDiscard")],
     },
     "interconnect": {
-        'in_octets': [("etherRxStats", "TotalBytes")],
-        'in_ucast': [("etherRxStats", "UnicastPackets")],
-        'in_mcast': [("etherRxStats", "MulticastPackets")],
-        'in_bcast': [("etherRxStats", "BroadcastPackets")],
-        'in_errors': [("etherErrStats", "Rcv")],
-        'out_octets': [("etherTxStats", "TotalBytes")],
-        'out_ucast': [("etherTxStats", "UnicastPackets")],
-        'out_mcast': [("etherTxStats", "MulticastPackets")],
-        'out_bcast': [("etherTxStats", "BroadcastPackets")],
-        'out_discards': [("etherErrStats", "OutDiscard")],
-    }
+        "in_octets": [("etherRxStats", "TotalBytes")],
+        "in_ucast": [("etherRxStats", "UnicastPackets")],
+        "in_mcast": [("etherRxStats", "MulticastPackets")],
+        "in_bcast": [("etherRxStats", "BroadcastPackets")],
+        "in_errors": [("etherErrStats", "Rcv")],
+        "out_octets": [("etherTxStats", "TotalBytes")],
+        "out_ucast": [("etherTxStats", "UnicastPackets")],
+        "out_mcast": [("etherTxStats", "MulticastPackets")],
+        "out_bcast": [("etherTxStats", "BroadcastPackets")],
+        "out_discards": [("etherErrStats", "OutDiscard")],
+    },
 }
 
 
@@ -149,16 +141,27 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
     converted = []
     last_index = 0
     for what, group_prefix, ifaces, item_template in [
-        ("fibrechannel", "Fibrechannel-Group", _parse_fc_interfaces(data),
-         "Slot %s FC-Switch %s Port %s"),
+        (
+            "fibrechannel",
+            "Fibrechannel-Group",
+            _parse_fc_interfaces(data),
+            "Slot %s FC-Switch %s Port %s",
+        ),
         ("ethernet", "Ethernet-Group", _parse_eth_interfaces(data), "Slot %s Switch %s Port %s"),
-        ("interconnect", "Interconnect-Group", _parse_icnt_interfaces(data),
-         "Slot %s IC-Switch %s Port %s"),
+        (
+            "interconnect",
+            "Interconnect-Group",
+            _parse_icnt_interfaces(data),
+            "Slot %s IC-Switch %s Port %s",
+        ),
     ]:
         index = 0
         for index, (_name, values) in enumerate(ifaces.items()):
-            item = item_template % (values.get("SlotId"), values.get("SwitchId"),
-                                    values.get("PortId"))
+            item = item_template % (
+                values.get("SlotId"),
+                values.get("SwitchId"),
+                values.get("PortId"),
+            )
             iface_index = str(last_index + index)
 
             # Interfaces in portchannels are grouped by setting the group-attribute of
@@ -170,17 +173,21 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
 
                 group = group_prefix + " " + port_name
                 speed = values["portchannel"].get("AdminSpeed") or values["portchannel"].get(
-                    "OperSpeed", "")
+                    "OperSpeed", ""
+                )
                 # It looks like that the AdminSpeed of a portchannel is the speed of one member
                 # speed = str(int(float(speed.replace("gbps", "000000000")) / values["portchannel"]["members"]))
-                is_up = values["portchannel"].get(
-                    "AdminState", "disabled") == "enabled" and values["portchannel"].get(
-                        "OperState", "down") == "up"
+                is_up = (
+                    values["portchannel"].get("AdminState", "disabled") == "enabled"
+                    and values["portchannel"].get("OperState", "down") == "up"
+                )
             else:
                 group = None
                 speed = values.get("AdminSpeed", "")
-                is_up = values.get("AdminState", "disabled") == "enabled" and values.get(
-                    "OperState", "down") == "up"
+                is_up = (
+                    values.get("AdminState", "disabled") == "enabled"
+                    and values.get("OperState", "down") == "up"
+                )
 
             speed = speed.replace("gbps", "000000000")
 
@@ -190,7 +197,7 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
                 alias=item,
                 # This means Ethernet. We should set the real type here, but 56 is currently not
                 # supported.
-                type='6',
+                type="6",
                 speed=interfaces.saveint(speed),
                 oper_status=is_up and "1" or "2",
                 group=group,
@@ -198,9 +205,11 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
                 # Right now, it's only Recv-Errors (therefore unlikely). We can live with that
                 **{  # type: ignore[arg-type]
                     iface_field: sum(
-                        int(values[ctr_class].get(ctr_key, "0")) for ctr_class, ctr_key in ctr_keys)
+                        int(values[ctr_class].get(ctr_key, "0")) for ctr_class, ctr_key in ctr_keys
+                    )
                     for iface_field, ctr_keys in _UCS_FIELDS_TO_IF_FIELDS[what].items()
-                })
+                },
+            )
 
             converted.append(iface)
 
@@ -298,7 +307,7 @@ def _parse_icnt_interfaces(data):
 
 
 register.agent_section(
-    name='ucs_bladecenter_if',
+    name="ucs_bladecenter_if",
     parse_function=parse_ucs_bladecenter_if,
     parsed_section_name="interfaces",
 )

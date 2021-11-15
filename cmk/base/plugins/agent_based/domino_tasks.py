@@ -5,14 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-
-from .utils import domino, memory, ps
 from .agent_based_api.v1 import register, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import domino, memory, ps
 
 # Example SNMP walk:
 #
@@ -40,7 +35,7 @@ def parse_domino_tasks(string_table: List[StringTable]) -> ps.Section:
 
 
 register.snmp_section(
-    name='domino_tasks',
+    name="domino_tasks",
     parse_function=parse_domino_tasks,
     fetch=[
         SNMPTree(
@@ -71,12 +66,14 @@ def check_domino_tasks(
     cpu_cores, lines = section_domino_tasks
     process_lines: ProcessLines = [(None, psi, cmd_line) for (psi, cmd_line) in lines]
 
+    total_ram = section_mem.get("MemTotal") if section_mem else None
+
     yield from ps.check_ps_common(
         label="Tasks",
         item=item,
         params=params,
         process_lines=process_lines,
-        total_ram=section_mem.get("MemTotal") if section_mem else None,
+        total_ram_map={} if total_ram is None else {"": total_ram},
         cpu_cores=cpu_cores,
     )
 
@@ -84,26 +81,37 @@ def check_domino_tasks(
 def cluster_check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
-    section_domino_tasks: Dict[str, ps.Section],
-    section_mem: Dict[str, memory.SectionMem],
+    section_domino_tasks: Dict[str, Optional[ps.Section]],
+    section_mem: Dict[str, Optional[memory.SectionMem]],
 ) -> CheckResult:
 
-    process_lines: ProcessLines = [(node_name, psi, cmd_line)
-                                   for node_name, node_section in section_domino_tasks.items()
-                                   for (psi, cmd_line) in node_section[1]]
+    iter_non_trivial_sections = (
+        (node_name, node_section)
+        for node_name, node_section in section_domino_tasks.items()
+        if node_section is not None
+    )
+    process_lines: ProcessLines = [
+        (node_name, psi, cmd_line)
+        for node_name, node_section in iter_non_trivial_sections
+        for (psi, cmd_line) in node_section[1]
+    ]
 
     yield from ps.check_ps_common(
         label="Tasks",
         item=item,
         params=params,
         process_lines=process_lines,
-        total_ram=None,
+        total_ram_map={
+            node: section["MemTotal"]
+            for node, section in section_mem.items()
+            if section and "MemTotal" in section
+        },
         cpu_cores=1,
     )
 
 
 register.check_plugin(
-    name='domino_tasks',
+    name="domino_tasks",
     service_name="Domino Task %s",
     sections=["domino_tasks", "mem"],
     discovery_function=discover_domino_tasks,

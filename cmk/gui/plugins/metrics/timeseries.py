@@ -4,38 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import operator
 import functools
-from typing import List, Literal, Optional
+import operator
 from itertools import chain
+from typing import List, Literal, Optional, Sequence, Tuple
 
-from cmk.utils.prediction import TimeSeries
 import cmk.utils.version as cmk_version
-import cmk.gui.escaping as escaping
+from cmk.utils.prediction import TimeSeries
+
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
+    ExpressionParams,
     fade_color,
     parse_color,
     render_color,
+    RRDData,
+    time_series_expression_registry,
 )
 
-if cmk_version.is_raw_edition():
-
-    def evaluate_timeseries_transformation(transform, conf, operands_evaluated):
-        raise MKGeneralException(
-            _("Metric transformations and combinations like Forecasts calculations, "
-              "aggregations and filtering are only available with the "
-              "Checkmk Enterprise Editions"))
-
-    def resolve_combined_single_metric_spec(expression):
-        return evaluate_timeseries_transformation(None, None, None)
-else:
-    # Suppression is needed to silence pylint in CRE environment
-    from cmk.gui.cee.plugins.metrics.timeseries import evaluate_timeseries_transformation  # type: ignore[no-redef] # pylint: disable=no-name-in-module
-    from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # type: ignore[no-redef] # pylint: disable=no-name-in-module
-
-#.
+# .
 #   .--Curves--------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|   _ _ ____   _____  ___                     |
@@ -48,7 +37,7 @@ else:
 #   '----------------------------------------------------------------------'
 
 
-def compute_graph_curves(metrics, rrd_data):
+def compute_graph_curves(metrics, rrd_data: RRDData):
     curves = []
     for metric_definition in metrics:
         expression = metric_definition["expression"]
@@ -60,83 +49,101 @@ def compute_graph_curves(metrics, rrd_data):
         mirror_prefix = "-" if metric_definition["line_type"].startswith("-") else ""
         for i, ts in enumerate(time_series):
             title = metric_definition["title"]
-            if ts.metadata.get('title') and multi:
-                title += " - " + ts.metadata['title']
+            if ts.metadata.get("title") and multi:
+                title += " - " + ts.metadata["title"]
 
-            color = metric_definition.get("color", ts.metadata.get('color', "#000000"))
-            if i % 2 == 1 and not (expression[0] == "transformation" and
-                                   expression[1][0] == "forecast"):
+            color = metric_definition.get("color", ts.metadata.get("color", "#000000"))
+            if i % 2 == 1 and not (
+                expression[0] == "transformation" and expression[1][0] == "forecast"
+            ):
                 color = render_color(fade_color(parse_color(color), 0.3))
 
-            curves.append({
-                "line_type": mirror_prefix + ts.metadata.get('line_type', "")
-                             if multi else metric_definition["line_type"],
-                "color": color,
-                'title': title,
-                'rrddata': ts
-            })
+            curves.append(
+                {
+                    "line_type": mirror_prefix + ts.metadata.get("line_type", "")
+                    if multi
+                    else metric_definition["line_type"],
+                    "color": color,
+                    "title": title,
+                    "rrddata": ts,
+                }
+            )
 
     return curves
 
 
-def evaluate_time_series_expression(expression, rrd_data) -> List[TimeSeries]:
+def evaluate_time_series_expression(expression, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    ident, parameters = expression[0], expression[1:]
+
+    try:
+        expression_func = time_series_expression_registry[ident]
+    except KeyError:
+        if cmk_version.is_raw_edition() and ident in ["combined", "transformation"]:
+            raise MKGeneralException(
+                _(
+                    "Metric transformations and combinations like Forecasts calculations, "
+                    "aggregations and filtering are only available with the "
+                    "Checkmk Enterprise Editions"
+                )
+            )
+
+        raise MKGeneralException("Unrecognized expressions type %s" % ident)
+
+    return expression_func(parameters, rrd_data)
+
+
+@time_series_expression_registry.register_expression("operator")
+def expression_operator(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    operator_id, operands = parameters
+    operands_evaluated = list(
+        chain.from_iterable(evaluate_time_series_expression(a, rrd_data) for a in operands)
+    )
+    if result := time_series_math(operator_id, operands_evaluated):
+        return [result]
+    return []
+
+
+@time_series_expression_registry.register_expression("rrd")
+def expression_rrd(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    key = (parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5])
+    if key in rrd_data:
+        return [rrd_data[key]]
+    num_points, twindow = _derive_num_points_twindow(rrd_data)
+    return [TimeSeries([None] * num_points, twindow)]
+
+
+@time_series_expression_registry.register_expression("constant")
+def expression_constant(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+    num_points, twindow = _derive_num_points_twindow(rrd_data)
+    return [TimeSeries([parameters[0]] * num_points, twindow)]
+
+
+def _derive_num_points_twindow(rrd_data: RRDData) -> Tuple[int, Tuple[int, int, int]]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
-        num_points = len(sample_data)
-        twindow = sample_data.twindow
-    else:
-        # no data, default clean graph, use for pure scalars on custom graphs
-        num_points = 1
-        twindow = (0, 60, 60)
-
-    if expression[0] == "operator":
-        operator_id, operands = expression[1:]
-        operands_evaluated = list(
-            chain.from_iterable(evaluate_time_series_expression(a, rrd_data) for a in operands))
-        if result := time_series_math(operator_id, operands_evaluated):
-            return [result]
-        return []
-
-    if expression[0] == "transformation":
-        (transform, conf), operands = expression[1:]
-        operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
-        return evaluate_timeseries_transformation(transform, conf, operands_evaluated)
-
-    if expression[0] == "rrd":
-        key = tuple(expression[1:])
-        if key in rrd_data:
-            return [rrd_data[key]]
-        return [TimeSeries([None] * num_points, twindow)]
-
-    if expression[0] == "constant":
-        return [TimeSeries([expression[1]] * num_points, twindow)]
-
-    if expression[0] == "combined":
-        metrics = resolve_combined_single_metric_spec(expression[1])
-        curves = []
-        for m in metrics:
-            for curve in evaluate_time_series_expression(m['expression'], rrd_data):
-                curve.metadata = {k: m[k] for k in m if k in ['line_type', 'title']}
-                curves.append(curve)
-
-        return curves
-
-    raise NotImplementedError()
+        return len(sample_data), sample_data.twindow
+    # no data, default clean graph, use for pure scalars on custom graphs
+    return 1, (0, 60, 60)
 
 
-def time_series_math(operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
-                     operands_evaluated: List[TimeSeries]) -> Optional[TimeSeries]:
+def time_series_math(
+    operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
+    operands_evaluated: List[TimeSeries],
+) -> Optional[TimeSeries]:
     operators = time_series_operators()
     if operator_id not in operators:
         raise MKGeneralException(
-            _("Undefined operator '%s' in graph expression") %
-            escaping.escape_attribute(operator_id))
+            _("Undefined operator '%s' in graph expression")
+            % escaping.escape_attribute(operator_id)
+        )
     # Test for correct arity on FOUND[evaluated] data
-    if any((
+    if any(
+        (
             operator_id in ["-", "/"] and len(operands_evaluated) != 2,
             len(operands_evaluated) < 1,
-    )):
-        #raise MKGeneralException(_("Incorrect amount of data to correctly evaluate expression"))
+        )
+    ):
+        # raise MKGeneralException(_("Incorrect amount of data to correctly evaluate expression"))
         # Silently return so to get an empty graph slot
         return None
 

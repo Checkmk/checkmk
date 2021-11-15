@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Alias: Start agent-receiver WSGI HTTP server
+# Menu: Basic
+# Description:
+#  This option enables agent-receiver - the server
+#  for communication with remote hosts. It supports
+#  communication with pull and push hosts via HTTP
+#  requests.
+
+case "$1" in
+default)
+    echo "on"
+    ;;
+choices)
+    echo "on: enable"
+    echo "off: disable"
+    ;;
+esac

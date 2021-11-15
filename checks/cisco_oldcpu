@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
 
 cisco_oldcpu_default_levels = (80.0, 90.0)
@@ -28,14 +30,14 @@ def check_cisco_oldcpu(_no_item, params, info):
     return check_cpu_util(float(info[0][0]), params)
 
 
-check_info['cisco_oldcpu'] = {
-    'inventory_function': inventory_cisco_oldcpu,
-    'check_function': check_cisco_oldcpu,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'snmp_info': (".1.3.6.1.4.1.9.2.1", ["57"]),
+check_info["cisco_oldcpu"] = {
+    "inventory_function": inventory_cisco_oldcpu,
+    "check_function": check_cisco_oldcpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.9.2.1", ["57"]),
     # For old cisco catalyst devices (1745) which do not support newer snmp data
     # e.g. 'Cisco Catalyst 3850 Series Switches'
-    'snmp_scan_function': snmp_scan_cisco_oldcpu,
-    'group': "cpu_utilization",
+    "snmp_scan_function": snmp_scan_cisco_oldcpu,
+    "group": "cpu_utilization",
 }

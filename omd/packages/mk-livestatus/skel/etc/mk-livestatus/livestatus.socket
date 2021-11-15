@@ -1,0 +1,15 @@
+[Unit]
+Description=TCP Socket for Livestatus
+After=network.target
+
+[Socket]
+Accept=yes
+IPAddressDeny=any
+IPAddressAllow=0.0.0.0/0 ::0/0
+ListenStream=6557
+MaxConnections=500
+MaxConnectionsPerSource=250
+NoDelay=yes
+
+[Install]
+WantedBy=sockets.target

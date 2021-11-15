@@ -41,7 +41,7 @@
 # folder_path --> A relative specification of a folder (e.g. "linux/prod")
 # folder      --> An instance of the class Folder
 
-#.
+# .
 #   .--Init----------------------------------------------------------------.
 #   |                           ___       _ _                              |
 #   |                          |_ _|_ __ (_) |_                            |
@@ -60,185 +60,161 @@
 
 import abc
 import ast
+import copy
 import csv
 import datetime
 import fcntl
 import glob
+import inspect
 import json
 import math
 import multiprocessing
 import pprint
 import random
 import re
-import tarfile
 import shutil
 import socket
 import subprocess
 import sys
+import tarfile
 import time
 import traceback
-import copy
-import inspect
 from hashlib import sha256
-from typing import Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union
-from six import ensure_str
+from typing import Any, Dict
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
-import cmk.utils.store as store
-from cmk.utils.regex import regex
-from cmk.utils.defines import short_service_state_name
 import cmk.utils.render as render
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
+from cmk.utils.defines import short_service_state_name
+from cmk.utils.regex import regex
 
-import cmk.gui.utils as utils
-import cmk.gui.sites as sites
-import cmk.gui.config as config
-from cmk.gui.table import table_element
-import cmk.gui.userdb as userdb
-import cmk.gui.weblib as weblib
-import cmk.gui.mkeventd
-import cmk.gui.forms as forms
-import cmk.gui.backup as backup
-import cmk.gui.watolib as watolib
-import cmk.gui.watolib.hosts_and_folders
-from cmk.gui.watolib.activate_changes import update_config_generation
 import cmk.gui.background_job as background_job
+import cmk.gui.backup as backup
+import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
-import cmk.gui.view_utils
+import cmk.gui.mkeventd
+import cmk.gui.plugins.wato
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
+import cmk.gui.sites as sites
+import cmk.gui.userdb as userdb
+import cmk.gui.utils as utils
+import cmk.gui.view_utils
 import cmk.gui.wato.mkeventd
+import cmk.gui.wato.pages.fetch_agent_output
 import cmk.gui.wato.permissions
-from cmk.gui.type_defs import PermissionName
-from cmk.gui.pages import page_registry, Page
-from cmk.gui.i18n import _u, _, _l
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+import cmk.gui.watolib as watolib
+import cmk.gui.watolib.hosts_and_folders
+import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import (
     HTTPRedirect,
-    MKGeneralException,
-    MKUserError,
     MKAuthException,
-    MKInternalError,
     MKException,
+    MKGeneralException,
+    MKInternalError,
+    MKUserError,
 )
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
+from cmk.gui.globals import config, html
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _l, _u
 from cmk.gui.log import logger
+from cmk.gui.pages import Page, page_registry
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.wato.pages.activate_changes import (
     ModeActivateChanges,
-    ModeAjaxStartActivation,
     ModeAjaxActivationState,
+    ModeAjaxStartActivation,
 )
 from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
-from cmk.gui.wato.pages.diagnostics import ModeDiagnostics
 from cmk.gui.wato.pages.audit_log import ModeAuditLog
-from cmk.gui.wato.pages.automation import ModeAutomationLogin, ModeAutomation
-import cmk.gui.wato.pages.fetch_agent_output
+from cmk.gui.wato.pages.automation import ModeAutomation, ModeAutomationLogin
 from cmk.gui.wato.pages.backup import (
     ModeBackup,
-    ModeBackupTargets,
-    ModeEditBackupTarget,
-    ModeEditBackupJob,
+    ModeBackupDownloadKey,
+    ModeBackupEditKey,
     ModeBackupJobState,
     ModeBackupKeyManagement,
-    ModeBackupEditKey,
-    ModeBackupUploadKey,
-    ModeBackupDownloadKey,
     ModeBackupRestore,
+    ModeBackupTargets,
+    ModeBackupUploadKey,
+    ModeEditBackupJob,
+    ModeEditBackupTarget,
 )
 from cmk.gui.wato.pages.bulk_discovery import ModeBulkDiscovery
-from cmk.gui.wato.pages.bulk_edit import ModeBulkEdit, ModeBulkCleanup
+from cmk.gui.wato.pages.bulk_edit import ModeBulkCleanup, ModeBulkEdit
 from cmk.gui.wato.pages.bulk_import import ModeBulkImport
 from cmk.gui.wato.pages.check_catalog import ModeCheckManPage, ModeCheckPlugins
 from cmk.gui.wato.pages.custom_attributes import (
-    ModeEditCustomAttr,
-    ModeEditCustomUserAttr,
-    ModeEditCustomHostAttr,
     ModeCustomAttrs,
-    ModeCustomUserAttrs,
     ModeCustomHostAttrs,
+    ModeCustomUserAttrs,
+    ModeEditCustomAttr,
+    ModeEditCustomHostAttr,
+    ModeEditCustomUserAttr,
 )
+from cmk.gui.wato.pages.diagnostics import ModeDiagnostics
 from cmk.gui.wato.pages.download_agents import ModeDownloadAgentsOther
 from cmk.gui.wato.pages.folders import (
-    ModeFolder,
     ModeAjaxPopupMoveToFolder,
-    ModeEditFolder,
-    ModeCreateFolder,
     ModeAjaxSetFoldertree,
+    ModeCreateFolder,
+    ModeEditFolder,
+    ModeFolder,
 )
-from cmk.gui.wato.pages.global_settings import (
-    ModeEditGlobals,
-    ModeEditGlobalSetting,
-)
+from cmk.gui.wato.pages.global_settings import ModeEditGlobals, ModeEditGlobalSetting
 from cmk.gui.wato.pages.groups import (
+    ModeContactgroups,
+    ModeEditContactgroup,
+    ModeEditHostgroup,
+    ModeEditServicegroup,
     ModeGroups,
     ModeHostgroups,
     ModeServicegroups,
-    ModeContactgroups,
-    ModeEditHostgroup,
-    ModeEditServicegroup,
-    ModeEditContactgroup,
 )
 from cmk.gui.wato.pages.host_diagnose import ModeDiagHost
 from cmk.gui.wato.pages.host_rename import ModeBulkRenameHost, ModeRenameHost
-from cmk.gui.wato.pages.tags import (
-    ModeTags,
-    ModeEditAuxtag,
-    ModeEditTagGroup,
-)
-from cmk.gui.wato.pages.hosts import ModeEditHost, ModeCreateHost, ModeCreateCluster
+from cmk.gui.wato.pages.hosts import ModeCreateCluster, ModeCreateHost, ModeEditHost
 from cmk.gui.wato.pages.icons import ModeIcons
-from cmk.gui.wato.pages.ldap import ModeLDAPConfig, ModeEditLDAPConnection
+from cmk.gui.wato.pages.ldap import ModeEditLDAPConnection, ModeLDAPConfig
 from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.wato.pages.notifications import (
-    ModeNotifications,
-    ModeUserNotifications,
-    ModePersonalUserNotifications,
     ModeEditNotificationRule,
     ModeEditPersonalNotificationRule,
+    ModeNotifications,
+    ModePersonalUserNotifications,
+    ModeUserNotifications,
 )
 from cmk.gui.wato.pages.object_parameters import ModeObjectParameters
 from cmk.gui.wato.pages.parentscan import ModeParentScan
-from cmk.gui.wato.pages.password_store import ModePasswords, ModeEditPassword
-from cmk.gui.wato.pages.predefined_conditions import ModePredefinedConditions, ModeEditPredefinedCondition
+from cmk.gui.wato.pages.password_store import ModeEditPassword, ModePasswords
 from cmk.gui.wato.pages.pattern_editor import ModePatternEditor
+from cmk.gui.wato.pages.predefined_conditions import (
+    ModeEditPredefinedCondition,
+    ModePredefinedConditions,
+)
 from cmk.gui.wato.pages.random_hosts import ModeRandomHosts
 from cmk.gui.wato.pages.read_only import ModeManageReadOnly
-from cmk.gui.wato.pages.roles import (
-    ModeRoles,
-    ModeEditRole,
-    ModeRoleMatrix,
-)
-from cmk.gui.wato.pages.rulesets import (
-    ModeEditRuleset,
-    ModeEditRule,
-    ModeCloneRule,
-    ModeNewRule,
-)
+from cmk.gui.wato.pages.roles import ModeEditRole, ModeRoleMatrix, ModeRoles
+from cmk.gui.wato.pages.rulesets import ModeCloneRule, ModeEditRule, ModeEditRuleset, ModeNewRule
 from cmk.gui.wato.pages.search import ModeSearch
-from cmk.gui.wato.pages.services import (
-    ModeDiscovery,
-    ModeAjaxExecuteCheck,
-)
-from cmk.gui.wato.pages.sites import (
-    ModeEditSite,
-    ModeDistributedMonitoring,
-    ModeEditSiteGlobals,
-)
+from cmk.gui.wato.pages.services import ModeAjaxExecuteCheck, ModeDiscovery
+from cmk.gui.wato.pages.sites import ModeDistributedMonitoring, ModeEditSite, ModeEditSiteGlobals
+from cmk.gui.wato.pages.tags import ModeEditAuxtag, ModeEditTagGroup, ModeTags
 from cmk.gui.wato.pages.timeperiods import (
-    ModeTimeperiods,
-    ModeTimeperiodImportICal,
     ModeEditTimeperiod,
+    ModeTimeperiodImportICal,
+    ModeTimeperiods,
 )
-from cmk.gui.wato.pages.users import ModeUsers, ModeEditUser
-
-import cmk.gui.plugins.wato
+from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
+from cmk.gui.watolib.activate_changes import update_config_generation
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.wato  # pylint: disable=no-name-in-module
@@ -261,15 +237,17 @@ ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
 NEGATE = watolib.NEGATE
 from cmk.gui.plugins.wato import (
-    monitoring_macro_help,
-    UserIconOrAction,
-    SNMPCredentials,
+    get_hostnames_from_checkboxes,
+    get_hosts_from_checkboxes,
+    get_search_expression,
     HostnameTranslation,
-    register_check_parameters,
-    sort_sites,
     Levels,
-    PredictiveLevels,
     mode_registry,
+    monitoring_macro_help,
+    PredictiveLevels,
+    register_check_parameters,
+    register_hook,
+    register_notification_parameters,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
@@ -279,12 +257,11 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersPrinters,
     RulespecGroupCheckParametersStorage,
     RulespecGroupCheckParametersVirtualization,
-    get_hostnames_from_checkboxes,
-    get_hosts_from_checkboxes,
-    get_search_expression,
-    register_notification_parameters,
-    register_hook,
+    SNMPCredentials,
+    sort_sites,
+    UserIconOrAction,
 )
+
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the WATO plugin context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
@@ -302,55 +279,48 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
+from cmk.gui.plugins.watolib.utils import configvar_order, register_configvar
 from cmk.gui.watolib import (
-    register_rulegroup,
-    register_rule,
-    add_replication_paths,
-    ConfigDomainGUI,
-    ConfigDomainCore,
-    ConfigDomainOMD,
-    ConfigDomainEventConsole,
-    add_change,
-    add_service_change,
-    site_neutral_path,
-    declare_host_attribute,
-    NagiosTextAttribute,
-    ValueSpecAttribute,
-    ACTestCategories,
-    ACTest,
     ACResultCRIT,
-    ACResultWARN,
     ACResultOK,
+    ACResultWARN,
+    ACTest,
+    ACTestCategories,
+    add_change,
+    add_replication_paths,
+    add_service_change,
+    ConfigDomainCore,
+    ConfigDomainEventConsole,
+    ConfigDomainGUI,
+    ConfigDomainOMD,
+    declare_host_attribute,
     LivestatusViaTCP,
     make_action_link,
-    init_wato_datastructures,
-)
-from cmk.gui.plugins.watolib.utils import (
-    register_configvar,
-    configvar_order,
+    NagiosTextAttribute,
+    register_rule,
+    register_rulegroup,
+    site_neutral_path,
+    ValueSpecAttribute,
 )
 
 modes: Dict[Any, Any] = {}
 
-from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_html_head,
-    initialize_wato_html_head,
-    wato_html_footer,
-    search_form,
-)
-
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainMenu,
-    MenuItem,
-    # Kept for compatibility with pre 1.6 plugins
-    WatoModule,
-    register_modules,
-)
-
 # Import the module to register page handler
 import cmk.gui.wato.page_handler
+from cmk.gui.plugins.wato.utils.html_elements import (
+    initialize_wato_html_head,
+    search_form,
+    wato_html_footer,
+    wato_html_head,
+)
+from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins
+    MainMenu,
+    MenuItem,
+    register_modules,
+    WatoModule,
+)
 
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -364,14 +334,9 @@ import cmk.gui.wato.page_handler
 
 modes = {}
 
-loaded_with_language: Union[bool, None, str] = False
 
-
-def load_plugins(force: bool) -> None:
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
+def load_plugins() -> None:
+    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     # Initialize watolib things which are needed before loading the WATO plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
@@ -380,10 +345,6 @@ def load_plugins(force: bool) -> None:
 
     if modes:
         raise MKGeneralException(
-            _("Deprecated WATO modes found: %r. "
-              "They need to be refactored to new API.") % list(modes.keys()))
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
+            _("Deprecated WATO modes found: %r. " "They need to be refactored to new API.")
+            % list(modes.keys())
+        )

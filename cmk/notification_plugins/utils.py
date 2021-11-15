@@ -4,30 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from email.utils import formataddr
-from html import escape as html_escape
 import os
-from quopri import encodestring
 import re
 import socket
 import subprocess
 import sys
-from typing import Dict, List, Tuple, NamedTuple
-
+from email.utils import formataddr, formatdate
+from html import escape as html_escape
 from http.client import responses as http_responses
+from quopri import encodestring
+from typing import Dict, List, NamedTuple, Tuple
+
 import requests
 
-from cmk.utils.notify import find_wato_folder
-import cmk.utils.paths
 import cmk.utils.password_store
+import cmk.utils.paths
+import cmk.utils.version as cmk_version
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.notify import find_wato_folder
+from cmk.utils.store import load_text_from_file
 
 
 def collect_context() -> Dict[str, str]:
-    return {
-        var[7:]: value  #
-        for var, value in os.environ.items()
-        if var.startswith("NOTIFY_")
-    }
+    return {var[7:]: value for var, value in os.environ.items() if var.startswith("NOTIFY_")}  #
 
 
 def format_link(template: str, url: str, text: str) -> str:
@@ -46,18 +45,23 @@ def format_address(display_name: str, email_address: str) -> str:
       * If the display_name contains backslashes or quotes, a backslash is prepended before these characters.
     """
     if not email_address:
-        return ''
+        return ""
 
     try:
-        display_name.encode('ascii')
+        display_name.encode("ascii")
     except UnicodeEncodeError:
-        display_name = u'=?utf-8?q?%s?=' % encodestring(
-            display_name.encode('utf-8')).decode('ascii')
+        display_name = "=?utf-8?q?%s?=" % encodestring(display_name.encode("utf-8")).decode("ascii")
     return formataddr((display_name, email_address))
 
 
 def default_from_address():
-    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+    environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+    if cmk_version.is_cma():
+        return load_text_from_file("/etc/nullmailer/default-from", environ_default).replace(
+            "\n", ""
+        )
+
+    return environ_default
 
 
 def _base_url(context: Dict[str, str]) -> str:
@@ -70,19 +74,19 @@ def _base_url(context: Dict[str, str]) -> str:
     elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "https":
         url_prefix = "https://%s/%s" % (context["MONITORING_HOST"], context["OMD_SITE"])
     else:
-        url_prefix = ''
+        url_prefix = ""
 
-    return re.sub('/check_mk/?', '', url_prefix, count=1)
+    return re.sub("/check_mk/?", "", url_prefix, count=1)
 
 
 def host_url_from_context(context: Dict[str, str]) -> str:
     base = _base_url(context)
-    return base + context['HOSTURL'] if base else ''
+    return base + context["HOSTURL"] if base else ""
 
 
 def service_url_from_context(context: Dict[str, str]) -> str:
     base = _base_url(context)
-    return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
+    return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
 
 # There is common code with cmk/gui/view_utils:format_plugin_output(). Please check
@@ -94,37 +98,40 @@ def format_plugin_output(output):
     crit_marker = '<b class="stmarkCRITICAL">CRIT</b>'
     unknown_marker = '<b class="stmarkUNKNOWN">UNKN</b>'
 
-    output = output.replace("(!)", warn_marker) \
-              .replace("(!!)", crit_marker) \
-              .replace("(?)", unknown_marker) \
-              .replace("(.)", ok_marker)
+    output = (
+        output.replace("(!)", warn_marker)
+        .replace("(!!)", crit_marker)
+        .replace("(?)", unknown_marker)
+        .replace("(.)", ok_marker)
+    )
 
     return output
 
 
-def html_escape_context(context):
+def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
     unescaped_variables = {
-        'CONTACTALIAS',
-        'CONTACTNAME',
-        'CONTACTEMAIL',
-        'PARAMETER_INSERT_HTML_SECTION',
-        'PARAMETER_BULK_SUBJECT',
-        'PARAMETER_HOST_SUBJECT',
-        'PARAMETER_SERVICE_SUBJECT',
-        'PARAMETER_FROM_ADDRESS',
-        'PARAMETER_FROM_DISPLAY_NAME',
-        'PARAMETER_REPLY_TO',
-        'PARAMETER_REPLY_TO_ADDRESS',
-        'PARAMETER_REPLY_TO_DISPLAY_NAME',
+        "CONTACTALIAS",
+        "CONTACTNAME",
+        "CONTACTEMAIL",
+        "PARAMETER_INSERT_HTML_SECTION",
+        "PARAMETER_BULK_SUBJECT",
+        "PARAMETER_HOST_SUBJECT",
+        "PARAMETER_SERVICE_SUBJECT",
+        "PARAMETER_FROM_ADDRESS",
+        "PARAMETER_FROM_DISPLAY_NAME",
+        "PARAMETER_REPLY_TO",
+        "PARAMETER_REPLY_TO_ADDRESS",
+        "PARAMETER_REPLY_TO_DISPLAY_NAME",
     }
     if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    for variable, value in context.items():
-        if variable not in unescaped_variables:
-            context[variable] = html_escape(value)
+    return {
+        variable: html_escape(value) if variable not in unescaped_variables else value
+        for variable, value in context.items()
+    }
 
 
 def add_debug_output(template, context):
@@ -134,7 +141,9 @@ def add_debug_output(template, context):
     for varname, value in elements:
         ascii_output += "%s=%s\n" % (varname, value)
         html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
-            varname, html_escape(value))
+            varname,
+            html_escape(value),
+        )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
 
@@ -142,7 +151,7 @@ def add_debug_output(template, context):
 def substitute_context(template, context):
     # First replace all known variables
     for varname, value in context.items():
-        template = template.replace('$' + varname + '$', value)
+        template = template.replace("$" + varname + "$", value)
 
     # Debugging of variables. Create content only on demand
     if "$CONTEXT_ASCII$" in template or "$CONTEXT_HTML$" in template:
@@ -151,7 +160,7 @@ def substitute_context(template, context):
     if re.search(r"\$[A-Z_][A-Z_0-9]*\$", template):
         # Second pass to replace nested variables inside e.g. SERVICENOTESURL
         for varname, value in context.items():
-            template = template.replace('$' + varname + '$', value)
+            template = template.replace("$" + varname + "$", value)
 
     # Remove the rest of the variables and make them empty
     template = re.sub(r"\$[A-Z_][A-Z_0-9]*\$", "", template)
@@ -163,17 +172,18 @@ def substitute_context(template, context):
 
 
 def set_mail_headers(target, subject, from_address, reply_to, mail):
-    mail['Subject'] = subject
-    mail['To'] = target
+    mail["Date"] = formatdate(localtime=True)
+    mail["Subject"] = subject
+    mail["To"] = target
 
     # Set a few configurable headers
     if from_address:
-        mail['From'] = from_address
+        mail["From"] = from_address
 
     if reply_to:
-        mail['Reply-To'] = reply_to
+        mail["Reply-To"] = reply_to
     elif len(target.split(",")) > 1:
-        mail['Reply-To'] = target
+        mail["Reply-To"] = target
 
     return mail
 
@@ -181,7 +191,7 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 def send_mail_sendmail(m, target, from_address):
     cmd = [_sendmail_path()]
     if from_address:
-        cmd += ['-F', from_address, "-f", from_address]
+        cmd += ["-F", from_address, "-f", from_address]
     cmd += ["-i", target]
 
     try:
@@ -205,8 +215,8 @@ def _sendmail_path() -> str:
     # We normally don't deliver the sendmail command, but our notification integration tests
     # put some fake sendmail command into the site to prevent actual sending of mails.
     for path in [
-            "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
-            "/usr/sbin/sendmail",
+        "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
+        "/usr/sbin/sendmail",
     ]:
         if os.path.exists(path):
             return path
@@ -278,7 +288,7 @@ def retrieve_from_passwordstore(parameter):
     value = parameter.split()
 
     if len(value) == 2:
-        if value[0] == 'store':
+        if value[0] == "store":
             value = cmk.utils.password_store.extract(value[1])
         else:
             value = value[1]
@@ -293,21 +303,23 @@ def post_request(message_constructor, url=None, headers=None):
 
     if not url:
         url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
-    proxy_url = context.get("PARAMETER_PROXY_URL")
-    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+
+    serialized_proxy_config = context.get("PARAMETER_PROXY_URL")
 
     verify: bool = True
     if "PARAMETER_IGNORE_SSL" in context:
         verify = False
 
     try:
-        response = requests.post(url=url,
-                                 json=message_constructor(context),
-                                 proxies=proxies,
-                                 headers=headers,
-                                 verify=verify)
+        response = requests.post(
+            url=url,
+            json=message_constructor(context),
+            proxies=deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies(),
+            headers=headers,
+            verify=verify,
+        )
     except requests.exceptions.ProxyError:
-        sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
+        sys.stderr.write("Cannot connect to proxy: %s\n" % serialized_proxy_config)
         sys.exit(2)
 
     return response
@@ -328,12 +340,18 @@ def process_by_status_code(response: requests.models.Response, success_code: int
         sys.exit(2)
 
 
-StateInfo = NamedTuple('StateInfo', [('state', int), ('type', str), ('title', str)])
+class StateInfo(NamedTuple):
+    state: int
+    type: str
+    title: str
+
+
 StatusCodeRange = Tuple[int, int]
 
 
-def process_by_result_map(response: requests.models.Response, result_map: Dict[StatusCodeRange,
-                                                                               StateInfo]):
+def process_by_result_map(
+    response: requests.models.Response, result_map: Dict[StatusCodeRange, StateInfo]
+):
     def get_details_from_json(json_response, what):
         for key, value in json_response.items():
             if key == what:
@@ -349,10 +367,10 @@ def process_by_result_map(response: requests.models.Response, result_map: Dict[S
 
     for status_code_range, state_info in result_map.items():
         if status_code_range[0] <= status_code <= status_code_range[1]:
-            if state_info.type == 'json':
+            if state_info.type == "json":
                 details = response.json()
                 details = get_details_from_json(details, state_info.title)
-            elif state_info.type == 'str':
+            elif state_info.type == "str":
                 details = response.text
 
             sys.stderr.write(f"{state_info.title}: {details}\n{summary}\n")

@@ -8,12 +8,12 @@ import pytest
 
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-from cmk.gui.userdb import on_access, on_succeeded_login
+import cmk.gui.login as login
 from cmk.gui.globals import session
+from cmk.gui.userdb import on_access, on_succeeded_login
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.script_helpers import application_and_request_context
-import cmk.gui.login as login
 
 
 @pytest.fixture(name="user_id")
@@ -52,7 +52,7 @@ def test_flash(user_id):
         assert get_flashed_messages() == []
 
 
-def test_flash_escape_html_in_str(user_id, module_wide_request_context):
+def test_flash_escape_html_in_str(user_id, request_context):
     with login.UserSessionContext(user_id):
         on_succeeded_login(user_id)  # Create and activate session
 
@@ -60,7 +60,7 @@ def test_flash_escape_html_in_str(user_id, module_wide_request_context):
         assert get_flashed_messages() == [HTML("&lt;script&gt;aaa&lt;/script&gt;")]
 
 
-def test_flash_dont_escape_html(user_id, module_wide_request_context):
+def test_flash_dont_escape_html(user_id, request_context):
     with login.UserSessionContext(user_id):
         on_succeeded_login(user_id)  # Create and activate session
 

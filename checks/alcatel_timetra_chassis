@@ -8,7 +8,7 @@
 def inventory_alcatel_timetra_chassis(info):
     for name, _adminstate, operstate, _alarmstate in info:
         # Only add active devices
-        if operstate in ['2', '8']:
+        if operstate in ["2", "8"]:
             yield name, None
 
 
@@ -48,8 +48,9 @@ def check_alcatel_timetra_chassis(item, _no_params, info):
             adminstate, operstate, alarmstate = map(int, line[1:])
             if operstate != adminstate:
                 if admin_states[adminstate][0] != 0:
-                    yield admin_states[adminstate][
-                        0], "Admin state: %s" % admin_states[adminstate][1]
+                    yield admin_states[adminstate][0], "Admin state: %s" % admin_states[adminstate][
+                        1
+                    ]
 
             yield oper_states[operstate][0], "Operational state: %s" % oper_states[operstate][1]
 
@@ -70,5 +71,6 @@ check_info["alcatel_timetra_chassis"] = {
             15,  # tmnxHwAdminState
             16,  # tmnxHwOperState
             24,  # tmnxHwAlarmState
-        ]),
+        ],
+    ),
 }

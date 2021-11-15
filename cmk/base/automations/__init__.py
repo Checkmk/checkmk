@@ -7,19 +7,19 @@
 import abc
 import signal
 from types import FrameType
-from typing import NoReturn, Dict, Any, List, Optional
+from typing import Any, Dict, List, NoReturn, Optional
 
 import cmk.utils.debug
-from cmk.utils.exceptions import MKTimeout
-from cmk.utils.plugin_loader import load_plugins
-from cmk.utils.exceptions import MKException
-import cmk.utils.python_printer as python_printer
+from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
+from cmk.utils.plugin_loader import load_plugins
 
-import cmk.base.config as config
-import cmk.base.profiling as profiling
+from cmk.automations.results import ABCAutomationResult
+
 import cmk.base.check_api as check_api
+import cmk.base.config as config
 import cmk.base.obsolete_output as out
+import cmk.base.profiling as profiling
 
 
 # TODO: Inherit from MKGeneralException
@@ -29,10 +29,10 @@ class MKAutomationError(MKException):
 
 class Automations:
     def __init__(self) -> None:
-        super(Automations, self).__init__()
+        super().__init__()
         self._automations: Dict[str, Automation] = {}
 
-    def register(self, automation: 'Automation') -> None:
+    def register(self, automation: "Automation") -> None:
         if automation.cmd is None:
             raise TypeError()
         self._automations[automation.cmd] = automation
@@ -69,8 +69,8 @@ class Automations:
         finally:
             profiling.output_profile()
 
-        out.output(python_printer.pformat(result))
-        out.output('\n')
+        out.output(result.serialize())
+        out.output("\n")
 
         return 0
 
@@ -88,14 +88,14 @@ class Automations:
         raise MKTimeout("Action timed out.")
 
 
-class Automation(metaclass=abc.ABCMeta):
+class Automation(abc.ABC):
     cmd: Optional[str] = None
     needs_checks = False
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args: List[str]) -> Any:
-        raise NotImplementedError()
+    def execute(self, args: List[str]) -> ABCAutomationResult:
+        ...
 
 
 #

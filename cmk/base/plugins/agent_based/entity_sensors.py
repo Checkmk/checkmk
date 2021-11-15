@@ -32,6 +32,7 @@ from typing import Any, List, Mapping
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
     check_levels,
+    get_value_store,
     OIDEnd,
     register,
     Result,
@@ -55,7 +56,7 @@ def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection
 
 
 register.snmp_section(
-    name='entity_sensors',
+    name="entity_sensors",
     detect=any_of(
         startswith(OIDSysDescr, "palo alto networks"),
         startswith(OIDSysDescr, "cisco adaptive security appliance"),
@@ -85,7 +86,7 @@ register.snmp_section(
 
 
 def discover_entity_sensors_temp(section: EntitySensorSection) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section.get('temp', {}))
+    yield from (Service(item=item) for item in section.get("temp", {}))
 
 
 def check_entity_sensors_temp(
@@ -93,13 +94,14 @@ def check_entity_sensors_temp(
     params: TempParamType,
     section: EntitySensorSection,
 ) -> CheckResult:
-    if not (sensor_reading := section.get('temp', {}).get(item)):
+    if not (sensor_reading := section.get("temp", {}).get(item)):
         return
 
     yield from check_temperature(
         sensor_reading.reading,
         params,
         unique_name="temp",
+        value_store=get_value_store(),
         dev_unit=sensor_reading.unit,
         dev_status=int(sensor_reading.state),
         dev_status_name=sensor_reading.status_descr,
@@ -107,19 +109,19 @@ def check_entity_sensors_temp(
 
 
 register.check_plugin(
-    name='entity_sensors_temp',
-    sections=['entity_sensors'],
-    service_name='Temperature %s',
+    name="entity_sensors_temp",
+    sections=["entity_sensors"],
+    service_name="Temperature %s",
     discovery_function=discover_entity_sensors_temp,
     check_function=check_entity_sensors_temp,
-    check_ruleset_name='temperature',
+    check_ruleset_name="temperature",
     check_default_parameters={},  # The check processes ambient and CPU temp sensors,
     # which would each require totally different defaults. So it is better not to define any.
 )
 
 
 def discover_entity_sensors_fan(section: EntitySensorSection) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section.get('fan', {}))
+    yield from (Service(item=item) for item in section.get("fan", {}))
 
 
 def check_entity_sensors_fan(
@@ -127,36 +129,37 @@ def check_entity_sensors_fan(
     params: Mapping[str, Any],
     section: EntitySensorSection,
 ) -> CheckResult:
-    if not (sensor_reading := section.get('fan', {}).get(item)):
+    if not (sensor_reading := section.get("fan", {}).get(item)):
         return
 
-    yield Result(state=sensor_reading.state,
-                 summary=f"Operational status: {sensor_reading.status_descr}")
+    yield Result(
+        state=sensor_reading.state, summary=f"Operational status: {sensor_reading.status_descr}"
+    )
 
     yield from check_levels(
         value=sensor_reading.reading,
-        metric_name="fan" if params.get('output_metrics') else None,
+        metric_name="fan" if params.get("output_metrics") else None,
         levels_upper=params.get("upper"),
         levels_lower=params["lower"],
-        render_func=lambda r: f'{int(r)} {sensor_reading.unit}',
+        render_func=lambda r: f"{int(r)} {sensor_reading.unit}",
         label="Speed",
         boundaries=(0, None),
     )
 
 
 register.check_plugin(
-    name='entity_sensors_fan',
-    sections=['entity_sensors'],
-    service_name='Fan %s',
+    name="entity_sensors_fan",
+    sections=["entity_sensors"],
+    service_name="Fan %s",
     discovery_function=discover_entity_sensors_fan,
     check_function=check_entity_sensors_fan,
-    check_ruleset_name='hw_fans',
-    check_default_parameters={'lower': (2000, 1000)},  # customer request
+    check_ruleset_name="hw_fans",
+    check_default_parameters={"lower": (2000, 1000)},  # customer request
 )
 
 
 def discover_entity_sensors_power_presence(section: EntitySensorSection) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section.get('power_presence', {}))
+    yield from (Service(item=item) for item in section.get("power_presence", {}))
 
 
 def check_entity_sensors_power_presence(
@@ -164,22 +167,22 @@ def check_entity_sensors_power_presence(
     params: Mapping[str, Any],
     section: EntitySensorSection,
 ) -> CheckResult:
-    if not (sensor_reading := section.get('power_presence', {}).get(item)):
+    if not (sensor_reading := section.get("power_presence", {}).get(item)):
         return
 
     if sensor_reading.reading == 1:
-        yield Result(state=State.OK, summary='Powered on')
+        yield Result(state=State.OK, summary="Powered on")
         return
 
-    yield Result(state=State(params['power_off_criticality']), summary='Powered off')
+    yield Result(state=State(params["power_off_criticality"]), summary="Powered off")
 
 
 register.check_plugin(
-    name='entity_sensors_power_presence',
-    sections=['entity_sensors'],
-    service_name='Power %s',
+    name="entity_sensors_power_presence",
+    sections=["entity_sensors"],
+    service_name="Power %s",
     discovery_function=discover_entity_sensors_power_presence,
     check_function=check_entity_sensors_power_presence,
-    check_ruleset_name='power_presence',
-    check_default_parameters={'power_off_criticality': 1},  # customer request
+    check_ruleset_name="power_presence",
+    check_default_parameters={"power_off_criticality": 1},  # customer request
 )

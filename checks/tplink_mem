@@ -23,19 +23,21 @@ def check_tplink_mem(_no_item, params, info):
 
     mem_used = float(mem_used) / num_units
 
-    return check_levels(mem_used,
-                        "mem_used_percent",
-                        params.get('levels', (None, None)),
-                        infoname="Usage",
-                        human_readable_func=get_percent_human_readable)
+    return check_levels(
+        mem_used,
+        "mem_used_percent",
+        params.get("levels", (None, None)),
+        infoname="Usage",
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["tplink_mem"] = {
-    'check_function': check_tplink_mem,
-    'inventory_function': inventory_tplink_mem,
-    'service_description': 'Memory',
-    'has_perfdata': True,
-    'snmp_info': (".1.3.6.1.4.1.11863.6.4.1.2.1.1", [2]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11863.5"),
-    'group': 'memory_percentage_used',
+    "check_function": check_tplink_mem,
+    "inventory_function": inventory_tplink_mem,
+    "service_description": "Memory",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.11863.6.4.1.2.1.1", [2]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11863.5"),
+    "group": "memory_percentage_used",
 }

@@ -4,10 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import register, type_defs
 from .utils import if64, interfaces
 
 _HPUX_FIELDS_TO_IF_FIELDS = {
@@ -65,16 +62,16 @@ def parse_hpux_if(string_table: type_defs.StringTable) -> interfaces.Section:
     nics = []
     for line in string_table:
 
-        if '***' in line:
+        if "***" in line:
             iface = interfaces.Interface(
-                index='0',
-                descr='0',
-                alias='0',
-                type='6',
+                index="0",
+                descr="0",
+                alias="0",
+                type="6",
             )
             nics.append(iface)
             continue
-        if '=' not in line:
+        if "=" not in line:
             continue
 
         left, right = " ".join(line).split("=")
@@ -119,7 +116,7 @@ def hpux_parse_operstatus(txt: str) -> str:
 
 
 register.agent_section(
-    name='hpux_if',
+    name="hpux_if",
     parse_function=parse_hpux_if,
 )
 

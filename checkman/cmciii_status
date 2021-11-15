@@ -15,5 +15,5 @@ description:
 item:
  The unit name and the name of the sensor
 
-inventory:
+discovery:
  One service is created for each sensor.

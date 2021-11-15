@@ -12,6 +12,6 @@ description:
  every other state according to BlueArc.3319.06 MIB and {UNKN} on every
  state not defined in the MIB.
 
-inventory:
+discovery:
  One service is created on each HNAS having a Quorum Device.
 

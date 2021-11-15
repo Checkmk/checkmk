@@ -4,18 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.kernel
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-import cmk.base.plugins.agent_based.kernel
 
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
@@ -33,11 +34,11 @@ kernel_default_levels = None
 kernel_counter_names = cmk.base.plugins.agent_based.kernel.KERNEL_COUNTER_NAMES
 
 kernel_metrics_names = {
-    'ctxt': 'context_switches',
-    'processes': 'process_creations',
-    'pgmajfault': 'major_page_faults',
-    'pswpin': 'page_swap_in',
-    'pswpout': 'page_swap_out',
+    "ctxt": "context_switches",
+    "processes": "process_creations",
+    "pgmajfault": "major_page_faults",
+    "pswpin": "page_swap_in",
+    "pswpout": "page_swap_out",
 }
 
 
@@ -64,13 +65,13 @@ def check_kernel(item, params, parsed):
 # This check is deprecated. Please have a look at werk #8969.
 check_info["kernel"] = {
     # section is already migrated!
-    'check_function': check_kernel,
-    'service_description': 'Kernel %s',
-    'has_perfdata': True,
-    'group': 'vm_counter',
+    "check_function": check_kernel,
+    "service_description": "Kernel %s",
+    "has_perfdata": True,
+    "group": "vm_counter",
 }
 
-#.
+# .
 #   .--kernel.performance--Counters----------------------------------------.
 #   |    ____            __                                                |
 #   |   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___      |
@@ -107,9 +108,10 @@ def check_kernel_performance(_no_item, params, parsed):
         counter, value = item_values[0]
         rate = get_rate(counter, timestamp, value)
 
-        if counter in ['pswpin', 'pswpout']:
-            levels = params.get('%s_levels' % kernel_metrics_names[counter],(None, None)) \
-                     + params.get('%s_levels_lower' % kernel_metrics_names[counter], (None, None))
+        if counter in ["pswpin", "pswpout"]:
+            levels = params.get(
+                "%s_levels" % kernel_metrics_names[counter], (None, None)
+            ) + params.get("%s_levels_lower" % kernel_metrics_names[counter], (None, None))
         else:
             levels = params.get(counter)
 
@@ -117,16 +119,16 @@ def check_kernel_performance(_no_item, params, parsed):
             rate,
             kernel_metrics_names[counter],
             levels,
-            unit='/s',
+            unit="/s",
             infoname=item_name,
             boundaries=(0, None),
         )
 
 
-check_info['kernel.performance'] = {
-    'inventory_function': inventory_kernel_performance,
-    'check_function': check_kernel_performance,
-    'service_description': 'Kernel Performance',
-    'has_perfdata': True,
-    'group': 'kernel_performance',
+check_info["kernel.performance"] = {
+    "inventory_function": inventory_kernel_performance,
+    "check_function": check_kernel_performance,
+    "service_description": "Kernel Performance",
+    "has_perfdata": True,
+    "group": "kernel_performance",
 }

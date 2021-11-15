@@ -6,9 +6,9 @@
 
 # pylint: disable=protected-access
 
-import cmk.base.api.agent_based.register as agent_based_register
-
 from cmk.utils.type_defs import CheckPluginName
+
+import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 
@@ -28,16 +28,20 @@ def test_get_registered_check_plugins(monkeypatch):
         None,  # type: ignore  # irrelevant for test
     )
 
-    monkeypatch.setattr(agent_based_register._config, "registered_check_plugins",
-                        {test_plugin.name: test_plugin})
+    monkeypatch.setattr(
+        agent_based_register._config, "registered_check_plugins", {test_plugin.name: test_plugin}
+    )
 
     assert agent_based_register.is_registered_check_plugin(test_plugin.name)
     assert agent_based_register.get_check_plugin(test_plugin.name) is test_plugin
-    assert agent_based_register.get_check_plugin(
-        CheckPluginName("mgmt_this_should_not_exists")) is None
+    assert (
+        agent_based_register.get_check_plugin(CheckPluginName("mgmt_this_should_not_exists"))
+        is None
+    )
 
     mgmt_plugin = agent_based_register.get_check_plugin(
-        CheckPluginName("mgmt_%s" % test_plugin.name))
+        CheckPluginName("mgmt_%s" % test_plugin.name)
+    )
     assert mgmt_plugin is not None
     assert str(mgmt_plugin.name).startswith("mgmt_")
     assert mgmt_plugin.service_name.startswith("Management Interface: ")

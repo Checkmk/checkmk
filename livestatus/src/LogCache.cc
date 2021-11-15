@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <utility>
 
 #include "Logfile.h"
@@ -46,7 +47,9 @@ void LogCache::update() {
                 std::make_unique<Logfile>(logger(), this, entry.path(), false));
         }
     } catch (const std::filesystem::filesystem_error &e) {
-        Warning(logger()) << "updating log file index: " << e.what();
+        if (e.code() != std::errc::no_such_file_or_directory) {
+            Warning(logger()) << "updating log file index: " << e.what();
+        }
     }
 
     if (_logfiles.empty()) {
@@ -55,9 +58,9 @@ void LogCache::update() {
     }
 }
 
-void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
-    time_t since = logfile->since();
-    if (since == 0) {
+void LogCache::addToIndex(mapped_type logfile) {
+    key_type since = logfile->since();
+    if (since == key_type{}) {  // TODO(sp) We simulate std::optional somehow...
         return;
     }
     // make sure that no entry with that 'since' is existing yet.  Under normal
@@ -92,7 +95,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
     }
 
     // [1] Delete old logfiles: Begin deleting with the oldest logfile available
-    logfiles_t::iterator it;
+    LogCache::iterator it;
     for (it = _logfiles.begin(); it != _logfiles.end(); ++it) {
         if (it->second.get() == logfile) {
             break;  // Do not touch the logfile the Query is currently accessing
@@ -148,7 +151,9 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
                     << _mc->maxCachedMessages() << ")";
 }
 
-size_t LogCache::numCachedLogMessages() const {
+size_t LogCache::numCachedLogMessages() {
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
     return _num_cached_log_messages;
 }
 

@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import typing
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import (
@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     Text,
@@ -20,34 +21,46 @@ from typing import (
     Union,
 )
 
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import UserId
+
+from cmk.gui.exceptions import FinalizeRequest
+from cmk.gui.utils.speaklater import LazyString
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
 LivestatusQuery = str
 PermissionName = str
 RoleName = str
 CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
-Choice = Tuple[Optional[str], str]
+ChoiceText = str
+ChoiceId = Optional[str]
+Choice = Tuple[ChoiceId, ChoiceText]
 Choices = List[Choice]
-ChoiceGroup = NamedTuple("ChoiceGroup", [
-    ("title", Text),
-    ("choices", Choices),
-])
+
+
+class ChoiceGroup(NamedTuple):
+    title: Text
+    choices: Choices
+
+
 GroupedChoices = List[ChoiceGroup]
+UserSpec = Dict[str, Any]  # TODO: Improve this type
 
 # Visual specific
 FilterName = str
-FilterHTTPVariables = Dict[str, str]
+FilterHTTPVariables = Mapping[str, str]
 Visual = Dict[str, Any]
 VisualName = str
 VisualTypeName = str
-VisualContext = Dict[FilterName, Union[str, FilterHTTPVariables]]
+VisualContext = Mapping[FilterName, FilterHTTPVariables]
 InfoName = str
 SingleInfos = List[InfoName]
-VisualLinkSpec = NamedTuple("VisualLinkSpec", [
-    ("type_name", VisualTypeName),
-    ("name", VisualName),
-])
+
+
+class VisualLinkSpec(NamedTuple):
+    type_name: VisualTypeName
+    name: VisualName
+
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type
@@ -61,13 +74,17 @@ PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
 
 class PainterSpec(
-        NamedTuple('PainterSpec', [
-            ('painter_name', PainterNameSpec),
-            ('link_spec', Optional[VisualLinkSpec]),
-            ('tooltip', Optional[ColumnName]),
-            ('join_index', Optional[ColumnName]),
-            ('column_title', Optional[str]),
-        ])):
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
+        "PainterSpec",
+        [
+            ("painter_name", PainterNameSpec),
+            ("link_spec", Optional[VisualLinkSpec]),
+            ("tooltip", Optional[ColumnName]),
+            ("join_index", Optional[ColumnName]),
+            ("column_title", Optional[str]),
+        ],
+    )
+):
     def __new__(cls, *value):
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
@@ -81,18 +98,19 @@ class PainterSpec(
         elif isinstance(value[1], tuple):
             value = (value[0], VisualLinkSpec(*value[1])) + value[2:]
 
-        return super(PainterSpec, cls).__new__(cls, *value)
+        return super().__new__(cls, *value)
 
     def __repr__(self):
-        return str((self.painter_name, tuple(self.link_spec) if self.link_spec else None) +
-                   tuple(self)[2:])
+        return str(
+            (self.painter_name, tuple(self.link_spec) if self.link_spec else None) + tuple(self)[2:]
+        )
 
 
 ViewSpec = Dict[str, Any]
 AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = Dict[ViewName, ViewSpec]
 SorterFunction = Callable[[ColumnName, Row, Row], int]
-FilterHeaders = str
+FilterHeader = str
 
 # Configuration related
 ConfigDomainName = str
@@ -114,6 +132,7 @@ class SetOnceDict(dict):
         ValueError: key 'foo' already set
 
     """
+
     def __setitem__(self, key, value):
         if key in self:
             raise ValueError("key %r already set" % (key,))
@@ -125,6 +144,7 @@ class SetOnceDict(dict):
 
 class ABCMegaMenuSearch(ABC):
     """Abstract base class for search fields in mega menus"""
+
     def __init__(self, name: str) -> None:
         self._name = name
 
@@ -171,7 +191,7 @@ class TopicMenuTopic(NamedTuple):
 
 class MegaMenu(NamedTuple):
     name: str
-    title: str
+    title: Union[str, LazyString]
     icon: Icon
     sort_index: int
     topics: Callable[[], List[TopicMenuTopic]]
@@ -185,6 +205,7 @@ SearchQuery = str
 @dataclass
 class SearchResult:
     """Representation of a single result"""
+
     title: str
     url: str
     context: str = ""
@@ -193,8 +214,48 @@ class SearchResult:
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
+
+
+class _UnitInfoRequired(TypedDict):
+    title: str
+    symbol: str
+    render: Callable[[Any], str]
+    js_render: str
+
+
+class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
+    id: str
+    stepping: str
+    color: str
+    graph_unit: Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
+    description: str
+    valuespec: Any  # TODO: better typing
+
+
+class TranslatedMetric(TypedDict):
+    orig_name: List[str]
+    value: float
+    scalar: Dict[str, float]
+    scale: List[float]
+    auto_graph: bool
+    title: str
+    unit: UnitInfo
+    color: str
+
+
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
+TranslatedMetrics = Dict[str, TranslatedMetric]
+MetricExpression = str
+LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
+MetricDefinition = Union[
+    Tuple[MetricExpression, LineType], Tuple[MetricExpression, LineType, Union[str, LazyString]]
+]
+PerfometerSpec = Dict[str, Any]
+PerfdataTuple = Tuple[
+    str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]
+]
+Perfdata = List[PerfdataTuple]
 
 
 class RenderableRecipe(NamedTuple):
@@ -203,3 +264,31 @@ class RenderableRecipe(NamedTuple):
     color: str
     line_type: str
     visible: bool
+
+
+ActionResult = Optional[FinalizeRequest]
+
+
+@dataclass
+class ViewProcessTracking:
+    amount_unfiltered_rows: int = 0
+    amount_filtered_rows: int = 0
+    amount_rows_after_limit: int = 0
+    duration_fetch_rows: Snapshot = Snapshot.null()
+    duration_filter_rows: Snapshot = Snapshot.null()
+    duration_view_render: Snapshot = Snapshot.null()
+
+
+CustomAttr = typing.TypedDict(
+    "CustomAttr",
+    {
+        "title": str,
+        "help": str,
+        "name": str,
+        "topic": str,
+        "type": str,
+        "add_custom_macro": bool,
+        "show_in_table": bool,
+    },
+    total=True,
+)

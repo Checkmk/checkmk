@@ -12,7 +12,7 @@ description:
 item:
  The name of the smoke sensor.
 
-inventory:
+discovery:
  One service is created for each sensor.
 
 

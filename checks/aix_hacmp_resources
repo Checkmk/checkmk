@@ -23,7 +23,10 @@ def parse_aix_hacmp_resources(info):
     parsed = {}
     for line in info:
         joined_line = " ".join(line)
-        if 'There is no cluster definition' in joined_line or 'Status of the RSCT subsystems' in joined_line:
+        if (
+            "There is no cluster definition" in joined_line
+            or "Status of the RSCT subsystems" in joined_line
+        ):
             continue
         try:
             parsed.setdefault(line[0], []).append((line[2], line[1].lower()))
@@ -54,17 +57,17 @@ def check_aix_hacmp_resources(item, params, data):
         if resource_states[0] != "online":
             state = 2
     elif expected_behaviour == "any":
-        if not any((resource_state == u"online" for resource_state in resource_states)):
+        if not any((resource_state == "online" for resource_state in resource_states)):
             state = 2
 
     return state, ", ".join(infotext)
 
 
-check_info['aix_hacmp_resources'] = {
-    'default_levels_variable': "aix_hacmp_resources",
-    'parse_function': parse_aix_hacmp_resources,
-    'inventory_function': inventory_aix_hacmp_resources,
-    'check_function': check_aix_hacmp_resources,
-    'service_description': 'HACMP RG %s',
-    'group': 'hacmp_resources',
+check_info["aix_hacmp_resources"] = {
+    "default_levels_variable": "aix_hacmp_resources",
+    "parse_function": parse_aix_hacmp_resources,
+    "inventory_function": inventory_aix_hacmp_resources,
+    "check_function": check_aix_hacmp_resources,
+    "service_description": "HACMP RG %s",
+    "group": "hacmp_resources",
 }

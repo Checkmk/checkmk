@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output of agent:
-#<<<fsc-ipmi-mem-status>>>
-#0 DIMM-1A 01
-#1 DIMM-1B 03
-#2 DIMM-2A 00
-#3 DIMM-2B 00
+# <<<fsc-ipmi-mem-status>>>
+# 0 DIMM-1A 01
+# 1 DIMM-1B 03
+# 2 DIMM-2A 00
+# 3 DIMM-2B 00
 #
 # Available state levels:
 # 00 = Empty slot
@@ -20,12 +20,12 @@
 # 05 = Prefail (module exceeded the correctable errors threshold)
 fsc_ipmi_mem_status_levels = [
     # Status Code, Label
-    (0, 'Empty slot'),
-    (0, 'Running'),
-    (0, 'Reserved'),
-    (2, 'Error (module has encountered errors, but is still in use)'),
-    (2, 'Fail (module has encountered errors and is therefore disabled)'),
-    (2, 'Prefail (module exceeded the correctable errors threshold)'),
+    (0, "Empty slot"),
+    (0, "Running"),
+    (0, "Reserved"),
+    (2, "Error (module has encountered errors, but is still in use)"),
+    (2, "Fail (module has encountered errors and is therefore disabled)"),
+    (2, "Prefail (module exceeded the correctable errors threshold)"),
 ]
 
 
@@ -35,13 +35,13 @@ def inventory_fsc_ipmi_mem_status(info):
     # b) Don't have a status (line[2])
     # c) Don't have a module
     return [
-        (line[1], "", None) for line in info if line[0] != 'E' and len(line) > 2 and line[2] != '00'
+        (line[1], "", None) for line in info if line[0] != "E" and len(line) > 2 and line[2] != "00"
     ]
 
 
 def check_fsc_ipmi_mem_status(name, _no_params, info):
     for line in info:
-        if line[0] == 'E':
+        if line[0] == "E":
             return (3, "Error in agent plugin output (%s)" % " ".join(line[1:]))
         elif line[1] == name:
             return fsc_ipmi_mem_status_levels[int(line[2])]
@@ -50,8 +50,8 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
 
 
 check_info["fsc_ipmi_mem_status"] = {
-    'check_function': check_fsc_ipmi_mem_status,
-    'inventory_function': inventory_fsc_ipmi_mem_status,
-    'service_description': 'IPMI Memory status %s',
-    'has_perfdata': True,
+    "check_function": check_fsc_ipmi_mem_status,
+    "inventory_function": inventory_fsc_ipmi_mem_status,
+    "service_description": "IPMI Memory status %s",
+    "has_perfdata": True,
 }

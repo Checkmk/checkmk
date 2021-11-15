@@ -15,12 +15,12 @@
 
 # GENERAL MAPS:
 
-hp_blade_status_map = {1: 'Other', 2: 'Ok', 3: 'Degraded', 4: 'Failed'}
+hp_blade_status_map = {1: "Other", 2: "Ok", 3: "Degraded", 4: "Failed"}
 hp_blade_status2nagios_map = {
-    'Other': 2,
-    'Ok': 0,
-    'Degraded': 1,
-    'Failed': 2,
+    "Other": 2,
+    "Ok": 0,
+    "Degraded": 1,
+    "Failed": 2,
 }
 
 
@@ -32,14 +32,16 @@ def inventory_hp_blade_general(info):
 def check_hp_blade_general(item, params, info):
     snmp_state = hp_blade_status_map[int(info[0][1])]
     status = hp_blade_status2nagios_map[snmp_state]
-    return (status,
-            "General Status is %s (Firmware: %s, S/N: %s)" % (snmp_state, info[0][0], info[0][2]))
+    return (
+        status,
+        "General Status is %s (Firmware: %s, S/N: %s)" % (snmp_state, info[0][0], info[0][2]),
+    )
 
 
 check_info["hp_blade"] = {
-    'check_function': check_hp_blade_general,
-    'inventory_function': inventory_hp_blade_general,
-    'service_description': 'General Status',
-    'snmp_info': ('.1.3.6.1.4.1.232.22.2.3.1.1.1', ['8', '16', '7']),
-    'snmp_scan_function': lambda oid: ".11.5.7.1.2" in oid(".1.3.6.1.2.1.1.2.0"),
+    "check_function": check_hp_blade_general,
+    "inventory_function": inventory_hp_blade_general,
+    "service_description": "General Status",
+    "snmp_info": (".1.3.6.1.4.1.232.22.2.3.1.1.1", ["8", "16", "7"]),
+    "snmp_scan_function": lambda oid: ".11.5.7.1.2" in oid(".1.3.6.1.2.1.1.2.0"),
 }

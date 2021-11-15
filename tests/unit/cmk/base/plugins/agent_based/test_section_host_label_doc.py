@@ -56,24 +56,27 @@ def test_all_sections_have_host_labels_documented(fix_register):
     encountered_labels: Set[Optional[str]] = set()
 
     for section in (
-            s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"):
+        s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"
+    ):
 
         if str(section.name) in KNOWN_MISSING_DOCSTRING:
             assert not section.host_label_function.__doc__
             continue
 
-        assert section.host_label_function.__doc__, (
-            f"Missing doc-string for host label function of {section.name}")
+        assert (
+            section.host_label_function.__doc__
+        ), f"Missing doc-string for host label function of {section.name}"
 
-        short_description, body = section.host_label_function.__doc__.split('\n', 1)
+        short_description, body = section.host_label_function.__doc__.split("\n", 1)
         text_sections = _TextSection(
             header=short_description,
             lines=body.splitlines(),
         ).subsections()
 
         label_paragraphs = [p for p in text_sections if p.header == "Labels"]
-        assert len(label_paragraphs) == 1, (
-            f"Missing 'Labels:' section in doc-string for host label function of {section.name}")
+        assert (
+            len(label_paragraphs) == 1
+        ), f"Missing 'Labels:' section in doc-string for host label function of {section.name}"
 
         if str(section.name) in KNOWN_NON_BUILTIN_LABEL_PRODUCERS:
             continue
@@ -92,6 +95,7 @@ def test_builtin_labels_start_with_cmk():
 
 class _TextSection:
     """A helper to parse doc-strings"""
+
     def __init__(
         self,
         *,
@@ -101,8 +105,11 @@ class _TextSection:
         self.header: Final = header
         # strip empty lines at beginning & end
         content_flags = [bool(l.strip()) for l in lines]
-        content_lines = (lines[content_flags.index(True):-content_flags[::-1].index(True) or None]
-                         if any(content_flags) else [])
+        content_lines = (
+            lines[content_flags.index(True) : -content_flags[::-1].index(True) or None]
+            if any(content_flags)
+            else []
+        )
         indent = self._get_indent(content_lines)
         self.lines: Final[Sequence[str]] = [l[indent:].rstrip() for l in content_lines]
 
@@ -118,7 +125,7 @@ class _TextSection:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(header={self.header}, lines={self.lines})"
 
-    def subsections(self) -> Sequence['_TextSection']:
+    def subsections(self) -> Sequence["_TextSection"]:
         """Split up the body in subsections"""
 
         subsections = []
@@ -130,11 +137,11 @@ class _TextSection:
                     lines.append(line)
                 continue
 
-            if line.startswith(' '):
+            if line.startswith(" "):
                 lines.append(line)
                 continue
 
-            new_header = line[:-1].strip() if line.endswith(':') else None
+            new_header = line[:-1].strip() if line.endswith(":") else None
             if new_header != header:
                 if lines:
                     subsections.append(_TextSection(header=header, lines=lines))

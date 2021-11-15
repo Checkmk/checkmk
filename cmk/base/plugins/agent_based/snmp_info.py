@@ -5,23 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import NamedTuple, Optional
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-    InventoryResult,
-)
 
-from .agent_based_api.v1 import (
-    Attributes,
-    exists,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    State,
-)
-
+from .agent_based_api.v1 import Attributes, exists, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 from .utils.device_types import get_device_type_label
 
 
@@ -62,8 +48,7 @@ def discover_snmp_info(section: SNMPInfo) -> DiscoveryResult:
 def check_snmp_info(section: SNMPInfo) -> CheckResult:
     yield Result(
         state=State.OK,
-        summary=f"{section.name}, {section.location}, {section.contact}",
-        details=f"{section.description}, {section.name}, {section.location}, {section.contact}",
+        summary=f"{section.description}, {section.name}, {section.location}, {section.contact}",
     )
 
 
@@ -76,17 +61,21 @@ register.check_plugin(
 
 
 def inventory_snmp_info(section: SNMPInfo) -> InventoryResult:
-    yield Attributes(path=["hardware", "system"],
-                     inventory_attributes={
-                         "product": section.description,
-                     })
+    yield Attributes(
+        path=["hardware", "system"],
+        inventory_attributes={
+            "product": section.description,
+        },
+    )
 
-    yield Attributes(path=["software", "configuration", "snmp_info"],
-                     inventory_attributes={
-                         "contact": section.contact,
-                         "name": section.name,
-                         "location": section.location,
-                     })
+    yield Attributes(
+        path=["software", "configuration", "snmp_info"],
+        inventory_attributes={
+            "contact": section.contact,
+            "name": section.name,
+            "location": section.location,
+        },
+    )
 
 
 register.inventory_plugin(

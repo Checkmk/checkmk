@@ -4,20 +4,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import json as _json
 import time as _time
 import uuid as _uuid
-from typing import Dict, List
+from typing import Dict, List, NamedTuple
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import web, create_linux_test_host  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import create_linux_test_host, web  # noqa: F401 # pylint: disable=unused-import
 
-DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
+from cmk.utils import version as cmk_version
 
 
-@pytest.fixture(name="default_cfg", scope="module", params=["nagios", "cmc"])
+class DefaultConfig(NamedTuple):
+    core: str
+
+
+@pytest.fixture(
+    name="default_cfg",
+    scope="module",
+    params=[
+        "nagios",
+        pytest.param(
+            "cmc",
+            marks=pytest.mark.skipif(
+                cmk_version.is_raw_edition(), reason="raw edition only supports nagios core."
+            ),
+        ),
+    ],
+)
 def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     site.ensure_running()
     config = DefaultConfig(core=request.param)
@@ -57,48 +72,54 @@ def test_host_table(default_cfg, site):
 
 def test_host_custom_variables(default_cfg, site):
     rows = site.live.query(
-        "GET hosts\nColumns: custom_variables tags\nFilter: name = livestatus-test-host\n")
+        "GET hosts\nColumns: custom_variables tags\nFilter: name = livestatus-test-host\n"
+    )
     assert isinstance(rows, list)
     assert len(rows) == 1
     custom_variables, tags = rows[0]
     assert custom_variables == {
-        u'ADDRESS_FAMILY': u'4',
-        u'TAGS': u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp' %
-                 site.id,
-        u'FILENAME': u'/wato/hosts.mk',
-        u'ADDRESS_4': u'127.0.0.1',
-        u'ADDRESS_6': u'',
+        "ADDRESS_FAMILY": "4",
+        "TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp"
+        % site.id,
+        "FILENAME": "/wato/hosts.mk",
+        "ADDRESS_4": "127.0.0.1",
+        "ADDRESS_6": "",
     }
     assert tags == {
-        u'address_family': u'ip-v4-only',
-        u'agent': u'cmk-agent',
-        u'criticality': u'prod',
-        u'ip-v4': u'ip-v4',
-        u'networking': u'lan',
-        u'piggyback': u'auto-piggyback',
-        u'site': str(site.id),
-        u'snmp_ds': u'no-snmp',
-        u'tcp': u'tcp',
+        "address_family": "ip-v4-only",
+        "agent": "cmk-agent",
+        "criticality": "prod",
+        "ip-v4": "ip-v4",
+        "networking": "lan",
+        "piggyback": "auto-piggyback",
+        "site": str(site.id),
+        "snmp_ds": "no-snmp",
+        "tcp": "tcp",
+        "checkmk-agent": "checkmk-agent",
     }
 
 
 host_equal_queries = {
     "nagios": {
-        "query": ("GET hosts\n"
-                  "Columns: host_name\n"
-                  "Filter: host_name = livestatus-test-host.domain\n"),
-        "result": [{
-            u'name': u'livestatus-test-host.domain',
-        },],
+        "query": (
+            "GET hosts\n" "Columns: host_name\n" "Filter: host_name = livestatus-test-host.domain\n"
+        ),
+        "result": [
+            {
+                "name": "livestatus-test-host.domain",
+            },
+        ],
     },
     "cmc": {
-        "query": ("GET hosts\n"
-                  "Columns: host_name\n"
-                  "Filter: host_name = livestatus-test-host\n"),
-        "result": [{
-            u'name': u'livestatus-test-host',
-        },],
-    }
+        "query": (
+            "GET hosts\n" "Columns: host_name\n" "Filter: host_name = livestatus-test-host\n"
+        ),
+        "result": [
+            {
+                "name": "livestatus-test-host",
+            },
+        ],
+    },
 }
 
 
@@ -109,8 +130,9 @@ def test_host_table_host_equal_filter(default_cfg, site):
 
 
 def test_service_table(default_cfg, site):
-    rows = site.live.query("GET services\nFilter: host_name = livestatus-test-host\n"
-                           "Columns: description\n")
+    rows = site.live.query(
+        "GET services\nFilter: host_name = livestatus-test-host\n" "Columns: description\n"
+    )
     assert isinstance(rows, list)
     assert len(rows) >= 20  # header + min 1 service
 
@@ -124,7 +146,8 @@ def test_service_table(default_cfg, site):
 
 def test_usage_counters(default_cfg, site):
     rows = site.live.query(
-        "GET status\nColumns: helper_usage_cmk helper_usage_fetcher helper_usage_checker\n")
+        "GET status\nColumns: helper_usage_cmk helper_usage_fetcher helper_usage_checker\n"
+    )
     assert isinstance(rows, list)
     assert len(rows) == 1
     assert isinstance(rows[0], list)
@@ -132,36 +155,53 @@ def test_usage_counters(default_cfg, site):
 
 
 @pytest.fixture(name="configure_service_tags")
-def configure_service_tags_fixture(site, web, default_cfg):  # noqa: F811 # pylint: disable=redefined-outer-name
+def configure_service_tags_fixture(
+    site, web, default_cfg
+):  # noqa: F811 # pylint: disable=redefined-outer-name
     web.set_ruleset(
-        "service_tag_rules", {
+        "service_tag_rules",
+        {
             "ruleset": {
-                "": [{
-                    "value": [("criticality", "prod")],
-                    "condition": {
-                        "host_name": ["livestatus-test-host"],
-                        "service_description": [{
-                            "$regex": "CPU load$",
-                        }],
+                "": [
+                    {
+                        "value": [("criticality", "prod")],
+                        "condition": {
+                            "host_name": ["livestatus-test-host"],
+                            "service_description": [
+                                {
+                                    "$regex": "CPU load$",
+                                }
+                            ],
+                        },
                     },
-                },],
+                ],
             }
-        })
+        },
+    )
     web.activate_changes()
     yield
-    web.set_ruleset("service_tag_rules", {"ruleset": {"": [],}})
+    web.set_ruleset(
+        "service_tag_rules",
+        {
+            "ruleset": {
+                "": [],
+            }
+        },
+    )
     web.activate_changes()
 
 
 def test_service_custom_variables(configure_service_tags, default_cfg, site):
-    rows = site.live.query("GET services\n"
-                           "Columns: custom_variables tags\n"
-                           "Filter: host_name = livestatus-test-host\n"
-                           "Filter: description = CPU load\n")
+    rows = site.live.query(
+        "GET services\n"
+        "Columns: custom_variables tags\n"
+        "Filter: host_name = livestatus-test-host\n"
+        "Filter: description = CPU load\n"
+    )
     assert isinstance(rows, list)
     custom_variables, tags = rows[0]
     assert custom_variables == {}
-    assert tags == {u'criticality': u'prod'}
+    assert tags == {"criticality": "prod"}
 
 
 @pytest.mark.usefixtures("default_cfg")
@@ -190,13 +230,19 @@ class TestCrashReport:
     def test_list_crash_report(self, site, component, uuid):
         rows = site.live.query("GET crashreports")
         assert rows
-        assert [u"component", u"id"] in rows
+        assert ["component", "id"] in rows
         assert [component, uuid] in rows
 
     def test_read_crash_report(self, site, component, uuid, crash_info):
-        rows = site.live.query("\n".join(
-            ("GET crashreports", "Columns: file:f0:%s/%s/crash.info" % (component, uuid),
-             "Filter: id = %s" % uuid)))
+        rows = site.live.query(
+            "\n".join(
+                (
+                    "GET crashreports",
+                    "Columns: file:f0:%s/%s/crash.info" % (component, uuid),
+                    "Filter: id = %s" % uuid,
+                )
+            )
+        )
         assert rows
         assert _json.loads(rows[0][0]) == crash_info
 
@@ -215,8 +261,10 @@ class TestCrashReport:
         before = site.live.query("GET crashreports")
         assert [component, uuid] in before
 
-        site.live.command("[%i] DEL_CRASH_REPORT;%s" %
-                          (_time.mktime(_time.gmtime()), "01234567-0123-4567-89ab-0123456789ab"))
+        site.live.command(
+            "[%i] DEL_CRASH_REPORT;%s"
+            % (_time.mktime(_time.gmtime()), "01234567-0123-4567-89ab-0123456789ab")
+        )
 
         after = site.live.query("GET crashreports")
         assert [component, uuid] in after

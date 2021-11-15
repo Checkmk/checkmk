@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -28,7 +29,8 @@ bintec_sensors_info = (
         4,  # sensorType
         5,  # sensorValue
         7,  # sensorMeasurementUnit
-    ])
+    ],
+)
 
 #   .--fans----------------------------------------------------------------.
 #   |                          __                                          |
@@ -69,7 +71,7 @@ check_info["bintec_sensors.fan"] = {
     "group": "hw_fans",
 }
 
-#.
+# .
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
 #   |                      | |_ ___ _ __ ___  _ __                         |
@@ -104,10 +106,10 @@ check_info["bintec_sensors.temp"] = {
     "has_perfdata": True,
     "snmp_info": bintec_sensors_info,
     "snmp_scan_function": bintec_sensors_scan,
-    "default_levels_variable": "bintec_sensors_temp_default_levels"
+    "default_levels_variable": "bintec_sensors_temp_default_levels",
 }
 
-#.
+# .
 #   .--voltage-------------------------------------------------------------.
 #   |                             _ _                                      |
 #   |                 __   _____ | | |_ __ _  __ _  ___                    |
@@ -148,4 +150,4 @@ check_info["bintec_sensors.voltage"] = {
     "snmp_scan_function": bintec_sensors_scan,
 }
 
-#.
+# .

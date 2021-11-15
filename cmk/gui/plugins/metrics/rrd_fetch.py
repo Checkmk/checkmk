@@ -5,34 +5,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
-import time
 import collections
-from typing import Any, Callable, Dict, List, Set, Tuple, Union, Optional, Iterator
+import time
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name
-import cmk.gui.plugins.metrics.timeseries as ts
 from cmk.utils.prediction import livestatus_lql, TimeSeries
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
-import cmk.gui.sites as sites
 
+import cmk.gui.plugins.metrics.timeseries as ts
+import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name, RRDData
 from cmk.gui.type_defs import ColumnName
 
 
-def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
+def fetch_rrd_data_for_graph(graph_recipe, graph_data_range) -> RRDData:
     needed_rrd_data = get_needed_sources(graph_recipe["metrics"])
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
-    rrd_data: Dict[Tuple[str, str, str, str, str, str], TimeSeries] = {}
+    rrd_data: RRDData = {}
     for (site, host_name, service_description), entries in by_service.items():
         try:
-            for (perfvar, cf, scale), data in \
-                fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, graph_data_range):
-                rrd_data[(site, host_name, service_description, perfvar, cf,
-                          scale)] = TimeSeries(data)
+            for (perfvar, cf, scale), data in fetch_rrd_data(
+                site, host_name, service_description, entries, graph_recipe, graph_data_range
+            ):
+                rrd_data[(site, host_name, service_description, perfvar, cf, scale)] = TimeSeries(
+                    data
+                )
         except livestatus.MKLivestatusNotFoundError:
             pass
 
@@ -42,7 +44,7 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
     return rrd_data
 
 
-def align_and_resample_rrds(rrd_data, cf):
+def align_and_resample_rrds(rrd_data: RRDData, cf):
     """RRDTool aligns start/end/step to its internal precision.
 
     This is returned as first 3 values in each RRD data row. Using that
@@ -76,7 +78,7 @@ def align_and_resample_rrds(rrd_data, cf):
 #
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
-def chop_last_empty_step(graph_data_range, rrd_data):
+def chop_last_empty_step(graph_data_range, rrd_data: RRDData):
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         step = sample_data.twindow[2]
@@ -104,15 +106,19 @@ def needed_elements_of_expression(expression):
             yield from needed_elements_of_expression(operand)
     elif expression[0] == "combined" and not cmk_version.is_raw_edition():
         # Suppression is needed to silence pylint in CRE environment
-        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # pylint: disable=no-name-in-module
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module
+            resolve_combined_single_metric_spec,
+        )
+
         metrics = resolve_combined_single_metric_spec(expression[1])
 
-        for out in (needed_elements_of_expression(m['expression']) for m in metrics):
+        for out in (needed_elements_of_expression(m["expression"]) for m in metrics):
             yield from out
 
 
-def get_needed_sources(metrics: List[Dict[str, Any]],
-                       condition: Callable[[Any], bool] = lambda x: True) -> Set:
+def get_needed_sources(
+    metrics: List[Dict[str, Any]], condition: Callable[[Any], bool] = lambda x: True
+) -> Set:
     """Extract all metric data sources definitions
 
     metrics: List
@@ -150,22 +156,24 @@ def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, 
         return list(zip(entries, sites.live().query_row(query)))
 
 
-def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidation: str,
-                data_range: str) -> Iterator[ColumnName]:
+def rrd_columns(
+    metrics: List[Tuple[str, Optional[str], float]], rrd_consolidation: str, data_range: str
+) -> Iterator[ColumnName]:
     """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
 
     for perfvar, cf, scale in metrics:
-        cf = rrd_consolidation or cf or u"max"
+        cf = rrd_consolidation or cf or "max"
         rpn = "%s.%s" % (perfvar, cf)
         if scale != 1.0:
             rpn += ",%f,*" % scale
         yield "rrddata:%s:%s:%s" % (perfvar, rpn, data_range)
 
 
-def metric_in_all_rrd_columns(metric: str, rrd_consolidation: str, from_time: int,
-                              until_time: int) -> List[ColumnName]:
+def metric_in_all_rrd_columns(
+    metric: str, rrd_consolidation: str, from_time: int, until_time: int
+) -> List[ColumnName]:
     """Translate metric name to all perf_data names and construct RRD data columns for each"""
 
     data_range = "%s:%s:%s" % (from_time, until_time, 60)
@@ -192,27 +200,27 @@ def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSe
     """
 
     relevant_ts = []
-    desired_metric = params['metric']
-    check_command = row['service_check_command']
+    desired_metric = params["metric"]
+    check_command = row["service_check_command"]
     translations = check_metrics.get(check_command, {})
 
     for rrdcol in rrdcols:
-        if not rrdcol.startswith('rrddata'):
+        if not rrdcol.startswith("rrddata"):
             continue
 
         if row[rrdcol] is None:
             raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
 
-        current_metric = rrdcol.split(':')[1]
+        current_metric = rrdcol.split(":")[1]
 
-        if translations.get(current_metric, {}).get('name', desired_metric) == desired_metric:
+        if translations.get(current_metric, {}).get("name", desired_metric) == desired_metric:
             if len(row[rrdcol]) > 3:
                 relevant_ts.append(row[rrdcol])
 
     if not relevant_ts:
         return TimeSeries([0, 0, 0])
 
-    _op_title, op_func = ts.time_series_operators()['MERGE']
+    _op_title, op_func = ts.time_series_operators()["MERGE"]
     single_value_series = [ts.op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
 
     return TimeSeries(single_value_series)

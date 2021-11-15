@@ -55,7 +55,7 @@ if [ -z "$CLANG_VERSION" ]; then
     cd "${SCRIPT_DIR}"
     while true; do
         if [ -e defines.make ]; then
-            CLANG_VERSION=$(make -f defines.make print-CLANG_VERSION)
+            CLANG_VERSION=$(make --no-print-directory --file=defines.make print-CLANG_VERSION)
             break
         elif [ $PWD == / ]; then
             echo "could not determine Clang version" >&2
@@ -82,6 +82,7 @@ case $CLANG_VERSION in
 10) TAG_NAME="10" LIB_VERSION="10" ;;
 11) TAG_NAME="11" LIB_VERSION="11" ;;
 12) TAG_NAME="12" LIB_VERSION="12" ;;
+12) TAG_NAME="13" LIB_VERSION="13" ;;
 *) failure "Unknown Clang version '${CLANG_VERSION}'" ;;
 esac
 

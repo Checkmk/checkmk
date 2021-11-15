@@ -12,5 +12,5 @@ description:
 item:
  Name of the license
 
-inventory:
+discovery:
  One service is created for each license.

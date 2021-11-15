@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
-from testlib import Check  # type: ignore[import]
+from typing import NamedTuple, Optional, Sequence, Tuple, TypedDict
 
-import pytest  # type: ignore[import]
+import pytest
 
-from checktestlib import CheckResult, assertCheckResultsEqual
+from tests.testlib import Check
+
+from .checktestlib import assertCheckResultsEqual, CheckResult
+
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
 
@@ -73,91 +75,131 @@ def splitter(text):
     return [line.split() for line in text.split("\n")]
 
 
-@pytest.mark.parametrize("capture, result",
-                         list(
-                             zip(agent_out, [
-                                 {
-                                     "License": "Initial grace period",
-                                     "expiration": "12960 minute(s) (9 day(s))",
-                                     "expiration_time": 12960 * 60,
-                                 },
-                                 {
-                                     "License": "Licensed",
-                                     "expiration": "253564 minute(s) (177 day(s))",
-                                     "expiration_time": 253564 * 60,
-                                 },
-                                 {
-                                     "License": "Licensed",
-                                     "expiration": "251100 minute(s) (174 day(s))",
-                                     "expiration_time": 251100 * 60,
-                                 },
-                                 {
-                                     "License": "Licensed",
-                                 },
-                             ])),
-                         ids=["win7", "win2012", "win2008", "win10"])
+@pytest.mark.parametrize(
+    "capture, result",
+    list(
+        zip(
+            agent_out,
+            [
+                {
+                    "License": "Initial grace period",
+                    "expiration": "12960 minute(s) (9 day(s))",
+                    "expiration_time": 12960 * 60,
+                },
+                {
+                    "License": "Licensed",
+                    "expiration": "253564 minute(s) (177 day(s))",
+                    "expiration_time": 253564 * 60,
+                },
+                {
+                    "License": "Licensed",
+                    "expiration": "251100 minute(s) (174 day(s))",
+                    "expiration_time": 251100 * 60,
+                },
+                {
+                    "License": "Licensed",
+                },
+            ],
+        )
+    ),
+    ids=["win7", "win2012", "win2008", "win10"],
+)
 def test_parse_win_license(capture, result):
     check = Check("win_license")
     assert result == check.run_parse(splitter(capture))
 
 
-check_ref = namedtuple('check_ref', ['parameters', 'check_output'])
+class CheckParameters(TypedDict):
+    status: Sequence[str]
+    expiration_time: Tuple[int, int]
+
+
+class check_ref(NamedTuple):
+    parameters: Optional[CheckParameters]
+    check_output: CheckResult
 
 
 @pytest.mark.parametrize(
     "capture, result",
     list(
-        zip(agent_out, [
-            check_ref(
-                {
-                    'status': ['Licensed', 'Initial grace period'],
-                    'expiration_time': (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
-                },
-                CheckResult([
-                    (0, "Software is Initial grace period"),
-                    (0, "License will expire in 9 d"),
-                ])),
-            check_ref(
-                {
-                    'status': ['Licensed', 'Initial grace period'],
-                    'expiration_time': (180 * 24 * 60 * 60, 90 * 24 * 60 * 60),
-                },
-                CheckResult([
-                    (0, "Software is Licensed"),
-                    (1, "License will expire in 176 d (warn/crit at 180 d/90 d)"),
-                ])),
-            check_ref(
-                {
-                    'status': ['Licensed', 'Initial grace period'],
-                    'expiration_time': (360 * 24 * 60 * 60, 180 * 24 * 60 * 60),
-                },
-                CheckResult([
-                    (0, "Software is Licensed"),
-                    (2, "License will expire in 174 d (warn/crit at 360 d/180 d)"),
-                ])),
-            check_ref(
-                {
-                    'status': ['Licensed', 'Initial grace period'],
-                    'expiration_time': (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
-                }, CheckResult([(0, "Software is Licensed")])),
-        ])) +
-    list(
-        zip(agent_out, [
-            check_ref(
-                {
-                    'status': ["Registered"],
-                    'expiration_time': (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
-                },
-                CheckResult([(2, "Software is Initial grace period Required: Registered"),
-                             (0, 'License will expire in 9 d')])),
-            check_ref(
-                None, CheckResult([(0, "Software is Licensed"),
-                                   (0, 'License will expire in 176 d')])),
-        ])),
-    ids=[str(x) for x in range(6)])
+        zip(
+            agent_out,
+            [
+                check_ref(
+                    {
+                        "status": ["Licensed", "Initial grace period"],
+                        "expiration_time": (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
+                    },
+                    CheckResult(
+                        [
+                            (0, "Software is Initial grace period"),
+                            (0, "License will expire in 9 d"),
+                        ]
+                    ),
+                ),
+                check_ref(
+                    {
+                        "status": ["Licensed", "Initial grace period"],
+                        "expiration_time": (180 * 24 * 60 * 60, 90 * 24 * 60 * 60),
+                    },
+                    CheckResult(
+                        [
+                            (0, "Software is Licensed"),
+                            (1, "License will expire in 176 d (warn/crit at 180 d/90 d)"),
+                        ]
+                    ),
+                ),
+                check_ref(
+                    {
+                        "status": ["Licensed", "Initial grace period"],
+                        "expiration_time": (360 * 24 * 60 * 60, 180 * 24 * 60 * 60),
+                    },
+                    CheckResult(
+                        [
+                            (0, "Software is Licensed"),
+                            (2, "License will expire in 174 d (warn/crit at 360 d/180 d)"),
+                        ]
+                    ),
+                ),
+                check_ref(
+                    {
+                        "status": ["Licensed", "Initial grace period"],
+                        "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
+                    },
+                    CheckResult([(0, "Software is Licensed")]),
+                ),
+            ],
+        )
+    )
+    + list(
+        zip(
+            agent_out,
+            [
+                check_ref(
+                    {
+                        "status": ["Registered"],
+                        "expiration_time": (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
+                    },
+                    CheckResult(
+                        [
+                            (2, "Software is Initial grace period Required: Registered"),
+                            (0, "License will expire in 9 d"),
+                        ]
+                    ),
+                ),
+                check_ref(
+                    None,
+                    CheckResult([(0, "Software is Licensed"), (0, "License will expire in 176 d")]),
+                ),
+            ],
+        )
+    ),
+    ids=[str(x) for x in range(6)],
+)
 def test_check_win_license(capture, result):
     check = Check("win_license")
-    output = check.run_check(None, result.parameters or check.default_parameters(),
-                             check.run_parse(splitter(capture)))
+    output = check.run_check(
+        None, result.parameters or check.default_parameters(), check.run_parse(splitter(capture))
+    )
 
     assertCheckResultsEqual(CheckResult(output), result.check_output)

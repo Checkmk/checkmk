@@ -17,5 +17,5 @@ description:
 item:
  The name of the humidity sensor.
 
-inventory:
+discovery:
  One service is created for each humdity sensor.

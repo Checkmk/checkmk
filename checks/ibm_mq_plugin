@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<ibm_mq_plugin:sep(58)>>>
 # version|2.0.4
 # dspmq|OK
@@ -51,9 +52,9 @@ def check_ibm_mq_plugin(_no_item, params, parsed):
 
 check_info["ibm_mq_plugin"] = {
     "parse_function": parse_ibm_mq_plugin,
-    'check_function': check_ibm_mq_plugin,
-    'inventory_function': inventory_ibm_mq_plugin,
-    'service_description': 'IBM MQ Plugin',
-    'has_perfdata': False,
+    "check_function": check_ibm_mq_plugin,
+    "inventory_function": inventory_ibm_mq_plugin,
+    "service_description": "IBM MQ Plugin",
+    "has_perfdata": False,
     "group": "ibm_mq_plugin",
 }

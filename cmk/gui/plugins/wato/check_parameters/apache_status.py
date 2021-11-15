@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextInput,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_apache_status():
@@ -26,22 +21,32 @@ def _item_spec_apache_status():
 
 
 def _parameter_valuespec_apache_status():
-    return Dictionary(elements=[
-        ("OpenSlots",
-         Tuple(title=_("Remaining Open Slots"),
-               help=_("Here you can set the number of remaining open slots"),
-               elements=[
-                   Integer(title=_("Warning below"), label=_("slots")),
-                   Integer(title=_("Critical below"), label=_("slots"))
-               ])),
-        ("BusyWorkers",
-         Tuple(title=_("Busy workers"),
-               help=_("Here you can set upper levels of busy workers"),
-               elements=[
-                   Integer(title=_("Warning at"), label=_("busy workers")),
-                   Integer(title=_("Critical at"), label=_("busy workers"))
-               ])),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "OpenSlots",
+                Tuple(
+                    title=_("Remaining Open Slots"),
+                    help=_("Here you can set the number of remaining open slots"),
+                    elements=[
+                        Integer(title=_("Warning below"), label=_("slots")),
+                        Integer(title=_("Critical below"), label=_("slots")),
+                    ],
+                ),
+            ),
+            (
+                "BusyWorkers",
+                Tuple(
+                    title=_("Busy workers"),
+                    help=_("Here you can set upper levels of busy workers"),
+                    elements=[
+                        Integer(title=_("Warning at"), label=_("busy workers")),
+                        Integer(title=_("Critical at"), label=_("busy workers")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -52,4 +57,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_apache_status,
         title=lambda: _("Apache Status"),
-    ))
+    )
+)

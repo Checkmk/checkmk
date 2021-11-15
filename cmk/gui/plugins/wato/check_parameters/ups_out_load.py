@@ -5,27 +5,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (Integer, TextInput, Tuple, Dictionary)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_ups_out_load():
-    return TextInput(title=_("Phase"),
-                     help=_("The identifier of the phase the power is related to."))
+    return TextInput(
+        title=_("Phase"), help=_("The identifier of the phase the power is related to.")
+    )
 
 
 def _parameter_valuespec_ups_out_load():
     return Dictionary(
-        elements=[("levels",
-                   Tuple(elements=[
-                       Integer(title=_("warning at"), unit=u"%", default_value=85),
-                       Integer(title=_("critical at"), unit=u"%", default_value=90),
-                   ],))],
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    elements=[
+                        Integer(title=_("warning at"), unit="%", default_value=85),
+                        Integer(title=_("critical at"), unit="%", default_value=90),
+                    ],
+                ),
+            )
+        ],
         optional_keys=False,
     )
 
@@ -37,4 +43,5 @@ rulespec_registry.register(
         item_spec=_item_spec_ups_out_load,
         parameter_valuespec=_parameter_valuespec_ups_out_load,
         title=lambda: _("Parameters for output loads of UPSs and PDUs"),
-    ))
+    )
+)

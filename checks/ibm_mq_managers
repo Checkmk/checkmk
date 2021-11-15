@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<ibm_mq_managers:sep(10)>>>
 # QMNAME(QMIMIQ11) STATUS(RUNNING) DEFAULT(NO) STANDBY(PERMITTED) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
 #     INSTANCE(iasv0001) MODE(Active)
@@ -57,30 +58,6 @@ def map_ibm_mq_manager_status(status, params):
     return check_state
 
 
-def parse_ibm_mq_managers(info):
-    re_attributes = regex(r"[()]")
-
-    def get_data_of_line(line):
-        splits = re_attributes.split(line)
-        data = {}
-        for key, value in zip(splits[::2], splits[1::2]):
-            data[key.strip()] = value.strip()
-        return data
-
-    parsed = {}
-    qmname = None
-    for line in info:
-        line = line[0]
-        data = get_data_of_line(line)
-        if "QMNAME" in data:
-            qmname = data["QMNAME"]
-            parsed[qmname] = data
-        elif "INSTANCE" in data:
-            instances = parsed[qmname].setdefault("INSTANCES", [])
-            instances.append((data["INSTANCE"], data["MODE"]))
-    return parsed
-
-
 def inventory_ibm_mq_managers(parsed):
     for item in parsed:
         yield item, {}
@@ -109,11 +86,17 @@ def check_ibm_mq_managers(item, params, data):
             yield 0, "High availability: replicated"
     elif standby == "PERMITTED":
         if len(instances) == 2:
-            yield 0, "Multi-Instance: %s=%s and %s=%s" % (instances[0][0], instances[0][1],
-                                                          instances[1][0], instances[1][1])
+            yield 0, "Multi-Instance: %s=%s and %s=%s" % (
+                instances[0][0],
+                instances[0][1],
+                instances[1][0],
+                instances[1][1],
+            )
         elif len(instances) == 1:
-            yield 2, "Multi-Instance: %s=%s and missing partner" % (instances[0][0],
-                                                                    instances[0][1])
+            yield 2, "Multi-Instance: %s=%s and missing partner" % (
+                instances[0][0],
+                instances[0][1],
+            )
         else:
             yield 2, "Multi-Instance: unknown instances (%s)" % instances
     elif standby == "NOT PERMITTED":
@@ -128,10 +111,10 @@ def check_ibm_mq_managers(item, params, data):
         yield 2, "Unknown STANDBY state (%s)" % standby
 
 
-check_info['ibm_mq_managers'] = {
-    "parse_function": parse_ibm_mq_managers,
-    'check_function': check_ibm_mq_managers,
-    'inventory_function': inventory_ibm_mq_managers,
-    'service_description': 'IBM MQ Manager %s',
-    'group': 'ibm_mq_managers',
+check_info["ibm_mq_managers"] = {
+    # section is already migrated!
+    "check_function": check_ibm_mq_managers,
+    "inventory_function": inventory_ibm_mq_managers,
+    "service_description": "IBM MQ Manager %s",
+    "group": "ibm_mq_managers",
 }

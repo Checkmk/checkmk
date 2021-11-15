@@ -7,7 +7,7 @@ description:
  This check monitors the state of the chassis blowers of an IBM blade
  center.
 
-inventory:
+discovery:
  One service is created for each blower.
 
 item:

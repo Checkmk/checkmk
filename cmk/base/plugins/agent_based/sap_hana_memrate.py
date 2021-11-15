@@ -6,14 +6,10 @@
 
 from typing import Any, Mapping
 
+from .agent_based_api.v1 import IgnoreResultsError, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
 from .utils.memory import check_element
-from .agent_based_api.v1 import register, Service
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 
 def parse_sap_hana_memrate(string_table: StringTable) -> sap_hana.ParsedSection:
@@ -30,8 +26,7 @@ def parse_sap_hana_memrate(string_table: StringTable) -> sap_hana.ParsedSection:
                     inst_data[key] = int(line[index])
                 except ValueError:
                     pass
-        if inst_data:
-            section.setdefault(sid_instance, inst_data)
+        section.setdefault(sid_instance, inst_data)
     return section
 
 
@@ -46,11 +41,12 @@ def discovery_sap_hana_memrate(section: sap_hana.ParsedSection) -> DiscoveryResu
         yield Service(item=item)
 
 
-def check_sap_hana_memrate(item: str, params: Mapping[str, Any],
-                           section: sap_hana.ParsedSection) -> CheckResult:
+def check_sap_hana_memrate(
+    item: str, params: Mapping[str, Any], section: sap_hana.ParsedSection
+) -> CheckResult:
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     yield from check_element(
         "Usage",
@@ -68,5 +64,4 @@ register.check_plugin(
     check_function=check_sap_hana_memrate,
     check_ruleset_name="sap_hana_memory",
     check_default_parameters={"levels": ("perc_used", (70.0, 80.0))},
-    cluster_check_function=sap_hana.get_cluster_check_with_params(check_sap_hana_memrate),
 )

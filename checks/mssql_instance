@@ -21,72 +21,6 @@
 # ERROR: Failed to gather SQL server instances
 
 
-def _parse_prod_version(entry):
-    if entry.startswith("8."):
-        version = "2000"
-    elif entry.startswith("9."):
-        version = "2005"
-    elif entry.startswith("10.0"):
-        version = "2008"
-    elif entry.startswith("10.50"):
-        version = "2008R2"
-    elif entry.startswith("11."):
-        version = "2012"
-    elif entry.startswith("12."):
-        version = "2014"
-    elif entry.startswith("13."):
-        version = "2016"
-    elif entry.startswith("14."):
-        version = "2017"
-    elif entry.startswith("15."):
-        version = "2019"
-    else:
-        return "unknown[%s]" % entry
-    return "Microsoft SQL Server %s" % version
-
-
-def parse_mssql_instance(info):
-    parsed = {}
-    for line in info:
-        if line[0].startswith("ERROR:") or len(line) < 2 or line[1] not in [
-                "config", "state", "details"
-        ]:
-            continue
-        elif line[0][:6] == "MSSQL_":
-            # Remove the MSSQL_ prefix from the ID for this check
-            instance_id = line[0][6:]
-        else:
-            instance_id = line[0]
-
-        instance = parsed.setdefault(
-            instance_id,
-            {
-                # it may happen that the state line is missing, add some fallback as default here
-                "state": "0",
-                "error_msg": "Unable to connect to database (Agent reported no state)",
-            })
-
-        if line[1] == "config":
-            instance.update({
-                "version_info": "%s - %s" % (line[2], line[3]),
-                "cluster_name": line[4],
-            })
-        elif line[1] == "state":
-            instance.update({
-                "state": line[2],
-                "error_msg": "|".join(line[3:]),
-            })
-
-        elif line[1] == "details":
-            _parse_prod_version(line[2])
-            instance.update({
-                "prod_version_info": "%s (%s) (%s) - %s" %
-                                     (_parse_prod_version(line[2]), line[3], line[2], line[4])
-            })
-
-    return parsed
-
-
 def inventory_mssql_instance(parsed):
     for instance_id in parsed:
         yield instance_id, {}
@@ -98,8 +32,7 @@ def check_mssql_instance(item, params, parsed):
         return
 
     state = 2
-    if params is not None and \
-       params.get("map_connection_state") is not None:
+    if params is not None and params.get("map_connection_state") is not None:
         state = params["map_connection_state"]
 
     if instance["state"] == "0":
@@ -111,9 +44,9 @@ def check_mssql_instance(item, params, parsed):
 
 
 check_info["mssql_instance"] = {
-    'parse_function': parse_mssql_instance,
-    'check_function': check_mssql_instance,
-    'inventory_function': inventory_mssql_instance,
-    'service_description': 'MSSQL %s Instance',
-    'group': 'mssql_instance',
+    # section is already migrated!
+    "check_function": check_mssql_instance,
+    "inventory_function": inventory_mssql_instance,
+    "service_description": "MSSQL %s Instance",
+    "group": "mssql_instance",
 }

@@ -10,5 +10,5 @@ description:
  Considered devices are of the type VirtualCdrom or VirtualFloppy.
  If such device is connected, the check goes WARN, otherwise OK.
 
-inventory:
+discovery:
  One service is created for each Virtual Machine.

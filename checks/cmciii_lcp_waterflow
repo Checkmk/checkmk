@@ -15,10 +15,10 @@ def check_cmciii_lcp_waterflow(item, params, info):
         # We have a list of values where no item has a fixed index. We
         # try to detect the starting index for the needed values now.
         try:
-            index = info[0].index('Waterflow')
-            name, flow, maxflow, minflow, status = info[0][index:index + 5]
+            index = info[0].index("Waterflow")
+            name, flow, maxflow, minflow, status = info[0][index : index + 5]
         except ValueError:
-            return 3, 'Waterflow information not found'
+            return 3, "Waterflow information not found"
 
         unit = flow.split(" ", 1)[1]
         flow = float(flow.split(" ", 1)[0])
@@ -34,8 +34,14 @@ def check_cmciii_lcp_waterflow(item, params, info):
             state = 1
             sym = "(!)"
 
-        info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" \
-                % (name, status, flow, sym, minflow, maxflow)
+        info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" % (
+            name,
+            status,
+            flow,
+            sym,
+            minflow,
+            maxflow,
+        )
 
         perfdata = [("flow", str(flow) + unit, str(minflow) + ":" + str(maxflow), 0, 0)]
 
@@ -44,11 +50,11 @@ def check_cmciii_lcp_waterflow(item, params, info):
     return (3, "no SNMP data found")
 
 
-check_info['cmciii_lcp_waterflow'] = {
+check_info["cmciii_lcp_waterflow"] = {
     "check_function": check_cmciii_lcp_waterflow,
     "inventory_function": inventory_cmciii_lcp_waterflow,
     "has_perfdata": True,
     "service_description": "LCP Fanunit WATER FLOW",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP"),
-    "snmp_info": ('.1.3.6.1.4.1.2606.7.4.2.2.1.10.2', list(range(74, 87))),
+    "snmp_info": (".1.3.6.1.4.1.2606.7.4.2.2.1.10.2", list(range(74, 87))),
 }

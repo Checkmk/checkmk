@@ -22,7 +22,7 @@ def check_blade_bx_load(item, params, info):
     return check_cpu_load_generic(params, [float(l[2]) for l in info])
 
 
-check_info['blade_bx_load'] = {
+check_info["blade_bx_load"] = {
     "check_function": check_blade_bx_load,
     "inventory_function": inventory_blade_bx_load,
     "service_description": "CPU load",

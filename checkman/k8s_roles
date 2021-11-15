@@ -8,5 +8,5 @@ description:
  total number of roles in a kubernetes cluster. Levels for the
  individual numbers of roles can be defined in WATO.
 
-inventory:
+discovery:
  One summary service is created.

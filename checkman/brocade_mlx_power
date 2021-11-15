@@ -14,5 +14,5 @@ item:
  If a power supply description is delivered by SNMP, the item is build from
  the power supply ID plus the description. Otherwise it is just the ID.
 
-inventory:
+discovery:
  One service is created for each power supply.

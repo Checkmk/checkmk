@@ -20,6 +20,6 @@ description:
 item:
  Name of the disk enclosure
 
-inventory:
+discovery:
  One service is created for each VxVM disk enclosure.
 

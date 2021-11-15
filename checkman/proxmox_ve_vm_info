@@ -8,5 +8,5 @@ description:
  It shows {vmid} (e.g. "101"), {status} (e.g. "running"), {type} ("lxc" or "qemu") and {host} values
  returned by the API for the given VM.
 
-inventory:
+discovery:
  One service per system is created.

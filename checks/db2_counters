@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<db2_counters>>>
 # TIMESTAMP 1426610723
 # db2taddm:CMDBS1 deadlocks 0
@@ -117,7 +118,7 @@ def check_db2_counters(item, params, parsed):
         raise MKCounterWrapped("Some counter(s) wrapped, no data this time")
 
 
-check_info['db2_counters'] = {
+check_info["db2_counters"] = {
     "parse_function": parse_db2_counters,
     "service_description": "DB2 Counters %s",
     "check_function": check_db2_counters,

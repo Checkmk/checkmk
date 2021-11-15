@@ -8,31 +8,22 @@
 # TODO: once this agent can be used on a 2.x live system, it should be checked for functionality
 #       and against known exceptions
 
-import math
-import json
 import datetime as dt
-from pathlib import Path
+import json
 import logging
-from typing import Sequence, Generator, Any, Optional, Callable, Tuple
+import math
+from pathlib import Path
+from typing import Any, Callable, Generator, Optional, Sequence, Tuple
+
 import urllib3  # type: ignore[import]
-from requests_oauthlib import OAuth2Session  # type: ignore[import]
 from oauthlib.oauth2 import LegacyApplicationClient  # type: ignore[import]
+from requests_oauthlib import OAuth2Session  # type: ignore[import]
 
 import cmk.utils.paths
-from cmk.special_agents.utils.agent_common import (
-    special_agent_main,
-    SectionWriter,
-)
-from cmk.special_agents.utils.argument_parsing import (
-    Args,
-    create_default_argument_parser,
-)
-from cmk.special_agents.utils.request_helper import (
-    Requester,
-    StringMap,
-    TokenDict,
-    to_token_dict,
-)
+
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.utils.request_helper import Requester, StringMap, to_token_dict, TokenDict
 
 AnyGenerator = Generator[Any, None, None]
 ResultFn = Callable[..., AnyGenerator]
@@ -48,7 +39,7 @@ class StoreOnceOauth2Session(Requester):
     _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"
     _token_endpoint = "/pml/login/authenticate"
-    _dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
+    _dt_fmt = "%Y-%m-%d %H:%M:%S.%f"
 
     def __init__(self, host: str, port: str, user: str, secret: str, verify_ssl: bool) -> None:
         self._host = host
@@ -72,30 +63,37 @@ class StoreOnceOauth2Session(Requester):
             self._oauth_session = OAuth2Session(
                 self._user,
                 client=self._client,
-                auto_refresh_url="https://%s:%s%s" %
-                (self._host, self._port, self._refresh_endpoint),
-                token_updater=self.store_token_file_and_update_expires_in_abs,
+                auto_refresh_url="https://%s:%s%s"
+                % (self._host, self._port, self._refresh_endpoint),
+                token_updater=lambda x: self.store_token_file_and_update_expires_in_abs(
+                    to_token_dict(x)
+                ),
                 token={
                     "access_token": self._json_token["access_token"],
                     "refresh_token": self._json_token["refresh_token"],
-                    "expires_in": self._json_token["expires_in"]
-                })
+                    "expires_in": self._json_token["expires_in"],
+                },
+            )
         except (FileNotFoundError, KeyError):
             LOGGER.debug("Token file not found or error in token file. Creating new connection.")
             self._oauth_session = OAuth2Session(
                 self._user,
                 client=self._client,
-                auto_refresh_url="https://%s:%s%s" %
-                (self._host, self._port, self._refresh_endpoint),
-                token_updater=self.store_token_file_and_update_expires_in_abs)
+                auto_refresh_url="https://%s:%s%s"
+                % (self._host, self._port, self._refresh_endpoint),
+                token_updater=lambda x: self.store_token_file_and_update_expires_in_abs(
+                    to_token_dict(x)
+                ),
+            )
             # Fetch token
             token_dict = to_token_dict(
                 self._oauth_session.fetch_token(
-                    token_url='https://%s:%s%s' % (self._host, self._port, self._token_endpoint),
+                    token_url="https://%s:%s%s" % (self._host, self._port, self._token_endpoint),
                     username=self._user,
                     password=self._secret,
                     verify=self._verify_ssl,
-                ))
+                )
+            )
             # Initially create the token file
             self.store_token_file_and_update_expires_in_abs(token_dict)
             self._json_token = token_dict
@@ -117,10 +115,13 @@ class StoreOnceOauth2Session(Requester):
 
             # Update expires_in from expires_in_abs
             expires_in_abs = token_json["expires_in_abs"]
-            expires_in_updated = dt.datetime.strptime(
-                expires_in_abs,
-                self._dt_fmt,
-            ) - dt.datetime.now()
+            expires_in_updated = (
+                dt.datetime.strptime(
+                    expires_in_abs,
+                    self._dt_fmt,
+                )
+                - dt.datetime.now()
+            )
             token_json["expires_in"] = math.floor(expires_in_updated.total_seconds())
             return to_token_dict(token_json)
 
@@ -166,53 +167,80 @@ def handler_nested(requester: Requester, uris: Sequence[str], identifier: str) -
 # https://hewlettpackard.github.io/storeonce-rest/cindex.html
 BASE = "/api/v1"
 SECTIONS: Sequence[Tuple[str, ResultFn]] = (
-    ("d2d_services", lambda conn: handler_simple(
-        conn,
-        (BASE + "/data-services/d2d-service/status",),
-    )),
-    ("rep_services", lambda conn: handler_simple(
-        conn,
-        (BASE + "/data-services/rep/services",),
-    )),
-    ("vtl_services", lambda conn: handler_simple(
-        conn,
-        (BASE + "/data-services/vtl/services",),
-    )),
-    ("alerts", lambda conn: handler_simple(
-        conn,
-        ("/rest/alerts",),
-    )),
-    ("system_information", lambda conn: handler_simple(
-        conn,
-        (BASE + "/management-services/system/information",),
-    )),
-    ("storage", lambda conn: handler_simple(
-        conn,
-        (BASE + "/management-services/local-storage/overview",),
-    )),
-    ("appliances", lambda conn: handler_nested(
-        conn,
-        (
-            BASE + "/management-services/federation/members",
-            BASE + "/data-services/dashboard/appliance",
+    (
+        "d2d_services",
+        lambda conn: handler_simple(
+            conn,
+            (BASE + "/data-services/d2d-service/status",),
         ),
-        "uuid",
-    )),
-    ("licensing", lambda conn: handler_simple(
-        conn,
-        (
-            BASE + "/management-services/licensing",
-            BASE + "/management-services/licensing/licenses",
+    ),
+    (
+        "rep_services",
+        lambda conn: handler_simple(
+            conn,
+            (BASE + "/data-services/rep/services",),
         ),
-    )),
-    ("cat_stores", lambda conn: handler_nested(
-        conn,
-        (
-            BASE + "/data-services/cat/stores",
-            BASE + "/data-services/cat/stores/store",
+    ),
+    (
+        "vtl_services",
+        lambda conn: handler_simple(
+            conn,
+            (BASE + "/data-services/vtl/services",),
         ),
-        "id",
-    )),
+    ),
+    (
+        "alerts",
+        lambda conn: handler_simple(
+            conn,
+            ("/rest/alerts",),
+        ),
+    ),
+    (
+        "system_information",
+        lambda conn: handler_simple(
+            conn,
+            (BASE + "/management-services/system/information",),
+        ),
+    ),
+    (
+        "storage",
+        lambda conn: handler_simple(
+            conn,
+            (BASE + "/management-services/local-storage/overview",),
+        ),
+    ),
+    (
+        "appliances",
+        lambda conn: handler_nested(
+            conn,
+            (
+                BASE + "/management-services/federation/members",
+                BASE + "/data-services/dashboard/appliance",
+            ),
+            "uuid",
+        ),
+    ),
+    (
+        "licensing",
+        lambda conn: handler_simple(
+            conn,
+            (
+                BASE + "/management-services/licensing",
+                BASE + "/management-services/licensing/licenses",
+            ),
+        ),
+    ),
+    (
+        "cat_stores",
+        lambda conn: handler_nested(
+            conn,
+            (
+                BASE + "/data-services/cat/stores",
+                BASE + "/data-services/cat/stores/store",
+            ),
+            "id",
+        ),
+    ),
 )
 
 
@@ -220,11 +248,9 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("user", metavar="USER", help="""Username for Observer Role""")
     parser.add_argument("password", metavar="PASSWORD", help="""Password for Observer Role""")
-    parser.add_argument("-p",
-                        "--port",
-                        default=443,
-                        type=int,
-                        help="Use alternative port (default: 443)")
+    parser.add_argument(
+        "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
+    )
 
     parser.add_argument("--verify_ssl", action="store_true", default=False)
     parser.add_argument("host", metavar="HOST", help="""APPLIANCE-ADDRESS of HP StoreOnce""")
@@ -254,7 +280,7 @@ def agent_storeonce4x_main(args: Args) -> None:
 
 
 def main() -> None:
-    """Main entry point to be used """
+    """Main entry point to be used"""
     special_agent_main(parse_arguments, agent_storeonce4x_main)
 
 

@@ -90,10 +90,10 @@
 #                   'state': 'Enabled'},
 # }
 
-factory_settings['emcvnx_disks_default_levels'] = {
-    'state_read_error': (2, 2),  # (state, count of errors)
-    'state_write_error': (2, 2),  # (state, count of errors)
-    'state_rebuilding': 1,
+factory_settings["emcvnx_disks_default_levels"] = {
+    "state_read_error": (2, 2),  # (state, count of errors)
+    "state_write_error": (2, 2),  # (state, count of errors)
+    "state_rebuilding": 1,
 }
 
 
@@ -112,7 +112,7 @@ def parse_emcvnx_disks(info):
             enc[line[0] + " " + line[1] + " Errors"] = error_count
         elif len(line) > 1 and line[0] == "Kbytes" and line[1] in ["Read:", "Written:"]:
             io_kbytes = saveint(line[-1])
-            enc[line[0] + " " + line[1].replace(':', '')] = io_kbytes
+            enc[line[0] + " " + line[1].replace(":", "")] = io_kbytes
     return parsed
 
 
@@ -175,12 +175,12 @@ def check_emcvnx_disks(item, params, parsed):
     return nagstate, message, perfdata
 
 
-check_info['emcvnx_disks'] = {
+check_info["emcvnx_disks"] = {
     "parse_function": parse_emcvnx_disks,
     "inventory_function": inventory_emcvnx_disks,
     "check_function": check_emcvnx_disks,
     "service_description": "Enclosure %s",
     "group": "emcvnx_disks",
     "has_perfdata": True,
-    "default_levels_variable": "emcvnx_disks_default_levels"
+    "default_levels_variable": "emcvnx_disks_default_levels",
 }

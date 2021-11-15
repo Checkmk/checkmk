@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 climaveneta_alarms = {
-    #20  : "Global (general)",
+    # 20  : "Global (general)",
     21: "Maintenance Status",
     22: "Password",
     23: "High water 1erature",
@@ -68,9 +68,9 @@ def inventory_climaveneta_alarm(info):
 def check_climaveneta_alarm(item, params, info):
     hit = False
     for oid_id, status in info:
-        alarm_id = int(oid_id.split('.')[0])
+        alarm_id = int(oid_id.split(".")[0])
         if alarm_id in climaveneta_alarms:
-            if status != '0':
+            if status != "0":
                 hit = True
                 yield 2, "Alarm: %s" % climaveneta_alarms[alarm_id]
     if not hit:

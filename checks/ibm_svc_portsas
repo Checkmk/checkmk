@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example agent output:
 # <<<ibm_svc_portsas:sep(58)>>>
 # 0:1:6Gb:1:node1:500507680305D3C0:online::host:host_controller:0:1
@@ -29,27 +30,27 @@ from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard
 # 15:8:N/A:2:node2:500507680321D3C1:offline_unconfigured::none:host_controller:1:4
 
 # the corresponding header line
-#id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
+# id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
 
 factory_settings["ibm_svc_portsas_default_levels"] = {
-    'current_state': 'offline',
+    "current_state": "offline",
 }
 
 
 def parse_ibm_svc_portsas(info):
     dflt_header = [
-        'id',
-        'port_id',
-        'port_speed',
-        'node_id',
-        'node_name',
-        'WWPN',
-        'status',
-        'switch_WWPN',
-        'attachment',
-        'type',
-        'adapter_location',
-        'adapter_port_id',
+        "id",
+        "port_id",
+        "port_speed",
+        "node_id",
+        "node_name",
+        "WWPN",
+        "status",
+        "switch_WWPN",
+        "attachment",
+        "type",
+        "adapter_location",
+        "adapter_port_id",
     ]
     parsed = {}
     for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
@@ -58,8 +59,11 @@ def parse_ibm_svc_portsas(info):
         except IndexError:
             continue
         if "node_id" in data and "adapter_location" in data and "adapter_port_id" in data:
-            item_name = "Node %s Slot %s Port %s" % (data['node_id'], data['adapter_location'],
-                                                     data['adapter_port_id'])
+            item_name = "Node %s Slot %s Port %s" % (
+                data["node_id"],
+                data["adapter_location"],
+                data["adapter_port_id"],
+            )
         else:
             item_name = "Port %s" % id_
         parsed.setdefault(item_name, data)
@@ -68,23 +72,23 @@ def parse_ibm_svc_portsas(info):
 
 def inventory_ibm_svc_portsas(parsed):
     for item_name, data in parsed.items():
-        status = data['status']
-        if status == 'offline_unconfigured':
+        status = data["status"]
+        if status == "offline_unconfigured":
             continue
-        yield item_name, {'current_state': status}
+        yield item_name, {"current_state": status}
 
 
 @get_parsed_item_data
 def check_ibm_svc_portsas(item, params, data):
-    sasport_status = data['status']
+    sasport_status = data["status"]
 
     infotext = "Status: %s" % sasport_status
-    if sasport_status == params['current_state']:
+    if sasport_status == params["current_state"]:
         state = 0
     else:
         state = 2
 
-    infotext += ", Speed: %s, Type: %s" % (data['port_speed'], data['type'])
+    infotext += ", Speed: %s, Type: %s" % (data["port_speed"], data["type"])
 
     return state, infotext
 

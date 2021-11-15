@@ -14,8 +14,8 @@ def inventory_apc_powerswitch(info):
 
 def check_apc_powerswitch(item, params, info):
     state_name = {
-        1: 'on',
-        2: 'off',
+        1: "on",
+        2: "off",
     }
     r_state = 0
     for line in info:
@@ -25,16 +25,17 @@ def check_apc_powerswitch(item, params, info):
                 r_state = 1
             if state in apc_powerswitch_critical_states:
                 r_state = 2
-            return (r_state, 'Port %s has status %s' % (line[1], state_name[state]))
+            return (r_state, "Port %s has status %s" % (line[1], state_name[state]))
 
     return 3, "Port not found"
 
 
-check_info['apc_powerswitch'] = {
-    'check_function': check_apc_powerswitch,
-    'inventory_function': inventory_apc_powerswitch,
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3.4"
-                                                                          ),
-    'service_description': 'Power Outlet Port %s',
-    'snmp_info': ('.1.3.6.1.4.1.318.1.1.12.3.5.1.1', [1, 2, 4]),
+check_info["apc_powerswitch"] = {
+    "check_function": check_apc_powerswitch,
+    "inventory_function": inventory_apc_powerswitch,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.318.1.3.4"
+    ),
+    "service_description": "Power Outlet Port %s",
+    "snmp_info": (".1.3.6.1.4.1.318.1.1.12.3.5.1.1", [1, 2, 4]),
 }

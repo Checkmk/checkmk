@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-from typing import TypedDict, Dict, List
 import json
+from dataclasses import dataclass
+from typing import Dict, List, Optional, TypedDict
+
+from pydantic import BaseModel
 
 from ..agent_based_api.v1.type_defs import StringTable
 
@@ -86,3 +88,58 @@ class Subset:
     addresses: List[Address]
     not_ready_addresses: List[Address]
     ports: List[Port]
+
+
+# agent_kube section schemas --------------------------------- #
+
+
+class NodeCount(BaseModel):
+    """section: k8s_node_count_v1"""
+
+    worker: int = 0
+    control_plane: int = 0
+
+
+class HealthZ(BaseModel):
+    status_code: int
+    response: str
+    # only set if status_code != 200
+    verbose_response: Optional[str]
+
+
+class KubeletInfo(BaseModel):
+    """section: k8s_node_kubelet_v1"""
+
+    version: str
+    health: HealthZ
+
+
+class APIHealth(BaseModel):
+    ready: HealthZ
+    live: HealthZ
+
+
+class ClusterInfo(BaseModel):
+    """section: k8s_cluster_details_v1"""
+
+    api_health: APIHealth
+
+
+class PodResources(BaseModel):
+    """section: k8s_pods_resources"""
+
+    running: int = 0
+    pending: int = 0
+    succeeded: int = 0
+    failed: int = 0
+    unknown: int = 0
+    capacity: Optional[int] = None
+    allocatable: Optional[int] = None
+
+
+class ContainerCount(BaseModel):
+    """section: k8s_node_container_count_v1"""
+
+    running: int = 0
+    waiting: int = 0
+    terminated: int = 0

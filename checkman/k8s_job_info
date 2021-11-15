@@ -9,6 +9,6 @@ description:
  The check returns {OK} if the jobs are either running, or completed
  successfully, {CRIT} if one or more failed.
 
-inventory:
+discovery:
  One service is created.
 

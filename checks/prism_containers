@@ -9,46 +9,47 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.prism import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<prism_containers:sep(9)>>>
 # name    usage   capacity
 # DS01_NFS_Nutanix_B2B_Intern_SAS_Contrainer      2518694292480   38575532134515
 
-factory_settings['prism_container_default_levels'] = {
-    'levels': (80.0, 90.0),  # in percent, defaults based on df checks
+factory_settings["prism_container_default_levels"] = {
+    "levels": (80.0, 90.0),  # in percent, defaults based on df checks
 }
 
 
 def inventory_prism_container(parsed):
     for row in parsed:
-        yield row['name'], {}
+        yield row["name"], {}
 
 
 def check_prism_container(item, params, parsed):
     for row in parsed:
-        if row['name'] == item:
-            usage, capacity = map(int, (row['usage'], row['capacity']))
+        if row["name"] == item:
+            usage, capacity = map(int, (row["usage"], row["capacity"]))
 
             yield 0, "Total: %s" % get_bytes_human_readable(capacity)
 
-            warn, crit = params['levels']
+            warn, crit = params["levels"]
             if isinstance(warn, float):
                 warn, crit = [x * capacity * 0.01 for x in (warn, crit)]
 
             yield check_levels(
                 usage,
-                'fs_used',
+                "fs_used",
                 (warn, crit),
-                infoname='Used',
+                infoname="Used",
                 human_readable_func=get_bytes_human_readable,
             )
 
 
-check_info['prism_containers'] = {
-    'check_function': check_prism_container,
-    'inventory_function': inventory_prism_container,
-    'parse_function': parse_prism,
-    'group': "prism_container",
-    'has_perfdata': True,
-    'service_description': "Container %s",
-    'default_levels_variable': 'prism_container_default_levels'
+check_info["prism_containers"] = {
+    "check_function": check_prism_container,
+    "inventory_function": inventory_prism_container,
+    "parse_function": parse_prism,
+    "group": "prism_container",
+    "has_perfdata": True,
+    "service_description": "Container %s",
+    "default_levels_variable": "prism_container_default_levels",
 }

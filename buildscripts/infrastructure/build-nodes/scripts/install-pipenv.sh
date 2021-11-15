@@ -8,18 +8,27 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-PYTHON_VERSION=3.8.7
-PYTHON_DIR_NAME=Python-${PYTHON_VERSION}
+# read optional command line argument
+if [ "$#" -eq 1 ]; then
+    PYTHON_VERSION=$1
+else
+    cd "${SCRIPT_DIR}"
+    while true; do
+        if [ -e defines.make ]; then
+            PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)
+            break
+        elif [ $PWD == / ]; then
+            failure "could not determine Python version"
+        else
+            cd ..
+        fi
+    done
+fi
 
-PIPENV_VERSION=2020.11.15
-ARCHIVE_NAME=v${PIPENV_VERSION}.tar.gz
-DIR_NAME=pipenv-${PIPENV_VERSION}
-TARGET_DIR=/opt
+pip3 install pipenv==2021.5.29 virtualenv==20.7.2
 
-cd "${TARGET_DIR}"
-mirrored_download "${ARCHIVE_NAME}" "https://github.com/pypa/pipenv/archive/${ARCHIVE_NAME}"
-tar xf "${ARCHIVE_NAME}"
-cd "${DIR_NAME}"
-pip3 install .
-
-ln -sf "${TARGET_DIR}/${PYTHON_DIR_NAME}/bin/pipenv"* /usr/bin
+# link pipenv to /usr/bin to be in PATH. Fallback to /opt/bin if no permissions for writting to /usr/bin.
+#   /opt/bin does not work as default, because `make -C omd deb` requires it to be in /usr/bin.
+#   only /usr/bin does not work, because GitHub Actions do not have permissions to write there.
+PIPENV_PATH="/opt/Python-${PYTHON_VERSION}/bin/pipenv"
+ln -sf "${PIPENV_PATH}"* /usr/bin || ln -sf "${PIPENV_PATH}"* /opt/bin

@@ -23,17 +23,18 @@ def check_checkpoint_voltage(item, params, info):
             return state, "Status: %s, %s %s" % (state_readable, value, unit)
 
 
-check_info['checkpoint_voltage'] = {
-    'check_function': check_checkpoint_voltage,
-    'inventory_function': inventory_checkpoint_voltage,
-    'service_description': "Voltage %s",
-    'snmp_scan_function': scan_checkpoint,
-    'snmp_info': (
-        '.1.3.6.1.4.1.2620.1.6.7.8.3.1',
+check_info["checkpoint_voltage"] = {
+    "check_function": check_checkpoint_voltage,
+    "inventory_function": inventory_checkpoint_voltage,
+    "service_description": "Voltage %s",
+    "snmp_scan_function": scan_checkpoint,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2620.1.6.7.8.3.1",
         [
             2,  # voltageSensorName
             3,  # voltageSensorValue
             4,  # voltageSensorUnit
-            6  # voltageSensorStatus
-        ]),
+            6,  # voltageSensorStatus
+        ],
+    ),
 }

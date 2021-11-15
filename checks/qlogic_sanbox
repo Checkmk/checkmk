@@ -25,18 +25,33 @@ qlogic_sanbox_status_map = [
 
 def inventory_qlogic_sanbox_temp(info):
     inventory = []
-    for sensor_name, _sensor_status, _sensor_message, sensor_type, \
-        sensor_characteristic, sensor_id in info:
+    for (
+        sensor_name,
+        _sensor_status,
+        _sensor_message,
+        sensor_type,
+        sensor_characteristic,
+        sensor_id,
+    ) in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
-        if sensor_type == "8" and sensor_characteristic == "3" and \
-            sensor_name != "Temperature Status":
+        if (
+            sensor_type == "8"
+            and sensor_characteristic == "3"
+            and sensor_name != "Temperature Status"
+        ):
             inventory.append((sensor_id, None))
     return inventory
 
 
 def check_qlogic_sanbox_temp(item, _no_params, info):
-    for _sensor_name, sensor_status, sensor_message, _sensor_type, \
-        _sensor_characteristic, sensor_id in info:
+    for (
+        _sensor_name,
+        sensor_status,
+        sensor_message,
+        _sensor_type,
+        _sensor_characteristic,
+        sensor_id,
+    ) in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_id == item:
             sensor_status = int(sensor_status)
@@ -56,33 +71,42 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
 
             if sensor_message.endswith(" degrees C"):
                 temp = int(sensor_message.replace(" degrees C", ""))
-                perfdata = [('temp', str(temp) + 'C')]
+                perfdata = [("temp", str(temp) + "C")]
             else:
                 perfdata = []
 
-            return status, "Sensor %s is at %s and reports status %s" % \
-            (sensor_id, sensor_message, sensor_status_descr), perfdata
+            return (
+                status,
+                "Sensor %s is at %s and reports status %s"
+                % (sensor_id, sensor_message, sensor_status_descr),
+                perfdata,
+            )
     return 3, "No sensor %s found" % item
 
+
 check_info["qlogic_sanbox.temp"] = {
-    "check_function"        : check_qlogic_sanbox_temp,
-    "inventory_function"    : inventory_qlogic_sanbox_temp,
-    "service_description"   : "Temperature Sensor %s",
-    "has_perfdata"          : True,
-    "snmp_info"             : (".1.3.6.1.3.94.1.8.1", [3, # connUnitSensorName
-                                                       4, # connUnitSensorStatus
-                                                       6, # connUnitSensorMessage
-                                                       7, # connUnitSensorType
-                                                       8, # connUnitSensorCharacteristic
-                                                       OID_END]),
+    "check_function": check_qlogic_sanbox_temp,
+    "inventory_function": inventory_qlogic_sanbox_temp,
+    "service_description": "Temperature Sensor %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.3.94.1.8.1",
+        [
+            3,  # connUnitSensorName
+            4,  # connUnitSensorStatus
+            6,  # connUnitSensorMessage
+            7,  # connUnitSensorType
+            8,  # connUnitSensorCharacteristic
+            OID_END,
+        ],
+    ),
     # .1.3.6.1.4.1.3873.1.14 Qlogic-Switch
     # .1.3.6.1.4.1.3873.1.8  Qlogic-4Gb SAN Switch Module for IBM BladeCenter
-    'snmp_scan_function'    : lambda oid: \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14") \
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8"),
 }
 
-#.
+# .
 #   .--power supplies------------------------------------------------------.
 #   |                                                      _ _             |
 #   | _ __   _____      _____ _ __   ___ _   _ _ __  _ __ | (_) ___  ___   |
@@ -96,8 +120,14 @@ check_info["qlogic_sanbox.temp"] = {
 
 def inventory_qlogic_sanbox_psu(info):
     inventory = []
-    for _sensor_name, _sensor_status, _sensor_message, sensor_type, \
-        _sensor_characteristic, sensor_id in info:
+    for (
+        _sensor_name,
+        _sensor_status,
+        _sensor_message,
+        sensor_type,
+        _sensor_characteristic,
+        sensor_id,
+    ) in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_type == "5":
             inventory.append((sensor_id, None))
@@ -105,8 +135,14 @@ def inventory_qlogic_sanbox_psu(info):
 
 
 def check_qlogic_sanbox_psu(item, _no_params, info):
-    for _sensor_name, sensor_status, _sensor_message, _sensor_type, \
-        _sensor_characteristic, sensor_id in info:
+    for (
+        _sensor_name,
+        sensor_status,
+        _sensor_message,
+        _sensor_type,
+        _sensor_characteristic,
+        sensor_id,
+    ) in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_id == item:
             sensor_status = int(sensor_status)
@@ -127,19 +163,24 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
             return status, "Power Supply %s reports status %s" % (sensor_id, sensor_status_descr)
     return 3, "No sensor %s found" % item
 
+
 check_info["qlogic_sanbox.psu"] = {
-    "check_function"        : check_qlogic_sanbox_psu,
-    "inventory_function"    : inventory_qlogic_sanbox_psu,
-    "service_description"   : "PSU %s",
-    "snmp_info"             : (".1.3.6.1.3.94.1.8.1", [3, # connUnitSensorName
-                                                       4, # connUnitSensorStatus
-                                                       6, # connUnitSensorMessage
-                                                       7, # connUnitSensorType
-                                                       8, # connUnitSensorCharacteristic
-                                                       OID_END]),
+    "check_function": check_qlogic_sanbox_psu,
+    "inventory_function": inventory_qlogic_sanbox_psu,
+    "service_description": "PSU %s",
+    "snmp_info": (
+        ".1.3.6.1.3.94.1.8.1",
+        [
+            3,  # connUnitSensorName
+            4,  # connUnitSensorStatus
+            6,  # connUnitSensorMessage
+            7,  # connUnitSensorType
+            8,  # connUnitSensorCharacteristic
+            OID_END,
+        ],
+    ),
     # .1.3.6.1.4.1.3873.1.14 Qlogic-Switch
     # .1.3.6.1.4.1.3873.1.8  Qlogic-4Gb SAN Switch Module for IBM BladeCenter
-    'snmp_scan_function'    : lambda oid: \
-           oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14") \
-        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.8"),
 }

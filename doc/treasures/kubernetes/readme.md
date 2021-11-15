@@ -1,5 +1,11 @@
 # Kubernetes Monitoring
 
+## Disclaimer
+These are internal notes. Please refer to the official documentation on <https://docs.checkmk.com>
+
+
+## Intro 
+
 Prometheus has become the standard software to monitor a kubernetes
 cluster. It runs in its own container and (unfortunately) every application
 that needs to use it ends up configuring its own instance of prometheus.
@@ -9,13 +15,8 @@ be found here
 <https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/monitoring_architecture.md>
 
 
-## Deprecation
 
-This setup should not be used anymore. It is recommended to use the
-Prometheus special agent instead.
-
-
-## Check-MK monitoring idea for kubernetes
+## Checkmk monitoring idea for kubernetes
 
 Because getting information out of a kubernetes cluster requires going
 through a metrics pipeline we need to setup various components in the

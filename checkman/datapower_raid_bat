@@ -12,5 +12,5 @@ description:
 item:
  The ID of the RAID controller.
 
-inventory:
+discovery:
  One service is created for every RAID controller on each gateway.

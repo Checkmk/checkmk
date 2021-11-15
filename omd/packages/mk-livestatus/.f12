@@ -1,0 +1,24 @@
+#!/bin/bash
+set -ex
+
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
+(
+    cd skel || exit 1
+    sudo rsync \
+        --exclude=__pycache__ \
+        --chown "$SITE:$SITE" \
+        -aR \
+        etc \
+        "$ROOT/"
+)
+
+sudo cp "$PWD/"LIVESTATUS_[[:upper:]]* "$ROOT/lib/omd/hooks"
+
+sudo find "$ROOT/etc" -type f -exec \
+    perl -pi -e "s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g" "{}" \;

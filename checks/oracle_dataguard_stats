@@ -28,56 +28,11 @@ def inventory_oracle_dataguard_stats(parsed):
         yield instance, {}
 
 
-def parsed_oracle_dataguard_stats(info):
-
-    parsed = {}
-
-    for line in info:
-        instance = {}
-        if len(line) >= 5:
-            db_name, db_unique_name, database_role, dgstat_parm, dgstat_value = line[:5]
-            instance = parsed.setdefault("%s.%s" % (db_name, db_unique_name), {
-                'database_role': database_role,
-                'dgstat': {},
-            })
-            instance['dgstat'][dgstat_parm] = dgstat_value
-
-        if len(line) >= 6:
-            # new plugin output with switchover_status
-            instance['switchover_status'] = line[5]
-
-        if len(line) >= 13:
-            # new format for Broker and Observer information
-            instance.update({
-                'broker_state': line[6],
-                'protection_mode': line[7],
-                'fs_failover_status': line[8],
-                'fs_failover_observer_present': line[9],
-                'fs_failover_observer_host': line[10],
-                'fs_failover_target': line[11],
-                'mrp_status': line[12],
-            })
-        if len(line) >= 14:
-            # new format with open_mode
-            instance.update({
-                'broker_state': line[6],
-                'protection_mode': line[7],
-                'fs_failover_status': line[8],
-                'fs_failover_observer_present': line[9],
-                'fs_failover_observer_host': line[10],
-                'fs_failover_target': line[11],
-                'mrp_status': line[12],
-                'open_mode': line[13],
-            })
-
-    return parsed
-
-
 def check_oracle_dataguard_stats(item, params, parsed):
     def get_seconds(timestamp):
         if not timestamp:
             return None
-        elif str(timestamp)[0:1] == '+':
+        elif str(timestamp)[0:1] == "+":
             days = int(timestamp[1:3])
             h = int(timestamp[4:6])
             min_ = int(timestamp[7:9])
@@ -99,157 +54,182 @@ def check_oracle_dataguard_stats(item, params, parsed):
         # switch to UNKNOWN, but will get stale.
         raise MKCounterWrapped("Dataguard disabled or Instance not running")
 
-    yield 0, "Database Role %s" % (dgdata['database_role'].lower())
+    yield 0, "Database Role %s" % (dgdata["database_role"].lower())
 
-    if 'protection_mode' in dgdata:
-        yield 0, "Protection Mode %s" % (dgdata['protection_mode'].lower())
+    if "protection_mode" in dgdata:
+        yield 0, "Protection Mode %s" % (dgdata["protection_mode"].lower())
 
-    if 'broker_state' in dgdata:
-        yield 0, "Broker %s" % (dgdata['broker_state'].lower())
+    if "broker_state" in dgdata:
+        yield 0, "Broker %s" % (dgdata["broker_state"].lower())
 
         # Observer is only usable with enabled Fast Start Failover!
-        if 'fs_failover_status' in dgdata and dgdata['fs_failover_status'] != 'DISABLED':
+        if "fs_failover_status" in dgdata and dgdata["fs_failover_status"] != "DISABLED":
 
-            if dgdata['fs_failover_observer_present'] != 'YES':
+            if dgdata["fs_failover_observer_present"] != "YES":
                 yield 2, "Observer not connected"
             else:
                 yield 0, "Observer connected %s from host %s" % (
-                    dgdata['fs_failover_observer_present'].lower(),
-                    dgdata['fs_failover_observer_host'])
+                    dgdata["fs_failover_observer_present"].lower(),
+                    dgdata["fs_failover_observer_host"],
+                )
 
-                if (dgdata['protection_mode'] == 'MAXIMUM PERFORMANCE' and dgdata['fs_failover_status'] == 'TARGET UNDER LAG LIMIT') \
-                   or \
-                   (dgdata['protection_mode'] == 'MAXIMUM AVAILABILITY' and dgdata['fs_failover_status'] == 'SYNCHRONIZED'):
+                if (
+                    dgdata["protection_mode"] == "MAXIMUM PERFORMANCE"
+                    and dgdata["fs_failover_status"] == "TARGET UNDER LAG LIMIT"
+                ) or (
+                    dgdata["protection_mode"] == "MAXIMUM AVAILABILITY"
+                    and dgdata["fs_failover_status"] == "SYNCHRONIZED"
+                ):
                     state = 0
                 else:
                     state = 1
-                yield state, "Fast Start Failover %s" % (dgdata['fs_failover_status'].lower())
+                yield state, "Fast Start Failover %s" % (dgdata["fs_failover_status"].lower())
 
     # switchover_status is important for non broker environemnts as well.
-    if 'switchover_status' in dgdata:
+    if "switchover_status" in dgdata:
 
-        if dgdata['database_role'] == 'PRIMARY':
-            if dgdata['switchover_status'] in ('TO STANDBY', 'SESSIONS ACTIVE', 'RESOLVABLE GAP',
-                                               'LOG SWITCH GAP'):
+        if dgdata["database_role"] == "PRIMARY":
+            if dgdata["switchover_status"] in (
+                "TO STANDBY",
+                "SESSIONS ACTIVE",
+                "RESOLVABLE GAP",
+                "LOG SWITCH GAP",
+            ):
                 yield 0, "Switchover to standby possible"
             else:
                 primary_broker_state = params.get("primary_broker_state")
-                if primary_broker_state or dgdata['broker_state'].lower() == 'enabled':
+                if primary_broker_state or dgdata["broker_state"].lower() == "enabled":
                     # We need primary_broker_state False for Data-Guards without Broker
-                    yield 2, "Switchover to standby not possible! reason: %s"\
-                             % dgdata['switchover_status'].lower()
+                    yield 2, "Switchover to standby not possible! reason: %s" % dgdata[
+                        "switchover_status"
+                    ].lower()
                 else:
                     yield 0, "Switchoverstate ignored "
 
-        elif dgdata['database_role'] == 'PHYSICAL STANDBY':
+        elif dgdata["database_role"] == "PHYSICAL STANDBY":
 
             # don't show the ok state, due to distracting 'NOT ALLOWED' state!
-            if dgdata['switchover_status'] in ('SYNCHRONIZED', 'NOT ALLOWED', 'SESSIONS ACTIVE'):
+            if dgdata["switchover_status"] in ("SYNCHRONIZED", "NOT ALLOWED", "SESSIONS ACTIVE"):
                 yield 0, "Switchover to primary possible"
             else:
-                yield 2, "Switchover to primary not possible! reason: %s"\
-                         % dgdata['switchover_status']
+                yield 2, "Switchover to primary not possible! reason: %s" % dgdata[
+                    "switchover_status"
+                ]
 
-    if dgdata['database_role'] == 'PHYSICAL STANDBY':
-        mrp_status = dgdata.get('mrp_status')
+    if dgdata["database_role"] == "PHYSICAL STANDBY":
+        mrp_status = dgdata.get("mrp_status")
 
-        mrp_started_state, mrp_stopped_state = params.get('mrp_option', (0, 2))
+        mrp_started_state, mrp_stopped_state = params.get("mrp_option", (0, 2))
         if mrp_status:
             yield mrp_started_state, "Managed Recovery Process state %s" % mrp_status.lower()
 
-            if dgdata.get('open_mode', '') == 'READ ONLY WITH APPLY':
-                yield params.get('active_dataguard_option'), 'Active Data-Guard found'
+            if dgdata.get("open_mode", "") == "READ ONLY WITH APPLY":
+                yield params.get("active_dataguard_option"), "Active Data-Guard found"
         elif mrp_status is not None:
-            yield mrp_stopped_state, 'Managed Recovery Process not started'
+            yield mrp_stopped_state, "Managed Recovery Process not started"
 
-        for dgstat_param in sorted(dgdata['dgstat']):
+        for dgstat_param in sorted(dgdata["dgstat"]):
 
-            if dgstat_param == 'apply lag' and not dgdata['dgstat'][dgstat_param]:
-                yield 1, 'No value for apply lag'
+            if dgstat_param == "apply lag" and not dgdata["dgstat"][dgstat_param]:
+                yield 1, "No value for apply lag"
 
-            if dgstat_param in ('apply lag', 'transport lag') and dgdata['dgstat'][dgstat_param]:
-                seconds = get_seconds(dgdata['dgstat'][dgstat_param])
+            if dgstat_param in ("apply lag", "transport lag") and dgdata["dgstat"][dgstat_param]:
+                seconds = get_seconds(dgdata["dgstat"][dgstat_param])
                 state = 0
-                if dgdata['dgstat'][dgstat_param]:
+                if dgdata["dgstat"][dgstat_param]:
 
                     paramtext = ""
                     warn = None
                     crit = None
 
-                    if params.get(dgstat_param.replace(' ', '_')):
+                    if params.get(dgstat_param.replace(" ", "_")):
 
-                        warn, crit = params.get(dgstat_param.replace(' ', '_'))
+                        warn, crit = params.get(dgstat_param.replace(" ", "_"))
 
                         if seconds is None:
                             # => This is only for safety. This point is not reached with soconds=None from parsed function!
                             state = 3
                         elif crit <= seconds:
-                            paramtext = '(%s/%s)' % (get_age_human_readable(warn),
-                                                     get_age_human_readable(crit))
+                            paramtext = "(%s/%s)" % (
+                                get_age_human_readable(warn),
+                                get_age_human_readable(crit),
+                            )
                             state = 2
                         elif warn <= seconds:
-                            paramtext = '(%s/%s)' % (get_age_human_readable(warn),
-                                                     get_age_human_readable(crit))
+                            paramtext = "(%s/%s)" % (
+                                get_age_human_readable(warn),
+                                get_age_human_readable(crit),
+                            )
                             state = 1
 
                         # apply_lag_min is a MINIMUM value!
-                        if dgstat_param == 'apply lag' and params.get('apply_lag_min'):
-                            warn, crit = params.get('apply_lag_min')
+                        if dgstat_param == "apply lag" and params.get("apply_lag_min"):
+                            warn, crit = params.get("apply_lag_min")
                             if seconds is None:
                                 # => This is only for safety. This point is not reached with soconds=None from parsed function!
                                 state = 3
                             elif crit >= seconds:
-                                paramtext += ' apply lag minimum (%s/%s)' % (
-                                    get_age_human_readable(warn), get_age_human_readable(crit))
+                                paramtext += " apply lag minimum (%s/%s)" % (
+                                    get_age_human_readable(warn),
+                                    get_age_human_readable(crit),
+                                )
                                 state = max(state, 2)
                             elif warn >= seconds:
-                                paramtext += ' apply lag minimum (%s/%s)' % (
-                                    get_age_human_readable(warn), get_age_human_readable(crit))
+                                paramtext += " apply lag minimum (%s/%s)" % (
+                                    get_age_human_readable(warn),
+                                    get_age_human_readable(crit),
+                                )
                                 state = max(state, 1)
 
                 perfdata = [
-                    (dgstat_param.replace(' ', '_'), seconds, warn, crit),
+                    (dgstat_param.replace(" ", "_"), seconds, warn, crit),
                 ]
 
                 if state == 0:
-                    yield 0, '%s %s' % (dgstat_param, get_age_human_readable(seconds)), perfdata
+                    yield 0, "%s %s" % (dgstat_param, get_age_human_readable(seconds)), perfdata
                 else:
                     if seconds is None:
                         # seconds is None => state != 0 from upper checks
-                        yield state, '%s unknown time' % (dgstat_param), perfdata
+                        yield state, "%s unknown time" % (dgstat_param), perfdata
                     else:
-                        yield state, '%s %s %s' % (dgstat_param, get_age_human_readable(seconds),
-                                                   paramtext), perfdata
+                        yield state, "%s %s %s" % (
+                            dgstat_param,
+                            get_age_human_readable(seconds),
+                            paramtext,
+                        ), perfdata
 
             # show only 'apply finish time'
 
-            elif dgstat_param == 'apply finish time':
-                if dgdata['dgstat'][dgstat_param]:
-                    seconds = get_seconds(dgdata['dgstat'][dgstat_param])
+            elif dgstat_param == "apply finish time":
+                if dgdata["dgstat"][dgstat_param]:
+                    seconds = get_seconds(dgdata["dgstat"][dgstat_param])
                     perfdata = [
-                        (dgstat_param.replace(' ', '_'), seconds),
+                        (dgstat_param.replace(" ", "_"), seconds),
                     ]
                     if seconds is None:
                         # apply finish time is only for informational purposes
                         # => we ignore possible unknown time for apply finish times
-                        yield 0, '%s unknown time' % (dgstat_param), perfdata
+                        yield 0, "%s unknown time" % (dgstat_param), perfdata
                     else:
-                        yield 0, '%s %s' % (dgstat_param, get_age_human_readable(seconds)), perfdata
+                        yield 0, "%s %s" % (dgstat_param, get_age_human_readable(seconds)), perfdata
 
-        if dgdata[
-                'database_role'] == 'PHYSICAL STANDBY' and 'broker_state' not in dgdata and 'apply lag' in dgdata[
-                    'dgstat'] and dgdata['dgstat']['apply lag'] == '':
+        if (
+            dgdata["database_role"] == "PHYSICAL STANDBY"
+            and "broker_state" not in dgdata
+            and "apply lag" in dgdata["dgstat"]
+            and dgdata["dgstat"]["apply lag"] == ""
+        ):
             # old sql cannot detect a started standby database without running media recovery
             # => add an information for old plugin with possible wrong result
-            yield 0, 'old plugin data found, recovery active?'
+            yield 0, "old plugin data found, recovery active?"
 
 
-check_info['oracle_dataguard_stats'] = {
+check_info["oracle_dataguard_stats"] = {
+    # section is already migrated!
     "check_function": check_oracle_dataguard_stats,
-    "parse_function": parsed_oracle_dataguard_stats,
     "inventory_function": inventory_oracle_dataguard_stats,
     "service_description": "ORA %s Dataguard-Stats",
     "has_perfdata": True,
-    'default_levels_variable': "oracle_dataguard_stats",
+    "default_levels_variable": "oracle_dataguard_stats",
     "group": "oracle_dataguard_stats",
 }

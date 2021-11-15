@@ -9,6 +9,8 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
+import time
+from datetime import timedelta
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
@@ -19,10 +21,10 @@ from cmk.utils.version import (
     is_expired_trial,
     is_free_edition,
 )
+
+from cmk.gui.globals import user
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
-from datetime import timedelta
-import time
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
@@ -53,6 +55,7 @@ class MegaMenuRegistry(Registry[MegaMenu]):
         >>> assert mega_menu_registry["monitoring"].sort_index == 5
 
     """
+
     def plugin_name(self, instance: MegaMenu) -> str:
         return instance.name
 
@@ -127,7 +130,8 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     sort_index=40,
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
-            ]),
+            ],
+        ),
         TopicMenuTopic(
             name="external_help",
             title=_("External"),
@@ -136,7 +140,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="manual",
                     title=_("User guide"),
-                    url="https://docs.checkmk.com",
+                    url=user.get_docs_base_url(),
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon
@@ -170,7 +174,8 @@ mega_menu_registry.register(
         sort_index=18,
         topics=_help_menu_topics,
         info_line=lambda: f"{__version__} ({edition_title()}){free_edition_status()}",
-    ))
+    )
+)
 
 
 def free_edition_status() -> str:
@@ -186,4 +191,5 @@ def free_edition_status() -> str:
     if remaining_time.days > 1:
         return "<br>" + _("Trial expires in %s days") % remaining_time.days
     return "<br>" + _("Trial expires today (%s)") % time.strftime(
-        str(_("%H:%M")), time.localtime(time.time() + remaining_time.seconds))
+        str(_("%H:%M")), time.localtime(time.time() + remaining_time.seconds)
+    )

@@ -5,16 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 systemtime_default_values = (30, 60)
-factory_settings['systemtime_default_levels'] = {'levels': (30, 60)}
+factory_settings["systemtime_default_levels"] = {"levels": (30, 60)}
 
 
 def check_systemtime(item, params, parsed):
     if not parsed:
         return
 
-    systemtime = parsed['foreign_systemtime']
-    if 'our_systemtime' in parsed:
-        offset = systemtime - parsed['our_systemtime']
+    systemtime = parsed["foreign_systemtime"]
+    if "our_systemtime" in parsed:
+        offset = systemtime - parsed["our_systemtime"]
     else:
         try:
             systemtime += get_agent_data_time()
@@ -22,7 +22,7 @@ def check_systemtime(item, params, parsed):
             pass
         offset = systemtime - time.time()
 
-    warn, crit = params if isinstance(params, tuple) else params['levels']
+    warn, crit = params if isinstance(params, tuple) else params["levels"]
     yield check_levels(
         offset,
         "offset",
@@ -33,10 +33,10 @@ def check_systemtime(item, params, parsed):
 
 
 check_info["systemtime"] = {
-    'check_function': check_systemtime,
-    'inventory_function': discover_single,
-    'service_description': 'System Time',
-    'has_perfdata': True,
-    'group': 'systemtime',
-    'default_levels_variable': 'systemtime_default_levels',
+    "check_function": check_systemtime,
+    "inventory_function": discover_single,
+    "service_description": "System Time",
+    "has_perfdata": True,
+    "group": "systemtime",
+    "default_levels_variable": "systemtime_default_levels",
 }

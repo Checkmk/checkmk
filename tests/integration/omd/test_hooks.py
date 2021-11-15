@@ -19,6 +19,8 @@ def test_hooks(site):
         "LIVESTATUS_TCP_ONLY_FROM",
         "LIVESTATUS_TCP_PORT",
         "LIVESTATUS_TCP_TLS",
+        "AGENT_RECEIVER",
+        "AGENT_RECEIVER_PORT",
         "MKEVENTD",
         "MKEVENTD_SNMPTRAP",
         "MKEVENTD_SYSLOG",

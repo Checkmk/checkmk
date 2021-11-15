@@ -6,12 +6,12 @@
 
 # pylint: disable=protected-access
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario  # type: ignore[import]
+from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import MKIPAddressLookupError, OnError
-from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, result, SourceType
+from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
 
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
@@ -59,11 +59,13 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
 
     Scenario().add_host(hostname).apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
-    monkeypatch.setattr(config, "host_attributes", {
-        "hostname": {
-            "management_address": "lolo"
+    monkeypatch.setattr(
+        config,
+        "host_attributes",
+        {
+            "hostname": {"management_address": "lolo"},
         },
-    })
+    )
     host_config = config.get_config_cache().get_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) is None
 
@@ -88,14 +90,15 @@ class TestSNMPSource_SNMP:
         Scenario().add_host(hostname).apply(monkeypatch)
 
         source = SNMPSource.snmp(
-            hostname,
+            HostName(hostname),
             ipaddress,
             selected_sections=NO_SELECTION,
             on_scan_error=OnError.RAISE,
             force_cache_refresh=False,
         )
         assert source.description == (
-            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
+            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
+        )
 
 
 class TestSNMPSource_MGMT:
@@ -109,15 +112,13 @@ class TestSNMPSource_MGMT:
         ts.set_option(
             "host_attributes",
             {
-                hostname: {
-                    "management_address": ipaddress
-                },
+                hostname: {"management_address": ipaddress},
             },
         )
         ts.apply(monkeypatch)
 
         source = SNMPSource.management_board(
-            hostname,
+            HostName(hostname),
             ipaddress,
             force_cache_refresh=False,
             selected_sections=NO_SELECTION,
@@ -125,23 +126,24 @@ class TestSNMPSource_MGMT:
         )
         assert source.description == (
             "Management board - SNMP "
-            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
+            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
+        )
 
 
 class TestSNMPSummaryResult:
     @pytest.fixture
-    def hostname(self):
-        return "testhost"
+    def hostname(self) -> HostName:
+        return HostName("testhost")
 
     @pytest.fixture
-    def scenario(self, hostname, monkeypatch):
+    def scenario(self, hostname: HostName, monkeypatch):
         ts = Scenario()
         ts.add_host(hostname)
         ts.apply(monkeypatch)
         return ts
 
     @pytest.fixture
-    def source(self, hostname):
+    def source(self, hostname: HostName):
         return SNMPSource(
             hostname,
             "1.2.3.4",

@@ -5,6 +5,8 @@
 
 #include "TableQueryHelper.h"
 
+#include <functional>
+
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"
@@ -12,7 +14,7 @@
 
 std::string mk::test::query(Table& table, const std::list<std::string>& q) {
     bool flag{false};
-    OutputBuffer output{-1, flag, table.logger()};
+    OutputBuffer output{-1, [&flag] { return flag; }, table.logger()};
     Query query{q, table, Encoding::utf8, 5000, output, table.logger()};
     query.process();
     // TODO(ml): Without resetting the flag, the function never terminates

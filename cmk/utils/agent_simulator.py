@@ -6,9 +6,9 @@
 
 import math
 from typing import List, Optional
-from cmk.utils.exceptions import MKGeneralException
 
 import cmk.utils.debug
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import AgentRawData
 
 
@@ -20,10 +20,10 @@ def our_uptime() -> float:
 def process(output: AgentRawData) -> AgentRawData:
     try:
         while True:
-            i = output.find(b'%{')
+            i = output.find(b"%{")
             if i == -1:
                 break
-            e = output.find(b'}', i)
+            e = output.find(b"}", i)
             if e == -1:
                 break
             # 2.1: Disabled this feature because of the eval() call below. To make this secure it
@@ -34,10 +34,11 @@ def process(output: AgentRawData) -> AgentRawData:
             raise MKGeneralException(
                 "Sorry, the agent simulator functions %{...} can not be used anymore. "
                 "They have been removed for security reasons. In case you need them, please let "
-                "us know.")
-            #simfunc = output[i + 2:e]
-            #replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")  # nosec
-            #output = AgentRawData(output[:i] + replacement + output[e + 1:])
+                "us know."
+            )
+            # simfunc = output[i + 2:e]
+            # replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")  # nosec
+            # output = AgentRawData(output[:i] + replacement + output[e + 1:])
     except MKGeneralException:
         raise
     except Exception:
@@ -47,8 +48,9 @@ def process(output: AgentRawData) -> AgentRawData:
     return output
 
 
-def agentsim_uptime(rate: float = 1.0,
-                    period: Optional[float] = None) -> int:  # period = sinus wave
+def agentsim_uptime(
+    rate: float = 1.0, period: Optional[float] = None
+) -> int:  # period = sinus wave
     if period is None:
         return int(our_uptime() * rate)
 
@@ -63,5 +65,6 @@ def agentsim_enum(values: List[bytes], period: int = 1) -> bytes:  # period is i
 
 
 def agentsim_sinus(base: int = 50, amplitude: int = 50, period: int = 300) -> int:
-    return int(math.sin(our_uptime() * math.pi * 2.0 / period) * amplitude +
-               base)  # fixed: true-division
+    return int(
+        math.sin(our_uptime() * math.pi * 2.0 / period) * amplitude + base
+    )  # fixed: true-division

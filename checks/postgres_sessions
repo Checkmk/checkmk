@@ -25,10 +25,13 @@ def parse_postgres_sessions(info):
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
-        instance = parsed.setdefault(instance_name, {
-            "total": 0,
-            "running": 0,
-        })
+        instance = parsed.setdefault(
+            instance_name,
+            {
+                "total": 0,
+                "running": 0,
+            },
+        )
         if line[0].startswith("t"):
             instance["total"] = int(line[1])
         elif line[0].startswith("f"):
@@ -48,8 +51,8 @@ def check_postgres_sessions(item, params, parsed):
         raise MKCounterWrapped("Login into database failed")
 
     data = parsed[item]
-    idle = data['total']
-    running = data['running']
+    idle = data["total"]
+    running = data["running"]
     total = idle + running
 
     for key, val in [
@@ -68,7 +71,7 @@ def check_postgres_sessions(item, params, parsed):
         yield state, infotext, [(key, val, warn, crit)]
 
 
-check_info['postgres_sessions'] = {
+check_info["postgres_sessions"] = {
     "parse_function": parse_postgres_sessions,
     "inventory_function": inventory_postgres_sessions,
     "check_function": check_postgres_sessions,

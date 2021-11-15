@@ -17,22 +17,22 @@ def inventory_steelhead_peers(info):
 def check_steelhead_peers(item, _no_params, info):
     for host, version, client, client_type in info:
         if host == item:
-            return 0, "Version: %s, Client Address: %s (%s)" % \
-            ( version, client, client_type )
+            return 0, "Version: %s, Client Address: %s (%s)" % (version, client, client_type)
     return 2, "Peer not connected"
 
 
-check_info['steelhead_peers'] = {
+check_info["steelhead_peers"] = {
     "check_function": check_steelhead_peers,
     "inventory_function": inventory_steelhead_peers,
     "service_description": "Peer %s",
     "snmp_info": (
         ".1.3.6.1.4.1.17163.1.1.2.6.1.1",
         [
-            2,  #Hostname
-            3,  #Version
-            4,  #Clients
-            5,  #Client Type
-        ]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.17163.")
+            2,  # Hostname
+            3,  # Version
+            4,  # Clients
+            5,  # Client Type
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.17163."),
 }

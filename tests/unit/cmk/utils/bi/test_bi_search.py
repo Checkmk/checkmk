@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.bi.bi_search import (
     BIEmptySearch,
+    BIFixedArgumentsSearch,
     BIHostSearch,
     BIServiceSearch,
-    BIFixedArgumentsSearch,
 )
 
 
@@ -23,40 +23,35 @@ def test_empty_search(bi_searcher):
     assert results[0] == {}
 
 
-@pytest.mark.parametrize("config, num_expected_keys, expected_total_length", [
-    (
-        [{
-            "key": "firstKey",
-            "values": ["a", "b", "c"]
-        }],
-        1,
-        3,
-    ),
-    (
-        [{
-            "key": "firstKey",
-            "values": ["a", "b", "c"]
-        }, {
-            "key": "secondKey",
-            "values": ["e", "f", "g"]
-        }],
-        2,
-        3,
-    ),
-    (
-        [{
-            "key": "firstKey",
-            "values": ["a", "b", "c", "e", "f"]
-        }, {
-            "key": "secondKey",
-            "values": ["e", "f", "g", "h"]
-        }],
-        2,
-        5,
-    ),
-])
-def test_fixed_argument_search(config, num_expected_keys, expected_total_length,
-                               bi_searcher_with_sample_config):
+@pytest.mark.parametrize(
+    "config, num_expected_keys, expected_total_length",
+    [
+        (
+            [{"key": "firstKey", "values": ["a", "b", "c"]}],
+            1,
+            3,
+        ),
+        (
+            [
+                {"key": "firstKey", "values": ["a", "b", "c"]},
+                {"key": "secondKey", "values": ["e", "f", "g"]},
+            ],
+            2,
+            3,
+        ),
+        (
+            [
+                {"key": "firstKey", "values": ["a", "b", "c", "e", "f"]},
+                {"key": "secondKey", "values": ["e", "f", "g", "h"]},
+            ],
+            2,
+            5,
+        ),
+    ],
+)
+def test_fixed_argument_search(
+    config, num_expected_keys, expected_total_length, bi_searcher_with_sample_config
+):
     schema_config = BIFixedArgumentsSearch.schema()().dump({"arguments": config})
     search = BIFixedArgumentsSearch(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
@@ -64,10 +59,13 @@ def test_fixed_argument_search(config, num_expected_keys, expected_total_length,
     assert len(results[0].keys()) == num_expected_keys
 
 
-@pytest.mark.parametrize("search_class", [
-    BIHostSearch,
-    BIServiceSearch,
-])
+@pytest.mark.parametrize(
+    "search_class",
+    [
+        BIHostSearch,
+        BIServiceSearch,
+    ],
+)
 def test_host_search(search_class, bi_searcher_with_sample_config):
     schema_config = search_class.schema()().dump({})
     search = search_class(schema_config)
@@ -77,11 +75,8 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
 
     # Tag match
     schema_config = search_class.schema()().dump(
-        {"conditions": {
-            "host_tags": {
-                "clone-tag": "clone-tag"
-            }
-        }})
+        {"conditions": {"host_tags": {"clone-tag": "clone-tag"}}}
+    )
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
@@ -90,11 +85,8 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
 
     # Label match
     schema_config = search_class.schema()().dump(
-        {"conditions": {
-            "host_labels": {
-                "cmk/check_mk_server": "yes"
-            }
-        }})
+        {"conditions": {"host_labels": {"cmk/check_mk_server": "yes"}}}
+    )
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
@@ -102,12 +94,8 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
 
     # Regex match hit without match group
     schema_config = search_class.schema()().dump(
-        {"conditions": {
-            "host_choice": {
-                "type": "host_name_regex",
-                "pattern": "heute_cl.*"
-            }
-        }})
+        {"conditions": {"host_choice": {"type": "host_name_regex", "pattern": "heute_cl.*"}}}
+    )
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
@@ -117,12 +105,8 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
 
     # Regex match hit with match group
     schema_config = search_class.schema()().dump(
-        {"conditions": {
-            "host_choice": {
-                "type": "host_name_regex",
-                "pattern": "(heute_cl).*"
-            }
-        }})
+        {"conditions": {"host_choice": {"type": "host_name_regex", "pattern": "(heute_cl).*"}}}
+    )
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
@@ -133,50 +117,48 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
 
     # Regex match miss
     schema_config = search_class.schema()().dump(
-        {"conditions": {
-            "host_choice": {
-                "type": "host_name_regex",
-                "pattern": "heute_missing.*"
-            }
-        }})
+        {"conditions": {"host_choice": {"type": "host_name_regex", "pattern": "heute_missing.*"}}}
+    )
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     assert len(results) == 0
 
     # Alias match
     schema_config = search_class.schema()().dump(
-        {"conditions": {
-            "host_choice": {
-                "type": "host_alias_regex",
-                "pattern": "heute_alias"
-            }
-        }})
+        {"conditions": {"host_choice": {"type": "host_alias_regex", "pattern": "heute_alias"}}}
+    )
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
 
 
-@pytest.mark.parametrize("service_regex, host_regex, expected_matches", [
-    ("Interface", ".*", 7),
-    ("Interface.*", ".*", 7),
-    ("Interface$", ".*", 0),
-    ("Interface (2|4)", ".*", 4),
-    ("Interface", "heute", 3),
-    ("Interface", "heute$", 3),
-    ("Interface", "heute_clone", 4),
-])
-def test_service_search(service_regex, host_regex, expected_matches,
-                        bi_searcher_with_sample_config):
-    schema_config = BIServiceSearch.schema()().dump({
-        "conditions": {
-            "service_regex": service_regex,
-            "host_choice": {
-                "type": "host_name_regex",
-                "pattern": host_regex,
+@pytest.mark.parametrize(
+    "service_regex, host_regex, expected_matches",
+    [
+        ("Interface", ".*", 7),
+        ("Interface.*", ".*", 7),
+        ("Interface$", ".*", 0),
+        ("Interface (2|4)", ".*", 4),
+        ("Interface", "heute", 3),
+        ("Interface", "heute$", 3),
+        ("Interface", "heute_clone", 4),
+    ],
+)
+def test_service_search(
+    service_regex, host_regex, expected_matches, bi_searcher_with_sample_config
+):
+    schema_config = BIServiceSearch.schema()().dump(
+        {
+            "conditions": {
+                "service_regex": service_regex,
+                "host_choice": {
+                    "type": "host_name_regex",
+                    "pattern": host_regex,
+                },
             }
         }
-    })
+    )
     search = BIServiceSearch(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     assert len(results) == expected_matches

@@ -4,9 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, MutableMapping, NamedTuple, Optional, Tuple
-
-from six import ensure_str
+from typing import Iterable, MutableMapping, NamedTuple, Optional, Sequence, Tuple
 
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
@@ -21,12 +19,15 @@ class PiggybackMarker(NamedTuple):
 
     @staticmethod
     def is_header(line: bytes) -> bool:
-        return (line.strip().startswith(b'<<<<') and line.strip().endswith(b'>>>>') and
-                not PiggybackMarker.is_footer(line))
+        return (
+            line.strip().startswith(b"<<<<")
+            and line.strip().endswith(b">>>>")
+            and not PiggybackMarker.is_footer(line)
+        )
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<<>>>>'
+        return line.strip() == b"<<<<>>>>"
 
     @classmethod
     def from_headerline(
@@ -36,9 +37,10 @@ class PiggybackMarker(NamedTuple):
         *,
         encoding_fallback: str,
     ) -> "PiggybackMarker":
+        # ? ensure_str called on a bytes object with different possible encodings
         raw_host_name = ensure_str_with_fallback(
             line.strip()[4:-4],
-            encoding='utf-8',
+            encoding="utf-8",
             fallback=encoding_fallback,
         )
         assert raw_host_name
@@ -47,7 +49,8 @@ class PiggybackMarker(NamedTuple):
         # Protect Checkmk against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Checkmk code.
-        return cls(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname))
+        # TODO: this should be moved into the HostName class, if it is ever created.
+        return cls(HostName(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname)))
 
 
 class SectionMarker(NamedTuple):
@@ -61,13 +64,17 @@ class SectionMarker(NamedTuple):
     @staticmethod
     def is_header(line: bytes) -> bool:
         line = line.strip()
-        return (line.startswith(b'<<<') and line.endswith(b'>>>') and
-                not SectionMarker.is_footer(line) and not PiggybackMarker.is_header(line) and
-                not PiggybackMarker.is_footer(line))
+        return (
+            line.startswith(b"<<<")
+            and line.endswith(b">>>")
+            and not SectionMarker.is_footer(line)
+            and not PiggybackMarker.is_header(line)
+            and not PiggybackMarker.is_footer(line)
+        )
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<>>>'
+        return line.strip() == b"<<<>>>"
 
     @classmethod
     def default(cls, name: SectionName):
@@ -86,7 +93,7 @@ class SectionMarker(NamedTuple):
         if not SectionMarker.is_header(headerline):
             raise ValueError(headerline)
 
-        headerparts = ensure_str(headerline[3:-3]).split(":")
+        headerparts = headerline[3:-3].decode().split(":")
         options = dict(parse_options(headerparts[1:]))
         cached: Optional[Tuple[int, int]]
         try:
@@ -143,3 +150,14 @@ class SectionMarker(NamedTuple):
         if self.persist is not None:
             return cached_at, self.persist - cached_at
         return None
+
+    def parse_line(self, line: bytes) -> Sequence[str]:
+        # ? ensure_str called on a bytes object with different possible encodings
+        line_str = ensure_str_with_fallback(
+            line,
+            encoding=self.encoding,
+            fallback="latin-1",
+        )
+        if not self.nostrip:
+            line_str = line_str.strip()
+        return line_str.split(self.separator)

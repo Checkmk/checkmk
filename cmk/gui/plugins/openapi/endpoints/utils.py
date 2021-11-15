@@ -4,30 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
-import json
 import http.client
+import json
+from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, Union
 
-from typing import Any, Dict, Literal, Sequence, List, Optional, Type, Union, Tuple
+from cmk.utils import version
+from cmk.utils.version import is_managed_edition
 
+from cmk.gui.exceptions import MKHTTPException
+from cmk.gui.groups import GroupSpec, GroupSpecs, load_group_information
 from cmk.gui.http import Response
-from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
 from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib import CREFolder
 from cmk.gui.watolib.groups import edit_group, GroupType
-from cmk.utils import version
 
-from cmk.utils.version import is_managed_edition
 if is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
-GroupName = Literal[
-    'host_group_config',
-    'contact_group_config',
-    'service_group_config',
-    'agent'
-]  # yapf: disable
+GroupName = Literal["host_group_config", "contact_group_config", "service_group_config", "agent"]
 
 
 def complement_customer(details):
@@ -46,8 +42,8 @@ def serve_group(group, serializer):
     response = Response()
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
-        response.set_content_type('application/json')
-    response.headers.add('ETag', constructors.etag_of_dict(group).to_header())
+        response.set_content_type("application/json")
+    response.headers.add("ETag", constructors.etag_of_dict(group).to_header())
     return response
 
 
@@ -61,19 +57,20 @@ def serialize_group_list(
             constructors.collection_item(
                 domain_type=domain_type,
                 obj={
-                    'title': group['alias'],
-                    'id': group['id'],
+                    "title": group["alias"],
+                    "id": group["id"],
                 },
-            ) for group in collection
+            )
+            for group in collection
         ],
-        links=[constructors.link_rel('self', constructors.collection_href(domain_type))],
+        links=[constructors.link_rel("self", constructors.collection_href(domain_type))],
     )
 
 
 def serialize_group(name: GroupName) -> Any:
     def _serializer(group):
         # type: (Dict[str, str]) -> Any
-        ident = group['id']
+        ident = group["id"]
         extensions = {}
         if "customer" in group:
             customer_id = group["customer"]
@@ -81,18 +78,11 @@ def serialize_group(name: GroupName) -> Any:
         elif is_managed_edition():
             extensions["customer"] = managed.default_customer_id()
 
+        extensions["alias"] = group["alias"]
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
-            title=group['alias'],
-            members={
-                'title': constructors.object_property(
-                    name='title',
-                    value=group['alias'],
-                    prop_format='string',
-                    base=constructors.object_href(name, ident),
-                ),
-            },
+            title=group["alias"] or ident,
             extensions=extensions,
         )
 
@@ -102,8 +92,8 @@ def serialize_group(name: GroupName) -> Any:
 def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
     groups = []
     for details in entries:
-        name = details['name']
-        group_details = details['attributes']
+        name = details["name"]
+        group_details = details["attributes"]
         updated_details = updated_group_details(name, group_type, group_details)
         edit_group(name, group_type, updated_details)
         groups.append(name)
@@ -111,26 +101,25 @@ def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
     return fetch_specific_groups(groups, group_type)
 
 
-def prepare_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def prepare_groups(group_type: GroupType, entries: List[Dict[str, Any]]) -> GroupSpecs:
     specific_existing_groups = load_group_information()[group_type]
-    groups: Dict[str, Dict[str, Any]] = {}
+    groups: GroupSpecs = {}
     already_existing = []
     for details in entries:
-        name = details['name']
+        name = details["name"]
         if name in specific_existing_groups:
             already_existing.append(name)
             continue
-        group_details = {'alias': details['alias']}
+        group_details: GroupSpec = {"alias": details["alias"]}
         if version.is_managed_edition():
-            group_details = update_customer_info(group_details, details['customer'])
+            group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
 
     if already_existing:
         raise ProblemException(
             status=400,
             title=f"Some {group_type} groups already exist",
-            detail=
-            f"The following {group_type} group names already exist: {', '.join(already_existing)}",
+            detail=f"The following {group_type} group names already exist: {', '.join(already_existing)}",
         )
 
     return groups
@@ -144,7 +133,7 @@ def fetch_group(
 ) -> GroupSpec:
     groups = load_group_information()[group_type]
     group = _retrieve_group(ident, groups, status, message)
-    group['id'] = ident
+    group["id"] = ident
     return group
 
 
@@ -158,7 +147,7 @@ def fetch_specific_groups(
     result = []
     for ident in idents:
         group = _retrieve_group(ident, groups, status, message)
-        group['id'] = ident
+        group["id"] = ident
         result.append(group)
     return result
 
@@ -181,7 +170,7 @@ def _retrieve_group(
 @contextlib.contextmanager
 def may_fail(
     exc_type: Union[Type[Exception], Tuple[Type[Exception], ...]],
-    status: int,
+    status: Optional[int] = None,
 ):
     """Context manager to make Exceptions REST-API safe
 
@@ -191,13 +180,32 @@ def may_fail(
             ...          raise ValueError("Nothing to see here, move along.")
             ... except ProblemException as _exc:
             ...     _exc.to_problem().data
-            b'{"title": "The operation has failed.", \
-"status": 404, \
+            b'{"title": "The operation has failed.", "status": 404, \
 "detail": "Nothing to see here, move along."}'
 
+            >>> from cmk.gui.exceptions import MKUserError
+            >>> try:
+            ...     with may_fail(MKUserError):
+            ...        raise MKUserError(None, "There is an activation already running.",
+            ...                          status=409)
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 409, \
+"detail": "There is an activation already running."}'
+
+            >>> from cmk.gui.exceptions import MKAuthException
+            >>> try:
+            ...     with may_fail(MKAuthException, status=401):
+            ...        raise MKAuthException("These are not the droids that you are looking for.")
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 401, \
+"detail": "These are not the droids that you are looking for."}'
+
     """
+
     def _get_message(e):
-        if hasattr(e, 'message'):
+        if hasattr(e, "message"):
             return e.message
 
         return str(e)
@@ -205,6 +213,10 @@ def may_fail(
     try:
         yield
     except exc_type as exc:
+        if isinstance(exc, MKHTTPException):
+            status = exc.status
+        elif status is None:
+            status = 400
         raise ProblemException(
             status=status,
             title="The operation has failed.",
@@ -233,7 +245,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
     return attributes
 
 
-def group_edit_details(body):
+def group_edit_details(body) -> GroupSpec:
     group_details = {k: v for k, v in body.items() if k != "customer"}
 
     if version.is_managed_edition() and "customer" in body:
@@ -241,7 +253,7 @@ def group_edit_details(body):
     return group_details
 
 
-def updated_group_details(name, group_type, changed_details):
+def updated_group_details(name: GroupName, group_type: GroupType, changed_details) -> GroupSpec:
     """Updates the group details without saving
 
     Args:
@@ -273,4 +285,4 @@ def folder_slug(folder: CREFolder) -> str:
         A path looking like this: `~folder~subfolder~leaf_folder`
 
     """
-    return '~' + folder.path().rstrip("/").replace("/", "~")
+    return "~" + folder.path().rstrip("/").replace("/", "~")

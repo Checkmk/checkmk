@@ -4,7 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from testlib import CMKWebSession
+import pytest
+
+from tests.testlib import CMKWebSession
+
+from cmk.utils import version as cmk_version
 
 
 def test_www_dir(site):
@@ -22,8 +26,12 @@ def test_www_dir(site):
 
 def test_base_path_redirects(site):
     web = CMKWebSession(site)
-    expected_target = '%s://%s:%d/%s/check_mk/' % \
-        (site.http_proto, site.http_address, site.apache_port, site.id)
+    expected_target = "%s://%s:%d/%s/check_mk/" % (
+        site.http_proto,
+        site.http_address,
+        site.apache_port,
+        site.id,
+    )
 
     web.check_redirect("/%s" % site.id, expected_target=expected_target)
     web.check_redirect("/%s/" % site.id, expected_target=expected_target)
@@ -64,6 +72,7 @@ def test_cmk_automation(site):
     assert response.text == "Missing secret for automation command."
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="agent deployment not supported on CRE")
 def test_cmk_deploy_agent(site):
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/deploy_agent.py" % site.id)

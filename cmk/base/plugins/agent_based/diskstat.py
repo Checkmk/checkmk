@@ -60,33 +60,18 @@
 #  Index 13 -- weighted # of milliseconds spent doing I/Os
 
 #  Kernel 4.18+ appends four more fields for discard
-#		tracking putting the total at 18:
+# 		tracking putting the total at 18:
 
 #  Index 14 -- discards completed successfully
 #  Index 15 -- discards merged
 #  Index 16 -- sectors discarded
 #  Index 17 -- time spent discarding
 
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
-
 import re
 import time
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence, Tuple
 
-from .agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat
 
 SectionMultipath = Mapping[str, Any]
@@ -101,9 +86,10 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
     # Eg. there are xvda1, xvda2, but no xvda...
     device_names = [line[2] for line in proc_diskstat]
     real_partitions = {
-        device_name for device_name in device_names
-        if diskstat.DISKSTAT_DISKLESS_PATTERN.match(device_name) and
-        re.sub('[0-9]+$', '', device_name) in device_names
+        device_name
+        for device_name in device_names
+        if diskstat.DISKSTAT_DISKLESS_PATTERN.match(device_name)
+        and re.sub("[0-9]+$", "", device_name) in device_names
     }
 
     disks = {}
@@ -112,17 +98,44 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
             continue
 
         try:
-            major, minor, device, \
-                read_ios, _read_merges, read_sectors, read_ticks, \
-                write_ios, _write_merges, write_sectors, write_ticks, \
-                ios_in_prog, total_ticks, _rq_ticks = line
+            (
+                major,
+                minor,
+                device,
+                read_ios,
+                _read_merges,
+                read_sectors,
+                read_ticks,
+                write_ios,
+                _write_merges,
+                write_sectors,
+                write_ticks,
+                ios_in_prog,
+                total_ticks,
+                _rq_ticks,
+            ) = line
         except ValueError:
             # kernel 4.18+
-            major, minor, device, \
-                read_ios, _read_merges, read_sectors, read_ticks, \
-                write_ios, _write_merges, write_sectors, write_ticks, \
-                ios_in_prog, total_ticks, _rq_ticks, _discards_completed, \
-                _discards_merged, _sectors_discarded, _time_discard = line
+            (
+                major,
+                minor,
+                device,
+                read_ios,
+                _read_merges,
+                read_sectors,
+                read_ticks,
+                write_ios,
+                _write_merges,
+                write_sectors,
+                write_ticks,
+                ios_in_prog,
+                total_ticks,
+                _rq_ticks,
+                _discards_completed,
+                _discards_merged,
+                _sectors_discarded,
+                _time_discard,
+            ) = line
 
         if major != "None" and minor != "None" and (int(major), int(minor)) in name_info:
             device = name_info[(int(major), int(minor))]
@@ -210,27 +223,27 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
 #     (None, 253, 6): 'LVM vgappl-applvol',
 # }
 def diskstat_extract_name_info(
-    string_table: type_defs.StringTable
+    string_table: type_defs.StringTable,
 ) -> Tuple[Optional[int], type_defs.StringTable, Mapping[Tuple[int, int], str]]:
     name_info = {}  # dict from (major, minor) to itemname
     timestamp = None
 
     info_plain = []
-    phase = 'info'
+    phase = "info"
     for line in string_table:
-        if line[0] == '[dmsetup_info]':
-            phase = 'dmsetup_info'
-        elif line[0] == '[vx_dsk]':
-            phase = 'vx_dsk'
+        if line[0] == "[dmsetup_info]":
+            phase = "dmsetup_info"
+        elif line[0] == "[vx_dsk]":
+            phase = "vx_dsk"
         else:
-            if phase == 'info':
+            if phase == "info":
                 if len(line) == 1:
                     timestamp = int(line[0])
                 else:
                     info_plain.append(line[:14])
-            elif phase == 'dmsetup_info':
+            elif phase == "dmsetup_info":
                 try:
-                    major, minor = map(int, line[1].split(':'))
+                    major, minor = map(int, line[1].split(":"))
                     if len(line) == 4:
                         name = "LVM %s" % line[0]
                     else:
@@ -238,10 +251,10 @@ def diskstat_extract_name_info(
                     name_info[major, minor] = name
                 except Exception:
                     pass  # ignore such crap as "No Devices Found"
-            elif phase == 'vx_dsk':
+            elif phase == "vx_dsk":
                 major = int(line[0], 16)
                 minor = int(line[1], 16)
-                group, disk = line[2].split('/')[-2:]
+                group, disk = line[2].split("/")[-2:]
                 name = "VxVM %s-%s" % (group, disk)
                 name_info[major, minor] = name
     return timestamp, info_plain, name_info
@@ -270,8 +283,10 @@ def diskstat_convert_info(
             if "alias" not in multipath:
                 multipath["alias"] = ""
 
-            if multipath["device"] in converted_disks or \
-               "DM %s" % multipath["alias"] in converted_disks:
+            if (
+                multipath["device"] in converted_disks
+                or "DM %s" % multipath["alias"] in converted_disks
+            ):
                 for path in multipath["paths"]:
                     if path in converted_disks:
                         del converted_disks[path]
@@ -313,18 +328,18 @@ def discover_diskstat(
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
     value_store: MutableMapping[str, Any],
-    value_store_suffix: str = '',
+    value_store_suffix: str = "",
 ) -> diskstat.Disk:
 
     raised_ignore_res_excpt = False
-    disk_with_rates = {k: disk[k] for k in ('queue_length',) if k in disk}
+    disk_with_rates = {k: disk[k] for k in ("queue_length",) if k in disk}
 
-    for metric in set(disk) - {'queue_length', 'timestamp'}:
+    for metric in set(disk) - {"queue_length", "timestamp"}:
         try:
             disk_with_rates[metric] = get_rate(
                 value_store,
                 metric + value_store_suffix,
-                disk['timestamp'],
+                disk["timestamp"],
                 disk[metric],
                 raise_overflow=True,
             )
@@ -332,16 +347,16 @@ def _compute_rates_single_disk(
             raised_ignore_res_excpt = True
 
     if raised_ignore_res_excpt:
-        raise IgnoreResultsError('Initializing counters')
+        raise IgnoreResultsError("Initializing counters")
 
     # statgrab_disk does not provide these
-    if not all(k in disk for k in ('read_ticks', 'read_ios', 'utilization')):
+    if not all(k in disk for k in ("read_ticks", "read_ios", "utilization")):
         return disk_with_rates
 
-    read_ticks_rate = disk_with_rates.pop('read_ticks')
-    write_ticks_rate = disk_with_rates.pop('write_ticks')
-    total_ios_rate = disk_with_rates['read_ios'] + disk_with_rates['write_ios']
-    total_bytes_rate = disk_with_rates['read_throughput'] + disk_with_rates['write_throughput']
+    read_ticks_rate = disk_with_rates.pop("read_ticks")
+    write_ticks_rate = disk_with_rates.pop("write_ticks")
+    total_ios_rate = disk_with_rates["read_ios"] + disk_with_rates["write_ios"]
+    total_bytes_rate = disk_with_rates["read_throughput"] + disk_with_rates["write_throughput"]
 
     # Some of the following computations were learned from Munin. Thanks
     # to that project!
@@ -350,31 +365,33 @@ def _compute_rates_single_disk(
     # e.g. 0.34 (34%) of the time and we can do 17 operations in that
     # time then the average latency is time * 0.34 / 17
     if total_ios_rate > 0:
-        disk_with_rates['latency'] = disk_with_rates['utilization'] / total_ios_rate
-        disk_with_rates['average_wait'] = (read_ticks_rate + write_ticks_rate) / total_ios_rate
-        disk_with_rates['average_request_size'] = total_bytes_rate / total_ios_rate
+        disk_with_rates["latency"] = disk_with_rates["utilization"] / total_ios_rate
+        disk_with_rates["average_wait"] = (read_ticks_rate + write_ticks_rate) / total_ios_rate
+        disk_with_rates["average_request_size"] = total_bytes_rate / total_ios_rate
     else:
-        disk_with_rates['latency'] = 0.0
-        disk_with_rates['average_wait'] = 0.0
-        disk_with_rates['average_request_size'] = 0.0
+        disk_with_rates["latency"] = 0.0
+        disk_with_rates["average_wait"] = 0.0
+        disk_with_rates["average_request_size"] = 0.0
 
     # Average read and write rate, from end to end, including queuing, etc.
     # and average size of one request
-    if read_ticks_rate > 0 and disk_with_rates['read_ios'] > 0:
-        disk_with_rates['average_read_wait'] = read_ticks_rate / disk_with_rates['read_ios']
-        disk_with_rates['average_read_request_size'] = \
-            disk_with_rates['read_throughput'] / disk_with_rates['read_ios']
+    if read_ticks_rate > 0 and disk_with_rates["read_ios"] > 0:
+        disk_with_rates["average_read_wait"] = read_ticks_rate / disk_with_rates["read_ios"]
+        disk_with_rates["average_read_request_size"] = (
+            disk_with_rates["read_throughput"] / disk_with_rates["read_ios"]
+        )
     else:
-        disk_with_rates['average_read_wait'] = 0.0
-        disk_with_rates['average_read_request_size'] = 0.0
+        disk_with_rates["average_read_wait"] = 0.0
+        disk_with_rates["average_read_request_size"] = 0.0
 
-    if write_ticks_rate > 0 and disk_with_rates['write_ios'] > 0:
-        disk_with_rates['average_write_wait'] = write_ticks_rate / disk_with_rates['write_ios']
-        disk_with_rates['average_write_request_size'] = \
-            disk_with_rates['write_throughput'] / disk_with_rates['write_ios']
+    if write_ticks_rate > 0 and disk_with_rates["write_ios"] > 0:
+        disk_with_rates["average_write_wait"] = write_ticks_rate / disk_with_rates["write_ios"]
+        disk_with_rates["average_write_request_size"] = (
+            disk_with_rates["write_throughput"] / disk_with_rates["write_ios"]
+        )
     else:
-        disk_with_rates['average_write_wait'] = 0.0
-        disk_with_rates['average_write_request_size'] = 0.0
+        disk_with_rates["average_write_wait"] = 0.0
+        disk_with_rates["average_write_request_size"] = 0.0
 
     return disk_with_rates
 
@@ -397,7 +414,7 @@ def check_diskstat(
 
     value_store = get_value_store()
 
-    if item == 'SUMMARY':
+    if item == "SUMMARY":
         names_and_disks_with_rates = diskstat.compute_rates_multiple_disks(
             converted_disks,
             value_store,
@@ -423,7 +440,8 @@ def check_diskstat(
 
 
 def _merge_cluster_sections(
-        cluster_section: Mapping[str, Optional[Mapping]]) -> Optional[Mapping[str, Mapping]]:
+    cluster_section: Mapping[str, Optional[Mapping]]
+) -> Optional[Mapping[str, Mapping]]:
     section_merged: Dict[str, Mapping] = {}
     for section in cluster_section.values():
         if section is not None:
@@ -451,7 +469,7 @@ register.check_plugin(
     service_name="Disk IO %s",
     discovery_ruleset_name="diskstat_inventory",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters={'summary': True},
+    discovery_default_parameters={"summary": True},
     discovery_function=discover_diskstat,
     check_ruleset_name="diskstat",
     check_default_parameters={},

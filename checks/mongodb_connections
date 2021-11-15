@@ -10,7 +10,7 @@
 # totalCreated 108141
 
 factory_settings["mongodb_connections_default_levels"] = {
-    'levels_perc': (80.0, 90.0),  # Levels at 80%/90% of maximum
+    "levels_perc": (80.0, 90.0),  # Levels at 80%/90% of maximum
 }
 
 
@@ -29,17 +29,21 @@ def check_mongodb_connections(item, params, info):
     maximum = current + available
     used_perc = float(current) / maximum * 100
 
-    yield check_levels(current,
-                       "connections",
-                       params.get("levels_abs"),
-                       human_readable_func=lambda x: "%d" % (x),
-                       infoname="Used connections")
+    yield check_levels(
+        current,
+        "connections",
+        params.get("levels_abs"),
+        human_readable_func=lambda x: "%d" % (x),
+        infoname="Used connections",
+    )
 
-    yield check_levels(used_perc,
-                       None,
-                       params.get("levels_perc"),
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Used percentage")
+    yield check_levels(
+        used_perc,
+        None,
+        params.get("levels_perc"),
+        human_readable_func=get_percent_human_readable,
+        infoname="Used percentage",
+    )
 
     rate = get_rate("total_created", time.time(), int(info_dict["totalCreated"]))
     yield 0, "Rate: %s/sec" % rate, [("connections_rate", rate)]
@@ -60,7 +64,7 @@ def _is_int(key_list, info_dict):
     return True
 
 
-check_info['mongodb_connections'] = {
+check_info["mongodb_connections"] = {
     "service_description": "MongoDB %s",
     "check_function": check_mongodb_connections,
     "inventory_function": inventory_mongodb_connections,

@@ -19,14 +19,14 @@ def parse_stormshield_disk(info):
     if cluster != []:
         for item in cluster:
             new_info = []
-            index = item[0].split('.')[0]
+            index = item[0].split(".")[0]
             new_info.append(index)
             new_info.extend(item[1:])
             parsed.append(new_info)
         return parsed
 
     new_info = []
-    new_info.append('0')
+    new_info.append("0")
     new_info.extend(standalone[0])
     parsed.append(new_info)
     return parsed
@@ -42,46 +42,53 @@ def check_stormshield_disk(item, params, parsed):
     for disk in parsed:
         clusterindex, index, name, selftest, israid, raidstatus, position = disk
         if item == clusterindex:
-            infotext = 'Device Index %s, Selftest: %s, Device Mount Point Name: %s' % (
-                index, selftest, name)
-            if selftest != 'PASSED':
+            infotext = "Device Index %s, Selftest: %s, Device Mount Point Name: %s" % (
+                index,
+                selftest,
+                name,
+            )
+            if selftest != "PASSED":
                 status = 1
             else:
                 status = 0
-            if israid != '0':
-                infotext = infotext + ', Raid active, Raid Status %s, Disk Position %s' % (
-                    raidstatus, position)
+            if israid != "0":
+                infotext = infotext + ", Raid active, Raid Status %s, Disk Position %s" % (
+                    raidstatus,
+                    position,
+                )
             yield status, infotext
 
 
-check_info['stormshield_disk'] = {
-    'parse_function': parse_stormshield_disk,
-    'inventory_function': inventory_stormshield_disk,
-    'check_function': check_stormshield_disk,
-    'service_description': 'Disk %s',
-    'snmp_info': [
+check_info["stormshield_disk"] = {
+    "parse_function": parse_stormshield_disk,
+    "inventory_function": inventory_stormshield_disk,
+    "check_function": check_stormshield_disk,
+    "service_description": "Disk %s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.11256.1.11.11.1',
+            ".1.3.6.1.4.1.11256.1.11.11.1",
             [
                 0,
-                '1',  # snsNodeDiskIndex
-                '2',  # snsDiskEntryDiskName
-                '3',  # snsDiskEntrySmartResult
-                '4',  # snsDiskEntryIsRaid
-                '5',  # snsDiskEntryRaidStatus
-                '6',  # snsDiskEntryPosition
-            ]),
+                "1",  # snsNodeDiskIndex
+                "2",  # snsDiskEntryDiskName
+                "3",  # snsDiskEntrySmartResult
+                "4",  # snsDiskEntryIsRaid
+                "5",  # snsDiskEntryRaidStatus
+                "6",  # snsDiskEntryPosition
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.11256.1.10.5.1',
+            ".1.3.6.1.4.1.11256.1.10.5.1",
             [
                 0,
-                '1',  # snsNodeDiskIndex
-                '2',  # snsDiskEntryDiskName
-                '3',  # snsDiskEntrySmartResult
-                '4',  # snsDiskEntryIsRaid
-                '5',  # snsDiskEntryRaidStatus
-                '6',  # snsDiskEntryPosition
-            ]),
+                "1",  # snsNodeDiskIndex
+                "2",  # snsDiskEntryDiskName
+                "3",  # snsDiskEntrySmartResult
+                "4",  # snsDiskEntryIsRaid
+                "5",  # snsDiskEntryRaidStatus
+                "6",  # snsDiskEntryPosition
+            ],
+        ),
     ],
-    'snmp_scan_function': stormshield_scan_function,
+    "snmp_scan_function": stormshield_scan_function,
 }

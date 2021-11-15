@@ -21,17 +21,15 @@ def check_logins(_no_item, params, info):
         logins = int(info[0][0])
     except (IndexError, ValueError):
         return
-    return check_levels(logins,
-                        "logins",
-                        params,
-                        infoname="On system",
-                        human_readable_func=lambda x: '%d' % x)
+    return check_levels(
+        logins, "logins", params, infoname="On system", human_readable_func=lambda x: "%d" % x
+    )
 
 
 check_info["logins"] = {
-    'check_function': check_logins,
-    'inventory_function': inventory_logins,
-    'service_description': 'Logins',
-    'has_perfdata': True,
-    'group': 'logins',
+    "check_function": check_logins,
+    "inventory_function": inventory_logins,
+    "service_description": "Logins",
+    "has_perfdata": True,
+    "group": "logins",
 }

@@ -16,5 +16,5 @@ description:
 item:
  The item is the name of the Redis instance.
 
-inventory:
+discovery:
  One service is created for each instance {"Redis MY_REDIS Server Info"}.

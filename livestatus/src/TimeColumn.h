@@ -22,16 +22,17 @@
 #include "contact_fwd.h"
 #include "opids.h"
 
-struct TimeColumn : Column {
-    class Constant;
-    class Reference;
-    template <class T>
-    class Callback;
-
+// TODO(sp): Is there a way to have a default value in the template parameters?
+// Currently it is hardwired to the start of the epoch.
+template <class T>
+class TimeColumn : public Column {
+public:
     using value_type = std::chrono::system_clock::time_point;
 
-    using Column::Column;
-    ~TimeColumn() override = default;
+    TimeColumn(const std::string& name, const std::string& description,
+               const ColumnOffsets& offsets,
+               std::function<value_type(const T&)> f)
+        : Column{name, description, offsets}, f_{std::move(f)} {}
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::time; }
 
@@ -59,59 +60,14 @@ struct TimeColumn : Column {
             });
     }
 
-    [[nodiscard]] virtual value_type getValue(
-        Row /*row*/, std::chrono::seconds /*timezone_offset*/) const = 0;
-};
-
-// TODO(sp): Is there a way to have a default value in the template parameters?
-// Currently it is hardwired to the start of the epoch.
-template <class T>
-class TimeColumn::Callback : public TimeColumn {
-public:
-    Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets,
-             std::function<value_type(const T&)> f)
-        : TimeColumn(name, description, offsets), f_{std::move(f)} {}
-
-    ~Callback() override = default;
-
     [[nodiscard]] value_type getValue(
-        Row row, std::chrono::seconds timezone_offset) const override {
+        Row row, std::chrono::seconds timezone_offset) const {
         const T* data = columnData<T>(row);
         return timezone_offset + (data == nullptr ? value_type{} : f_(*data));
     }
 
 private:
     std::function<value_type(const T&)> f_;
-};
-
-class TimeColumn::Constant : public TimeColumn {
-public:
-    Constant(const std::string& name, const std::string& description,
-             value_type x)
-        : TimeColumn{name, description, {}}, x_{x} {};
-
-    [[nodiscard]] value_type getValue(
-        Row /*row*/, std::chrono::seconds timezone_offset) const override {
-        return timezone_offset + x_;
-    }
-
-private:
-    const value_type x_;
-};
-
-class TimeColumn::Reference : public TimeColumn {
-public:
-    Reference(const std::string& name, const std::string& description,
-              std::chrono::system_clock::time_point& x)
-        : TimeColumn{name, description, {}}, x_{x} {};
-    [[nodiscard]] value_type getValue(
-        Row /*row*/, std::chrono::seconds timezone_offset) const override {
-        return timezone_offset + x_;
-    }
-
-private:
-    const value_type& x_;
 };
 
 #endif

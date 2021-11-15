@@ -68,17 +68,20 @@ def parse_rabbitmq_cluster(info):
         msg = {
             "messages": cluster.get("queue_totals", {}).get("messages", 0),
             "messages_ready": cluster.get("queue_totals", {}).get("messages_ready", 0),
-            "messages_unacknowledged": cluster.get("queue_totals",
-                                                   {}).get("messages_unacknowledged", 0),
-            "messages_rate": cluster.get("queue_totals", {}).get("messages_details",
-                                                                 {}).get("rate", 0.0),
+            "messages_unacknowledged": cluster.get("queue_totals", {}).get(
+                "messages_unacknowledged", 0
+            ),
+            "messages_rate": cluster.get("queue_totals", {})
+            .get("messages_details", {})
+            .get("rate", 0.0),
             "messages_publish": cluster.get("message_stats", {}).get("publish", 0),
-            "messages_publish_rate": cluster.get("message_stats", {}).get("publish_details",
-                                                                          {}).get("rate", 0.0),
+            "messages_publish_rate": cluster.get("message_stats", {})
+            .get("publish_details", {})
+            .get("rate", 0.0),
             "messages_deliver": cluster.get("message_stats", {}).get("deliver_get", 0),
-            "messages_deliver_rate": cluster.get("message_stats",
-                                                 {}).get("deliver_get_details",
-                                                         {}).get("rate", 0.0),
+            "messages_deliver_rate": cluster.get("message_stats", {})
+            .get("deliver_get_details", {})
+            .get("rate", 0.0),
         }
 
         object_totals = {
@@ -89,11 +92,13 @@ def parse_rabbitmq_cluster(info):
             "queues": cluster.get("object_totals", {}).get("queues"),
         }
 
-        parsed.update({
-            "info": info,
-            "msg": msg,
-            "object_totals": object_totals,
-        })
+        parsed.update(
+            {
+                "info": info,
+                "msg": msg,
+                "object_totals": object_totals,
+            }
+        )
 
     return parsed
 
@@ -196,8 +201,8 @@ def _handle_output(params, value, key, infotext, hr_func):
     if "rate" in key:
         unit = "1/s"
 
-    levels_upper = params.get('%s_upper' % key, (None, None))
-    levels_lower = params.get('%s_lower' % key, (None, None))
+    levels_upper = params.get("%s_upper" % key, (None, None))
+    levels_lower = params.get("%s_lower" % key, (None, None))
     return check_levels(
         value,
         key,

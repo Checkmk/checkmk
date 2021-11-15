@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timedelta
-from typing import List, NamedTuple, Final, Dict
+from typing import Dict, Final, List, NamedTuple
 
+from .agent_based_api.v1 import register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State, render
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 
 class InstanceProcess(NamedTuple):
@@ -64,7 +60,8 @@ def parse_sap_hana_instance_status(string_table: StringTable) -> Dict[str, Insta
                 description=line[3],
                 elapsed_time=_parse_elapsed_time(line[5]),
                 pid=line[6],
-            ) for line in lines[3:]
+            )
+            for line in lines[3:]
         ]
 
         section[sid_instance] = InstanceStatus(status=status, processes=processes)
@@ -107,5 +104,4 @@ register.check_plugin(
     service_name="SAP HANA Instance Status %s",
     discovery_function=discovery_sap_hana_instance_status,
     check_function=check_sap_hana_instance_status,
-    cluster_check_function=sap_hana.get_cluster_check(check_sap_hana_instance_status),
 )

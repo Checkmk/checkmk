@@ -7,14 +7,16 @@
 
 def inv_aix_baselevel(info):
     version = info[0][0]
-    inv_tree("software.os.").update({
-        "version": version,
-        "vendor": "IBM",
-        "type": "aix",
-        "name": "IBM AIX %s" % version,
-    })
+    inv_tree("software.os.").update(
+        {
+            "version": version,
+            "vendor": "IBM",
+            "type": "aix",
+            "name": "IBM AIX %s" % version,
+        }
+    )
 
 
-inv_info['aix_baselevel'] = {
+inv_info["aix_baselevel"] = {
     "inv_function": inv_aix_baselevel,
 }

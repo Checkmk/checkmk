@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # emc_isilon_quota_types = {
 #     0: "default_user",
 #     1: "user",
@@ -23,16 +25,24 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 #     5: "special",
 #     6: "max"
 # }
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 
 
 def inventory_emc_isilon_quota(info):
     mount_points = []
 
-    for path, _hard_threshold, _soft_threshold_defined, _soft_threshold, \
-        _advisory_threshold_defined, _advisory_threshold, _usage in info:
+    for (
+        path,
+        _hard_threshold,
+        _soft_threshold_defined,
+        _soft_threshold,
+        _advisory_threshold_defined,
+        _advisory_threshold,
+        _usage,
+    ) in info:
         mount_points.append(path)
 
-    return df_inventory(mount_points)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mount_points)
 
 
 def check_emc_isilon_quota(item, params, info):
@@ -40,8 +50,15 @@ def check_emc_isilon_quota(item, params, info):
 
     fslist_blocks = []
 
-    for path, hard_threshold, soft_threshold_defined, soft_threshold, \
-        advisory_threshold_defined, advisory_threshold, usage in info:
+    for (
+        path,
+        hard_threshold,
+        soft_threshold_defined,
+        soft_threshold,
+        advisory_threshold_defined,
+        advisory_threshold,
+        usage,
+    ) in info:
 
         if "patterns" in params or item == path:
             # note 1: quota type is currently unused
@@ -54,8 +71,9 @@ def check_emc_isilon_quota(item, params, info):
             assumed_size = hard_threshold or soft_threshold or advisory_threshold
 
             # If the users has not configured levels, we use the soft/advisory threshold
-            if "levels" not in params and (soft_threshold_defined == '1' or
-                                           advisory_threshold_defined == '1'):
+            if "levels" not in params and (
+                soft_threshold_defined == "1" or advisory_threshold_defined == "1"
+            ):
                 # if a soft threshold is set, it will be used as crit (since the hard_threshold can't be
                 # exceeded anyway)
                 crit = soft_threshold or (assumed_size * 0.9)
@@ -67,7 +85,8 @@ def check_emc_isilon_quota(item, params, info):
 
             avail = assumed_size - int(usage)
             fslist_blocks.append(
-                (path, assumed_size / byte_to_mb, avail / byte_to_mb, 0))  # fixed: true-division
+                (path, assumed_size / byte_to_mb, avail / byte_to_mb, 0)
+            )  # fixed: true-division
 
     return df_check_filesystem_list(item, params, fslist_blocks)
 
@@ -95,7 +114,8 @@ check_info["emc_isilon_quota"] = {
             # 15,   # quotaInodeUsage  # apparently doesn't provide the total
             # number of inodes, so this is
             # useless to us
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "filesystem",
     "default_levels_variable": "emc_isilon_quota",

@@ -3,34 +3,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# The test container should be set via the enviroment. e.g. for master:
-# export TEST_CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
+# The test image is selected automatically, but can still be set via 
+# enviroment. e.g. for master:
+# export IMAGE_ID="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 
 set -ex
 COMMAND=$@
-REPO_DIR=$(git rev-parse --show-toplevel)
+REPO_DIR="$(git rev-parse --show-toplevel)"
 
-if [ -e $TEST_CONTAINER ]; then
-    echo "Please set TEST_CONTAINER via the environment:"
-    echo "e.g.: export TEST_CONTAINER='artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest'"
-    exit 1
-fi
+: "${IMAGE_ALIAS:=IMAGE_TESTING}"
+: "${IMAGE_ID:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh ${IMAGE_ALIAS})"}"
 
-echo "Running in Docker Container $TEST_CONTAINER (workdir $PWD)"
-docker pull $TEST_CONTAINER
+# in case of worktrees $REPO_DIR might not contain the actual repository clone
+GIT_TOPLEVEL="$(dirname $(realpath $(git rev-parse --git-common-dir)))"
+
+echo "Running in Docker container from ${IMAGE_ID} (workdir ${PWD})"
+
 docker run -t -a stdout -a stderr \
+    --rm \
     --init \
-    -u "$UID:$UID" \
-    -v "$REPO_DIR:$REPO_DIR" \
+    -u "${UID}:$(id -g)" \
+    -v "${GIT_TOPLEVEL}:${GIT_TOPLEVEL}" \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     --group-add=$(getent group docker | cut -d: -f3) \
-    -w "$PWD" \
+    -w "${PWD}" \
     -e JUNIT_XML \
     -e PYLINT_ARGS \
     -e PYTEST_ADDOPTS \
     -e DOCKER_ADDOPTS \
+    -e MYPY_ADDOPTS \
     -e PYTHON_FILES \
     -e RESULTS \
     -e WORKDIR \
-    "$TEST_CONTAINER" \
-    $COMMAND
+    ${DOCKER_RUN_ADDOPTS} \
+    "${IMAGE_ID}" \
+    ${COMMAND}
+

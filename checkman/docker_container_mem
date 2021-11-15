@@ -11,6 +11,6 @@ description:
  Use the "Main memory usage (UNIX / Other Devices)" rule set to configure
  thresholds on the memory usage.
 
-inventory:
+discovery:
  One service is created for each container if the Checkmk agent is executed
  in the context of a docker container.

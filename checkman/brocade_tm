@@ -10,6 +10,6 @@ description:
 item:
  The name of the network interface
 
-inventory:
+discovery:
  One service is created for each network interface
 

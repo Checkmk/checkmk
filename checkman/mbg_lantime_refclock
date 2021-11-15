@@ -18,6 +18,6 @@ description:
  reported by the device.
  It also handles a warning/critical threshold for the number of good satellites.
 
-inventory:
+discovery:
  One service is created for each device.
 

@@ -5,15 +5,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def test_swagger_ui(wsgi_app):
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/index.html", status=200)
-    assert resp.headers['content-type'] == 'text/html'
-    assert b'petstore' not in resp.body
-    assert b'check_mk/api' in resp.body
-    assert b'openapi-swagger-ui.yaml' in resp.body
+def test_swagger_ui_http(wsgi_app):
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
+    assert resp.headers["content-type"] == "text/html"
+    assert b"//" in resp.body
+    assert b"petstore" not in resp.body
+    assert b"check_mk/api" in resp.body
+    assert b"openapi-swagger-ui.yaml" in resp.body
+
+
+def test_swagger_ui_https(wsgi_app):
+    wsgi_app.extra_environ = {"wsgi.url_scheme": "https"}
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
+    assert b"//" in resp.body
+    assert b"petstore" not in resp.body
+    assert b"check_mk/api" in resp.body
+    assert b"openapi-swagger-ui.yaml" in resp.body
+
+
+def test_swagger_ui_resource_urls(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.js", status=200)
-    assert resp.headers['content-type'] == 'application/javascript'
+    assert resp.headers["content-type"] == "application/javascript"
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.css", status=200)
-    assert resp.headers['content-type'] == 'text/css'
+    assert resp.headers["content-type"] == "text/css"
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.css.map", status=200)
-    assert resp.headers['content-type'] == 'text/plain; charset=utf-8'
+    assert resp.headers["content-type"] == "text/plain; charset=utf-8"

@@ -11,24 +11,30 @@ from typing import List, Optional
 
 from .agent_based_api.v1 import register, SNMPTree, startswith
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.ups import (
-    Battery,
-    optional_int,
-    optional_yes_or_no,
-)
+from .utils.ups import Battery, optional_int, optional_yes_or_no
 
 DETECT_UPS_EATON_MG = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705")
 
 
 def parse_battery_capacity_eaton_mg(string_table: StringTable) -> Optional[Battery]:
-    return Battery(
-        seconds_left=optional_int(string_table[0][0]),
-        percent_charged=optional_int(string_table[0][1]),
-    ) if string_table else None
+    return (
+        Battery(
+            seconds_left=optional_int(string_table[0][0]),
+            percent_charged=optional_int(string_table[0][1]),
+        )
+        if string_table
+        else None
+    )
 
 
 def parse_on_battery_eaton_mg(string_table: StringTable) -> Optional[Battery]:
-    return Battery(on_battery=optional_yes_or_no(string_table[0][0]),) if string_table else None
+    return (
+        Battery(
+            on_battery=optional_yes_or_no(string_table[0][0]),
+        )
+        if string_table
+        else None
+    )
 
 
 def parse_battery_warnings_eaton_mg(string_table: List[StringTable]) -> Optional[Battery]:

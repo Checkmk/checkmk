@@ -15,5 +15,5 @@ description:
 item:
  Name configured by user
 
-inventory:
+discovery:
  One service is created for each request.

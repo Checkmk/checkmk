@@ -41,17 +41,22 @@ class MKAgentError(MKFetcherError):
     pass
 
 
+class MKSNMPError(MKFetcherError):
+    pass
+
+
 class MKEmptyAgentData(MKAgentError):
     pass
 
 
 class MKParseFunctionError(MKException):
-    def __init__(self, exception_type: Type[Exception], exception: Exception,
-                 backtrace: TracebackType) -> None:
+    def __init__(
+        self, exception_type: Type[Exception], exception: Exception, backtrace: TracebackType
+    ) -> None:
         self.exception_type = exception_type
         self.exception = exception
         self.backtrace = backtrace
-        super(MKParseFunctionError, self).__init__(self, exception_type, exception, backtrace)
+        super().__init__(self, exception_type, exception, backtrace)
 
     def exc_info(self) -> Tuple[Type[Exception], Exception, TracebackType]:
         return self.exception_type, self.exception, self.backtrace
@@ -86,15 +91,16 @@ class MKBailOut(MKException):
     pass
 
 
-# This exception is raised when a previously configured timeout is reached.
-# It is used during keepalive mode. It is also used by the automations
-# which have a timeout set.
 class MKTimeout(MKException):
-    pass
+    """Raise when a timeout is reached.
 
+    Note:
+        It is used during keepalive mode. It is also used by the
+        automations which have a timeout set.
 
-class MKSNMPError(MKException):
-    pass
+    See also:
+        `cmk.utils.timeout` has a context manager using it.
+    """
 
 
 class MKIPAddressLookupError(MKGeneralException):

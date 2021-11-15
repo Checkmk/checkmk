@@ -4,12 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    Attributes,
-    register,
-    SNMPTree,
-    startswith,
-)
+from .agent_based_api.v1 import Attributes, register, SNMPTree, startswith
 
 register.snmp_section(
     name="juniper_info",
@@ -39,6 +34,6 @@ def inventory_juniper_info(section):
 
 
 register.inventory_plugin(
-    name='juniper_info',
+    name="juniper_info",
     inventory_function=inventory_juniper_info,
 )

@@ -6,9 +6,9 @@
 
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.base.agent_based.discovery.utils import QualifiedDiscovery, TimeLimitFilter, DiscoveryMode
+from cmk.base.agent_based.discovery.utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
 
 
 class TestDiscoveryMode:
@@ -68,6 +68,12 @@ def test_qualified_discovery():
     assert result.new == [3]
     assert result.present == [2, 3]
 
+    assert list(result.chain_with_qualifier()) == [
+        ("vanished", 1),
+        ("old", 2),
+        ("new", 3),
+    ]
+
 
 def test_qualified_discovery_keeps_old():
 
@@ -86,30 +92,22 @@ def test_qualified_discovery_keeps_old():
 
 def test_qualified_discovery_replaced():
     result = QualifiedDiscovery(
-        preexisting=([
-            {
-                "key": "a",
-                "value": "1"
-            },
-            {
-                "key": "b",
-                "value": "1"
-            },
-        ]),
-        current=([
-            {
-                "key": "a",
-                "value": "1"
-            },
-            {
-                "key": "b",
-                "value": "2"
-            },
-        ]),
+        preexisting=(
+            [
+                {"key": "a", "value": "1"},
+                {"key": "b", "value": "1"},
+            ]
+        ),
+        current=(
+            [
+                {"key": "a", "value": "1"},
+                {"key": "b", "value": "2"},
+            ]
+        ),
         key=lambda item: item["key"] + ":" + item["value"],
     )
 
-    assert result.vanished == [{'key': 'b', 'value': '1'}]
-    assert result.old == [{'key': 'a', 'value': '1'}]
-    assert result.new == [{'key': 'b', 'value': '2'}]
-    assert result.present == [{'key': 'a', 'value': '1'}, {'key': 'b', 'value': '2'}]
+    assert result.vanished == [{"key": "b", "value": "1"}]
+    assert result.old == [{"key": "a", "value": "1"}]
+    assert result.new == [{"key": "b", "value": "2"}]
+    assert result.present == [{"key": "a", "value": "1"}, {"key": "b", "value": "2"}]

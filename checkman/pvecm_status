@@ -19,5 +19,5 @@ description:
 
  Otherwise the check reports OK.
 
-inventory:
+discovery:
  One service is created.

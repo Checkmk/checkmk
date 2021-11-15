@@ -11,7 +11,7 @@ description:
  Returns {OK} if the reported state is "ok". Returns {WARN} on state "notFitted".
  Returns {CRIT} on state "failed" and {UNKN} on every other state.
 
-inventory:
+discovery:
  One service is created for each PSU in the HNAS system.
 
 item:

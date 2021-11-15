@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_tape_library import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.1 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.1
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.2 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.2
 # .1.3.6.1.4.1.14851.3.1.6.2.1.3.1 IBM     ULT3580-TD6     00078B5F0F --> SNIA-SML-MIB::mediaAccessDevice-Name.1
@@ -29,7 +30,8 @@ def parse_ibm_tl_media_access_devices(info):
     media_access_info, controller_info = info
     for ty, name, clean in media_access_info:
         parsed.setdefault(
-            ibm_tape_library_parse_device_name(name), {
+            ibm_tape_library_parse_device_name(name),
+            {
                 "type": {
                     "0": "unknown",
                     "1": "worm drive",
@@ -43,7 +45,8 @@ def parse_ibm_tl_media_access_devices(info):
                     "1": "true",
                     "2": "false",
                 }[clean],
-            })
+            },
+        )
 
     for ctrl_name, ctrl_avail, ctrl_status in controller_info:
         ctrl_name = ibm_tape_library_parse_device_name(ctrl_name)
@@ -68,26 +71,28 @@ def check_ibm_tl_media_access_devices(item, params, parsed):
         yield 0, "Type: %s, Needs cleaning: %s" % (data["type"], data["clean"])
 
 
-check_info['ibm_tl_media_access_devices'] = {
-    'parse_function': parse_ibm_tl_media_access_devices,
-    'inventory_function': inventory_ibm_tl_media_access_devices,
-    'check_function': check_ibm_tl_media_access_devices,
-    'service_description': 'Media access device %s',
-    'snmp_info': [
+check_info["ibm_tl_media_access_devices"] = {
+    "parse_function": parse_ibm_tl_media_access_devices,
+    "inventory_function": inventory_ibm_tl_media_access_devices,
+    "check_function": check_ibm_tl_media_access_devices,
+    "service_description": "Media access device %s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.14851.3.1.6.2.1',
+            ".1.3.6.1.4.1.14851.3.1.6.2.1",
             [
                 "2",  # SNIA-SML-MIB::mediaAccessDeviceObjectType
                 "3",  # SNIA-SML-MIB::mediaAccessDevice-Name
                 "6",  # SNIA-SML-MIB::mediaAccessDevice-NeedsCleaning
-            ]),
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.14851.3.1.12.2.1',
+            ".1.3.6.1.4.1.14851.3.1.12.2.1",
             [
                 "3",  # SNIA-SML-MIB::scsiProtocolController-ElementName
                 "6",  # SNIA-SML-MIB::scsiProtocolController-Availability
                 "4",  # SNIA-SML-MIB::scsiProtocolController-OperationalStatus
-            ])
+            ],
+        ),
     ],
-    'snmp_scan_function': scan_ibm_tape_library,
+    "snmp_scan_function": scan_ibm_tape_library,
 }

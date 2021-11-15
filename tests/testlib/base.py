@@ -4,25 +4,60 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
 from pathlib import Path
+from typing import Dict
 
-from testlib.utils import get_standard_linux_agent_output
+from tests.testlib.utils import get_standard_linux_agent_output
 
-import cmk.base.config as config
-import cmk.base.autochecks as autochecks
 import cmk.utils.tags
+
+import cmk.base.autochecks as autochecks
+import cmk.base.config as config
+
+
+class _AutochecksMocker:
+    def __init__(self):
+        self.autochecks = {}
+
+    def get_autochecks_of(
+        self, hostname, compute_check_parameters, service_description, get_effective_hostname
+    ):
+        return [
+            autochecks.Service(
+                s.check_plugin_name,
+                s.item,
+                s.description,
+                compute_check_parameters(
+                    get_effective_hostname(hostname, s.description),
+                    s.check_plugin_name,
+                    s.item,
+                    s.parameters,
+                ),
+                s.service_labels,
+            )
+            for s in self.autochecks.get(hostname, ())
+        ]
+
+    def discovered_labels_of(self, hostname, service_descr, get_service_description):
+        try:
+            return {
+                service.description: service.service_labels
+                for service in self.autochecks.get(hostname, ())
+            }[service_descr]
+        except KeyError:
+            return {}
 
 
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
+
     def __init__(self, site_id="unit"):
         super().__init__()
 
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         self.site_id = site_id
-        self._autochecks = {}
+        self._autochecks_mocker = _AutochecksMocker()
 
         self.config = {
             "tag_config": tag_config,
@@ -35,12 +70,9 @@ class Scenario:
         }
         self.config_cache = config.get_config_cache()
 
-    def add_host(self,
-                 hostname,
-                 tags=None,
-                 host_path="/wato/hosts.mk",
-                 labels=None,
-                 ipaddress=None):
+    def add_host(
+        self, hostname, tags=None, host_path="/wato/hosts.mk", labels=None, ipaddress=None
+    ):
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -101,13 +133,13 @@ class Scenario:
 
         # TODO: Compute this dynamically with self.tags
         tag_config = {
-            'piggyback': 'auto-piggyback',
-            'networking': 'lan',
-            'agent': 'cmk-agent',
-            'criticality': 'prod',
-            'snmp_ds': 'no-snmp',
-            'site': self.site_id,
-            'address_family': 'ip-v4-only',
+            "piggyback": "auto-piggyback",
+            "networking": "lan",
+            "agent": "cmk-agent",
+            "criticality": "prod",
+            "snmp_ds": "no-snmp",
+            "site": self.site_id,
+            "address_family": "ip-v4-only",
         }
         tag_config.update(tags)
 
@@ -136,7 +168,12 @@ class Scenario:
         return self
 
     def set_autochecks(self, hostname, services):
-        self._autochecks[hostname] = services
+        # these services have no real counterpart in the code:
+        #  * the description is used as given
+        #    (bypassing the get_service_description callback)
+        #  * the parameters are processed according to the config
+        #    (calling config.compute_check_parameters)
+        self._autochecks_mocker.autochecks[hostname] = services
 
     def apply(self, monkeypatch):
         check_vars: Dict = {}
@@ -150,15 +187,12 @@ class Scenario:
         self.config_cache.initialize()
         config.set_check_variables(check_vars)
 
-        if self._autochecks:
-            # TODO: This monkeypatching is horrible, it totally breaks any abstraction!
-            monkeypatch.setattr(self.config_cache._autochecks_manager,
-                                "_raw_autochecks",
-                                dict(self._autochecks.items()),
-                                raising=False)
-
+        if self._autochecks_mocker.autochecks:
             monkeypatch.setattr(
-                autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
-                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []))
+                self.config_cache,
+                "_autochecks_manager",
+                self._autochecks_mocker,
+                raising=False,
+            )
 
         return self.config_cache

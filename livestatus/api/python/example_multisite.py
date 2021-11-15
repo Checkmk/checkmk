@@ -6,6 +6,7 @@
 
 import os
 import sys
+
 import livestatus
 
 try:
@@ -33,9 +34,7 @@ sites = {
         "alias": "Berlin",
         "socket": "tcp:siteb:6557",
         "nagios_url": "/nagios/",
-        "tls": ("encrypted", {
-            "verify": True
-        }),
+        "tls": ("encrypted", {"verify": True}),
         "timeout": 10,
     },
 }
@@ -65,9 +64,7 @@ sites = {
         "alias": "Berlin",
         "socket": "tcp:siteb:6557",
         "nagios_url": "/nagios/",
-        "tls": ("encrypted", {
-            "verify": True
-        }),
+        "tls": ("encrypted", {"verify": True}),
         "timeout": 10,
     },
 }

@@ -11,6 +11,6 @@ description:
  the usage during the complete check interval but is just a snapshot
  of the current usage.
 
-inventory:
+discovery:
  One service is created if at least one CPU entry is found.
 

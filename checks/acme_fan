@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.acme import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.1 MAIN FAN1 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.2 MAIN FAN2 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.2
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.3 MAIN FAN3 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.3
@@ -31,21 +32,21 @@ def check_acme_fan(item, params, info):
     for descr, value_str, state in info:
         if item == descr:
             dev_state, dev_state_readable = acme_environment_states[state]
-            return dev_state, "Status: %s, Speed: %s%%" % \
-                   (dev_state_readable, value_str)
+            return dev_state, "Status: %s, Speed: %s%%" % (dev_state_readable, value_str)
 
 
-check_info['acme_fan'] = {
-    'inventory_function': inventory_acme_fan,
-    'check_function': check_acme_fan,
-    'service_description': 'Fan %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.9148.3.3.1.4.1.1',
+check_info["acme_fan"] = {
+    "inventory_function": inventory_acme_fan,
+    "check_function": check_acme_fan,
+    "service_description": "Fan %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9148.3.3.1.4.1.1",
         [
             "3",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr
             "4",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusValue
             "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanState
-        ]),
-    'snmp_scan_function': scan_acme,
-    'group': 'hw_fans_perc',
+        ],
+    ),
+    "snmp_scan_function": scan_acme,
+    "group": "hw_fans_perc",
 }

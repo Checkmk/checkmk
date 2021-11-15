@@ -5,20 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    FixedValue,
-    Integer,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput, Tuple
 
 
 def _item_spec_ibm_svc_enclosure():
@@ -29,28 +21,38 @@ def _item_spec_ibm_svc_enclosure():
 
 
 def _parameter_valuespec_ibm_svc_enclosure():
-    return Dictionary(elements=[("levels_lower_online_canisters",
-                                 Alternative(
-                                     title="Lower levels for online canisters",
-                                     elements=[
-                                         FixedValue(
-                                             False,
-                                             title=_("All must be online"),
-                                             totext="",
-                                         ),
-                                         Tuple(
-                                             title=_("Specify levels"),
-                                             elements=[
-                                                 Integer(title=_("Warning below"),
-                                                         minvalue=-1,
-                                                         unit=_("online canisters")),
-                                                 Integer(title=_("Critical below"),
-                                                         minvalue=-1,
-                                                         unit=_("online canisters")),
-                                             ],
-                                         ),
-                                     ],
-                                 ))],)
+    return Dictionary(
+        elements=[
+            (
+                "levels_lower_online_canisters",
+                Alternative(
+                    title="Lower levels for online canisters",
+                    elements=[
+                        FixedValue(
+                            False,
+                            title=_("All must be online"),
+                            totext="",
+                        ),
+                        Tuple(
+                            title=_("Specify levels"),
+                            elements=[
+                                Integer(
+                                    title=_("Warning below"),
+                                    minvalue=-1,
+                                    unit=_("online canisters"),
+                                ),
+                                Integer(
+                                    title=_("Critical below"),
+                                    minvalue=-1,
+                                    unit=_("online canisters"),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -61,4 +63,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_enclosure,
         title=lambda: _("IBM SVC Enclosure"),
-    ))
+    )
+)

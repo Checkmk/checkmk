@@ -25,32 +25,25 @@ True
 False
 """
 
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 from contextlib import suppress
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 
-from .utils.size_trend import size_trend
-from .utils.memory import (
-    get_levels_mode_from_value,
-    check_element,
-)
 from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    startswith,
     all_of,
-    matches,
-    not_matches,
     get_value_store,
     GetRateError,
+    matches,
+    not_matches,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
 )
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.memory import check_element, get_levels_mode_from_value
+from .utils.size_trend import size_trend
 
 Section = Dict[str, Sequence[str]]
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
@@ -80,15 +73,19 @@ def parse_cisco_mem_asa(string_table: List[StringTable]) -> Optional[Section]:
     """
     return {
         item: values  #
-        for row in string_table for entry in row  #
-        if entry for item, *values in (entry,)
+        for row in string_table
+        for entry in row  #
+        if entry
+        for item, *values in (entry,)
     }
 
 
 register.snmp_section(
     name="cisco_mem_asa",
-    detect=all_of(startswith(OID_SysDesc, "cisco adaptive security"),
-                  matches(OID_SysDesc, VERSION_PRE_V9_PATTERN)),
+    detect=all_of(
+        startswith(OID_SysDesc, "cisco adaptive security"),
+        matches(OID_SysDesc, VERSION_PRE_V9_PATTERN),
+    ),
     parse_function=parse_cisco_mem_asa,
     fetch=[
         SNMPTree(
@@ -108,8 +105,10 @@ register.snmp_section(
     # .1.3.6.1.4.1.9.9.221.1.1.1.1.20.2.1 3392957761    --> CISCO-ENHANCED-MEMPOOL-MIB::cempMemPoolHCFree.2.1
     name="cisco_mem_asa64",
     parsed_section_name="cisco_mem_asa",
-    detect=all_of(startswith(OID_SysDesc, "cisco adaptive security"),
-                  not_matches(OID_SysDesc, VERSION_PRE_V9_PATTERN)),
+    detect=all_of(
+        startswith(OID_SysDesc, "cisco adaptive security"),
+        not_matches(OID_SysDesc, VERSION_PRE_V9_PATTERN),
+    ),
     parse_function=parse_cisco_mem_asa,
     fetch=[
         SNMPTree(
@@ -196,8 +195,10 @@ def check_cisco_mem_sub(
     mem_total: int,
 ) -> CheckResult:
     if not mem_total:
-        yield Result(state=state.UNKNOWN,
-                     summary="Cannot calculate memory usage: Device reports total memory 0")
+        yield Result(
+            state=state.UNKNOWN,
+            summary="Cannot calculate memory usage: Device reports total memory 0",
+        )
         return
 
     warn, crit = params.get("levels", (None, None))

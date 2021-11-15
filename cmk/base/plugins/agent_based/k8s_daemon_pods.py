@@ -5,16 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict
 
-from .agent_based_api.v1.type_defs import HostLabelGenerator
 from .agent_based_api.v1 import HostLabel, register
-
+from .agent_based_api.v1.type_defs import HostLabelGenerator
 from .utils import k8s
 
 
 def host_labels(section: Dict) -> HostLabelGenerator:
     if section:
-        yield HostLabel(u'cmk/kubernetes_object', u'daemonset')
-        yield HostLabel('cmk/kubernetes', 'yes')
+        yield HostLabel("cmk/kubernetes_object", "daemonset")
+        yield HostLabel("cmk/kubernetes", "yes")
 
 
 register.agent_section(

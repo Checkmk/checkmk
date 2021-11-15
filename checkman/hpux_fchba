@@ -20,7 +20,7 @@ item:
  The name of the adapter, i.e. "fcd0"
 
 
-inventory:
+discovery:
  One service is created for each HBA using the {"fcd"} driver with an
  active SAN connection.
  Older {"td"} / {"fcms"} based HBAs are not reported from the

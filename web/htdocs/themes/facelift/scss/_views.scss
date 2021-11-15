@@ -30,7 +30,7 @@ div.floatfilter {
   padding: 4px;
   padding-left: 10px;
   margin: 0 5px 5px 0;
-  color: $primary-font-color;
+  color: $font-color;
   background-color: $bg-color-secondary;
 
   .legend {
@@ -277,7 +277,7 @@ div.floatfilter {
   }
 
   span.select2-selection {
-    border-color: $select2-border-color;
+    border-color: $input-dropdown-border-color;
   }
 
   &.rangespec table.valuespec_tuple {
@@ -356,7 +356,7 @@ table.nform table.valuespec_listof {
 
   .vlof_content,
   .vlof_buttons {
-    border-bottom: 1px solid $nform-vlof-border-color;
+    border-bottom: 1px solid $line-color;
   }
 
   .vlof_content {
@@ -551,25 +551,6 @@ table.data.single {
     td:not(.left) {
       width: auto;
     }
-
-    td.invtree table {
-      margin: 8px 0 12px;
-      border: 1px solid $color-table-border;
-      box-shadow: none;
-
-      th,
-      td {
-        height: 14px;
-        padding: 2px 6px;
-        background-color: $invtree-td-bg-color;
-        border: 1px solid $color-table-border;
-      }
-
-      th {
-        color: $font-color;
-        background-color: $invtree-th-bg-color;
-      }
-    }
   }
 
   > tbody > tr > td,
@@ -597,12 +578,6 @@ table.data.single {
 
     &.perfometer div.glass {
       width: 100%;
-    }
-
-    /* Make td class of invtree more specific, when shown in single dataset mode */
-    /* td.data.single td.invtree td.number { */
-    &.invtree td.number {
-      text-align: right;
     }
   }
 }
@@ -643,7 +618,7 @@ table.data.matrix {
     &,
     a,
     a:link {
-      color: $minority-font-color;
+      color: $font-color-light-bg;
     }
   }
 
@@ -726,8 +701,8 @@ table.views {
   td,
   th {
     padding: 2px 1ex;
-    color: rgb(255, 255, 255);
-    border: 1px solid rgb(68, 68, 68);
+    color: $font-color-white;
+    border: 1px solid $grey-3;
   }
 
   td {
@@ -735,12 +710,12 @@ table.views {
     padding-top: 3px;
 
     &.legend {
-      color: rgb(255, 255, 255);
+      color: $font-color-white;
       background-color: rgb(142, 174, 184);
     }
 
     &.content {
-      color: rgb(255, 255, 255);
+      color: $font-color-white;
       background-color: rgb(158, 190, 200);
     }
 
@@ -767,10 +742,6 @@ table.data.availability {
     width: 60px;
   }
 
-  td.unused {
-    color: rgb(136, 136, 136);
-  }
-
   tr.summary td {
     font-weight: bold;
   }
@@ -784,7 +755,7 @@ table.data.availability {
   }
 }
 
-table.data td.flapping,
+table.data td.flapping span,
 table.timeline td.flapping,
 div.avlegend.timeline div.state.flapping span {
   background-color: rgb(255, 0, 255);
@@ -799,30 +770,30 @@ div.avlegend.timeline div.state.downtime span {
 table.data tr.data > td.hostdown,
 table.timeline td.hostdown,
 div.avlegend.timeline div.state.hostdown span {
-  color: $white;
+  color: $font-color-white;
   background-color: $hostdown-bg-color;
 }
 
-table.data tr.data td.unmonitored,
+table.data tr.data td.unmonitored span,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored span {
-  color: $unmonitored-font-color;
-  background-color: $unmonitored-bg-color;
+  color: $font-color-black;
+  background-color: $color-state-4-background;
 }
 
 table.data.availability tr td {
   &.unmonitored {
-    background-color: lighten($unmonitored-bg-color, 10%);
+    background-color: $color-state-4-background;
   }
 
   &.hostdown {
-    background-color: lighten($hostdown-bg-color, 10%);
+    background-color: $hostdown-bg-color;
   }
 }
 
 table.timeline td.ooservice,
 div.avlegend.timeline div.state.ooservice span {
-  color: $black;
+  color: $font-color-black;
   background-color: rgb(202, 202, 202);
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
@@ -878,6 +849,10 @@ table.timeline {
   }
 }
 
+div.sla_timerange {
+  width: $timerange-width;
+}
+
 div.timelinerange {
   position: relative;
   float: none;
@@ -885,7 +860,7 @@ div.timelinerange {
 
   div {
     float: left;
-    width: 300px;
+    width: ($timerange-width * 0.5);
 
     /* We render the small vertical lines in a way that only
        the left border is visible but the thing is thick 5 pixels.
@@ -926,7 +901,6 @@ table.data.oddeven.timelineevents > tbody > tr.hilite {
   margin-bottom: 4px;
   font-size: $font-size-small;
   letter-spacing: $letter-spacing-table;
-  color: $darkgrey;
 }
 
 .timelinerange .timeline {
@@ -995,7 +969,7 @@ td.invtree {
   /* TODO: Reproduce this html element */
   b.treeangle.title {
     font-weight: normal;
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
   }
 
   ul.treeangle {
@@ -1012,7 +986,7 @@ td.invtree {
   table th {
     height: 14px;
     padding: 1px 5px;
-    border: 1px solid rgb(136, 136, 136);
+    border: 1px solid $color-table-border;
   }
 
   table th {
@@ -1020,20 +994,41 @@ td.invtree {
   }
 
   table td {
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
+  }
+
+  table.data.single tr.data & table,
+  table.data.table tr.data & table {
+    margin: 8px 0 12px;
+    box-shadow: none;
+
+    th,
+    td {
+      height: 14px;
+      padding: 2px 6px;
+      background-color: $nested-table-td-bg-color;
+    }
+
+    th {
+      color: $font-color;
+      background-color: $nested-table-th-bg-color;
+    }
+  }
+
+  /* Make td class of invtree more specific, when shown in single dataset mode */
+  table.data.single & td.number {
+    text-align: right;
   }
 }
 
-/* TODO: Reproduce this html element */
 td.invtree span.invold,
 span.invold table.data {
-  color: rgb(255, 0, 0);
+  color: $font-color-red;
 }
 
-/* TODO: Reproduce this html element */
 td.invtree span.invnew,
 span.invnew table.data {
-  color: rgb(0, 191, 0);
+  color: $font-color-green;
 }
 
 /* Positioning of the link from an inventory dicttable to the matching multisite table */
@@ -1052,11 +1047,12 @@ td.if_state {
 table.data.single tr.data td.invtree table td.if_state,
 table.data tr.data td.if_state {
   &.if_state_up {
-    color: $if-state-up-font-color;
+    color: $font-color-black;
     background-color: $color-state-success-background;
   }
 
   &.if_state_down {
+    color: $font-color-white;
     background-color: $color-state-2-background;
   }
 
@@ -1065,12 +1061,12 @@ table.data tr.data td.if_state {
   }
 
   &.if_available {
-    color: $black;
+    color: $font-color-black;
     background-color: $color-state-success-background;
   }
 
   &.if_not_available {
-    color: $black;
+    color: $font-color-black;
     background-color: $color-state-4-background;
   }
 }
@@ -1111,40 +1107,28 @@ table.data.headerleft.sla {
   }
 
   a {
-    color: rgb(255, 255, 255);
+    color: $font-color-white;
     text-decoration: underline;
   }
 }
 
-table.timeline {
+.sla table.timeline {
   &.standalone.sla {
-    margin-bottom: 5px;
-
     td {
       padding: 0;
-      border: none solid rgb(68, 68, 68);
     }
 
     &.period {
       height: 10px;
-      margin-bottom: 5px;
     }
   }
 
-  td.state0.even {
-    background-color: rgb(0, 187, 51);
-  }
-
-  td.state0.odd {
-    background-color: rgb(0, 153, 34);
-  }
-
-  td.state2.even {
-    background-color: rgb(255, 0, 0);
-  }
-
-  td.state2.odd {
-    background-color: rgb(153, 0, 0);
+  td.state0,
+  td.state1,
+  td.state2 {
+    &.odd {
+      opacity: 0.5;
+    }
   }
 }
 
@@ -1152,16 +1136,12 @@ div.sla_details {
   background-color: rgb(115, 161, 180);
 }
 
-td.sla > div.foldable > b {
-  color: rgb(0, 0, 0);
-}
-
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {
   height: 1px;
 
   &.black {
     height: 1px;
-    border-bottom: 1px solid rgb(0, 0, 0);
+    border-bottom: 1px solid $font-color;
   }
 }
 
@@ -1256,39 +1236,19 @@ div#avoptions td {
   }
 }
 
-/* TODO: Reproduce these tables
- * TODO: Decide whether to put these into a separate _tables.scss or not
+/*
+ * TODO: Refactor into a single style for nested tables
  */
 td.sla_spec table table,
 td.agent_config table.rulesets table,
 table.data tr.ac_test_details table,
-table.data tr.notification_context table {
+table.data tr.notification_context table,
+td.rule_conditions table {
   margin-top: 3px;
-  border: 0.5px solid $color-table-border;
   border-collapse: collapse;
-  box-shadow: $primary-box-shadow;
-}
-
-table.data tr.ac_test_details td {
-  padding: 8px;
-
-  p,
-  ul,
-  table {
-    margin: 8px 0;
-
-    &:first-child:not(:last-child) {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
 }
 
 td.agent_config table.rulesets table td,
-td.agent_config table.rulesets table td.title,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 table.data tr.notification_context table th,
@@ -1298,13 +1258,10 @@ td.rule_conditions table td {
   border: 1px solid $color-table-border;
 }
 
-table.data tr.ac_test_details table td {
-  padding: $ac-test-details-td-padding;
-}
-
 td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th {
+  color: $font-color;
   text-align: left;
 }
 
@@ -1312,13 +1269,13 @@ td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 td.rule_conditions table td {
-  background-color: $bg-color;
+  background-color: $nested-table-td-bg-color;
 }
 
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {
-  background-color: $color-table-background;
+  background-color: $nested-table-th-bg-color;
 }
 
 table.agents tbody > tr {
@@ -1348,7 +1305,6 @@ table.agents tbody > tr {
 }
 
 td.agent_config table.rulesets td {
-  color: $agent-config-td-color;
   vertical-align: top;
 
   table {
@@ -1358,7 +1314,7 @@ td.agent_config table.rulesets td {
 
       td.title {
         height: auto;
-        color: $primary-font-color;
+        color: $font-color;
         background-color: $agent-config-inner-title-bg-color;
       }
 

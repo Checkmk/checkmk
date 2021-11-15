@@ -12,8 +12,10 @@ MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS = {
 
 
 def snmp_scan_mbg_lantime_ng_hw(oid):
-    return oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3" or \
-            oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.30"
+    return (
+        oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3"
+        or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.30"
+    )
 
 
 def check_mbg_lantime_state_common(states, _no_item, params, info):
@@ -55,6 +57,6 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
     elif pos_refclock_offset >= warn:
         state = 1
     if state != 0:
-        levels_text = u" (warn/crit at %s/%s µs)" % (warn, crit)
+        levels_text = " (warn/crit at %s/%s µs)" % (warn, crit)
     perfdata = [("offset", refclock_offset, warn, crit)]  # all in us
-    yield state, u"Reference clock offset: %g µs%s" % (refclock_offset, levels_text), perfdata
+    yield state, "Reference clock offset: %g µs%s" % (refclock_offset, levels_text), perfdata

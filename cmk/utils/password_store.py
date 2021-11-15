@@ -68,9 +68,7 @@ def replace_passwords():
         except KeyError:
             bail_out("pwstore: Password '%s' does not exist" % password_id)
 
-        sys.argv[num_arg] = arg[:pos_in_arg] \
-                            + password \
-                            + arg[pos_in_arg + len(password):]
+        sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
 
 def save(stored_passwords):
@@ -78,7 +76,7 @@ def save(stored_passwords):
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw["password"])
 
-    store.save_file(password_store_path, content)
+    store.save_text_to_file(password_store_path, content)
 
 
 def load():

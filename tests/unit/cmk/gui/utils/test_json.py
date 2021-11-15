@@ -5,12 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+
 import pytest
+
 from cmk.gui.utils.json import patch_json
 
 
 # Override the GUI unit test global fixture to test the context manager
-@pytest.fixture(scope='function', name="patch_json")
+@pytest.fixture(scope="function", name="patch_json")
 def fixture_patch_json():
     yield
 
@@ -31,10 +33,10 @@ def test_patch_json_to_json_method() -> None:
             return self.__dict__
 
     with pytest.raises(TypeError, match="is not JSON serializable"):
-        assert json.dumps(Ding()) == ''
+        assert json.dumps(Ding()) == ""
 
     with patch_json(json):
         assert json.dumps(Ding()) == '{"_a": 1}'
 
     with pytest.raises(TypeError, match="is not JSON serializable"):
-        assert json.dumps(Ding()) == ''
+        assert json.dumps(Ding()) == ""

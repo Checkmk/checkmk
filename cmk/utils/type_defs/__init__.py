@@ -8,5 +8,9 @@
 from . import result
 from ._misc import *  # TODO(ML): We should clean this up some day.
 from .bakery import *
+from .core_config import *
+from .ip_lookup import *
+from .notify import *
+from .parent_scan import *
 from .pluginname import *
 from .protocol import *

@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _item_spec_mysql_slave():
@@ -27,21 +21,26 @@ def _item_spec_mysql_slave():
 
 
 def _parameter_valuespec_mysql_slave():
-    return Dictionary(elements=[
-        ("seconds_behind_master",
-         Tuple(
-             title=_("Max. time behind the master"),
-             help=_(
-                 "Compares the time which the slave can be behind the master. "
-                 "This rule makes the check raise warning/critical states if the time is equal to "
-                 "or above the configured levels."),
-             elements=[
-                 Age(title=_("Warning at")),
-                 Age(title=_("Critical at")),
-             ],
-         )),
-    ],
-                      optional_keys=False)
+    return Dictionary(
+        elements=[
+            (
+                "seconds_behind_master",
+                Tuple(
+                    title=_("Max. time behind the master"),
+                    help=_(
+                        "Compares the time which the slave can be behind the master. "
+                        "This rule makes the check raise warning/critical states if the time is equal to "
+                        "or above the configured levels."
+                    ),
+                    elements=[
+                        Age(title=_("Warning at")),
+                        Age(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+        optional_keys=False,
+    )
 
 
 rulespec_registry.register(
@@ -52,4 +51,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_slave,
         title=lambda: _("MySQL Slave"),
-    ))
+    )
+)

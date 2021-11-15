@@ -13,7 +13,7 @@ description:
 item:
  The {VolumeID} of the raid array
 
-inventory:
+discovery:
  One service is created for each existing array.
  One service is also created if an array is in a bad state but the service will go {CRIT}.
 

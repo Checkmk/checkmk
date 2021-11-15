@@ -7,7 +7,9 @@
 # <<<splunk_license_usage>>>
 # 524288000 5669830
 
-SplunkLicenseUsage = collections.namedtuple("lcsusg", ["quota", "slaves_usage_bytes"])
+SplunkLicenseUsage = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "lcsusg", ["quota", "slaves_usage_bytes"]
+)
 
 
 def parse_splunk_license_usage(info):
@@ -17,8 +19,9 @@ def parse_splunk_license_usage(info):
         try:
             quota, slaves_usage_bytes = lcs_detail
 
-            parsed.setdefault("License Usage",
-                              []).append(SplunkLicenseUsage(int(quota), int(slaves_usage_bytes)))
+            parsed.setdefault("License Usage", []).append(
+                SplunkLicenseUsage(int(quota), int(slaves_usage_bytes))
+            )
 
         except (IndexError, ValueError):
             pass
@@ -47,10 +50,13 @@ def check_splunk_license_usage(item, params, parsed):
             warn = data.quota / 100 * warn
             crit = data.quota / 100 * crit
 
-        yield check_levels(value,
-                           "splunk_slave_usage_bytes", (warn, crit),
-                           human_readable_func=get_bytes_human_readable,
-                           infoname=infotext)
+        yield check_levels(
+            value,
+            "splunk_slave_usage_bytes",
+            (warn, crit),
+            human_readable_func=get_bytes_human_readable,
+            infoname=infotext,
+        )
 
 
 check_info["splunk_license_usage"] = {

@@ -5,26 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
-from typing import Any, List, Mapping, Optional
-from collections import namedtuple
+from typing import Any, List, Mapping, NamedTuple, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
 
-State = namedtuple("State", ["state", "description"])
+
+class State(NamedTuple):
+    state: str
+    description: str
+
 
 CONFIG_SYNC_DEFAULT_PARAMETERS = {
     "0": 3,
@@ -40,16 +32,16 @@ CONFIG_SYNC_DEFAULT_PARAMETERS = {
 }
 
 CONFIG_SYNC_STATE_NAMES = {
-    '0': "Unknown",
-    '1': "Syncing",
-    '2': "Need Manual Sync",
-    '3': "In Sync",
-    '4': "Sync Failed",
-    '5': "Sync Disconnected",
-    '6': "Standalone",
-    '7': "Awaiting Initial Sync",
-    '8': "Incompatible Version",
-    '9': "Partial Sync",
+    "0": "Unknown",
+    "1": "Syncing",
+    "2": "Need Manual Sync",
+    "3": "In Sync",
+    "4": "Sync Failed",
+    "5": "Sync Disconnected",
+    "6": "Standalone",
+    "7": "Awaiting Initial Sync",
+    "8": "Incompatible Version",
+    "9": "Partial Sync",
 }
 
 
@@ -89,8 +81,10 @@ def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckResult:
     elif section.state in {"1", "2"}:
         yield Result(state=state.WARN, summary=section.description)
     else:
-        yield Result(state=state.UNKNOWN,
-                     summary="unexpected output from SNMP Agent %r" % section.description)
+        yield Result(
+            state=state.UNKNOWN,
+            summary="unexpected output from SNMP Agent %r" % section.description,
+        )
 
 
 register.snmp_section(
@@ -138,7 +132,7 @@ def check_f5_bigip_config_sync_v11_plus(params: Mapping[str, Any], section: Stat
     status_name = CONFIG_SYNC_STATE_NAMES[section.state]
     infotext = status_name
     if status_name != section.description:
-        infotext += ' - ' + section.description
+        infotext += " - " + section.description
     yield Result(state=state(status), summary=infotext)
 
 
@@ -152,7 +146,8 @@ register.snmp_section(
             oids=[
                 "1.0",  # sysCmSyncStatusId
                 "2.0",  # sysCmSyncStatusStatus
-            ]),
+            ],
+        ),
     ],
 )
 

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.1.0.0 FPC: EX3300 48-Port @ 0/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.1.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.2.0.0 FPC: EX3300 48-Port @ 1/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.2.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.7.7.1.0.0 45 --> SNMPv2-SMI::enterprises.2636.3.1.13.1.7.7.1.0.0
@@ -24,10 +25,7 @@ def parse_juniper_temp(info):
     for description, reading_str in info:
         temperature = float(reading_str)
         if temperature > 0:
-            description = description.replace(":", "") \
-                                     .replace("/*", "") \
-                                     .replace("@ ", "") \
-                                     .strip()
+            description = description.replace(":", "").replace("/*", "").replace("@ ", "").strip()
             parsed[description] = temperature
     return parsed
 
@@ -41,21 +39,23 @@ def check_juniper_temp(item, params, parsed):
         return check_temperature(parsed[item], params, "juniper_temp_%s" % item)
 
 
-check_info['juniper_temp'] = {
-    'parse_function': parse_juniper_temp,
-    'inventory_function': inventory_juniper_temp,
-    'check_function': check_juniper_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
+check_info["juniper_temp"] = {
+    "parse_function": parse_juniper_temp,
+    "inventory_function": inventory_juniper_temp,
+    "check_function": check_juniper_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
-        ".1.3.6.1.4.1.2636.1.1.1.2") or oid(".1.3.6.1.2.1.1.2.0").startswith(
-            ".1.3.6.1.4.1.2636.1.1.1.4"),
-    'snmp_info': (
+        ".1.3.6.1.4.1.2636.1.1.1.2"
+    )
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1.4"),
+    "snmp_info": (
         ".1.3.6.1.4.1.2636.3.1.13.1",
         [
             "5.7",  # jnxOperatingDescr
             "7.7",  # jnxOperatingTemp
-        ]),
-    'group': 'temperature',
-    'default_levels_variable': "juniper_temp_default_levels",
+        ],
+    ),
+    "group": "temperature",
+    "default_levels_variable": "juniper_temp_default_levels",
 }

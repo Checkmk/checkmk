@@ -17,5 +17,5 @@ description:
  Roles and all monitoring states can can be configured using the ruleset
  "Failover states".
 
-inventory:
+discovery:
   One service is created.

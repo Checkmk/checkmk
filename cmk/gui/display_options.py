@@ -4,7 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#.
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import cmk.gui.htmllib as htmllib
+    from cmk.gui.http import Request
+
+# .
 #   .--Display Opts.-------------------------------------------------------.
 #   |       ____  _           _                ___        _                |
 #   |      |  _ \(_)___ _ __ | | __ _ _   _   / _ \ _ __ | |_ ___          |
@@ -43,7 +51,7 @@ class DisplayOptions:
     # (e.g. no padding round page)
 
     @classmethod
-    def all_on(cls):
+    def all_on(cls) -> str:
         opts = ""
         for k in sorted(cls.__dict__.keys()):
             if len(k) == 1:
@@ -51,18 +59,17 @@ class DisplayOptions:
         return opts
 
     @classmethod
-    def all_off(cls):
+    def all_off(cls) -> str:
         return cls.all_on().lower()
 
-    def __init__(self):
-        super(DisplayOptions, self).__init__()
-        self.options = self.all_off()
-        self.title_options = None
+    def __init__(self) -> None:
+        self.options: str = self.all_off()
+        self.title_options: Optional[str] = None
 
-    def load_from_html(self, html):
+    def load_from_html(self, request: Request, html: htmllib.html) -> None:
         # Parse display options and
         if html.output_format == "html":
-            options = html.request.var("display_options", "")
+            options = request.get_ascii_input_mandatory("display_options", "")
         else:
             options = self.all_off()
 
@@ -75,34 +82,36 @@ class DisplayOptions:
         # a special var _display_options for defining the display_options for rendering
         # the data table to be reloaded. The contents of "display_options" are used for
         # linking to other views.
-        if html.request.has_var('_display_options'):
-            self.options = self._merge_with_defaults(html.request.var("_display_options", ""))
+        if request.has_var("_display_options"):
+            self.options = self._merge_with_defaults(
+                request.get_ascii_input_mandatory("_display_options", "")
+            )
 
         # But there is one special case: Links to other views (sorter header links, painter column
         # links). These links need to know about the provided display_option parameter. The links
         # could use "display_options.options" but this contains the implicit options which should
         # not be added to the URLs. So the real parameters need to be preserved for this case.
-        self.title_options = html.request.var("display_options")
+        self.title_options = request.get_ascii_input("display_options")
 
         # If display option 'M' is set, then all links are targetet to the 'main'
         # frame. Also the display options are removed since the view in the main
         # frame should be displayed in standard mode.
         if self.disabled(self.M):
             html.set_link_target("main")
-            html.request.del_var("display_options")
+            request.del_var("display_options")
 
     # If all display_options are upper case assume all not given values default
     # to lower-case. Vice versa when all display_options are lower case.
     # When the display_options are mixed case assume all unset options to be enabled
-    def _merge_with_defaults(self, opts):
+    def _merge_with_defaults(self, opts: str) -> str:
         do_defaults = self.all_off() if opts.isupper() else self.all_on()
         for c in do_defaults:
             if c.lower() not in opts.lower():
                 opts += c
         return opts
 
-    def enabled(self, opt):
+    def enabled(self, opt: str) -> bool:
         return opt in self.options
 
-    def disabled(self, opt):
+    def disabled(self, opt: str) -> bool:
         return opt not in self.options

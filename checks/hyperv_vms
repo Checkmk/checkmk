@@ -48,31 +48,31 @@
 
 # these default values were suggested by Aldi Sued
 factory_settings["hyperv_vms_default_levels"] = {
-    'FastSaved': 0,
-    'FastSavedCritical': 2,
-    'FastSaving': 0,
-    'FastSavingCritical': 2,
-    'Off': 1,
-    'OffCritical': 2,
-    'Other': 3,
-    'Paused': 0,
-    'PausedCritical': 2,
-    'Pausing': 0,
-    'PausingCritical': 2,
-    'Reset': 1,
-    'ResetCritical': 2,
-    'Resuming': 0,
-    'ResumingCritical': 2,
-    'Running': 0,
-    'RunningCritical': 2,
-    'Saved': 0,
-    'SavedCritical': 2,
-    'Saving': 0,
-    'SavingCritical': 2,
-    'Starting': 0,
-    'StartingCritical': 2,
-    'Stopping': 1,
-    'StoppingCritical': 2
+    "FastSaved": 0,
+    "FastSavedCritical": 2,
+    "FastSaving": 0,
+    "FastSavingCritical": 2,
+    "Off": 1,
+    "OffCritical": 2,
+    "Other": 3,
+    "Paused": 0,
+    "PausedCritical": 2,
+    "Pausing": 0,
+    "PausingCritical": 2,
+    "Reset": 1,
+    "ResetCritical": 2,
+    "Resuming": 0,
+    "ResumingCritical": 2,
+    "Running": 0,
+    "RunningCritical": 2,
+    "Saved": 0,
+    "SavedCritical": 2,
+    "Saving": 0,
+    "SavingCritical": 2,
+    "Starting": 0,
+    "StartingCritical": 2,
+    "Stopping": 1,
+    "StoppingCritical": 2,
 }
 
 
@@ -92,15 +92,15 @@ def parse_hyperv_vms(info):
             idx = 2
             while idx < len(line):
                 if line[idx].endswith(")"):
-                    vm_name = " ".join(line[:idx + 1])
+                    vm_name = " ".join(line[: idx + 1])
                     break
                 idx += 1
-            line = line[idx + 1:]
+            line = line[idx + 1 :]
         else:
             vm_name = line[0]
             line = line[1:]
 
-        if ':' in line[1]:  # skip heading line
+        if ":" in line[1]:  # skip heading line
             parsed[vm_name] = {
                 "state": line[0],
                 "uptime": line[1],
@@ -110,7 +110,7 @@ def parse_hyperv_vms(info):
 
 
 def inventory_hyperv_vms(parsed):
-    return [(vm_name, {'state': vm["state"]}) for (vm_name, vm) in parsed.items()]
+    return [(vm_name, {"state": vm["state"]}) for (vm_name, vm) in parsed.items()]
 
 
 @get_parsed_item_data
@@ -119,20 +119,25 @@ def check_hyperv_vms(_item, params, vm):
     # compare against discovered VM state
     if params.get("compare_discovery"):
 
-        discovery_state = params.get('state')
+        discovery_state = params.get("state")
 
         # this means that the check is executed as a manual check
         if discovery_state is None:
             service_state = 3
-            message = "State is %s (%s), discovery state is not available" % (vm["state"],
-                                                                              vm["state_msg"])
+            message = "State is %s (%s), discovery state is not available" % (
+                vm["state"],
+                vm["state_msg"],
+            )
         elif vm["state"] == discovery_state:
             service_state = 0
             message = "State %s (%s) matches discovery" % (vm["state"], vm["state_msg"])
         else:
             service_state = 2
-            message = "State %s (%s) does not match discovery (%s)" % (vm["state"], vm["state_msg"],
-                                                                       params['state'])
+            message = "State %s (%s) does not match discovery (%s)" % (
+                vm["state"],
+                vm["state_msg"],
+                params["state"],
+            )
 
     # service state defined in rule
     else:
@@ -155,5 +160,5 @@ check_info["hyperv_vms"] = {
     "inventory_function": inventory_hyperv_vms,
     "service_description": "VM %s",
     "group": "hyperv_vms",
-    "default_levels_variable": "hyperv_vms_default_levels"
+    "default_levels_variable": "hyperv_vms_default_levels",
 }

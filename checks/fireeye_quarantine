@@ -9,30 +9,32 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
-factory_settings['quarantine_levels'] = {'usage': (70, 80)}
+factory_settings["quarantine_levels"] = {"usage": (70, 80)}
 
 
 def check_fireeye_quarantine(no_item, params, info):
     usage = int(info[0][0])
-    warn, crit = params.get('usage')
-    infotext = 'Usage: %d%%' % usage
-    perf_counter = 'quarantine'
+    warn, crit = params.get("usage")
+    infotext = "Usage: %d%%" % usage
+    perf_counter = "quarantine"
     return fireeye_check_generic(infotext, perf_counter, usage, warn, crit)
 
 
-check_info['fireeye_quarantine'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False, True),
-    'check_function': check_fireeye_quarantine,
-    'service_description': 'Quarantine Usage',
-    'default_levels_variable': 'quarantine_levels',
-    'group': 'fireeye_quarantine',
-    'snmp_info': (
-        '.1.3.6.1.4.1.25597.13.1.40',
+check_info["fireeye_quarantine"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "check_function": check_fireeye_quarantine,
+    "service_description": "Quarantine Usage",
+    "default_levels_variable": "quarantine_levels",
+    "group": "fireeye_quarantine",
+    "snmp_info": (
+        ".1.3.6.1.4.1.25597.13.1.40",
         [
-            '0',  # FE-FIREEYE-MIB::feeQuarantineUsage
-        ]),
-    'snmp_scan_function': scan_fireeye,
-    'has_perfdata': True,
+            "0",  # FE-FIREEYE-MIB::feeQuarantineUsage
+        ],
+    ),
+    "snmp_scan_function": scan_fireeye,
+    "has_perfdata": True,
 }

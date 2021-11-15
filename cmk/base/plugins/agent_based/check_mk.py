@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .agent_based_api.v1 import register, HostLabel
+from .agent_based_api.v1 import HostLabel, register
 
 
 def parse_checkmk_labels(string_table):
@@ -18,7 +18,7 @@ def parse_checkmk_labels(string_table):
         Architecture: 64bit
 
     """
-    return {line[0].rstrip(':'): ' '.join(line[1:]) for line in string_table}
+    return {line[0].rstrip(":"): " ".join(line[1:]) for line in string_table}
 
 
 def host_label_function_labels(section):
@@ -31,8 +31,8 @@ def host_label_function_labels(section):
             as "AgentOS" (such as "windows" or "linux").
 
     """
-    if 'AgentOS' in section:
-        yield HostLabel("cmk/os_family", section['AgentOS'])
+    if "AgentOS" in section:
+        yield HostLabel("cmk/os_family", section["AgentOS"])
 
 
 register.agent_section(

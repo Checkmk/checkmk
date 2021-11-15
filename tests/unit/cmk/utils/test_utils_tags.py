@@ -13,137 +13,56 @@ from cmk.utils.exceptions import MKGeneralException
 @pytest.fixture(name="test_cfg")
 def fixture_test_cfg() -> tags.TagConfig:
     cfg = tags.TagConfig()
-    cfg.parse_config({
-        "aux_tags": [{
-            "id": "bla",
-            "topic": u"Bluna",
-            "title": u"bläää",
-        }],
-        'tag_groups': [
-            {
-                'id': 'criticality',
-                'topic': "Blubberei",
-                'tags': [
-                    {
-                        'aux_tags': ["bla"],
-                        'id': 'prod',
-                        'title': u'Productive system'
-                    },
-                    {
-                        'aux_tags': [],
-                        'id': 'critical',
-                        'title': u'Business critical'
-                    },
-                    {
-                        'aux_tags': [],
-                        'id': 'test',
-                        'title': u'Test system'
-                    },
-                    {
-                        'aux_tags': [],
-                        'id': 'offline',
-                        'title': u'Do not monitor this host'
-                    },
-                ],
-                'title': u'Criticality'
-            },
-            {
-                'id': 'networking',
-                'tags': [
-                    {
-                        'aux_tags': [],
-                        'id': 'lan',
-                        'title': u'Local network (low latency)'
-                    },
-                    {
-                        'aux_tags': [],
-                        'id': 'wan',
-                        'title': u'WAN (high latency)'
-                    },
-                    {
-                        'aux_tags': [],
-                        'id': 'dmz',
-                        'title': u'DMZ (low latency, secure access)'
-                    },
-                ],
-                'title': u'Networking Segment',
-            },
-            {
-                'id': 'none_choice',
-                'tags': [
-                    {
-                        'aux_tags': ['bla'],
-                        'id': None,
-                        'title': u'None'
-                    },
-                    {
-                        'aux_tags': [],
-                        'id': 'none_val',
-                        'title': u'None value'
-                    },
-                ],
-                'title': u'None choice',
-            },
-            {
-                'id': 'none_2',
-                'tags': [
-                    {
-                        'aux_tags': ['bla'],
-                        'id': 'none_val',
-                        'title': 'None value 2'
-                    },
-                    {
-                        'aux_tags': [],
-                        'id': 'none_val_2',
-                        'title': 'None value again'
-                    },
-                ],
-                'title': 'None 2',
-            },
-        ],
-    })
-    return cfg
-
-
-def test_convert_pre_16_tags() -> None:
-    dict_config = tags.transform_pre_16_tags(
-        [
-            ('criticality', u'Criticality', [
-                ('prod', u'Productive system', ['bla']),
-            ]),
-            ('networking', u'Networking Segment', [
-                ('lan', u'Local network (low latency)', []),
-            ]),
-        ],
-        [("bla", u"blüb")],
+    cfg.parse_config(
+        {
+            "aux_tags": [
+                {
+                    "id": "bla",
+                    "topic": "Bluna",
+                    "title": "bläää",
+                }
+            ],
+            "tag_groups": [
+                {
+                    "id": "criticality",
+                    "topic": "Blubberei",
+                    "tags": [
+                        {"aux_tags": ["bla"], "id": "prod", "title": "Productive system"},
+                        {"aux_tags": [], "id": "critical", "title": "Business critical"},
+                        {"aux_tags": [], "id": "test", "title": "Test system"},
+                        {"aux_tags": [], "id": "offline", "title": "Do not monitor this host"},
+                    ],
+                    "title": "Criticality",
+                },
+                {
+                    "id": "networking",
+                    "tags": [
+                        {"aux_tags": [], "id": "lan", "title": "Local network (low latency)"},
+                        {"aux_tags": [], "id": "wan", "title": "WAN (high latency)"},
+                        {"aux_tags": [], "id": "dmz", "title": "DMZ (low latency, secure access)"},
+                    ],
+                    "title": "Networking Segment",
+                },
+                {
+                    "id": "none_choice",
+                    "tags": [
+                        {"aux_tags": ["bla"], "id": None, "title": "None"},
+                        {"aux_tags": [], "id": "none_val", "title": "None value"},
+                    ],
+                    "title": "None choice",
+                },
+                {
+                    "id": "none_2",
+                    "tags": [
+                        {"aux_tags": ["bla"], "id": "none_val", "title": "None value 2"},
+                        {"aux_tags": [], "id": "none_val_2", "title": "None value again"},
+                    ],
+                    "title": "None 2",
+                },
+            ],
+        }
     )
-
-    assert dict_config == {
-        'aux_tags': [{
-            'id': 'bla',
-            'title': u'bl\xfcb'
-        }],
-        'tag_groups': [
-            {
-                'id': 'criticality',
-                'tags': [{
-                    'aux_tags': ["bla"],
-                    'id': 'prod',
-                    'title': u'Productive system'
-                },],
-                'title': u'Criticality'
-            },
-            {
-                'id': 'networking',
-                'tags': [{
-                    'aux_tags': [],
-                    'id': 'lan',
-                    'title': u'Local network (low latency)'
-                },],
-                'title': u'Networking Segment'
-            },
-        ],
-    }
+    return cfg
 
 
 def test_tag_config() -> None:
@@ -172,29 +91,31 @@ def test_iadd_tag_config(test_cfg: tags.TagConfig) -> None:
     aux_tags = test_cfg.get_aux_tags()
     assert len(aux_tags) == 2
     assert aux_tags[0].id == "bla"
-    assert aux_tags[0].title == u"bläää"
+    assert aux_tags[0].title == "bläää"
     assert aux_tags[1].id == "blub"
 
 
 def test_tag_config_get_topic_choices(test_cfg: tags.TagConfig) -> None:
-    assert sorted(test_cfg.get_topic_choices()) == sorted([
-        ("Blubberei", "Blubberei"),
-        ("Bluna", "Bluna"),
-        ("Tags", "Tags"),
-    ])
+    assert sorted(test_cfg.get_topic_choices()) == sorted(
+        [
+            ("Blubberei", "Blubberei"),
+            ("Bluna", "Bluna"),
+            ("Tags", "Tags"),
+        ]
+    )
 
 
 def test_tag_groups_by_topic(test_cfg: tags.TagConfig) -> None:
     expected_groups = {
-        u"Blubberei": ["criticality"],
-        u'Tags': ["networking", "none_choice", "none_2"],
+        "Blubberei": ["criticality"],
+        "Tags": ["networking", "none_choice", "none_2"],
     }
 
     actual_groups = dict(test_cfg.get_tag_groups_by_topic())
     assert sorted(actual_groups.keys()) == sorted(expected_groups.keys())
 
     for topic, tag_group_ids in expected_groups.items():
-        tg_ids = [tg.id for tg in actual_groups[topic]]
+        tg_ids = [tg.id for tg in actual_groups[topic] if tg.id is not None]
         assert sorted(tg_ids) == sorted(tag_group_ids)
 
 
@@ -219,10 +140,10 @@ def test_tag_config_remove_tag_group(test_cfg: tags.TagConfig) -> None:
 
 def test_tag_config_get_tag_group_choices(test_cfg: tags.TagConfig) -> None:
     assert test_cfg.get_tag_group_choices() == [
-        ('criticality', u'Blubberei / Criticality'),
-        ('networking', u'Networking Segment'),
-        ('none_choice', u'None choice'),
-        ('none_2', 'None 2'),
+        ("criticality", "Blubberei / Criticality"),
+        ("networking", "Networking Segment"),
+        ("none_choice", "None choice"),
+        ("none_2", "None 2"),
     ]
 
 
@@ -232,22 +153,22 @@ def test_tag_config_get_aux_tags(test_cfg: tags.TagConfig) -> None:
 
 def test_tag_config_get_aux_tags_by_tag(test_cfg: tags.TagConfig) -> None:
     assert test_cfg.get_aux_tags_by_tag() == {
-        None: ['bla'],
-        'none_val': ['bla'],  # none_val from none_2 overwrites none_val from none_choice
-        'none_val_2': [],
-        'critical': [],
-        'dmz': [],
-        'lan': [],
-        'offline': [],
-        'prod': ['bla'],
-        'test': [],
-        'wan': [],
+        None: ["bla"],
+        "none_val": ["bla"],  # none_val from none_2 overwrites none_val from none_choice
+        "none_val_2": [],
+        "critical": [],
+        "dmz": [],
+        "lan": [],
+        "offline": [],
+        "prod": ["bla"],
+        "test": [],
+        "wan": [],
     }
 
 
 def test_tag_config_get_aux_tags_by_topic(test_cfg: tags.TagConfig) -> None:
     expected_groups = {
-        u"Bluna": ["bla"],
+        "Bluna": ["bla"],
     }
 
     actual_groups = dict(test_cfg.get_aux_tags_by_topic())
@@ -261,33 +182,33 @@ def test_tag_config_get_aux_tags_by_topic(test_cfg: tags.TagConfig) -> None:
 def test_tag_config_get_tag_ids(test_cfg: tags.TagConfig) -> None:
     assert test_cfg.get_tag_ids() == {
         None,
-        'none_val',
-        'bla',
-        'critical',
-        'dmz',
-        'lan',
-        'offline',
-        'prod',
-        'test',
-        'wan',
-        'none_val_2',
+        "none_val",
+        "bla",
+        "critical",
+        "dmz",
+        "lan",
+        "offline",
+        "prod",
+        "test",
+        "wan",
+        "none_val_2",
     }
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg: tags.TagConfig) -> None:
     assert test_cfg.get_tag_ids_by_group() == {
-        ('bla', 'bla'),
-        ('criticality', 'critical'),
-        ('criticality', 'offline'),
-        ('criticality', 'prod'),
-        ('criticality', 'test'),
-        ('networking', 'dmz'),
-        ('networking', 'lan'),
-        ('networking', 'wan'),
-        ('none_2', 'none_val_2'),
-        ('none_2', 'none_val'),
-        ('none_choice', None),
-        ('none_choice', 'none_val'),
+        ("bla", "bla"),
+        ("criticality", "critical"),
+        ("criticality", "offline"),
+        ("criticality", "prod"),
+        ("criticality", "test"),
+        ("networking", "dmz"),
+        ("networking", "lan"),
+        ("networking", "wan"),
+        ("none_2", "none_val_2"),
+        ("none_2", "none_val"),
+        ("none_choice", None),
+        ("none_choice", "none_val"),
     }
 
 
@@ -344,36 +265,60 @@ def test_tag_config_insert_tag_group_missing_title(cfg: tags.TagConfig) -> None:
 
 def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Only one tag may be empty"):
-        tg = tags.TagGroup(("tgid3", "Topics/titlor", [
-            (None, "tagid2", []),
-            ("", "tagid3", []),
-        ]))
+        tg = tags.TagGroup(
+            (
+                "tgid3",
+                "Topics/titlor",
+                [
+                    (None, "tagid2", []),
+                    ("", "tagid3", []),
+                ],
+            )
+        )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
 def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="must be unique"):
-        tg = tags.TagGroup(("tgid4", "Topics/titlor", [
-            ("ding", "tagid2", []),
-            ("ding", "tagid3", []),
-        ]))
+        tg = tags.TagGroup(
+            (
+                "tgid4",
+                "Topics/titlor",
+                [
+                    ("ding", "tagid2", []),
+                    ("ding", "tagid3", []),
+                ],
+            )
+        )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
 def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: tags.TagConfig) -> None:
     cfg.aux_tag_list.append(tags.AuxTag(("bla", "BLAAAA")))
-    tg = tags.TagGroup(("tgid6", "Topics/titlor", [
-        ("bla", "tagid2", []),
-    ]))
+    tg = tags.TagGroup(
+        (
+            "tgid6",
+            "Topics/titlor",
+            [
+                ("bla", "tagid2", []),
+            ],
+        )
+    )
     cfg.insert_tag_group(tg)
     cfg.validate_config()
 
     with pytest.raises(MKGeneralException, match="is used twice"):
-        tg = tags.TagGroup(("bla", "Topics/titlor", [
-            ("tagid2", "tagid2", []),
-        ]))
+        tg = tags.TagGroup(
+            (
+                "bla",
+                "Topics/titlor",
+                [
+                    ("tagid2", "tagid2", []),
+                ],
+            )
+        )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
@@ -388,7 +333,8 @@ def test_tag_config_insert_tag_group_no_tag(cfg: tags.TagConfig) -> None:
 def test_tag_config_update_tag_group(test_cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Unknown tag group"):
         test_cfg.update_tag_group(
-            tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+            tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])]))
+        )
         test_cfg.validate_config()
 
     test_cfg.update_tag_group(tags.TagGroup(("networking", "title", [("tgid2", "tagid2", [])])))
@@ -399,25 +345,25 @@ def test_tag_config_update_tag_group(test_cfg: tags.TagConfig) -> None:
 def test_tag_group_get_tag_group_config(test_cfg: tags.TagConfig) -> None:
     tg = test_cfg.get_tag_group("criticality")
     assert tg is not None
-    assert tg.get_tag_group_config("prod") == {'bla': 'bla', 'criticality': 'prod'}
+    assert tg.get_tag_group_config("prod") == {"bla": "bla", "criticality": "prod"}
 
 
 def test_tag_group_get_tag_group_config_none_choice(test_cfg: tags.TagConfig) -> None:
     tg = test_cfg.get_tag_group("none_choice")
     assert tg is not None
-    assert tg.get_tag_group_config(None) == {'bla': 'bla'}
+    assert tg.get_tag_group_config(None) == {"bla": "bla"}
 
 
 def test_tag_group_get_tag_group_config_none_val(test_cfg: tags.TagConfig) -> None:
     tg = test_cfg.get_tag_group("none_choice")
     assert tg is not None
-    assert tg.get_tag_group_config('none_val') == {'none_choice': 'none_val'}
+    assert tg.get_tag_group_config("none_val") == {"none_choice": "none_val"}
 
 
 def test_tag_group_get_tag_group_config_unknown_choice(test_cfg: tags.TagConfig) -> None:
     tg = test_cfg.get_tag_group("criticality")
     assert tg is not None
-    assert tg.get_tag_group_config("prodX") == {'criticality': 'prodX'}
+    assert tg.get_tag_group_config("prodX") == {"criticality": "prodX"}
 
 
 def test_aux_tag_list_remove(test_cfg: tags.TagConfig) -> None:

@@ -4,18 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 import functools
+from typing import Any, Callable, Dict, Mapping, MutableSequence, Sequence
 
 
-def mysql_parse_per_item(parse_function):
+def mysql_parse_per_item(
+    parse_function: Callable[[Sequence[Sequence[str]]], Any]
+) -> Callable[[Sequence[Sequence[str]]], Mapping[str, Any]]:
     @functools.wraps(parse_function)
-    def wrapped_parse_function(info):
-        item = 'mysql'
-        grouped = {}
+    def wrapped_parse_function(info: Sequence[Sequence[str]]) -> Mapping[str, Any]:
+        item = "mysql"
+        grouped: Dict[str, MutableSequence[Sequence[str]]] = {}
         for line in info:
-            if line[0].startswith('[['):
-                item = ' '.join(line).strip('[ ]') or item
+            if line[0].startswith("[["):
+                item = " ".join(line).strip("[ ]") or item
                 continue
             grouped.setdefault(item, []).append(line)
         return {k: parse_function(grouped[k]) for k in grouped}

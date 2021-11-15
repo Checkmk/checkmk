@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.25597.11.5.1.1.0 eMPS (eMPS) 7.6.5.442663 --> FE-FIREEYE-MIB::feInstalledSystemImage.0
 # .1.3.6.1.4.1.25597.11.5.1.2.0 7.6.5 --> FE-FIREEYE-MIB::feSystemImageVersionCurrent.0
 # .1.3.6.1.4.1.25597.11.5.1.3.0 7.6.5 --> FE-FIREEYE-MIB::feSystemImageVersionLatest.0
@@ -18,10 +19,9 @@ from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard
 def check_fireeye_sys_image(_no_item, _no_params, info):
     installed, version, latest_version, is_latest = info[0]
     state = 0
-    infotext = "Image: %s, Version: %s" % \
-                (installed, version)
+    infotext = "Image: %s, Version: %s" % (installed, version)
 
-    if is_latest != '1':
+    if is_latest != "1":
         state = 1
         infotext += ", Latest version: %s" % latest_version
 
@@ -39,6 +39,7 @@ check_info["fireeye_sys_image"] = {
             "2",  # FE-FIREEYE-MIB::feSystemImageVersionCurrent
             "3",  # FE-FIREEYE-MIB::feSystemImageVersionLatest
             "4",  # FE-FIREEYE-MIB::feIsSystemImageLatest
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_fireeye,
 }

@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import subprocess
-import re
 import logging
-import pytest  # type: ignore[import]
+import os
+import re
+import subprocess
+
+import pytest
 
 from cmk.utils.misc import is_daily_build_version
 
@@ -45,8 +46,11 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
         rpm2cpio = subprocess.Popen(["rpm2cpio", package_path], stdout=subprocess.PIPE)
         return subprocess.check_output(
             [
-                "cpio", "-i", "--quiet", "--to-stdout",
-                "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)
+                "cpio",
+                "-i",
+                "--quiet",
+                "--to-stdout",
+                "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path),
             ],
             stdin=rpm2cpio.stdout,
         )
@@ -54,14 +58,14 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
     if package_path.endswith(".deb"):
         dpkg = subprocess.Popen(["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE)
         return subprocess.check_output(
-            ["tar", "xOf", "-",
-             "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)],
-            stdin=dpkg.stdout)
+            ["tar", "xOf", "-", "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)],
+            stdin=dpkg.stdout,
+        )
 
     if package_path.endswith(".cma"):
         return subprocess.check_output(
-            ["tar", "xOzf", package_path,
-             "%s/%s" % (omd_version, version_rel_path)])
+            ["tar", "xOzf", package_path, "%s/%s" % (omd_version, version_rel_path)]
+        )
 
     if package_path.endswith(".tar.gz"):
         raise NotImplementedError()
@@ -70,12 +74,15 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
 
 
 # In case packages grow/shrink this check has to be changed.
-@pytest.mark.parametrize("pkg_format,min_size,max_size", [
-    ("rpm", 196 * 1024 * 1024, 229 * 1024 * 1024),
-    ("deb", 150 * 1024 * 1024, 165 * 1024 * 1024),
-    ("cma", 290 * 1024 * 1024, 302 * 1024 * 1024),
-    ("tar.gz", 350 * 1024 * 1024, 380 * 1024 * 1024),
-])
+@pytest.mark.parametrize(
+    "pkg_format,min_size,max_size",
+    [
+        ("rpm", 196 * 1024 * 1024, 229 * 1024 * 1024),
+        ("deb", 150 * 1024 * 1024, 165 * 1024 * 1024),
+        ("cma", 290 * 1024 * 1024, 302 * 1024 * 1024),
+        ("tar.gz", 350 * 1024 * 1024, 380 * 1024 * 1024),
+    ],
+)
 @pytest.mark.skip("skip for now until our build chaos has settled...")
 def test_package_sizes(package_path, pkg_format, min_size, max_size):
     if not package_path.endswith(".%s" % pkg_format):
@@ -85,9 +92,12 @@ def test_package_sizes(package_path, pkg_format, min_size, max_size):
         pytest.skip("only testing enterprise packages")
 
     size = os.stat(package_path).st_size
-    assert min_size <= size <= max_size, \
-        "Package %s size %s not between %s and %s bytes." % \
-        (package_path, size, min_size, max_size)
+    assert min_size <= size <= max_size, "Package %s size %s not between %s and %s bytes." % (
+        package_path,
+        size,
+        min_size,
+        max_size,
+    )
 
 
 def test_files_not_in_version_path(package_path, cmk_version):
@@ -115,8 +125,9 @@ def test_files_not_in_version_path(package_path, cmk_version):
             "/var/lock/mkbackup$",
         ] + version_allowed_patterns
 
-        paths = subprocess.check_output(["rpm", "-qlp", package_path],
-                                        encoding="utf-8").splitlines()
+        paths = subprocess.check_output(
+            ["rpm", "-qlp", package_path], encoding="utf-8"
+        ).splitlines()
     elif package_path.endswith(".deb"):
         allowed_patterns = [
             "/$",
@@ -141,8 +152,9 @@ def test_files_not_in_version_path(package_path, cmk_version):
         ] + version_allowed_patterns
 
         paths = []
-        for line in subprocess.check_output(["dpkg", "-c", package_path],
-                                            encoding="utf-8").splitlines():
+        for line in subprocess.check_output(
+            ["dpkg", "-c", package_path], encoding="utf-8"
+        ).splitlines():
             paths.append(line.split()[5].lstrip("."))
     else:
         raise NotImplementedError()
@@ -154,7 +166,8 @@ def test_files_not_in_version_path(package_path, cmk_version):
 
     for path in paths:
         is_allowed = any(
-            re.match(p.replace("###OMD_VERSION###", omd_version), path) for p in allowed_patterns)
+            re.match(p.replace("###OMD_VERSION###", omd_version), path) for p in allowed_patterns
+        )
         assert is_allowed, "Found unexpected global file: %s in %s" % (path, package_path)
 
 
@@ -164,8 +177,10 @@ def test_cma_only_contains_version_paths(package_path, cmk_version):
 
     omd_version = _get_omd_version(cmk_version, package_path)
     files = [
-        line.split()[5] for line in subprocess.check_output(["tar", "tvf", package_path],
-                                                            encoding="utf-8").splitlines()
+        line.split()[5]
+        for line in subprocess.check_output(
+            ["tar", "tvf", package_path], encoding="utf-8"
+        ).splitlines()
     ]
     assert len(files) > 1000
     for file_path in files:
@@ -178,15 +193,18 @@ def test_cma_specific_files(package_path, cmk_version):
 
     omd_version = _get_omd_version(cmk_version, package_path)
     files = [
-        line.split()[5] for line in subprocess.check_output(["tar", "tvf", package_path],
-                                                            encoding="utf-8").splitlines()
+        line.split()[5]
+        for line in subprocess.check_output(
+            ["tar", "tvf", package_path], encoding="utf-8"
+        ).splitlines()
     ]
     assert "%s/cma.info" % omd_version in files
     assert "%s/skel/etc/apache/conf.d/cma.conf" % omd_version in files
     assert "%s/lib/cma/post-install" % omd_version in files
 
     cma_info = subprocess.check_output(
-        ["tar", "xOvzf", package_path, "%s/cma.info" % omd_version], encoding="utf-8")
+        ["tar", "xOvzf", package_path, "%s/cma.info" % omd_version], encoding="utf-8"
+    )
     if _is_demo(package_path):
         assert "DEMO=1" in cma_info
     else:
@@ -198,8 +216,9 @@ def test_src_only_contains_relative_version_paths(package_path):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
     prefix = os.path.basename(package_path).replace(".tar.gz", "")
-    for line in subprocess.check_output(["tar", "tvf", package_path],
-                                        encoding="utf-8").splitlines():
+    for line in subprocess.check_output(
+        ["tar", "tvf", package_path], encoding="utf-8"
+    ).splitlines():
         path = line.split()[5]
         assert path.startswith(prefix + "/")
 
@@ -212,8 +231,9 @@ def test_src_not_contains_enterprise_sources(package_path):
     enterprise_files = []
     managed_files = []
 
-    for line in subprocess.check_output(["tar", "tvf", package_path],
-                                        encoding="utf-8").splitlines():
+    for line in subprocess.check_output(
+        ["tar", "tvf", package_path], encoding="utf-8"
+    ).splitlines():
         path = line.split()[5]
         if path != "%s/enterprise/" % prefix and path.startswith("%s/enterprise/" % prefix):
             enterprise_files.append(path)

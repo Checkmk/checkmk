@@ -6,8 +6,8 @@
 
 import typing as t
 
-from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult
 
 #
 # There will be a new concept of kubernetes services which will
@@ -18,7 +18,7 @@ from .agent_based_api.v1 import register, TableRow
 def inventory_k8s_ingress_info(section: t.Any) -> InventoryResult:
     path = ["software", "applications", "kubernetes", "ingresses"]
     for name, data in sorted(section.items()):
-        for service_path, service_name, service_port in data['backends']:
+        for service_path, service_name, service_port in data["backends"]:
             yield TableRow(
                 path=path + [name, "backends"],
                 key_columns={
@@ -28,7 +28,7 @@ def inventory_k8s_ingress_info(section: t.Any) -> InventoryResult:
                 },
             )
 
-        for secret_name, hosts in data['hosts'].items():
+        for secret_name, hosts in data["hosts"].items():
             for host in hosts:
                 yield TableRow(
                     path=path + [name, "hosts"],
@@ -38,7 +38,7 @@ def inventory_k8s_ingress_info(section: t.Any) -> InventoryResult:
                     },
                 )
 
-        for load_balancer in data['load_balancers']:
+        for load_balancer in data["load_balancers"]:
             yield TableRow(
                 path=path + [name, "load_balancers"],
                 key_columns=load_balancer,

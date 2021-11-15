@@ -9,13 +9,11 @@ import signal
 import subprocess
 from typing import List, Optional
 
-from six import ensure_str
-
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
 
-from cmk.snmplib.type_defs import SNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -23,9 +21,9 @@ __all__ = ["ClassicSNMPBackend"]
 
 
 class ClassicSNMPBackend(SNMPBackend):
-    def get(self,
-            oid: OID,
-            context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:
+    def get(
+        self, oid: OID, context_name: Optional[SNMPContextName] = None
+    ) -> Optional[SNMPRawValue]:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype = "getnext"
@@ -38,10 +36,14 @@ class ClassicSNMPBackend(SNMPBackend):
         if self.config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
         portspec = self._snmp_port_spec()
-        command = (
-            self._snmp_base_command(commandtype, context_name) +
-            ["-On", "-OQ", "-Oe", "-Ot",
-             "%s%s%s" % (protospec, ipaddress, portspec), oid_prefix])
+        command = self._snmp_base_command(commandtype, context_name) + [
+            "-On",
+            "-OQ",
+            "-Oe",
+            "-Ot",
+            "%s%s%s" % (protospec, ipaddress, portspec),
+            oid_prefix,
+        ]
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
@@ -71,10 +73,12 @@ class ClassicSNMPBackend(SNMPBackend):
         item = parts[0]
         value = parts[1].strip()
         console.vverbose("SNMP answer: ==> [%s]\n" % value)
-        if value.startswith('No more variables') or \
-           value.startswith('End of MIB') or \
-           value.startswith('No Such Object available') or \
-           value.startswith('No Such Instance currently exists'):
+        if (
+            value.startswith("No more variables")
+            or value.startswith("End of MIB")
+            or value.startswith("No Such Object available")
+            or value.startswith("No Such Instance currently exists")
+        ):
             return None
 
         # In case of .*, check if prefix is the one we are looking for
@@ -83,11 +87,13 @@ class ClassicSNMPBackend(SNMPBackend):
 
         return strip_snmp_value(value)
 
-    def walk(self,
-             oid: str,
-             check_plugin_name: Optional[str] = None,
-             table_base_oid: Optional[str] = None,
-             context_name: Optional[str] = None) -> SNMPRowInfo:
+    def walk(
+        self,
+        oid: str,
+        check_plugin_name: Optional[str] = None,
+        table_base_oid: Optional[str] = None,
+        context_name: Optional[str] = None,
+    ) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 
         ipaddress = self.config.ipaddress
@@ -103,12 +109,14 @@ class ClassicSNMPBackend(SNMPBackend):
         exitstatus = None
         rowinfo: SNMPRowInfo = []
         try:
-            snmp_process = subprocess.Popen(command,
-                                            close_fds=True,
-                                            stdin=open(os.devnull),
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE,
-                                            encoding="utf-8")
+            snmp_process = subprocess.Popen(
+                command,
+                close_fds=True,
+                stdin=open(os.devnull),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="utf-8",
+            )
 
             rowinfo = self._get_rowinfo_from_snmp_process(snmp_process)
 
@@ -132,10 +140,12 @@ class ClassicSNMPBackend(SNMPBackend):
                     snmp_process.stdout.close()
 
         if exitstatus:
-            console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
-                            "SNMP error: %s\n" % ensure_str(error).strip())
-            raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" %
-                              (ipaddress, ensure_str(error).strip(), exitstatus))
+            console.verbose(
+                tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip()
+            )
+            raise MKSNMPError(
+                "SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus)
+            )
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process: subprocess.Popen) -> SNMPRowInfo:
@@ -156,19 +166,23 @@ class ClassicSNMPBackend(SNMPBackend):
             except StopIteration:
                 break
 
-            parts = line.split('=', 1)
+            parts = line.split("=", 1)
             if len(parts) < 2:
                 continue  # broken line, must contain =
             oid = parts[0].strip()
             value = parts[1].strip()
             # Filter out silly error messages from snmpwalk >:-P
-            if value.startswith('No more variables') or value.startswith('End of MIB') \
-               or value.startswith('No Such Object available') \
-               or value.startswith('No Such Instance currently exists'):
+            if (
+                value.startswith("No more variables")
+                or value.startswith("End of MIB")
+                or value.startswith("No Such Object available")
+                or value.startswith("No Such Instance currently exists")
+            ):
                 continue
 
-            if value == '"' or (len(value) > 1 and value[0] == '"' and
-                                (value[-1] != '"')):  # to be continued
+            if value == '"' or (
+                len(value) > 1 and value[0] == '"' and (value[-1] != '"')
+            ):  # to be continued
                 while True:  # scan for end of this dataset
                     nextline = next(line_iter).strip()
                     value += " " + nextline
@@ -193,7 +207,7 @@ class ClassicSNMPBackend(SNMPBackend):
 
         Including options for authentication. This handles communities and
         authentication for SNMP V3. Also bulkwalk hosts"""
-        return self._snmp_base_command('walk', context_name) + ["-Cc"]
+        return self._snmp_base_command("walk", context_name) + ["-Cc"]
 
     # if the credentials are a string, we use that as community,
     # if it is a four-tuple, we use it as V3 auth parameters:
@@ -207,28 +221,28 @@ class ClassicSNMPBackend(SNMPBackend):
     def _snmp_base_command(self, what: str, context_name: Optional[SNMPContextName]) -> List[str]:
         options = []
 
-        if what == 'get':
-            command = ['snmpget']
-        elif what == 'getnext':
-            command = ['snmpgetnext', '-Cf']
+        if what == "get":
+            command = ["snmpget"]
+        elif what == "getnext":
+            command = ["snmpgetnext", "-Cf"]
         elif self.config.is_bulkwalk_host:
-            command = ['snmpbulkwalk']
+            command = ["snmpbulkwalk"]
 
             options.append("-Cr%d" % self.config.bulk_walk_size_of)
         else:
-            command = ['snmpwalk']
+            command = ["snmpwalk"]
 
         if not self.config.is_snmpv3_host:
             # Handle V1 and V2C
             if self.config.is_bulkwalk_host:
-                options.append('-v2c')
+                options.append("-v2c")
             else:
-                if what == 'walk':
-                    command = ['snmpwalk']
+                if what == "walk":
+                    command = ["snmpwalk"]
                 if self.config.is_snmpv2or3_without_bulkwalk_host:
-                    options.append('-v2c')
+                    options.append("-v2c")
                 else:
-                    options.append('-v1')
+                    options.append("-v1")
 
             if not isinstance(self.config.credentials, str):
                 raise TypeError()
@@ -236,25 +250,53 @@ class ClassicSNMPBackend(SNMPBackend):
 
         else:
             # TODO: Fix the horrible credentials typing
-            if not (isinstance(self.config.credentials, tuple) and
-                    len(self.config.credentials) in (2, 4, 6)):
-                raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be "
-                                         "string, 2-tuple, 4-tuple or 6-tuple" %
-                                         (self.config.credentials, self.config.hostname))
+            if not (
+                isinstance(self.config.credentials, tuple)
+                and len(self.config.credentials) in (2, 4, 6)
+            ):
+                raise MKGeneralException(
+                    "Invalid SNMP credentials '%r' for host %s: must be "
+                    "string, 2-tuple, 4-tuple or 6-tuple"
+                    % (self.config.credentials, self.config.hostname)
+                )
 
             if len(self.config.credentials) == 6:
-                sec_level, auth_proto, sec_name, auth_pass, priv_proto, priv_pass = self.config.credentials
+                (
+                    sec_level,
+                    auth_proto,
+                    sec_name,
+                    auth_pass,
+                    priv_proto,
+                    priv_pass,
+                ) = self.config.credentials
                 options += [
-                    "-v3", "-l", sec_level, "-a",
-                    _auth_proto_for(auth_proto), "-u", sec_name, "-A", auth_pass, "-x",
-                    _priv_proto_for(priv_proto), "-X", priv_pass
+                    "-v3",
+                    "-l",
+                    sec_level,
+                    "-a",
+                    _auth_proto_for(auth_proto),
+                    "-u",
+                    sec_name,
+                    "-A",
+                    auth_pass,
+                    "-x",
+                    _priv_proto_for(priv_proto),
+                    "-X",
+                    priv_pass,
                 ]
 
             elif len(self.config.credentials) == 4:
                 sec_level, auth_proto, sec_name, auth_pass = self.config.credentials
                 options += [
-                    "-v3", "-l", sec_level, "-a",
-                    _auth_proto_for(auth_proto), "-u", sec_name, "-A", auth_pass
+                    "-v3",
+                    "-l",
+                    sec_level,
+                    "-a",
+                    _auth_proto_for(auth_proto),
+                    "-u",
+                    sec_name,
+                    "-A",
+                    auth_pass,
                 ]
 
             else:

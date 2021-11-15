@@ -34,13 +34,13 @@ def check_mailboxes_arguments(params):
 
     if "age" in params:
         warn, crit = params["age"]
-        args.append("--warn-age=%d" % warn)
-        args.append("--crit-age=%d" % crit)
+        args.append("--warn-age-oldest=%d" % warn)
+        args.append("--crit-age-oldest=%d" % crit)
 
-    if "new" in params:
-        warn, crit = params["new"]
-        args.append("--warn-new=%d" % warn)
-        args.append("--crit-new=%d" % crit)
+    if "age_newest" in params:
+        warn, crit = params["age_newest"]
+        args.append("--warn-age-newest=%d" % warn)
+        args.append("--crit-age-newest=%d" % crit)
 
     if "count" in params:
         warn, crit = params["count"]

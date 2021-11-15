@@ -32,11 +32,12 @@ def check_mongodb_asserts(_no_item, params, info):
             elif what_rate >= warn:
                 state = 1
 
-        yield state, "%.2f %s Asserts/sec" % (what_rate, what.title()), [("assert_%s" % what,
-                                                                          what_rate)]
+        yield state, "%.2f %s Asserts/sec" % (what_rate, what.title()), [
+            ("assert_%s" % what, what_rate)
+        ]
 
 
-check_info['mongodb_asserts'] = {
+check_info["mongodb_asserts"] = {
     "service_description": "MongoDB Asserts",
     "check_function": check_mongodb_asserts,
     "inventory_function": inventory_mongodb_asserts,

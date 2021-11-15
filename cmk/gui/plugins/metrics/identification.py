@@ -12,7 +12,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import GraphRecipe
 from cmk.gui.type_defs import GraphIdentifier
 
-#.
+# .
 #   .--Identification------------------------------------------------------.
 #   |     ___    _            _   _  __ _           _   _                  |
 #   |    |_ _|__| | ___ _ __ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __       |
@@ -35,17 +35,18 @@ from cmk.gui.type_defs import GraphIdentifier
 
 class GraphIdentificationTypes:
     """Container class for managing all known identification types"""
-    def __init__(self) -> None:
-        super(GraphIdentificationTypes, self).__init__()
-        self._types: MutableMapping[str, Type['GraphIdentification']] = {}
 
-    def register(self, type_cls: Type['GraphIdentification']) -> None:
+    def __init__(self) -> None:
+        super().__init__()
+        self._types: MutableMapping[str, Type["GraphIdentification"]] = {}
+
+    def register(self, type_cls: Type["GraphIdentification"]) -> None:
         assert issubclass(type_cls, GraphIdentification)
         self._types[type_cls.ident()] = type_cls
 
     def verify(self, type_ident: str) -> None:
         if type_ident not in self._types:
-            raise MKUserError(None, _("Invalid graph specification type \"%s\" given") % type_ident)
+            raise MKUserError(None, _('Invalid graph specification type "%s" given') % type_ident)
 
     def create_graph_recipes(
         self,
@@ -60,8 +61,9 @@ class GraphIdentificationTypes:
 graph_identification_types = GraphIdentificationTypes()
 
 
-class GraphIdentification(metaclass=abc.ABCMeta):
+class GraphIdentification(abc.ABC):
     """Abstract base class for all graph identification classes"""
+
     @classmethod
     @abc.abstractmethod
     def ident(cls) -> str:

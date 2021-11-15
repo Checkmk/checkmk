@@ -8,7 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Final, Iterable, Iterator, Optional, Sequence, Tuple
+from typing import Dict, Final, Iterable, Iterator, Optional, Sequence
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker
@@ -16,24 +16,28 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
+import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
+
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
-from cmk.core_helpers.protocol import FetcherMessage
-from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 from ._abstract import Mode, Source
 from .ipmi import IPMISource
 from .piggyback import PiggybackSource
 from .programs import DSProgramSource, SpecialAgentSource
+from .push_agent import PushAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
 
-__all__ = ["fetch_all", "make_sources", "make_nodes"]
+__all__ = ["fetch_all", "make_sources", "make_cluster_sources"]
 
 
 class _Builder:
     """Build a source list from host config and raw sections."""
+
     def __init__(
         self,
         host_config: HostConfig,
@@ -50,7 +54,8 @@ class _Builder:
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self._fallback_ip: Final = ip_lookup.fallback_ip_for(
-            self.host_config.default_address_family)
+            self.host_config.default_address_family
+        )
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -79,10 +84,12 @@ class _Builder:
 
     def _initialize_agent_based(self) -> None:
         if self.host_config.is_all_agents_host:
-            self._add(self._get_agent(
-                ignore_special_agents=True,
-                main_data_source=True,
-            ))
+            self._add(
+                self._get_agent(
+                    ignore_special_agents=True,
+                    main_data_source=True,
+                )
+            )
             for elem in self._get_special_agents():
                 self._add(elem)
 
@@ -91,10 +98,12 @@ class _Builder:
                 self._add(elem)
 
         elif self.host_config.is_tcp_host:
-            self._add(self._get_agent(
-                ignore_special_agents=False,
-                main_data_source=True,
-            ))
+            self._add(
+                self._get_agent(
+                    ignore_special_agents=False,
+                    main_data_source=True,
+                )
+            )
 
         if "no-piggyback" not in self.host_config.tags:
             self._add(PiggybackSource(self.hostname, self.ipaddress))
@@ -118,7 +127,8 @@ class _Builder:
                 selected_sections=self.selected_sections,
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
-            ))
+            )
+        )
 
     def _initialize_mgmt_boards(self) -> None:
         protocol = self.host_config.management_protocol
@@ -139,12 +149,15 @@ class _Builder:
                     selected_sections=self.selected_sections,
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
-                ))
+                )
+            )
         elif protocol == "ipmi":
-            self._add(IPMISource(
-                self.hostname,
-                ip_address,
-            ))
+            self._add(
+                IPMISource(
+                    self.hostname,
+                    ip_address,
+                )
+            )
         else:
             raise LookupError()
 
@@ -170,11 +183,16 @@ class _Builder:
                 template=datasource_program,
             )
 
-        return TCPSource(
-            self.hostname,
-            self.ipaddress,
-            main_data_source=main_data_source,
-        )
+        connection_mode = self.host_config.agent_connection_mode()
+        if connection_mode == "push-agent":
+            return PushAgentSource(self.hostname)
+        if connection_mode == "pull-agent":
+            return TCPSource(
+                self.hostname,
+                self.ipaddress,
+                main_data_source=main_data_source,
+            )
+        raise NotImplementedError(f"connection mode {connection_mode!r}")
 
     def _get_special_agents(self) -> Sequence[Source]:
         return [
@@ -183,7 +201,8 @@ class _Builder:
                 self.ipaddress or self._fallback_ip,
                 special_agent_id=agentname,
                 params=params,
-            ) for agentname, params in self.host_config.special_agents
+            )
+            for agentname, params in self.host_config.special_agents
         ]
 
 
@@ -205,59 +224,40 @@ def make_sources(
     ).sources
 
 
-def make_nodes(
-    config_cache: config.ConfigCache,
-    host_config: HostConfig,
-    ipaddress: Optional[HostAddress],
-    sources: Sequence[Source],
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
-    if host_config.nodes is None:
-        return [(host_config.hostname, ipaddress, sources)]
-    return _make_cluster_nodes(config_cache, host_config)
-
-
 def fetch_all(
     *,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
-    file_cache_max_age: int,
+    sources: Iterable[Source],
+    file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
 ) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    # TODO(ml): It is not clear to me in which case it is possible for the following to hold true
-    #           for any source in nodes:
-    #             - hostname != source.hostname
-    #             - ipaddress != source.ipaddress
-    #           If this is impossible, then we do not need the Tuple[HostName, HostAddress, ...].
-    for _hostname, _ipaddress, sources in nodes:
-        for source in sources:
-            console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+    for source in sources:
+        console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
-            source.file_cache_max_age = file_cache_max_age
+        source.file_cache_max_age = file_cache_max_age
 
-            with CPUTracker() as tracker:
-                raw_data = source.fetch(mode)
-            yield FetcherMessage.from_raw_data(
-                raw_data,
-                tracker.duration,
-                source.fetcher_type,
-            )
+        with CPUTracker() as tracker:
+            raw_data = source.fetch(mode)
+        yield FetcherMessage.from_raw_data(
+            raw_data,
+            tracker.duration,
+            source.fetcher_type,
+        )
 
 
-def _make_cluster_nodes(
+def make_cluster_sources(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
-) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
+) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
 
-    nodes = []
-    for hostname in host_config.nodes:
-        node_config = config_cache.get_host_config(hostname)
-        ipaddress = config.lookup_ip_address(node_config)
-        sources = make_sources(
-            HostConfig.make_host_config(hostname),
-            ipaddress,
+    return [
+        source
+        for host_name in host_config.nodes
+        for source in make_sources(
+            HostConfig.make_host_config(host_name),
+            config.lookup_ip_address(config_cache.get_host_config(host_name)),
             force_snmp_cache_refresh=False,
         )
-        nodes.append((hostname, ipaddress, sources))
-    return nodes
+    ]

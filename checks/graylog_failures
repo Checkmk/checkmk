@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# <<<graylog_failures>>>
 
-import json
+# <<<graylog_failures>>>
 
 
 def inventory_graylog_failures(parsed):
@@ -27,27 +28,30 @@ def check_graylog_failures(_no_item, params, parsed):
 
     failure_total = parsed.get("total")
     if failure_total is not None:
-        yield check_levels(failure_total,
-                           "failures",
-                           params.get("failures"),
-                           human_readable_func=int,
-                           infoname="Total number of failures")
+        yield check_levels(
+            failure_total,
+            "failures",
+            params.get("failures"),
+            human_readable_func=int,
+            infoname="Total number of failures",
+        )
 
     failure_count = parsed.get("count")
     if failure_count is not None:
-        yield check_levels(failure_count,
-                           None,
-                           params.get("failures_last"),
-                           human_readable_func=int,
-                           infoname="Failures in last %s" %
-                           get_age_human_readable(parsed["ds_param_since"]))
+        yield check_levels(
+            failure_count,
+            None,
+            params.get("failures_last"),
+            human_readable_func=int,
+            infoname="Failures in last %s" % get_age_human_readable(parsed["ds_param_since"]),
+        )
 
         if failure_count:
             index_affected = []
             long_output = []
             for failure in sorted(
-                    failure_details,
-                    key=lambda k: (k['timestamp'], k['index']),
+                failure_details,
+                key=lambda k: (k["timestamp"], k["index"]),
             ):
 
                 long_output_str = ""
@@ -77,8 +81,9 @@ def check_graylog_failures(_no_item, params, parsed):
                 long_output.append(long_output_str)
 
             if long_output:
-                yield 0, "Affected indices: %d, " \
-                         "See long output for further information" % len(index_affected)
+                yield 0, "Affected indices: %d, " "See long output for further information" % len(
+                    index_affected
+                )
 
                 yield 0, "\n%s" % "\n".join(long_output)
 

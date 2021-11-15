@@ -519,8 +519,8 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
         return true;
     }
 
-    // argv[0]
-    auto ret = FindRootByExePath(wtools::GetArgv(0));
+    // By Exe
+    auto ret = FindRootByExePath(wtools::GetCurrentExePath());
     if (!ret.empty()) {
         root_ = ret.lexically_normal();
         XLOG::l.i("Set root '{}' from executable", root_);
@@ -595,11 +595,10 @@ bool Folders::setRootEx(const std::wstring& service_name,  // look in registry
 }  // namespace cma::cfg::details
 
 void Folders::createDataFolderStructure(const std::wstring& proposed_folder,
-                                        CreateMode mode,
                                         Protection protection) {
     try {
         std::filesystem::path folder = proposed_folder;
-        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring(), mode,
+        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring(),
                                       protection);
     } catch (const std::exception& e) {
         XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
@@ -795,19 +794,17 @@ int CreateTree(const std::filesystem::path& base_path) {
 // 1. ProgramData/CorpName/AgentName
 //
 std::filesystem::path Folders::makeDefaultDataFolder(
-    std::wstring_view AgentDataFolder, CreateMode mode, Protection protection) {
+    std::wstring_view data_folder, Protection protection) {
     namespace fs = std::filesystem;
-    using cma::tools::win::GetSomeSystemFolder;
-    auto draw_folder = [mode](std::wstring_view DataFolder) -> auto {
-        fs::path app_data = DataFolder;
-        if (mode == CreateMode::with_path) {
+    if (data_folder.empty()) {
+        using cma::tools::win::GetSomeSystemFolder;
+        auto draw_folder = [](std::wstring_view DataFolder) -> auto {
+            fs::path app_data = DataFolder;
             app_data /= cma::cfg::kAppDataCompanyName;
             app_data /= cma::cfg::kAppDataAppName;
-        }
-        return app_data;
-    };
+            return app_data;
+        };
 
-    if (AgentDataFolder.empty()) {
         /// automatic data path, used ProgramData folder
         auto app_data_folder = GetSomeSystemFolder(FOLDERID_ProgramData);
 
@@ -823,24 +820,20 @@ std::filesystem::path Folders::makeDefaultDataFolder(
             wtools::ExecuteCommandsAsync(L"all", commands);
         }
 
-        if (ret == 0) return app_data;
+        if (ret == 0) {
+            return app_data;
+        }
         XLOG::l("Failed to access ProgramData Folder {}", ret);
 
-        if constexpr (false) {
-            // Public fallback
-            app_data_folder = GetSomeSystemFolder(FOLDERID_Public);
-            app_data = draw_folder(app_data_folder);
-            ret = CreateTree(app_data);
-            if (ret == 0) return app_data;
-            XLOG::l.crit("Failed to access Public Folder {}", ret);
-        }
         return {};
     }
 
-    // path with a custom folder
-    auto app_data = draw_folder(AgentDataFolder);
+    // path with a predefined folder
+    fs::path app_data{data_folder};
     auto ret = CreateTree(app_data);
-    if (ret == 0) return app_data;
+    if (ret == 0) {
+        return app_data;
+    }
     XLOG::l.bp("Failed to access Public Folder {}", ret);
     return {};
 }
@@ -1259,9 +1252,8 @@ void ConfigInfo::initFolders(
 {
     cleanFolders();
     folders_.createDataFolderStructure(
-        data_folder, Folders::CreateMode::with_path,
-        service_valid_name.empty() ? Folders::Protection::no
-                                   : Folders::Protection::yes);
+        data_folder, service_valid_name.empty() ? Folders::Protection::no
+                                                : Folders::Protection::yes);
 
     // This is not very good idea, but we want
     // to start logging as early as possible
@@ -1324,8 +1316,7 @@ bool ConfigInfo::pushFolders(const std::filesystem::path& root,
     }
     folders_stack_.push(folders_);
     folders_.setRoot({}, root.wstring());
-    folders_.createDataFolderStructure(data, Folders::CreateMode::direct,
-                                       Folders::Protection::no);
+    folders_.createDataFolderStructure(data, Folders::Protection::no);
 
     return true;
 }

@@ -621,6 +621,8 @@ public:
 
     std::wstring cmdLine() const noexcept { return cmd_line_; }
 
+    const wtools::InternalUser& getUser() const { return iu_; }
+
 protected:
     void fillInternalUser();
     void resetData() {
@@ -684,9 +686,9 @@ private:
     FRIEND_TEST(PluginTest, ApplyConfig);
     FRIEND_TEST(PluginTest, TimeoutCalc);
     FRIEND_TEST(PluginTest, AsyncStartSimulation_Long);
-    FRIEND_TEST(PluginTest, Async0DataPickup);
-    FRIEND_TEST(PluginTest, AsyncLocal);
-    FRIEND_TEST(PluginTest, SyncLocal);
+    FRIEND_TEST(PluginTest, AsyncDataPickup_Integration);
+    FRIEND_TEST(PluginTest, AsyncLocal_Integration);
+    FRIEND_TEST(PluginTest, SyncLocal_Integration);
 
     FRIEND_TEST(PluginTest, Entry);
 #endif

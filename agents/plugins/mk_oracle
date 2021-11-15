@@ -1246,14 +1246,13 @@ sql_recovery_status () {
                      ||'|'|| dh.RECOVER
                      ||'|'|| dh.FUZZY
                      ||'|'|| dh.CHECKPOINT_CHANGE#
-                     ||'|'|| vb.STATUS
-                     ||'|'|| round((sysdate-vb.TIME)*24*60*60)
+                     ||'|'|| nvl(vb.STATUS, 'unknown')
+                     ||'|'|| nvl2(vb.TIME, round((sysdate-vb.TIME)*24*60*60), 0)
               FROM  V\$datafile_header dh
               JOIN v\$database d on 1=1
               JOIN v\$instance i on 1=1
-              JOIN v\$backup vb on 1=1
+              LEFT OUTER JOIN v\$backup vb on vb.file# = dh.file#
               LEFT OUTER JOIN V\$PDBS vp on dh.con_id = vp.con_id
-              WHERE vb.file# = dh.file#
               ORDER BY dh.file#;"
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
@@ -1291,6 +1290,11 @@ sql_recovery_status () {
 
 sql_rman () {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+
+        local archive_target="'PRIMARY'"
+        if [ "$NUMERIC_ORACLE_VERSION" -ge 122 ]; then
+            archive_target="'PRIMARY', 'LOCAL'"
+        fi
 
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
@@ -1354,7 +1358,7 @@ sql_rman () {
                           and a.dest_id in
                           (select b.dest_id
                            from v\$archive_dest b
-                           where b.target = 'PRIMARY'
+                           where b.target IN (${archive_target})
                              and b.SCHEDULE = 'ACTIVE'
                           )
                     group by d.NAME, i.instance_name
@@ -2320,7 +2324,7 @@ print_dummy_sections () {
 
 
 do_dummy_sections () {
-    if $MK_ORA_SECTIONS; then
+    if [ -n "$MK_ORA_SECTIONS" ]; then
         return
     fi
 

@@ -19,7 +19,7 @@ description:
 item:
  The cluster name.
 
-inventory:
+discovery:
  One service is created for each cluster.
 
 cluster:

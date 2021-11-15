@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from typing import Any, Mapping, NamedTuple
 
-from typing import NamedTuple
-from ..agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
-from ..agent_based_api.v1 import get_value_store, get_rate, Service
+from ..agent_based_api.v1 import get_rate, get_value_store, Service
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from ..utils.cpu_util import check_cpu_util
 
 
@@ -21,9 +20,9 @@ class CpuSection(NamedTuple):
 def parse_cpu(string_table: StringTable) -> CpuSection:
     parsed = {line[0]: line[1:] for line in string_table}
     return CpuSection(
-        uptime=float(parsed['uptime'][0]),
-        num_cpus=int(parsed['num_cpus'][0]),
-        usage_usec=int(parsed['usage_usec'][0]),
+        uptime=float(parsed["uptime"][0]),
+        num_cpus=int(parsed["num_cpus"][0]),
+        usage_usec=int(parsed["usage_usec"][0]),
     )
 
 
@@ -36,8 +35,12 @@ def _check_cpu(value_store, params: Mapping[str, Any], section: CpuSection) -> C
     this_time = section.uptime
     # https://github.com/containerd/cri/blob/bc08a19f3a44bda9fd141e6ee4b8c6b369e17e6b/pkg/server/container_stats_list_linux.go#L85
     # https://github.com/moby/moby/blob/64bd4485b3a66a597c02c95f5776395e540b2c7c/daemon/daemon_unix.go#L1528
-    util = get_rate(value_store, 'cpu_usage', this_time,
-                    (section.usage_usec) / 1000_000 / section.num_cpus) * 100
+    util = (
+        get_rate(
+            value_store, "cpu_usage", this_time, (section.usage_usec) / 1000_000 / section.num_cpus
+        )
+        * 100
+    )
     yield from check_cpu_util(
         util=util,
         params=params,

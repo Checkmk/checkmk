@@ -13,6 +13,6 @@ description:
  CPU "utiliziation" (which measures the current usage of the CPU
  in percent).
 
-inventory:
+discovery:
  One service is created for each Linux host.
 

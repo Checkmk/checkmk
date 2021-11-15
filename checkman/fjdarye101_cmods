@@ -13,6 +13,6 @@ item:
  The index of the controller module in the SNMP table. It is of type
  integer. The first module has an index of {0}.
 
-inventory:
+discovery:
  One service is created for each channel module
  if the state is not {invalid} (4).

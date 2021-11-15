@@ -28,8 +28,9 @@ def parse_jira_workflow(info):
                     continue
 
                 try:
-                    parsed.setdefault("%s/%s" % (project.title(), workflow.title()),
-                                      {}).update({workflow: issue_count})
+                    parsed.setdefault("%s/%s" % (project.title(), workflow.title()), {}).update(
+                        {workflow: issue_count}
+                    )
                 except KeyError:
                     pass
 
@@ -48,19 +49,21 @@ def check_jira_workflow(item, params, item_data):
 
     for _workflow, issue_count in item_data.items():
 
-        issue_nr_levels = params.get('workflow_count_upper', (None, None))
-        issue_nr_levels_lower = params.get('workflow_count_lower', (None, None))
-        yield check_levels(issue_count,
-                           "jira_count",
-                           issue_nr_levels + issue_nr_levels_lower,
-                           human_readable_func=int,
-                           infoname="Total number of issues")
+        issue_nr_levels = params.get("workflow_count_upper", (None, None))
+        issue_nr_levels_lower = params.get("workflow_count_lower", (None, None))
+        yield check_levels(
+            issue_count,
+            "jira_count",
+            issue_nr_levels + issue_nr_levels_lower,
+            human_readable_func=int,
+            infoname="Total number of issues",
+        )
 
 
 check_info["jira_workflow"] = {
     "parse_function": parse_jira_workflow,
     "check_function": check_jira_workflow,
-    'inventory_function': discover(),
+    "inventory_function": discover(),
     "service_description": "Jira Workflow %s",
     "has_perfdata": True,
     "group": "jira_workflow",

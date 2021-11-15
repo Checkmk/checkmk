@@ -4,16 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import abc
 import logging
-from typing import Optional, Final, Dict
+import sys
+from typing import Dict, Final, Optional
 
-from cmk.utils.log import VERBOSE
-from cmk.utils.caching import config_cache
-from cmk.utils.caching import runtime_cache
-import cmk.utils.render as render
 import cmk.utils.misc
+import cmk.utils.render as render
+from cmk.utils.caching import config_cache, runtime_cache
+from cmk.utils.log import VERBOSE
 
 __all__ = [
     "ABCResourceObserver",
@@ -23,10 +22,10 @@ __all__ = [
 
 
 class ABCResourceObserver(abc.ABC):
-    __slots__ = ['_logger', '_num_check_cycles', '_hint']
+    __slots__ = ["_logger", "_num_check_cycles", "_hint"]
 
     def __init__(self) -> None:
-        super(ABCResourceObserver, self).__init__()
+        super().__init__()
         self._logger = logging.getLogger("cmk.base")
         self._num_check_cycles = 0
         self._hint = "<unknown>"
@@ -49,10 +48,10 @@ class ABCResourceObserver(abc.ABC):
         return f'[cycle {self._num_check_cycles}, host "{self._hint}"]'
 
     def _warning(self, message: str) -> None:
-        self._logger.warning('%s %s', self._context(), message)
+        self._logger.warning("%s %s", self._context(), message)
 
     def _error(self, message: str) -> None:
-        self._logger.error('%s %s', self._context(), message)
+        self._logger.error("%s %s", self._context(), message)
 
     def _costly_checks_enabled(self) -> bool:
         return self._logger.isEnabledFor(VERBOSE)
@@ -66,11 +65,12 @@ class AbstractMemoryObserver(ABCResourceObserver):
     process is defined as (initial VM size)*self._allowed_growth/100.
     Initial VM size is stored at 5-th call of check_resources().
     """
-    __slots__ = ['_memory_usage', '_allowed_growth', '_steady_cycle_num']
+
+    __slots__ = ["_memory_usage", "_allowed_growth", "_steady_cycle_num"]
 
     def __init__(self, allowed_growth: int) -> None:
         """allowed_growth is the permitted increase of the VM size measured in percents."""
-        super(AbstractMemoryObserver, self).__init__()
+        super().__init__()
         self._memory_usage = 0
         self._allowed_growth = allowed_growth
         self._steady_cycle_num: Final = 5
@@ -82,7 +82,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
         return int(self._allowed_growth / 100 * self._memory_usage)
 
     def _validate_size(self) -> bool:
-        """ Determines whether RAM limit was exceeded.
+        """Determines whether RAM limit was exceeded.
         Registers (once) memory status when steady state is achieved.
         """
 
@@ -102,7 +102,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
 
     @staticmethod
     def _vm_size() -> int:
-        with open('/proc/self/statm') as f:  # see: man proc(5).
+        with open("/proc/self/statm") as f:  # see: man proc(5).
             return int(f.read().split()[0]) * 4096
 
     def _print_global_memory_usage(self) -> None:
@@ -129,6 +129,7 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
     Call sys.exit(14) if during call of check_resources() memory is overloaded.
     The microcore is responsible for restart of Fetcher.
     """
+
     def _context(self) -> str:
         return f'[cycle {self._num_check_cycles}, command "{self._hint}"]'
 
@@ -136,8 +137,11 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
         self._register_check(hint)
 
         if not self._validate_size():
-            self._error("memory usage increased from %s to %s, exiting" % (
-                render.fmt_bytes(self.memory_usage()),
-                render.fmt_bytes(self._vm_size()),
-            ))
+            self._error(
+                "memory usage increased from %s to %s, exiting"
+                % (
+                    render.fmt_bytes(self.memory_usage()),
+                    render.fmt_bytes(self._vm_size()),
+                )
+            )
             sys.exit(14)

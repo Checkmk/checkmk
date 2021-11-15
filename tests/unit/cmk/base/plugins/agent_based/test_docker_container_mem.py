@@ -22,15 +22,15 @@ PLUGIN_OUTPUT_MEM_NO_LIMIT = [
         ', "total_mapped_file": 540672, "total_pgfault": 2901789, "total_pgmajfault": 0, "total_pgpgi'
         'n": 2894232, "total_pgpgout": 2637078, "total_rss": 1052303360, "total_rss_huge": 0, "total_'
         'unevictable": 0, "total_writeback": 0, "unevictable": 0, "writeback": 0}, "limit": 466723225'
-        '6}'
-    ]
+        "6}"
+    ],
 ]
 
 # docker stats: 386.1MiB / 500MiB
 PLUGIN_OUTPUT_MEM_LIMIT = [
     [
-        '@docker_version_info',
-        '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.4", "ApiVersion": "1.41"}'
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.4", "ApiVersion": "1.41"}',
     ],
     [
         '{"usage": 404840448, "max_usage": 412770304, "stats": {"active_anon": 403460096, "active_fil'
@@ -42,7 +42,7 @@ PLUGIN_OUTPUT_MEM_LIMIT = [
         '4, "total_pgmajfault": 0, "total_pgpgin": 100716, "total_pgpgout": 2230, "total_rss": 403460'
         '096, "total_rss_huge": 0, "total_unevictable": 0, "total_writeback": 0, "unevictable": 0, "w'
         'riteback": 0}, "limit": 524288000}'
-    ]
+    ],
 ]
 
 
@@ -52,10 +52,10 @@ def test_parse_container_mem_docker_plugin():
     be parsed corretly
     """
     result = parse_docker_container_mem(PLUGIN_OUTPUT_MEM_NO_LIMIT)
-    assert result == {'MemFree': 3611148288, 'MemTotal': 4667232256}
+    assert result == {"MemFree": 3611148288, "MemTotal": 4667232256}
     # compare to output of docker stats:
-    assert round(result['MemTotal'] / 1024 / 1024 / 1.024) / 1000 == 4.347
-    assert round((result['MemTotal'] - result['MemFree']) / 1024 / 1024) == 1007
+    assert round(result["MemTotal"] / 1024 / 1024 / 1.024) / 1000 == 4.347
+    assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 1024) == 1007
 
 
 def test_parse_container_mem_docker_plugin_with_limit():
@@ -63,7 +63,7 @@ def test_parse_container_mem_docker_plugin_with_limit():
     same as above, but with a 500MiB memory limit set via `-m` on `docker run`
     """
     result = parse_docker_container_mem(PLUGIN_OUTPUT_MEM_LIMIT)
-    assert result == {'MemFree': 119451648, 'MemTotal': 524288000}
+    assert result == {"MemFree": 119451648, "MemTotal": 524288000}
     # compare to output of docker stats:
-    assert round(result['MemTotal'] / 1024 / 1024) == 500
-    assert round((result['MemTotal'] - result['MemFree']) / 1024 / 102.4) / 10 == 386.1
+    assert round(result["MemTotal"] / 1024 / 1024) == 500
+    assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 102.4) / 10 == 386.1

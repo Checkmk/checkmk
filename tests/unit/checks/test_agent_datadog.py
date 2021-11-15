@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Sequence
+from typing import Any, Mapping, Sequence
 
 import pytest
 
-from testlib import SpecialAgent
+from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
@@ -40,11 +40,14 @@ pytestmark = pytest.mark.checks
                     ],
                 },
                 "events": {
+                    "max_age": 456,
                     "tags": [
                         "t3",
                         "t4",
                     ],
-                    "tags_to_show": [".*",],
+                    "tags_to_show": [
+                        ".*",
+                    ],
                     "syslog_facility": 1,
                     "syslog_priority": 1,
                     "service_level": 0,
@@ -52,31 +55,33 @@ pytestmark = pytest.mark.checks
                 },
             },
             [
-                'testhost',
-                '12345',
-                'powerg',
-                'api.datadoghq.eu',
-                '--monitor_tags',
-                't1',
-                't2',
-                '--monitor_monitor_tags',
-                'mt1',
-                'mt2',
-                '--event_tags',
-                't3',
-                't4',
-                '--event_tags_show',
-                '.*',
-                '--event_syslog_facility',
-                '1',
-                '--event_syslog_priority',
-                '1',
-                '--event_service_level',
-                '0',
-                '--event_add_text',
-                '--sections',
-                'monitors',
-                'events',
+                "testhost",
+                "12345",
+                "powerg",
+                "api.datadoghq.eu",
+                "--monitor_tags",
+                "t1",
+                "t2",
+                "--monitor_monitor_tags",
+                "mt1",
+                "mt2",
+                "--event_max_age",
+                "456",
+                "--event_tags",
+                "t3",
+                "t4",
+                "--event_tags_show",
+                ".*",
+                "--event_syslog_facility",
+                "1",
+                "--event_syslog_priority",
+                "1",
+                "--event_service_level",
+                "0",
+                "--event_add_text",
+                "--sections",
+                "monitors",
+                "events",
             ],
             id="full configuration",
         ),
@@ -95,6 +100,7 @@ pytestmark = pytest.mark.checks
                 },
                 "monitors": {},
                 "events": {
+                    "max_age": 600,
                     "syslog_facility": 1,
                     "syslog_priority": 1,
                     "service_level": 0,
@@ -102,23 +108,25 @@ pytestmark = pytest.mark.checks
                 },
             },
             [
-                'testhost',
-                '12345',
-                'powerg',
-                'api.datadoghq.eu',
-                '--monitor_tags',
-                '--monitor_monitor_tags',
-                '--event_tags',
-                '--event_tags_show',
-                '--event_syslog_facility',
-                '1',
-                '--event_syslog_priority',
-                '1',
-                '--event_service_level',
-                '0',
-                '--sections',
-                'monitors',
-                'events',
+                "testhost",
+                "12345",
+                "powerg",
+                "api.datadoghq.eu",
+                "--monitor_tags",
+                "--monitor_monitor_tags",
+                "--event_max_age",
+                "600",
+                "--event_tags",
+                "--event_tags_show",
+                "--event_syslog_facility",
+                "1",
+                "--event_syslog_priority",
+                "1",
+                "--event_service_level",
+                "0",
+                "--sections",
+                "monitors",
+                "events",
             ],
             id="first setup",
         ),
@@ -137,22 +145,25 @@ pytestmark = pytest.mark.checks
                 },
             },
             [
-                'testhost',
-                '12345',
-                'powerg',
-                'api.datadoghq.eu',
-                '--sections',
+                "testhost",
+                "12345",
+                "powerg",
+                "api.datadoghq.eu",
+                "--sections",
             ],
             id="minimal case",
         ),
     ],
 )
 def test_datadog_argument_parsing(
-    params: Dict[str, Any],
+    params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    assert SpecialAgent('agent_datadog').argument_func(
-        params,
-        "testhost",
-        "address",
-    ) == expected_result
+    assert (
+        SpecialAgent("agent_datadog").argument_func(
+            params,
+            "testhost",
+            "address",
+        )
+        == expected_result
+    )

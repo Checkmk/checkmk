@@ -13,6 +13,6 @@ item:
 perfdata:
  One graph for the input voltage.
 
-inventory:
+discovery:
  One service is created for each available voltage sensor.
 

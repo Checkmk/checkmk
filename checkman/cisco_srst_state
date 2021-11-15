@@ -11,5 +11,5 @@ description:
  Moreover the check displays the time (in minutes) since the SRST feature
  switched to active mode.
 
-inventory:
+discovery:
  One service is created for each device.

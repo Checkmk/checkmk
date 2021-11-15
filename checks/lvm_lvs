@@ -11,11 +11,13 @@ factory_settings["lvm_lvs_default_levels"] = {
     "levels_meta": (80.0, 90.0),
 }
 
-LvmLvsEntry = collections.namedtuple('LvmLvsEntry', ['data', 'meta'])
+LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "LvmLvsEntry", ["data", "meta"]
+)
 
 
 def parse_lvm_lvs(info):
-    possible_items = {"%s/%s" % (line[1], line[4]) for line in info if line[4] != ''}
+    possible_items = {"%s/%s" % (line[1], line[4]) for line in info if line[4] != ""}
 
     parsed = {}
     for line in info:
@@ -32,24 +34,28 @@ def parse_lvm_lvs(info):
 
 @get_parsed_item_data
 def check_lvm_lvs(item, params, entry):
-    yield check_levels(entry.data,
-                       "data_usage",
-                       params["levels_data"],
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Data usage")
-    yield check_levels(entry.meta,
-                       "meta_usage",
-                       params["levels_meta"],
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Meta usage")
+    yield check_levels(
+        entry.data,
+        "data_usage",
+        params["levels_data"],
+        human_readable_func=get_percent_human_readable,
+        infoname="Data usage",
+    )
+    yield check_levels(
+        entry.meta,
+        "meta_usage",
+        params["levels_meta"],
+        human_readable_func=get_percent_human_readable,
+        infoname="Meta usage",
+    )
 
 
-check_info['lvm_lvs'] = {
-    'parse_function': parse_lvm_lvs,
-    'inventory_function': discover(),
-    'check_function': check_lvm_lvs,
-    'service_description': 'LVM LV Pool %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'lvm_lvs_default_levels',
-    'group': 'lvm_lvs_pools',
+check_info["lvm_lvs"] = {
+    "parse_function": parse_lvm_lvs,
+    "inventory_function": discover(),
+    "check_function": check_lvm_lvs,
+    "service_description": "LVM LV Pool %s",
+    "has_perfdata": True,
+    "default_levels_variable": "lvm_lvs_default_levels",
+    "group": "lvm_lvs_pools",
 }

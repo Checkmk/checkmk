@@ -10,6 +10,6 @@ description:
 item:
  The individual Catalyst Store entities
 
-inventory:
+discovery:
  One service per Catalyst Store is created
 

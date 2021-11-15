@@ -34,7 +34,7 @@ $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	  $(MAKE)
 	$(TOUCH) $@
 
-$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
+$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
@@ -77,11 +77,12 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	rm \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/check_legacy_includes/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py
-	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
-	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
@@ -113,6 +114,8 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 
 	# Install hooks
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
@@ -120,8 +123,17 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create/
+
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/update-pre-hooks/01_mkp-disable-outdated $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/update-pre-hooks/02_cmk-update-config $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/02_cmk-update-config $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-mv
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-mv/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-mv/
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-cp
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-cp/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-cp/
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-restore
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-restore/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-restore/
 
 	$(TOUCH) $@

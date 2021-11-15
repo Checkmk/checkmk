@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<mysql_ping>>>
 # [[instance]]
 # mysqladmin: connect to server at 'localhost' failed
@@ -24,7 +25,7 @@ def check_mysql_ping(_no_item, _no_params, data):
     return 2, message
 
 
-check_info['mysql_ping'] = {
+check_info["mysql_ping"] = {
     "parse_function": mysql_parse_per_item(lambda info: info),
     "inventory_function": discover(),
     "check_function": check_mysql_ping,

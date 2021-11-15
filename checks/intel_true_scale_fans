@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.intel_true_scale import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.6.1 Fan 201 --> ICS-CHASSIS-MIB::icsChassisFanDescription.6.1
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.7.1 Fan 202 --> ICS-CHASSIS-MIB::icsChassisFanDescription.7.1
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.8.1 Fan 203 --> ICS-CHASSIS-MIB::icsChassisFanDescription.8.1
@@ -44,9 +45,11 @@ from cmk.base.check_legacy_includes.intel_true_scale import *  # pylint: disable
 
 
 def inventory_intel_true_scale_fans(info):
-    return [(fan_name.replace("Fan", "").strip(), None)
-            for fan_name, operstate, _speed_state in info
-            if operstate != "4"]
+    return [
+        (fan_name.replace("Fan", "").strip(), None)
+        for fan_name, operstate, _speed_state in info
+        if operstate != "4"
+    ]
 
 
 def check_intel_true_scale_fans(item, _no_params, info):
@@ -62,27 +65,30 @@ def check_intel_true_scale_fans(item, _no_params, info):
             "2": (0, "normal"),
             "3": (2, "high"),
             "4": (3, "unknown"),
-        }
+        },
     }
 
     for fan_name, operstate, speedstate in info:
         if item == fan_name.replace("Fan", "").strip():
-            for what, what_descr, what_mapping in [(operstate, "Operational", "operational"),
-                                                   (speedstate, "Speed", "speed")]:
+            for what, what_descr, what_mapping in [
+                (operstate, "Operational", "operational"),
+                (speedstate, "Speed", "speed"),
+            ]:
                 state, state_readable = map_states[what_mapping][what]
                 yield state, "%s status: %s" % (what_descr, state_readable)
 
 
-check_info['intel_true_scale_fans'] = {
-    'inventory_function': inventory_intel_true_scale_fans,
-    'check_function': check_intel_true_scale_fans,
-    'service_description': 'Fan %s',
-    'snmp_info': (
+check_info["intel_true_scale_fans"] = {
+    "inventory_function": inventory_intel_true_scale_fans,
+    "check_function": check_intel_true_scale_fans,
+    "service_description": "Fan %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.10222.2.1.6.5.1",
         [
             "2",  # ICS-CHASSIS-MIB::icsChassisFanDescription
             "3",  # ICS-CHASSIS-MIB::icsChassisFanOperStatus
             "4",  # ICS-CHASSIS-MIB::icsChassisFanSpeed
-        ]),
-    'snmp_scan_function': scan_intel_true_scale,
+        ],
+    ),
+    "snmp_scan_function": scan_intel_true_scale,
 }

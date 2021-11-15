@@ -4,41 +4,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from typing import NamedTuple
+
+from cmk.base.check_legacy_includes.cisco_ucs import map_operability, scan_cisco_ucs
+
 # comNET GmbH, Fabian Binder - 2018-05-07
 
-# .1.3.6.1.4.1.9.9.719.1.45.1.1.5  cucsStorageControllerModel
-# .1.3.6.1.4.1.9.9.719.1.45.1.1.17 cucsStorageControllerVendor
-# .1.3.6.1.4.1.9.9.719.1.45.1.1.14 cucsStorageControllerSerial
-# .1.3.6.1.4.1.9.9.719.1.45.1.1.7  cucsStorageControllerOperability
+
+class Section(NamedTuple):
+    model: str
+    state: int
+    operability: str
+    serial: str
+    vendor: str
 
 
-def inventory_cisco_ucs_raid(info):
-    return [(None, None)]
+def parse_cisco_ucs_raid(string_table) -> Section:
+    return Section(
+        string_table[0][0],
+        *map_operability[string_table[0][1]],
+        string_table[0][2],
+        string_table[0][3],
+    )
 
 
-def check_cisco_ucs_raid(_no_item, _no_params, info):
-    model, vendor, serial, status = info[0]
-    state, state_readable = map_operability.get(status, (3, "Unknown, status code %s" % status))
-    return state, "Status: %s, Model: %s, Vendor: %s, SN: %s" % \
-                (state_readable, model, vendor, serial)
+def discover_cisco_ucs_raid(section):
+    yield None, {}
+
+
+def check_cisco_ucs_raid(_no_item, _no_params, section):
+    yield section.state, f"Status: {section.operability}"
+    yield 0, f"Model: {section.model}"
+    yield 0, f"Vendor: {section.vendor}"
+    yield 0, f"Serial number: {section.serial}"
 
 
 check_info["cisco_ucs_raid"] = {
+    "parse_function": parse_cisco_ucs_raid,
     "check_function": check_cisco_ucs_raid,
-    "inventory_function": inventory_cisco_ucs_raid,
+    "inventory_function": discover_cisco_ucs_raid,
     "service_description": "RAID Controller",
     "snmp_scan_function": scan_cisco_ucs,
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.45.1.1",
         [
             "5",  # cucsStorageControllerModel
-            "17",  # cucsStorageControllerVendor
-            "14",  # cucsStorageControllerSerial
             "7",  # cucsStorageControllerOperability
-        ]),
+            "14",  # cucsStorageControllerSerial
+            "17",  # cucsStorageControllerVendor
+        ],
+    ),
 }

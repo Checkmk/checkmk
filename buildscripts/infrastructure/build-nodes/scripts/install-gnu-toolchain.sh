@@ -10,18 +10,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 MIRROR_URL="https://ftp.gnu.org/gnu/"
 
-GCC_MAJOR="10"
-GCC_MINOR="1"
+GCC_MAJOR="11"
+GCC_MINOR="2"
 GCC_PATCHLEVEL="0"
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 GCC_ARCHIVE_NAME="gcc-${GCC_VERSION}.tar.gz"
 GCC_URL="${MIRROR_URL}gcc/gcc-${GCC_VERSION}/${GCC_ARCHIVE_NAME}"
 
-BINUTILS_VERSION="2.34"
+BINUTILS_VERSION="2.36.1"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="9.2"
+GDB_VERSION="11.1"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
@@ -103,6 +103,10 @@ set_symlinks() {
     ln -sf ${PREFIX}/bin/* /usr/bin
     ln -sf ${PREFIX}/bin/gcc-${GCC_MAJOR} /usr/bin/gcc
     ln -sf ${PREFIX}/bin/g++-${GCC_MAJOR} /usr/bin/g++
+
+    # not really a symlink, but almost...
+    echo ${PREFIX}/lib64 > /etc/ld.so.conf.d/gcc-${GCC_VERSION}.conf
+    ldconfig
 }
 
 build_package() {

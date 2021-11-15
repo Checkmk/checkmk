@@ -4,26 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 import socket
-from hashlib import md5, sha256
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
-from cmk.utils.encryption import (
-    decrypt_aes_256_cbc_legacy,
-    decrypt_aes_256_cbc_pbkdf2,
-    OPENSSL_SALTED_MARKER,
-)
+from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
-
-if TYPE_CHECKING:
-    import hashlib
 
 
 class TCPFetcher(AgentFetcher):
@@ -44,27 +37,40 @@ class TCPFetcher(AgentFetcher):
         self.timeout: Final = timeout
         self.encryption_settings: Final = encryption_settings
         self.use_only_cache: Final = use_only_cache
-        self._socket: Optional[socket.socket] = None
+        self._opt_socket: Optional[socket.socket] = None
+
+    @property
+    def _socket(self) -> socket.socket:
+        if self._opt_socket is None:
+            raise MKFetcherError("Not connected")
+        return self._opt_socket
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{type(self.file_cache).__name__}",
-            f"family={self.family!r}",
-            f"timeout={self.timeout!r}",
-            f"encryption_settings={self.encryption_settings!r}",
-            f"use_only_cache={self.use_only_cache!r}",
-        )) + ")"
-
-    @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
-        address: Tuple[Optional[HostAddress], int] = serialized.pop("address")
-        return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            address=address,
-            **serialized,
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"family={self.family!r}",
+                    f"timeout={self.timeout!r}",
+                    f"encryption_settings={self.encryption_settings!r}",
+                    f"use_only_cache={self.use_only_cache!r}",
+                )
+            )
+            + ")"
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
+        address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
+        return cls(
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            address=address,
+            **serialized_,
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "family": self.family,
@@ -82,14 +88,14 @@ class TCPFetcher(AgentFetcher):
             self.address[1],
             self.timeout,
         )
-        self._socket = socket.socket(self.family, socket.SOCK_STREAM)
+        self._opt_socket = socket.socket(self.family, socket.SOCK_STREAM)
         try:
             self._socket.settimeout(self.timeout)
             self._socket.connect(self.address)
             self._socket.settimeout(None)
         except socket.error as e:
             self._socket.close()
-            self._socket = None
+            self._opt_socket = None
 
             if cmk.utils.debug.enabled():
                 raise
@@ -99,48 +105,60 @@ class TCPFetcher(AgentFetcher):
         self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
         if self._socket is not None:
             self._socket.close()
-        self._socket = None
+        self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self.use_only_cache:
-            raise MKFetcherError("Got no data: No usable cache file present at %s" %
-                                 self.file_cache.base_path)
-        if self._socket is None:
-            raise MKFetcherError("Not connected")
+            raise MKFetcherError(
+                "Got no data: No usable cache file present at %s" % self.file_cache.base_path
+            )
 
-        return self._validate_decrypted_data(self._decrypt(self._raw_data()))
+        protocol = self._detect_transport_protocol()
+
+        return self._validate_decrypted_data(self._decrypt(protocol, self._raw_data()))
+
+    def _detect_transport_protocol(self) -> TransportProtocol:
+        try:
+            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
+        except socket.error as e:
+            raise MKFetcherError(f"Communication failed: {e}") from e
+
+        try:
+            return TransportProtocol(raw_protocol)
+        except ValueError:
+            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
     def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")
-        if not self._socket:
-            return AgentRawData(b"")
+        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL))
 
-        def recvall(sock: socket.socket) -> bytes:
-            buffer: List[bytes] = []
+    @staticmethod
+    def _recvall(sock: socket.socket, flags: int = 0) -> bytes:
+        buffer: List[bytes] = []
+        try:
             while True:
-                data = sock.recv(4096, socket.MSG_WAITALL)
+                data = sock.recv(4096, flags)
                 if not data:
                     break
                 buffer.append(data)
-            return b"".join(buffer)
-
-        try:
-            return AgentRawData(recvall(self._socket))
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise
             raise MKFetcherError("Communication failed: %s" % e)
 
-    def _decrypt(self, output: AgentRawData) -> AgentRawData:
+        return b"".join(buffer)
+
+    def _decrypt(self, protocol: TransportProtocol, output: AgentRawData) -> AgentRawData:
         if not output:
             return output  # nothing to to, validation will fail
 
-        if output.startswith(b"<<<"):
+        if protocol is TransportProtocol.PLAIN:
             self._logger.debug("Output is not encrypted")
             if self.encryption_settings["use_regular"] == "enforce":
                 raise MKFetcherError(
-                    "Agent output is plaintext but encryption is enforced by configuration")
-            return output
+                    "Agent output is plaintext but encryption is enforced by configuration"
+                )
+            return protocol.value + output  # bring back stolen bytes
 
         self._logger.debug("Output is encrypted or invalid")
         if self.encryption_settings["use_regular"] == "disable":
@@ -150,7 +168,13 @@ class TCPFetcher(AgentFetcher):
 
         try:
             self._logger.debug("Try to decrypt output")
-            output = self._decrypt_agent_data(output=output)
+            output = AgentRawData(
+                decrypt_by_agent_protocol(
+                    self.encryption_settings["passphrase"],
+                    protocol,
+                    output,
+                )
+            )
         except MKFetcherError:
             raise
         except Exception as e:
@@ -168,48 +192,3 @@ class TCPFetcher(AgentFetcher):
         if len(output) < 16:
             raise MKFetcherError("Too short output from agent: %r" % output)
         return output
-
-    def _decrypt_agent_data(self, output: AgentRawData) -> AgentRawData:
-        salt_start = len(OPENSSL_SALTED_MARKER)
-
-        try:
-            # simply check if the protocol is an actual number
-            protocol = int(output[:2])
-        except ValueError:
-            raise MKFetcherError(f"Unsupported protocol version: {output[:2]!r}")
-        encrypted_pkg = output[2:]
-        password = self.encryption_settings["passphrase"]
-
-        if protocol == 3:
-            return AgentRawData(
-                decrypt_aes_256_cbc_pbkdf2(
-                    ciphertext=encrypted_pkg[salt_start:],
-                    password=password,
-                ))
-        if protocol == 2:
-            return AgentRawData(
-                decrypt_aes_256_cbc_legacy(
-                    ciphertext=encrypted_pkg,
-                    password=password,
-                    digest=sha256,
-                ))
-        if protocol == 0:
-            return AgentRawData(
-                decrypt_aes_256_cbc_legacy(
-                    ciphertext=encrypted_pkg,
-                    password=password,
-                    digest=md5,
-                ))
-        # Support encrypted agent data with "99" header.
-        # This was not intended, but the Windows agent accidentally sent this header
-        # instead of "00" up to 2.0.0p1, so we keep this for a while.
-        # Caution: "99" for real-time check data means "unencrypted"!
-        if protocol == 99:
-            return AgentRawData(
-                decrypt_aes_256_cbc_legacy(
-                    ciphertext=encrypted_pkg,
-                    password=password,
-                    digest=md5,
-                ))
-
-        raise MKFetcherError(f"Unsupported protocol version: {protocol}")

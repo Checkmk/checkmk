@@ -12,6 +12,6 @@ description:
 
  Levels for warning and critical state can be set.
 
-inventory:
+discovery:
  One service is created for each windows host.
 

@@ -13,5 +13,5 @@ description:
 item:
  The name of the relay port.
 
-inventory:
+discovery:
  One service is created for each relay port.

@@ -6,29 +6,32 @@
 
 from typing import Any, Iterable, List, Mapping, NamedTuple, Sequence, Set
 
-from cmk.utils.type_defs import ContactgroupName, HostAddress, HostName, TimeperiodName, Timestamp, UserId
 from livestatus import LocalConnection
+
+from cmk.utils.type_defs import (
+    ContactgroupName,
+    HostAddress,
+    HostName,
+    TimeperiodName,
+    Timestamp,
+    UserId,
+)
 
 ################################################################################
 
 
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/
 def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> Set[UserId]:
-    query = (
-        "GET contactgroups\n"  #
-        "Columns: members")
+    query = "GET contactgroups\nColumns: members"
     num_group_names = 0
     for group_name in group_names:
         query += f"\nFilter: name = {group_name}"
         num_group_names += 1
     query += f"\nOr: {num_group_names}"
-    contact_lists: List[List[str]] = (LocalConnection().query_column(query)
-                                      if num_group_names else [])
-    return {
-        UserId(contact)  #
-        for contact_list in contact_lists  #
-        for contact in contact_list
-    }
+    contact_lists: List[List[str]] = (
+        LocalConnection().query_column(query) if num_group_names else []
+    )
+    return {UserId(contact) for contact_list in contact_lists for contact in contact_list}
 
 
 ################################################################################
@@ -45,12 +48,12 @@ class HostInfo(NamedTuple):
 
 def _create_host_info(row: Mapping[str, Any]) -> HostInfo:
     return HostInfo(
-        name=row['name'],
-        alias=row['alias'],
-        address=row['address'],
-        custom_variables=row['custom_variables'],
-        contacts={UserId(c) for c in row['contacts']},
-        contact_groups=set(row['contact_groups']),
+        name=row["name"],
+        alias=row["alias"],
+        address=row["address"],
+        custom_variables=row["custom_variables"],
+        contacts={UserId(c) for c in row["contacts"]},
+        contact_groups=set(row["contact_groups"]),
     )
 
 
@@ -58,8 +61,8 @@ def query_hosts_infos() -> Sequence[HostInfo]:
     return [
         _create_host_info(row)  #
         for row in LocalConnection().query_table_assoc(
-            "GET hosts\n"
-            "Columns: name alias address custom_variables contacts contact_groups")
+            "GET hosts\n" "Columns: name alias address custom_variables contacts contact_groups"
+        )
     ]
 
 
@@ -67,25 +70,23 @@ def query_hosts_infos() -> Sequence[HostInfo]:
 
 
 def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
-    return LocalConnection().query_value("GET hosts\n"
-                                         "Columns: scheduled_downtime_depth\n"
-                                         f"Filter: host_name = {host_name}")
+    return LocalConnection().query_value(
+        "GET hosts\n" "Columns: scheduled_downtime_depth\n" f"Filter: host_name = {host_name}"
+    )
 
 
 ################################################################################
 
 
 def query_status_program_start() -> Timestamp:
-    return LocalConnection().query_value("GET status\n"  #
-                                         "Columns: program_start")
+    return LocalConnection().query_value("GET status\n" "Columns: program_start")  #
 
 
 ################################################################################
 
 
 def query_status_enable_notifications() -> bool:
-    return bool(LocalConnection().query_value("GET status\n"  #
-                                              "Columns: enable_notifications"))
+    return bool(LocalConnection().query_value("GET status\n" "Columns: enable_notifications"))  #
 
 
 ################################################################################
@@ -94,6 +95,5 @@ def query_status_enable_notifications() -> bool:
 def query_timeperiods_in() -> Mapping[TimeperiodName, bool]:
     return {
         name: bool(in_)  #
-        for name, in_ in LocalConnection().query("GET timeperiods\n"  #
-                                                 "Columns: name in")
+        for name, in_ in LocalConnection().query("GET timeperiods\n" "Columns: name in")  #
     }

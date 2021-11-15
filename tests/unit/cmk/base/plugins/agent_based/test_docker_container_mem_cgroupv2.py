@@ -4,8 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.docker_container_mem_cgroupv2 import parse_docker_container_mem_cgroupv2
 from cmk.base.plugins.agent_based.docker_container_mem import parse_docker_container_mem
+from cmk.base.plugins.agent_based.docker_container_mem_cgroupv2 import (
+    parse_docker_container_mem_cgroupv2,  # yapf: disable
+)
 
 # 16GB RAM
 AGENT_OUTPUT_NO_LIMIT = """anon 5406720
@@ -85,8 +87,8 @@ MemTotal: 16202704 kB
 
 PLUGIN_OUTPUT_CGROUPV2 = [
     [
-        '@docker_version_info',
-        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}'
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
         '{"usage": 30220288, "stats": {"active_anon": 69632, "active_file": 11534336, "anon": 0, "ano'
@@ -97,13 +99,13 @@ PLUGIN_OUTPUT_CGROUPV2 = [
         '31456, "slab_reclaimable": 3469312, "slab_unreclaimable": 13062144, "sock": 0, "thp_collapse'
         '_alloc": 0, "thp_fault_alloc": 0, "unevictable": 0, "workingset_activate": 231, "workingset_'
         'nodereclaim": 0, "workingset_refault": 231}, "limit": 16591540224}'
-    ]
+    ],
 ]
 
 PLUGIN_OUTPUT_CGROUPV2_LIMIT = [
     [
-        '@docker_version_info',
-        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}'
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
     [
         '{"usage": 3112960, "stats": {"active_anon": 0, "active_file": 0, "anon": 0, "anon_thp": 0, "'
@@ -113,7 +115,7 @@ PLUGIN_OUTPUT_CGROUPV2_LIMIT = [
         '"pgsteal": 0, "shmem": 0, "slab": 1060864, "slab_reclaimable": 135168, "slab_unreclaimable":'
         '925696, "sock": 0, "thp_collapse_alloc": 0, "thp_fault_alloc": 0, "unevictable": 0, "working'
         'set_activate": 0, "workingset_nodereclaim": 0, "workingset_refault": 33}, "limit": 57671680}'
-    ]
+    ],
 ]
 
 
@@ -139,14 +141,14 @@ def test_docker_parse_container_mem_docker_plugin_cgroupv2():
     version used on the host.
     """
     result = parse_docker_container_mem(PLUGIN_OUTPUT_CGROUPV2)
-    assert result == {'MemFree': 16564215808, 'MemTotal': 16591540224}
+    assert result == {"MemFree": 16564215808, "MemTotal": 16591540224}
     # make sure docker stats result is the same:
-    assert round((result['MemTotal'] - result['MemFree']) / 1024 / 10.24) / 100 == 26.06
+    assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 10.24) / 100 == 26.06
 
 
 def test_docker_parse_container_mem_docker_plugin_cgroupv2_with_limit():
     result = parse_docker_container_mem(PLUGIN_OUTPUT_CGROUPV2_LIMIT)
-    assert result == {'MemFree': 55504896, 'MemTotal': 57671680}
+    assert result == {"MemFree": 55504896, "MemTotal": 57671680}
     # make sure docker stats result is the same:
-    assert (result['MemTotal']) / 1024 / 1024 == 55
-    assert round((result['MemTotal'] - result['MemFree']) / 1024 / 10.24) / 100 == 2.07
+    assert (result["MemTotal"]) / 1024 / 1024 == 55
+    assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 10.24) / 100 == 2.07

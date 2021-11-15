@@ -74,7 +74,7 @@ def check_tsm_drives(item, params, info):
     return (3, "drive not found")
 
 
-check_info['tsm_drives'] = {
+check_info["tsm_drives"] = {
     "check_function": check_tsm_drives,
     "inventory_function": inventory_tsm_drives,
     "service_description": "TSM Drive %s",

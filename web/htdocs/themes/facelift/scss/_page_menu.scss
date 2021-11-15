@@ -18,7 +18,7 @@ div#top_heading {
   div.titlebar {
     height: 53px;
     padding: 0.5 * $spacing $spacing 0;
-    background-color: $color-background;
+    background-color: $bg-color;
   }
 
   a.title {
@@ -53,7 +53,7 @@ div#top_heading {
       text-decoration: none;
 
       &:hover {
-        color: $success;
+        color: $font-color-green;
       }
     }
 
@@ -127,7 +127,7 @@ div#top_heading {
       &:last-child:after {
         content: "";
       }
-      color: rgba($font-color, 0.8);
+      color: $font-color-dimmed;
       text-decoration: none;
     }
 
@@ -145,7 +145,7 @@ div#top_heading {
     width: 100%;
     padding: 0 0 $spacing;
     white-space: nowrap;
-    background-color: $color-background;
+    background-color: $bg-color;
     border-spacing: 0;
 
     td {
@@ -281,7 +281,7 @@ div#top_heading {
           div.topic_title {
             padding: $spacing 0 2px 12px;
             font-weight: normal;
-            color: rgba($font-color, 0.5);
+            color: $font-color-dimmed;
             cursor: default;
           }
 
@@ -295,7 +295,7 @@ div#top_heading {
             }
 
             &.enabled a:hover {
-              color: $success;
+              color: $font-color-green;
             }
 
             &.disabled a {
@@ -357,7 +357,7 @@ div#top_heading {
       form {
         padding: 0;
         margin: 0;
-        background-color: $inpage-highlight-color;
+        background-color: $input-background-color;
         border-radius: 2px;
       }
 
@@ -416,7 +416,7 @@ div#top_heading {
   }
 
   tr#suggestions {
-    background-color: $color-background;
+    background-color: $bg-color;
 
     td {
       width: 100%;
@@ -456,7 +456,7 @@ div#top_heading {
           padding: 0 8px;
           font-weight: $font-weight-bold;
           line-height: 16px;
-          color: $button-font-color-default;
+          color: $font-color;
           text-decoration: none;
           background-color: $button-bg-color-suggestions;
           border-radius: 4px;
@@ -488,6 +488,10 @@ div#top_heading {
             animation-name: easyhoverbg;
             animation-fill-mode: forwards;
           }
+        }
+
+        &.submit a {
+          border: 1px solid $default-submit-button-border-color;
         }
       }
     }
@@ -575,8 +579,7 @@ div#page_menu_popups {
   button,
   input.button {
     padding: 8px 16px;
-    margin-top: 0;
-    margin-bottom: 0;
+    margin: 0 $spacing;
   }
 }
 
@@ -589,7 +592,7 @@ body.dashboard {
     bottom: 0;
     left: 0;
     // Important needed to override swal2 internal definition
-    background-color: rgba(0, 0, 0, 0.2) !important; // sass-lint:disable-line no-important
+    background-color: rgba($black, 0.2) !important; // sass-lint:disable-line no-important
 
     .confirm_popup {
       flex: 0 0 auto;
@@ -726,7 +729,7 @@ div#page_menu_popups div.side_popup {
         div.description {
           display: inline-block;
           margin: 5px 10px 0;
-          color: #5a6782;
+          color: $font-color-blue-1;
         }
 
         &:hover,
@@ -781,7 +784,7 @@ div#page_menu_popups div.side_popup {
       display: block;
       padding: 8px 10px;
       font-weight: bold;
-      color: $filter-group-title-font-color;
+      color: $font-color;
       cursor: pointer;
     }
 

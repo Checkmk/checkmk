@@ -15,11 +15,5 @@ description:
 item:
  The name of the OMD site.
 
-inventory:
+discovery:
  One service is created for each running OMD site.
-
-cluster:
- On a cluster we aggregate over all node results -- but we
- expect to only get data from the active node.
- Note that the plugin will not warn you if more than one
- node sends data.

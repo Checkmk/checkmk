@@ -7,5 +7,5 @@ description:
  This check monitors the battery breaker status of a Eltek Valere USV.
  The check is OK if the status is 'normal', otherwise CRIT.
 
-inventory:
+discovery:
  One service is created.

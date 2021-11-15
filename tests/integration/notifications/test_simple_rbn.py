@@ -4,30 +4,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import os
-import pytest  # type: ignore[import]
+import time
 
-from testlib import WatchLog
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+import pytest
+
+from tests.testlib import WatchLog
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+
+from cmk.utils import version as cmk_version
 
 
 @pytest.fixture(name="fake_sendmail")
 def fake_sendmail_fixture(site):
-    site.write_file("local/bin/sendmail", "#!/bin/bash\n"
-                    "set -e\n"
-                    "echo \"sendmail called with: $@\"\n")
+    site.write_file(
+        "local/bin/sendmail", "#!/bin/bash\n" "set -e\n" 'echo "sendmail called with: $@"\n'
+    )
     os.chmod(site.path("local/bin/sendmail"), 0o775)
     yield
     site.delete_file("local/bin/sendmail")
 
 
-@pytest.fixture(name="test_log",
-                params=[
-                    ("nagios", "var/log/nagios.log"),
-                    ("cmc", "var/check_mk/core/history"),
-                ])
-def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.fixture(
+    name="test_log",
+    params=[
+        ("nagios", "var/log/nagios.log"),
+        pytest.param(
+            ("cmc", "var/check_mk/core/history"),
+            marks=pytest.mark.skipif(
+                cmk_version.is_raw_edition(), reason="CMC not supported on CRE"
+            ),
+        ),
+    ],
+)
+def test_log_fixture(
+    request, web, site, fake_sendmail
+):  # noqa: F811 # pylint: disable=redefined-outer-name
     core, log = request.param
     site.set_config("CORE", core, with_restart=True)
 
@@ -35,8 +47,8 @@ def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint:
         "hh": {
             "alias": "Harry Hirsch",
             "password": "1234",
-            "email": u"%s@localhost" % web.site.id,
-            'contactgroups': ['all'],
+            "email": "%s@localhost" % web.site.id,
+            "contactgroups": ["all"],
         },
     }
 
@@ -48,9 +60,12 @@ def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint:
     site.live.command("[%d] STOP_EXECUTING_HOST_CHECKS" % time.time())
     site.live.command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
 
-    web.add_host("notify-test", attributes={
-        "ipaddress": "127.0.0.1",
-    })
+    web.add_host(
+        "notify-test",
+        attributes={
+            "ipaddress": "127.0.0.1",
+        },
+    )
     web.activate_changes()
 
     with WatchLog(site, log, default_timeout=20) as l:
@@ -69,7 +84,8 @@ def test_simple_rbn_host_notification(test_log, site):
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
-        "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN")
+        "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN"
+    )
     test_log.check_logged("] HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN")
     test_log.check_logged(
         "] HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;"

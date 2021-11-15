@@ -72,19 +72,6 @@ def add_page_number(canvas, doc):
     canvas.drawRightString(20 * cm, 1 * cm, text)
 
 
-def parse_arguments():
-    '''Argument parser for build license texts script handling the following arguments:
-    cmk_version     Set the Checkmk version for which the license texts PDF shall be built.'''
-    parser = argparse.ArgumentParser(
-        description="Script to build the license texts file License_texts.pdf",
-        usage="./build_license_texts_pdf [-h] cmk_version")
-    parser.add_argument(
-        "cmk_version",
-        help="Set the Checkmk version for which the license texts PDF shall be built.\
-                        (Beware: The exact string provided here is used on the PDF's cover page)")
-    return parser.parse_args()
-
-
 def used_licenses_from_csv(path_licenses_csv):
     used_licenses = []
     with open(path_licenses_csv, "r") as csv_file:
@@ -94,7 +81,7 @@ def used_licenses_from_csv(path_licenses_csv):
     return sorted(used_licenses)
 
 
-def main(args):
+def main():
     try:
         path_omd = Path(__file__).resolve().parent.parent
     except:
@@ -134,8 +121,7 @@ def main(args):
     cover_logo = Image(str(path_logo), width=3.5 * inch, height=1 * inch)
     cover_text = "Open Source licenses included in:<br /><br />\n\
             Checkmk Enterprise Edition<br />\n\
-            Checkmk Managed Services Edition<br /><br />\n\
-            Version Status: %s" % args.cmk_version
+            Checkmk Managed Services Edition"
 
     story = []
     story.append(Spacer(width=0, height=6 * cm))
@@ -169,8 +155,7 @@ def main(args):
 
 if __name__ == "__main__":
     try:
-        args = parse_arguments()
-        main(args)
+        main()
         sys.exit(0)
     except Exception:
         sys.stderr.write(traceback.format_exc())

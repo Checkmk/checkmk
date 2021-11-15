@@ -153,7 +153,7 @@ def license_from_file(file_path: Path) -> str:
             return "BSL-UNKN"
         # MIT - CMU style
         if "permission to use, copy, modify, and distribute this" in ltxt:
-            return "MIT - CMU style"
+            return "MIT-CMU"
         # MIT
         if "permission is hereby granted, free of charge, to" in ltxt:
             return "MIT"

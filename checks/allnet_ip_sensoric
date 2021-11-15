@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 
 # <<<allnet_ip_sensoric:sep(59)>>>
@@ -60,7 +62,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 
 def parse_allnet_ip_sensoric(info):
-    '''parses agent output in a structure like:
+    """parses agent output in a structure like:
     {'sensor0': {'alarm0': '0',
               'all4000_typ': '0',
               'function': '1',
@@ -79,10 +81,10 @@ def parse_allnet_ip_sensoric(info):
              'devicetype': 'ALL5000',
              'sys': '116240',
              'time': '16:57:50'}}
-    '''
+    """
     parsed = {}
     for key, value in info:
-        match = re.search(r'(\w+)\.(\w+)', key)
+        match = re.search(r"(\w+)\.(\w+)", key)
         if match:
             sensor = match.group(1)
             field = match.group(2)
@@ -144,7 +146,7 @@ check_info["allnet_ip_sensoric.tension"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
 #   |                      | |_ ___ _ __ ___  _ __                         |
@@ -159,8 +161,9 @@ factory_settings["allnet_ip_sensoric_temp_default_levels"] = {"levels": (35, 40)
 
 def inventory_allnet_ip_sensoric_temp(parsed):
     for sensor, sensor_data in parsed.items():
-        if (sensor_data.get('function') and sensor_data["function"] == "1") \
-            or (sensor_data.get('unit') and sensor_data['unit'] == u'°C'):
+        if (sensor_data.get("function") and sensor_data["function"] == "1") or (
+            sensor_data.get("unit") and sensor_data["unit"] == "°C"
+        ):
             item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
             yield item, {}
 
@@ -182,10 +185,10 @@ check_info["allnet_ip_sensoric.temp"] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "group": "temperature",
-    "default_levels_variable": "allnet_ip_sensoric_temp_default_levels"
+    "default_levels_variable": "allnet_ip_sensoric_temp_default_levels",
 }
 
-#.
+# .
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
 #   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
@@ -201,7 +204,9 @@ allnet_ip_sensoric_humidity_default_levels = (35, 40, 60, 65)
 def inventory_allnet_ip_sensoric_humidity(parsed):
     inventory = []
     for sensor, sensor_data in parsed.items():
-        if "function" in sensor_data and sensor_data["function"] == "2":
+        if ("function" in sensor_data and sensor_data["function"] == "2") or sensor_data.get(
+            "unit"
+        ) == "%":
             item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
             inventory.append((item, "allnet_ip_sensoric_humidity_default_levels"))
     return inventory
@@ -223,7 +228,7 @@ check_info["allnet_ip_sensoric.humidity"] = {
     "group": "humidity",
 }
 
-#.
+# .
 #   .--pressure------------------------------------------------------------.
 #   |                                                                      |
 #   |               _ __  _ __ ___  ___ ___ _   _ _ __ ___                 |
@@ -263,7 +268,7 @@ check_info["allnet_ip_sensoric.pressure"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 
 check_info["allnet_ip_sensoric"] = {
     "parse_function": parse_allnet_ip_sensoric,

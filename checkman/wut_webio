@@ -12,5 +12,5 @@ description:
 item:
  The user definable string of the WebIO device and its input description.
 
-inventory:
+discovery:
  For every input of the WebIO, one service is created.

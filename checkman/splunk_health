@@ -9,6 +9,6 @@ description:
 
  Details for each component can be found in the long output of the check.
 
-inventory:
+discovery:
  One service is created.
 

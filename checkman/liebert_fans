@@ -9,5 +9,5 @@ description:
 item:
  The item will be the data label of the OID
 
-inventory:
+discovery:
  One service is created for each fan.

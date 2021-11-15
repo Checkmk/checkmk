@@ -8,7 +8,7 @@ description:
  You may provide levels using the WATO-rule "Couchbase Cache".
  It evaluates the rate of cache misses.
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

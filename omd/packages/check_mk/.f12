@@ -1,11 +1,16 @@
 #!/bin/bash
-set -e
+set -ex
 
 SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo mkdir -p $ROOT/lib/omd/scripts/update-pre-hooks
-sudo install -m 755 cmk.update-pre-hooks $ROOT/lib/omd/scripts/update-pre-hooks
-sed -e "s|###ROOT###|$ROOT|g" -e "s|###SITE###|$SITE|g" skel/etc/check_mk/apache.conf | sudo tee $ROOT/etc/check_mk/apache.conf >/dev/null
-sudo omd restart $SITE apache
+for dir in update-pre-hooks post-create; do
+    dir_in_site="$ROOT/lib/omd/scripts/$dir"
+    sudo mkdir -p "$dir_in_site"
+    for hook in "$dir"/*; do
+        sudo install -m 755 "$hook" "$dir_in_site"
+    done
+done
+sed -e "s|###ROOT###|$ROOT|g" -e "s|###SITE###|$SITE|g" skel/etc/check_mk/apache.conf | sudo tee "$ROOT/etc/check_mk/apache.conf" >/dev/null
+sudo omd restart "$SITE" apache

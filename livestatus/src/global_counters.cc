@@ -5,9 +5,15 @@
 
 #include "global_counters.h"
 
-#include <ctime>
+#include <chrono>
 #include <mutex>
+#include <optional>
+#include <ratio>
 #include <vector>
+
+#include "ChronoUtils.h"
+
+using namespace std::chrono_literals;
 
 namespace {
 constexpr int num_counters = 10;
@@ -27,8 +33,8 @@ CounterInfo &counter(Counter which) {
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-time_t last_statistics_update = 0;
-constexpr time_t statistics_interval = 5;
+std::optional<std::chrono::system_clock::time_point> last_statistics_update;
+constexpr auto statistics_interval = 5s;
 constexpr double rating_weight = 0.25;
 
 double lerp(double a, double b, double t) { return (1 - t) * a + t * b; }
@@ -61,20 +67,21 @@ double counterRate(Counter which) {
 }
 
 void do_statistics() {
-    time_t now = time(nullptr);
-    if (last_statistics_update == 0) {
+    auto now = std::chrono::system_clock::now();
+    if (!last_statistics_update) {
         last_statistics_update = now;
         return;
     }
-    time_t delta_time = now - last_statistics_update;
-    if (delta_time < statistics_interval) {
+    auto age = now - *last_statistics_update;
+    if (age < statistics_interval) {
         return;
     }
     last_statistics_update = now;
     for (auto &c : counters) {
         std::lock_guard<std::mutex> lg(c.mutex);
+        auto age_secs = mk::ticks<std::chrono::seconds>(age);
         double old_rate = c.rate;
-        double new_rate = (c.value - c.last_value) / delta_time;
+        double new_rate = (c.value - c.last_value) / age_secs;
         c.rate = lerp(old_rate, new_rate, old_rate == 0 ? 1 : rating_weight);
         c.last_value = c.value;
     }

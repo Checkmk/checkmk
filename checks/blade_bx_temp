@@ -19,7 +19,7 @@ def check_blade_bx_temp(item, params, info):
         4: "sensor-faild",
         5: "warning-temp",
         6: "critical-temp",
-        7: "not-available"
+        7: "not-available",
     }
     for _index, status, descr, level_warn, level_crit, temp, crit_react in info:
         status = saveint(status)
@@ -30,8 +30,9 @@ def check_blade_bx_temp(item, params, info):
             # wrong item
             continue
 
-        statuscode, message, perfdata =\
-                check_temperature(temp, params, "blade_bx_temp_%s" % item, dev_levels=(level_warn, level_crit))
+        statuscode, message, perfdata = check_temperature(
+            temp, params, "blade_bx_temp_%s" % item, dev_levels=(level_warn, level_crit)
+        )
 
         if crit_react != "2":
             return (2, "Temperature not present or poweroff", perfdata)
@@ -49,17 +50,19 @@ def inventory_blade_bx_temp(info):
 
 
 def scan_blade_bx_temp(oid):
-    return "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
-            or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1"
+    return (
+        "BX600" in oid(".1.3.6.1.2.1.1.1.0")
+        or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1"
+    )
 
 
-check_info['blade_bx_temp'] = {
-    'check_function': check_blade_bx_temp,
-    'inventory_function': inventory_blade_bx_temp,
-    'service_description': 'Temperature Blade %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.7244.1.1.1.3.4.1.1',
+check_info["blade_bx_temp"] = {
+    "check_function": check_blade_bx_temp,
+    "inventory_function": inventory_blade_bx_temp,
+    "service_description": "Temperature Blade %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.7244.1.1.1.3.4.1.1",
         [
             1,  # index
             2,  # status
@@ -68,7 +71,8 @@ check_info['blade_bx_temp'] = {
             5,  # level crit
             6,  # temp
             7,  # crit react
-        ]),
-    'snmp_scan_function': scan_blade_bx_temp,
-    'group': 'temperature',
+        ],
+    ),
+    "snmp_scan_function": scan_blade_bx_temp,
+    "group": "temperature",
 }

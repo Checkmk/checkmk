@@ -9,15 +9,16 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example Agent Output:
 # GENUA-MIB:
 
-#.1.3.6.1.4.1.3137.2.1.2.1.2.9 = STRING: "carp0"
-#.1.3.6.1.4.1.3137.2.1.2.1.2.10 = STRING: "carp1"
-#.1.3.6.1.4.1.3137.2.1.2.1.4.9 = INTEGER: 2
-#.1.3.6.1.4.1.3137.2.1.2.1.4.10 = INTEGER: 2
-#.1.3.6.1.4.1.3137.2.1.2.1.7.9 = INTEGER: 2
-#.1.3.6.1.4.1.3137.2.1.2.1.7.10 = INTEGER: 2
+# .1.3.6.1.4.1.3137.2.1.2.1.2.9 = STRING: "carp0"
+# .1.3.6.1.4.1.3137.2.1.2.1.2.10 = STRING: "carp1"
+# .1.3.6.1.4.1.3137.2.1.2.1.4.9 = INTEGER: 2
+# .1.3.6.1.4.1.3137.2.1.2.1.4.10 = INTEGER: 2
+# .1.3.6.1.4.1.3137.2.1.2.1.7.9 = INTEGER: 2
+# .1.3.6.1.4.1.3137.2.1.2.1.7.10 = INTEGER: 2
 
 
 def inventory_genua_carp(info):
@@ -35,20 +36,20 @@ def inventory_genua_carp(info):
 
 def genua_linkstate(st):
     names = {
-        '0': 'unknown',
-        '1': 'down',
-        '2': 'up',
-        '3': 'hd',
-        '4': 'fd',
+        "0": "unknown",
+        "1": "down",
+        "2": "up",
+        "3": "hd",
+        "4": "fd",
     }
     return names.get(st, st)
 
 
 def genua_carpstate(st):
     names = {
-        '0': 'init',
-        '1': 'backup',
-        '2': 'master',
+        "0": "init",
+        "1": "backup",
+        "2": "master",
     }
     return names.get(st, st)
 
@@ -82,8 +83,10 @@ def check_genua_carp(item, _no_params, info):
                 if masters == 1:
                     if nodes > 1:
                         output = "one "
-                    output += "node in carp state %s with IfLinkState %s" \
-                        % (ifCarpStateStr,ifLinkStateStr)
+                    output += "node in carp state %s with IfLinkState %s" % (
+                        ifCarpStateStr,
+                        ifLinkStateStr,
+                    )
                     # first master
                     if ifLinkState == "2":
                         state = 0
@@ -95,12 +98,17 @@ def check_genua_carp(item, _no_params, info):
                         state = 3
                 else:
                     state = 2
-                    output = "%d nodes in carp state %s on cluster with %d nodes" \
-                            % (masters,ifCarpStateStr,nodes)
+                    output = "%d nodes in carp state %s on cluster with %d nodes" % (
+                        masters,
+                        ifCarpStateStr,
+                        nodes,
+                    )
             # look for non-masters, only interesting if no cluster
             elif ifName == item and nodes == 1:
-                output = "node in carp state %s with IfLinkState %s" \
-                    % (ifCarpStateStr,ifLinkStateStr)
+                output = "node in carp state %s with IfLinkState %s" % (
+                    ifCarpStateStr,
+                    ifLinkStateStr,
+                )
                 # carp backup
                 if ifCarpState == "1" and ifLinkState == "1":
                     state = 0
@@ -116,7 +124,7 @@ def check_genua_carp(item, _no_params, info):
     return (state, output)
 
 
-check_info['genua_carp'] = {
+check_info["genua_carp"] = {
     "inventory_function": inventory_genua_carp,
     "check_function": check_genua_carp,
     "service_description": "Carp Interface %s",
@@ -127,14 +135,16 @@ check_info['genua_carp'] = {
                 "1.2",  # "ifName"
                 "1.4",  # "ifLinkState"
                 "1.7",  # "ifCarpState"
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.3717.2.1.2",
             [
                 "1.2",  # "ifName"
                 "1.4",  # "ifLinkState"
                 "1.7",  # "ifCarpState"
-            ]),
+            ],
+        ),
     ],
     "snmp_scan_function": scan_genua,
 }

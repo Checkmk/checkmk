@@ -18,8 +18,5 @@ item:
  "sys.dm_os_performance_counters"), separated by a space. If no instance name
  is defined by MSSQL, the object name is used on its own.
 
-inventory:
+discovery:
  One service is created for each available PLE counter.
-
-cluster:
- On a cluster, the check accumulates all results for each cluster node.

@@ -7,12 +7,14 @@
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 
 factory_settings["pulse_secure_mem_util_def_levels"] = {
-    'mem_used_percent': (90, 95),
-    'swap_used_percent': (5, None)
+    "mem_used_percent": (90, 95),
+    "swap_used_percent": (5, None),
 }
 
-METRICS_INFO_NAMES_PULSE_SECURE_MEM = (['mem_used_percent',
-                                        'swap_used_percent'], ['RAM used', 'Swap used'])
+METRICS_INFO_NAMES_PULSE_SECURE_MEM = (
+    ["mem_used_percent", "swap_used_percent"],
+    ["RAM used", "Swap used"],
+)
 
 
 def check_pulse_secure_mem(item, params, parsed):
@@ -22,11 +24,13 @@ def check_pulse_secure_mem(item, params, parsed):
 
     for metric, info_name in zip(*METRICS_INFO_NAMES_PULSE_SECURE_MEM):
         if metric in parsed:
-            yield check_levels(parsed[metric],
-                               metric,
-                               params.get(metric),
-                               infoname=info_name,
-                               human_readable_func=get_percent_human_readable)
+            yield check_levels(
+                parsed[metric],
+                metric,
+                params.get(metric),
+                infoname=info_name,
+                human_readable_func=get_percent_human_readable,
+            )
 
 
 check_info["pulse_secure_mem_util"] = {
@@ -39,11 +43,12 @@ check_info["pulse_secure_mem_util"] = {
     "service_description": "Pulse Secure IVE memory utilization",
     "has_perfdata": True,
     "snmp_info": (
-        '.1.3.6.1.4.1.12532',
+        ".1.3.6.1.4.1.12532",
         [
-            '11',  # iveMemoryUtil
-            '24',  # iveSwapUtil
-        ]),
+            "11",  # iveMemoryUtil
+            "24",  # iveSwapUtil
+        ],
+    ),
     "snmp_scan_function": pulse_secure.scan_pulse_secure,
     "group": "pulse_secure_mem_util",
     "default_levels_variable": "pulse_secure_mem_util_def_levels",

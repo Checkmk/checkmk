@@ -19,5 +19,5 @@ description:
 item:
  Name of the power supply module.
 
-inventory:
+discovery:
  One service is created for each connected power supply unit

@@ -4,28 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Type, Any, Union, Set
+from typing import Any, Dict, List, Set, Type, Union
 
-from marshmallow import validate, fields
+from marshmallow import fields, validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.utils.macros import MacroMapping
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.type_defs import HostName
 from cmk.utils.bi.bi_lib import (
-    replace_macros,
-    bi_search_registry,
     ABCBISearch,
-    ReqConstant,
-    ReqDict,
-    ReqList,
-    ReqString,
-    ReqNested,
     ABCBISearcher,
+    bi_search_registry,
     BIHostData,
     BIHostSearchMatch,
     BIServiceSearchMatch,
+    replace_macros,
+    ReqConstant,
+    ReqDict,
+    ReqList,
+    ReqNested,
+    ReqString,
 )
+from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.macros import MacroMapping
+from cmk.utils.type_defs import HostName
 
 
 class BIAllHostsChoiceSchema(Schema):
@@ -59,9 +59,9 @@ class HostConditionsSchema(Schema):
     host_folder = ReqString(default="", example="servers/groupA")
     host_labels = ReqDict(default={}, example={"db": "mssql"})
     host_tags = ReqDict(default={}, example={})
-    host_choice = ReqNested(BIHostChoice,
-                            default={"type": "all_hosts"},
-                            example={"type": "all_hosts"})
+    host_choice = ReqNested(
+        BIHostChoice, default={"type": "all_hosts"}, example={"type": "all_hosts"}
+    )
 
 
 class ServiceConditionsSchema(HostConditionsSchema):
@@ -147,8 +147,9 @@ class BIHostSearch(ABCBISearch):
         if isinstance(self.refer_to, tuple):
             refer_type, refer_config = self.refer_to
             if refer_type == "child_with":
-                return self._refer_to_children_with_results(search_matches, bi_searcher,
-                                                            refer_config)
+                return self._refer_to_children_with_results(
+                    search_matches, bi_searcher, refer_config
+                )
 
         raise NotImplementedError("Invalid refer to type %r" % (self.refer_to,))
 
@@ -158,15 +159,16 @@ class BIHostSearch(ABCBISearch):
             search_result = {
                 "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                 "$HOSTNAME$": search_match.host.name,
-                "$HOSTALIAS$": search_match.host.alias
+                "$HOSTALIAS$": search_match.host.alias,
             }
             for idx, group in enumerate(search_match.match_groups):
                 search_result["$HOST_MG_%d$" % idx] = group
             search_results.append(search_result)
         return search_results
 
-    def _refer_to_children_results(self, search_matches: List[BIHostSearchMatch],
-                                   bi_searcher: ABCBISearcher) -> List[Dict]:
+    def _refer_to_children_results(
+        self, search_matches: List[BIHostSearchMatch], bi_searcher: ABCBISearcher
+    ) -> List[Dict]:
         search_results = []
         handled_children = set()
         for search_match in search_matches:
@@ -177,7 +179,7 @@ class BIHostSearch(ABCBISearch):
                 search_result = {
                     "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                     "$HOSTNAME$": bi_searcher.hosts[child].name,
-                    "$HOSTALIAS$": bi_searcher.hosts[child].alias
+                    "$HOSTALIAS$": bi_searcher.hosts[child].alias,
                 }
                 search_results.append(search_result)
         return search_results
@@ -193,16 +195,19 @@ class BIHostSearch(ABCBISearch):
                 search_result = {
                     "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                     "$HOSTNAME$": search_match.host.name,
-                    "$HOSTALIAS$": search_match.host.alias
+                    "$HOSTALIAS$": search_match.host.alias,
                 }
                 search_result["$2$"] = parent
                 search_results.append(search_result)
 
         return search_results
 
-    def _refer_to_children_with_results(self, search_matches: List[BIHostSearchMatch],
-                                        bi_searcher: ABCBISearcher,
-                                        refer_config: dict) -> List[Dict]:
+    def _refer_to_children_with_results(
+        self,
+        search_matches: List[BIHostSearchMatch],
+        bi_searcher: ABCBISearcher,
+        refer_config: dict,
+    ) -> List[Dict]:
         referred_tags, referred_host_choice = refer_config
         all_children: Set[HostName] = set()
 
@@ -217,7 +222,8 @@ class BIHostSearch(ABCBISearch):
 
         # Apply host choice and host tags search
         matched_hosts, _matched_re_groups = bi_searcher.filter_host_choice(
-            children_host_data, referred_host_choice)
+            children_host_data, referred_host_choice
+        )
         matched_hosts = bi_searcher.filter_host_tags(matched_hosts, referred_tags)
 
         search_results = []
@@ -275,7 +281,7 @@ class BIServiceSearch(ABCBISearch):
             search_result = {
                 "$1$": next(iter(search_match.host_match.match_groups), ""),
                 "$HOSTNAME$": search_match.host_match.host.name,
-                "$HOSTALIAS$": search_match.host_match.host.alias
+                "$HOSTALIAS$": search_match.host_match.host.alias,
             }
             for idx, group in enumerate(search_match.match_groups, start=2):
                 search_result["$%d$" % (idx)] = group

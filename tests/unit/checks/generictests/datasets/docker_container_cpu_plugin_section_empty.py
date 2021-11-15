@@ -6,21 +6,23 @@
 
 # type: ignore
 
-checkname = 'docker_container_cpu'
+checkname = "docker_container_cpu"
 
-info = [[
-    '@docker_version_info',
-    '{"PluginVersion": "0.1", "DockerPyVersion": "4.0.2", "ApiVersion": "1.40"}'
-],
-        [
-            '{"cpu_usage": {"total_usage": 0, "usage_in_kernelmode": 0, "usage_in_usermode": 0}, '
-            '"throttling_data": {"throttled_time": 0, "periods": 0, "throttled_periods": 0}}'
-        ]]
+info = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.0.2", "ApiVersion": "1.40"}',
+    ],
+    [
+        '{"cpu_usage": {"total_usage": 0, "usage_in_kernelmode": 0, "usage_in_usermode": 0}, '
+        '"throttling_data": {"throttled_time": 0, "periods": 0, "throttled_periods": 0}}'
+    ],
+]
 
-discovery = {'': []}
+discovery = {"": []}
 
 checks = {
-    '': [],
+    "": [],
 }
 
-mock_item_state = {'': (0, 0)}
+mock_item_state = {"": (0, 0)}

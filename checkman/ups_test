@@ -12,6 +12,6 @@ description:
  has a {WARN} or {CRIT} state if the date of the last self test is more than
  the warning or critical level ago.
 
-inventory:
+discovery:
  One service is created.
 

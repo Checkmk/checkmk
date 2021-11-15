@@ -10,14 +10,14 @@ are just for optical output purposes."""
 
 # THIS IS STILL EXPERIMENTAL
 
-import time
 import math
+import time
 from datetime import timedelta
 from typing import Optional, Tuple, Union
 
 from cmk.utils.i18n import _
 
-#.
+# .
 #   .--Date/Time-----------------------------------------------------------.
 #   |           ____        _          _______ _                           |
 #   |          |  _ \  __ _| |_ ___   / /_   _(_)_ __ ___   ___            |
@@ -52,8 +52,9 @@ def time_since(timestamp: int) -> str:
 
 class Age:
     """Format time difference seconds into approximated human readable text"""
+
     def __init__(self, secs: float) -> None:
-        super(Age, self).__init__()
+        super().__init__()
         self.__secs = secs
 
     def __str__(self) -> str:
@@ -98,7 +99,7 @@ def approx_age(secs: float) -> str:
     return "%s" % Age(secs)
 
 
-#.
+# .
 #   .--Bits/Bytes----------------------------------------------------------.
 #   |            ____  _ _          ______        _                        |
 #   |           | __ )(_) |_ ___   / / __ ) _   _| |_ ___  ___             |
@@ -110,8 +111,8 @@ def approx_age(secs: float) -> str:
 
 
 def scale_factor_prefix(
-    value: float, base: float,
-    prefixes: Tuple[str, ...] = ('', 'k', 'M', 'G', 'T', 'P')) -> Tuple[float, str]:
+    value: float, base: float, prefixes: Tuple[str, ...] = ("", "k", "M", "G", "T", "P")
+) -> Tuple[float, str]:
     base = float(base)
 
     prefix = prefixes[-1]
@@ -131,24 +132,26 @@ def drop_dotzero(v: float, digits: int = 2) -> str:
     45.1 -> "45.1"
     45.0 -> "45"
     """
-    t = '%.*f' % (digits, v)
+    t = "%.*f" % (digits, v)
     if "." in t:
         return t.rstrip("0").rstrip(".")
     return t
 
 
-def fmt_number_with_precision(v: float,
-                              base: float = 1000.0,
-                              precision: int = 2,
-                              drop_zeroes: bool = False,
-                              unit: str = "",
-                              zero_non_decimal: bool = False) -> str:
+def fmt_number_with_precision(
+    v: float,
+    base: float = 1000.0,
+    precision: int = 2,
+    drop_zeroes: bool = False,
+    unit: str = "",
+    zero_non_decimal: bool = False,
+) -> str:
     factor, prefix = scale_factor_prefix(v, base)
     value = float(v) / factor
     if zero_non_decimal and value == 0:
-        return '0 %s' % prefix + unit
-    number = drop_dotzero(value, precision) if drop_zeroes else '%.*f' % (precision, value)
-    return '%s %s' % (number, prefix + unit)
+        return "0 %s" % prefix + unit
+    number = drop_dotzero(value, precision) if drop_zeroes else "%.*f" % (precision, value)
+    return "%s %s" % (number, prefix + unit)
 
 
 def fmt_bytes(b: int, base: float = 1024.0, precision: int = 2, unit: str = "B") -> str:
@@ -172,11 +175,18 @@ def filesize(size: float) -> str:
     if size < 1000000000:
         return str(size)[:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
 
-    return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(
-        size)[-3:]
+    return (
+        str(size)[:-9]
+        + dec_sep
+        + str(size)[-9:-6]
+        + dec_sep
+        + str(size)[-6:-3]
+        + dec_sep
+        + str(size)[-3:]
+    )
 
 
-#.
+# .
 #   .--Misc.Numbers--------------------------------------------------------.
 #   |    __  __ _            _   _                 _                       |
 #   |   |  \/  (_)___  ___  | \ | |_   _ _ __ ___ | |__   ___ _ __ ___     |
@@ -230,7 +240,7 @@ def scientific(v: float, precision: int = 3) -> str:
     mantissa, exponent = _frexp10(float(v))
     # Render small numbers without exponent
     if -3 <= exponent <= 4:
-        return "%.*f" % (max(0, precision - exponent), v)
+        return "%.*f" % (min(precision, max(0, precision - exponent)), v)
 
     return "%.*fe%+d" % (precision, mantissa, exponent)
 
@@ -273,7 +283,7 @@ def calculate_physical_precision(v: float, precision: int) -> Tuple[str, int, in
         -5: "f",
         -4: "p",
         -3: "n",
-        -2: u"µ",
+        -2: "µ",
         -1: "m",
         0: "",
         1: "k",
@@ -297,7 +307,7 @@ def calculate_physical_precision(v: float, precision: int) -> Tuple[str, int, in
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
 
-    return scale_symbols[scale], places_after_comma, 1000**scale
+    return scale_symbols[scale], places_after_comma, 1000 ** scale
 
 
 def fmt_nic_speed(speed: str) -> str:
@@ -307,14 +317,12 @@ def fmt_nic_speed(speed: str) -> str:
     except ValueError:
         return speed
 
-    return fmt_number_with_precision(speedi,
-                                     base=1000.0,
-                                     precision=2,
-                                     unit="bit/s",
-                                     drop_zeroes=True)
+    return fmt_number_with_precision(
+        speedi, base=1000.0, precision=2, unit="bit/s", drop_zeroes=True
+    )
 
 
-#.
+# .
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
 #   |                   | |__   ___| |_ __   ___ _ __                      |
@@ -331,7 +339,7 @@ def _frexp10(x: float) -> Tuple[float, int]:
 
 def _frexpb(x: float, base: int) -> Tuple[float, int]:
     exp = int(math.log(x, base))
-    mantissa = x / base**exp
+    mantissa = x / base ** exp
     if mantissa < 1:
         mantissa *= base
         exp -= 1

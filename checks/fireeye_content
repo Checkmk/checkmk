@@ -4,22 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import collections
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.25597.11.5.1.5.0 456.180 --> FE-FIREEYE-MIB::feSecurityContentVersion.0
 # .1.3.6.1.4.1.25597.11.5.1.6.0 1 --> FE-FIREEYE-MIB::feLastContentUpdatePassed.0
 # .1.3.6.1.4.1.25597.11.5.1.7.0 2016/02/26 15:42:06 --> FE-FIREEYE-MIB::feLastContentUpdateTime.0
 
-import collections
-
 
 def parse_fireeye_content(info):
     security_content_status_map = {
-        '1': 'OK',
-        '0': 'failed',
+        "1": "OK",
+        "0": "failed",
     }
 
     version, update_status_raw, update_time_str = info[0]
@@ -28,29 +29,29 @@ def parse_fireeye_content(info):
     # If content update has never completed, last_update_time contains no valid timestamp
     # In that case, we just skip the output
     try:
-        update_time_seconds = \
-            time.mktime(time.strptime(update_time_str, '%Y/%m/%d %H:%M:%S'))
+        update_time_seconds = time.mktime(time.strptime(update_time_str, "%Y/%m/%d %H:%M:%S"))
     except ValueError:
         update_time_seconds = None
 
-    SecurityContent = collections.namedtuple(
-        'SecurityContent', 'version update_status update_time_str update_time_seconds')
+    SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "SecurityContent", "version update_status update_time_str update_time_seconds"
+    )
     return SecurityContent(version, update_status, update_time_str, update_time_seconds)
 
 
 def check_fireeye_content(_no_item, params, parsed):
-    if parsed.update_status != 'OK':
-        yield 1, 'Update: failed'
+    if parsed.update_status != "OK":
+        yield 1, "Update: failed"
 
-    yield 0, 'Last update: %s' % parsed.update_time_str
+    yield 0, "Last update: %s" % parsed.update_time_str
 
     if parsed.update_time_seconds is None:
-        yield 0, 'update has never completed'
+        yield 0, "update has never completed"
     else:
         yield check_levels(
             time.time() - parsed.update_time_seconds,
             None,
-            params.get('update_time_levels'),
+            params.get("update_time_levels"),
             human_readable_func=get_age_human_readable,
             infoname="Age",
         )
@@ -69,7 +70,8 @@ check_info["fireeye_content"] = {
             "5",  # FE-FIREEYE-MIB::feSecurityContentVersion
             "6",  # FE-FIREEYE-MIB::feLastContentUpdatePassed
             "7",  # FE-FIREEYE-MIB::feLastContentUpdateTime
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_fireeye,
     "group": "fireeye_content",
 }

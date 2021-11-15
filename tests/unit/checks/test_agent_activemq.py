@@ -5,68 +5,69 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib import SpecialAgent
+
+from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    'params,expected_args',
+    "params,expected_args",
     [
         pytest.param(
             {
                 "use_piggyback": False,
-                'servername': 'testserver',
-                'port': 8161,
-                'protocol': 'http',
+                "servername": "testserver",
+                "port": 8161,
+                "protocol": "http",
             },
             [
                 "testserver",
                 "8161",
-                '--protocol',
-                'http',
+                "--protocol",
+                "http",
             ],
             id="base case",
         ),
         pytest.param(
             {
-                'use_piggyback': True,
-                'servername': 'testserver',
-                'port': 8161,
-                'protocol': 'https',
+                "use_piggyback": True,
+                "servername": "testserver",
+                "port": 8161,
+                "protocol": "https",
             },
             [
                 "testserver",
                 "8161",
-                '--protocol',
-                'https',
+                "--protocol",
+                "https",
                 "--piggyback",
             ],
             id="piggyback activated, protocl=https",
         ),
         pytest.param(
             {
-                'use_piggyback': True,
-                'servername': 'testserver',
-                'port': 8161,
-                'protocol': 'https',
+                "use_piggyback": True,
+                "servername": "testserver",
+                "port": 8161,
+                "protocol": "https",
             },
             [
                 "testserver",
                 "8161",
-                '--protocol',
-                'https',
+                "--protocol",
+                "https",
                 "--piggyback",
             ],
             id="piggyback activated, protocl=https",
         ),
         pytest.param(
             {
-                'use_piggyback': True,
-                'servername': 'testserver',
-                'port': 8161,
-                'protocol': 'https',
-                'basicauth': (
+                "use_piggyback": True,
+                "servername": "testserver",
+                "port": 8161,
+                "protocol": "https",
+                "basicauth": (
                     "user",
                     "password",
                 ),
@@ -74,8 +75,8 @@ pytestmark = pytest.mark.checks
             [
                 "testserver",
                 "8161",
-                '--protocol',
-                'https',
+                "--protocol",
+                "https",
                 "--piggyback",
                 "--username",
                 "user",
@@ -88,6 +89,6 @@ pytestmark = pytest.mark.checks
 )
 def test_activemq_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_activemq')
+    agent = SpecialAgent("agent_activemq")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

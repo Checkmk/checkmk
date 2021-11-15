@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
 def parse_aws_rds_summary(info):
     try:
         return {
-            aws_rds_service_item(instance['DBInstanceIdentifier'], instance['Region']): instance
+            aws_rds_service_item(instance["DBInstanceIdentifier"], instance["Region"]): instance
             for instance in parse_aws(info)
         }
     except IndexError:
@@ -35,7 +35,7 @@ def parse_aws_rds_summary(info):
 def check_aws_rds_summary(item, params, parsed):
     instances_by_classes = {}
     for instance in parsed.values():
-        instance_class = instance['DBInstanceClass']
+        instance_class = instance["DBInstanceClass"]
         instances_by_classes.setdefault(instance_class, []).append(instance)
 
     class_infos = []
@@ -44,14 +44,14 @@ def check_aws_rds_summary(item, params, parsed):
     yield 0, ", ".join(class_infos)
 
 
-check_info['aws_rds_summary'] = {
-    'parse_function': parse_aws_rds_summary,
-    'inventory_function': discover_single,
-    'check_function': check_aws_rds_summary,
-    'service_description': 'AWS/RDS Summary',
+check_info["aws_rds_summary"] = {
+    "parse_function": parse_aws_rds_summary,
+    "inventory_function": discover_single,
+    "check_function": check_aws_rds_summary,
+    "service_description": "AWS/RDS Summary",
 }
 
-#.
+# .
 #   .--DB status-----------------------------------------------------------.
 #   |              ____  ____        _        _                            |
 #   |             |  _ \| __ )   ___| |_ __ _| |_ _   _ ___                |
@@ -64,29 +64,29 @@ check_info['aws_rds_summary'] = {
 
 @get_parsed_item_data
 def check_aws_rds_summary_db(item, params, data):
-    db_name = data.get('DBName')
+    db_name = data.get("DBName")
     pre_info = ""
     if db_name is not None:
         pre_info = "[%s] " % db_name
-    yield 0, '%sStatus: %s' % (pre_info, data['DBInstanceStatus'])
+    yield 0, "%sStatus: %s" % (pre_info, data["DBInstanceStatus"])
 
-    multi_az = data.get('MultiAZ')
+    multi_az = data.get("MultiAZ")
     if multi_az is not None:
         if multi_az:
             multi_az_readable = "yes"
         else:
             multi_az_readable = "no"
-        yield 0, 'Multi AZ: %s' % multi_az_readable
+        yield 0, "Multi AZ: %s" % multi_az_readable
 
-    zone = data.get('AvailabilityZone')
+    zone = data.get("AvailabilityZone")
     if zone is not None:
         region = zone[:-1]
         zone_info = zone[-1]
-        yield 0, 'Availability zone: %s (%s)' % (AWSRegions[region], zone_info)
+        yield 0, "Availability zone: %s (%s)" % (AWSRegions[region], zone_info)
 
 
-check_info['aws_rds_summary.db_status'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['DBInstanceStatus']),
-    'check_function': check_aws_rds_summary_db,
-    'service_description': 'AWS/RDS %s Info',
+check_info["aws_rds_summary.db_status"] = {
+    "inventory_function": lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
+    "check_function": check_aws_rds_summary_db,
+    "service_description": "AWS/RDS %s Info",
 }

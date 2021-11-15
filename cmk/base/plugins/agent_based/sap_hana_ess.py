@@ -4,13 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from .agent_based_api.v1 import IgnoreResultsError, Metric, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, Metric, State
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 
 def parse_sap_hana_ess(string_table: StringTable) -> sap_hana.ParsedSection:
@@ -30,8 +26,7 @@ def parse_sap_hana_ess(string_table: StringTable) -> sap_hana.ParsedSection:
                     pass
             else:
                 inst_data[key] = line[1]
-        if inst_data:
-            section.setdefault(sid_instance, inst_data)
+        section.setdefault(sid_instance, inst_data)
     return section
 
 
@@ -48,8 +43,8 @@ def discovery_sap_hana_ess(section: sap_hana.ParsedSection) -> DiscoveryResult:
 
 def check_sap_hana_ess(item: str, section: sap_hana.ParsedSection) -> CheckResult:
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     active_state_name = data["active"]
     if active_state_name == "unknown":
@@ -74,5 +69,4 @@ register.check_plugin(
     service_name="SAP HANA ESS %s",
     discovery_function=discovery_sap_hana_ess,
     check_function=check_sap_hana_ess,
-    cluster_check_function=sap_hana.get_cluster_check(check_sap_hana_ess),
 )

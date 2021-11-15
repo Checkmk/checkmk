@@ -11,5 +11,5 @@ description:
 item:
  The sensorDescr from SNMP.
 
-inventory:
+discovery:
  One service is created for each voltage sensor.

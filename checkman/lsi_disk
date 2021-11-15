@@ -15,7 +15,7 @@ description:
 item:
  The ID of the disk
 
-inventory:
+discovery:
  One service is created for each existing disk regardless of their states.
  The current state of a disk is used as target state.
  That way, you will be notified, even if a disk changes from state {HSP} to {ONL}.

@@ -7,8 +7,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <map>
-#include <memory>
 #include <utility>
 
 #include "Logger.h"
@@ -275,11 +273,11 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
                 dt->_author_name,
                 dt->_comment,
                 false,
-                std::chrono::system_clock::from_time_t(dt->_entry_time),
-                std::chrono::system_clock::from_time_t(dt->_start_time),
-                std::chrono::system_clock::from_time_t(dt->_end_time),
+                dt->_entry_time,
+                dt->_start_time,
+                dt->_end_time,
                 dt->_fixed != 0,
-                std::chrono::seconds(dt->_duration),
+                dt->_duration,
                 0,
                 dt->_type != 0,
             });
@@ -293,10 +291,9 @@ std::vector<CommentData> NagiosCore::comments_for_object(
     std::vector<CommentData> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == h && co->_service == s) {
-            result.push_back(
-                {co->_id, co->_author_name, co->_comment,
-                 static_cast<uint32_t>(co->_entry_type),
-                 std::chrono::system_clock::from_time_t(co->_entry_time)});
+            result.push_back({co->_id, co->_author_name, co->_comment,
+                              static_cast<uint32_t>(co->_entry_type),
+                              co->_entry_time});
         }
     }
     return result;

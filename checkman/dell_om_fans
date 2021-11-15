@@ -16,5 +16,5 @@ description:
 item:
  The fan index
 
-inventory:
+discovery:
  One service is created for each fan.

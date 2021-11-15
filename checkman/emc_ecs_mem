@@ -8,5 +8,5 @@ description:
  The device provides a level for minimum free swap space.
  Make sure to create the rule 'Hosts without system description OID' for this host.
 
-inventory:
+discovery:
  One service is created for each device.

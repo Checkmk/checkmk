@@ -6,8 +6,9 @@
 from .agent_based_api.v1 import register
 from .utils import container_cgroupv2
 
-register.agent_section(name="lxc_container_cpu_cgroupv2",
-                       parse_function=container_cgroupv2.parse_cpu)
+register.agent_section(
+    name="lxc_container_cpu_cgroupv2", parse_function=container_cgroupv2.parse_cpu
+)
 
 register.check_plugin(
     name="lxc_container_cpu_cgroupv2",

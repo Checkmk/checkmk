@@ -11,18 +11,20 @@
 from contextlib import contextmanager
 from typing import Optional
 
+from cmk.utils.type_defs import HostName
+
 from cmk.base.check_utils import Service
 
 # Is set before check/discovery function execution
 # Host currently being checked
 # Types must remain string, they're passed to API clients!
-_hostname: Optional[str] = None
+_hostname: Optional[HostName] = None
 _check_type: Optional[str] = None
 _service_description: Optional[str] = None
 
 
 @contextmanager
-def current_host(host_name_: str):
+def current_host(host_name_: HostName):
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -59,7 +61,7 @@ def current_service(service: Service):
         _service_description = previous_service_description
 
 
-def host_name() -> str:
+def host_name() -> HostName:
     """Returns the name of the host currently being checked or discovered."""
     if _hostname is None:
         raise RuntimeError("host name has not been set")

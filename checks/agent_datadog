@@ -33,6 +33,8 @@ def agent_datadog_arguments(params, hostname, ipaddress):
     if (events_config := params.get("events")) is not None:
         sections.append("events")
         args += [
+            "--event_max_age",
+            str(events_config["max_age"]),
             "--event_tags",
             *events_config.get(
                 "tags",
@@ -57,4 +59,4 @@ def agent_datadog_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['datadog'] = agent_datadog_arguments
+special_agent_info["datadog"] = agent_datadog_arguments

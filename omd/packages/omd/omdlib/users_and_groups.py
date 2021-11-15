@@ -23,11 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import pwd
 import grp
 import os
+import pwd
 import subprocess
-from typing import Union, List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Union
+
 import psutil  # type: ignore[import]
 
 if TYPE_CHECKING:
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKTerminate
 
-#.
+# .
 #   .--Users/Groups--------------------------------------------------------.
 #   |     _   _                      ______                                |
 #   |    | | | |___  ___ _ __ ___   / / ___|_ __ ___  _   _ _ __  ___      |
@@ -52,11 +53,13 @@ from cmk.utils.exceptions import MKTerminate
 
 def find_processes_of_user(username: str) -> List[str]:
     try:
-        p = subprocess.Popen(["pgrep", "-u", username],
-                             stdin=open(os.devnull, "r"),
-                             stdout=subprocess.PIPE,
-                             close_fds=True,
-                             encoding="utf-8")
+        p = subprocess.Popen(
+            ["pgrep", "-u", username],
+            stdin=open(os.devnull, "r"),
+            stdout=subprocess.PIPE,
+            close_fds=True,
+            encoding="utf-8",
+        )
         if p.stdout is None:
             raise Exception()
         return p.stdout.read().split()
@@ -66,34 +69,43 @@ def find_processes_of_user(username: str) -> List[str]:
 
 def groupdel(groupname: str) -> None:
     try:
-        p = subprocess.Popen(["groupdel", groupname],
-                             stdin=open(os.devnull, "r"),
-                             stdout=open(os.devnull, "w"),
-                             stderr=subprocess.PIPE,
-                             close_fds=True,
-                             encoding="utf-8")
+        p = subprocess.Popen(
+            ["groupdel", groupname],
+            stdin=open(os.devnull, "r"),
+            stdout=open(os.devnull, "w"),
+            stderr=subprocess.PIPE,
+            close_fds=True,
+            encoding="utf-8",
+        )
     except OSError as e:
         raise MKTerminate("\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, e))
 
     stderr = p.communicate()[1]
     if p.returncode != 0:
-        raise MKTerminate("\n" + tty.error + ": Failed to delete group '%s': %s" %
-                          (groupname, stderr))
+        raise MKTerminate(
+            "\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, stderr)
+        )
 
 
 # TODO: Cleanup: Change uid/gid to int
-def useradd(version_info: 'VersionInfo',
-            site: 'SiteContext',
-            uid: Optional[str] = None,
-            gid: Optional[str] = None) -> None:
+def useradd(
+    version_info: "VersionInfo",
+    site: "SiteContext",
+    uid: Optional[str] = None,
+    gid: Optional[str] = None,
+) -> None:
     # Create user for running site 'name'
     _groupadd(site.name, gid)
     useradd_options = version_info.USERADD_OPTIONS
     if uid is not None:
         useradd_options += " -u %d" % int(uid)
-    if os.system(  # nosec
-            "useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" %
-        (useradd_options, site.dir, site.name, site.name, site.name)) != 0:
+    if (
+        os.system(  # nosec
+            "useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash"
+            % (useradd_options, site.dir, site.name, site.name, site.name)
+        )
+        != 0
+    ):
         groupdel(site.name)
         raise MKTerminate("Error creating site user.")
 
@@ -114,15 +126,18 @@ def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
         cmd += ["-g", "%d" % int(gid)]
     cmd.append(groupname)
 
-    if subprocess.Popen(
+    if (
+        subprocess.Popen(
             cmd,
             close_fds=True,
             stdin=open(os.devnull, "r"),
-    ).wait() != 0:
+        ).wait()
+        != 0
+    ):
         raise MKTerminate("Cannot create group for site user.")
 
 
-def _add_user_to_group(version_info: 'VersionInfo', user: str, group: str) -> bool:
+def _add_user_to_group(version_info: "VersionInfo", user: str, group: str) -> bool:
     cmd = version_info.ADD_USER_TO_GROUP % {"user": user, "group": group}
     return os.system(cmd + " >/dev/null") == 0  # nosec
 
@@ -130,19 +145,22 @@ def _add_user_to_group(version_info: 'VersionInfo', user: str, group: str) -> bo
 def userdel(name: str) -> None:
     if user_exists(name):
         try:
-            p = subprocess.Popen(["userdel", "-r", name],
-                                 stdin=open(os.devnull, "r"),
-                                 stdout=open(os.devnull, "w"),
-                                 stderr=subprocess.PIPE,
-                                 close_fds=True,
-                                 encoding="utf-8")
+            p = subprocess.Popen(
+                ["userdel", "-r", name],
+                stdin=open(os.devnull, "r"),
+                stdout=open(os.devnull, "w"),
+                stderr=subprocess.PIPE,
+                close_fds=True,
+                encoding="utf-8",
+            )
         except OSError as e:
             raise MKTerminate("\n" + tty.error + ": Failed to delete user '%s': %s" % (name, e))
 
         stderr = p.communicate()[1]
         if p.returncode != 0:
-            raise MKTerminate("\n" + tty.error + ": Failed to delete user '%s': %s" %
-                              (name, stderr))
+            raise MKTerminate(
+                "\n" + tty.error + ": Failed to delete user '%s': %s" % (name, stderr)
+            )
 
     # On some OSes (e.g. debian) the group is automatically removed if
     # it bears the same name as the user. So first check for the group.
@@ -182,9 +200,9 @@ def user_logged_in(name: str) -> bool:
     return any(p for p in psutil.process_iter() if p.username() == name)
 
 
-def user_verify(version_info: 'VersionInfo',
-                site: 'SiteContext',
-                allow_populated: bool = False) -> bool:
+def user_verify(
+    version_info: "VersionInfo", site: "SiteContext", allow_populated: bool = False
+) -> bool:
     name = site.name
 
     if not user_exists(name):
@@ -192,28 +210,35 @@ def user_verify(version_info: 'VersionInfo',
 
     user = _user_by_id(user_id(name))
     if user.pw_dir != site.dir:
-        raise MKTerminate(tty.error + ": Wrong home directory for user %s, must be %s" %
-                          (name, site.dir))
+        raise MKTerminate(
+            tty.error + ": Wrong home directory for user %s, must be %s" % (name, site.dir)
+        )
 
     if not os.path.exists(site.dir):
-        raise MKTerminate(tty.error + ": home directory for user %s (%s) does not exist" %
-                          (name, site.dir))
+        raise MKTerminate(
+            tty.error + ": home directory for user %s (%s) does not exist" % (name, site.dir)
+        )
 
     if not allow_populated and os.path.exists(site.dir + "/version"):
-        raise MKTerminate(tty.error + ": home directory for user %s (%s) must be empty" %
-                          (name, site.dir))
+        raise MKTerminate(
+            tty.error + ": home directory for user %s (%s) must be empty" % (name, site.dir)
+        )
 
     if not _file_owner_verify(site.dir, user.pw_uid, user.pw_gid):
-        raise MKTerminate(tty.error + ": home directory (%s) is not owned by user %s and group %s" %
-                          (site.dir, name, name))
+        raise MKTerminate(
+            tty.error
+            + ": home directory (%s) is not owned by user %s and group %s" % (site.dir, name, name)
+        )
 
     group = _group_by_id(user.pw_gid)
     if group is None or group.gr_name != name:
         raise MKTerminate(tty.error + ": primary group for siteuser must be %s" % name)
 
     if not _user_has_group(version_info.APACHE_USER, name):
-        raise MKTerminate(tty.error + ": apache user %s must be member of group %s" %
-                          (version_info.APACHE_USER, name))
+        raise MKTerminate(
+            tty.error
+            + ": apache user %s must be member of group %s" % (version_info.APACHE_USER, name)
+        )
 
     if not _user_has_group(name, "omd"):
         raise MKTerminate(tty.error + ": siteuser must be member of group omd")
@@ -253,7 +278,7 @@ def _group_by_id(id_: int) -> grp.struct_group:
     return grp.getgrgid(id_)
 
 
-def switch_to_site_user(site: 'SiteContext') -> None:
+def switch_to_site_user(site: "SiteContext") -> None:
     p = pwd.getpwnam(site.name)
     uid = p.pw_uid
     gid = p.pw_gid
@@ -271,6 +296,6 @@ def switch_to_site_user(site: 'SiteContext') -> None:
 
 
 def _groups_of(username: str) -> List[int]:
-    group_ids = {g.gr_gid for g in grp.getgrall() if username in g.gr_mem}
-    group_ids.add(pwd.getpwnam(username).pw_gid)
-    return list(group_ids)
+    # Note: Do NOT use grp.getgrall to fetch all availabile groups
+    # Certain setups might have ldap group authorization and may start excessive queries
+    return list(map(int, subprocess.check_output(["id", "-G", username]).split()))

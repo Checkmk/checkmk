@@ -14,5 +14,5 @@ description:
 item:
  The sensor description as returned by SNMP
 
-inventory:
+discovery:
  One service is created for each for each hardware sensor.

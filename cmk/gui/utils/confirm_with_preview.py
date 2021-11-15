@@ -4,16 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple, Union, Optional
-from cmk.gui.utils.html import HTML
+from typing import List, Optional, Tuple, Union
+
 from cmk.gui.globals import html, request, response, transactions
 from cmk.gui.i18n import _
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 
 
-def confirm_with_preview(msg: Union[str, HTML],
-                         confirm_options: List[Tuple[str, str]],
-                         method: str = "POST") -> Optional[bool]:
+def confirm_with_preview(
+    msg: Union[str, HTML], confirm_options: List[Tuple[str, str]], method: str = "POST"
+) -> Optional[bool]:
     """Show a confirm dialog to the user
 
     BE AWARE: In case you just want to have some action confirmed by the user, you
@@ -27,12 +28,12 @@ def confirm_with_preview(msg: Union[str, HTML],
     is used during rendering a normal page, for example when deleting a dashlet from a dashboard. In
     such cases, the transid must be added by the confirm dialog.
     """
-    if html.request.var("_do_actions") == _("Cancel"):
+    if request.var("_do_actions") == _("Cancel"):
         # User has pressed "Cancel", now invalidate the unused transid
         transactions.check_transaction()
         return None  # None --> "Cancel"
 
-    if not any(html.request.has_var(varname) for _title, varname in confirm_options):
+    if not any(request.has_var(varname) for _title, varname in confirm_options):
         mobile = is_mobile(request, response)
         if mobile:
             html.open_center()

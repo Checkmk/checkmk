@@ -19,14 +19,12 @@ import yapf.yapflib.yapf_api  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
-from cmk.utils.version import omd_site
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.restful_objects.params import to_openapi, fill_out_path_template
+from cmk.utils.site import omd_site
+
+from cmk.gui import fields
+from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
-from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    CodeSample,
-    OpenAPIParameter,
-)
+from cmk.gui.plugins.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
@@ -193,7 +191,6 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
-    --json
     {%- if endpoint.does_redirects %}
     --follow \\
     --all \\
@@ -206,7 +203,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
 {%- if query_params %}
  {%- for param in query_params %}
   {%- if param.example is defined and param.example %}
-    {{ param.name }}=="{{ param.example }}" \\
+    {{ param.name }}=='{{ param.example }}' \\
   {%- endif %}
  {%- endfor %}
 {%- endif %}
@@ -274,21 +271,26 @@ else:
     raise RuntimeError(pprint.pformat(resp.json()))
 """
 
-CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('template', str)])
+
+class CodeExample(NamedTuple):
+    lang: str
+    label: str
+    template: str
+
 
 # NOTE: To add a new code-example, you need to add them to this list.
 CODE_EXAMPLES: List[CodeExample] = [
-    CodeExample(lang='python', label='requests', template=CODE_TEMPLATE_REQUESTS),
-    CodeExample(lang='python', label='urllib', template=CODE_TEMPLATE_URLLIB),
-    CodeExample(lang='bash', label='httpie', template=CODE_TEMPLATE_HTTPIE),
-    CodeExample(lang='bash', label='curl', template=CODE_TEMPLATE_CURL),
+    CodeExample(lang="python", label="requests", template=CODE_TEMPLATE_REQUESTS),
+    CodeExample(lang="python", label="urllib", template=CODE_TEMPLATE_URLLIB),
+    CodeExample(lang="bash", label="httpie", template=CODE_TEMPLATE_HTTPIE),
+    CodeExample(lang="bash", label="curl", template=CODE_TEMPLATE_CURL),
 ]
 
 # The examples will appear in the order they are put in above, as starting from Python 3.7, dicts
 # keep insertion order.
 TEMPLATES = {
-    '_macros': CODE_TEMPLATE_MACROS,
-    **{example.label: example.template for example in CODE_EXAMPLES}
+    "_macros": CODE_TEMPLATE_MACROS,
+    **{example.label: example.template for example in CODE_EXAMPLES},
 }
 
 
@@ -319,11 +321,11 @@ def first_sentence(text: str) -> str:
         A string containing only the first sentence of a string.
 
     """
-    return ''.join(re.split(r'(\w\.)', text)[:2])
+    return "".join(re.split(r"(\w\.)", text)[:2])
 
 
 def field_value(field: fields.Field) -> str:
-    return field.metadata['example']
+    return field.metadata["example"]
 
 
 def to_dict(schema: Schema) -> Dict[str, str]:
@@ -331,8 +333,8 @@ def to_dict(schema: Schema) -> Dict[str, str]:
 
     Examples:
 
+        >>> from cmk.gui.fields.utils import BaseSchema
         >>> from marshmallow import fields
-        >>> from cmk.gui.plugins.openapi.utils import BaseSchema
         >>> class SayHello(BaseSchema):
         ...      message = fields.String(example="Hello world!")
         ...      message2 = fields.String(example="Hello Bob!")
@@ -354,13 +356,13 @@ def to_dict(schema: Schema) -> Dict[str, str]:
         A dict with the field-names as a key and their example as value.
 
     """
-    if not getattr(schema.Meta, 'ordered', False):
+    if not getattr(schema.Meta, "ordered", False):
         # NOTE: We need this to make sure our checkmk.yaml spec file is always predictably sorted.
         raise Exception(f"Schema '{schema.__module__}.{schema.__class__.__name__}' is not ordered.")
     ret = {}
     for name, field in schema.declared_fields.items():
         try:
-            ret[name] = field.metadata['example']
+            ret[name] = field.metadata["example"]
         except KeyError as exc:
             raise KeyError(f"Field '{schema.__class__.__name__}.{name}' has no {exc}")
     return ret
@@ -387,7 +389,7 @@ def _transform_params(param_list):
         A dict with the key being the parameters name and the value being the parameter.
     """
     return {
-        param['name']: param for param in param_list if 'in' in param and param['in'] != 'header'
+        param["name"]: param for param in param_list if "in" in param and param["in"] != "header"
     }
 
 
@@ -413,7 +415,7 @@ def code_samples(
         >>> _endpoint = Endpoint()
         >>> import os
         >>> from unittest import mock
-        >>> with mock.patch.dict(os.environ, {"OMD_SITE": "heute"}):
+        >>> with mock.patch.dict(os.environ, {"OMD_SITE": "NO_SITE"}):
         ...     samples = code_samples(_endpoint, [], [], [])
 
         >>> assert len(samples)
@@ -421,24 +423,29 @@ def code_samples(
     """
     env = _jinja_environment()
 
-    return [{
-        'label': example.label,
-        'lang': example.lang,
-        'source': env.get_template(example.label).render(
-            hostname='localhost',
-            site=omd_site(),
-            username='automation',
-            password='test123',
-            endpoint=endpoint,
-            path_params=to_openapi(path_params, 'path'),
-            query_params=to_openapi(query_params, 'query'),
-            header_params=to_openapi(header_params, 'header'),
-            request_endpoint=endpoint.path,
-            request_method=endpoint.method,
-            request_schema=_get_schema(endpoint.request_schema),
-            request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
-        ).strip(),
-    } for example in CODE_EXAMPLES]
+    return [
+        {
+            "label": example.label,
+            "lang": example.lang,
+            "source": env.get_template(example.label)
+            .render(
+                hostname="localhost",
+                site=omd_site(),
+                username="automation",
+                password="test123",
+                endpoint=endpoint,
+                path_params=to_openapi(path_params, "path"),
+                query_params=to_openapi(query_params, "query"),
+                header_params=to_openapi(header_params, "header"),
+                request_endpoint=endpoint.path,
+                request_method=endpoint.method,
+                request_schema=_get_schema(endpoint.request_schema),
+                request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
+            )
+            .strip(),
+        }
+        for example in CODE_EXAMPLES
+    ]
 
 
 def yapf_format(obj) -> str:
@@ -460,10 +467,10 @@ def yapf_format(obj) -> str:
 
     """
     style = {
-        'COLUMN_LIMIT': 50,
-        'ALLOW_SPLIT_BEFORE_DICT_VALUE': False,
-        'COALESCE_BRACKETS': True,
-        'DEDENT_CLOSING_BRACKETS': True,
+        "COLUMN_LIMIT": 50,
+        "ALLOW_SPLIT_BEFORE_DICT_VALUE": False,
+        "COALESCE_BRACKETS": True,
+        "DEDENT_CLOSING_BRACKETS": True,
     }
     text, _ = yapf.yapflib.yapf_api.FormatCode(str(obj), style_config=style)
     return text
@@ -503,7 +510,7 @@ def _schema_is_multiple(schema: Optional[Union[str, Type[Schema]]]) -> bool:
     if schema is None:
         return False
     _schema = resolve_schema_instance(schema)
-    return bool(getattr(_schema, 'type_schemas', None))
+    return bool(getattr(_schema, "type_schemas", None))
 
 
 @functools.lru_cache()
@@ -543,7 +550,7 @@ def _jinja_environment() -> jinja2.Environment:
     # This is not a security problem, as this is an Environment which accepts no data from the web
     # but is only used to fill in our code examples.
     tmpl_env = jinja2.Environment(  # nosec
-        extensions=['jinja2.ext.loopcontrols'],
+        extensions=["jinja2.ext.loopcontrols"],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
         loader=jinja2.DictLoader(TEMPLATES),
         undefined=jinja2.StrictUndefined,
@@ -562,7 +569,9 @@ def _jinja_environment() -> jinja2.Environment:
         repr=repr,
     )
     # These objects will be available in the templates
-    tmpl_env.globals.update(spec=SPEC,)
+    tmpl_env.globals.update(
+        spec=SPEC,
+    )
     return tmpl_env
 
 
@@ -580,9 +589,9 @@ def to_param_dict(params: List[OpenAPIParameter]) -> Dict[str, OpenAPIParameter]
     """
     res = {}
     for entry in params:
-        if 'name' not in entry:
-            raise ValueError(f'Illegal parameter (name missing) ({entry!r}) in {params!r}')
-        res[entry['name']] = entry
+        if "name" not in entry:
+            raise ValueError(f"Illegal parameter (name missing) ({entry!r}) in {params!r}")
+        res[entry["name"]] = entry
     return res
 
 
@@ -623,7 +632,7 @@ def fill_out_parameters(ctx: Dict[str, Any], val) -> str:
     Returns:
         A filled out string.
     """
-    return fill_out_path_template(val, to_param_dict(ctx['path_params']))
+    return fill_out_path_template(val, to_param_dict(ctx["path_params"]))
 
 
 def indent(s, skip_lines=0, spaces=2):
@@ -660,5 +669,5 @@ def indent(s, skip_lines=0, spaces=2):
         if count < skip_lines:
             resp.append(line)
         else:
-            resp.append((' ' * spaces) + line)
-    return '\n'.join(resp)
+            resp.append((" " * spaces) + line)
+    return "\n".join(resp)

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<db2_bp_hitratios>>>
 # [[[db2taddm:CMDBS1]]]
 # BP_NAME        TOTAL_HIT_RATIO_PERCENT DATA_HIT_RATIO_PERCENT INDEX_HIT_RATIO_PERCENT XDA_HIT_RATIO_PERCENT
@@ -40,7 +41,7 @@ def parse_db2_bp_hitratios(info):
             # DPF mode
             current_node_offset = -1
             current_instance = None
-            for line in lines[header_idx + 1:]:
+            for line in lines[header_idx + 1 :]:
                 if line[0] == "IBMDEFAULTBP":
                     current_node_offset += 1
                     current_instance = "%s DPF %s" % (instance, node_names[current_node_offset])
@@ -86,7 +87,7 @@ def check_db2_bp_hitratios(item, no_params, parsed):
             break
 
 
-check_info['db2_bp_hitratios'] = {
+check_info["db2_bp_hitratios"] = {
     "parse_function": parse_db2_bp_hitratios,
     "service_description": "DB2 BP-Hitratios %s",
     "check_function": check_db2_bp_hitratios,

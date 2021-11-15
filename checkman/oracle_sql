@@ -17,5 +17,5 @@ description:
 item:
  The SID and SQL name or specified item name.
 
-inventory:
+discovery:
  One service is created for each SQL.

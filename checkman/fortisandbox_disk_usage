@@ -12,5 +12,5 @@ description:
 item:
  The string 'system'.
 
-inventory:
+discovery:
  One service is created per host.

@@ -5,22 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    ListOf,
-    TextInput,
-    Transform,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
+from cmk.gui.valuespec import Dictionary, Integer, ListOf, TextInput, Transform, Tuple
 
 
 def transform_msx_queues(params):
@@ -32,9 +24,13 @@ def transform_msx_queues(params):
 def transform_msx_queues_inventory(params):
     if isinstance(params, list):
         # do not overwrite default discovery parameters with empty list
-        return {
-            "queue_names": params,
-        } if params else {}
+        return (
+            {
+                "queue_names": params,
+            }
+            if params
+            else {}
+        )
     return params
 
 
@@ -42,34 +38,38 @@ def _valuespec_winperf_msx_queues_inventory():
     return Transform(
         Dictionary(
             title=_("Queue names"),
-            elements=
-            [('queue_names',
-              ListOf(
-                  Tuple(
-                      orientation="horizontal",
-                      elements=[
-                          TextInput(
-                              title=_("Name of Queue"),
-                              size=50,
-                              allow_empty=False,
-                          ),
-                          Integer(
-                              title=_("Offset"),
-                              help=_(
-                                  "The offset of the information relative to counter base."
-                                  " You can get a detailed list of available counters in a windows shell with the command 'lodctr /s:counters.txt'."
-                              ),
-                          ),
-                      ],
-                  ),
-                  title=_('MS Exchange message queues discovery'),
-                  help=
-                  _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
-                    'If the format of your counters object is not compatible then you can adapt the counter '
-                    'offsets manually.'),
-                  movable=False,
-                  add_label=_("Add Counter"),
-              ))],
+            elements=[
+                (
+                    "queue_names",
+                    ListOf(
+                        Tuple(
+                            orientation="horizontal",
+                            elements=[
+                                TextInput(
+                                    title=_("Name of Queue"),
+                                    size=50,
+                                    allow_empty=False,
+                                ),
+                                Integer(
+                                    title=_("Offset"),
+                                    help=_(
+                                        "The offset of the information relative to counter base."
+                                        " You can get a detailed list of available counters in a windows shell with the command 'lodctr /s:counters.txt'."
+                                    ),
+                                ),
+                            ],
+                        ),
+                        title=_("MS Exchange message queues discovery"),
+                        help=_(
+                            "Per default the offsets of all Windows performance counters are preconfigured in the check. "
+                            "If the format of your counters object is not compatible then you can adapt the counter "
+                            "offsets manually."
+                        ),
+                        movable=False,
+                        add_label=_("Add Counter"),
+                    ),
+                )
+            ],
         ),
         forth=transform_msx_queues_inventory,
     )
@@ -81,7 +81,8 @@ rulespec_registry.register(
         match_type="dict",
         name="winperf_msx_queues_inventory",
         valuespec=_valuespec_winperf_msx_queues_inventory,
-    ))
+    )
+)
 
 
 def _item_spec_msx_queues():
@@ -96,20 +97,25 @@ def _parameter_valuespec_msx_queues():
         Dictionary(
             title=_("Set Levels"),
             elements=[
-                ('levels',
-                 Tuple(
-                     title=_("Maximum Number of E-Mails in Queue"),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("E-Mails")),
-                         Integer(title=_("Critical at"), unit=_("E-Mails"))
-                     ],
-                 )),
-                ('offset',
-                 Integer(
-                     title=_("Offset"),
-                     help=
-                     _("This parameter should only be used for enforced services, otherwise it will be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</i>."
-                      ))),
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Maximum Number of E-Mails in Queue"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("E-Mails")),
+                            Integer(title=_("Critical at"), unit=_("E-Mails")),
+                        ],
+                    ),
+                ),
+                (
+                    "offset",
+                    Integer(
+                        title=_("Offset"),
+                        help=_(
+                            "This parameter should only be used for enforced services, otherwise it will be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</i>."
+                        ),
+                    ),
+                ),
             ],
         ),
         forth=transform_msx_queues,
@@ -123,4 +129,5 @@ rulespec_registry.register(
         item_spec=_item_spec_msx_queues,
         parameter_valuespec=_parameter_valuespec_msx_queues,
         title=lambda: _("MS Exchange Message Queues"),
-    ))
+    )
+)

@@ -10,7 +10,7 @@ description:
  There are no default upper levels, but they can be configured using
  the rule "Pulse Secure users".
 
-inventory:
+discovery:
  One service is created.
 
 cluster:

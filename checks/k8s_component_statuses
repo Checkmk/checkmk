@@ -15,16 +15,16 @@ from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-imp
 def check_k8s_component_statuses(item, _no_params, conditions):
     for condition in conditions:
         status = 0
-        if condition['status'] == 'False':
+        if condition["status"] == "False":
             status = 2
-        elif condition['status'] == 'Unknown':
+        elif condition["status"] == "Unknown":
             status = 3
-        yield status, '%s: %s' % (condition['type'], condition['status'])
+        yield status, "%s: %s" % (condition["type"], condition["status"])
 
 
-check_info['k8s_component_statuses'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': discover(),
-    'check_function': check_k8s_component_statuses,
-    'service_description': 'Component %s',
+check_info["k8s_component_statuses"] = {
+    "parse_function": parse_k8s,
+    "inventory_function": discover(),
+    "check_function": check_k8s_component_statuses,
+    "service_description": "Component %s",
 }

@@ -12,6 +12,7 @@ Welcome to CheckMK's documentation!
 
    arch-index.rst
    api-index.rst
+   arch-build-chain.rst
 
 Indices and tables
 ==================

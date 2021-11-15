@@ -5,25 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
-from six import ensure_binary, ensure_str
+from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
-import cmk.gui.escaping as escaping
-from cmk.gui.utils.html import HTML
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, user_errors, theme
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKUserError
-import cmk.gui.config as config
+from cmk.gui.globals import html, request, theme, transactions, user, user_errors
+from cmk.gui.htmllib.foldable_container import (
+    foldable_container_id,
+    foldable_container_img_id,
+    foldable_container_onclick,
+)
+from cmk.gui.i18n import _
+from cmk.gui.utils.html import HTML
 
 if TYPE_CHECKING:
     from typing import Sequence
-    from cmk.gui.valuespec import Dictionary, ValueSpec, Transform
+
+    from cmk.gui.valuespec import Dictionary, Transform, ValueSpec
 
 g_header_open = False
 g_section_open = False
 
 
-def get_input(valuespec: 'ValueSpec', varprefix: str) -> Any:
+def get_input(valuespec: "ValueSpec", varprefix: str) -> Any:
     value = valuespec.from_html_vars(varprefix)
     valuespec.validate_value(value, varprefix)
     return value
@@ -37,19 +41,21 @@ def get_input(valuespec: 'ValueSpec', varprefix: str) -> Any:
 # several dictionaries at once.
 # TODO: Remove all call sites and clean this up! The mechanic of this
 # is very uncommon compared to the other usages of valuespecs.
-def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictionary]]]',
-                      value: Dict[str, Any],
-                      focus: Optional[str] = None,
-                      hover_help: bool = True,
-                      validate: Optional[Callable[[Any], None]] = None,
-                      title: Optional[str] = None,
-                      method: str = "GET",
-                      preview: bool = False,
-                      varprefix: str = "",
-                      formname: str = "form",
-                      consume_transid: bool = True):
+def edit_dictionaries(
+    dictionaries: "Sequence[Tuple[str, Union[Transform, Dictionary]]]",
+    value: Dict[str, Any],
+    focus: Optional[str] = None,
+    hover_help: bool = True,
+    validate: Optional[Callable[[Any], None]] = None,
+    title: Optional[str] = None,
+    method: str = "GET",
+    preview: bool = False,
+    varprefix: str = "",
+    formname: str = "form",
+    consume_transid: bool = True,
+):
 
-    if html.request.get_ascii_input("filled_in") == formname and transactions.transaction_valid():
+    if request.get_ascii_input("filled_in") == formname and transactions.transaction_valid():
         if not preview and consume_transid:
             transactions.check_transaction()
 
@@ -93,7 +99,7 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
 
     end()
     # Should be ignored be hidden_fields, but I do not dare to change it there
-    html.request.del_var("filled_in")
+    request.del_var("filled_in")
     html.hidden_fields()
     html.end_form()
 
@@ -116,20 +122,21 @@ def header(
     if g_header_open:
         end()
 
-    id_ = ensure_str(base64.b64encode(ensure_binary(title)))
+    id_ = base64.b64encode(title.encode()).decode()
     treename = html.form_name or "nform"
-    isopen = config.user.get_tree_state(treename, id_, isopen)
-    container_id = html.foldable_container_id(treename, id_)
+    isopen = user.get_tree_state(treename, id_, isopen)
+    container_id = foldable_container_id(treename, id_)
 
-    html.open_table(id_=table_id if table_id else None,
-                    class_=[
-                        "nform",
-                        "narrow" if narrow else None,
-                        css if css else None,
-                        "open" if isopen else "closed",
-                        "more" if config.user.get_show_more_setting("foldable_%s" % id_) or
-                        show_more_mode else None,
-                    ])
+    html.open_table(
+        id_=table_id if table_id else None,
+        class_=[
+            "nform",
+            "narrow" if narrow else None,
+            css if css else None,
+            "open" if isopen else "closed",
+            "more" if user.get_show_more_setting("foldable_%s" % id_) or show_more_mode else None,
+        ],
+    )
 
     if show_table_head:
         _table_head(
@@ -142,7 +149,7 @@ def header(
         )
 
     html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
-    html.tr(html.render_td('', colspan=2))
+    html.tr(html.render_td("", colspan=2))
     g_header_open = True
     g_section_open = False
 
@@ -155,16 +162,18 @@ def _table_head(
     show_more_toggle: bool,
     help_text: Union[str, HTML, None] = None,
 ) -> None:
-    onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
-    img_id = html.foldable_container_img_id(treename, id_)
+    onclick = foldable_container_onclick(treename, id_, fetch_url=None)
+    img_id = foldable_container_img_id(treename, id_)
 
     html.open_thead()
     html.open_tr(class_="heading")
     html.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
-    html.img(id_=img_id,
-             class_=["treeangle", "nform", "open" if isopen else "closed"],
-             src=theme.url("images/tree_closed.svg"),
-             align="absbottom")
+    html.img(
+        id_=img_id,
+        class_=["treeangle", "nform", "open" if isopen else "closed"],
+        src=theme.url("images/tree_closed.svg"),
+        align="absbottom",
+    )
     html.write_text(title)
     html.help(help_text)
     if show_more_toggle:
@@ -184,19 +193,21 @@ def container() -> None:
 
 
 def space() -> None:
-    html.tr(html.render_td('', colspan=2, style="height:15px;"))
+    html.tr(html.render_td("", colspan=2, style="height:15px;"))
 
 
-def section(title: Union[None, HTML, str] = None,
-            checkbox: Union[None, HTML, str, Tuple[str, bool, str]] = None,
-            section_id: Optional[str] = None,
-            simple: bool = False,
-            hide: bool = False,
-            legend: bool = True,
-            css: Optional[str] = None,
-            is_show_more: bool = False,
-            is_changed: bool = False,
-            is_required: bool = False) -> None:
+def section(
+    title: Union[None, HTML, str] = None,
+    checkbox: Union[None, HTML, str, Tuple[str, bool, str]] = None,
+    section_id: Optional[str] = None,
+    simple: bool = False,
+    hide: bool = False,
+    legend: bool = True,
+    css: Optional[str] = None,
+    is_show_more: bool = False,
+    is_changed: bool = False,
+    is_required: bool = False,
+) -> None:
     global g_section_open
     section_close()
     html.open_tr(
@@ -208,20 +219,22 @@ def section(title: Union[None, HTML, str] = None,
     if legend:
         html.open_td(class_=["legend", "simple" if simple else None])
         if title:
-            html.open_div(class_=["title", "withcheckbox" if checkbox else None],
-                          title=escaping.strip_tags(title))
-            html.write(escaping.escape_text(title))
-            html.span('.' * 200, class_=["dots", "required" if is_required else None])
+            html.open_div(
+                class_=["title", "withcheckbox" if checkbox else None],
+                title=escaping.strip_tags(title),
+            )
+            html.write_text(title)
+            html.span("." * 200, class_=["dots", "required" if is_required else None])
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
             if isinstance(checkbox, (str, HTML)):
-                html.write(checkbox)
+                html.write_text(checkbox)
             else:
                 name, active, attrname = checkbox
-                html.checkbox(name,
-                              active,
-                              onclick='cmk.wato.toggle_attribute(this, \'%s\')' % attrname)
+                html.checkbox(
+                    name, active, onclick="cmk.wato.toggle_attribute(this, '%s')" % attrname
+                )
             html.close_div()
         html.close_td()
     html.open_td(class_=["content", "simple" if simple else None])
@@ -238,6 +251,6 @@ def end() -> None:
     global g_header_open
     g_header_open = False
     section_close()
-    html.tr(html.render_td('', colspan=2), class_=["bottom"])
+    html.tr(html.render_td("", colspan=2), class_=["bottom"])
     html.close_tbody()
     html.close_table()

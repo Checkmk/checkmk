@@ -4,13 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    register,
-    SNMPTree,
-)
+from .agent_based_api.v1 import all_of, contains, exists, register, SNMPTree
 
 register.snmp_section(
     name="infoblox_osinfo",
@@ -18,7 +12,7 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.4.1.2021.100",
             oids=[
-                '6.0',  # versionConfigureOptions
+                "6.0",  # versionConfigureOptions
             ],
         ),
     ],

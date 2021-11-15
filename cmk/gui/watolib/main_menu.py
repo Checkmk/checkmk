@@ -5,14 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Iterable, NamedTuple, Optional, Type
+from typing import Iterable, NamedTuple, Optional, Type, Union
+
+import cmk.utils.plugin_registry
 
 from cmk.gui.breadcrumb import BreadcrumbItem
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
-import cmk.gui.config as config
-import cmk.utils.plugin_registry
 
 
 class MenuItem:
@@ -65,25 +66,34 @@ class MenuItem:
         else:
             permission = self.permission
 
-        return config.user.may(permission) or config.user.may("wato.seeall")
+        return user.may(permission) or user.may("wato.seeall")
 
     def get_url(self):
         mode_or_url = self.mode_or_url
-        if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
+        if "?" in mode_or_url or "/" in mode_or_url or mode_or_url.endswith(".py"):
             return mode_or_url
         return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
     def __repr__(self):
-        return "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)" % \
-            (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
+        return (
+            "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)"
+            % (
+                self.__class__.__name__,
+                self.mode_or_url,
+                self.title,
+                self.icon,
+                self.permission,
+                self.description,
+                self.sort_index,
+            )
+        )
 
 
-MainModuleTopic = NamedTuple("MainModuleTopic", [
-    ("name", str),
-    ("title", str),
-    ("icon_name", str),
-    ("sort_index", int),
-])
+class MainModuleTopic(NamedTuple):
+    name: str
+    title: Union[str, LazyString]
+    icon_name: str
+    sort_index: int
 
 
 class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic]):
@@ -94,7 +104,7 @@ class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic
 main_module_topic_registry = MainModuleTopicRegistry()
 
 
-class ABCMainModule(MenuItem, metaclass=abc.ABCMeta):
+class ABCMainModule(MenuItem, abc.ABC):
     def __init__(self):
         # TODO: Cleanup hierarchy
         super().__init__(

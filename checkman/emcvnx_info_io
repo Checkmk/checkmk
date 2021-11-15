@@ -13,5 +13,5 @@ description:
  The information is retrieved by the special agent agent_emcvnx which uses
  EMC's command line tool naviseccli.
 
-inventory:
+discovery:
  One service is created for each EMC VNX storage system called EMC VNX IO.

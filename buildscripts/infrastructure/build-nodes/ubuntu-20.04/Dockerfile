@@ -1,4 +1,6 @@
-FROM ubuntu:20.04
+ARG IMAGE_UBUNTU_20_04
+# hadolint ignore=DL3006
+FROM ${IMAGE_UBUNTU_20_04}
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -100,12 +102,14 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-cmake.sh
+RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
 
 # Exclusively for this distro at the moment, because it is used by several CI
@@ -114,7 +118,7 @@ RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-docker.sh
 RUN /opt/install-make-dist-deps.sh
 RUN /opt/install-clang.sh
-RUN /opt/install-cppcheck.sh
+RUN /opt/install-shellcheck.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

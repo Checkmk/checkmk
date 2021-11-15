@@ -26,8 +26,6 @@ class RowRenderer;
 
 template <typename T>
 const T *offset_cast(const void *ptr, size_t offset) {
-    // cppcheck is too dumb to see that this is just pointer arithmetic... :-/
-    // cppcheck-suppress invalidPointerCast
     return reinterpret_cast<const T *>(reinterpret_cast<const char *>(ptr) +
                                        offset);
 }
@@ -74,7 +72,7 @@ public:
     [[nodiscard]] Logger *logger() const { return &_logger; }
 
 private:
-    mutable ContextLogger _logger;
+    mutable ThreadNameLogger _logger;
     std::string _name;
     std::string _description;
     ColumnOffsets _offsets;

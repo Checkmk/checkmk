@@ -7,6 +7,7 @@
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .humidity import check_humidity
 from .temperature import check_temperature
+
 #   .--General-------------------------------------------------------------.
 #   |                                                  _                   |
 #   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
@@ -29,13 +30,15 @@ akcp_sensor_level_states = {
 
 
 def snmp_scan_akcp_sensor(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3854.1") \
-            and not oid(".1.3.6.1.4.1.3854.2.*")
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3854.1") and not oid(
+        ".1.3.6.1.4.1.3854.2.*"
+    )
 
 
 def snmp_scan_akcp_exp(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3854.1") \
-            and oid(".1.3.6.1.4.1.3854.2.*")
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3854.1") and oid(
+        ".1.3.6.1.4.1.3854.2.*"
+    )
 
 
 def inventory_akcp_sensor_no_params(info):
@@ -45,7 +48,7 @@ def inventory_akcp_sensor_no_params(info):
             yield line[0], None
 
 
-#.
+# .
 #   .--Humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
 #   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
@@ -79,7 +82,7 @@ def check_akcp_humidity(item, params, info):
                 yield check_humidity(int(percent), params)
 
 
-#.
+# .
 #   .--Temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -103,10 +106,18 @@ def inventory_akcp_sensor_temp(info):
 
 
 def check_akcp_sensor_temp(item, params, info):
-    for description, degree, unit, status, \
-            low_crit, low_warn, high_warn, high_crit, \
-            degreeraw, online \
-        in info:
+    for (
+        description,
+        degree,
+        unit,
+        status,
+        low_crit,
+        low_warn,
+        high_warn,
+        high_crit,
+        degreeraw,
+        online,
+    ) in info:
 
         if description == item:
             # Online is set to "2" if sensor is offline
@@ -123,17 +134,20 @@ def check_akcp_sensor_temp(item, params, info):
                     unit_normalised = "f"
                 else:
                     unit_normalised = "c"
-                low_crit, low_warn, high_warn, high_crit = \
-                    list(map(float, (low_crit, low_warn, high_warn, high_crit)))
+                low_crit, low_warn, high_warn, high_crit = list(
+                    map(float, (low_crit, low_warn, high_warn, high_crit))
+                )
             else:
                 unit_normalised = unit.lower()
                 if int(high_crit) > 100:
                     # Devices with "F" or "C" have the levels in degrees * 10
-                    low_crit, low_warn, high_warn, high_crit = \
-                        [float(t) / 10 for t in (low_crit, low_warn, high_warn, high_crit)]
+                    low_crit, low_warn, high_warn, high_crit = [
+                        float(t) / 10 for t in (low_crit, low_warn, high_warn, high_crit)
+                    ]
                 else:
-                    low_crit, low_warn, high_warn, high_crit = \
-                        [float(t) for t in (low_crit, low_warn, high_warn, high_crit)]
+                    low_crit, low_warn, high_warn, high_crit = [
+                        float(t) for t in (low_crit, low_warn, high_warn, high_crit)
+                    ]
 
             if degreeraw and degreeraw != "0":
                 temperature = float(degreeraw) / 10.0
@@ -142,11 +156,17 @@ def check_akcp_sensor_temp(item, params, info):
             else:
                 temperature = float(degree)
 
-            return check_temperature(temperature, params, "akcp_sensor_temp_%s" % item, unit_normalised, \
-                    (high_warn, high_crit), (low_warn, low_crit))
+            return check_temperature(
+                temperature,
+                params,
+                "akcp_sensor_temp_%s" % item,
+                unit_normalised,
+                (high_warn, high_crit),
+                (low_warn, low_crit),
+            )
 
 
-#.
+# .
 #   .--Water & Smoke-------------------------------------------------------.
 #   |               _               ___                         _          |
 #   |__      ____ _| |_ ___ _ __   ( _ )    ___ _ __ ___   ___ | | _____   |
@@ -179,7 +199,7 @@ def check_akcp_sensor_relay(item, _no_params, info):
             return state, "State: %s" % state_name
 
 
-#.
+# .
 #   .--Drycontact----------------------------------------------------------.
 #   |             _                            _             _             |
 #   |          __| |_ __ _   _  ___ ___  _ __ | |_ __ _  ___| |_           |

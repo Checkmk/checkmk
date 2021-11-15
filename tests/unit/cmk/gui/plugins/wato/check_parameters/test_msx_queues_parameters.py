@@ -8,19 +8,16 @@ from typing import Mapping, Tuple, Union
 
 import pytest
 
-from cmk.gui.plugins.wato.check_parameters.msx_queues import (
-    transform_msx_queues_inventory,)
+from cmk.gui.plugins.wato.check_parameters.msx_queues import transform_msx_queues_inventory
 
-CUSTOMIZED_QUEUES = [('Custom queue', 56)]
+CUSTOMIZED_QUEUES = [("Custom queue", 56)]
 
 
 @pytest.mark.parametrize(
     "parameters, expected_result",
     [
         ([], {}),
-        (CUSTOMIZED_QUEUES, {
-            'queue_names': CUSTOMIZED_QUEUES
-        }),
+        (CUSTOMIZED_QUEUES, {"queue_names": CUSTOMIZED_QUEUES}),
     ],
 )
 def test_transform_msx_queues_inventory(parameters, expected_result):

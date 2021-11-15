@@ -9,10 +9,10 @@ def parse_apc_ats_output(info):
     parsed = {}
     for index, voltage_str, current_str, perc_load_str, power_str in info:
         for key, value_str, factor in [
-            ('voltage', voltage_str, 1),
-            ('current', current_str, 0.1),
-            ('perc_load', perc_load_str, 1),
-            ('power', power_str, 1),
+            ("voltage", voltage_str, 1),
+            ("current", current_str, 0.1),
+            ("perc_load", perc_load_str, 1),
+            ("power", power_str, 1),
         ]:
             try:
                 value = float(value_str) * factor
@@ -37,26 +37,25 @@ def check_apc_ats_output(item, params, data):
     if voltage is not None:
         yield check_levels(
             voltage,
-            'volt',
-            params.get('output_voltage_max',(None, None))\
-                       + params.get('output_voltage_min', (None, None)),
+            "volt",
+            params.get("output_voltage_max", (None, None))
+            + params.get("output_voltage_min", (None, None)),
             infoname="Voltage",
-            unit='V',
+            unit="V",
         )
     if power is not None:
-        yield 0, 'Power: %.2f W' % power
+        yield 0, "Power: %.2f W" % power
 
     if current is not None:
-        yield 0, 'Current: %.2f A' % current
+        yield 0, "Current: %.2f A" % current
 
     if perc_load is not None:
         yield check_levels(
             perc_load,
-            'load_perc',
-            params.get('load_perc_max', (None, None))\
-                       + params.get('load_perc_min', (None, None)),
+            "load_perc",
+            params.get("load_perc_max", (None, None)) + params.get("load_perc_min", (None, None)),
             infoname="Load",
-            unit='%',
+            unit="%",
         )
 
 
@@ -73,7 +72,8 @@ check_info["apc_ats_output"] = {
     "default_levels_variable": "apc_ats_output_default_levels",
     "service_description": "Phase %s output",
     "has_perfdata": True,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
+    in [
         ".1.3.6.1.4.1.318.1.3.11",
         ".1.3.6.1.4.1.318.1.3.32",
     ],
@@ -85,5 +85,6 @@ check_info["apc_ats_output"] = {
             "4",  # atsOutputCurrent (0.1 AMPERE)
             "10",  # atsOutputPercentLoad
             "13",  # atsOutputPower (Watt)
-        ]),
+        ],
+    ),
 }

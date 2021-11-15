@@ -22,6 +22,7 @@ check_info["hitachi_hus_dku"] = {
             3,  # dkuHWFan
             4,  # dkuHWEnvironment
             5,  # dkuHWDrive
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_hitachi_hus,
 }

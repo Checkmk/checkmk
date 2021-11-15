@@ -7,16 +7,16 @@
 # yapf: disable
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
-from cmk.gui.globals import request
-import cmk.gui.plugins.visuals.utils as utils
+
 import cmk.gui.plugins.visuals
+import cmk.gui.plugins.visuals.filters
+import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
 import cmk.gui.visuals as visuals
-import cmk.gui.plugins.visuals.filters
-from cmk.gui.type_defs import Visual
+from cmk.gui.globals import request
 
 
 def test_get_filter():
@@ -30,7 +30,7 @@ def test_get_not_existing_filter():
 
 
 def test_filters_allowed_for_info():
-    allowed = visuals.filters_allowed_for_info("host")
+    allowed = dict(visuals.filters_allowed_for_info("host"))
     assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.FilterText)
     assert "service" not in allowed
 
@@ -76,12 +76,10 @@ def _expected_visual_types():
     return expected_visual_types
 
 
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_types():
     assert sorted(utils.visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
 
 
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_type_attributes():
     for ident, plugin_class in utils.visual_type_registry.items():
         plugin = plugin_class()
@@ -3471,7 +3469,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
         'info': 'host',
         'link_columns': [],
         'sort_index': 10,
-        'title': u'WATO Folder'
+        'title': u'Folder'
     },
 }
 
@@ -3479,7 +3477,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_filters(load_plugins):
+def test_registered_filters():
     names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
@@ -3499,6 +3497,7 @@ def test_registered_filters(load_plugins):
 
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
+
 
 expected_infos: Dict[str, Dict[str, Any]] = {
     'aggr': {
@@ -3681,7 +3680,6 @@ expected_infos: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_infos():
     assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
 
@@ -3689,7 +3687,6 @@ def test_registered_infos():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_info_attributes():
     for ident, cls in utils.visual_info_registry.items():
         info = cls()
@@ -3725,79 +3722,54 @@ def test_registered_info_attributes():
     ({"single_infos": ["host"], "context": {}}, []),
     # Single host + service context
     ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
-        [("host", "abc"), ("service", "äää")]),
-])
-def test_add_context_to_uri_vars(register_builtin_html, visual, expected_vars):
-    with request.stashed_vars():
-        visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"])
-        assert sorted(list(request.itervars())) == sorted(expected_vars)
-
-
-@pytest.mark.parametrize("visual,expected_vars", [
-    # No single context, no filter
-    ({"single_infos": [], "context": {}}, []),
-    # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
-    # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
-    # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, []),
-    # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
         [("host", "abc"), ("service", u"äää")]),
 ])
-def test_get_context_uri_vars(register_builtin_html, visual, expected_vars):
+def test_get_context_uri_vars(request_context, visual, expected_vars):
     context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
     assert sorted(context_vars) == sorted(expected_vars)
 
 
-@pytest.mark.parametrize("infos,single_infos,uri_vars,expected_context", [
+@pytest.mark.parametrize("infos,uri_vars,expected_context", [
     # No single context, no filter
-    (["host"], [], [("abc", "dingeling")], {}),
+    (["host"], [("abc", "dingeling")], {}),
     # Single host context
-    (["host"], ["host"], [("host", "aaa")], {"host": "aaa"}),
+    (["host"], [("host", "aaa")], {"host": {"host": "aaa"}}),
     # Single host context with site hint
     # -> add site and siteopt (Why? Was like this in 1.6...)
-    (["host"], ["host"], [("host", "aaa"),("site", "abc")], {"host": "aaa", "site": {"site": "abc"},
+    (["host"], [("host", "aaa"),("site", "abc")], {"host": {"host": "aaa"}, "site": {"site": "abc"},
         "siteopt": {"site": "abc"}}),
     # Single host context -> not set
-    (["host"], ["host"], [], {}),
+    (["host"], [], {}),
     # Single host context -> empty set
-    (["host"], ["host"], [("host", "")], {}),
+    (["host"], [("host", "")], {}),
     # Single host context with non-ascii char
-    (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
+    (["host"], [("host", "äbc")], {"host": {"host": "äbc"}}),
     # Single host context, multiple services
-    (["host", "service"], ["host"], [("host", "aaa"), ("service_regex", "äbc")], {"host": "aaa",
+    (["host", "service"], [("host", "aaa"), ("service_regex", "äbc")], {"host": {"host": "aaa"},
         'serviceregex': {'service_regex': 'äbc'}}),
     # multiple services
-    (["service", "host"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+    (["service", "host"], [("host", "aaa"), ("service_regex", "äbc")], {
         'serviceregex': {'service_regex': 'äbc'}, 'host': {'host': 'aaa'},}),
     # multiple services, ignore filters of unrelated infos
-    (["service"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+    (["service"], [("host", "aaa"), ("service_regex", "äbc")], {
         'serviceregex': {'service_regex': 'äbc'},}),
 ])
-def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, uri_vars,
+def test_get_context_from_uri_vars(request_context, infos, uri_vars,
         expected_context):
     for key, val in uri_vars:
         request.set_var(key, val)
 
-    context = visuals.get_context_from_uri_vars(infos, single_infos)
+    context = visuals.get_context_from_uri_vars(infos)
     assert context == expected_context
 
 
 @pytest.mark.parametrize("uri_vars,visual,expected_context", [
     # Single host context, set via URL, with some service filter, set via context
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"service_regex":
-        {"serviceregex": "abc"}},}, {"host": "aaa", "service_regex": {"serviceregex": "abc"},}),
+        {"serviceregex": "abc"}},}, {"host": {"host": "aaa"}, "service_regex": {"serviceregex": "abc"},}),
     # Single host context, set via context and URL
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"host":
-        "from_context",}}, {"host": "from_context"}),
+        {"host": "from_context"},}}, {"host": {"host": "from_context"}}),
     # No single context with some host & service filter
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {"service_regex":
         {"serviceregex": "abc"}},}, {"host": {"host": "aaa"}, "service_regex": {"serviceregex": "abc"},}),
@@ -3805,50 +3777,74 @@ def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, u
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {}},
         {"host": {"host": "aaa"},}),
 ])
-def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_context):
+def test_get_merged_context(request_context, uri_vars, visual, expected_context):
     for key, val in uri_vars:
         request.set_var(key, val)
 
-    url_context = visuals.get_context_from_uri_vars(visual["infos"], visual["single_infos"])
+    url_context = visuals.get_context_from_uri_vars(visual["infos"])
     context = visuals.get_merged_context(url_context, visual["context"])
 
     assert context == expected_context
 
 
 def test_get_missing_single_infos_has_context():
-    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": "abc"}) == set()
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": {"host": "abc"}}) == set()
 
 
 def test_get_missing_single_infos_missing_context():
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
-def test_context_uri_vars(register_builtin_html):
-    visual: Visual = {
-        "single_infos": ["host"],
-        "context": {
-            "host": "abc",
-            "blubl": {
-                "ag": "1"
-            },
+@pytest.mark.parametrize("context, single_infos, expected_context", [
+    pytest.param(
+        {
+            "discovery_state": {
+                'discovery_state_ignored': True,
+                'discovery_state_vanished': False,
+                'discovery_state_unmonitored': True
+            }
+        }, [], {
+            "discovery_state": {
+                'discovery_state_ignored': 'on',
+                'discovery_state_vanished': '',
+                'discovery_state_unmonitored': 'on'
+            }
         },
-    }
-
-    visual2: Visual = {
-        "single_infos": [],
-        "context": {
-            "hu_filter": {"hu": "hu"},
+        id="1.6.0->2.1.0 CMK-6606"),
+    pytest.param({"host": {
+        "host": "heute"
+    }}, ["host"], {"host": {
+        "host": "heute"
+    }},
+                  id="-> 2.1.0 Idempotent on already transformed single_info"),
+    pytest.param({
+        "host": "heute",
+        "event_id": 5
+    }, ["host", "history"], {
+        "host": {
+            "host": "heute"
         },
-    }
-
-    request.set_var("bla", "blub")
-    assert request.var("bla") == "blub"
-
-    with visuals.context_uri_vars(visual["context"], visual["single_infos"]), \
-         visuals.context_uri_vars(visual2["context"], visual2["single_infos"]):
-        assert request.var("bla") == "blub"
-        assert request.var("host") == "abc"
-        assert request.var("ag") == "1"
-        assert request.var("hu") == "hu"
-
-    assert list(dict(request.itervars()).keys()) == ["bla"]
+        "event_id": {
+            "event_id": "5"
+        }
+    },
+                 id="-> 2.1.0 No single_info, only FilterHTTPVariables VisualContext"),
+    pytest.param({
+        "site": "heute",
+        "sites": "heute|morgen",
+        "siteopt": "heute"
+    }, [], {
+        "site": {
+            "site": "heute"
+        },
+        "siteopt": {
+            "site": "heute"
+        },
+        "sites": {
+            "sites": "heute|morgen"
+        }
+    },
+                 id="-> 2.1.0 Site hint is not bound to single info"),
+])
+def test_cleanup_contexts(context, single_infos, expected_context):
+    assert visuals.cleaup_context_filters(context, single_infos) == expected_context

@@ -8,29 +8,25 @@ import ast
 import re
 import socket
 import time
-from typing import Dict, List, Optional, Tuple
 from pathlib import Path
-
-from six import ensure_binary, ensure_str
+from typing import Dict, List, Optional, Tuple
 
 import livestatus
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-)
-from cmk.gui.valuespec import DropdownChoices, DropdownChoiceEntry
+from cmk.gui.globals import config
+from cmk.gui.hooks import request_memoize
+from cmk.gui.i18n import _, _l
+from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.valuespec import DropdownChoiceEntry, DropdownChoices
 
 
 def _socket_path() -> Path:
@@ -44,9 +40,9 @@ def mib_upload_dir() -> Path:
 def mib_dirs() -> List[Tuple[Path, str]]:
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
-        (mib_upload_dir(), _('Custom MIBs')),
-        (cmk.utils.paths.mib_dir, _('MIBs shipped with Checkmk')),
-        (Path('/usr/share/snmp/mibs'), _('System MIBs')),
+        (mib_upload_dir(), _("Custom MIBs")),
+        (cmk.utils.paths.mib_dir, _("MIBs shipped with Checkmk")),
+        (Path("/usr/share/snmp/mibs"), _("System MIBs")),
     ]
 
 
@@ -90,32 +86,33 @@ syslog_facilities: DropdownChoices = [
 ]
 
 phase_names = {
-    'counting': _("counting"),
-    'delayed': _("delayed"),
-    'open': _("open"),
-    'ack': _("acknowledged"),
-    'closed': _("closed"),
+    "counting": _l("counting"),
+    "delayed": _l("delayed"),
+    "open": _l("open"),
+    "ack": _l("acknowledged"),
+    "closed": _l("closed"),
 }
 
 action_whats = {
-    "ORPHANED": _("Event deleted in counting state because rule was deleted."),
-    "NOCOUNT": _("Event deleted in counting state because rule does not count anymore"),
-    "DELAYOVER":
-        _("Event opened because the delay time has elapsed before cancelling event arrived."),
-    "EXPIRED": _("Event deleted because its livetime expired"),
-    "COUNTREACHED": _("Event deleted because required count had been reached"),
-    "COUNTFAILED": _("Event created by required count was not reached in time"),
-    "UPDATE": _("Event information updated by user"),
-    "NEW": _("New event created"),
-    "DELETE": _("Event deleted manually by user"),
-    "EMAIL": _("Email sent"),
-    "SCRIPT": _("Script executed"),
-    "CANCELLED": _("The event was cancelled because the corresponding OK message was received"),
-    "ARCHIVED": _(
+    "ORPHANED": _l("Event deleted in counting state because rule was deleted."),
+    "NOCOUNT": _l("Event deleted in counting state because rule does not count anymore"),
+    "DELAYOVER": _l(
+        "Event opened because the delay time has elapsed before cancelling event arrived."
+    ),
+    "EXPIRED": _l("Event deleted because its livetime expired"),
+    "COUNTREACHED": _l("Event deleted because required count had been reached"),
+    "COUNTFAILED": _l("Event created by required count was not reached in time"),
+    "UPDATE": _l("Event information updated by user"),
+    "NEW": _l("New event created"),
+    "DELETE": _l("Event deleted manually by user"),
+    "EMAIL": _l("Email sent"),
+    "SCRIPT": _l("Script executed"),
+    "CANCELLED": _l("The event was cancelled because the corresponding OK message was received"),
+    "ARCHIVED": _l(
         "Event was archived because no rule matched and archiving is activated in global settings."
     ),
-    "AUTODELETE": _("Event was deleted automatically"),
-    "CHANGESTATE": _("State of event changed by user"),
+    "AUTODELETE": _l("Event was deleted automatically"),
+    "CHANGESTATE": _l("State of event changed by user"),
 }
 
 
@@ -139,26 +136,20 @@ def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
-    return ([("@NOTIFY", _("Send monitoring notification"))] +
-            [(a["id"], a["title"])
-             for a in eventd_configuration().get("actions", [])
-             if not omit_hidden or not a.get("hidden")])
+    return [("@NOTIFY", _("Send monitoring notification"))] + [
+        (a["id"], a["title"])
+        for a in _eventd_configuration().get("actions", [])
+        if not omit_hidden or not a.get("hidden")
+    ]
 
 
-cached_config = None
-
-
-def eventd_configuration() -> ec.ConfigFromWATO:
-    global cached_config
-    # TODO: Huh??? Why do we use html simply as a tag here???
-    if cached_config and cached_config[0] is html:
-        return cached_config[1]
-
-    settings = ec.settings('', Path(cmk.utils.paths.omd_root),
-                           Path(cmk.utils.paths.default_config_dir), [''])
-    cfg = ec.load_config(settings)
-    cached_config = (html, cfg)
-    return cfg
+@request_memoize()
+def _eventd_configuration() -> ec.ConfigFromWATO:
+    return ec.load_config(
+        ec.settings(
+            "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
+        )
+    )
 
 
 def daemon_running() -> bool:
@@ -176,7 +167,8 @@ def send_event(event) -> str:
             text=event["text"],
             ip_address=event["ipaddress"],
             service_level=event["sl"],
-        ))
+        )
+    )
 
     execute_command("CREATE", [syslog_message_str], site=event["site"])
 
@@ -216,20 +208,21 @@ def query_ec_directly(query):
             if not chunk:
                 break
 
-        return ast.literal_eval(ensure_str(response_text))
+        return ast.literal_eval(response_text.decode())
     except SyntaxError:
         raise MKGeneralException(
-            _("Invalid response from event daemon: "
-              "<pre>%s</pre>") % response_text)
+            _("Invalid response from event daemon: " "<pre>%s</pre>") % response_text
+        )
 
     except Exception as e:
         raise MKGeneralException(
-            _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e))
+            _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e)
+        )
 
 
-def execute_command(name: str,
-                    args: Optional[List[str]] = None,
-                    site: Optional[SiteId] = None) -> None:
+def execute_command(
+    name: str, args: Optional[List[str]] = None, site: Optional[SiteId] = None
+) -> None:
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -276,8 +269,9 @@ def get_total_stats(only_sites):
         ]:
             total_stats.setdefault(time_key, 0.0)
             if total_stats[in_relation_to]:  # avoid division by zero
-                my_weight = row[in_relation_to] / total_stats[
-                    in_relation_to]  # fixed: true-division
+                my_weight = (
+                    row[in_relation_to] / total_stats[in_relation_to]
+                )  # fixed: true-division
                 total_stats[time_key] += my_weight * row[time_key]
 
     total_sync_time = 0.0
@@ -297,9 +291,13 @@ def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
         # Do not mark the site as dead in case the Event Console is not available.
-        query = livestatus.Query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
-                                 suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
-                                                      livestatus.MKLivestatusBadGatewayError))
+        query = livestatus.Query(
+            "GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
+            suppress_exceptions=(
+                livestatus.MKLivestatusTableNotFoundError,
+                livestatus.MKLivestatusBadGatewayError,
+            ),
+        )
         for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))
     finally:
@@ -379,6 +377,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 
     if cmk_version.is_managed_edition():
         import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module,import-outside-toplevel
+
         if "customer" in rule_pack:
             rule_customer_id = rule_pack["customer"]
         else:
@@ -398,7 +397,7 @@ def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(cmk.utils.paths.livestatus_unix_socket)
-        livesock.send(ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
+        livesock.send(("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname).encode())
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()
         if answer == b"":
@@ -416,7 +415,7 @@ def match(pattern, text, complete=True):
         return True
     if complete:
         if not pattern.endswith("$"):
-            pattern += '$'
+            pattern += "$"
         m = re.compile(pattern, re.IGNORECASE).match(text)
     else:
         m = re.compile(pattern, re.IGNORECASE).search(text)

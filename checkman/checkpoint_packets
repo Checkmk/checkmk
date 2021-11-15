@@ -8,6 +8,6 @@ description:
  accepted, rejected, dropped, logged, espEncrypted, espDecrypted.  Warning and critical levels for
  the packet rates may be configured.
 
-inventory:
+discovery:
  One service is created.
 

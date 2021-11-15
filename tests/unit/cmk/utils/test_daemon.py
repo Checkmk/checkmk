@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
 
-import cmk.utils.store as store
+import pytest
+
 import cmk.utils.daemon as daemon
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 

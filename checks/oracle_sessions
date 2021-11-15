@@ -35,10 +35,10 @@ def check_oracle_sessions(item, params, parsed):
     if isinstance(params, tuple):
         params = {"sessions_abs": params}
 
-    if item in parsed and 'cursess' in parsed[item]:
+    if item in parsed and "cursess" in parsed[item]:
         data = parsed[item]
-        sessions = data['cursess']
-        sessions_max = data.get('maxsess')
+        sessions = data["cursess"]
+        sessions_max = data.get("maxsess")
 
         if sessions_max is not None:
             state = 0
@@ -80,10 +80,10 @@ def check_oracle_sessions(item, params, parsed):
 
 check_info["oracle_sessions"] = {
     "parse_function": parse_oracle_sessions,
-    'inventory_function': inventory_oracle_sessions,
-    'check_function': check_oracle_sessions,
-    'service_description': 'ORA %s Sessions',
-    'has_perfdata': True,
-    'group': 'oracle_sessions',
-    'default_levels_variable': 'oracle_sessions_default_levels'
+    "inventory_function": inventory_oracle_sessions,
+    "check_function": check_oracle_sessions,
+    "service_description": "ORA %s Sessions",
+    "has_perfdata": True,
+    "group": "oracle_sessions",
+    "default_levels_variable": "oracle_sessions_default_levels",
 }

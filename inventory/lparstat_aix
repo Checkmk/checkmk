@@ -6,21 +6,25 @@
 
 
 def inv_lparstat_aix(parsed, inventory_tree):
-    data = parsed.get('system_config', {})
-    node = inventory_tree.get_dict('hardware.cpu.')
+    data = parsed.get("system_config", {})
+    node = inventory_tree.get_dict("hardware.cpu.")
 
-    sharing_mode = '-'.join(data.get(k) for k in ('type', 'mode') if data.get(k))
+    sharing_mode = "-".join(data.get(k) for k in ("type", "mode") if data.get(k))
     if sharing_mode:
-        node['sharing_mode'] = sharing_mode
+        node["sharing_mode"] = sharing_mode
 
-    for nkey, dkey in [("smt_threads", "smt"), ("entitlement", "ent"), ("cpus", "psize"),
-                       ("logical_cpus", "lcpu")]:
+    for nkey, dkey in [
+        ("smt_threads", "smt"),
+        ("entitlement", "ent"),
+        ("cpus", "psize"),
+        ("logical_cpus", "lcpu"),
+    ]:
         try:
             node[nkey] = data[dkey]
         except KeyError:
             pass
 
 
-inv_info['lparstat_aix'] = {
+inv_info["lparstat_aix"] = {
     "inv_function": inv_lparstat_aix,
 }

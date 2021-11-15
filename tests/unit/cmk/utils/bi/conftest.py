@@ -6,19 +6,19 @@
 
 import pytest
 
+from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher, BIStructureFetcher
+from cmk.utils.bi.bi_lib import SitesCallback
 from cmk.utils.bi.bi_node_generator import BINodeGenerator
-from cmk.utils.bi.bi_searcher import BISearcher
-from cmk.utils.bi.bi_data_fetcher import BIStructureFetcher, BIStatusFetcher
+from cmk.utils.bi.bi_packs import BIAggregationPacks
 from cmk.utils.bi.bi_rule import BIRule
 from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_lib import SitesCallback
-from cmk.utils.bi.bi_packs import BIAggregationPacks
+from cmk.utils.bi.bi_searcher import BISearcher
 
-import bi_test_data.sample_config as sample_config
+from .bi_test_data import sample_config
 
 
-@pytest.fixture(scope="function")
-def bi_searcher():
+@pytest.fixture(scope="function", name="bi_searcher")
+def _bi_searcher():
     yield BISearcher()
 
 

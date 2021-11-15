@@ -22,7 +22,7 @@ description:
  BGP tables). In that case you might have to fine tune the check parameters
  or even have to disable the check.
 
-inventory:
+discovery:
  One service is created for each CPU.
 
 item:

@@ -4,27 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Mapping,
-    Optional,
-)
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    State as state,
-    type_defs,
-)
-from .utils import ipmi
+from typing import Any, Mapping, Optional
 
 # NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
 # This is needed because inventory_ipmi_rules was once not a dict, which is not allowed by the API
 # for discovery rulesets
 # ==================================================================================================
 from cmk.utils.type_defs import RuleSetName  # pylint: disable=cmk-module-layer-violation
-from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
+
+from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
+    add_discovery_ruleset,
+    get_discovery_ruleset,
+)
 from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.register import add_discovery_ruleset, get_discovery_ruleset  # pylint: disable=cmk-module-layer-violation
+from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
+
+from .agent_based_api.v1 import register, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
+from .utils import ipmi
+
 # ==================================================================================================
 
 # Example of output from ipmi:
@@ -198,12 +197,13 @@ def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
                         "unrec_high",
                     ],
                     line[1:],
-                ))
+                )
+            )
 
             sensor = parsed.setdefault(
                 name,
                 ipmi.Sensor(
-                    data['status_txt'],
+                    data["status_txt"],
                     data["unit"].replace(" ", "_"),
                 ),
             )
@@ -277,10 +277,11 @@ def discover_ipmi(
 
 def ipmi_status_txt_mapping(status_txt: str) -> state:
     status_txt_lower = status_txt.lower()
-    if status_txt.startswith('ok') and not ("failure detected" in status_txt_lower or
-                                            "in critical array" in status_txt_lower):
+    if status_txt.startswith("ok") and not (
+        "failure detected" in status_txt_lower or "in critical array" in status_txt_lower
+    ):
         return state.OK
-    if status_txt.startswith('nc'):
+    if status_txt.startswith("nc"):
         return state.WARN
     return state.CRIT
 
@@ -306,7 +307,7 @@ register.check_plugin(
     service_name="IPMI Sensor %s",
     discovery_function=discover_ipmi,
     check_function=check_ipmi,
-    check_ruleset_name='ipmi',
+    check_ruleset_name="ipmi",
     check_default_parameters={"ignored_sensorstates": ["ns", "nr", "na"]},
 )
 

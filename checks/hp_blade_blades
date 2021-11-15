@@ -24,20 +24,20 @@
 
 # GENERAL MAPS:
 
-hp_blade_present_map = {1: 'other', 2: 'absent', 3: 'present'}
-hp_blade_status_map = {1: 'Other', 2: 'Ok', 3: 'Degraded', 4: 'Failed'}
+hp_blade_present_map = {1: "other", 2: "absent", 3: "present"}
+hp_blade_status_map = {1: "Other", 2: "Ok", 3: "Degraded", 4: "Failed"}
 
 hp_blade_status2nagios_map = {
-    'Other': 2,
-    'Ok': 0,
-    'Degraded': 1,
-    'Failed': 2,
+    "Other": 2,
+    "Ok": 0,
+    "Degraded": 1,
+    "Failed": 2,
 }
 
 
 def inventory_hp_blade_blades(info):
     return [
-        (line[0], None) for line in info if hp_blade_present_map.get(int(line[1]), "") == 'present'
+        (line[0], None) for line in info if hp_blade_present_map.get(int(line[1]), "") == "present"
     ]
 
 
@@ -45,28 +45,34 @@ def check_hp_blade_blades(item, params, info):
     for line in info:
         if line[0] == item:
             present_state = hp_blade_present_map[int(line[1])]
-            if present_state != 'present':
-                return (2, 'Blade was present but is not available anymore'
-                        ' (Present state: %s)' % present_state)
+            if present_state != "present":
+                return (
+                    2,
+                    "Blade was present but is not available anymore"
+                    " (Present state: %s)" % present_state,
+                )
 
             # Status field can be an empty string.
             # Seems not to be implemented. The MIB file tells me that this value
             # should represent a state but is empty. So set it to "fake" OK and
             # display the other gathered information.
-            state = 2 if line[2] == '' else line[2]
+            state = 2 if line[2] == "" else line[2]
             state = saveint(state)
 
             snmp_state = hp_blade_status_map[state]
             status = hp_blade_status2nagios_map[snmp_state]
-            return (status, 'Blade status is %s (Product: %s Name: %s S/N: %s)' %
-                    (snmp_state, line[3], line[4], line[5]))
+            return (
+                status,
+                "Blade status is %s (Product: %s Name: %s S/N: %s)"
+                % (snmp_state, line[3], line[4], line[5]),
+            )
     return (3, "item not found in snmp data")
 
 
 check_info["hp_blade_blades"] = {
-    'check_function': check_hp_blade_blades,
-    'inventory_function': inventory_hp_blade_blades,
-    'service_description': 'Blade %s',
-    'snmp_info': ('.1.3.6.1.4.1.232.22.2.4.1.1.1', ['3', '12', '21', '17', '4', '16']),
-    'snmp_scan_function': lambda oid: ".11.5.7.1.2" in oid(".1.3.6.1.2.1.1.2.0"),
+    "check_function": check_hp_blade_blades,
+    "inventory_function": inventory_hp_blade_blades,
+    "service_description": "Blade %s",
+    "snmp_info": (".1.3.6.1.4.1.232.22.2.4.1.1.1", ["3", "12", "21", "17", "4", "16"]),
+    "snmp_scan_function": lambda oid: ".11.5.7.1.2" in oid(".1.3.6.1.2.1.1.2.0"),
 }

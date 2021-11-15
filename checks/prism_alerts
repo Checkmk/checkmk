@@ -10,9 +10,9 @@
 [1594857282558164, "kCritical", "File Server space usage for tk2sydafs1 is at 100%.", {}]
 [1594776768272094, "kWarning", "The CVM is not synchronizing time with any external servers. [check_cvm_ntp_sync][3026]NTP leader is not synchronizing to an external NTP server", {"vm_type": "CVM"}]
 """
-from typing import Sequence, Mapping, Dict, Tuple, Any
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, Mapping, Sequence, Tuple
 
 Section = Sequence[Dict[Any, Any]]
 StringMap = Mapping[str, str]
@@ -38,9 +38,9 @@ def parse_prism_alerts(info: Sequence[Sequence[str]]) -> Section:
 def severity(name: str) -> Tuple[int, int]:
     # first value is for sorting second is the nagios status codes
     return {
-        'kInfo': (0, 0),
-        'kWarning': (1, 1),
-        'kCritical': (3, 2),
+        "kInfo": (0, 0),
+        "kWarning": (1, 1),
+        "kCritical": (3, 2),
     }.get(name, (2, 3))
 
 
@@ -58,27 +58,29 @@ def to_string(timestamp: str) -> str:
 def check_prism_alerts(_no_item: str, params: StringMap, parsed: Section) -> Any:
     valid_alerts = (
         [e for e in parsed if e.get("context", {}).get("vm_type") == "Prism Central VM"]  #
-        if params.get("prism_central_only") else parsed)
+        if params.get("prism_central_only")
+        else parsed
+    )
 
     if not valid_alerts:
         yield 0, "No alerts"
         return
 
     # find the newest alert among those with the highest severity
-    immediate_alert = max(valid_alerts, key=lambda x: (severity(x['severity'])[0], x['timestamp']))
+    immediate_alert = max(valid_alerts, key=lambda x: (severity(x["severity"])[0], x["timestamp"]))
 
-    yield severity(immediate_alert['severity'])[1], "%d alerts" % len(valid_alerts)
+    yield severity(immediate_alert["severity"])[1], "%d alerts" % len(valid_alerts)
 
-    message = immediate_alert['message']
+    message = immediate_alert["message"]
     state = 1 if "has the following problems" in message else 0  # see werk #7203
-    yield state, "Last worst on %s: %r" % (to_string(immediate_alert['timestamp']), message)
+    yield state, "Last worst on %s: %r" % (to_string(immediate_alert["timestamp"]), message)
 
 
-check_info['prism_alerts'] = {
-    'check_function': check_prism_alerts,
-    'inventory_function': inventory_prism_alerts,
-    'parse_function': parse_prism_alerts,
-    'group': "prism_alerts",
-    'has_perfdata': True,
-    'service_description': "Prism Alerts",
+check_info["prism_alerts"] = {
+    "check_function": check_prism_alerts,
+    "inventory_function": inventory_prism_alerts,
+    "parse_function": parse_prism_alerts,
+    "group": "prism_alerts",
+    "has_perfdata": True,
+    "service_description": "Prism Alerts",
 }

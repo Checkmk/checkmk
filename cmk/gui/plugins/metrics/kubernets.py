@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -26,10 +22,46 @@ from cmk.gui.plugins.metrics import (
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["k8s_nodes"] = {
+metric_info["k8s_nodes"] = {  # legacy kubernetes checks
     "title": _("Nodes"),
     "unit": "count",
     "color": "11/a",
+}
+
+metric_info["k8s_node_count_worker"] = {
+    "title": _("Worker nodes"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["k8s_node_count_control_plane"] = {
+    "title": _("Control plane nodes"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+metric_info["k8s_node_container_count_running"] = {
+    "title": _("Running node containers"),
+    "unit": "count",
+    "color": "35/a",
+}
+
+metric_info["k8s_node_container_count_waiting"] = {
+    "title": _("Waiting node containers"),
+    "unit": "count",
+    "color": "22/a",
+}
+
+metric_info["k8s_node_container_count_terminated"] = {
+    "title": _("Terminated node containers"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["k8s_node_container_count_total"] = {
+    "title": _("Total node containers"),
+    "unit": "count",
+    "color": "42/a",
 }
 
 metric_info["k8s_pods_request"] = {
@@ -47,7 +79,15 @@ metric_info["k8s_pods_allocatable"] = {
 metric_info["k8s_pods_capacity"] = {
     "title": _("Capacity"),
     "unit": "count",
-    "color": "c0c0c0",
+    "color": "#c0c0c0",
+}
+
+metric_info["k8s_pods_pending"] = {"title": _("Pending"), "unit": "count", "color": "#d1d4e8"}
+
+metric_info["k8s_pods_running"] = {
+    "title": _("Running"),
+    "unit": "count",
+    "color": "#93a2ee",
 }
 
 metric_info["k8s_cpu_request"] = {
@@ -170,7 +210,7 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "color": "14/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -188,6 +228,16 @@ graph_info["k8s_resources.pods"] = {
         ("k8s_pods_capacity", "area"),
         ("k8s_pods_allocatable", "area"),
         ("k8s_pods_request", "area"),
+    ],
+}
+
+graph_info["k8s_resources.pod"] = {
+    "title": _("Pod resources"),
+    "metrics": [
+        ("k8s_pods_allocatable", "line"),
+        ("k8s_pods_capacity", "line"),
+        ("k8s_pods_running", "area"),
+        ("k8s_pods_pending", "stack"),
     ],
 }
 
@@ -218,5 +268,27 @@ graph_info["k8s_pod_container"] = {
     "metrics": [
         ("docker_all_containers", "line"),
         ("ready_containers", "area"),
+    ],
+}
+
+graph_info["k8s_node_count"] = {
+    "title": _("Nodes"),
+    "metrics": [
+        ("k8s_node_count_control_plane", "stack"),
+        ("k8s_node_count_worker", "stack"),
+    ],
+}
+
+graph_info["k8s_node_container_count"] = {
+    "title": _("Node Containers"),
+    "metrics": [
+        ("k8s_node_container_count_running", "stack"),
+        ("k8s_node_container_count_waiting", "stack"),
+        ("k8s_node_container_count_terminated", "stack"),
+        ("k8s_node_container_count_total", "line"),
+    ],
+    "scalars": [
+        "k8s_node_container_count_total:warn",
+        "k8s_node_container_count_total:crit",
     ],
 }

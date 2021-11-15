@@ -4,32 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import copy
-import socket
-import shutil
 import logging
+import shutil
+import socket
 from pathlib import Path
-from unittest import mock
 from typing import Any, Mapping, NamedTuple
+from unittest import mock
 
-from fakeredis import FakeRedis  # type: ignore[import]
 import pytest
+from fakeredis import FakeRedis  # type: ignore[import]
+
+from tests.testlib import is_enterprise_repo, is_managed_repo
+from tests.testlib.debug_utils import cmk_debug_enabled
+
 import livestatus
 
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
 
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
-
-# No stub file
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import mock_livestatus
-from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
-# No stub file
-from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
+from cmk.gui.livestatus_utils.testing import mock_livestatus
 
 logger = logging.getLogger(__name__)
 
@@ -54,25 +54,28 @@ def fixture_edition_short(monkeypatch, request):
     yield edition_short
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
-    monkeypatch.setattr(cmk_version, "omd_site", lambda: "NO_SITE")
+    omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)
     store.makedirs(cmk.utils.paths.autochecks_dir)
-    store.makedirs(cmk.utils.paths.var_dir + '/web')
-    store.makedirs(cmk.utils.paths.var_dir + '/php-api')
-    store.makedirs(cmk.utils.paths.var_dir + '/wato/php-api')
+    store.makedirs(cmk.utils.paths.var_dir + "/web")
+    store.makedirs(cmk.utils.paths.var_dir + "/php-api")
+    store.makedirs(cmk.utils.paths.var_dir + "/wato/php-api")
     store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
     store.makedirs(cmk.utils.paths.tmp_dir + "/wato/activation")
-    store.makedirs(cmk.utils.paths.omd_root + '/var/log')
-    store.makedirs(cmk.utils.paths.omd_root + '/tmp/check_mk')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/conf.d/wato')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/multisite.d/wato')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/wato')
-    _touch(cmk.utils.paths.default_config_dir + '/mkeventd.mk')
-    _touch(cmk.utils.paths.default_config_dir + '/multisite.mk')
+    store.makedirs(cmk.utils.paths.omd_root + "/var/log")
+    store.makedirs(cmk.utils.paths.omd_root + "/tmp/check_mk")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
+    _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
+    _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
+
+    yield
+    omd_site.cache_clear()
 
 
 def _touch(path):
@@ -80,7 +83,7 @@ def _touch(path):
     Path(path).touch()
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def cleanup_after_test():
     yield
 
@@ -124,8 +127,8 @@ def fixup_ip_lookup(monkeypatch):
 
 
 class FixRegister:
-    """Access agent based plugins
-    """
+    """Access agent based plugins"""
+
     def __init__(self):
         # Local import to have faster pytest initialization
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
@@ -142,11 +145,6 @@ class FixRegister:
                 check_api.get_check_api_context,
                 register.inventory_plugins_legacy.get_inventory_context,
             )
-
-        # some sanitiy checks, may decrease as we migrate
-        assert len(config.check_info) > 1000
-        assert len(config.snmp_info) > 400
-        assert len(inventory_plugins._inv_info) > 60
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
@@ -171,11 +169,12 @@ class FixRegister:
 
 
 class FixPluginLegacy:
-    """Access legacy dicts like `check_info`
-    """
+    """Access legacy dicts like `check_info`"""
+
     def __init__(self, fixed_register: FixRegister):
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.inventory_plugins as inventory_plugins
+
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
         self._check_info = copy.deepcopy(config.check_info)
@@ -210,14 +209,9 @@ class FixPluginLegacy:
         return self._check_variables
 
 
-@pytest.fixture(scope="session")
-def fix_register():
+@pytest.fixture(scope="session", name="fix_register")
+def fix_register_fixture():
     yield FixRegister()
-
-
-@pytest.fixture(scope="session")
-def load_all_agent_based_plugins(fix_register):
-    pass
 
 
 @pytest.fixture(scope="session")
@@ -230,9 +224,13 @@ def prevent_livestatus_connect(monkeypatch):
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
     monkeypatch.setattr(
-        livestatus.SingleSiteConnection, "_create_socket", lambda *_: pytest.fail(
+        livestatus.SingleSiteConnection,
+        "_create_socket",
+        lambda *_: pytest.fail(
             "The test tried to use a livestatus connection. This will result in connect timeouts. "
-            "Use mock_livestatus for mocking away the livestatus API"))
+            "Use mock_livestatus for mocking away the livestatus API"
+        ),
+    )
 
     orig_init = livestatus.MultiSiteConnection.__init__
 
@@ -267,7 +265,7 @@ def _mock_livestatus():
         yield live
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def use_fakeredis_client(monkeypatch):
     """Use fakeredis client instead of redis.Redis"""
     monkeypatch.setattr(
@@ -281,11 +279,38 @@ class _MockVSManager(NamedTuple):
     active_service_interface: Mapping[str, Any]
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def initialised_item_state():
     mock_vs = _MockVSManager({})
     with mock.patch(
-            "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
-            mock_vs,
+        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+        mock_vs,
     ):
         yield
+
+
+@pytest.fixture
+def registry_reset(request):
+    """Fixture to reset a Registry to its default entries.
+
+    Tests using this fixture need a `registry_reset` marker with the registry to reset as argument.
+
+    >>> import pytest
+    >>> import cmk.gui.dashboard
+    >>> @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+    ... def test_foo(reset_registry):
+    ...     pass
+
+    """
+    marker = request.node.get_closest_marker("registry_reset")
+    if marker is None:
+        raise TypeError("registry_reset fixture needs reset_registry maker")
+    registry = marker.args[0]
+
+    default_entries = list(registry)
+    try:
+        yield registry
+    finally:
+        for entry in list(registry):
+            if entry not in default_entries:
+                registry.unregister(entry)

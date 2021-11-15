@@ -7,15 +7,15 @@
 
 def agent_innovaphone_arguments(params, hostname, ipaddress):
     auth_info = params["auth_basic"]
-    username = auth_info['username']
-    password = passwordstore_get_cmdline("%s", auth_info['password'])
+    username = auth_info["username"]
+    password = passwordstore_get_cmdline("%s", auth_info["password"])
     args = [hostname, username, password]
-    protocol = params.get('protocol')
+    protocol = params.get("protocol")
     if protocol:
         args.extend(["--protocol", protocol])
-    if params.get('no-cert-check'):
-        args.append('--no-cert-check')
+    if params.get("no-cert-check"):
+        args.append("--no-cert-check")
     return args
 
 
-special_agent_info['innovaphone'] = agent_innovaphone_arguments
+special_agent_info["innovaphone"] = agent_innovaphone_arguments

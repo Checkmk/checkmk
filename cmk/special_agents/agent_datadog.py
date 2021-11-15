@@ -10,22 +10,24 @@ is fetched from the Datadog API, https://docs.datadoghq.com/api/, version 1. End
 * Events: events
 """
 
+import json
 import logging
 import re
 import time
-from contextlib import suppress
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, FrozenSet, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import requests
 
 from cmk.utils import paths, store
 
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogForwarderUnixSocket, SyslogMessage,
-)
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    SyslogForwarderUnixSocket,
+    SyslogMessage,
+)
 
 Tags = Sequence[str]
 DatadogAPIResponse = Mapping[str, Any]
@@ -39,8 +41,10 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         "hostname",
         type=str,
         metavar="NAME",
-        help=("Name of the Checkmk host on which the agent is executed (used as filename to store "
-              "the timestamp of the last event)"),
+        help=(
+            "Name of the Checkmk host on which the agent is executed (used as filename to store "
+            "the timestamp of the last event)"
+        ),
     )
     parser.add_argument(
         "api_key",
@@ -89,6 +93,13 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         default=[],
     )
     parser.add_argument(
+        "--event_max_age",
+        type=int,
+        metavar="AGE",
+        help="Restrict maximum age of fetched events (in seconds)",
+        default=600,
+    )
+    parser.add_argument(
         "--event_tags",
         type=str,
         nargs="*",
@@ -101,8 +112,10 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         type=str,
         nargs="*",
         metavar="REGEX1 REGEX2 ...",
-        help=("Any tag of a fetched event matching one of these regular expressions will be shown "
-              "in the EC"),
+        help=(
+            "Any tag of a fetched event matching one of these regular expressions will be shown "
+            "in the EC"
+        ),
         default=[],
     )
     parser.add_argument(
@@ -129,8 +142,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser.add_argument(
         "--event_add_text",
         action="store_true",
-        help=
-        "Add text of events to data forwarded to the EC. Newline characters are replaced by '~'.",
+        help="Add text of events to data forwarded to the EC. Newline characters are replaced by '~'.",
     )
     return parser.parse_args(argv)
 
@@ -143,8 +155,8 @@ class DatadogAPI:
         app_key: str,
     ) -> None:
         self._query_heads = {
-            'DD-API-KEY': api_key,
-            'DD-APPLICATION-KEY': app_key,
+            "DD-API-KEY": api_key,
+            "DD-APPLICATION-KEY": app_key,
         }
         self._api_url = api_host.rstrip("/") + "/api/v1"
 
@@ -154,7 +166,7 @@ class DatadogAPI:
         params: Mapping[str, Any],
     ) -> Any:
         return requests.get(
-            f'{self._api_url}/{api_endpoint}',
+            f"{self._api_url}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
         ).json()
@@ -180,10 +192,10 @@ class MonitorsQuerier:
         current_page = 0
         while True:
             if monitors_in_page := self._query_monitors_page(
-                    tags,
-                    monitor_tags,
-                    page_size,
-                    current_page,
+                tags,
+                monitor_tags,
+                page_size,
+                current_page,
             ):
                 yield from monitors_in_page
                 current_page += 1
@@ -223,11 +235,24 @@ class EventsQuerier:
         self,
         datadog_api: DatadogAPI,
         host_name: str,
+        max_age: int,
     ) -> None:
         self._datadog_api = datadog_api
-        self._path_state_file = Path(paths.tmp_dir) / "agents" / "agent_datadog" / host_name
+        self._path_last_event_ids = (
+            Path(paths.tmp_dir) / "agents" / "agent_datadog" / (host_name + ".json")
+        )
+        self._max_age = max_age
 
     def query_events(
+        self,
+        tags: Tags,
+    ) -> Iterable[DatadogAPIResponse]:
+        last_event_ids = self._read_last_event_ids()
+        queried_events = list(self._execute_query(tags))
+        self._store_last_event_ids(event["id"] for event in queried_events)
+        yield from (event for event in queried_events if event["id"] not in last_event_ids)
+
+    def _execute_query(
         self,
         tags: Tags,
     ) -> Iterable[DatadogAPIResponse]:
@@ -240,10 +265,10 @@ class EventsQuerier:
 
         while True:
             if events_in_page := self._query_events_page_in_time_window(
-                    start,
-                    end,
-                    current_page,
-                    tags,
+                start,
+                end,
+                current_page,
+                tags,
             ):
                 yield from events_in_page
                 current_page += 1
@@ -251,17 +276,9 @@ class EventsQuerier:
 
             break
 
-        self._store_events_timestamp(end)
-
     def _events_query_time_range(self) -> Tuple[int, int]:
-        end = int(time.time())
-        # we go back one hour at maximum, this happens if the state file cannot be read or if the
-        # last agent run was more than one hour ago
-        start = max(
-            self._read_last_events_timestamp() or 0,
-            end - 3600,
-        )
-        return start, end
+        now = int(time.time())
+        return now - self._max_age, now
 
     def _query_events_page_in_time_window(
         self,
@@ -288,16 +305,24 @@ class EventsQuerier:
             params,
         )["events"]
 
-    def _store_events_timestamp(
+    def _store_last_event_ids(
         self,
-        timestamp: int,
+        ids: Iterable[int],
     ) -> None:
-        store.save_text_to_file(self._path_state_file, str(timestamp))
+        store.save_text_to_file(
+            self._path_last_event_ids,
+            json.dumps(list(ids)),
+        )
 
-    def _read_last_events_timestamp(self) -> Optional[int]:
-        with suppress(Exception):
-            return int(store.load_text_from_file(self._path_state_file, default=""))
-        return None
+    def _read_last_event_ids(self) -> FrozenSet[int]:
+        return frozenset(
+            json.loads(
+                store.load_text_from_file(
+                    self._path_last_event_ids,
+                    default="[]",
+                )
+            )
+        )
 
 
 def _to_syslog_message(
@@ -309,8 +334,11 @@ def _to_syslog_message(
     add_text: bool,
 ) -> SyslogMessage:
     LOGGER.debug(raw_event)
-    matching_tags = ', '.join(tag for tag in raw_event["tags"] if any(
-        re.match(tag_regex, tag) for tag_regex in tag_regexes))
+    matching_tags = ", ".join(
+        tag
+        for tag in raw_event["tags"]
+        if any(re.match(tag_regex, tag) for tag_regex in tag_regexes)
+    )
     tags_text = f", Tags: {matching_tags}" if matching_tags else ""
     details = str(raw_event["text"]).replace("\n", " ~ ")
     details_text = f", Text: {details}" if add_text else ""
@@ -341,7 +369,9 @@ def _forward_events_to_ec(
             severity,
             service_level,
             add_text,
-        ) for raw_event in raw_events)
+        )
+        for raw_event in raw_events
+    )
 
 
 def _monitors_section(
@@ -351,18 +381,21 @@ def _monitors_section(
     LOGGER.debug("Querying monitors")
     with SectionWriter("datadog_monitors") as writer:
         for monitor in MonitorsQuerier(datadog_api).query_monitors(
-                args.monitor_tags,
-                args.monitor_monitor_tags,
+            args.monitor_tags,
+            args.monitor_monitor_tags,
         ):
             writer.append_json(monitor)
 
 
 def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
     LOGGER.debug("Querying events")
-    events = list(EventsQuerier(
-        datadog_api,
-        args.hostname,
-    ).query_events(args.event_tags))
+    events = list(
+        EventsQuerier(
+            datadog_api,
+            args.hostname,
+            args.event_max_age,
+        ).query_events(args.event_tags)
+    )
     _forward_events_to_ec(
         events,
         args.event_tags_show,
@@ -382,10 +415,7 @@ def agent_datadog_main(args: Args) -> None:
         args.app_key,
     )
     for section in args.sections:
-        {
-            "monitors": _monitors_section,
-            "events": _events_section,
-        }[section](
+        {"monitors": _monitors_section, "events": _events_section,}[section](
             datadog_api,
             args,
         )

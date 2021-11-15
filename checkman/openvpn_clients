@@ -17,7 +17,7 @@ description:
 item:
  The name of the OpenVPN connection (first column in the status file).
 
-inventory:
+discovery:
  One service is created for each active connection.
  Please use {ignored_services} if you want to restrict this.
 

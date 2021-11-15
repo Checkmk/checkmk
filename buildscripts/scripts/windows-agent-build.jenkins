@@ -16,9 +16,14 @@ node ('windows') {
         def CMK_VERS = versioning.get_cmk_version(scm, VERSION)
         bat("make -C agents\\wnx NEW_VERSION=\"${CMK_VERS}\" setversion")
     }
-    windows.build(
-        TARGET: 'agent'
-    )
+    stage('preparation') {
+        withCredentials([usernamePassword(credentialsId: 'win_sign', passwordVariable: 'WIN_SIGN_PASSWORD', usernameVariable: '')]) {
+            windows.build(
+                TARGET: 'agent_with_sign',
+                PASSWORD: WIN_SIGN_PASSWORD,
+            )
+        }
+    }
 }
 
 def checkout_git(scm, VERSION) {

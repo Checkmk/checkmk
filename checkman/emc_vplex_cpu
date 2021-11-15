@@ -11,6 +11,6 @@ description:
 item:
  Name of the director
 
-inventory:
+discovery:
  One service is created for each director.
 

@@ -12,6 +12,6 @@ description:
 
  The check allways returns {OK} status.
 
-inventory:
+discovery:
  One service is created for each host
  if the agent output contains a {statgrab_cpu} section containing cpu information.

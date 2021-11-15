@@ -11,5 +11,5 @@ description:
  {cmk --snmpwalk} along with a description as to how the check behaves unexpectedly in
  your setup.
 
-inventory:
+discovery:
  One service is created.

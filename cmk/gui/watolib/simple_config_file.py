@@ -10,12 +10,13 @@ from pathlib import Path
 import cmk.utils.store as store
 
 
-class WatoSimpleConfigFile(metaclass=abc.ABCMeta):
+class WatoSimpleConfigFile(abc.ABC):
     """Manage simple .mk config file containing a single dict variable
 
     The file handling logic is inherited from cmk.utils.store.load_from_mk_file()
     and cmk.utils.store.save_to_mk_file().
     """
+
     def __init__(self, config_file_path: Path, config_variable: str) -> None:
         self._config_file_path = config_file_path
         self._config_variable = config_variable

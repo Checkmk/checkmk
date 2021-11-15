@@ -10,8 +10,6 @@ import os
 from pathlib import Path
 from typing import Union
 
-from cmk.utils.type_defs import ConfigSerial, OptionalConfigSerial
-
 
 # One bright day, when every path is really a Path, this can die... :-)
 def _path(*args: Union[str, Path]) -> str:
@@ -31,6 +29,8 @@ def _local_path(global_path: Union[str, Path]) -> Path:
 omd_root = _path(os.environ.get("OMD_ROOT", ""))
 opt_root = _path("/opt" + omd_root)
 
+mkbackup_lock_dir = Path("/run/lock/mkbackup")
+trusted_ca_file = _omd_path("var/ssl/ca-certificates.crt")
 default_config_dir = _omd_path("etc/check_mk")
 main_config_file = _omd_path("etc/check_mk/main.mk")
 final_config_file = _omd_path("etc/check_mk/final.mk")
@@ -71,6 +71,7 @@ base_discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_l
 discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
+profile_dir = Path(var_dir, "web")
 crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
@@ -94,6 +95,8 @@ disabled_packages_dir = Path(_omd_path("var/check_mk/disabled_packages"))
 _base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
 agent_based_plugins_dir = _base_plugins_dir / "agent_based"
 
+gui_plugins_dir = Path(lib_dir, "check_mk", "gui", "plugins")
+
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
@@ -110,22 +113,16 @@ local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
+local_gui_plugins_dir = _local_path(gui_plugins_dir)
 
 license_usage_dir = Path(var_dir, "license_usage")
 
 
-def make_helper_config_path(serial: OptionalConfigSerial) -> Path:
-    return core_helper_config_dir / serial
-
-
-def make_fetchers_config_path(serial: ConfigSerial) -> Path:
-    return make_helper_config_path(serial) / "fetchers"
-
-
 def make_experimental_config_file() -> Path:
-    """ Returns file with experimental settings to be used.
+    """Returns file with experimental settings to be used.
     Used to enable features which is "in development" and not good enough to be enabled by default.
     Example of experimental.mk:
     config_storage_format = "raw"
+    microcore_config_format = "protobuf"
     """
     return Path(default_config_dir) / "experimental.mk"

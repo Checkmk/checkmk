@@ -6,33 +6,26 @@
 """This file is synced from the check_mk repo to the cmk-license repo."""
 
 import abc
-from typing import (
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Union,
-    Tuple,
-)
 from collections import Counter
 from datetime import datetime
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+
 from dateutil.relativedelta import relativedelta
 
-RawSubscriptionDetails = NamedTuple(
-    "RawSubscriptionDetails",
-    [
-        ("start", Optional[int]),
-        ("end", Optional[int]),
-        ("limit", Optional[int]),
-    ],
-)
+
+class RawSubscriptionDetails(NamedTuple):
+    start: Optional[int]
+    end: Optional[int]
+    limit: Optional[int]
+
+
 RawMonthlyServiceAverage = Dict[str, Union[int, float]]
 RawMonthlyServiceAverages = List[RawMonthlyServiceAverage]
 DailyServices = Dict[datetime, Counter]
 SortedDailyServices = List[Tuple[datetime, Counter]]
 
 
-class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
+class ABCMonthlyServiceAverages(abc.ABC):
     today = datetime.today()
 
     def __init__(
@@ -67,10 +60,13 @@ class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
     @property
     def daily_services(self) -> List[Dict]:
         # Sorting is done in the frontend
-        return [{
-            "sample_time": daily_service_date.timestamp(),
-            "num_services": counter["num_services"],
-        } for daily_service_date, counter in self._daily_services]
+        return [
+            {
+                "sample_time": daily_service_date.timestamp(),
+                "num_services": counter["num_services"],
+            }
+            for daily_service_date, counter in self._daily_services
+        ]
 
     @abc.abstractmethod
     def _calculate_daily_services(self) -> DailyServices:
@@ -121,10 +117,12 @@ class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
                 )
 
         for month_start, counter in monthly_services.items():
-            self._monthly_service_averages.append({
-                "num_services": 1.0 * counter["num_services"] / counter["num_daily_services"],
-                "sample_time": month_start.timestamp(),
-            })
+            self._monthly_service_averages.append(
+                {
+                    "num_services": 1.0 * counter["num_services"] / counter["num_daily_services"],
+                    "sample_time": month_start.timestamp(),
+                }
+            )
 
     def get_aggregation(self) -> Dict:
         return {
@@ -142,17 +140,23 @@ class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
         "sample_time": None,
     }
 
-    def _get_last_service_report(self,) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
+    def _get_last_service_report(
+        self,
+    ) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
         if not self._monthly_service_averages:
             return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
         return self._monthly_service_averages[-1]
 
-    def _get_highest_service_report(self,) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
+    def _get_highest_service_report(
+        self,
+    ) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
         if not self._monthly_service_averages:
             return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
         return max(self._monthly_service_averages, key=lambda d: d["num_services"])
 
-    def _get_subscription_exceeded_first(self,) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
+    def _get_subscription_exceeded_first(
+        self,
+    ) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
         if self.subscription_limit is None:
             return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
         for service_average in self._monthly_service_averages:
@@ -186,11 +190,13 @@ class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
 
     def get_aggregation(self) -> Dict:
         aggregation = super().get_aggregation()
-        aggregation.update({
-            "daily_services": self.daily_services,
-            "monthly_service_averages": self.monthly_service_averages,
-            "samples": self._samples,
-        })
+        aggregation.update(
+            {
+                "daily_services": self.daily_services,
+                "monthly_service_averages": self.monthly_service_averages,
+                "samples": self._samples,
+            }
+        )
         return aggregation
 
 
@@ -223,8 +229,10 @@ class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
 
     def get_aggregation(self) -> Dict:
         aggregation = super().get_aggregation()
-        aggregation.update({
-            "daily_services": self.daily_services,
-            "monthly_service_averages": self.monthly_service_averages,
-        })
+        aggregation.update(
+            {
+                "daily_services": self.daily_services,
+                "monthly_service_averages": self.monthly_service_averages,
+            }
+        )
         return aggregation

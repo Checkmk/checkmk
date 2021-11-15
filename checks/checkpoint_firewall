@@ -20,23 +20,29 @@ def check_checkpoint_firewall(item, params, info):
     if info:
         state, filter_name, filter_date, major, minor = info[0]
         if state.lower() == "installed":
-            return 0, "%s (v%s.%s), filter: %s (since %s)" %\
-                (state, major, minor, filter_name, filter_date)
+            return 0, "%s (v%s.%s), filter: %s (since %s)" % (
+                state,
+                major,
+                minor,
+                filter_name,
+                filter_date,
+            )
         return 2, "not installed, state: %s" % state
 
 
-check_info['checkpoint_firewall'] = {
-    'check_function': check_checkpoint_firewall,
-    'inventory_function': inventory_checkpoint_firewall,
-    'service_description': "Firewall Module",
-    'snmp_scan_function': scan_checkpoint,
-    'snmp_info': (
-        '.1.3.6.1.4.1.2620.1.1',
+check_info["checkpoint_firewall"] = {
+    "check_function": check_checkpoint_firewall,
+    "inventory_function": inventory_checkpoint_firewall,
+    "service_description": "Firewall Module",
+    "snmp_scan_function": scan_checkpoint,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2620.1.1",
         [
             1,  # fwModuleState
             2,  # fwFilterName
             3,  # fwFilterDate
             8,  # fwMajor
             9,  # fwMinor
-        ]),
+        ],
+    ),
 }

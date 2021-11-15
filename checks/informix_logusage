@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['informix_logusage_default_levels'] = {'levels_perc': (80.0, 85.0)}
+factory_settings["informix_logusage_default_levels"] = {"levels_perc": (80.0, 85.0)}
 
 
 def parse_informix_logusage(info):
@@ -45,32 +45,38 @@ def check_informix_logusage(item, params, parsed):
         size = 0
         used = 0
         for entry in data:
-            pagesize = int(entry['sh_pagesize'])
-            size += int(entry['size']) * pagesize
-            used += int(entry['used']) * pagesize
+            pagesize = int(entry["sh_pagesize"])
+            size += int(entry["size"]) * pagesize
+            used += int(entry["used"]) * pagesize
 
-        infotext = "Files: %s, Size: %s, Used: %s" % \
-                   (logfiles, get_bytes_human_readable(size),
-                    get_bytes_human_readable(used))
+        infotext = "Files: %s, Size: %s, Used: %s" % (
+            logfiles,
+            get_bytes_human_readable(size),
+            get_bytes_human_readable(used),
+        )
         state = 0
-        if 'levels' in params:
-            warn, crit = params['levels']
+        if "levels" in params:
+            warn, crit = params["levels"]
             if size >= crit:
                 state = 2
             elif size >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % \
-                            (get_bytes_human_readable(warn),
-                             get_bytes_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (
+                    get_bytes_human_readable(warn),
+                    get_bytes_human_readable(crit),
+                )
 
-        yield state, infotext, [("file_count", logfiles), ("log_files_total", size),
-                                ("log_files_used", used)]
+        yield state, infotext, [
+            ("file_count", logfiles),
+            ("log_files_total", size),
+            ("log_files_used", used),
+        ]
 
         if size:
             used_perc = used * 100.0 / size
             infotext = "%.2f%%" % used_perc
-            warn_perc, crit_perc = params['levels_perc']
+            warn_perc, crit_perc = params["levels_perc"]
             state = 0
             if used_perc >= crit_perc:
                 state = 2
@@ -82,11 +88,12 @@ def check_informix_logusage(item, params, parsed):
             yield state, infotext
 
 
-check_info['informix_logusage'] = {
-    'parse_function': parse_informix_logusage,
-    'inventory_function': inventory_informix_logusage,
-    'check_function': check_informix_logusage,
-    'has_perfdata': True,
-    'service_description': 'Informix Log Usage %s',
-    'default_levels_variable': 'informix_logusage_default_levels',
+check_info["informix_logusage"] = {
+    "parse_function": parse_informix_logusage,
+    "inventory_function": inventory_informix_logusage,
+    "check_function": check_informix_logusage,
+    "has_perfdata": True,
+    "service_description": "Informix Log Usage %s",
+    "group": "informix_logusage",
+    "default_levels_variable": "informix_logusage_default_levels",
 }

@@ -7,171 +7,85 @@ def NODE = ''
 
 withFolderProperties {
     NODE = env.BUILD_NODE
-    // There is no way to determine the Docker Tag by branch or build in Gerrit jobs
-    // Therefore the folder tag is selected directly
-    TEST_CONTAINER = DOCKER_REGISTRY + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
 }
 
-node (NODE) {
-    def WORKSPACE = pwd()
-    def RESULTS = WORKSPACE + "/results"
-
-    try {
-        stage("Auschecken: Checkmk") {
-            checkout(scm)
-            sh("rm -rf ${RESULTS}; mkdir ${RESULTS}")
-            test_gerrit_helper = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
-            str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-            withFolderProperties {
-                TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
+timeout(time: 12, unit: 'HOURS') {
+    node (NODE) {
+        def WORKSPACE = pwd()
+        def RESULTS = WORKSPACE + "/results"
+        def issues = [];
+    
+        try {
+            stage("Auschecken: Checkmk") {
+                checkout(scm)
+                sh("rm -rf ${RESULTS}; mkdir ${RESULTS}")
+                test_gerrit_helper = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
+                withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin')
+                }
             }
-            withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
-                sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin')
+    
+            /// Add description to the build
+            test_gerrit_helper.desc_init()
+            test_gerrit_helper.desc_add_line(GERRIT_CHANGE_SUBJECT)
+            test_gerrit_helper.desc_add_table()
+            test_gerrit_helper.desc_add_row('Stage', 'Status', 'Result Files')
+    
+            /* Reason for the following try/catch block:
+            * Jenkins will abort jobs (e.g. in case of a new patch set) with SIGKILL (at least this is what we think)
+            * in case a job is aborted during a rebuild of the .venv, the .venv will be left broken
+            * the next run in this workspace will use the .venv as-is but fail to import modules
+            * attempts to use a trap in the .venv Makefile-target were also not succesful - SIGKILL is not trap-able...
+            * So at the end, we need to use a groovy try/catch to ensure a rebuild in the next job in case something failed
+            */
+            try {
+                sh("scripts/run-in-docker.sh make .venv")
             }
-        }
-
-        /// Add description to the build
-        test_gerrit_helper.desc_init()
-        test_gerrit_helper.desc_add_line(GERRIT_CHANGE_SUBJECT)
-        test_gerrit_helper.desc_add_table()
-        test_gerrit_helper.desc_add_row('Stage', 'Status')
-
-        /// Generate list of stages to be added - save them locally for reference
-        withEnv(["TEST_CONTAINER=${TEST_CONTAINER}"]) {
-          sh("""scripts/run-in-docker.sh \
-                  scripts/run-pipenv run \
-                    buildscripts/scripts/verify_changes \
-                    --log-level=DEBUG \
-                    --no-skip=False \
-                    --env "RESULTS=${RESULTS}" \
-                    --env "WORKSPACE=${WORKSPACE}" \
-                    --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
-                    --write-file=${RESULTS}/stages.json \
-                    buildscripts/scripts/stages.yml
-             """);
-        }
-        def stage_info = test_gerrit_helper.load_json("${RESULTS}/stages.json");
-
-        println(">>> stage configuration")
-        sh("cat ${RESULTS}/stages.json");
-        println("<<< stage configuration")
-
-
-        /// >>>>> JUST FOR VERIFICATION - can be removed as soon as the script is known to work
-
-        withEnv(["LC_ALL=C.UTF-8"]) {  // for `sort`
-
-        // Creates a \n separated list of changed files
-        // We get realpaths here. However, the scripts/find-python-files calls
-        // later work with logical paths which would not match the realpaths
-        // produced here. We try to make both match here... hope it is enough.
-        // In case things get complicated here we should try to move the logic
-        // to some kind of helper script/function to improve maintainability
-        def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION} | sed -E 's#(enterprise|managed)/cmk/#cmk/#g' | sort", returnStdout: true).toString().trim()
-
-        def CHANGED_FILES_ABS = sh(script: "echo '${CHANGED_FILES_REL}' | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
-
-        // Gather the list of changed python files
-        def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_PYTHON_FILES = sh(script: "scripts/find-python-files | grep -h ${GREP_PATTERNS} - | sort", returnStdout: true).toString().trim()
-        def CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
-
-        // Gather the list of changed agent plugins
-        def CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-
-        // Gather the list of changed agent plugins unit tests
-        def CHANGED_AGENT_PLUGINS_TESTS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^tests/agent-plugin-unit/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-
-        // Gather the list of changed livestatus / core files
-        def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-
-        // Gather the list of changed JavaScript and CSS files in raw and enterprise edition
-        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-
-        def CHANGED_SW_DOC_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'doc/documentation/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-
-        print(">>>>>>>>>>>>>>>> FOR VERIFICATION DEPRECATED VARIABLES COMPARED TO NEW ONES")
-        if (stage_info.VARIABLES.CHANGED_FILES_REL != CHANGED_FILES_REL) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_FILES_REL != CHANGED_FILES_REL:");
-            print(">>${stage_info.VARIABLES.CHANGED_FILES_REL}\n==\n${CHANGED_FILES_REL}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_FILES_ABS != CHANGED_FILES_ABS) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_FILES_ABS != CHANGED_FILES_ABS:");
-            print(">>${stage_info.VARIABLES.CHANGED_FILES_ABS}\n==\n${CHANGED_FILES_ABS}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.GREP_PATTERNS != GREP_PATTERNS) {
-            print("WARNING! stage_info.VARIABLES.GREP_PATTERNS != GREP_PATTERNS:");
-            print(">>${stage_info.VARIABLES.GREP_PATTERNS}\n==\n${GREP_PATTERNS}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_PYTHON_FILES != CHANGED_PYTHON_FILES) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_PYTHON_FILES != CHANGED_PYTHON_FILES:");
-            print(">>${stage_info.VARIABLES.CHANGED_PYTHON_FILES}\n==\n${CHANGED_PYTHON_FILES}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_PYLINT_RC_FILE != CHANGED_PYLINT_RC_FILE) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_PYLINT_RC_FILE != CHANGED_PYLINT_RC_FILE:");
-            print(">>${stage_info.VARIABLES.CHANGED_PYLINT_RC_FILE}\n==\n${CHANGED_PYLINT_RC_FILE}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_AGENT_PLUGINS != CHANGED_AGENT_PLUGINS) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_AGENT_PLUGINS != CHANGED_AGENT_PLUGINS:");
-            print(">>${stage_info.VARIABLES.CHANGED_AGENT_PLUGINS}\n==\n${CHANGED_AGENT_PLUGINS}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_AGENT_PLUGINS_TESTS != CHANGED_AGENT_PLUGINS_TESTS) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_AGENT_PLUGINS_TESTS != CHANGED_AGENT_PLUGINS_TESTS:");
-            print(">>${stage_info.VARIABLES.CHANGED_AGENT_PLUGINS_TESTS}\n==\n${CHANGED_AGENT_PLUGINS_TESTS}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_CORE_FILES != CHANGED_CORE_FILES) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_CORE_FILES != CHANGED_CORE_FILES:");
-            print(">>${stage_info.VARIABLES.CHANGED_CORE_FILES}\n==\n${CHANGED_CORE_FILES}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_JS_FILES != CHANGED_JS_FILES) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_JS_FILES != CHANGED_JS_FILES:");
-            print(">>${stage_info.VARIABLES.CHANGED_JS_FILES}\n==\n${CHANGED_JS_FILES}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_CSS_FILES != CHANGED_CSS_FILES) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_CSS_FILES != CHANGED_CSS_FILES:");
-            print(">>${stage_info.VARIABLES.CHANGED_CSS_FILES}\n==\n${CHANGED_CSS_FILES}\n<<");
-            assert false}
-        if (stage_info.VARIABLES.CHANGED_SW_DOC_FILES != CHANGED_SW_DOC_FILES) {
-            print("WARNING! stage_info.VARIABLES.CHANGED_SW_DOC_FILES != CHANGED_SW_DOC_FILES:");
-            print(">>${stage_info.VARIABLES.CHANGED_SW_DOC_FILES}\n==\n${CHANGED_SW_DOC_FILES}\n<<");
-            assert false}
-        }
-        print("<<<<<<<<<<<<<<<<<<<<")
-        /// <<<< REMOVE ME
-
-        stage_info.STAGES.each { item ->
-            test_gerrit_helper.create_stage(item);
-        }
-    } catch (e) {
-        currentBuild.result = "FAILED"
-        throw e
-    } finally {
-        stage("Analyse Issues") {
-            def CLANG = scanForIssues(tool: clang(
-                pattern: "results/*-tidy.txt"))
-            def GCC = scanForIssues(tool: gcc(
-                pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/python-yapf.txt"))
-            def PYLINT = scanForIssues(tool: pyLint(
-                pattern: "results/pylint.txt"))
-            def MYPY = scanForIssues(tool: myPy(
-                pattern: "results/mypy.xml"))
-            def CPPCHECK = scanForIssues(tool: cppCheck(
-                pattern: 'results/cppcheck-*.xml'))
-
-            publishIssues(
-                issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK],
-                trendChartType: 'TOOLS_ONLY',
-                qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]])
-            xunit([Custom(
-                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                deleteOutputFiles: false,
-                failIfNotNew: true,
-                pattern: "results/*junit.xml",
-                skipNoTestFiles: true,
-                stopProcessingIfError: true)])
-
-            archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*')
+            catch (e)
+            {
+                sh("rm -r .venv")
+                throw e
+            }
+    
+            /// Generate list of stages to be added - save them locally for reference
+            sh("""scripts/run-in-docker.sh \
+                    scripts/run-pipenv run \
+                      buildscripts/scripts/validate_changes.py \
+                      --env "RESULTS=${RESULTS}" \
+                      --env "WORKSPACE=${WORKSPACE}" \
+                      --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
+                      --write-file=${RESULTS}/stages.json \
+                      buildscripts/scripts/stages.yml
+               """);
+            def stage_info = test_gerrit_helper.load_json("${RESULTS}/stages.json");
+            def allStagesPassed = true;
+            stage_info.STAGES.each { item ->
+                allStagesPassed = test_gerrit_helper.create_stage(item, issues) and allStagesPassed;
+                sh("ls -alF ${RESULTS}");
+            }
+            currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
+        } catch (e) {
+            currentBuild.result = "FAILED"
+            throw e
+        } finally {
+            stage("Analyse Issues") {
+                if (issues) {
+                    publishIssues(
+                        issues: issues,
+                        trendChartType: 'TOOLS_ONLY',
+                        qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]);
+                }
+    
+                xunit([Custom(
+                    customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                    deleteOutputFiles: false,
+                    failIfNotNew: true,
+                    pattern: "results/*junit.xml",
+                    skipNoTestFiles: true,
+                    stopProcessingIfError: true)])
+    
+                archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*')
+            }
         }
     }
 }

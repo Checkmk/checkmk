@@ -18,5 +18,5 @@ description:
 item:
  The filename of the JAR file.
 
-inventory:
+discovery:
  One service is created for each JAR file.

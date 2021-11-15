@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, bulletlink
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import bulletlink, SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register

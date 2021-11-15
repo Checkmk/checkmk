@@ -15,22 +15,22 @@ Environment variables VERSION, EDITION, BRANCH affect the package used for
 the test.
 """
 
+import argparse
+import logging
 import os
 import sys
-import logging
 import tempfile
-import argparse
 from pathlib import Path
 from typing import List
 
-# Make the testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Make the tests.testlib available
+sys.path.insert(0, os.path.dirname((os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
-from testlib.utils import current_base_branch_name
-from testlib.version import CMKVersion
-from testlib.containers import execute_tests_in_container
+from tests.testlib.containers import execute_tests_in_container
+from tests.testlib.utils import current_base_branch_name
+from tests.testlib.version import CMKVersion
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
 
 
@@ -44,8 +44,13 @@ def main(raw_args):
     branch = _os_environ_get("BRANCH", current_base_branch_name())
 
     version = CMKVersion(version_spec, edition, branch)
-    logger.info("Version: %s (%s), Edition: %s, Branch: %s", version.version, version.version_spec,
-                edition, branch)
+    logger.info(
+        "Version: %s (%s), Edition: %s, Branch: %s",
+        version.version,
+        version.version_spec,
+        edition,
+        branch,
+    )
 
     result_path_str = _os_environ_get("RESULT_PATH", "")
     if result_path_str:
@@ -79,9 +84,11 @@ def _os_environ_get(key: str, default: str) -> str:
 
 def _parse_arguments(args: List[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("make_target",
-                   metavar="MAKE_TARGET",
-                   help="The make target to execute in test-py3 directory")
+    p.add_argument(
+        "make_target",
+        metavar="MAKE_TARGET",
+        help="The make target to execute in test-py3 directory",
+    )
 
     return p.parse_args(args)
 

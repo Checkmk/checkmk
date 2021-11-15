@@ -11,16 +11,16 @@ from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcar
 # https://mibs.observium.org/mib/SKYCONTROL-SYSTEM-MIB/#
 # NOTE: the unit is not given in the SNMP walk, it is %
 
-factory_settings['vutlan_ems_humidity_default_levels'] = {
-    'levels': (60.0, 70.0),
-    'levels_lower': (30.0, 15.0),
+factory_settings["vutlan_ems_humidity_default_levels"] = {
+    "levels": (60.0, 70.0),
+    "levels_lower": (30.0, 15.0),
 }
 
 
 def parse_vutlan_ems_humidity(info):
     parsed = {}
     for line in info[0]:
-        if line[0].startswith('202'):
+        if line[0].startswith("202"):
             # all OIDs 202xxx are humidity-related
             parsed[line[1]] = float(line[2])
 
@@ -39,14 +39,14 @@ def check_vutlan_ems_humidity(item, params, parsed):
     yield check_humidity(parsed[item], params)
 
 
-check_info['vutlan_ems_humidity'] = {
-    'parse_function': parse_vutlan_ems_humidity,
-    'inventory_function': discover_vutlan_ems_humidity,
-    'check_function': check_vutlan_ems_humidity,
-    'service_description': 'Humidity %s',
-    'snmp_info': [
+check_info["vutlan_ems_humidity"] = {
+    "parse_function": parse_vutlan_ems_humidity,
+    "inventory_function": discover_vutlan_ems_humidity,
+    "check_function": check_vutlan_ems_humidity,
+    "service_description": "Humidity %s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.39052.1.3.1',
+            ".1.3.6.1.4.1.39052.1.3.1",
             [
                 OID_END,
                 7,  # vutlan.mib::ctlUnitElementName (can be user-defined)
@@ -54,8 +54,8 @@ check_info['vutlan_ems_humidity'] = {
             ],
         ),
     ],
-    'snmp_scan_function': lambda oid: 'vutlan ems' in oid('.1.3.6.1.2.1.1.1.0').lower(),
-    'has_perfdata': True,
-    'group': 'humidity',
-    'default_levels_variable': 'vutlan_ems_humidity_default_levels',
+    "snmp_scan_function": lambda oid: "vutlan ems" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "has_perfdata": True,
+    "group": "humidity",
+    "default_levels_variable": "vutlan_ems_humidity_default_levels",
 }

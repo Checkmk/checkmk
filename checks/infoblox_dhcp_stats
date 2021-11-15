@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.1.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfDiscovers.0
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.2.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfRequests.0
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.3.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfReleases.0
@@ -21,26 +22,31 @@ from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcar
 
 
 def check_infoblox_dhcp_stats(_no_item, _no_params, info):
-    discovers, requests, releases, offers, acks, nacks, \
-        declines, informs, others = map(int, info[0])
+    discovers, requests, releases, offers, acks, nacks, declines, informs, others = map(
+        int, info[0]
+    )
 
-    return check_infoblox_statistics("dhcp",
-                                     [("discovery", discovers, "Received", "discovery messages"),
-                                      ("requests", requests, "Received", "requests"),
-                                      ("releases", releases, "Received", "releases"),
-                                      ("declines", declines, "Received", "declines"),
-                                      ("informs", informs, "Received", "informs"),
-                                      ("others", others, "Received", "other messages"),
-                                      ("offers", offers, "Sent", "offers"),
-                                      ("acks", acks, "Sent", "acks"),
-                                      ("nacks", nacks, "Sent", "nacks")])
+    return check_infoblox_statistics(
+        "dhcp",
+        [
+            ("discovery", discovers, "Received", "discovery messages"),
+            ("requests", requests, "Received", "requests"),
+            ("releases", releases, "Received", "releases"),
+            ("declines", declines, "Received", "declines"),
+            ("informs", informs, "Received", "informs"),
+            ("others", others, "Received", "other messages"),
+            ("offers", offers, "Sent", "offers"),
+            ("acks", acks, "Sent", "acks"),
+            ("nacks", nacks, "Sent", "nacks"),
+        ],
+    )
 
 
-check_info['infoblox_dhcp_stats'] = {
-    'inventory_function': inventory_infoblox_statistics,
-    'check_function': check_infoblox_dhcp_stats,
-    'service_description': 'DHCP statistics',
-    'snmp_info': (
+check_info["infoblox_dhcp_stats"] = {
+    "inventory_function": inventory_infoblox_statistics,
+    "check_function": check_infoblox_dhcp_stats,
+    "service_description": "DHCP statistics",
+    "snmp_info": (
         ".1.3.6.1.4.1.7779.3.1.1.4.1.3",
         [
             "1",  # IB-DHCPONE-MIB::ibDhcpTotalNoOfDiscovers
@@ -52,7 +58,8 @@ check_info['infoblox_dhcp_stats'] = {
             "7",  # IB-DHCPONE-MIB::ibDhcpTotalNoOfDeclines
             "8",  # IB-DHCPONE-MIB::ibDhcpTotalNoOfInforms
             "9",  # IB-DHCPONE-MIB::ibDhcpTotalNoOfOthers
-        ]),
-    'snmp_scan_function': scan_infoblox,
-    'has_perfdata': True,
+        ],
+    ),
+    "snmp_scan_function": scan_infoblox,
+    "has_perfdata": True,
 }

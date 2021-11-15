@@ -4,16 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import Check  # type: ignore[import]
+import pytest
+
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("info, item_expected, data_expected", [
-    ([[u'29', u'0']], 'Board', {}),
-    ([[u'0', u'29']], 'CPU', {}),
-])
+@pytest.mark.parametrize(
+    "info, item_expected, data_expected",
+    [
+        ([["29", "0"]], "Board", {}),
+        ([["0", "29"]], "CPU", {}),
+    ],
+)
 def test_inventory_function(info, item_expected, data_expected):
     """
     Verifies if the item is detected corresponding to info content.
@@ -25,16 +29,19 @@ def test_inventory_function(info, item_expected, data_expected):
 
 
 @pytest.mark.parametrize(
-    "parameters, item, info, state_expected, infotext_expected, perfdata_expected", [
-        ((30, 40), u'Slot 1 Board', [[u'29', u'0']], 0, '29', [('temp', 29, 30, 40)]),
-        ((30, 40), u'Slot 1 Board', [[u'31', u'0']], 1, '31', [('temp', 31, 30, 40)]),
-        ((30, 40), u'Slot 1 Board', [[u'41', u'0']], 2, '41', [('temp', 41, 30, 40)]),
-        ((30, 40), u'Slot 1 CPU', [[u'0', u'29']], 0, '29', [('temp', 29, 30, 40)]),
-        ((30, 40), u'Slot 1 CPU', [[u'0', u'31']], 1, '31', [('temp', 31, 30, 40)]),
-        ((30, 40), u'Slot 1 CPU', [[u'0', u'41']], 2, '41', [('temp', 41, 30, 40)]),
-    ])
-def test_check_function(parameters, item, info, state_expected, infotext_expected,
-                        perfdata_expected):
+    "parameters, item, info, state_expected, infotext_expected, perfdata_expected",
+    [
+        ((30, 40), "Slot 1 Board", [["29", "0"]], 0, "29", [("temp", 29, 30, 40)]),
+        ((30, 40), "Slot 1 Board", [["31", "0"]], 1, "31", [("temp", 31, 30, 40)]),
+        ((30, 40), "Slot 1 Board", [["41", "0"]], 2, "41", [("temp", 41, 30, 40)]),
+        ((30, 40), "Slot 1 CPU", [["0", "29"]], 0, "29", [("temp", 29, 30, 40)]),
+        ((30, 40), "Slot 1 CPU", [["0", "31"]], 1, "31", [("temp", 31, 30, 40)]),
+        ((30, 40), "Slot 1 CPU", [["0", "41"]], 2, "41", [("temp", 41, 30, 40)]),
+    ],
+)
+def test_check_function(
+    parameters, item, info, state_expected, infotext_expected, perfdata_expected
+):
     """
     Verifies if check function asserts warn and crit Board and CPU temperature levels.
     """

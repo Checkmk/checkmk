@@ -35,23 +35,29 @@ from ._abstract import Source
 
 def make_inventory_sections() -> Set[SectionName]:
     return {
-        s for s in agent_based_register.get_relevant_raw_sections(
+        s
+        for s in agent_based_register.get_relevant_raw_sections(
             check_plugin_names=(),
             inventory_plugin_names=(
-                p.name for p in agent_based_register.iter_all_inventory_plugins()))
+                p.name for p in agent_based_register.iter_all_inventory_plugins()
+            ),
+        )
         if agent_based_register.is_registered_snmp_section_plugin(s)
     }
 
 
 def make_plugin_store() -> SNMPPluginStore:
     inventory_sections = make_inventory_sections()
-    return SNMPPluginStore({
-        s.name: SNMPPluginStoreItem(
-            [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
-            SNMPDetectSpec(s.detect_spec),
-            s.name in inventory_sections,
-        ) for s in agent_based_register.iter_all_snmp_sections()
-    })
+    return SNMPPluginStore(
+        {
+            s.name: SNMPPluginStoreItem(
+                [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
+                SNMPDetectSpec(s.detect_spec),
+                s.name in inventory_sections,
+            )
+            for s in agent_based_register.iter_all_snmp_sections()
+        }
+    )
 
 
 class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
@@ -88,7 +94,9 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         self.snmp_config = (
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)
-            if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
+            if self.source_type is SourceType.HOST
+            else self.host_config.management_snmp_config
+        )
         self._on_snmp_scan_error = on_scan_error
         self._force_cache_refresh = force_cache_refresh
 
@@ -179,7 +187,8 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 disabled=name in disabled_sections,
                 redetect=name in checking_sections and self._needs_redetection(name),
                 fetch_interval=self.host_config.snmp_fetch_interval(name),
-            ) for name in (checking_sections | disabled_sections)
+            )
+            for name in (checking_sections | disabled_sections)
         }
 
     def _make_parser(self) -> SNMPParser:
@@ -215,9 +224,12 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                         filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
                         skip_ignored=True,
                     ).needed_check_names(),
-                    inventory_plugin_names=()))
+                    inventory_plugin_names=(),
+                )
+            )
         return {
-            s for s in checking_sections
+            s
+            for s in checking_sections
             if agent_based_register.is_registered_snmp_section_plugin(s)
         }
 
@@ -235,8 +247,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         title: str,
     ) -> str:
         host_config = config.get_config_cache().get_host_config(hostname)
-        snmp_config = (host_config.snmp_config(ipaddress)
-                       if source_type is SourceType.HOST else host_config.management_snmp_config)
+        snmp_config = (
+            host_config.snmp_config(ipaddress)
+            if source_type is SourceType.HOST
+            else host_config.management_snmp_config
+        )
 
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"

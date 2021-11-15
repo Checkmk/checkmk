@@ -5,53 +5,49 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    ListOf,
-    MonitoringState,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-
 from cmk.gui.plugins.wato.check_parameters.ibm_mq_plugin import ibm_mq_version
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_ibm_mq_managers():
-    return Dictionary(elements=[
-        ("mapped_states",
-         ListOf(
-             Tuple(
-                 orientation="horizontal",
-                 elements=[
-                     DropdownChoice(
-                         title=_("Queue manager state"),
-                         choices=[
-                             ('starting', 'STARTING'),
-                             ('running', 'RUNNING'),
-                             ('running_as_standby', 'RUNNING AS STANDBY'),
-                             ('running_elsewhere', 'RUNNING ELSEWHERE'),
-                             ('quiescing', 'QUIESCING'),
-                             ('ending_immediately', 'ENDING IMMEDIATELY'),
-                             ('ending_pre_emptively', 'ENDING PRE-EMPTIVLEY'),
-                             ('ended_normally', 'ENDED NORMALLY'),
-                             ('ended_immediately', 'ENDED IMMEDIATELY'),
-                             ('ended_unexpectedly', 'ENDED UNEXPECTEDLY'),
-                             ('ended_pre_emptively', 'ENDED PRE-EMPTIVELY'),
-                             ('status_not_available', 'STATUS NOT AVAILABLE'),
-                         ],
-                     ),
-                     MonitoringState(title=_("Service state"),),
-                 ],
-             ),
-             title=_('Map manager state to service state'),
-             help=_("""If you do not use this parameter, the following factory
+    return Dictionary(
+        elements=[
+            (
+                "mapped_states",
+                ListOf(
+                    Tuple(
+                        orientation="horizontal",
+                        elements=[
+                            DropdownChoice(
+                                title=_("Queue manager state"),
+                                choices=[
+                                    ("starting", "STARTING"),
+                                    ("running", "RUNNING"),
+                                    ("running_as_standby", "RUNNING AS STANDBY"),
+                                    ("running_elsewhere", "RUNNING ELSEWHERE"),
+                                    ("quiescing", "QUIESCING"),
+                                    ("ending_immediately", "ENDING IMMEDIATELY"),
+                                    ("ending_pre_emptively", "ENDING PRE-EMPTIVLEY"),
+                                    ("ended_normally", "ENDED NORMALLY"),
+                                    ("ended_immediately", "ENDED IMMEDIATELY"),
+                                    ("ended_unexpectedly", "ENDED UNEXPECTEDLY"),
+                                    ("ended_pre_emptively", "ENDED PRE-EMPTIVELY"),
+                                    ("status_not_available", "STATUS NOT AVAILABLE"),
+                                ],
+                            ),
+                            MonitoringState(
+                                title=_("Service state"),
+                            ),
+                        ],
+                    ),
+                    title=_("Map manager state to service state"),
+                    help=_(
+                        """If you do not use this parameter, the following factory
              defaults apply:<br>
                 STARTING: OK<br>
                 RUNNING: OK<br>
@@ -65,13 +61,17 @@ def _parameter_valuespec_ibm_mq_managers():
                 ENDED UNEXPECTEDLY: CRIT<br>
                 ENDED PRE-EMPTIVELY: WARN<br>
                 STATUS NOT AVAILABLE: OK<br>
-             """),
-         )),
-        (
-            "mapped_states_default",
-            MonitoringState(title=_("Service state if no map rule matches"), default_value=2),
-        ),
-    ] + ibm_mq_version(),)
+             """
+                    ),
+                ),
+            ),
+            (
+                "mapped_states_default",
+                MonitoringState(title=_("Service state if no map rule matches"), default_value=2),
+            ),
+        ]
+        + ibm_mq_version(),
+    )
 
 
 rulespec_registry.register(
@@ -82,4 +82,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_managers,
         title=lambda: _("IBM MQ Managers"),
-    ))
+    )
+)

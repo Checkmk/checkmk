@@ -29,7 +29,10 @@ def check_nfsexports(item, _no_params, info):
     # if the agent returned an empty list then it found entries in /etc/exports
     # but apparently no daemons were running.
     if len(info) == 0:
-        return 2, "exports defined but no exports found in export list. Daemons might not be working"
+        return (
+            2,
+            "exports defined but no exports found in export list. Daemons might not be working",
+        )
 
     # otherwise lets see if our export exists.
     for line in info:
@@ -40,7 +43,7 @@ def check_nfsexports(item, _no_params, info):
 
 
 check_info["nfsexports"] = {
-    'check_function': check_nfsexports,
-    'inventory_function': inventory_nfsexports,
-    'service_description': 'NFS export %s',
+    "check_function": check_nfsexports,
+    "inventory_function": inventory_nfsexports,
+    "service_description": "NFS export %s",
 }

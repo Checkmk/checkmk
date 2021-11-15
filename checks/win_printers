@@ -10,12 +10,14 @@
 # PrinterStockholm                      0                   3                   0
 # WH1_BC_O3_UPS                         0                   3                   0
 
-factory_settings['win_printer_default_levels'] = {
+factory_settings["win_printer_default_levels"] = {
     "warn_states": [8, 11],
     "crit_states": [9, 10],
 }
 
-WinPrinter = collections.namedtuple("WinPrinter", ["jobs", "status", "error"])
+WinPrinter = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "WinPrinter", ["jobs", "status", "error"]
+)
 
 
 def parse_win_printers(info):
@@ -24,8 +26,9 @@ def parse_win_printers(info):
         if len(line) < 4:
             continue
         try:
-            parsed.setdefault(" ".join(line[:-3]),
-                              WinPrinter(int(line[-3]), int(line[-2]), int(line[-1])))
+            parsed.setdefault(
+                " ".join(line[:-3]), WinPrinter(int(line[-3]), int(line[-2]), int(line[-1]))
+            )
         except ValueError:
             pass
     return parsed
@@ -34,7 +37,7 @@ def parse_win_printers(info):
 @discover
 def inventory_win_printers(printer_name, printer_attrs):
     # Do not discovery offline printers
-    return printer_attrs.error != '9'
+    return printer_attrs.error != "9"
 
 
 @get_parsed_item_data
@@ -60,7 +63,7 @@ def check_win_printers(item, params, data):
         8: "Jammed",
         9: "Offline",
         10: "Service Requested",
-        11: "Output Bin Full"
+        11: "Output Bin Full",
     }
 
     if not isinstance(params, dict):
@@ -70,10 +73,10 @@ def check_win_printers(item, params, data):
         else:
             warn, crit = params
         params = {}
-        params['crit_states'] = [9, 10]
-        params['warn_states'] = [8, 11]
+        params["crit_states"] = [9, 10]
+        params["warn_states"] = [8, 11]
     else:
-        warn, crit = params.get('levels', (None, None))
+        warn, crit = params.get("levels", (None, None))
 
     state = 0
     current_jobs = data.jobs
@@ -81,10 +84,10 @@ def check_win_printers(item, params, data):
     error = data.error
 
     error_text = ""
-    if error in params['crit_states']:
+    if error in params["crit_states"]:
         state = 2
         error_text = "Error State: %s(!!)" % error_map[error]
-    elif error in params['warn_states']:
+    elif error in params["warn_states"]:
         state = 1
         error_text = "Error State: %s(!)" % error_map[error]
 
@@ -96,8 +99,12 @@ def check_win_printers(item, params, data):
         state = max(1, state)
         queue_label = "(!)"
 
-    return state, "%s jobs current%s, State: %s, %s" %\
-           (current_jobs, queue_label, status_map[status], error_text)
+    return state, "%s jobs current%s, State: %s, %s" % (
+        current_jobs,
+        queue_label,
+        status_map[status],
+        error_text,
+    )
 
 
 check_info["win_printers"] = {

@@ -26,5 +26,5 @@ description:
 item:
  The logical unit number.
 
-inventory:
+discovery:
  One service is created for each logical unit.

@@ -8,6 +8,7 @@
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import CheckPluginName
+
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,
     load_host_value_store,
@@ -22,13 +23,13 @@ def test_load_host_value_store_loads_file(monkeypatch):
 
     monkeypatch.setattr(
         store,
-        "load_object_from_file",
-        lambda *_a, **_kw: {(str(service_id[0]), service_id[1], "loaded_file"): True},
+        "load_text_from_file",
+        lambda *_a, **_kw: "{('%s', %r, 'loaded_file'): True}" % service_id,
     )
 
     with load_host_value_store(
-            "test_load_host_value_store_loads_file",
-            store_changes=False,
+        "test_load_host_value_store_loads_file",
+        store_changes=False,
     ) as mgr:
         with mgr.namespace(service_id):
             assert get_value_store()["loaded_file"]

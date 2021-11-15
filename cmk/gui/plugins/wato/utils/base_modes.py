@@ -10,25 +10,20 @@ from typing import Iterable, List, Optional, Type
 
 from cmk.utils.plugin_registry import Registry
 
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.page_menu import PageMenu
-from cmk.gui.type_defs import MegaMenu, HTTPVariables
+from cmk.gui.exceptions import HTTPRedirect
+from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
-
+from cmk.gui.page_menu import PageMenu
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
-
+from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect
-
-ActionResult = Optional[FinalizeRequest]
 
 
-class WatoMode(metaclass=abc.ABCMeta):
+class WatoMode(abc.ABC):
     def __init__(self) -> None:
-        super(WatoMode, self).__init__()
+        super().__init__()
         self._from_vars()
 
     @classmethod
@@ -93,7 +88,7 @@ class WatoMode(metaclass=abc.ABCMeta):
     def _breadcrumb_item(self) -> BreadcrumbItem:
         """Return the breadcrumb item for the current mode"""
         # For the currently active mode use the same link as the "page title click"
-        if html.request.get_ascii_input("mode") == self.name():
+        if request.get_ascii_input("mode") == self.name():
             breadcrumb_url = "javascript:window.location.reload(false)"
         else:
             breadcrumb_url = self._breadcrumb_url()
@@ -132,7 +127,7 @@ class WatoMode(metaclass=abc.ABCMeta):
         if main_module is None:
             return
             # TODO: Can be activated once all non top level modes have a parent_mode set
-            #raise RuntimeError("Could not determine topic breadcrumb item for mode %r" % mode_name)
+            # raise RuntimeError("Could not determine topic breadcrumb item for mode %r" % mode_name)
 
         yield BreadcrumbItem(
             title=main_module().topic.title,

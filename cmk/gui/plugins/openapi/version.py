@@ -7,4 +7,4 @@
 # This identifier needs to be set to the highest version identifier used in the endpoints. If any
 # endpoint has a higher version as the one specified here, a unit test checking this will fail.
 
-API_VERSION = '1.0'
+API_VERSION = "1.0"

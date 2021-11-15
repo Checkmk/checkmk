@@ -7,7 +7,11 @@
 import os
 from pathlib import Path
 
-from testlib import repo_path, import_module
+from tests.testlib import import_module, repo_path
+
+system_paths = [
+    "mkbackup_lock_dir",
+]
 
 pathlib_paths = [
     "core_helper_config_dir",
@@ -38,25 +42,34 @@ pathlib_paths = [
     "local_mib_dir",
     "agent_based_plugins_dir",
     "local_agent_based_plugins_dir",
+    "gui_plugins_dir",
+    "local_gui_plugins_dir",
     "diagnostics_dir",
     "site_config_dir",
     "license_usage_dir",
+    "profile_dir",
 ]
 
 
 def _check_paths(root, module):
     for var, value in module.__dict__.items():
-        if not var.startswith("_") and not var.startswith("make_") and var not in (
-                'ConfigSerial',
-                'Path',
-                'OptionalConfigSerial',
-                'os',
-                'sys',
-                'Union',
+        if (
+            not var.startswith("_")
+            and not var.startswith("make_")
+            and var
+            not in (
+                "Path",
+                "os",
+                "sys",
+                "Union",
+            )
         ):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)
+            elif var in system_paths:
+                assert isinstance(value, Path)
+                assert str(value).startswith("/")
             else:
                 assert isinstance(value, str)
                 # TODO: Differentiate in a more clever way between /omd and /opt paths
@@ -65,8 +78,8 @@ def _check_paths(root, module):
 
 def test_paths_in_omd_and_opt_root(monkeypatch):
 
-    omd_root = '/omd/sites/dingeling'
+    omd_root = "/omd/sites/dingeling"
     with monkeypatch.context() as m:
-        m.setitem(os.environ, 'OMD_ROOT', omd_root)
+        m.setitem(os.environ, "OMD_ROOT", omd_root)
         test_paths = import_module("%s/cmk/utils/paths.py" % repo_path())
         _check_paths(omd_root, test_paths)

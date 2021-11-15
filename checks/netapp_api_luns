@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_luns:sep(9)>>>
 # lun /vol/iscsi_crm_dblogs/crm_dblogs_lu01   read-only false size 644286182400   vserver ISCSI_CRM   size-used 538924421120  online true volume iscsi_crm_dblogs
 
@@ -49,7 +52,8 @@ def check_netapp_api_luns(item, params, lun):
 
     if params.get("ignore_levels"):
         yield 0, "Total size: %s, Used space is ignored" % get_bytes_human_readable(
-            size_total_bytes)
+            size_total_bytes
+        )
     else:
         # df_check_filesystem_single expects input in Megabytes
         mega = 1024.0 * 1024.0
@@ -70,11 +74,11 @@ def netapp_api_luns_item(name, _values):
 
 
 check_info["netapp_api_luns"] = {
-    'check_function': check_netapp_api_luns,
-    'inventory_function': inventory_netapp_api_luns,
-    'parse_function': lambda x: netapp_api_parse_lines(x, item_func=netapp_api_luns_item),
-    'service_description': 'LUN %s',
-    'has_perfdata': True,
-    'group': "netapp_luns",
+    "check_function": check_netapp_api_luns,
+    "inventory_function": inventory_netapp_api_luns,
+    "parse_function": lambda x: netapp_api_parse_lines(x, item_func=netapp_api_luns_item),
+    "service_description": "LUN %s",
+    "has_perfdata": True,
+    "group": "netapp_luns",
     "default_levels_variable": "netapp_api_luns_default_levels",
 }

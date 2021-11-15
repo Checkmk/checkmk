@@ -7,8 +7,8 @@
 from typing import (
     Any,
     Dict,
-    Literal,
     Iterable,
+    Literal,
     Mapping,
     Optional,
     Sequence,
@@ -43,7 +43,7 @@ class EMailAction(TypedDict):
     title: str
     hidden: bool
     disabled: bool
-    action: Tuple[Literal['email'], EMailActionConfig]
+    action: Tuple[Literal["email"], EMailActionConfig]
 
 
 class ScriptActionConfig(TypedDict):
@@ -55,7 +55,7 @@ class ScriptAction(TypedDict):
     title: str
     hidden: bool
     disabled: bool
-    action: Tuple[Literal['script'], ScriptActionConfig]
+    action: Tuple[Literal["script"], ScriptActionConfig]
 
 
 Action = Union[EMailAction, ScriptAction]
@@ -75,7 +75,7 @@ class EventLimits(TypedDict):
 
 
 class HostnameTranslation(TypedDict, total=False):
-    case: Union[Literal['lower'], Literal['upper']]
+    case: Union[Literal["lower"], Literal["upper"]]
     drop_domain: bool
     mapping: Iterable[Tuple[str, str]]
     regex: Iterable[Tuple[str, str]]
@@ -84,14 +84,16 @@ class HostnameTranslation(TypedDict, total=False):
 LogLevel = int
 
 LogConfig = TypedDict(
-    'LogConfig', {
-        'cmk.mkeventd': LogLevel,
-        'cmk.mkeventd.EventServer': LogLevel,
-        'cmk.mkeventd.EventServer.snmp': LogLevel,
-        'cmk.mkeventd.EventStatus': LogLevel,
-        'cmk.mkeventd.StatusServer': LogLevel,
-        'cmk.mkeventd.lock': LogLevel,
-    })
+    "LogConfig",
+    {
+        "cmk.mkeventd": LogLevel,
+        "cmk.mkeventd.EventServer": LogLevel,
+        "cmk.mkeventd.EventServer.snmp": LogLevel,
+        "cmk.mkeventd.EventStatus": LogLevel,
+        "cmk.mkeventd.StatusServer": LogLevel,
+        "cmk.mkeventd.lock": LogLevel,
+    },
+)
 
 
 class ReplicationBase(TypedDict):
@@ -102,39 +104,49 @@ class ReplicationBase(TypedDict):
 
 class Replication(ReplicationBase, total=False):
     fallback: int
-    disabled: Literal['true']
-    logging: Literal['true']
+    disabled: Literal["true"]
+    logging: Literal["true"]
     takeover: int
 
 
 class ContactGroups(TypedDict):
     groups: Iterable[str]
     notify: bool
-    precedence: Union[Literal['host'], Literal['rule']]
+    precedence: Union[Literal["host"], Literal["rule"]]
 
 
 class Expect(TypedDict):
-    merge: Union[Literal['open'], Literal['acked'], Literal['never']]
+    merge: Union[Literal["open"], Literal["acked"], Literal["never"]]
 
 
 class ServiceLevel(TypedDict):
     value: int
-    precedence: Union[Literal['message'], Literal['rule']]
+    precedence: Union[Literal["message"], Literal["rule"]]
 
 
-StatePatterns = TypedDict('StatePatterns', {
-    '0': str,
-    '1': str,
-    '2': str,
-}, total=False)
+StatePatterns = TypedDict(
+    "StatePatterns",
+    {
+        "0": str,
+        "1": str,
+        "2": str,
+    },
+    total=False,
+)
 
-State = Union[Literal[-1], Literal[0], Literal[1], Literal[2], Literal[3],
-              Tuple[Literal['text_pattern'], StatePatterns]]
+State = Union[
+    Literal[-1],
+    Literal[0],
+    Literal[1],
+    Literal[2],
+    Literal[3],
+    Tuple[Literal["text_pattern"], StatePatterns],
+]
 
 
 # TODO: This is only a rough approximation.
 class Rule(TypedDict, total=False):
-    actions: Iterable[Tuple[str, str]]
+    actions: Iterable[str]
     actions_in_downtime: bool
     autodelete: bool
     cancel_application: str
@@ -143,7 +155,7 @@ class Rule(TypedDict, total=False):
     expect: Expect
     id: str
     invert_matching: bool
-    livetime: Tuple[Seconds, Iterable[Union[Literal['open'], Literal['ack']]]]
+    livetime: Tuple[Seconds, Iterable[Union[Literal["open"], Literal["ack"]]]]
     match: str
     match_application: str
     match_facility: int
@@ -164,20 +176,37 @@ class Rule(TypedDict, total=False):
     state: State
 
 
-AuthenticationProtocol = Union[Literal['md5'], Literal['sha'], Literal['SHA-224'],
-                               Literal['SHA-256'], Literal['SHA-384'], Literal['SHA-512']]
+AuthenticationProtocol = Union[
+    Literal["md5"],
+    Literal["sha"],
+    Literal["SHA-224"],
+    Literal["SHA-256"],
+    Literal["SHA-384"],
+    Literal["SHA-512"],
+]
 
-PrivacyProtocol = Union[Literal['DES'], Literal['AES'], Literal['3DES-EDE'], Literal['AES-192'],
-                        Literal['AES-256'], Literal['AES-192-Blumenthal'],
-                        Literal['AES-256-Blumenthal']]
+PrivacyProtocol = Union[
+    Literal["DES"],
+    Literal["AES"],
+    Literal["3DES-EDE"],
+    Literal["AES-192"],
+    Literal["AES-256"],
+    Literal["AES-192-Blumenthal"],
+    Literal["AES-256-Blumenthal"],
+]
 
 SNMPV1V2Credentials = str
-SNMPV3NoAuthNoPrivCredentials = Tuple[Literal['noAuthNoPriv'], str]
-SNMPV3AuthNoPrivCredentials = Tuple[Literal['authNoPriv'], AuthenticationProtocol, str, str]
-SNMPV3AuthPrivCredentials = Tuple[Literal['authPriv'], AuthenticationProtocol, str, str,
-                                  PrivacyProtocol, str]
-SNMPCredentials = Union[SNMPV1V2Credentials, SNMPV3NoAuthNoPrivCredentials,
-                        SNMPV3AuthNoPrivCredentials, SNMPV3AuthPrivCredentials]
+SNMPV3NoAuthNoPrivCredentials = Tuple[Literal["noAuthNoPriv"], str]
+SNMPV3AuthNoPrivCredentials = Tuple[Literal["authNoPriv"], AuthenticationProtocol, str, str]
+SNMPV3AuthPrivCredentials = Tuple[
+    Literal["authPriv"], AuthenticationProtocol, str, str, PrivacyProtocol, str
+]
+SNMPCredentials = Union[
+    SNMPV1V2Credentials,
+    SNMPV3NoAuthNoPrivCredentials,
+    SNMPV3AuthNoPrivCredentials,
+    SNMPV3AuthPrivCredentials,
+]
 
 
 class SNMPCredentialBase(TypedDict):
@@ -192,13 +221,13 @@ class SNMPCredential(SNMPCredentialBase, total=False):
 # This is what we get from the outside.
 class ConfigFromWATO(TypedDict):
     actions: Sequence[Action]
-    archive_mode: Union[Literal['file'], Literal['mongodb']]
+    archive_mode: Union[Literal["file"], Literal["mongodb"]]
     archive_orphans: bool
     debug_rules: bool
     event_limit: EventLimits
     eventsocket_queue_len: int
     history_lifetime: int
-    history_rotation: Union[Literal['daily'], Literal['weekly']]
+    history_rotation: Union[Literal["daily"], Literal["weekly"]]
     hostname_translation: HostnameTranslation  # TODO: Mutable???
     housekeeping_interval: int
     log_level: LogConfig  # TODO: Mutable???

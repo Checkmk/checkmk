@@ -14,4 +14,7 @@ item:
  The service unit name.
 
 Inventory:
- One service is created for each service name.
+ By default, no services are discovered. This has to be specifically
+ actived using the ruleset "Systemd single services discovery". If
+ activated, one service is created in Checkmk for each systemd service
+ unit.

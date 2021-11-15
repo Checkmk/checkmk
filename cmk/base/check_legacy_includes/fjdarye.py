@@ -17,18 +17,18 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 fjdarye_item_status = {
-    "1": (0, 'Normal'),
-    "2": (2, 'Alarm'),
-    "3": (1, 'Warning'),
-    "4": (2, 'Invalid'),
-    "5": (2, 'Maintenance'),
-    "6": (2, 'Undefined'),
+    "1": (0, "Normal"),
+    "2": (2, "Alarm"),
+    "3": (1, "Warning"),
+    "4": (2, "Invalid"),
+    "5": (2, "Maintenance"),
+    "6": (2, "Undefined"),
 }
 
 
 # generic inventory item - status other than 'invalid' is ok for inventory
 def inventory_fjdarye_item(info):
-    return [(index, {}) for index, status in info if status != '4']
+    return [(index, {}) for index, status in info if status != "4"]
 
 
 # generic check_function returning the nagios-code and the status text
@@ -38,7 +38,7 @@ def check_fjdarye_item(item, _no_param, info):
             return fjdarye_item_status[line[1]]
 
 
-#.
+# .
 #   .--single disks--------------------------------------------------------.
 #   |               _             _            _ _     _                   |
 #   |           ___(_)_ __   __ _| | ___    __| (_)___| | _____            |
@@ -51,19 +51,19 @@ def check_fjdarye_item(item, _no_param, info):
 #   '----------------------------------------------------------------------'
 
 fjdarye_disks_status = {
-    "1": (0, 'available'),
-    "2": (2, 'broken'),
-    "3": (1, 'notavailable'),
-    "4": (1, 'notsupported'),
-    "5": (0, 'present'),
-    "6": (1, 'readying'),
-    "7": (1, 'recovering'),
-    "64": (1, 'partbroken'),
-    "65": (1, 'spare'),
-    "66": (0, 'formatting'),
-    "67": (0, 'unformated'),
-    "68": (1, 'notexist'),
-    "69": (1, 'copying'),
+    "1": (0, "available"),
+    "2": (2, "broken"),
+    "3": (1, "notavailable"),
+    "4": (1, "notsupported"),
+    "5": (0, "present"),
+    "6": (1, "readying"),
+    "7": (1, "recovering"),
+    "64": (1, "partbroken"),
+    "65": (1, "spare"),
+    "66": (0, "formatting"),
+    "67": (0, "unformated"),
+    "68": (1, "notexist"),
+    "69": (1, "copying"),
 }
 
 
@@ -74,18 +74,23 @@ def parse_fjdarye_disks(info):
             disk_state,
             (3, "unknown[%s]" % disk_state),
         )
-        parsed.setdefault(str(idx), {
-            "state": state,
-            "state_readable": state_readable,
-            "state_disk": disk_state,
-        })
+        parsed.setdefault(
+            str(idx),
+            {
+                "state": state,
+                "state_readable": state_readable,
+                "state_disk": disk_state,
+            },
+        )
     return parsed
 
 
 def inventory_fjdarye_disks(parsed):
-    return [(idx, repr(attrs["state_readable"]))
-            for idx, attrs in parsed.items()
-            if attrs["state_disk"] != "3"]
+    return [
+        (idx, repr(attrs["state_readable"]))
+        for idx, attrs in parsed.items()
+        if attrs["state_disk"] != "3"
+    ]
 
 
 def check_fjdarye_disks(item, params, parsed):
@@ -108,7 +113,7 @@ def check_fjdarye_disks(item, params, parsed):
         return check_state, infotext
 
 
-#.
+# .
 #   .--summary disks-------------------------------------------------------.
 #   |                                                                      |
 #   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
@@ -146,19 +151,19 @@ def fjdarye_disks_printstates(states):
 
 def check_fjdarye_disks_summary(index, params, parsed):
     map_states = {
-        'available': 0,
-        'broken': 2,
-        'notavailable': 1,
-        'notsupported': 1,
-        'present': 0,
-        'readying': 1,
-        'recovering': 1,
-        'partbroken': 1,
-        'spare': 1,
-        'formatting': 0,
-        'unformated': 0,
-        'notexist': 1,
-        'copying': 1,
+        "available": 0,
+        "broken": 2,
+        "notavailable": 1,
+        "notsupported": 1,
+        "present": 0,
+        "readying": 1,
+        "recovering": 1,
+        "partbroken": 1,
+        "spare": 1,
+        "formatting": 0,
+        "unformated": 0,
+        "notexist": 1,
+        "copying": 1,
     }
 
     use_devices_states = False
@@ -188,7 +193,7 @@ def check_fjdarye_disks_summary(index, params, parsed):
     return result, "%s (expected: %s)" % (infotext, fjdarye_disks_printstates(expected_state))
 
 
-#.
+# .
 #   .--rluns---------------------------------------------------------------.
 #   |                            _                                         |
 #   |                       _ __| |_   _ _ __  ___                         |
@@ -202,7 +207,7 @@ def check_fjdarye_disks_summary(index, params, parsed):
 def inventory_fjdarye_rluns(info):
     for line in info:
         rawdata = line[1]
-        if rawdata[3] == u'\xa0':  # RLUN is present
+        if rawdata[3] == "\xa0":  # RLUN is present
             yield line[0], "", None
 
 
@@ -210,24 +215,24 @@ def check_fjdarye_rluns(item, _no_params, info):
     for line in info:
         if item == line[0]:
             rawdata = line[1]
-            if rawdata[3] != u'\xa0':
+            if rawdata[3] != "\xa0":
                 return (2, "RLUN is not present")
-            elif rawdata[2] == u'\x08':
+            elif rawdata[2] == "\x08":
                 return (1, "RLUN is rebuilding")
-            elif rawdata[2] == u'\x07':
+            elif rawdata[2] == "\x07":
                 return (1, "RLUN copyback in progress")
-            elif rawdata[2] == u'\x41':
+            elif rawdata[2] == "\x41":
                 return (1, "RLUN spare is in use")
-            elif rawdata[2] == u'B':
+            elif rawdata[2] == "B":
                 return (0, "RLUN is in RAID0 state")  # assumption state 42
-            elif rawdata[2] == u'\x00':
+            elif rawdata[2] == "\x00":
                 return (0, "RLUN is in normal state")  # assumption
             return (2, "RLUN in unknown state %02x" % ord(rawdata[2]))
 
 
-#.
+# .
 
-fjdarye_sum_status = {1: 'unknown', 2: 'unused', 3: 'ok', 4: 'warning', 5: 'failed'}
+fjdarye_sum_status = {1: "unknown", 2: "unused", 3: "ok", 4: "warning", 5: "failed"}
 
 
 def inventory_fjdarye_sum(info):

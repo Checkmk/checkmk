@@ -11,5 +11,5 @@ description:
  The check will also report {WARNING} if the mode is "simple" or "stripe" and {CRITICAL}
  if the mode is "unspecified". Otherwise it will report {OK}.
 
-inventory:
+discovery:
  One service is created.

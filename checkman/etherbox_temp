@@ -11,6 +11,6 @@ item:
 
  Example: "2.1" A temperature sensor(type 1) on port 2
 
-inventory:
+discovery:
  One service is created for each temperature sensor.
 

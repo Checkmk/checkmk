@@ -8,5 +8,5 @@ description:
  which support the MCAFEE-MEG MIB.
  Default levels are 5 and 10. These are configurable
 
-inventory:
+discovery:
  One service is created.

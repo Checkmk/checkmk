@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#.
+
+# .
 #   .--Glacier limits------------------------------------------------------.
 #   |       ____ _            _             _ _           _ _              |
 #   |      / ___| | __ _  ___(_) ___ _ __  | (_)_ __ ___ (_) |_ ___        |
@@ -19,8 +20,8 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings['aws_glacier_limits_default_levels'] = {
-    'number_of_vaults': (None, 80.0, 90.0),
+factory_settings["aws_glacier_limits_default_levels"] = {
+    "number_of_vaults": (None, 80.0, 90.0),
 }
 
 
@@ -29,12 +30,12 @@ def check_aws_glacier_limits(item, params, region_data):
     return check_aws_limits("glacier", params, region_data)
 
 
-check_info['aws_glacier_limits'] = {
-    'parse_function': parse_aws_limits_generic,
-    'inventory_function': discover(),
-    'check_function': check_aws_glacier_limits,
-    'service_description': 'AWS/Glacier Limits %s',
-    'group': 'aws_glacier_limits',
-    'default_levels_variable': 'aws_glacier_limits_default_levels',
-    'has_perfdata': True,
+check_info["aws_glacier_limits"] = {
+    "parse_function": parse_aws_limits_generic,
+    "inventory_function": discover(),
+    "check_function": check_aws_glacier_limits,
+    "service_description": "AWS/Glacier Limits %s",
+    "group": "aws_glacier_limits",
+    "default_levels_variable": "aws_glacier_limits_default_levels",
+    "has_perfdata": True,
 }

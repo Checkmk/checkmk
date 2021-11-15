@@ -6,16 +6,58 @@
 """This module provides commonly used functions for the handling of encrypted
 data within the Checkmk ecosystem."""
 
-from typing import Callable, Tuple, TYPE_CHECKING
+import enum
+import hashlib
+from typing import Callable, Tuple
 
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
 from Cryptodome.Protocol.KDF import PBKDF2
 
-if TYPE_CHECKING:
-    import hashlib
-
 OPENSSL_SALTED_MARKER = "Salted__"
+
+
+class TransportProtocol(enum.Enum):
+    PLAIN = b"<<"
+    MD5 = b"00"
+    SHA256 = b"02"
+    PBKDF2 = b"03"
+    NONE = b"99"
+
+
+def decrypt_by_agent_protocol(
+    password: str,
+    protocol: TransportProtocol,
+    encrypted_pkg: bytes,
+) -> bytes:
+    """select the decryption algorithm based on the agent header
+
+    Support encrypted agent data with "99" header.
+    This was not intended, but the Windows agent accidentally sent this header
+    instead of "00" up to 2.0.0p1, so we keep this for a while.
+
+    Warning:
+        "99" for real-time check data means "unencrypted"!
+    """
+
+    if protocol is TransportProtocol.PBKDF2:
+        return decrypt_aes_256_cbc_pbkdf2(
+            ciphertext=encrypted_pkg[len(OPENSSL_SALTED_MARKER) :],
+            password=password,
+        )
+
+    if protocol is TransportProtocol.SHA256:
+        return decrypt_aes_256_cbc_legacy(
+            ciphertext=encrypted_pkg,
+            password=password,
+            digest=hashlib.sha256,
+        )
+
+    return decrypt_aes_256_cbc_legacy(
+        ciphertext=encrypted_pkg,
+        password=password,
+        digest=hashlib.md5,
+    )
 
 
 def decrypt_aes_256_cbc_pbkdf2(
@@ -33,11 +75,9 @@ def decrypt_aes_256_cbc_pbkdf2(
     PBKDF2_CYCLES = 10_000
 
     salt = ciphertext[:SALT_LENGTH]
-    raw_key = PBKDF2(password,
-                     salt,
-                     KEY_LENGTH + IV_LENGTH,
-                     count=PBKDF2_CYCLES,
-                     hmac_hash_module=SHA256)
+    raw_key = PBKDF2(
+        password, salt, KEY_LENGTH + IV_LENGTH, count=PBKDF2_CYCLES, hmac_hash_module=SHA256
+    )
     key, iv = raw_key[:KEY_LENGTH], raw_key[KEY_LENGTH:]
 
     decryption_suite = AES.new(key, AES.MODE_CBC, iv)
@@ -70,14 +110,13 @@ def _derive_openssl_key_and_iv(
     key_length: int,
     iv_length: int,
 ) -> Tuple[bytes, bytes]:
-    """Simple OpenSSL Key derivation function
-    """
+    """Simple OpenSSL Key derivation function"""
     d = d_i = b""
     while len(d) < key_length + iv_length:
         d_i = digest(d_i + password).digest()
         d += d_i
-    return d[:key_length], d[key_length:key_length + iv_length]
+    return d[:key_length], d[key_length : key_length + iv_length]
 
 
 def _strip_fill_bytes(content: bytes) -> bytes:
-    return content[0:-content[-1]]
+    return content[0 : -content[-1]]

@@ -8,9 +8,9 @@
 # been updated since the TimeSeries refactoring. This will be cleaned up with CMK-3556
 # type: ignore[arg-type,assignment,call-overload]
 
+import getopt
 import sys
 import time
-import getopt
 from typing import Optional
 
 import cmk.utils.prediction as prediction
@@ -18,7 +18,8 @@ from cmk.utils.exceptions import MKGeneralException
 
 
 def usage():
-    sys.stderr.write("""== check_cpu_peaks ==
+    sys.stderr.write(
+        """== check_cpu_peaks ==
 This checks raises an alert if the CPU utilization over a configurable
 timeperiod (default is "-30 days until now") does NOT exceed the configured thresholds.
 It can be used to detect unchallenged hosts. The check is done by evaluating the
@@ -37,7 +38,8 @@ OPTIONS:
   -f   From time (unixtimestamp), default is until time minus 30 days
   -v   Verbose mode, Outputs RRD data
   -d   Debug mode - let Python exceptions come through
-""")
+"""
+    )
 
 
 if len(sys.argv) < 2:
@@ -56,17 +58,17 @@ fromtime: Optional[float] = None
 untiltime: Optional[float] = None
 
 for o, a in opts:
-    if o in ['-v']:
+    if o in ["-v"]:
         opt_verbose = True
-    elif o in ['-d']:
+    elif o in ["-d"]:
         opt_debug = True
-    elif o in ['-w']:
+    elif o in ["-w"]:
         warn_level = int(a)
-    elif o in ['-c']:
+    elif o in ["-c"]:
         crit_level = int(a)
-    elif o in ['-f']:
+    elif o in ["-f"]:
         fromtime = int(a)
-    elif o in ['-u']:
+    elif o in ["-u"]:
         untiltime = int(a)
 
 if len(args) == 1:
@@ -89,7 +91,7 @@ try:
         data = prediction.get_rrd_data(host, "CPU utilization", "util", "MAX", fromtime, untiltime)
         datasets.append(data[1])
         step_secs = data[0]
-        #util_total = [ x for x in datasets[0] if x is not None ]
+        # util_total = [ x for x in datasets[0] if x is not None ]
         util_total = datasets[0]
     except Exception as e:
         if opt_debug:
@@ -106,7 +108,7 @@ try:
                 return None
             return int(sum(y for y in _a))
 
-        #util_total = map(lambda x: int(sum([y for y in x if y is not None])),
+        # util_total = map(lambda x: int(sum([y for y in x if y is not None])),
         util_total = [sumsum(x) for x in zip(datasets[0], datasets[1], datasets[2])]
 
     cpu_peak = max(util_total)
@@ -121,20 +123,25 @@ try:
 
     if is_windows:
         info = [
-            "CPU utilization from %s until %s" %
-            (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
-             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)))
+            "CPU utilization from %s until %s"
+            % (
+                time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
+                time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)),
+            )
         ]
     else:
         info = [
-            "CPU utilization (user, system, wait) from %s until %s" %
-            (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
-             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)))
+            "CPU utilization (user, system, wait) from %s until %s"
+            % (
+                time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
+                time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)),
+            )
         ]
 
     if cpu_peak:
-        info.append("Highest Peak of %d%% at %s" %
-                    (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
+        info.append(
+            "Highest Peak of %d%% at %s" % (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time))
+        )
         state = 0
         if crit_level and cpu_peak <= crit_level:
             info.append("less than %d (!!)" % crit_level)

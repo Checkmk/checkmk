@@ -15,8 +15,14 @@
 
 
 def agent_hivemanager_ng_arguments(params, hostname, ipaddress):
-    return [params["url"], params["vhm_id"], params["api_token"], params["client_id"], \
-            params["client_secret"], params["redirect_url"]]
+    return [
+        params["url"],
+        params["vhm_id"],
+        params["api_token"],
+        params["client_id"],
+        params["client_secret"],
+        params["redirect_url"],
+    ]
 
 
-special_agent_info['hivemanager_ng'] = agent_hivemanager_ng_arguments
+special_agent_info["hivemanager_ng"] = agent_hivemanager_ng_arguments

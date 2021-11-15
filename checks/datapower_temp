@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #
 
 factory_settings["datapower_temp_default_levels"] = {
@@ -38,11 +40,12 @@ def check_datapower_temp(item, params, info):
                 dev_state, dev_state_txt = datapower_temp_status[status]
                 return dev_state, "device status: %s" % dev_state_txt
 
-            state, infotext, perfdata = check_temperature(float(temp),
-                                                          params,
-                                                          "datapower_temp_%s" % item,
-                                                          dev_levels=(float(upper_warn),
-                                                                      float(upper_crit)))
+            state, infotext, perfdata = check_temperature(
+                float(temp),
+                params,
+                "datapower_temp_%s" % item,
+                dev_levels=(float(upper_warn), float(upper_crit)),
+            )
 
             return state, infotext, perfdata
 
@@ -61,7 +64,8 @@ check_info["datapower_temp"] = {
             3,  # dpStatusEnvironmentalSensorsUpperNonCriticalThreshold
             5,  # dpStatusEnvironmentalSensorsReadingStatus
             6,  # dpStatusEnvironmentalSensorsUpperCriticalThreshold
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_datapower,
     "default_levels_variable": "datapower_temp_default_levels",
 }

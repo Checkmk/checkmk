@@ -9,26 +9,31 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # TODO together with 'mcafee_emailgateway_agent'
 # only info check?
 
 
 def check_mcafee_emailgateway_av_mcafee(item, params, info):
     eng_version, dat_version, extra_dat_version = info[0]
-    return 0, "Engine version: %s, DAT version: %s (%s)" % \
-              (eng_version, dat_version, extra_dat_version)
+    return 0, "Engine version: %s, DAT version: %s (%s)" % (
+        eng_version,
+        dat_version,
+        extra_dat_version,
+    )
 
 
-check_info['mcafee_emailgateway_av_mcafee'] = {
-    'inventory_function': inventory_mcafee_gateway_generic,
-    'check_function': check_mcafee_emailgateway_av_mcafee,
-    'service_description': 'AV McAfee',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.4.1.2.3.6',
+check_info["mcafee_emailgateway_av_mcafee"] = {
+    "inventory_function": inventory_mcafee_gateway_generic,
+    "check_function": check_mcafee_emailgateway_av_mcafee,
+    "service_description": "AV McAfee",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.4.1.2.3.6",
         [
-            '1',  # av-mcafee-engine-version
-            '2',  # av-mcafee-dat-version
-            '3',  # av-mcafee-extra-dat-version
-        ]),
-    'snmp_scan_function': scan_mcafee_emailgateway,
+            "1",  # av-mcafee-engine-version
+            "2",  # av-mcafee-dat-version
+            "3",  # av-mcafee-extra-dat-version
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_emailgateway,
 }

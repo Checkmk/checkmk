@@ -9,5 +9,5 @@ description:
 item:
  The namespace whose cpu resources are monitored
 
-inventory:
+discovery:
  One service is created for each namespace.

@@ -1,0 +1,177 @@
+{
+    "files.exclude": {
+        "**/*.o": true,
+        "**/*.py": true,
+        "**/*.tmp": true
+    },
+    "files.associations": {
+        "*.ipp": "cpp",
+        "iosfwd": "cpp",
+        "iostream": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "cmath": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "array": "cpp",
+        "atomic": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "strstream": "cpp",
+        "*.tcc": "cpp",
+        "bitset": "cpp",
+        "cfenv": "cpp",
+        "chrono": "cpp",
+        "cinttypes": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "condition_variable": "cpp",
+        "cstdint": "cpp",
+        "cuchar": "cpp",
+        "deque": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "exception": "cpp",
+        "algorithm": "cpp",
+        "filesystem": "cpp",
+        "functional": "cpp",
+        "iterator": "cpp",
+        "map": "cpp",
+        "memory": "cpp",
+        "memory_resource": "cpp",
+        "numeric": "cpp",
+        "optional": "cpp",
+        "random": "cpp",
+        "ratio": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "system_error": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "fstream": "cpp",
+        "future": "cpp",
+        "initializer_list": "cpp",
+        "iomanip": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "mutex": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "sstream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp",
+        "thread": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp",
+        "valarray": "cpp",
+        "variant": "cpp",
+        "charconv": "cpp",
+        "*.inc": "cpp",
+        "*.def": "cpp",
+        "*.gen": "cpp",
+        "any": "cpp",
+        "bit": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp",
+        "coroutine": "cpp"
+    },
+    "python.pythonPath": "/usr/bin/python3",
+    "gulp.autoDetect": "off",
+    "grunt.autoDetect": "off",
+    "jake.autoDetect": "off",
+    "typescript.tsc.autoDetect": "off",
+    "task.autoDetect": "off",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.cStandard": "c11",
+    "vscode_custom_css.imports": [
+        "file:///home/sk/vscode_custom.css",
+        "/home/sk/vscode_custom.css",
+    ],
+    "vscode_custom_css.statusbar": false,
+    "clang-format.executable": "clang-format-12",
+    "editor.formatOnSave": true,
+    "clang-format.fallbackStyle": "none",
+    "C_Cpp.loggingLevel": "Information",
+    "C_Cpp.clang_format_path": "/usr/bin/clang-format-10",
+    "C_Cpp.clang_format_fallbackStyle": "Google",
+    "C_Cpp.clang_format_sortIncludes": true,
+    "cSpell.enableFiletypes": [
+        "!python"
+    ],
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "googletest.failed",
+                "settings": {
+                    "foreground": "#f00"
+                }
+            },
+            {
+                "scope": "googletest.passed",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            },
+            {
+                "scope": "googletest.run",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            }
+        ]
+    },
+    "gtest-adapter.debugConfig": [
+        "Debug test_cmc"
+    ],
+    "gtest-adapter.supportLocation": true,
+    "cSpell.words": [
+        "Checkmk",
+        "cppcheck",
+        "ub"
+    ],
+    "C_Cpp.intelliSenseEngineFallback": "Disabled",
+    "C_Cpp.default.intelliSenseMode": "clang-x64",
+    "C_Cpp.intelliSenseCacheSize": 10120,
+    "cSpell.enabled": false,
+    "spellright.language": [
+        "en_US"
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex",
+        "plaintext",
+        "cpp"
+    ],
+    "doxdocgen.c.commentPrefix": "///",
+    "doxdocgen.c.firstLine": "///",
+    "doxdocgen.c.lastLine": "///",
+    "doxdocgen.c.triggerSequence": "///",
+    "c-cpp-flylint.flexelint.enable": false,
+    "window.title": "${dirty}${activeEditorShort}${separator}LIVESTATUS${separator}",
+    "workbench.colorCustomizations": {
+        "[Atom One Light]": {},
+        "activityBar.background": "#3D2A0F",
+        "titleBar.activeBackground": "#563B15",
+        "titleBar.activeForeground": "#FDFAF6"
+    }
+}

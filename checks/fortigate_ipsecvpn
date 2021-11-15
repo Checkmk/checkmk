@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['fortigate_ipsecvpn_default_levels'] = {
+factory_settings["fortigate_ipsecvpn_default_levels"] = {
     "levels": (1, 2),
 }
 
@@ -35,8 +35,12 @@ def check_fortigate_ipsecvpn(item, params, info):
     num_ignored = len(tunnels_ignored)
     num_down_and_not_ignored = num_down - num_ignored
 
-    infotext = "Total: %d, Up: %d, Down: %d, Ignored: %s"\
-               % (num_total, num_up, num_down, num_ignored)
+    infotext = "Total: %d, Up: %d, Down: %d, Ignored: %s" % (
+        num_total,
+        num_up,
+        num_down,
+        num_ignored,
+    )
 
     warn, crit = params.get("levels", (None, None))
     status = 0
@@ -47,7 +51,7 @@ def check_fortigate_ipsecvpn(item, params, info):
     if status:
         infotext += " (warn/crit at %s/%s)" % (warn, crit)
 
-    yield status, infotext, [('active_vpn_tunnels', num_up, '', '', 0, num_total)]
+    yield status, infotext, [("active_vpn_tunnels", num_up, "", "", 0, num_total)]
 
     long_output = []
     for title, tunnels in [
@@ -73,7 +77,8 @@ check_info["fortigate_ipsecvpn"] = {
         [
             3,  # fgVpnTunEntPhase2Name
             20,  # fgVpnTunEntStatus
-        ]),
+        ],
+    ),
     "default_levels_variable": "fortigate_ipsecvpn_default_levels",
     "group": "ipsecvpn",
 }

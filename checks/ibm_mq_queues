@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dateutil.parser
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
 # 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -38,18 +41,12 @@ from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-
 # No commands have a syntax error.
 # All valid MQSC commands were processed.
 
-import dateutil.parser
-
 factory_settings["ibm_mq_queues_default_levels"] = {}
-
-
-def parse_ibm_mq_queues(info):
-    return parse_runmqsc_display_output(info, "QUEUE")
 
 
 def inventory_ibm_mq_queues(parsed):
     for service_name in parsed:
-        if ':' not in service_name:
+        if ":" not in service_name:
             # Do not show queue manager entry in inventory
             continue
         yield service_name, {}
@@ -61,8 +58,8 @@ def check_ibm_mq_queues(item, params, parsed):
     data = parsed[item]
 
     if "CURDEPTH" in data:
-        cur_depth = data.get('CURDEPTH')
-        max_depth = data.get('MAXDEPTH')
+        cur_depth = data.get("CURDEPTH")
+        max_depth = data.get("MAXDEPTH")
         yield ibm_mq_depth(cur_depth, max_depth, params)
 
     if "MSGAGE" in data:
@@ -73,21 +70,21 @@ def check_ibm_mq_queues(item, params, parsed):
         mq_date = data.get("LGETDATE")
         mq_time = data.get("LGETTIME")
         agent_timestamp = ibm_mq_agent_timestamp(item, parsed)
-        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, 'Last get', 'lgetage', params)
+        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, "Last get", "lgetage", params)
 
     if "LPUTDATE" in data:
         mq_date = data.get("LPUTDATE")
         mq_time = data.get("LPUTTIME")
         agent_timestamp = ibm_mq_agent_timestamp(item, parsed)
-        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, 'Last put', 'lputage', params)
+        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, "Last put", "lputage", params)
 
     if "IPPROCS" in data:
         cnt = data["IPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open input handles', 'ipprocs', 'ipprocs', params)
+        yield ibm_mq_procs(cnt, "Open input handles", "ipprocs", "ipprocs", params)
 
     if "OPPROCS" in data:
         cnt = data["OPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open output handles', 'opprocs', 'opprocs', params)
+        yield ibm_mq_procs(cnt, "Open output handles", "opprocs", "opprocs", params)
 
     if "QTIME" in data:
         qtimes = data["QTIME"]
@@ -96,8 +93,8 @@ def check_ibm_mq_queues(item, params, parsed):
         if qtimes_match:
             qtime_short = qtimes_match.group(1)
             qtime_long = qtimes_match.group(2)
-            yield ibm_mq_get_qtime(qtime_short, 'Qtime short', 'qtime_short')
-            yield ibm_mq_get_qtime(qtime_long, 'Qtime long', 'qtime_long')
+            yield ibm_mq_get_qtime(qtime_short, "Qtime short", "qtime_short")
+            yield ibm_mq_get_qtime(qtime_long, "Qtime long", "qtime_long")
 
 
 def ibm_mq_depth(cur_depth, max_depth, params):
@@ -144,30 +141,30 @@ def ibm_mq_msg_age(msg_age, params):
     label = "Oldest message"
     if not msg_age:
         return (0, label + ": n/a", [])
-    return check_levels(int(msg_age),
-                        "msgage",
-                        params.get("msgage"),
-                        human_readable_func=get_age_human_readable,
-                        infoname=label)
+    return check_levels(
+        int(msg_age),
+        "msgage",
+        params.get("msgage"),
+        human_readable_func=get_age_human_readable,
+        infoname=label,
+    )
 
 
 def ibm_mq_agent_timestamp(item, parsed):
-    qmgr_name = item.split(':', 1)[0]
-    now = dateutil.parser.isoparse(parsed[qmgr_name]['NOW'])
+    qmgr_name = item.split(":", 1)[0]
+    now = dateutil.parser.isoparse(parsed[qmgr_name]["NOW"])
     return now
 
 
 def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
     if not (mq_date and mq_time):
         return (0, label + ": n/a", [])
-    mq_datetime = "%s %s" % (mq_date, mq_time.replace('.', ':'))
+    mq_datetime = "%s %s" % (mq_date, mq_time.replace(".", ":"))
     input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
     age = (agent_timestamp - input_time).total_seconds()
-    return check_levels(age,
-                        None,
-                        params.get(key),
-                        human_readable_func=get_age_human_readable,
-                        infoname=label)
+    return check_levels(
+        age, None, params.get(key), human_readable_func=get_age_human_readable, infoname=label
+    )
 
 
 def ibm_mq_procs(cnt, label, levels_key, metric, params):
@@ -176,17 +173,13 @@ def ibm_mq_procs(cnt, label, levels_key, metric, params):
     if wato:
         levels += wato.get("upper", (None, None))
         levels += wato.get("lower", (None, None))
-    return check_levels(int(cnt),
-                        metric,
-                        levels,
-                        factor=1,
-                        scale=1,
-                        human_readable_func=int,
-                        infoname=label)
+    return check_levels(
+        int(cnt), metric, levels, factor=1, scale=1, human_readable_func=int, infoname=label
+    )
 
 
 def ibm_mq_get_qtime(qtime, label, key):
-    if not qtime or qtime == '999999999':
+    if not qtime or qtime == "999999999":
         time_in_seconds = 0
         info_value = "n/a"
     else:
@@ -198,7 +191,7 @@ def ibm_mq_get_qtime(qtime, label, key):
 
 
 check_info["ibm_mq_queues"] = {
-    "parse_function": parse_ibm_mq_queues,
+    # section is already migrated!
     "inventory_function": inventory_ibm_mq_queues,
     "check_function": check_ibm_mq_queues,
     "service_description": "IBM MQ Queue %s",

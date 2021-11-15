@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
 import ipaddress
+from typing import Dict
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
@@ -17,12 +17,16 @@ def translate_hostname(translation: TranslationOptions, hostname: str) -> str:
     return _translate(translation, hostname)
 
 
-def translate_service_description(translation: TranslationOptions,
-                                  service_description: ServiceName) -> ServiceName:
-    if service_description.strip() in \
-        ["Check_MK", "Check_MK Agent",
-         "Check_MK Discovery", "Check_MK inventory",
-         "Check_MK HW/SW Inventory"]:
+def translate_service_description(
+    translation: TranslationOptions, service_description: ServiceName
+) -> ServiceName:
+    if service_description.strip() in [
+        "Check_MK",
+        "Check_MK Agent",
+        "Check_MK Discovery",
+        "Check_MK inventory",
+        "Check_MK HW/SW Inventory",
+    ]:
         return service_description.strip()
     return _translate(translation, service_description)
 
@@ -50,8 +54,8 @@ def _translate(translation: TranslationOptions, name: str) -> str:
         translations = translation.get("regex", [])
 
     for expr, subst in translations:
-        if not expr.endswith('$'):
-            expr += '$'
+        if not expr.endswith("$"):
+            expr += "$"
         rcomp = regex(expr)
         # re.RegexObject.sub() by hand to handle non-existing references
         mo = rcomp.match(name)

@@ -1,0 +1,28 @@
+Title: REST API: agent bakery urls
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1616752373
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+Some URLs of the agent bakery section had to be changed, to be in line
+with the rest of the system. These URLs had to be changed:
+
+/domain-types/agent/actions/sign
+  became
+/domain-types/agent/actions/sign/invoke
+
+/domain-types/agent/actions/bake
+  became
+/domain-types/agent/actions/bake/invoke
+
+/domain-types/agent/actions/bake_and_sign
+  became
+/domain-types/agent/actions/bake_and_sign/invoke
+
+/domain-types/agent/actions/automatic-deployment
+  became
+/domain-types/agent/actions/automatic-deployment/invoke

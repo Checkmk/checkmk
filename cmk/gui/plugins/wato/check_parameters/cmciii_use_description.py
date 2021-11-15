@@ -5,34 +5,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-)
-
 from cmk.gui.plugins.wato import (
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _valuespec_discovery_cmciii():
     return Dictionary(
         title=_("Rittal CMC III discovery"),
         elements=[
-            ("use_sensor_description",
-             DropdownChoice(
-                 title=_("Service description"),
-                 help=_("The sensor description is a user defined text. If you use "
-                        "this option, you must ensure that all sensors have a "
-                        "unique description. Otherwise two or more sensors can be "
-                        "aliased to the same service."),
-                 choices=[
-                     (False, _("Use device and sensor name")),
-                     (True, _("Use sensor description (see help text)")),
-                 ],
-             )),
+            (
+                "use_sensor_description",
+                DropdownChoice(
+                    title=_("Service description"),
+                    help=_(
+                        "Since the sensor description is a user defined text, multiple sensors "
+                        "may have the same description. To ensure that items are unique, they "
+                        "are prefixed with X-Y where X is the device number and Y the index "
+                        "of the sensor."
+                    ),
+                    choices=[
+                        (False, _("Use device and sensor name")),
+                        (True, _("Use sensor description")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -43,4 +43,5 @@ rulespec_registry.register(
         match_type="dict",
         name="discovery_cmciii",
         valuespec=_valuespec_discovery_cmciii,
-    ))
+    )
+)

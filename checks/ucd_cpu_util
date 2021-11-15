@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591
 #    UCD-SNMP-MIB::ssCpuRawNice.0 = Counter32: 0
 #    UCD-SNMP-MIB::ssCpuRawSystem.0 = Counter32: 98206536
@@ -35,20 +37,35 @@ def parse_ucd_cpu_util(info):
         return {}
 
     parsed = {}
-    error, raw_cpu_user, raw_cpu_nice, raw_cpu_system, raw_cpu_idle, raw_cpu_wait, \
-    raw_cpu_interrupt, raw_io_send, raw_io_received, raw_cpu_softirq = info[0]
+    (
+        error,
+        raw_cpu_user,
+        raw_cpu_nice,
+        raw_cpu_system,
+        raw_cpu_idle,
+        raw_cpu_wait,
+        raw_cpu_interrupt,
+        raw_io_send,
+        raw_io_received,
+        raw_cpu_softirq,
+    ) = info[0]
 
     raw_cpu_ticks = [
-        raw_cpu_user, raw_cpu_nice, raw_cpu_system, raw_cpu_idle, raw_cpu_wait, raw_cpu_interrupt,
-        raw_cpu_softirq
+        raw_cpu_user,
+        raw_cpu_nice,
+        raw_cpu_system,
+        raw_cpu_idle,
+        raw_cpu_wait,
+        raw_cpu_interrupt,
+        raw_cpu_softirq,
     ]
 
     try:
         parsed = {
-            'error': error,
-            'raw_cpu_ticks': [int(v) for v in raw_cpu_ticks],
-            'raw_io_send': int(raw_io_send),
-            'raw_io_received': int(raw_io_received),
+            "error": error,
+            "raw_cpu_ticks": [int(v) for v in raw_cpu_ticks],
+            "raw_io_send": int(raw_io_send),
+            "raw_io_received": int(raw_io_received),
         }
     except ValueError:
         pass
@@ -62,29 +79,29 @@ def inventory_ucd_cpu_util(info):
 
 def check_ucd_cpu_util(item, params, parsed):
     now = time.time()
-    error = parsed['error']
-    if error != 'systemStats':
-        yield 1, 'Error: %s' % error
+    error = parsed["error"]
+    if error != "systemStats":
+        yield 1, "Error: %s" % error
 
-    cpu_ticks = CPUInfo('cpu', *parsed['raw_cpu_ticks'])
+    cpu_ticks = CPUInfo("cpu", *parsed["raw_cpu_ticks"])
     for result in check_cpu_util_unix(cpu_ticks, params):
         yield result
 
     perfdata = [
-        ('read_blocks', get_rate('io_received', now, parsed['raw_io_received']), None, None),
-        ('write_blocks', get_rate('io_send', now, parsed['raw_io_send']), None, None),
+        ("read_blocks", get_rate("io_received", now, parsed["raw_io_received"]), None, None),
+        ("write_blocks", get_rate("io_send", now, parsed["raw_io_send"]), None, None),
     ]
-    yield 0, '', perfdata
+    yield 0, "", perfdata
 
 
 check_info["ucd_cpu_util"] = {
-    'parse_function': parse_ucd_cpu_util,
-    'inventory_function': inventory_ucd_cpu_util,
-    'check_function': check_ucd_cpu_util,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.2021.11',
+    "parse_function": parse_ucd_cpu_util,
+    "inventory_function": inventory_ucd_cpu_util,
+    "check_function": check_ucd_cpu_util,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2021.11",
         [
             "2",  # ssErrorName
             "50",  # ssCpuRawUser
@@ -96,7 +113,8 @@ check_info["ucd_cpu_util"] = {
             "57",  # ssIORawSent
             "58",  # ssIORawReceived
             "61",  # ssCpuRawSoftIRQ
-        ]),
-    'snmp_scan_function': prefer_hr_else_ucd,
-    'group': 'cpu_iowait',
+        ],
+    ),
+    "snmp_scan_function": prefer_hr_else_ucd,
+    "group": "cpu_iowait",
 }

@@ -47,15 +47,8 @@ description:
  With the optional item 'page' its posible to change the status page from server-status to a
  name you want
 
-inventory:
+discovery:
  One service is created for each Apache server.
 
 item:
  A string-combination of servername and port, e.g. {127.0.0.1:5000}.
-
-cluster:
- On a cluster we aggregate over all node results -- but we
- expect to only get data from the active node.
- Note that the plugin will not warn you if more than one
- node sends data.
-

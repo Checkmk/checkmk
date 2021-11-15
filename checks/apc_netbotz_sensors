@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.636159851 nbAlinkEnc_0_4_TEMP
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.882181375 nbAlinkEnc_2_1_TEMP
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.1619732064 nbAlinkEnc_0_2_TEMP
@@ -101,9 +103,9 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer
-factory_settings['apc_netbotz_sensors_temp_default_levels'] = {
-    'levels': (30, 35),
-    'levels_lower': (25, 20),
+factory_settings["apc_netbotz_sensors_temp_default_levels"] = {
+    "levels": (30, 35),
+    "levels_lower": (25, 20),
 }
 
 
@@ -119,10 +121,9 @@ def parse_apc_netbotz_sensors(info):
             item_info = oid_item.split(".")
             item_type = map_sensors[item_info[0]]
             item_name = " ".join(item_info[2:])
-            parsed.setdefault(item_type, {}).setdefault(item_name, {
-                "reading": float(reading_str) / 10,
-                "label": label
-            })
+            parsed.setdefault(item_type, {}).setdefault(
+                item_name, {"reading": float(reading_str) / 10, "label": label}
+            )
     return parsed
 
 
@@ -133,35 +134,42 @@ def inventory_apc_netbotz_sensors_temp(parsed, what):
 def check_apc_netbotz_sensors_temp(item, params, parsed, what):
     if item in parsed.get(what, []):
         data = parsed[what][item]
-        state, infotext, perf = check_temperature(data['reading'], params,
-                                                  "apc_netbotz_sensors_%s_%s" % (what, item))
-        return state, "[%s] %s" % (data['label'], infotext), perf
+        state, infotext, perf = check_temperature(
+            data["reading"], params, "apc_netbotz_sensors_%s_%s" % (what, item)
+        )
+        return state, "[%s] %s" % (data["label"], infotext), perf
 
-check_info['apc_netbotz_sensors'] = {
-    'parse_function'            : parse_apc_netbotz_sensors,
-    'inventory_function'        : lambda parsed: \
-        inventory_apc_netbotz_sensors_temp(parsed, "temp"),
-    'check_function'            : lambda item, params, parsed: \
-        check_apc_netbotz_sensors_temp(item, params, parsed, "temp"),
-    'service_description'       : 'Temperature %s',
-    'has_perfdata'              : True,
-    'snmp_info'                 : (".1.3.6.1.4.1.5528.100.4.1", [
-                                        "1.1",  # temp
-                                        "2.1",  # humi
-                                        "3.1",  # dewPoint
-                                        ], [
-                                        "1",    # NETBOTZV2-MIB::*SensorId
-                                        "2",    # NETBOTZV2-MIB::*SensorValue
-                                        "4",    # NETBOTZV2-MIB::*SensorLabel
-                                        "7",    # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
-                                  ]),
-    'snmp_scan_function'        : lambda oid: \
-        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5528.100.20.10"),
-    'default_levels_variable'   : 'apc_netbotz_sensors_temp_default_levels',
-    'group'                     : "temperature",
+
+check_info["apc_netbotz_sensors"] = {
+    "parse_function": parse_apc_netbotz_sensors,
+    "inventory_function": lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "temp"),
+    "check_function": lambda item, params, parsed: check_apc_netbotz_sensors_temp(
+        item, params, parsed, "temp"
+    ),
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.5528.100.4.1",
+        [
+            "1.1",  # temp
+            "2.1",  # humi
+            "3.1",  # dewPoint
+        ],
+        [
+            "1",  # NETBOTZV2-MIB::*SensorId
+            "2",  # NETBOTZV2-MIB::*SensorValue
+            "4",  # NETBOTZV2-MIB::*SensorLabel
+            "7",  # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.5528.100.20.10"
+    ),
+    "default_levels_variable": "apc_netbotz_sensors_temp_default_levels",
+    "group": "temperature",
 }
 
-#.
+# .
 #   .--dewpoint------------------------------------------------------------.
 #   |                 _                           _       _                |
 #   |              __| | _____      ___ __   ___ (_)_ __ | |_              |
@@ -172,24 +180,24 @@ check_info['apc_netbotz_sensors'] = {
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer
-factory_settings['apc_netbotz_sensors_dewpoint_default_levels'] = {
-    'levels': (18, 25),
-    'levels_lower': (-4, -6),
+factory_settings["apc_netbotz_sensors_dewpoint_default_levels"] = {
+    "levels": (18, 25),
+    "levels_lower": (-4, -6),
 }
 
 
-check_info['apc_netbotz_sensors.dewpoint'] = {
-    'inventory_function'        : lambda parsed: \
-        inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
-    'check_function'            : lambda item, params, info: \
-        check_apc_netbotz_sensors_temp(item, params, info, "dewpoint"),
-    'service_description'       : 'Dew point %s',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : "apc_netbotz_sensors_dewpoint_default_levels",
-    'group'                     : "temperature",
+check_info["apc_netbotz_sensors.dewpoint"] = {
+    "inventory_function": lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
+    "check_function": lambda item, params, info: check_apc_netbotz_sensors_temp(
+        item, params, info, "dewpoint"
+    ),
+    "service_description": "Dew point %s",
+    "has_perfdata": True,
+    "default_levels_variable": "apc_netbotz_sensors_dewpoint_default_levels",
+    "group": "temperature",
 }
 
-#.
+# .
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
 #   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
@@ -204,21 +212,22 @@ apc_netbotz_sensors_humidity_default_levels = (30, 35, 60, 65)
 
 
 def inventory_apc_netbotz_sensors_humidity(parsed):
-    return [ (item, "apc_netbotz_sensors_humidity_default_levels") \
-             for item in parsed.get("humidity", []) ]
+    return [
+        (item, "apc_netbotz_sensors_humidity_default_levels") for item in parsed.get("humidity", [])
+    ]
 
 
 def check_apc_netbotz_sensors_humidity(item, params, parsed):
     if item in parsed.get("humidity", []):
         data = parsed["humidity"][item]
-        state, infotext, perf = check_humidity(data['reading'], params)
-        return state, "[%s] %s" % (data['label'], infotext), perf
+        state, infotext, perf = check_humidity(data["reading"], params)
+        return state, "[%s] %s" % (data["label"], infotext), perf
 
 
-check_info['apc_netbotz_sensors.humidity'] = {
-    'inventory_function': inventory_apc_netbotz_sensors_humidity,
-    'check_function': check_apc_netbotz_sensors_humidity,
-    'service_description': 'Humidity %s',
-    'has_perfdata': True,
-    'group': "humidity",
+check_info["apc_netbotz_sensors.humidity"] = {
+    "inventory_function": inventory_apc_netbotz_sensors_humidity,
+    "check_function": check_apc_netbotz_sensors_humidity,
+    "service_description": "Humidity %s",
+    "has_perfdata": True,
+    "group": "humidity",
 }

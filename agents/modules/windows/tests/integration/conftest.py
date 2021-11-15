@@ -4,19 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+import shutil
+import tempfile
+from pathlib import Path
+from subprocess import PIPE, Popen
+from typing import List
+
 import pytest  # type: ignore[import]
 
-import os
-import tempfile
-import shutil
 
-from pathlib import Path
-from typing import List
-from subprocess import (Popen, PIPE)
+def pytest_addoption(parser):
+    parser.addoption("--expected_version", action="store", default="3.8.7")
+
 
 tested_pythons = ["python-3.4.cab", "python-3.8.cab"]
 # I know this is not a best method to reach artifacts, but in Windows not so many options.
 artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
+
+
+@pytest.fixture(scope="session")
+def expected_version(pytestconfig):
+    return pytestconfig.getoption("expected_version")
+
 
 # NOTE: unpacked python can work only in predefined folder(pyvenv.cfg  points on it).
 # We must do two things.
@@ -24,14 +34,21 @@ artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 # 2. Change pyvenv.cfg so that we could test our scripts: replace ProgramData with temp
 # Above mentioned things must be done in fixture, while decompression process is quite expensive.
 # Also this give possibility to test literally everything
-regression_data = {
-    "python-3.8.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
-                      b"version_info = 3.8.7\r\n"
-                      b"include-system-site-packages = false\r\n",
-    "python-3.4.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
-                      b"version_info = 3.4.4\r\n"
-                      b"include-system-site-packages = false\r\n"
-}
+@pytest.fixture(scope="session")
+def regression_data(expected_version):
+    return {
+        "python-3.8.cab": b"".join([
+            b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n",
+            b"version_info = ",
+            expected_version.encode(),
+            b"\r\n",
+            b"include-system-site-packages = false\r\n",
+        ]),
+        "python-3.4.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
+                          b"version_info = 3.4.4\r\n"
+                          b"include-system-site-packages = false\r\n"
+    }
+
 
 client_module_root = b"C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8"
 
@@ -55,7 +72,7 @@ def run_proc(command: List[str], *, cwd: Path = None):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def python_to_test(python_subdir) -> Path:
+def python_to_test(python_subdir, regression_data) -> Path:
     """ This is quite complicated simulator to verify python module and prepare the module for
     testing. During deployment every step will be validated, not because it is required(this method
     also contradicts a bit to the TDD philosophy), but to prevent extremely strange errors during

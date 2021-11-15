@@ -21,7 +21,7 @@ def check_dell_chassis_slots(item, _no_params, info):
         if saveint(number) in (1, 2, 3, 4, 5, 6, 7, 8, 9):
             number = "0" + number
         if item == number:
-            #absent = 1,none = 2,basic = 3,off = 4,
+            # absent = 1,none = 2,basic = 3,off = 4,
             state_table = {
                 "1": ("absent", 0),
                 "2": ("none", 1),
@@ -43,11 +43,12 @@ check_info["dell_chassis_slots"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.674.10892.2.5.1.1",
         [
-            #"1", # drsServerIndex
+            # "1", # drsServerIndex
             "2",  # drsServerMonitoringCapable
             "3",  # drsServerServiceTag
             "4",  # drsServerSlotName
             "5",  # drsServerSlotNumber
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.2",
 }

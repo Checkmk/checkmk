@@ -5,8 +5,10 @@
 
 #include "TableEventConsoleHistory.h"
 
+#include <memory>
+
 #include "Column.h"
-#include "IntLambdaColumn.h"
+#include "IntColumn.h"
 #include "Row.h"
 #include "StringColumn.h"
 #include "TableEventConsoleEvents.h"

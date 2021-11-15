@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterator
-from contextlib import contextmanager
 import functools
 import json
+from contextlib import contextmanager
+from typing import Iterator
 
 
 # TODO: Cleanup this dirty hack. Creating a custom subclass of the JSONEncoder and implement the
@@ -19,8 +19,9 @@ def patch_json(json_module) -> Iterator[None]:
     # default json calls.
     def _default(self: json.JSONEncoder, obj: object) -> str:
         # ignore attr-defined: See hack below
-        return getattr(obj.__class__, "to_json",
-                       _default.default)(obj)  # type: ignore[attr-defined]
+        return getattr(obj.__class__, "to_json", _default.default)(  # type: ignore[attr-defined]
+            obj
+        )
 
     # TODO: suppress mypy warnings for this monkey patch right now. See also:
     # https://github.com/python/mypy/issues/2087
@@ -40,7 +41,7 @@ def patch_json(json_module) -> Iterator[None]:
 
     @functools.wraps(orig_func)
     def _escaping_wrapper(s):
-        return orig_func(s).replace('/', '\\/')
+        return orig_func(s).replace("/", "\\/")
 
     json_module.encoder.encode_basestring_ascii = _escaping_wrapper
 

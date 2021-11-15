@@ -15,7 +15,7 @@ description:
  is {OK} when the value of the {Status} parameter is the same as during
  inventory.  It is {WARN} otherwise.
 
-inventory:
+discovery:
  One service is created for each database on the Mailbox Server.
  The DBCopy {Status} is saved as check parameter.
 

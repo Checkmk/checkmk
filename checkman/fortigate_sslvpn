@@ -12,6 +12,6 @@ description:
 item:
  Name of the SSL VPN tunnel
 
-inventory:
+discovery:
  One service is created for each virtual domain.
 

@@ -7,7 +7,7 @@ description:
  This check measures the CPU utilization of a linux container (LXC) during
  the last check cycle. Levels can be set on the total utilization.
 
-inventory:
+discovery:
  One service is created for each container if the Checkmk agent is executed
  in the context of a linux container.
 

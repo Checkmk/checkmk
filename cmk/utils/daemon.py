@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import contextmanager
 import ctypes
 import ctypes.util
 import os
-from pathlib import Path
 import sys
+from contextlib import contextmanager
+from pathlib import Path
 from typing import Generator
 
 import cmk.utils.store as store
@@ -80,13 +80,14 @@ def lock_with_pid_file(path: Path) -> None:
     one process running.
     """
     if not store.try_aquire_lock(str(path)):
-        raise MKGeneralException("Failed to aquire PID file lock: "
-                                 "Another process is already running")
+        raise MKGeneralException(
+            "Failed to aquire PID file lock: " "Another process is already running"
+        )
 
     # Now that we have the lock we are allowed to write our pid to the file.
     # The pid can then be used by the init script.
     with path.open("w", encoding="utf-8") as f:
-        f.write(u"%d\n" % os.getpid())
+        f.write("%d\n" % os.getpid())
 
 
 def _cleanup_locked_pid_file(path: Path) -> None:
@@ -123,7 +124,7 @@ def set_cmdline(cmdline: bytes) -> None:
     # mypy: The type is not detected correctly
     cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore[arg-type]
     # TODO: This can probably be simplified...
-    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b'\0'))  # noqa: F841
+    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b"\0"))  # noqa: F841
 
     set_procname(cmdline)
 
@@ -133,20 +134,20 @@ def set_procname(cmdline: bytes) -> None:
     Change the process name of the running process
     This works at least with Python 2.x on Linux
     """
-    lib = ctypes.util.find_library('c')
+    lib = ctypes.util.find_library("c")
     if not lib:
         return
     libc = ctypes.cdll.LoadLibrary(lib)
 
-    #argv = ctypes.POINTER(ctypes.c_char_p)()
+    # argv = ctypes.POINTER(ctypes.c_char_p)()
 
     # replace the command line, which is available via /proc/<pid>/cmdline.
     # This is .e.g used by ps
-    #libc.memcpy(argv.contents, new_cmdline, cmdlen)
+    # libc.memcpy(argv.contents, new_cmdline, cmdlen)
 
     # replace the prctl name, which is available via /proc/<pid>/status.
     # This is for example used by top and killall
-    #libc.prctl(15, new_cmdline, 0, 0, 0)
+    # libc.prctl(15, new_cmdline, 0, 0, 0)
 
     name_buffer = ctypes.create_string_buffer(len(cmdline) + 1)
     name_buffer.value = cmdline

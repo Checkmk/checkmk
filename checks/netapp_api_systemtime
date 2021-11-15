@@ -13,10 +13,13 @@
 # node1 76123   123123
 # node2 7612311 123123
 
-NetappApiTimeEntry = collections.namedtuple("NetappApiTimeEntry", [
-    'agent_time',
-    'system_time',
-])
+NetappApiTimeEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "NetappApiTimeEntry",
+    [
+        "agent_time",
+        "system_time",
+    ],
+)
 
 
 def parse_netapp_api_systemtime(info):
@@ -32,23 +35,27 @@ def parse_netapp_api_systemtime(info):
 
 @get_parsed_item_data
 def check_netapp_api_systemtime(item, params, entry):
-    yield check_levels(entry.system_time,
-                       None,
-                       None,
-                       infoname='System time',
-                       human_readable_func=get_timestamp_human_readable)
-    yield check_levels(entry.agent_time - entry.system_time,
-                       'time_difference',
-                       params.get('levels', (None, None)),
-                       infoname='Time difference',
-                       human_readable_func=get_age_human_readable)
+    yield check_levels(
+        entry.system_time,
+        None,
+        None,
+        infoname="System time",
+        human_readable_func=get_timestamp_human_readable,
+    )
+    yield check_levels(
+        entry.agent_time - entry.system_time,
+        "time_difference",
+        params.get("levels", (None, None)),
+        infoname="Time difference",
+        human_readable_func=get_age_human_readable,
+    )
 
 
-check_info['netapp_api_systemtime'] = {
-    'parse_function': parse_netapp_api_systemtime,
-    'inventory_function': discover(),
-    'check_function': check_netapp_api_systemtime,
-    'service_description': 'Systemtime %s',
-    'group': 'netapp_systemtime',
-    'has_perfdata': True,
+check_info["netapp_api_systemtime"] = {
+    "parse_function": parse_netapp_api_systemtime,
+    "inventory_function": discover(),
+    "check_function": check_netapp_api_systemtime,
+    "service_description": "Systemtime %s",
+    "group": "netapp_systemtime",
+    "has_perfdata": True,
 }

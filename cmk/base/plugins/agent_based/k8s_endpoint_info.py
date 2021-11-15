@@ -5,14 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Sequence
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import fields, post_load, Schema
 
-from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .agent_based_api.v1 import HostLabel, register
-
-from .utils.k8s import Address, Port, Subset
-
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .utils import k8s
+from .utils.k8s import Address, Port, Subset
 
 
 def host_labels(section: Sequence[k8s.Subset]) -> HostLabelGenerator:
@@ -33,8 +31,8 @@ def host_labels(section: Sequence[k8s.Subset]) -> HostLabelGenerator:
     # 1) empty endpoints are valid
     # 2) the host object is already created, so we need to attach the
     #    cmk/kubernetes:yes label
-    yield HostLabel('cmk/kubernetes_object', 'endpoint')
-    yield HostLabel('cmk/kubernetes', 'yes')
+    yield HostLabel("cmk/kubernetes_object", "endpoint")
+    yield HostLabel("cmk/kubernetes", "yes")
 
 
 # 2.1.0 TODO: use pydantic or marshmallow-dataclass
@@ -74,7 +72,7 @@ class SubsetsSchema(Schema):
 
     @post_load
     def make_object(self, data, **kwargs) -> Sequence[k8s.Subset]:
-        return data['subsets']
+        return data["subsets"]
 
 
 def parse_k8s_endpoint_info(string_table: StringTable) -> Sequence[k8s.Subset]:

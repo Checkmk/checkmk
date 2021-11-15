@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.2.1.1 1 --> PERLE-MCR-MGT-MIB::mcrMgtSlotIndex.1.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.3.1.1 MCR-MGT --> PERLE-MCR-MGT-MIB::mcrMgtModelName.1.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.3.1.4.1.1 0 --> PERLE-MCR-MGT-MIB::mcrMgtLedALM.1.1
@@ -32,25 +33,28 @@ def check_perle_modules_mgt(item, _no_params, info):
 
     for index, _name, _descr, power_led, alarm_led in info:
         if item == index:
-            for title, value, key in [("Alarm LED", alarm_led, "alarm_led"),
-                                      ("Power LED", power_led, "power_led")]:
+            for title, value, key in [
+                ("Alarm LED", alarm_led, "alarm_led"),
+                ("Power LED", power_led, "power_led"),
+            ]:
                 state, state_readable = mappings[key][value]
                 yield state, "%s: %s" % (title, state_readable)
 
 
-check_info['perle_modules_mgt'] = {
-    'inventory_function': inventory_perle_modules_mgt,
-    'check_function': check_perle_modules_mgt,
-    'service_description': 'Chassis slot %s MGT',
+check_info["perle_modules_mgt"] = {
+    "inventory_function": inventory_perle_modules_mgt,
+    "check_function": check_perle_modules_mgt,
+    "service_description": "Chassis slot %s MGT",
     # If you change snmp info please adapt the related inventory plugin
-    'snmp_info': (
-        '.1.3.6.1.4.1.1966.21.1.1.1.1.4.5',
+    "snmp_info": (
+        ".1.3.6.1.4.1.1966.21.1.1.1.1.4.5",
         [
             "1.1.2",  # PERLE-MCR-MGT-MIB::mcrMgtSlotIndex
             "1.1.3",  # PERLE-MCR-MGT-MIB::mcrMgtModelName.
             "1.1.4",  # PERLE-MCR-MGT-MIB::mcrMgtModelDesc
             "3.1.3",  # PERLE-MCR-MGT-MIB::mcrMgtLedPWR
             "3.1.4",  # PERLE-MCR-MGT-MIB::mcrMgtLedALM
-        ]),
-    'snmp_scan_function': perle_scan_function,
+        ],
+    ),
+    "snmp_scan_function": perle_scan_function,
 }

@@ -12,5 +12,5 @@ description:
 
  This check uses the ATTO6500N-MIB.
 
-inventory:
+discovery:
  One service is created for each device

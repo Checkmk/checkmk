@@ -27,10 +27,13 @@ def get_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
 def fetchers(host_config: HostConfig) -> Dict[str, Any]:
     ipaddress = get_ip_address(host_config)
     return {
-        "fetchers": [{
-            "fetcher_type": c.fetcher_type.name,
-            "fetcher_params": c.fetcher_configuration,
-        } for c in make_sources(host_config, ipaddress)]
+        "fetchers": [
+            {
+                "fetcher_type": c.fetcher_type.name,
+                "fetcher_params": c.fetcher_configuration,
+            }
+            for c in make_sources(host_config, ipaddress)
+        ]
     }
 
 

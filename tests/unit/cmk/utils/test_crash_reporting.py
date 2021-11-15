@@ -10,12 +10,14 @@ import itertools
 import shutil
 import struct
 import uuid
+from functools import lru_cache
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
-from cmk.utils.crash_reporting import ABCCrashReport, _format_var_for_export, CrashReportStore
+import cmk.utils.version as cmk_version
+from cmk.utils.crash_reporting import _format_var_for_export, ABCCrashReport, CrashReportStore
 
 
 class UnitTestCrashReport(ABCCrashReport):
@@ -76,9 +78,7 @@ def test_format_var_for_export_strip_nested_dict():
 
 def test_format_var_for_export_strip_large_data():
     orig_var = {
-        "a": {
-            "y": ("a" * 1024 * 1024) + "a"
-        },
+        "a": {"y": ("a" * 1024 * 1024) + "a"},
     }
 
     var = copy.deepcopy(orig_var)
@@ -131,13 +131,23 @@ def patch_uuid1(monkeypatch):
     monkeypatch.setattr("uuid.uuid1", uuid1)
 
 
-@pytest.mark.usefixtures("patch_uuid1")
+@pytest.fixture
+def cache_general_version_infos(monkeypatch):
+    """Cache the computation to save time for repeated crash report creation"""
+
+    monkeypatch.setattr(
+        cmk_version, "get_general_version_infos", lru_cache(cmk_version.get_general_version_infos)
+    )
+
+
+@pytest.mark.usefixtures("patch_uuid1", "cache_general_version_infos")
 @pytest.mark.parametrize("n_crashes", [15, 45])
 def test_crash_report_store_cleanup(crash_dir, n_crashes):
     store = CrashReportStore()
     assert not set(crash_dir.glob("*"))
 
     crash_ids = []
+
     for num in range(n_crashes):
         try:
             raise ValueError("Crash #%d" % num)
@@ -147,4 +157,4 @@ def test_crash_report_store_cleanup(crash_dir, n_crashes):
             crash_ids.append(crash.ident_to_text())
 
     assert len(set(crash_dir.glob("*"))) <= store._keep_num_crashes
-    assert {e.name for e in crash_dir.glob("*")} == set(crash_ids[-store._keep_num_crashes:])
+    assert {e.name for e in crash_dir.glob("*")} == set(crash_ids[-store._keep_num_crashes :])

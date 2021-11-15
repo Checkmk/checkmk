@@ -20,11 +20,6 @@
 #include "RendererPython3.h"
 #include "data_encoding.h"
 
-Renderer::Renderer(std::ostream &os, Logger *logger, Encoding data_encoding)
-    : _os(os), _data_encoding(data_encoding), _logger(logger) {}
-
-Renderer::~Renderer() = default;
-
 // static
 std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,
                                          Logger *logger,

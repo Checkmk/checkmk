@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.docker as docker
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def parse_docker_container_diskstat(info):
@@ -41,7 +42,7 @@ def _parse_docker_container_diskstat_plugin(info):
 
     devices = {}
     for major_minor, name in raw["names"].items():
-        major, minor = map(int, major_minor.split(':', 1))
+        major, minor = map(int, major_minor.split(":", 1))
         devices[(major, minor)] = {
             "name": name,
             "bytes": {},
@@ -70,9 +71,9 @@ def _parse_docker_container_diskstat_agent(info):
             phase = "bytes"
         elif line[0] == "[io_serviced]":
             phase = "ios"
-        elif line[0] == '[names]':
+        elif line[0] == "[names]":
             phase = "names"
-        elif line[0] == '[time]':
+        elif line[0] == "[time]":
             phase = "time"
         else:
             if line[0] == "Total":
@@ -107,14 +108,13 @@ def _prepare_diskdata(device_name: str, timestamp: int, device: dict) -> Tuple[b
     diskdata = {}
     counter_template = "diskstat.%s.%%s" % device_name
 
-    for io_op in ('read', 'write'):
-        for unit in ('ios', 'bytes'):
-            key = "%s_%s" % (io_op, 'ios' if unit == 'ios' else 'throughput')
+    for io_op in ("read", "write"):
+        for unit in ("ios", "bytes"):
+            key = "%s_%s" % (io_op, "ios" if unit == "ios" else "throughput")
             try:
-                diskdata[key] = get_rate(counter_template % key,
-                                         timestamp,
-                                         device[unit][io_op.title()],
-                                         onwrap=RAISE)
+                diskdata[key] = get_rate(
+                    counter_template % key, timestamp, device[unit][io_op.title()], onwrap=RAISE
+                )
             except KeyError:
                 # KeyError: Containers counters are not initialized
                 #           (may be because disk is not *ever* used by container)
@@ -146,8 +146,9 @@ def check_docker_container_diskstat(item, params, parsed):
 
 check_info["docker_container_diskstat"] = {
     "parse_function": parse_docker_container_diskstat,
-    "inventory_function": lambda parsed: inventory_diskstat_generic([(None, key)
-                                                                     for key in parsed]),
+    "inventory_function": lambda parsed: inventory_diskstat_generic(
+        [(None, key) for key in parsed]
+    ),
     "check_function": check_docker_container_diskstat,
     "service_description": "Disk IO %s",
     "has_perfdata": True,

@@ -14,5 +14,5 @@ description:
 item:
  The fan identifier.
 
-inventory:
+discovery:
  One service is created for each fan.

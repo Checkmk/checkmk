@@ -30,8 +30,9 @@ class PiggybackSource(AgentSource):
             id_="piggyback",
             main_data_source=False,
         )
-        self.time_settings: Final = (config.get_config_cache().get_piggybacked_hosts_time_settings(
-            piggybacked_hostname=hostname))
+        self.time_settings: Final = config.get_config_cache().get_piggybacked_hosts_time_settings(
+            piggybacked_hostname=hostname
+        )
 
     def _make_file_cache(self) -> NoCache:
         return NoCacheFactory(

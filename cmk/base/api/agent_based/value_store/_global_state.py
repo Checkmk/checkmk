@@ -9,6 +9,7 @@ This module keeps the global state of the ValueStore.
 
 from contextlib import contextmanager
 from typing import Any, Generator, MutableMapping, Optional
+
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 

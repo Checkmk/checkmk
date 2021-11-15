@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextInput,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersStorage,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_bossock_fibers():
@@ -34,4 +30,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Node ID")),
         parameter_valuespec=_parameter_valuespec_bossock_fibers,
         title=lambda: _("Number of Running Bossock Fibers"),
-    ))
+    )
+)

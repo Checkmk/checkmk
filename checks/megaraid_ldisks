@@ -15,8 +15,11 @@
 
 
 def megaraid_ldisks_is_new_drive(l):
-    return l.startswith('Virtual Disk:') or l.startswith('Virtual Drive:') \
-           or l.startswith('CacheCade Virtual Drive:')
+    return (
+        l.startswith("Virtual Disk:")
+        or l.startswith("Virtual Drive:")
+        or l.startswith("CacheCade Virtual Drive:")
+    )
 
 
 def parse_megaraid_ldisks(info):
@@ -26,10 +29,10 @@ def parse_megaraid_ldisks(info):
     item = None
     for line in info:
         l = " ".join(line)
-        if line[0] == "Adapter" and not l.endswith('No Virtual Drive Configured.'):
+        if line[0] == "Adapter" and not l.endswith("No Virtual Drive Configured."):
             adapter = line[1]
         elif megaraid_ldisks_is_new_drive(l) and adapter is not None:
-            disk = l.split(': ')[1].split(' ')[0]
+            disk = l.split(": ")[1].split(" ")[0]
             item = "%d/%d" % (int(adapter), int(disk))
             parsed[item] = {}
 
@@ -39,15 +42,15 @@ def parse_megaraid_ldisks(info):
                 parsed[item]["state"] = l.split(":")[1].strip()
             elif line[0].startswith("Default"):
                 if line[1].startswith("Cache"):
-                    parsed[item]["default_cache"] = " ".join(line[3:]).replace(': ', '')
+                    parsed[item]["default_cache"] = " ".join(line[3:]).replace(": ", "")
                 elif line[1].startswith("Write"):
-                    parsed[item]["default_write"] = " ".join(line[3:]).replace(': ', '')
+                    parsed[item]["default_write"] = " ".join(line[3:]).replace(": ", "")
 
             elif line[0].startswith("Current"):
                 if line[1].startswith("Cache"):
-                    parsed[item]["current_cache"] = " ".join(line[3:]).replace(': ', '')
+                    parsed[item]["current_cache"] = " ".join(line[3:]).replace(": ", "")
                 elif line[1].startswith("Write"):
-                    parsed[item]["current_write"] = " ".join(line[3:]).replace(': ', '')
+                    parsed[item]["current_write"] = " ".join(line[3:]).replace(": ", "")
     return parsed
 
 
@@ -88,8 +91,8 @@ def check_megaraid_ldisks(item, _no_params, parsed):
 
 
 check_info["megaraid_ldisks"] = {
-    'parse_function': parse_megaraid_ldisks,
-    'check_function': check_megaraid_ldisks,
-    'inventory_function': inventory_megaraid_ldisks,
-    'service_description': 'RAID Adapter/LDisk %s',
+    "parse_function": parse_megaraid_ldisks,
+    "check_function": check_megaraid_ldisks,
+    "inventory_function": inventory_megaraid_ldisks,
+    "service_description": "RAID Adapter/LDisk %s",
 }

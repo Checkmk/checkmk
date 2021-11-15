@@ -5,19 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import List, Dict, Any, Type, Sequence
+from typing import Any, Dict, List, Sequence, Type
+
 import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
     ABCBISearcher,
-    BIParams,
-    ReqString,
-    ReqBoolean,
-    ReqDict,
     ABCWithSchema,
     ActionArgument,
+    BIParams,
+    ReqBoolean,
+    ReqDict,
+    ReqString,
 )
-
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
 from cmk.utils.bi.bi_schema import Schema
 
@@ -76,15 +76,18 @@ class ABCBIRule(ABCWithSchema):
     def __init__(self):
         self.id = ""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def params(self) -> BIParams:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def properties(self) -> BIRuleProperties:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
@@ -106,8 +109,9 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile(self, extern_arguments: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def compile(
+        self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod

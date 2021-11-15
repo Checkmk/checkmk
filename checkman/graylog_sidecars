@@ -15,5 +15,5 @@ description:
 item:
  The name of the sidecar.
 
-inventory:
+discovery:
  One service is created for each node.

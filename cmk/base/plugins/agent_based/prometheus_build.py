@@ -6,13 +6,12 @@
 """Prometheus Build Check"""
 
 import json
-from typing import Dict, Any, Optional
-from .agent_based_api.v1 import Result, register, type_defs, State as state, Service
+from typing import Any, Dict, Optional
 
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Section = Dict[str, Any]
 
@@ -34,14 +33,17 @@ register.agent_section(
 
 
 def discovery_prometheus_build(section: Section) -> DiscoveryResult:
+    if not section:
+        return
     yield Service()
 
 
 def check_prometheus_build(section: Section) -> CheckResult:
-    yield Result(
-        state=state.OK,
-        summary=f"Version: {section['version']}",
-    )
+    if "version" in section:
+        yield Result(
+            state=state.OK,
+            summary=f"Version: {section['version']}",
+        )
 
     if "reload_config_status" in section:
         successful_reload = section["reload_config_status"]

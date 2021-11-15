@@ -49,23 +49,30 @@ def check_scaleio_devices(item, params, devices):
         err_state_readable = _make_state_readable(err_state)
         dev_id = device["DEVICE"]
         error_devices.append(dev_id)
-        long_output.append("Device %s: Error: %s, State: %s (ID: %s, Storage pool ID: %s)" %
-                           (dev_id, _make_state_readable(device["STATE"]), err_state_readable,
-                            dev_id, device["STORAGE_POOL_ID"]))
+        long_output.append(
+            "Device %s: Error: %s, State: %s (ID: %s, Storage pool ID: %s)"
+            % (
+                dev_id,
+                _make_state_readable(device["STATE"]),
+                err_state_readable,
+                dev_id,
+                device["STORAGE_POOL_ID"],
+            )
+        )
 
     if error_devices:
         num_errors = len(error_devices)
         yield 2, "%d devices, %d errors (%s)" % (num_devices, num_errors, ", ".join(error_devices))
     else:
-        yield 0, '%d devices, no errors' % num_devices
+        yield 0, "%d devices, no errors" % num_devices
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info['scaleio_devices'] = {
-    'parse_function': parse_scaleio_devices,
-    'inventory_function': discover(),
-    'check_function': check_scaleio_devices,
-    'service_description': 'ScaleIO Data Server %s Devices',
+check_info["scaleio_devices"] = {
+    "parse_function": parse_scaleio_devices,
+    "inventory_function": discover(),
+    "check_function": check_scaleio_devices,
+    "service_description": "ScaleIO Data Server %s Devices",
 }

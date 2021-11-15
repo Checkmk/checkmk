@@ -34,12 +34,12 @@ td.state {
 
 table.data tr.data td.stale,
 table.data td.perfometer.stale div.title {
-  color: rgb(136, 136, 136);
+  color: $font-color-dimmed;
 }
 
 table.data tr.data td.stale.state2,
 table.data tr.data td.stale.hstate1 {
-  color: $lightgrey !important;
+  color: $font-color-light-grey !important;
   text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
@@ -55,7 +55,7 @@ div.tile {
     height: 100%;
     padding: 0 1px;
 
-    span {
+    span.state_rounded_fill {
       display: flex;
       align-items: center;
       height: calc(100% - 3px);
@@ -64,25 +64,40 @@ div.tile {
   }
 }
 
-td.state span {
+td.state span.state_rounded_fill {
   justify-content: center;
 }
 
-td.hstate span {
+td.hstate span.state_rounded_fill {
   padding: 0 5px;
+
+  &.host {
+    /* align with host names without state background-color */
+    padding: 0 8px;
+  }
 }
+
+// TODO: Refactor the code so that every element with a class .stateX can apply style
+// and no further class specifications like .bibox_box, .statemini etc. are necessary.
+// This requires that the Python code sets the .stateX class on the correct elements.
 
 /* OK/UP */
 .bibox_box.state0,
 span.content.state0,
 b.state0,
 td.count.state0,
+td.number.state0,
 td.fillbackground.state0,
+.statemini.state0,
+.statebullet.state0,
+.infobox_entry.state0,
 .state0 span,
-.hstate0 span {
+.hstate0 span,
+.timeline .state0,
+.hostmatrix .state0 {
   &,
   a {
-    color: $black !important;
+    color: $font-color-black !important;
     background-color: $color-state-success-background !important;
   }
 }
@@ -96,11 +111,17 @@ td.fillbackground.state0,
 span.content.state1,
 b.state1,
 td.count.state1,
+td.number.state1,
 td.fillbackground.state1,
-.state1 span {
+.statemini.state1,
+.statebullet.state1,
+.infobox_entry.state1,
+.state1 span,
+.timeline .state1,
+.hostmatrix .state1 {
   &,
   a {
-    color: $black !important;
+    color: $font-color-black !important;
     background-color: $color-state-1-background !important;
   }
 }
@@ -110,12 +131,18 @@ td.fillbackground.state1,
 span.content.state2,
 b.state2,
 td.count.state2,
+td.number.state2,
 td.fillbackground.state2,
+.statemini.state2,
+.statebullet.state2,
+.infobox_entry.state2,
 .state2 span,
+.timeline .state2,
+.hostmatrix .state2,
 .hstate1 span {
   &,
   a {
-    color: $white !important;
+    color: $font-color-white !important;
     background-color: $color-state-2-background !important;
   }
 }
@@ -125,12 +152,17 @@ td.fillbackground.state2,
 span.content.state3,
 b.state3,
 td.count.state3,
+td.number.state3,
 td.fillbackground.state3,
+.statebullet.state3,
+.infobox_entry.state3,
 .state3 span,
+.timeline .state3,
+.hostmatrix .state3,
 .hstate2 span {
   &,
   a {
-    color: $white !important;
+    color: $font-color-white !important;
     background-color: $color-state-3-background !important;
   }
 }
@@ -143,9 +175,50 @@ td.fillbackground.state3,
   span {
     &,
     a {
-      color: $statep-font-color !important;
       background-color: $color-state-4-background !important;
     }
+  }
+}
+
+svg {
+  .svcstate,
+  .hoststate {
+    // Undefined state (e.g. if no metric is available in the gauge dashlet)
+    fill: rgb(0, 142, 255) !important;
+    stroke: rgb(0, 142, 255) !important;
+  }
+
+  .state0,
+  .hstate0 {
+    /* OK/UP */
+    fill: $color-state-success-background !important;
+    stroke: $color-state-success-background !important;
+  }
+
+  .state1 {
+    /* WARN */
+    fill: $color-state-1-background !important;
+    stroke: $color-state-1-background !important;
+  }
+
+  .state2,
+  .hstate1 {
+    /* CRIT/DOWN */
+    fill: $color-state-2-background !important;
+    stroke: $color-state-2-background !important;
+  }
+
+  .state3,
+  .hstate2 {
+    /* UNKNOWN/UNREACH */
+    fill: $color-state-3-background !important;
+    stroke: $color-state-3-background !important;
+  }
+
+  .state-1 {
+    // PENDING
+    fill: $color-state-4-background !important;
+    stroke: $color-state-4-background !important;
   }
 }
 
@@ -157,6 +230,27 @@ b.stmark {
   margin-left: 2px;
   font-size: $font-size-small;
   border-radius: 4px;
+}
+
+.statemini {
+  float: left;
+  width: 12px;
+  height: 12px;
+  margin: 1px;
+  font-size: $font-size-small;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.statebullet {
+  position: relative;
+  top: 3px;
+  left: 1px;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
 /* inline icon in plugin output for URLs */
@@ -175,7 +269,7 @@ img.pluginurl {
   padding: 2px;
   font-size: $font-size-small;
   line-height: 12px;
-  color: $white;
+  color: $font-color-white;
   text-align: center;
   cursor: default;
   border-radius: 8px;
@@ -193,8 +287,8 @@ img.pluginurl {
   }
 
   &.disabled {
-    color: $footnote-link-color;
-    background-color: $inpage-highlight-color;
+    color: $font-color-dimmed;
+    background-color: $input-background-color;
   }
 
   &.dead {
@@ -206,7 +300,7 @@ img.pluginurl {
   }
 
   &.online {
-    color: $hot-font-color !important;
+    color: $font-color-light-bg;
     background-color: $color-state-success-background;
   }
 
@@ -253,9 +347,7 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-weight: $font-weight-bold;
     letter-spacing: 0;
-    color: $color-perfometer-title;
   }
 
   .glass {
@@ -269,7 +361,7 @@ table.data tr.data > td.perfometer {
 
 td.perfometer {
   a {
-    color: rgb(0, 0, 0);
+    color: $font-color-black;
     text-decoration: none;
   }
 
@@ -294,7 +386,9 @@ td.perfometer {
     width: 114px;
     margin: 0 3px;
     overflow: hidden;
+    font-weight: $font-weight-bold;
     line-height: 22px;
+    color: $font-color-light-bg;
     text-align: center;
     white-space: nowrap;
   }
@@ -346,55 +440,39 @@ table.data td.perfometer {
 /* Row coloring in case of the different states */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
-
-  td:not(.count).state1,
-  td:not(.count).state3 {
-    a,
-    span {
-      color: $dark-font-color;
-    }
-  }
 }
 
 tr[class*="even"] {
   background-color: $even-tr-bg-color;
-
-  td:not(.count).state1,
-  td:not(.count).state3 {
-    a,
-    span {
-      color: $dark-font-color;
-    }
-  }
 }
 
 .data div.hostdown {
   padding-right: 3px;
   padding-left: 3px;
-  background-color: $danger;
-  border: 2px solid rgb(0, 0, 0);
+  background-color: $color-state-2-background;
+  border: 2px solid $black;
   border-radius: 4px;
 }
 
 table.data {
   td.age {
-    color: $table-secondary-font-color;
+    color: $font-color-dimmed;
     white-space: nowrap;
 
     &.staletime {
       font-weight: bold;
-      color: $danger;
+      color: $font-color-red;
     }
 
     &.recent {
       font-weight: bold;
-      color: $primary-font-color;
+      color: $font-color;
     }
   }
 
   .state2 *,
   .state3 * {
-    color: $white;
+    color: $font-color-white;
   }
 }
 
@@ -404,7 +482,7 @@ td.badflag span {
 }
 
 td.goodflag {
-  color: $success !important;
+  color: $font-color-green !important;
 }
 
 td.icons {
@@ -467,31 +545,8 @@ table.data tr.data td table.customvars td {
 }
 
 td.matchgroups span {
-  padding: 0 3px;
+  padding: 2px;
   margin-right: 3px;
-  font-family: monospace;
-  background-color: rgb(255, 255, 255);
-  border: 1px solid rgb(238, 238, 238);
-  border-radius: 3px;
-  box-shadow: 0 0 1px rgb(136, 136, 136);
-}
-
-table.allhosts,
-table.hostmatrix,
-table.timeline {
-  .state0 {
-    background-color: $color-state-success-background;
-  }
-
-  .state1 {
-    background-color: $color-state-1-background;
-  }
-
-  .state2 {
-    background-color: $color-state-2-background;
-  }
-
-  .state3 {
-    background-color: $color-state-3-background;
-  }
+  border: 1px solid $font-color-dimmed;
+  border-radius: $theme-border-radius;
 }

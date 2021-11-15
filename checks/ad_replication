@@ -6,22 +6,22 @@
 
 # <<<ad_replication>>>
 # showrepl_COLUMNS,Destination DC Site,Destination DC,Naming Context,Source DC Site,Source DC,\
-#Transport Type,Number of Failures,Last Failure Time,Last Success Time,Last Failure Status
+# Transport Type,Number of Failures,Last Failure Time,Last Success Time,Last Failure Status
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"DC=corp,DC=de",Standardname-des-ers\
-#ten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 13:33:27,0
+# ten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 13:33:27,0
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Configuration,DC=corp,DC=de",Sta\
-#ndardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:54:08,0
+# ndardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:54:08,0
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,\
-#DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
+# DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
 
 ad_replication_default_params = (15, 20)
 
 
 def parse_ad_replication_dates(s):
-    if s == '0' or s == '(never)':
+    if s == "0" or s == "(never)":
         return None, "unknown"
 
-    s_val = time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
+    s_val = time.mktime(time.strptime(s, "%Y-%m-%d %H:%M:%S"))
     s_txt = get_relative_date_human_readable(s_val)
     return s_val, s_txt
 
@@ -30,8 +30,8 @@ def parse_ad_replication_info(info):
     lines = []
     for line_parts in info:
         # Make lines split by , instead of spaces
-        line_txt = ' '.join(line_parts).replace(',CN=', ';CN=').replace(',DC=', ';DC=')
-        line_parts = line_txt.split(',')
+        line_txt = " ".join(line_parts).replace(",CN=", ";CN=").replace(",DC=", ";DC=")
+        line_parts = line_txt.split(",")
         if len(line_parts) in [11, 10]:
             lines.append(line_parts)
     return lines
@@ -48,8 +48,8 @@ def inventory_ad_replication(info):
             source_dc = line[4]
         else:
             break  # unhandled data
-        entry = ('%s/%s' % (source_site, source_dc), 'ad_replication_default_params')
-        if line[0] == 'showrepl_INFO' and entry not in inv:
+        entry = ("%s/%s" % (source_site, source_dc), "ad_replication_default_params")
+        if line[0] == "showrepl_INFO" and entry not in inv:
             inv.append(entry)
     return inv
 
@@ -64,15 +64,36 @@ def check_ad_replication(item, params, info):
 
     for line in parse_ad_replication_info(info):
         if len(line) == 11:
-            (line_type, _dest_site, _dest_dc, naming_context, source_site, source_dc, _transport,
-             num_failures, time_last_failure, time_last_success, status_last_failure) = line
+            (
+                line_type,
+                _dest_site,
+                _dest_dc,
+                naming_context,
+                source_site,
+                source_dc,
+                _transport,
+                num_failures,
+                time_last_failure,
+                time_last_success,
+                status_last_failure,
+            ) = line
         elif len(line) == 10:
-            (line_type, _dest_site, naming_context, source_site, source_dc, _transport,
-             num_failures, time_last_failure, time_last_success, status_last_failure) = line
+            (
+                line_type,
+                _dest_site,
+                naming_context,
+                source_site,
+                source_dc,
+                _transport,
+                num_failures,
+                time_last_failure,
+                time_last_success,
+                status_last_failure,
+            ) = line
         else:
             continue  # unhandled data
 
-        if line_type == 'showrepl_INFO' and source_site + '/' + source_dc == item:
+        if line_type == "showrepl_INFO" and source_site + "/" + source_dc == item:
             found_line = True
             time_last_failure, time_last_failure_txt = parse_ad_replication_dates(time_last_failure)
             time_last_success, time_last_success_txt = parse_ad_replication_dates(time_last_success)
@@ -82,46 +103,70 @@ def check_ad_replication(item, params, info):
             if failure_count > max_failures_warn or failure_count > max_failures_crit:
                 if failure_count > max_failures_crit:
                     status = 2
-                    state_marker = '(!!)'
+                    state_marker = "(!!)"
                 else:
                     status = 1
-                    state_marker = '(!)'
+                    state_marker = "(!)"
 
                 count_failures += failure_count
                 count_failed_repl += 1
-                long_output.append('%s/%s replication of context %s reached ' \
-                          ' the threshold of maximum failures (%s) (Last success: %s, ' \
-                          'Last failure: %s, Num failures: %s, Status: %s)%s' % \
-                         (source_site, source_dc, naming_context, max_failures_warn,
-                          time_last_success_txt, time_last_failure_txt, num_failures, status_last_failure, state_marker))
+                long_output.append(
+                    "%s/%s replication of context %s reached "
+                    " the threshold of maximum failures (%s) (Last success: %s, "
+                    "Last failure: %s, Num failures: %s, Status: %s)%s"
+                    % (
+                        source_site,
+                        source_dc,
+                        naming_context,
+                        max_failures_warn,
+                        time_last_success_txt,
+                        time_last_failure_txt,
+                        num_failures,
+                        status_last_failure,
+                        state_marker,
+                    )
+                )
 
-            if time_last_failure is not None and time_last_success is not None \
-               and time_last_failure > time_last_success:
+            if (
+                time_last_failure is not None
+                and time_last_success is not None
+                and time_last_failure > time_last_success
+            ):
                 status = 2
                 count_failures += 1
                 count_failed_repl += 1
-                long_output.append('%s/%s replication of context %s failed ' \
-                         '(Last success: %s, Last failure: %s, Num failures: %s, Status: %s)(!!)' % \
-                         (source_site, source_dc, naming_context,
-                          time_last_success_txt, time_last_failure_txt, num_failures, status_last_failure))
+                long_output.append(
+                    "%s/%s replication of context %s failed "
+                    "(Last success: %s, Last failure: %s, Num failures: %s, Status: %s)(!!)"
+                    % (
+                        source_site,
+                        source_dc,
+                        naming_context,
+                        time_last_success_txt,
+                        time_last_failure_txt,
+                        num_failures,
+                        status_last_failure,
+                    )
+                )
 
     if not found_line:
         return
 
     if status == 0:
-        yield 0, 'All replications are OK.'
+        yield 0, "All replications are OK."
         return
 
-    yield status, ("Replications with failures: %s, Total failures: %s" %
-                   (count_failed_repl, count_failures))
+    yield status, (
+        "Replications with failures: %s, Total failures: %s" % (count_failed_repl, count_failures)
+    )
     if long_output:
-        yield 0, '\n%s' % '\n'.join(long_output)
+        yield 0, "\n%s" % "\n".join(long_output)
     return
 
 
 check_info["ad_replication"] = {
-    'check_function': check_ad_replication,
-    'inventory_function': inventory_ad_replication,
-    'service_description': 'AD Replication %s',
-    'group': 'ad_replication',
+    "check_function": check_ad_replication,
+    "inventory_function": inventory_ad_replication,
+    "service_description": "AD Replication %s",
+    "group": "ad_replication",
 }

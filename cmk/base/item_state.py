@@ -19,12 +19,8 @@ Do not store long-time things here. Also do not store complex
 structures like log files or stuff.
 """
 
-from typing import (
-    Any,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Optional, Tuple, Union
+
 from cmk.utils.exceptions import MKException
 
 from cmk.base.api.agent_based.value_store import get_value_store
@@ -34,7 +30,7 @@ SKIP = None
 RAISE = False
 ZERO = 0.0
 
-g_last_counter_wrap: 'Optional[MKCounterWrapped]' = None
+g_last_counter_wrap: "Optional[MKCounterWrapped]" = None
 g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 # e.g. do not suppress this check on check_mk -nv
 
@@ -89,12 +85,14 @@ def continue_on_counter_wrap() -> None:
 
 # Idea (2): Checkmk should fetch a time stamp for each info. This should also be
 # available as a global variable, so that this_time would be an optional argument.
-def get_rate(user_key: _UserKey,
-             this_time: float,
-             this_val: float,
-             allow_negative: bool = False,
-             onwrap: _OnWrap = SKIP,
-             is_rate: bool = False) -> float:
+def get_rate(
+    user_key: _UserKey,
+    this_time: float,
+    this_val: float,
+    allow_negative: bool = False,
+    onwrap: _OnWrap = SKIP,
+    is_rate: bool = False,
+) -> float:
     try:
         return _get_counter(user_key, this_time, this_val, allow_negative, is_rate)[1]
     except MKCounterWrapped as e:
@@ -109,11 +107,13 @@ def get_rate(user_key: _UserKey,
 
 # Helper for get_rate(). Note: this function has been part of the official check API
 # for a long time. So we cannot change its call syntax or remove it for the while.
-def _get_counter(countername: _UserKey,
-                 this_time: float,
-                 this_val: float,
-                 allow_negative: bool = False,
-                 is_rate: bool = False) -> Tuple[float, float]:
+def _get_counter(
+    countername: _UserKey,
+    this_time: float,
+    this_val: float,
+    allow_negative: bool = False,
+    is_rate: bool = False,
+) -> Tuple[float, float]:
     old_state = get_item_state(countername, None)
     set_item_state(countername, (this_time, this_val))
 
@@ -122,14 +122,14 @@ def _get_counter(countername: _UserKey,
     if old_state is None:
         if not g_suppress_on_wrap:
             return 1.0, 0.0
-        raise MKCounterWrapped('Counter initialization')
+        raise MKCounterWrapped("Counter initialization")
 
     last_time, last_val = old_state
     timedif = this_time - last_time
     if timedif <= 0:  # do not update counter
         if not g_suppress_on_wrap:
             return 1.0, 0.0
-        raise MKCounterWrapped('No time difference')
+        raise MKCounterWrapped("No time difference")
 
     if not is_rate:
         valuedif = this_val - last_val
@@ -143,7 +143,7 @@ def _get_counter(countername: _UserKey,
         # and wait for the next check interval.
         if not g_suppress_on_wrap:
             return 1.0, 0.0
-        raise MKCounterWrapped('Value overflow')
+        raise MKCounterWrapped("Value overflow")
 
     per_sec = float(valuedif) / timedif
     return timedif, per_sec
@@ -164,11 +164,13 @@ def raise_counter_wrap() -> None:
         raise g_last_counter_wrap  # pylint: disable=raising-bad-type
 
 
-def get_average(itemname: _UserKey,
-                this_time: float,
-                this_val: float,
-                backlog_minutes: float,
-                initialize_zero: bool = True) -> float:
+def get_average(
+    itemname: _UserKey,
+    this_time: float,
+    this_val: float,
+    backlog_minutes: float,
+    initialize_zero: bool = True,
+) -> float:
     """Return new average based on current value and last average
 
     itemname        : unique ID for storing this average until the next check
@@ -207,7 +209,7 @@ def get_average(itemname: _UserKey,
     if time_diff <= 0:
         # Gracefully handle time-anomaly of target systems
         return last_average
-    backlog_count = (backlog_minutes * 60.) / time_diff
+    backlog_count = (backlog_minutes * 60.0) / time_diff
 
     backlog_weight = 0.50
     # TODO: For the version in the new Check API change the above line to
@@ -217,7 +219,7 @@ def get_average(itemname: _UserKey,
     #  with the advantage that a) the initial value becomes irrelevant, and
     #  b) for beginning timeseries we reach a meaningful value more quickly.
 
-    weight = (1 - backlog_weight)**(1.0 / backlog_count)
+    weight = (1 - backlog_weight) ** (1.0 / backlog_count)
 
     average = (1.0 - weight) * this_val + weight * last_average
     value_store[itemname] = (this_time, average)

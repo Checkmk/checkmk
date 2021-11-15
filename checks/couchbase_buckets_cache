@@ -13,23 +13,23 @@ from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildca
 
 @get_parsed_item_data
 def check_couchbase_buckets_cache(_item, params, data):
-    miss_rate = data.get('ep_cache_miss_rate')
+    miss_rate = data.get("ep_cache_miss_rate")
     if miss_rate is not None:
         yield check_levels(
             miss_rate,
-            'cache_misses_rate',
-            params.get('cache_misses'),
+            "cache_misses_rate",
+            params.get("cache_misses"),
             human_readable_func=str,
             unit="/s",
             infoname="Cache misses",
         )
 
 
-check_info['couchbase_buckets_cache'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(lambda k, v: 'ep_cache_miss_rate' in v),
-    'check_function': check_couchbase_buckets_cache,
-    'service_description': 'Couchbase Bucket %s Cache',
-    'group': 'couchbase_cache',
-    'has_perfdata': True
+check_info["couchbase_buckets_cache"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(lambda k, v: "ep_cache_miss_rate" in v),
+    "check_function": check_couchbase_buckets_cache,
+    "service_description": "Couchbase Bucket %s Cache",
+    "group": "couchbase_cache",
+    "has_perfdata": True,
 }

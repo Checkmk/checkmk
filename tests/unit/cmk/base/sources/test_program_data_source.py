@@ -7,19 +7,18 @@
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.paths
+from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 
-fun_args_stdin: Tuple[  #
-    Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #
-] = (  #
+fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (  #  #  #
     ("arg0 arg1", "arg0 arg1", None),
     (["arg0", "arg1"], "'arg0' 'arg1'", None),
     (SpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
@@ -42,7 +41,7 @@ class TestDSProgramChecker:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_attribute_defaults(self, ipaddress, monkeypatch):
         template = ""
-        hostname = "testhost"
+        hostname = HostName("testhost")
         Scenario().add_host(hostname).apply(monkeypatch)
 
         source = DSProgramSource(
@@ -60,7 +59,7 @@ class TestDSProgramChecker:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
     def test_template_translation(self, ipaddress, monkeypatch):
         template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
-        hostname = "testhost"
+        hostname = HostName("testhost")
         Scenario().add_host(hostname).apply(monkeypatch)
         source = DSProgramSource(hostname, ipaddress, template=template)
 
@@ -110,7 +109,7 @@ class TestSpecialAgentChecker:
         expected_stdin,
         monkeypatch,
     ):
-        hostname = "testhost"
+        hostname = HostName("testhost")
         params: Dict[Any, Any] = {}
         Scenario().add_host(hostname).apply(monkeypatch)
 
@@ -125,6 +124,7 @@ class TestSpecialAgentChecker:
         assert source.hostname == hostname
         assert source.ipaddress == ipaddress
         assert source.cmdline == (  #
-            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
+            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args
+        )
         assert source.stdin == expected_stdin
         assert source.id == "special_%s" % special_agent_id

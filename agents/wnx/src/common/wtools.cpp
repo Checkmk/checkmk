@@ -7,6 +7,7 @@
 #if defined(_WIN32)
 #include <WinSock2.h>
 
+#include <Sddl.h>
 #include <comdef.h>
 #include <shellapi.h>
 
@@ -1620,7 +1621,7 @@ bool WmiWrapper::impersonate() noexcept {
 // RETURNS RAW OBJECT
 // returns nullptr, WmiStatus
 std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
-    IEnumWbemClassObject* Enumerator) {
+    IEnumWbemClassObject* Enumerator, uint32_t timeout) {
     if (nullptr == Enumerator) {
         XLOG::l.e("nullptr in Enumerator");
         return {nullptr, WmiStatus::error};
@@ -1628,7 +1629,6 @@ std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
     ULONG returned = 0;
     IWbemClassObject* wmi_object = nullptr;
 
-    auto timeout = cma::cfg::groups::global.getWmiTimeout();
     auto hres = Enumerator->Next(timeout * 1000, 1, &wmi_object,
                                  &returned);  // legacy code
     if (WBEM_S_TIMEDOUT == hres) {
@@ -1668,7 +1668,7 @@ static void FillAccuAndNames(std::wstring& accu,
 std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
     IEnumWbemClassObject* enumerator,
     const std::vector<std::wstring>& existing_names,
-    std::wstring_view separator) noexcept {
+    std::wstring_view separator, uint32_t wmi_timeout) noexcept {
     // preparation
     std::wstring accu;
     auto status_to_return = WmiStatus::ok;
@@ -1679,7 +1679,7 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
 
     // processing loop
     while (nullptr != enumerator) {
-        auto [wmi_object, status] = WmiGetNextObject(enumerator);
+        auto [wmi_object, status] = WmiGetNextObject(enumerator, wmi_timeout);
         status_to_return = status;  // last status is most important
 
         if (nullptr == wmi_object) break;
@@ -1718,7 +1718,7 @@ std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
 // returns "", Status
 std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
     const std::vector<std::wstring>& names, const std::wstring& target,
-    std::wstring_view separator) noexcept {
+    std::wstring_view separator, uint32_t wmi_timeout) noexcept {
     auto query_text = makeQuery(names, target);
 
     // Send a query to system
@@ -1732,7 +1732,7 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
     }
     ON_OUT_OF_SCOPE(enumerator->Release());
 
-    return produceTable(enumerator, names, separator);
+    return produceTable(enumerator, names, separator, wmi_timeout);
 }
 
 // special purposes: formatting for PS for example
@@ -2182,21 +2182,11 @@ std::wstring GetArgv(uint32_t index) noexcept {
     return {};
 }
 
-std::wstring GetCurrentExePath() noexcept {
-    namespace fs = std::filesystem;
-
-    std::wstring exe_path;
-    int args_count = 0;
-    auto* arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
-    if (nullptr == arg_list) return {};
-
-    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
-    fs::path exe = arg_list[0];
-
-    std::error_code ec;
-    if (fs::exists(exe, ec)) return exe.parent_path();
-    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
-
+std::filesystem::path GetCurrentExePath() {
+    WCHAR path[MAX_PATH];
+    auto ret = ::GetModuleFileNameW(nullptr, path, MAX_PATH);
+    if (ret) return {path};
+    XLOG::l("Can't determine exe path [{}]", ::GetLastError());
     return {};
 }
 
@@ -2577,42 +2567,35 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
 }
 
 InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
-    uc::LdapControl primary_dc;
-
-    auto g = wtools::ToUtf8(group);
-
-    // Set up the LOCALGROUP_INFO_1 structure.
-    uc::Status add_group_status = uc::Status::exists;
-
-    if (add_group_status == uc::Status::error) return {};
-
     auto name = GenerateCmaUserNameInGroup(group);
-    if (name.empty()) return {};
-
-    auto n = wtools::ToUtf8(name);
+    if (name.empty()) {
+        XLOG::l("Failed to create user name");
+        return {};
+    }
 
     auto pwd = GenerateRandomString(12);
 
+    uc::LdapControl primary_dc;
     primary_dc.userDel(name);
     auto add_user_status = primary_dc.userAdd(name, pwd);
     if (add_user_status != uc::Status::success) {
-        XLOG::l("Can't add user '{}'", n);
-        if (add_group_status == uc::Status::success)
-            primary_dc.localGroupDel(group);
+        XLOG::l("Can't add user '{}'", wtools::ToUtf8(name));
         return {};
     }
 
     // Now add the user to the local group.
     auto add_user_to_group_status =
         primary_dc.localGroupAddMembers(group, name);
-    if (add_user_to_group_status != uc::Status::error) return {name, pwd};
+    if (add_user_to_group_status != uc::Status::error) {
+        return {name, pwd};
+    }
 
     // Fail situation processing
-    XLOG::l("Can't add user '{}' to group '{}'", n, g);
-    if (add_user_status == uc::Status::success) primary_dc.userDel(name);
-
-    if (add_group_status == uc::Status::success)
-        primary_dc.localGroupDel(group);
+    XLOG::l("Can't add user '{}' to group '{}'", wtools::ToUtf8(name),
+            wtools::ToUtf8(group));
+    if (add_user_status == uc::Status::success) {
+        primary_dc.userDel(name);
+    }
 
     return {};
 }
@@ -2700,8 +2683,9 @@ std::filesystem::path MakeCmdFileInTemp(
 }
 }  // namespace
 
-std::filesystem::path ExecuteCommandsAsync(
-    std::wstring_view name, const std::vector<std::wstring>& commands) {
+std::filesystem::path ExecuteCommands(std::wstring_view name,
+                                      const std::vector<std::wstring>& commands,
+                                      bool wait_for_end) {
     XLOG::l.i("'{}' Starting executing commands [{}]", ToUtf8(name),
               commands.size());
     if (commands.empty()) {
@@ -2710,7 +2694,7 @@ std::filesystem::path ExecuteCommandsAsync(
 
     auto to_exec = MakeCmdFileInTemp(name, commands);
     if (!to_exec.empty()) {
-        auto pid = cma::tools::RunStdCommand(to_exec.wstring(), false);
+        auto pid = cma::tools::RunStdCommand(to_exec.wstring(), wait_for_end);
         if (pid != 0) {
             XLOG::l.i("Process is started '{}'  with pid [{}]", to_exec, pid);
             return to_exec;
@@ -2720,6 +2704,16 @@ std::filesystem::path ExecuteCommandsAsync(
     }
 
     return {};
+}
+
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    return ExecuteCommands(name, commands, false);
+}
+
+std::filesystem::path ExecuteCommandsSync(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    return ExecuteCommands(name, commands, true);
 }
 
 // simple scanner of multi_sz strings
@@ -2933,6 +2927,28 @@ void SecurityAttributeKeeper::cleanupAll() {
     acl_ = nullptr;
     sd_ = nullptr;
     sa_ = nullptr;
+}
+
+std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE& sid_type) {
+    constexpr DWORD buf_size = 256;
+    PSID psid{nullptr};
+
+    if (::ConvertStringSidToSid(sid.data(), &psid) == FALSE) {
+        return {};
+    }
+    ON_OUT_OF_SCOPE(::LocalFree(psid));
+
+    wchar_t name[buf_size];
+    DWORD name_size{buf_size};
+    wchar_t domain[buf_size];
+    DWORD domain_size{buf_size};
+    SID_NAME_USE try_sid_type{sid_type};
+
+    if (::LookupAccountSid(NULL, psid, name, &name_size, domain, &domain_size,
+                           &try_sid_type)) {
+        return name;
+    }
+    return {};
 }
 
 #if 0

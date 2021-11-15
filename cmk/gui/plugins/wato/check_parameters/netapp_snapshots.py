@@ -5,33 +5,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    Percentage,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_netapp_snapshots():
-    return Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Levels for used configured reserve"),
-             elements=[
-                 Percentage(title=_("Warning at or above"), unit="%", default_value=85.0),
-                 Percentage(title=_("Critical at or above"), unit="%", default_value=90.0),
-             ],
-         )),
-        ("state_noreserve", MonitoringState(title=_("State if no reserve is configured"),)),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels for used configured reserve"),
+                    elements=[
+                        Percentage(title=_("Warning at or above"), unit="%", default_value=85.0),
+                        Percentage(title=_("Critical at or above"), unit="%", default_value=90.0),
+                    ],
+                ),
+            ),
+            (
+                "state_noreserve",
+                MonitoringState(
+                    title=_("State if no reserve is configured"),
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -42,4 +44,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_snapshots,
         title=lambda: _("NetApp Snapshot Reserve"),
-    ))
+    )
+)

@@ -35,7 +35,7 @@ def check_vms_users(item, params, info):
     return (0, "No interactive users", perfdata)
 
 
-check_info['vms_users'] = {
+check_info["vms_users"] = {
     "check_function": check_vms_users,
     "inventory_function": inventory_vms_users,
     "service_description": "VMS Users",

@@ -11,27 +11,17 @@ This module exposes three functions:
  * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
 
 """
-from typing import (
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-)
+from typing import Dict, Mapping, Optional, Sequence
+
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    HostKey,
-    SourceType,
-)
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-import cmk.base.api.agent_based.register as agent_based_register
+from cmk.utils.type_defs import HostAddress, HostKey, HostName, SourceType
+
 import cmk.base.config as config
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.discovered_labels import HostLabel
 
-from .type_defs import DiscoveryParameters
 from .utils import QualifiedDiscovery
 
 
@@ -39,22 +29,29 @@ def analyse_host_labels(
     *,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
+    load_labels: bool,
+    save_labels: bool,
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
-    return analyse_cluster_labels(
-        host_config=host_config,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-        on_error=on_error,
-    ) if host_config.is_cluster else analyse_node_labels(
-        host_name=host_config.hostname,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-        on_error=on_error,
+    return (
+        analyse_cluster_labels(
+            host_config=host_config,
+            ipaddress=ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            load_labels=load_labels,
+            save_labels=save_labels,
+            on_error=on_error,
+        )
+        if host_config.is_cluster
+        else analyse_node_labels(
+            host_name=host_config.hostname,
+            ipaddress=ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            load_labels=load_labels,
+            save_labels=save_labels,
+            on_error=on_error,
+        )
     )
 
 
@@ -63,7 +60,8 @@ def analyse_node_labels(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    load_labels: bool,
+    save_labels: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     """Discovers and processes host labels per real host or node
@@ -86,11 +84,8 @@ def analyse_node_labels(
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
-        existing_host_labels=_load_existing_host_labels(
-            host_name=host_name,
-            discovery_parameters=discovery_parameters,
-        ),
-        discovery_parameters=discovery_parameters,
+        existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
+        save_labels=save_labels,
     )
 
 
@@ -99,7 +94,8 @@ def analyse_cluster_labels(
     host_config: config.HostConfig,
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    load_labels: bool,
+    save_labels: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     """Discovers and processes host labels per cluster host
@@ -128,27 +124,29 @@ def analyse_cluster_labels(
             host_name=node,
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
+            load_labels=load_labels,
+            save_labels=save_labels,
             on_error=on_error,
         )
 
         # keep the latest for every label.name
-        nodes_host_labels.update({
-            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
-            # I'm not sure this is desired. If it is, it should be explained.
-            # Whenever we do not load the host labels, vanished will be empty.
-            **{l.name: l for l in node_result.vanished},
-            **{l.name: l for l in node_result.present},
-        })
+        nodes_host_labels.update(
+            {
+                # TODO (mo): According to unit tests, this is what was done prior to refactoring.
+                # I'm not sure this is desired. If it is, it should be explained.
+                # Whenever we do not load the host labels, vanished will be empty.
+                **{l.name: l for l in node_result.vanished},
+                **{l.name: l for l in node_result.present},
+            }
+        )
 
     return _analyse_host_labels(
         host_name=host_config.hostname,
         discovered_host_labels=list(nodes_host_labels.values()),
-        existing_host_labels=_load_existing_host_labels(
-            host_name=host_config.hostname,
-            discovery_parameters=discovery_parameters,
-        ),
-        discovery_parameters=discovery_parameters,
+        existing_host_labels=_load_existing_host_labels(host_config.hostname)
+        if load_labels
+        else (),
+        save_labels=save_labels,
     )
 
 
@@ -157,7 +155,7 @@ def _analyse_host_labels(
     host_name: HostName,
     discovered_host_labels: Sequence[HostLabel],
     existing_host_labels: Sequence[HostLabel],
-    discovery_parameters: DiscoveryParameters,
+    save_labels: bool,
 ) -> QualifiedDiscovery[HostLabel]:
 
     host_labels = QualifiedDiscovery(
@@ -166,13 +164,15 @@ def _analyse_host_labels(
         key=lambda hl: hl.label,
     )
 
-    if discovery_parameters.save_labels:
-        DiscoveredHostLabelsStore(host_name).save({
-            # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
-            # Whenever we do not load the host labels, vanished will be empty.
-            **{l.name: l.to_dict() for l in host_labels.vanished},
-            **{l.name: l.to_dict() for l in host_labels.present},
-        })
+    if save_labels:
+        DiscoveredHostLabelsStore(host_name).save(
+            {
+                # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
+                # Whenever we do not load the host labels, vanished will be empty.
+                **{l.name: l.to_dict() for l in host_labels.vanished},
+                **{l.name: l.to_dict() for l in host_labels.present},
+            }
+        )
 
     if host_labels.new:
         # Some check plugins like 'df' may discover services based on host labels.
@@ -200,15 +200,7 @@ def _analyse_host_labels(
     return host_labels
 
 
-def _load_existing_host_labels(
-    *,
-    host_name: HostName,
-    discovery_parameters: DiscoveryParameters,
-) -> Sequence[HostLabel]:
-    # Take over old items if -I is selected
-    if not discovery_parameters.load_labels:
-        return []
-
+def _load_existing_host_labels(host_name: HostName) -> Sequence[HostLabel]:
     raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
     return [HostLabel.from_dict(name, value) for name, value in raw_label_dict.items()]
 
@@ -244,32 +236,17 @@ def _discover_host_labels_for_source_type(
     on_error: OnError,
 ) -> Mapping[str, HostLabel]:
 
-    try:
-        sections_parser = parsed_sections_broker[host_key]
-    except KeyError:
-        return {}
-
     host_labels = {}
     try:
-        # We do *not* process all available raw sections. Instead we see which *parsed*
-        # sections would result from them, and then process those.
-        parse_sections = {
-            agent_based_register.get_section_plugin(rs).parsed_section_name
-            for rs in sections_parser.sections
-        }
-        applicable_sections = parsed_sections_broker.determine_applicable_sections(
-            parse_sections,
-            host_key.source_type,
+        parsed_results = parsed_sections_broker.all_parsing_results(host_key)
+
+        console.vverbose(
+            "Trying host label discovery with: %s\n"
+            % ", ".join(str(r.section.name) for r in parsed_results)
         )
+        for (section_data, _cache_info), section_plugin in parsed_results:
 
-        console.vverbose("Trying host label discovery with: %s\n" %
-                         ", ".join(str(s.name) for s in applicable_sections))
-        for section_plugin in _sort_sections_by_label_priority(applicable_sections):
-
-            kwargs = {
-                'section': parsed_sections_broker.get_parsed_section(
-                    host_key, section_plugin.parsed_section_name),
-            }
+            kwargs = {"section": section_data}
 
             host_label_params = config.get_host_label_parameters(host_key.hostname, section_plugin)
             if host_label_params is not None:
@@ -290,7 +267,8 @@ def _discover_host_labels_for_source_type(
                     raise
                 if on_error is OnError.WARN:
                     console.error(
-                        f"Host label discovery of '{section_plugin.name}' failed: {exc}\n")
+                        f"Host label discovery of '{section_plugin.name}' failed: {exc}\n"
+                    )
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

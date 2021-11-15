@@ -15,22 +15,12 @@
 
 from typing import List, Type
 
-from cmk.utils.macros import MacroMapping
-from cmk.utils.bi.bi_lib import (
-    ABCBICompiledNode,
-    ABCBISearcher,
-    create_nested_schema,
-)
-
-from cmk.utils.bi.bi_actions import (
-    BIActionSchema,
-    BIStateOfHostActionSchema,
-    BICallARuleAction,
-)
-
+from cmk.utils.bi.bi_actions import BIActionSchema, BICallARuleAction, BIStateOfHostActionSchema
+from cmk.utils.bi.bi_lib import ABCBICompiledNode, ABCBISearcher, create_nested_schema
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
 from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.bi.bi_search import BISearchSchema, BIEmptySearchSchema
+from cmk.utils.bi.bi_search import BIEmptySearchSchema, BISearchSchema
+from cmk.utils.macros import MacroMapping
 
 
 class BINodeGenerator(ABCBINodeGenerator):
@@ -51,7 +41,7 @@ class BINodeGenerator(ABCBINodeGenerator):
                     filtered_search_results.append(search_result)
             search_results = filtered_search_results
 
-        return list(self.action.execute_search_results(search_results, macros, bi_searcher))
+        return sorted(self.action.execute_search_results(search_results, macros, bi_searcher))
 
     def serialize(self):
         return {

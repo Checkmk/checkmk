@@ -15,6 +15,6 @@ description:
  is unavailable.
 
 
-inventory:
+discovery:
  One service is created for each Cisco device.
 

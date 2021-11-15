@@ -7,17 +7,13 @@
 import abc
 
 import cmk.gui.sites as sites
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    bulletlink,
-)
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import bulletlink, SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import urlencode
 
 
-class GroupSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
+class GroupSnapin(SidebarSnapin, abc.ABC):
     @abc.abstractmethod
     def _group_type_ident(self):
         raise NotImplementedError()

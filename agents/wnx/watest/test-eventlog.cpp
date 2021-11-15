@@ -24,7 +24,7 @@ TEST(EventLogTest, ChoosePos) {
     EXPECT_EQ(choosePos(cfg::kFromBegin), 0);
 }
 
-TEST(EventLogTest, ScanEventLog) {
+TEST(EventLogTest, ScanEventLogIntegration) {
     for (auto vista_mode : {false, true}) {
         auto ptr = OpenEvl(L"Application", vista_mode);
         ASSERT_TRUE(ptr != nullptr);

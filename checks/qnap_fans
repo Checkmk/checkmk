@@ -17,7 +17,7 @@ def parse_qnap_fans(info):
     parsed = {}
     for fan, value in info:
         try:
-            parsed[fan] = int(value.replace('RPM', ''))
+            parsed[fan] = int(value.replace("RPM", ""))
         except ValueError:
             pass
     return parsed

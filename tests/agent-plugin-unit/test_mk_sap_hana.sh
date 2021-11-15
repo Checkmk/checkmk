@@ -20,6 +20,7 @@ oneTimeSetUp () {
     export USERSTOREKEY="storekey"
     export PASSWORD_CONNECT="123"
     export USER_CONNECT="hana"
+    export MK_VARDIR="/vardir"
 
     # shellcheck disable=SC1090
     . "$MK_SAP_HANA_PLUGIN_PATH" >/dev/null 2>&1
@@ -240,6 +241,7 @@ test_mk_sap_hana_1_connect_OK () {
         fi
     }
 
+    SAP_HANA_VERSION="1"
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected=$(sim_odbcreg_1_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
     assertEquals "$expected" "$actual"
@@ -275,9 +277,9 @@ test_mk_sap_hana_2_connect_OK () {
         fi
     }
 
+    SAP_HANA_VERSION="2"
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "myServer" "$landscape" "$status")
     expected=$(sim_odbcreg_2_0_OK | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g")
-
     assertEquals "$expected" "$actual"
 }
 
@@ -298,6 +300,7 @@ test_mk_sap_hana_unknown_version() {
     # Mocks
     status=$'Version;;9.22.122.22.123445 (fa/hanaUNKNOWN)\nAll Started;WARNING;No'
 
+    set_sap_hana_version "$status"
     actual=$(sap_hana_connect "sid" "inst" "inst_user" "do not care" "do not care" "$status")
     expected="Cannot determine port due to unknown HANA version."
 
@@ -313,7 +316,7 @@ test_mk_sap_hana_skip_sql_queries() {
         return 43
     }
 
-    actual=$(do_query "sid" "inst" "inst_user")
+    actual=$(query_instance "sid" "inst" "inst_user" "" "" "" 2> /dev/null)
     # SQL DB not available so we only want non-sql sections to be executed
     expected_sections=("sap_hana_replication_status" "sap_hana_connect:sep(59)")
 
@@ -322,6 +325,88 @@ test_mk_sap_hana_skip_sql_queries() {
         :
         assertContains "$actual" "$exp_section"
     done
+}
+
+test_mk_sap_hana_get_ssl_option_with_ssl(){
+
+    # Mocks read_global_ini
+    read_global_ini () {
+        echo "sslenforce = true"
+    }
+
+    actual=$(get_ssl_option "sid" "hostname")
+    assertEquals "-e -sslhostnameincert $(hostname -f)" "$actual"
+}
+
+test_mk_sap_hana_get_ssl_option_without_ssl(){
+
+    # Mocks read_global_ini
+    read_global_ini () {
+        echo "sslenforce = false"
+    }
+
+    actual=$(get_ssl_option "sid" "hostname")
+    assertEquals "" "$actual"
+}
+
+test_mk_sap_hana_get_alerts_last_check_file_no_remote_host(){
+
+    actual=$(get_alerts_last_check_file "sid" "instance" "_DB")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "$actual"
+}
+
+test_mk_sap_hana_get_alerts_last_check_file_with_remote_host(){
+    REMOTE="hostname"
+
+    actual=$(get_alerts_last_check_file "sid" "instance" "")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance.hostname.last_checked" "$actual"
+
+    REMOTE=""
+}
+
+test_mk_sap_hana_get_last_used_check_file_new_file_exists(){
+
+    # Mocks file_exists
+    file_exists() {
+        local path="$1"
+
+        if [ "$path" == "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" ]; then
+            return 0
+        else
+            return 1
+        fi
+    }
+
+    actual=$(get_last_used_check_file "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "_DB")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "$actual"
+}
+
+test_mk_sap_hana_get_last_used_check_file_old_file_exists(){
+
+    # Mocks file_exists
+    file_exists() {
+        local path="$1"
+
+        if [ "$path" == "/vardir/sap_hana_alerts_sid_instance.last_checked" ]; then
+            return 0
+        else
+            return 1
+        fi
+    }
+
+    actual=$(get_last_used_check_file "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "_DB")
+    assertEquals "/vardir/sap_hana_alerts_sid_instance.last_checked" "$actual"
+}
+
+test_mk_sap_hana_get_last_used_check_file_no_file(){
+
+    # Mocks file_exists
+    file_exists() {
+        return 1
+    }
+
+    actual=$(get_last_used_check_file "/vardir/sap_hana_alerts_sid_instance_DB.last_checked" "_DB")
+    assertEquals "" "$actual"
 }
 
 # shellcheck disable=SC1090

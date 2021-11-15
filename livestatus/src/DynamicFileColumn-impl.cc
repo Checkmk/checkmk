@@ -3,10 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <filesystem>
 #include <memory>
+#include <sstream>
+#include <string>
 
-// NOLINTNEXTLINE(bugprone-suspicious-include)
-#include "DynamicFileColumn.cc"
+#include "DynamicFileColumn.cc"  // NOLINT(bugprone-suspicious-include)
 #include "DynamicFileColumn.h"
 #include "nagios.h"
 class CrashReport;

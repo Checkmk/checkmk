@@ -8,29 +8,17 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import re
-import uuid
-import marshal
 import itertools
-from pathlib import Path
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+import marshal
+import re
 import urllib.parse
-
-from six import ensure_str
+import uuid
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.paths
 
-from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
 
 
 def num_split(s: str) -> Tuple[Union[int, str], ...]:
@@ -40,7 +28,7 @@ def num_split(s: str) -> Tuple[Union[int, str], ...]:
     That way a naturual sort can be implemented.
     """
     parts: List[Union[int, str]] = []
-    for part in re.split(r'(\d+)', s):
+    for part in re.split(r"(\d+)", s):
         try:
             parts.append(int(part))
         except ValueError:
@@ -77,14 +65,6 @@ def is_allowed_url(url: str) -> bool:
         return False
 
     return True
-
-
-def validate_start_url(value: str, varprefix: str) -> None:
-    if not is_allowed_url(value):
-        raise MKUserError(
-            varprefix,
-            _("The given value is not allowed. You may only configure "
-              "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."))
 
 
 def cmp_version(a: Optional[str], b: Optional[str]) -> int:
@@ -132,7 +112,7 @@ def get_random_string(size: int, from_ascii: int = 48, to_ascii: int = 90) -> st
         while len(secret) < size:
             c = urandom.read(1)
             if ord(c) >= from_ascii and ord(c) <= to_ascii:
-                secret += ensure_str(c)
+                secret += c.decode()
     return secret
 
 
@@ -140,7 +120,7 @@ def gen_id() -> str:
     """Generates a unique id"""
     try:
         with Path("/proc/sys/kernel/random/uuid").open("r", encoding="utf-8") as f:
-            return ensure_str(f.read().strip())
+            return f.read().strip()
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback
@@ -159,8 +139,8 @@ def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
     _failed_plugins[forwhat] = []
 
     for plugins_path in [
-            Path(cmk.utils.paths.web_dir, "plugins", forwhat),
-            cmk.utils.paths.local_web_dir / "plugins" / forwhat,
+        Path(cmk.utils.paths.web_dir, "plugins", forwhat),
+        cmk.utils.paths.local_web_dir / "plugins" / forwhat,
     ]:
         if not plugins_path.exists():
             continue
@@ -175,7 +155,7 @@ def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
                     with file_path.open("rb") as pyc:
                         code_bytes = pyc.read()[8:]
                     code = marshal.loads(code_bytes)
-                    exec(code, globalvars)  # yapf: disable
+                    exec(code, globalvars)
 
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
@@ -184,25 +164,6 @@ def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
 
 def get_failed_plugins() -> List[Tuple[str, Exception]]:
     return list(itertools.chain(*list(_failed_plugins.values())))
-
-
-def validate_regex(value: str, varname: Optional[str]) -> None:
-    try:
-        re.compile(value)
-    except re.error:
-        raise MKUserError(
-            varname,
-            _('Your search statement is not valid. You need to provide a regular '
-              'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-              'if you like to search for a single backslash.'))
-
-    # livestatus uses re2 and re can not validate posix pattern, so we have to
-    # check for lookaheads here
-    lookahead_pattern = r'\((\?!|\?=|\?<)'
-
-    if re.search(lookahead_pattern, value):
-        raise MKUserError(
-            varname, _('Your search statement is not valid. You can not use a lookahead here.'))
 
 
 def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> str:

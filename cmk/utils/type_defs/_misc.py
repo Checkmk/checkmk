@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import enum
 import sys
 from collections.abc import Container
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
-    Final,
     List,
     Literal,
     Mapping,
@@ -39,12 +40,58 @@ AgentRawData = NewType("AgentRawData", bytes)
 
 RulesetName = str
 RuleValue = Any  # TODO: Improve this type
-RuleSpec = Dict[str, Any]  # TODO: Improve this type
+
+# FIXME: A lot of signatures regarding rules and rule sets are simply lying:
+# They claim to expect a RuleConditionsSpec or Ruleset (from cmk.utils.type_defs), but
+# they are silently handling a very chaotic tuple-based structure, too. We
+# really, really need to fix all those signatures! Some test cases for tuples are in
+# test_tuple_rulesets.py. They contain some horrible hand-made types...
+
+
+# TODO: Improve this type
+class RuleConditionsSpec(TypedDict, total=False):
+    host_tags: Any
+    host_labels: Any
+    host_name: Optional[HostOrServiceConditions]
+    service_description: Optional[HostOrServiceConditions]
+    service_labels: Any
+    host_folder: Any
+
+
+# TODO: Improve this type
+class _RuleSpecBase(TypedDict):
+    id: str
+    # TODO: Make the TypedDict generic over the value once it is supported
+    # in mypy: https://github.com/python/mypy/issues/3863 (CMK-8632)
+    value: Any
+    condition: RuleConditionsSpec
+
+
+class RuleSpec(_RuleSpecBase, total=False):
+    options: RuleOptions
+
+
+HostOrServiceConditionRegex = TypedDict(
+    "HostOrServiceConditionRegex",
+    {"$regex": str},
+)
+HostOrServiceConditionsSimple = List[Union[HostOrServiceConditionRegex, str]]
+HostOrServiceConditionsNegated = TypedDict(
+    "HostOrServiceConditionsNegated",
+    {"$nor": HostOrServiceConditionsSimple},
+)
+
+HostOrServiceConditions = Union[
+    HostOrServiceConditionsSimple,
+    HostOrServiceConditionsNegated,
+]  # TODO: refine type
+
+RuleOptions = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
-Labels = Dict[str, str]
+Labels = Mapping[str, str]
 LabelSources = Dict[str, str]
 
 TagID = str
@@ -53,21 +100,21 @@ TaggroupIDToTagID = Mapping[TaggroupID, TagID]
 TagIDToTaggroupID = Mapping[TagID, TaggroupID]
 TagIDs = Set[TagID]
 TagConditionNE = TypedDict(
-    'TagConditionNE',
+    "TagConditionNE",
     {
-        '$ne': Optional[TagID],
+        "$ne": Optional[TagID],
     },
 )
 TagConditionOR = TypedDict(
-    'TagConditionOR',
+    "TagConditionOR",
     {
-        '$or': Sequence[Optional[TagID]],
+        "$or": Sequence[Optional[TagID]],
     },
 )
 TagConditionNOR = TypedDict(
-    'TagConditionNOR',
+    "TagConditionNOR",
     {
-        '$nor': Sequence[Optional[TagID]],
+        "$nor": Sequence[Optional[TagID]],
     },
 )
 TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditionNOR]
@@ -76,10 +123,6 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
 
-HostNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
-                           List[Union[Dict[str, str], str]]]
-ServiceNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
-                              List[Union[Dict[str, str], str]]]
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int
@@ -91,17 +134,24 @@ ServiceDetails = str
 ServiceAdditionalDetails = str
 
 MetricName = str
-MetricTuple = Tuple[MetricName, float, Optional[float], Optional[float], Optional[float],
-                    Optional[float],]
+MetricTuple = Tuple[
+    MetricName,
+    float,
+    Optional[float],
+    Optional[float],
+    Optional[float],
+    Optional[float],
+]
+
+ClusterMode = Literal["native", "failover", "worst", "best"]
 
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
-ActiveCheckResult = Tuple[ServiceState, Sequence[ServiceDetails],
-                          Sequence[ServiceAdditionalDetails], Sequence[str]]
 
 LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 
-SetAutochecksTable = Dict[Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels,
-                                                  List[HostName]]]
+SetAutochecksTable = Dict[
+    Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels, List[HostName]]
+]
 
 SetAutochecksTablePre20 = Dict[Tuple[str, Item], Tuple[Dict[str, Any], Labels]]
 
@@ -127,30 +177,8 @@ class DiscoveryResult:
     diff_text: Optional[str] = None
 
 
-@dataclass
-class AutomationDiscoveryResponse:
-    results: Dict[HostName, DiscoveryResult]
-
-    def serialize(self):
-        return {
-            "results": {k: asdict(v) for k, v in self.results.items()},
-        }
-
-    @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "AutomationDiscoveryResponse":
-        return cls(results={k: DiscoveryResult(**v) for k, v in serialized["results"].items()})
-
-
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
-
-LATEST_SERIAL: Final[Literal["latest"]] = "latest"
-# TODO(ml): The strings in ConfigSerial look like this: "0", "1", "2"...
-#           We should use `int` or even better make a full-blown
-#           abstraction out of that.
-#           See also: a few of its "methods" are in `cmk.base.core_config`.
-ConfigSerial = NewType("ConfigSerial", str)
-OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
 
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
@@ -163,20 +191,20 @@ TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
 
 class SourceType(enum.Enum):
     """Classification of management sources vs regular hosts"""
+
     HOST = "HOST"
     MANAGEMENT = "MANAGEMENT"
 
 
-HostKey = NamedTuple("HostKey", [
-    ("hostname", HostName),
-    ("ipaddress", Optional[HostAddress]),
-    ("source_type", SourceType),
-])
+class HostKey(NamedTuple):
+    hostname: HostName
+    ipaddress: Optional[HostAddress]
+    source_type: SourceType
 
 
 # TODO: We should really parse our configuration file and use a
 # class/NamedTuple, see above.
-def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = u"") -> str:
+def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = "") -> str:
     alias = timeperiod_spec.get("alias", default)
     if isinstance(alias, str):
         return alias
@@ -186,14 +214,15 @@ def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = u"") -
 class EvalableFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
+
     def __str__(self):
         return super().__repr__()
 
     def __repr__(self) -> str:
         if self > sys.float_info.max:
-            return '1e%d' % (sys.float_info.max_10_exp + 1)
+            return "1e%d" % (sys.float_info.max_10_exp + 1)
         if self < -1 * sys.float_info.max:
-            return '-1e%d' % (sys.float_info.max_10_exp + 1)
+            return "-1e%d" % (sys.float_info.max_10_exp + 1)
         return super().__repr__()
 
 
@@ -218,3 +247,27 @@ class ExitSpec(TypedDict, total=False):
     missing_sections: int
     specific_missing_sections: List[Tuple[str, int]]
     restricted_address_mismatch: int
+
+
+class HostLabelValueDict(TypedDict):
+    value: str
+    plugin_name: Optional[str]
+
+
+DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+
+CheckPreviewEntry = Tuple[
+    str,
+    CheckPluginNameStr,
+    Optional[RulesetName],
+    Item,
+    LegacyCheckParameters,
+    LegacyCheckParameters,
+    str,
+    Optional[int],
+    str,
+    List[MetricTuple],
+    Dict[str, str],
+    List[HostName],
+]
+CheckPreviewTable = Sequence[CheckPreviewEntry]

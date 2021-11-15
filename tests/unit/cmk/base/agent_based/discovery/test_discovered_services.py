@@ -5,22 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING
-from cmk.base.check_utils import Service
 
 from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
+from cmk.base.autochecks import AutocheckEntry
 
 
-def _service(plugin_name: str, item: str) -> Service:
-    return Service(CheckPluginName(plugin_name), item, "", {})
+def _service(plugin_name: str, item: str) -> AutocheckEntry:
+    return AutocheckEntry(CheckPluginName(plugin_name), item, {}, {})
 
 
-def test_discover_only_new():
+def test_discover_keep_vanished_and_remember():
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
-        only_new=True,
+        forget_existing=False,
+        keep_vanished=True,
     )
 
     assert not result.vanished
@@ -28,17 +29,49 @@ def test_discover_only_new():
     assert result.new == [_service("B", "1")]
 
 
-def test_discover_not_only_new():
+def test_discover_drop_vanished_but_remember():
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
-        only_new=False,
+        forget_existing=False,
+        keep_vanished=False,
     )
 
     assert result.vanished == [_service("A", "1")]
     assert not result.old
+    assert result.new == [_service("B", "1")]
+
+
+def test_discover_forget_everything_but_keep_it():
+
+    result = _analyse_discovered_services(
+        existing_services=[_service("A", "1")],
+        discovered_services=[_service("B", "1")],
+        run_plugin_names=EVERYTHING,
+        forget_existing=True,
+        keep_vanished=True,
+    )
+    assert not result.vanished
+    assert not result.old
+    assert result.new == result.present
+    assert result.new == [_service("B", "1"), _service("A", "1")]
+
+
+def test_discover_forget_everything_and_clear():  # a.k.a. "tabula rasa"
+
+    result = _analyse_discovered_services(
+        existing_services=[_service("A", "1")],
+        discovered_services=[_service("B", "1")],
+        run_plugin_names=EVERYTHING,
+        forget_existing=True,
+        keep_vanished=False,
+    )
+
+    assert not result.vanished
+    assert not result.old
+    assert result.new == result.present
     assert result.new == [_service("B", "1")]
 
 
@@ -48,9 +81,25 @@ def test_discover_run_plugin_names():
         existing_services=[_service("A", "1"), _service("B", "1")],
         discovered_services=[_service("B", "2")],
         run_plugin_names={CheckPluginName("B")},
-        only_new=False,
+        forget_existing=False,
+        keep_vanished=False,
     )
 
     assert result.vanished == [_service("B", "1")]
+    assert result.old == [_service("A", "1")]
+    assert result.new == [_service("B", "2")]
+
+
+def test_discover_run_plugin_names_forget():
+    # this combination does not really make sense, but this is what we'd expect to happen.
+    result = _analyse_discovered_services(
+        existing_services=[_service("A", "1"), _service("B", "1")],
+        discovered_services=[_service("B", "2")],
+        run_plugin_names={CheckPluginName("B")},
+        forget_existing=True,
+        keep_vanished=False,
+    )
+
+    assert not result.vanished
     assert result.old == [_service("A", "1")]
     assert result.new == [_service("B", "2")]

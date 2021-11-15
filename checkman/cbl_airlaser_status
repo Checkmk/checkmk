@@ -28,7 +28,7 @@ description:
  (4)anything failed:   {CRIT}
 
 
-inventory:
+discovery:
  One service is created for each remote device
  if the CBL-AIRLASOR-IP1000 MIB is supported.
 

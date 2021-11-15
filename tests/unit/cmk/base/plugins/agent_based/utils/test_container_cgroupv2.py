@@ -7,9 +7,9 @@ from typing import Any, Dict
 
 import pytest
 
-from cmk.base.plugins.agent_based.utils.container_cgroupv2 import parse_cpu, _check_cpu, CpuSection
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Metric, Result
 from cmk.base.api.agent_based.utils import GetRateError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.utils.container_cgroupv2 import _check_cpu, CpuSection, parse_cpu
 
 AGENT_OUTPUT = [
     ["uptime", "200716.86", "651734.60"],
@@ -60,6 +60,6 @@ def test_check_cpu_cgroupv2():
         _ = list(_check_cpu(value_store, {}, parse_cpu(AGENT_OUTPUT_0)))
     result = _check_cpu(value_store, {}, parse_cpu(AGENT_OUTPUT_1))
     assert list(result) == [
-        Result(state=State.OK, summary='Total CPU: 51.93%'),
-        Metric('util', 51.9263206459054, boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Total CPU: 51.93%"),
+        Metric("util", 51.9263206459054, boundaries=(0.0, None)),
     ]

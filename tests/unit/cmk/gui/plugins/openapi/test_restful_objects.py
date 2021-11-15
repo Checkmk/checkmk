@@ -5,67 +5,82 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
+from cmk.gui.plugins.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
 
 
 def test_domain_object():
-    errors = response_schemas.DomainObject().validate({
-        'domainType': 'folder',
-        'extensions': {
-            'attributes': {
-                'meta_data': {
-                    'created_at': 1583248090.277515,
-                    'created_by': u'test123-jinlc',
-                    'update_at': 1583248090.277516,
-                    'updated_at': 1583248090.324114
+    errors = response_schemas.DomainObject().validate(
+        {
+            "domainType": "folder",
+            "extensions": {
+                "attributes": {
+                    "meta_data": {
+                        "created_at": 1583248090.277515,
+                        "created_by": "test123-jinlc",
+                        "update_at": 1583248090.277516,
+                        "updated_at": 1583248090.324114,
+                    }
                 }
-            }
-        },
-        'links': [{
-            'domainType': 'link',
-            'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
-            'method': 'GET',
-            'rel': 'self',
-            'type': 'application/json'
-        }, {
-            'domainType': 'link',
-            'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
-            'method': 'PUT',
-            'rel': '.../update',
-            'type': 'application/json'
-        }, {
-            'domainType': 'link',
-            'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
-            'method': 'DELETE',
-            'rel': '.../delete',
-            'type': 'application/json'
-        }],
-        'members': {
-            'move': {
-                'id': 'move',
-                'links': [{
-                    'domainType': 'link',
-                    'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
-                    'method': 'GET',
-                    'rel': 'up',
-                    'type': 'application/json'
-                }, {
-                    'domainType': 'link',
-                    'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move',
-                    'method': 'GET',
-                    'rel': '.../details;action="move"',
-                    'type': 'application/json'
-                }, {
-                    'domainType': 'link',
-                    'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move/invoke',
-                    'method': 'POST',
-                    'rel': '.../invoke;action="move"',
-                    'type': 'application/json'
-                }],
-                'memberType': 'action'
-            }
-        },
-        'title': u'foobar'
-    })
+            },
+            "links": [
+                {
+                    "domainType": "link",
+                    "href": "/objects/folder/a71684ebd8fe49548263083a3da332c8",
+                    "method": "GET",
+                    "rel": "self",
+                    "type": "application/json",
+                },
+                {
+                    "domainType": "link",
+                    "href": "/objects/folder/a71684ebd8fe49548263083a3da332c8",
+                    "method": "PUT",
+                    "rel": ".../update",
+                    "type": "application/json",
+                },
+                {
+                    "domainType": "link",
+                    "href": "/objects/folder/a71684ebd8fe49548263083a3da332c8",
+                    "method": "DELETE",
+                    "rel": ".../delete",
+                    "type": "application/json",
+                },
+            ],
+            "members": {
+                "move": {
+                    "id": "move",
+                    "links": [
+                        {
+                            "domainType": "link",
+                            "href": "/objects/folder/a71684ebd8fe49548263083a3da332c8",
+                            "method": "GET",
+                            "rel": "up",
+                            "type": "application/json",
+                        },
+                        {
+                            "domainType": "link",
+                            "href": "/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move/invoke",
+                            "method": "GET",
+                            "rel": '.../details;action="move"',
+                            "type": "application/json",
+                        },
+                        {
+                            "domainType": "link",
+                            "href": "/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move/invoke",
+                            "method": "POST",
+                            "rel": '.../invoke;action="move"',
+                            "type": "application/json",
+                        },
+                    ],
+                    "memberType": "action",
+                }
+            },
+            "title": "foobar",
+        }
+    )
 
     if errors:
         raise Exception(errors)
+
+
+def test_status_codes_match():
+    assert StatusCodeInt.__args__ == tuple(int(sc) for sc in StatusCode.__args__)  # type: ignore

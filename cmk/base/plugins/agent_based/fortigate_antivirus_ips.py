@@ -5,24 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from time import time
-from typing import (
-    Mapping,
-    Tuple,
-)
+from typing import Mapping, Tuple
+
 from .agent_based_api.v1 import (
-    OIDEnd,
-    SNMPTree,
-    Service,
     check_levels,
     get_rate,
     get_value_store,
+    OIDEnd,
     register,
+    Service,
+    SNMPTree,
 )
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    CheckResult,
-    StringTable,
-)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.fortinet import DETECT_FORTIGATE
 
 Section = Mapping[str, Mapping[str, int]]
@@ -37,7 +31,8 @@ def parse_fortigate_antivirus_ips(string_table: StringTable) -> Section:
         sub_table[0]: {
             "detected": int(sub_table[1]),
             "blocked": int(sub_table[2]),
-        } for sub_table in string_table
+        }
+        for sub_table in string_table
     }
 
 

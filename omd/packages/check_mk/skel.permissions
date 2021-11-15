@@ -12,4 +12,5 @@ etc/check_mk/conf.d/wato 0775
 etc/check_mk/multisite.d 0775
 etc/check_mk/multisite.d/wato 0775
 etc/auth.secret 0660
-etc/init.d/mkeventd 755
+etc/init.d/mkeventd 0775
+etc/init.d/agent-receiver 0775

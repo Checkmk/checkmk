@@ -4,32 +4,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Type
+from __future__ import annotations
+
+from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
+
+from livestatus import OnlySites
 
 from cmk.utils.defines import short_service_state_name
 
-import cmk.gui.escaping as escaping
 import cmk.gui.bi as bi
-from cmk.gui.valuespec import DropdownChoice
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-
 from cmk.gui.plugins.views import (
-    data_source_registry,
     ABCDataSource,
-    RowTable,
-    PainterOptions,
-    painter_option_registry,
-    PainterOption,
-    painter_registry,
-    Painter,
-    CellSpec,
     Cell,
+    CellSpec,
+    data_source_registry,
+    Painter,
+    painter_option_registry,
+    painter_registry,
+    PainterOption,
+    PainterOptions,
     Row,
+    RowTable,
 )
-
+from cmk.gui.type_defs import ColumnName, Rows
 from cmk.gui.utils.urls import makeuri, urlencode_vars
+from cmk.gui.valuespec import DropdownChoice
+
+if TYPE_CHECKING:
+    from cmk.gui.plugins.visuals.utils import Filter
+    from cmk.gui.views import View
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -67,8 +74,16 @@ class DataSourceBIAggregations(ABCDataSource):
 
 
 class RowTableBIAggregations(RowTable):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return bi.table(view, columns, headers, only_sites, limit, all_active_filters)
+    def query(
+        self,
+        view: View,
+        columns: List[ColumnName],
+        headers: str,
+        only_sites: OnlySites,
+        limit: Optional[int],
+        all_active_filters: List[Filter],
+    ) -> Union[Rows, Tuple[Rows, int]]:
+        return bi.table(view.context, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -107,6 +122,7 @@ class RowTableBIHostAggregations(RowTable):
 class DataSourceBIHostnameAggregations(ABCDataSource):
     """Similar to host aggregations, but the name of the aggregation
     is used to join the host table rather then the affected host"""
+
     @property
     def ident(self):
         return "bi_hostname_aggregations"
@@ -140,6 +156,7 @@ class RowTableBIHostnameAggregations(RowTable):
 @data_source_registry.register
 class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
     """The same but with group information"""
+
     @property
     def ident(self):
         return "bi_hostnamebygroup_aggregations"
@@ -167,8 +184,9 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
 
 class RowTableBIHostnameByGroupAggregations(RowTable):
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return bi.hostname_by_group_table(view, columns, headers, only_sites, limit,
-                                          all_active_filters)
+        return bi.hostname_by_group_table(
+            view, columns, headers, only_sites, limit, all_active_filters
+        )
 
 
 #     ____       _       _
@@ -190,38 +208,47 @@ class PainterAggrIcons(Painter):
 
     @property
     def columns(self):
-        return ['aggr_group', 'aggr_name', 'aggr_effective_state']
+        return ["aggr_group", "aggr_name", "aggr_effective_state"]
 
     @property
     def printable(self):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        single_url = "view.py?" + urlencode_vars([("view_name", "aggr_single"),
-                                                  ("aggr_name", row["aggr_name"])])
+        single_url = "view.py?" + urlencode_vars(
+            [("view_name", "aggr_single"), ("aggr_name", row["aggr_name"])]
+        )
         avail_url = single_url + "&mode=availability"
 
-        bi_map_url = "bi_map.py?" + urlencode_vars([
-            ("aggr_name", row["aggr_name"]),
-        ])
+        bi_map_url = "bi_map.py?" + urlencode_vars(
+            [
+                ("aggr_name", row["aggr_name"]),
+            ]
+        )
 
-        with html.plugged():
+        with output_funnel.plugged():
             html.icon_button(bi_map_url, _("Visualize this aggregation"), "aggr")
             html.icon_button(single_url, _("Show only this aggregation"), "showbi")
-            html.icon_button(avail_url, _("Analyse availability of this aggregation"),
-                             "availability")
+            html.icon_button(
+                avail_url, _("Analyse availability of this aggregation"), "availability"
+            )
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon("derived_downtime",
-                          _("A service or host in this aggregation is in downtime."))
+                html.icon(
+                    "derived_downtime", _("A service or host in this aggregation is in downtime.")
+                )
             if row["aggr_effective_state"]["acknowledged"]:
                 html.icon(
                     "ack",
-                    _("The critical problems that make this aggregation non-OK have been acknowledged."
-                     ))
+                    _(
+                        "The critical problems that make this aggregation non-OK have been acknowledged."
+                    ),
+                )
             if not row["aggr_effective_state"]["in_service_period"]:
-                html.icon("outof_serviceperiod",
-                          _("This aggregation is currently out of its service period."))
-            code = HTML(html.drain())
+                html.icon(
+                    "outof_serviceperiod",
+                    _("This aggregation is currently out of its service period."),
+                )
+            code = HTML(output_funnel.drain())
         return "buttons", code
 
 
@@ -236,7 +263,7 @@ class PainterAggrInDowntime(Painter):
 
     @property
     def columns(self):
-        return ['aggr_effective_state']
+        return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0"))
@@ -253,7 +280,7 @@ class PainterAggrAcknowledged(Painter):
 
     @property
     def columns(self):
-        return ['aggr_effective_state']
+        return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
@@ -266,7 +293,7 @@ def _paint_aggr_state_short(state, assumed=False):
     classes = "state svcstate state%s" % state["state"]
     if assumed:
         classes += " assumed"
-    return classes, html.render_span(name)
+    return classes, html.render_span(name, class_=["state_rounded_fill"])
 
 
 @painter_registry.register
@@ -283,11 +310,12 @@ class PainterAggrState(Painter):
 
     @property
     def columns(self):
-        return ['aggr_effective_state']
+        return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_aggr_state_short(row["aggr_effective_state"],
-                                       row["aggr_effective_state"] != row["aggr_state"])
+        return _paint_aggr_state_short(
+            row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"]
+        )
 
 
 @painter_registry.register
@@ -304,10 +332,10 @@ class PainterAggrStateNum(Painter):
 
     @property
     def columns(self):
-        return ['aggr_effective_state']
+        return ["aggr_effective_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", str(row["aggr_effective_state"]['state']))
+        return ("", str(row["aggr_effective_state"]["state"]))
 
 
 @painter_registry.register
@@ -324,7 +352,7 @@ class PainterAggrRealState(Painter):
 
     @property
     def columns(self):
-        return ['aggr_state']
+        return ["aggr_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_state"])
@@ -344,7 +372,7 @@ class PainterAggrAssumedState(Painter):
 
     @property
     def columns(self):
-        return ['aggr_assumed_state']
+        return ["aggr_assumed_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_assumed_state"])
@@ -364,7 +392,7 @@ class PainterAggrGroup(Painter):
 
     @property
     def columns(self):
-        return ['aggr_group']
+        return ["aggr_group"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", escaping.escape_attribute(row["aggr_group"])
@@ -384,7 +412,7 @@ class PainterAggrName(Painter):
 
     @property
     def columns(self):
-        return ['aggr_name']
+        return ["aggr_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", escaping.escape_attribute(row["aggr_name"])
@@ -404,7 +432,7 @@ class PainterAggrOutput(Painter):
 
     @property
     def columns(self):
-        return ['aggr_output']
+        return ["aggr_output"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["aggr_output"])
@@ -432,7 +460,7 @@ class PainterAggrHosts(Painter):
 
     @property
     def columns(self):
-        return ['aggr_hosts']
+        return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggr_hosts(row, "aggr_host")
@@ -452,7 +480,7 @@ class PainterAggrHostsServices(Painter):
 
     @property
     def columns(self):
-        return ['aggr_hosts']
+        return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggr_hosts(row, "host")
@@ -537,8 +565,8 @@ class PainterOptionAggrWrap(PainterOption):
 
 
 def paint_aggregated_tree_state(
-        row: Row,
-        force_renderer_cls: Optional[Type[bi.ABCFoldableTreeRenderer]] = None) -> CellSpec:
+    row: Row, force_renderer_cls: Optional[Type[bi.ABCFoldableTreeRenderer]] = None
+) -> CellSpec:
     if html.is_api_call():
         return bi.render_tree_json(row)
 
@@ -561,12 +589,14 @@ def paint_aggregated_tree_state(
     else:
         raise NotImplementedError()
 
-    renderer = cls(row,
-                   omit_root=(treetype == "boxes-omit-root"),
-                   expansion_level=expansion_level,
-                   only_problems=only_problems,
-                   lazy=True,
-                   wrap_texts=wrap_texts)
+    renderer = cls(
+        row,
+        omit_root=(treetype == "boxes-omit-root"),
+        expansion_level=expansion_level,
+        only_problems=only_problems,
+        lazy=True,
+        wrap_texts=wrap_texts,
+    )
     return renderer.css_class(), renderer.render()
 
 
@@ -584,11 +614,11 @@ class PainterAggrTreestate(Painter):
 
     @property
     def columns(self):
-        return ['aggr_treestate', 'aggr_hosts']
+        return ["aggr_treestate", "aggr_hosts"]
 
     @property
     def painter_options(self):
-        return ['aggr_expand', 'aggr_onlyproblems', 'aggr_treetype', 'aggr_wrap']
+        return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row)
@@ -608,7 +638,7 @@ class PainterAggrTreestateBoxed(Painter):
 
     @property
     def columns(self):
-        return ['aggr_treestate', 'aggr_hosts']
+        return ["aggr_treestate", "aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row, force_renderer_cls=bi.FoldableTreeRendererBoxes)

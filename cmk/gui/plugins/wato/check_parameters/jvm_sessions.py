@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_jvm_sessions():
@@ -28,8 +23,10 @@ def _item_spec_jvm_sessions():
 
 def _parameter_valuespec_jvm_sessions():
     return Tuple(
-        help=_("This rule sets the warn and crit levels for the number of current "
-               "connections to a JVM application on the servlet level."),
+        help=_(
+            "This rule sets the warn and crit levels for the number of current "
+            "connections to a JVM application on the servlet level."
+        ),
         elements=[
             Integer(
                 title=_("Warning if below"),
@@ -62,4 +59,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_sessions,
         parameter_valuespec=_parameter_valuespec_jvm_sessions,
         title=lambda: _("JVM session count"),
-    ))
+    )
+)

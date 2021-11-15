@@ -15,5 +15,5 @@ description:
 item:
  The power supply identifier.
 
-inventory:
+discovery:
  One service is created for each power supply.

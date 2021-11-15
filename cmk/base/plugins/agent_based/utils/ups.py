@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from enum import Enum, unique
 from typing import Final, Optional, Tuple, TypedDict
 
@@ -14,10 +14,10 @@ from ..agent_based_api.v1 import (
     equals,
     render,
     Result,
+    Service,
     startswith,
     State,
     type_defs,
-    Service,
 )
 
 DETECT_UPS_GENERIC = any_of(
@@ -116,8 +116,10 @@ def check_ups_capacity(
 def _assemble_battery(*sections: Optional[Battery]) -> Battery:
     merged_dict = {
         key: value  #
-        for section in sections if section is not None  #
-        for key, value in asdict(section).items() if value is not None  #
+        for section in sections
+        if section is not None  #
+        for key, value in asdict(section).items()
+        if value is not None  #
     }
     return Battery(**merged_dict)
 

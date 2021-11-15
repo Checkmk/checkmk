@@ -7,11 +7,11 @@
 configuration and cache files (cmk --backup and cmk --restore). This
 is implemented here. """
 
+import io
 import os
 import shutil
 import tarfile
 import time
-import io
 from typing import List, Tuple
 
 import cmk.utils.paths
@@ -42,7 +42,13 @@ def do_backup(tarname: str) -> None:
     console.verbose("Creating backup file '%s'...\n", tarname)
     tar = tarfile.open(tarname, "w:gz")
 
-    for name, path, canonical_name, descr, is_dir, in backup_paths():
+    for (
+        name,
+        path,
+        canonical_name,
+        descr,
+        is_dir,
+    ) in backup_paths():
 
         absdir = os.path.abspath(path)
         if os.path.exists(path):
@@ -64,8 +70,9 @@ def do_backup(tarname: str) -> None:
             info.mode = 0o644
             info.type = tarfile.REGTYPE
             info.name = subtarname
-            console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir,
-                            render.fmt_bytes(info.size))
+            console.verbose(
+                "  Added %s (%s) with a size of %s\n", descr, absdir, render.fmt_bytes(info.size)
+            )
             tar.addfile(info, io.BytesIO(subdata))
 
     tar.close()
@@ -88,7 +95,7 @@ def do_restore(tarname: str) -> None:
                 # The path might point to a symbalic link. So it is no option
                 # to call shutil.rmtree(). We must delete just the contents
                 for f in os.listdir(absdir):
-                    if f not in ['.', '..']:
+                    if f not in [".", ".."]:
                         try:
                             p = absdir + "/" + f
                             if os.path.isdir(p):

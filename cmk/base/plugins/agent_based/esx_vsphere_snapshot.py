@@ -6,8 +6,8 @@
 
 import datetime
 import json
-
 from typing import Any, Mapping, NamedTuple, Sequence
+
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import esx_vsphere
@@ -24,10 +24,10 @@ Section = Sequence[Snapshot]
 
 def parse_esx_vsphere_snapshots(string_table: StringTable) -> Section:
     """
-        >>> parse_esx_vsphere_snapshots([
-        ...     ['{"time": 0, "state": "poweredOn", "name": "foo"}'],
-        ... ])
-        [Snapshot(time=0, state='poweredOn', name='foo')]
+    >>> parse_esx_vsphere_snapshots([
+    ...     ['{"time": 0, "state": "poweredOn", "name": "foo"}'],
+    ... ])
+    [Snapshot(time=0, state='poweredOn', name='foo')]
     """
     return [Snapshot(**json.loads(line[0])) for line in string_table]
 
@@ -51,8 +51,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
     if any(s for s in snapshots if s.time > now):
         yield Result(
             state=State.WARN,
-            summary=
-            "Snapshot with a creation time in future found. Please check your network time synchronisation."
+            summary="Snapshot with a creation time in future found. Please check your network time synchronisation.",
         )
         return
 
@@ -62,7 +61,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
         return
 
     powered_on = (s.name for s in snapshots if s.state == "poweredOn")
-    yield Result(state=State.OK, summary="Powered on: %s" % (', '.join(powered_on) or "None"))
+    yield Result(state=State.OK, summary="Powered on: %s" % (", ".join(powered_on) or "None"))
 
     latest_snapshot = max(snapshots, key=lambda s: s.time)
     latest_timestamp = render.datetime(latest_snapshot.time)
@@ -115,7 +114,8 @@ def check_snapshots(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -
     raw_snapshots = " ".join(section.get("snapshot.rootSnapshotList", [])).split("|")
     iter_snapshots_tuple = (x.split(" ", 3) for x in raw_snapshots if x)
     yield from check_snapshots_summary(
-        params, [Snapshot(int(x[1]), x[2], x[3]) for x in iter_snapshots_tuple])
+        params, [Snapshot(int(x[1]), x[2], x[3]) for x in iter_snapshots_tuple]
+    )
 
 
 register.check_plugin(

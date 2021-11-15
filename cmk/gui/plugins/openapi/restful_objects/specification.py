@@ -145,7 +145,6 @@ be found on the documentation of each affected endpoint.
 The endpoints in the category "Monitoring" support arbitrary Livestatus expressions (including And,
 Or combinators) and all columns of some specific tables can be queried.
 
-
 ### Note
 
 You can find an introduction to basic monitoring principles including host and service status in the
@@ -171,15 +170,6 @@ Livestatus column name, `right` is always a value.
 A list of all list of all possible
 [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 can be found in the Checkmk documentation.
-
-### Table definitions
-
-To check what columns are available and what kind of value each column can have, please consult
-these definition files on GitHub.
-
- * [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
- * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
- * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 
 ### Example
 
@@ -213,7 +203,7 @@ This is equivalent to
 
 ## Combination nodes
 
-`and` and `or` combinators are supported. They can be nested arbitrarily. `exprs` is a list of
+`and` and `or` combinators are supported. They can be nested arbitrarily. `expr` is a list of
 valid *filter expressions*, so any number of *binary nodes*, *negation nodes* or *combination nodes*
 may be used there. These expression do not have to all be of the same type, so a mix of *binary
 expression nodes*, *negation nodes* and *combination nodes* is also possible.
@@ -222,20 +212,27 @@ expression nodes*, *negation nodes* and *combination nodes* is also possible.
 
 This results in a *filter expression* in which all the contained expression must be true:
 
-    {'op': 'and', 'exprs': [<any filter expr>, ...]}
+    {'op': 'and', 'expr': [<any filter expr>, ...]}
 
 This results in a *filter expression* in which only one of the contained expression needs to
 be true:
 
-    {'op': 'or', 'exprs': [<any filter expr>, ...]}
+    {'op': 'or', 'expr': [<any filter expr>, ...]}
 
 ### Example
 
 This example filters for the host "example.com" only when the `state` column is set to `0`, which
 means the state is OK.
 
-    {'op': 'and', 'exprs': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
+    {'op': 'and', 'expr': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
                             {'op': '=', 'left': 'state', 'right': 0}}
+
+# Table definitions
+
+The following Livestatus tables can be queried through the REST-API. Which table is being used
+in a particular endpoint can be seen in the endpoint documentation.
+
+$TABLE_DEFINITIONS
 
 # Authentication
 
@@ -317,49 +314,50 @@ import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
 import apispec_oneofschema  # type: ignore[import]
 
-from cmk.gui.plugins.openapi import plugins
+from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
+from cmk.gui.plugins.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.plugins.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
 
 SECURITY_SCHEMES = {
-    'headerAuth': {
-        'type': 'http',
-        'scheme': 'bearer',
-        'description': 'Use user credentials in the `Authorization` HTTP header. '
-                       'The format of the header value is `$user $password`. This method has the '
-                       'highest precedence. If it succeeds, all other authentication methods are '
-                       'skipped.',
-        'bearerFormat': 'username password',
+    "headerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Use user credentials in the `Authorization` HTTP header. "
+        "The format of the header value is `$user $password`. This method has the "
+        "highest precedence. If it succeeds, all other authentication methods are "
+        "skipped.",
+        "bearerFormat": "username password",
     },
-    'webserverAuth': {
-        'type': 'http',
-        'scheme': 'basic',
-        'description': "Use the authentication method of the webserver ('basic' or 'digest'). To "
-                       "use this, you'll either have to re-configure the site's Apache instance "
-                       "yourself, or disable multi-site logins via `omd config`. This method "
-                       "takes precedence over the `cookieAuth` method."
-    }
+    "webserverAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Use the authentication method of the webserver ('basic' or 'digest'). To "
+        "use this, you'll either have to re-configure the site's Apache instance "
+        "yourself, or disable multi-site logins via `omd config`. This method "
+        "takes precedence over the `cookieAuth` method.",
+    },
 }
 
 DEFAULT_HEADERS = [
-    ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
+    ("Accept", "Media type(s) that is/are acceptable for the response.", "application/json"),
 ]
 
 OpenAPIInfoDict = TypedDict(
-    'OpenAPIInfoDict',
+    "OpenAPIInfoDict",
     {
-        'description': str,
-        'license': Dict[str, str],
-        'contact': Dict[str, str],
+        "description": str,
+        "license": Dict[str, str],
+        "contact": Dict[str, str],
     },
     total=True,
 )
 
 TagGroup = TypedDict(
-    'TagGroup',
+    "TagGroup",
     {
-        'name': str,
-        'tags': List[str],
+        "name": str,
+        "tags": List[str],
     },
     total=True,
 )
@@ -367,54 +365,49 @@ TagGroup = TypedDict(
 ReDocSpec = TypedDict(
     "ReDocSpec",
     {
-        'info': OpenAPIInfoDict,
-        'externalDocs': Dict[str, str],
-        'security': List[Dict[str, List[str]]],
-        'x-logo': Dict[str, str],
-        'x-tagGroups': List[TagGroup],
-        'x-ignoredHeaderParameters': List[str],
+        "info": OpenAPIInfoDict,
+        "externalDocs": Dict[str, str],
+        "security": List[Dict[str, List[str]]],
+        "x-logo": Dict[str, str],
+        "x-tagGroups": List[TagGroup],
+        "x-ignoredHeaderParameters": List[str],
     },
     total=True,
 )
 
 OPTIONS: ReDocSpec = {
-    'info': {
-        'description': apispec.utils.dedent(__doc__).strip(),
-        'license': {
-            'name': 'GNU General Public License version 2',
-            'url': 'https://checkmk.com/gpl.html',
+    "info": {
+        "description": apispec.utils.dedent(__doc__)
+        .strip()
+        .replace("$TABLE_DEFINITIONS", "\n".join(table_definitions())),
+        "license": {
+            "name": "GNU General Public License version 2",
+            "url": "https://checkmk.com/gpl.html",
         },
-        'contact': {
-            'name': 'Contact the Checkmk Team',
-            'url': 'https://checkmk.com/contact.php',
-            'email': 'feedback@checkmk.com'
+        "contact": {
+            "name": "Contact the Checkmk Team",
+            "url": "https://checkmk.com/contact.php",
+            "email": "feedback@checkmk.com",
         },
     },
-    'externalDocs': {
-        'description': 'User guide',
-        'url': 'https://docs.checkmk.com/master',
+    "externalDocs": {
+        "description": "User guide",
+        "url": "https://docs.checkmk.com/master",
     },
-    'x-logo': {
-        'url': 'https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png',
-        'altText': 'Checkmk',
+    "x-logo": {
+        "url": "https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png",
+        "altText": "Checkmk",
     },
-    'x-tagGroups': [
-        {
-            'name': 'Monitoring',
-            'tags': []
-        },
-        {
-            'name': 'Setup',
-            'tags': []
-        },
+    "x-tagGroups": [
+        {"name": "Monitoring", "tags": []},
+        {"name": "Setup", "tags": []},
+        {"name": "Checkmk Internal", "tags": []},
     ],
-    'x-ignoredHeaderParameters': [
-        'User-Agent',
-        'X-Test-Header',
+    "x-ignoredHeaderParameters": [
+        "User-Agent",
+        "X-Test-Header",
     ],
-    'security': [{
-        sec_scheme_name: []
-    } for sec_scheme_name in SECURITY_SCHEMES]
+    "security": [{sec_scheme_name: []} for sec_scheme_name in SECURITY_SCHEMES],
 }
 
 __version__ = "1.0"
@@ -427,8 +420,8 @@ def make_spec(options: ReDocSpec):
         apispec.utils.OpenAPIVersion("3.0.2"),
         plugins=[
             marshmallow.MarshmallowPlugin(),
-            plugins.ValueTypedDictMarshmallowPlugin(),
             apispec_oneofschema.MarshmallowPlugin(),
+            CheckmkMarshmallowPlugin(),
         ],
         **options,
     )
@@ -450,10 +443,8 @@ for sec_scheme_name, sec_scheme_spec in SECURITY_SCHEMES.items():
 for header_name, field in ACCEPT_HEADER.items():
     SPEC.components.parameter(
         header_name,
-        'header',
-        to_openapi([{
-            header_name: field
-        }], 'header')[0],
+        "header",
+        to_openapi([{header_name: field}], "header")[0],
     )
 
-ErrorType = Literal['ignore', 'raise']
+ErrorType = Literal["ignore", "raise"]

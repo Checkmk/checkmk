@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
+
 import cmk.gui.groups as gui_groups
 import cmk.gui.watolib.groups as groups
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -32,7 +33,8 @@ def test_load_group_information_empty(tmp_path):
 
 def test_load_group_information(tmp_path):
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
-        f.write("""# encoding: utf-8
+        f.write(
+            """# encoding: utf-8
 
 if type(define_contactgroups) != dict:
     define_contactgroups = {}
@@ -45,10 +47,12 @@ define_hostgroups.update({'all_hosts': u'All hosts :-)'})
 if type(define_servicegroups) != dict:
     define_servicegroups = {}
 define_servicegroups.update({'all_services': u'All särvices'})
-""")
+"""
+        )
 
     with open(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", "w") as f:
-        f.write("""# encoding: utf-8
+        f.write(
+            """# encoding: utf-8
 
 multisite_hostgroups = {
     "all_hosts": {
@@ -67,47 +71,48 @@ multisite_contactgroups = {
         "d!ng": "dong",
     },
 }
-""")
+"""
+        )
 
     with application_and_request_context():
         assert groups.load_group_information() == {
-            'contact': {
-                'all': {
-                    'alias': u'Everything',
+            "contact": {
+                "all": {
+                    "alias": "Everything",
                     "d!ng": "dong",
                 }
             },
-            'host': {
-                'all_hosts': {
-                    'alias': u'All hosts :-)',
+            "host": {
+                "all_hosts": {
+                    "alias": "All hosts :-)",
                     "ding": "dong",
                 }
             },
-            'service': {
-                'all_services': {
-                    'alias': u'All s\xe4rvices',
+            "service": {
+                "all_services": {
+                    "alias": "All s\xe4rvices",
                     "d1ng": "dong",
                 }
             },
         }
 
         assert groups.load_contact_group_information() == {
-            'all': {
-                'alias': u'Everything',
+            "all": {
+                "alias": "Everything",
                 "d!ng": "dong",
             }
         }
 
         assert gui_groups.load_host_group_information() == {
-            'all_hosts': {
-                'alias': u'All hosts :-)',
+            "all_hosts": {
+                "alias": "All hosts :-)",
                 "ding": "dong",
             }
         }
 
         assert gui_groups.load_service_group_information() == {
-            'all_services': {
-                'alias': u'All s\xe4rvices',
+            "all_services": {
+                "alias": "All s\xe4rvices",
                 "d1ng": "dong",
             }
         }

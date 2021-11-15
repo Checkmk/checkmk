@@ -48,10 +48,7 @@ def parse_datadog_monitors(string_table: StringTable) -> Section:
         monitor_dict["name"]: Monitor(
             state=monitor_dict["overall_state"],
             message=monitor_dict["message"],
-            thresholds=monitor_dict.get(
-                "options",
-                {},
-            ).get(
+            thresholds=monitor_dict.get("options", {},).get(
                 "thresholds",
                 {},
             ),
@@ -75,9 +72,11 @@ def discover_datadog_monitors(
     params: DiscoveryParams,
     section: Section,
 ) -> DiscoveryResult:
-    yield from (Service(item=name)
-                for name, monitor in section.items()
-                if monitor.state in params["states_discover"])
+    yield from (
+        Service(item=name)
+        for name, monitor in section.items()
+        if monitor.state in params["states_discover"]
+    )
 
 
 def check_datadog_monitors(
@@ -88,10 +87,12 @@ def check_datadog_monitors(
     if not (monitor := section.get(item)):
         return
     yield Result(
-        state=State(params["state_mapping"].get(
-            monitor.state,
-            State.UNKNOWN,
-        )),
+        state=State(
+            params["state_mapping"].get(
+                monitor.state,
+                State.UNKNOWN,
+            )
+        ),
         summary=f"Overall state: {monitor.state}",
         details=monitor.message,
     )
@@ -100,12 +101,14 @@ def check_datadog_monitors(
             state=State.OK,
             summary=f"Datadog thresholds: {datadog_thresholds}",
         )
-    if datadog_tags := ', '.join(  #
-            tag for tag in monitor.tags  #
-            if any(re.match(tag_regex, tag) for tag_regex in params["tags_to_show"])):
+    if datadog_tags := ", ".join(  #
+        tag
+        for tag in monitor.tags  #
+        if any(re.match(tag_regex, tag) for tag_regex in params["tags_to_show"])
+    ):
         yield Result(
             state=State.OK,
-            notice=f"Datadog tags: {datadog_tags}",
+            summary=f"Datadog tags: {datadog_tags}",
         )
 
 

@@ -5,4 +5,7 @@
 
 set -e
 
+REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
+make --silent -C "$REPO_PATH" node_modules/.bin/prettier 1>&2
+
 npx prettier "$@"

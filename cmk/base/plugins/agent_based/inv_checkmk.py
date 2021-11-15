@@ -12,8 +12,9 @@
 from typing import Any, Dict, Mapping, Optional, Sequence
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
-from .agent_based_api.v1.type_defs import InventoryResult
+
 from .agent_based_api.v1 import Attributes, register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult
 
 
 def _service_status(status: Mapping[str, Sequence[str]], service_name: str):
@@ -30,9 +31,9 @@ def _service_status(status: Mapping[str, Sequence[str]], service_name: str):
     """
     if not status:
         return "unknown"
-    if service_name not in status['existing']:
+    if service_name not in status["existing"]:
         return "not existent"
-    if service_name in status['stopped']:
+    if service_name in status["stopped"]:
         return "stopped"
     return "running"
 
@@ -52,30 +53,29 @@ def merge_sections(
 
         # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once the
         # livestatus status table has been updated.
-        helper_usage_cmk = float(status['helper_usage_cmk'] or "0") * 100
+        helper_usage_cmk = float(status["helper_usage_cmk"] or "0") * 100
         try:
-            helper_usage_fetcher = float(status['helper_usage_fetcher'] or "0") * 100
-            helper_usage_checker = float(status['helper_usage_checker'] or "0") * 100
+            helper_usage_fetcher = float(status["helper_usage_fetcher"] or "0") * 100
+            helper_usage_checker = float(status["helper_usage_checker"] or "0") * 100
         except KeyError:
             # May happen if we are trying to query old host.
             # To be consistent we correctly report that usage of the new helpers is zero.
             helper_usage_fetcher = 0.0
             helper_usage_checker = 0.0
 
-        helper_usage_generic = float(status['helper_usage_generic']) * 100
-        livestatus_usage = float(status['livestatus_usage']) * 100
+        helper_usage_generic = float(status["helper_usage_generic"]) * 100
+        livestatus_usage = float(status["livestatus_usage"]) * 100
 
-        merged_section["sites"].setdefault(site, {
-            "status_columns": {},
-            "inventory_columns": {}
-        })["status_columns"] = {
-            'num_hosts': status['num_hosts'],
-            'num_services': status['num_services'],
-            'check_helper_usage': helper_usage_generic,
-            'check_mk_helper_usage': helper_usage_cmk,
-            'fetcher_helper_usage': helper_usage_fetcher,
-            'checker_helper_usage': helper_usage_checker,
-            'livestatus_usage': livestatus_usage,
+        merged_section["sites"].setdefault(site, {"status_columns": {}, "inventory_columns": {}})[
+            "status_columns"
+        ] = {
+            "num_hosts": status["num_hosts"],
+            "num_services": status["num_services"],
+            "check_helper_usage": helper_usage_generic,
+            "check_mk_helper_usage": helper_usage_cmk,
+            "fetcher_helper_usage": helper_usage_fetcher,
+            "checker_helper_usage": helper_usage_checker,
+            "livestatus_usage": livestatus_usage,
         }
 
     # SECTION: omd_status
@@ -110,45 +110,45 @@ def merge_sections(
         # create a column for each service
         for service in services:
             omd_status_dict[service] = _service_status(omd_status, service)
-        merged_section["sites"].setdefault(site, {
-            "status_columns": {},
-            "inventory_columns": {}
-        })["status_columns"].update(omd_status_dict)
+        merged_section["sites"].setdefault(site, {"status_columns": {}, "inventory_columns": {}})[
+            "status_columns"
+        ].update(omd_status_dict)
 
     merged_section["check_mk"]["num_sites"] = num_sites
 
-    pre_versions = section_omd_info.get('versions', {})
-    pre_sites = section_omd_info.get('sites', {})
+    pre_versions = section_omd_info.get("versions", {})
+    pre_sites = section_omd_info.get("sites", {})
     if not (pre_versions or pre_sites):
         return merged_section
 
     versions = {
         name: {
-            'num_sites': 0,
+            "num_sites": 0,
             **{k: v for k, v in version.items() if k != "version"},
-            'demo': (version['demo'] == "1"),
-        } for name, version in pre_versions.items()
+            "demo": (version["demo"] == "1"),
+        }
+        for name, version in pre_versions.items()
     }
 
     sites = {
         name: {
             **site_dict,
-            'autostart': (site_dict['autostart'] == "1"),
-        } for name, site_dict in pre_sites.items()
+            "autostart": (site_dict["autostart"] == "1"),
+        }
+        for name, site_dict in pre_sites.items()
     }
 
     for site_dict in sites.values():
-        version_dict = versions.get(site_dict['used_version'])
+        version_dict = versions.get(site_dict["used_version"])
         if version_dict:
-            version_dict['num_sites'] += 1
+            version_dict["num_sites"] += 1
 
     merged_section["versions"] = versions
     for site, values in sites.items():
         values.pop("site", None)
-        merged_section["sites"].setdefault(site, {
-            "inventory_columns": {},
-            "status_columns": {}
-        })["inventory_columns"].update(values)
+        merged_section["sites"].setdefault(site, {"inventory_columns": {}, "status_columns": {}})[
+            "inventory_columns"
+        ].update(values)
 
     merged_section["check_mk"]["num_versions"] = len(versions)
 
@@ -158,21 +158,27 @@ def merge_sections(
 def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
 
     for key, elem in merged_sections["sites"].items():
-        yield TableRow(path=["software", "applications", "check_mk", "sites"],
-                       key_columns={"site": key},
-                       status_columns=elem["status_columns"],
-                       inventory_columns=elem["inventory_columns"])
+        yield TableRow(
+            path=["software", "applications", "check_mk", "sites"],
+            key_columns={"site": key},
+            status_columns=elem["status_columns"],
+            inventory_columns=elem["inventory_columns"],
+        )
 
     for key, elem in merged_sections["versions"].items():
-        yield TableRow(path=["software", "applications", "check_mk", "versions"],
-                       key_columns={"version": key},
-                       inventory_columns=elem)
+        yield TableRow(
+            path=["software", "applications", "check_mk", "versions"],
+            key_columns={"version": key},
+            inventory_columns=elem,
+        )
 
-    yield Attributes(path=["software", "applications", "check_mk"],
-                     inventory_attributes={
-                         "num_versions": merged_sections["check_mk"].get("num_versions"),
-                         "num_sites": merged_sections["check_mk"].get("num_sites")
-                     })
+    yield Attributes(
+        path=["software", "applications", "check_mk"],
+        inventory_attributes={
+            "num_versions": merged_sections["check_mk"].get("num_versions"),
+            "num_sites": merged_sections["check_mk"].get("num_sites"),
+        },
+    )
 
 
 def inventory_checkmk(
@@ -190,7 +196,7 @@ def inventory_checkmk(
 
 
 register.inventory_plugin(
-    name='inventory_checkmk',
+    name="inventory_checkmk",
     inventory_function=inventory_checkmk,
     sections=["livestatus_status", "omd_status", "omd_info"],
 )

@@ -16,7 +16,7 @@ def parse_safenet_ntls(info):
     }
 
 
-#.
+# .
 #   .--Connection rate-----------------------------------------------------.
 #   |          ____                            _   _                       |
 #   |         / ___|___  _ __  _ __   ___  ___| |_(_) ___  _ __            |
@@ -53,7 +53,7 @@ check_info["safenet_ntls.connrate"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--Expiration date-----------------------------------------------------.
 #   |           _____            _           _   _                         |
 #   |          | ____|_  ___ __ (_)_ __ __ _| |_(_) ___  _ __              |
@@ -85,7 +85,7 @@ check_info["safenet_ntls.expiration"] = {
     "service_description": "NTLS Expiration Date",
 }
 
-#.
+# .
 #   .--Links---------------------------------------------------------------.
 #   |                       _     _       _                                |
 #   |                      | |   (_)_ __ | | _____                         |
@@ -102,11 +102,9 @@ def inventory_safenet_ntls_links(parsed):
 
 
 def check_safenet_ntls_links(_no_item, params, parsed):
-    return check_levels(parsed["links"],
-                        "connections",
-                        params,
-                        unit='links',
-                        infoname="Connections")
+    return check_levels(
+        parsed["links"], "connections", params, unit="links", infoname="Connections"
+    )
 
 
 check_info["safenet_ntls.links"] = {
@@ -117,7 +115,7 @@ check_info["safenet_ntls.links"] = {
     "group": "safenet_ntls_links",
 }
 
-#.
+# .
 #   .--Connected clients---------------------------------------------------.
 #   |            ____                            _           _             |
 #   |           / ___|___  _ __  _ __   ___  ___| |_ ___  __| |            |
@@ -140,11 +138,13 @@ def inventory_safenet_ntls_clients(parsed):
 
 
 def check_safenet_ntls_clients(_no_item, params, parsed):
-    yield check_levels(parsed["connected_clients"],
-                       "connections",
-                       params,
-                       unit='connected clients',
-                       infoname="Connections")
+    yield check_levels(
+        parsed["connected_clients"],
+        "connections",
+        params,
+        unit="connected clients",
+        infoname="Connections",
+    )
 
 
 check_info["safenet_ntls.clients"] = {
@@ -155,7 +155,7 @@ check_info["safenet_ntls.clients"] = {
     "group": "safenet_ntls_clients",
 }
 
-#.
+# .
 #   .--Operation status----------------------------------------------------.
 #   |             ___                       _   _                          |
 #   |            / _ \ _ __   ___ _ __ __ _| |_(_) ___  _ __               |
@@ -192,7 +192,12 @@ check_info["safenet_ntls"] = {
     "inventory_function": inventory_safenet_ntls,
     "check_function": check_safenet_ntls,
     "service_description": "NTLS Operation Status",
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12383"),
+    "snmp_scan_function": lambda oid: (
+        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12383")  # old SafeNet devices
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(
+            ".1.3.6.1.4.1.8072"
+        )  # oid changed with Thales SafeNet Luna S700 Series
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.12383.3.1.2",
         [
@@ -202,5 +207,6 @@ check_info["safenet_ntls"] = {
             "4",  # ntlsSuccessfulClientConnections
             "5",  # ntlsFailedClientConnections
             "6",  # ntlsCertExpireDay
-        ]),
+        ],
+    ),
 }

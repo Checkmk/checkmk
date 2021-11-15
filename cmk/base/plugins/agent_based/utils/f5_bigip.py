@@ -20,12 +20,9 @@ False
 True
 """
 
-from ..agent_based_api.v1 import (
-    all_of,
-    contains,
-    matches,
-    not_matches,
-)
+from typing import Dict, Literal, TypedDict, Union
+
+from ..agent_based_api.v1 import all_of, contains, matches, not_matches
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 OID_F5_BIG_IP_bigipTrafficMgmt = ".1.3.6.1.4.1.3375.2"
@@ -50,3 +47,13 @@ VERSION_V11_PLUS = matches(OID_F5_BIG_IP_sysProductVersion, VERSION_GE_V11_PATTE
 F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS = {
     "type": "active_standby",
 }
+
+AllStates = Union[Literal[0], Literal[1], Literal[2], Literal[3], Literal[4]]
+
+
+class _F5BigipClusterStatusVSResultRequired(TypedDict, total=False):
+    type: Union[Literal["active_standby"], Literal["active_active"]]
+
+
+class F5BigipClusterStatusVSResult(_F5BigipClusterStatusVSResultRequired):
+    v11_2_states: Dict[AllStates, AllStates]

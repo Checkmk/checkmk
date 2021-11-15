@@ -12,21 +12,31 @@ from .utils.ups import (
     Battery,
     CHECK_DEFAULT_PARAMETERS,
     check_ups_capacity,
+    DETECT_UPS_GENERIC,
     discover_ups_capacity,
     optional_int,
-    DETECT_UPS_GENERIC,
 )
 
 
 def parse_ups_capacity(string_table: StringTable) -> Optional[Battery]:
-    return Battery(
-        seconds_left=optional_int(string_table[0][0], factor=60),
-        percent_charged=optional_int(string_table[0][1]),
-    ) if string_table else None
+    return (
+        Battery(
+            seconds_left=optional_int(string_table[0][0], factor=60),
+            percent_charged=optional_int(string_table[0][1]),
+        )
+        if string_table
+        else None
+    )
 
 
 def parse_ups_seconds_on_battery(string_table: StringTable) -> Optional[Battery]:
-    return Battery(seconds_on_bat=optional_int(string_table[0][0]),) if string_table else None
+    return (
+        Battery(
+            seconds_on_bat=optional_int(string_table[0][0]),
+        )
+        if string_table
+        else None
+    )
 
 
 register.snmp_section(

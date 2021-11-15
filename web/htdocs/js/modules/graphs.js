@@ -304,10 +304,6 @@ function render_graph(graph) {
 
     var v_axis_orig = v_range_from;
 
-    // paint graph canvas background if not transparent
-    if (graph.render_options.canvas_color)
-        paint_rect([t_orig, top_border], t_pixels, v_pixels, graph.render_options.canvas_color);
-
     // Now transform the whole coordinate system to our real t and v coords
     // so if we paint something at (0, 0) it will correctly represent a
     // value of 0 and a time point of time_start.
@@ -444,18 +440,6 @@ function render_graph(graph) {
         }
     }
 
-    // Clear areas where values have been painted out of range. This is
-    // At top and bottom. This is a Hack to cover incorrect paint area size.
-    if (graph.render_options.background_color) {
-        paint_rect([t_orig - 1, 0], t_pixels + 1, 0);
-        paint_rect(
-            [t_orig - 1, v_orig],
-            t_pixels + 1,
-            height - v_orig,
-            graph.render_options.background_color
-        );
-    }
-
     if (!graph.render_options.preview && graph.render_options.show_time_axis) {
         // Paint time axis labels
         ctx.save();
@@ -532,7 +516,6 @@ function graph_vertical_axis_width(graph) {
 function update_graph_styling(graph, container) {
     var graph_div = container.getElementsByClassName("graph")[0];
     if (!graph_div) return;
-    graph_div.style.backgroundColor = graph.render_options.background_color;
     graph_div.style.color = graph.render_options.foreground_color;
 
     var inverted_fg_color = render_color(

@@ -107,21 +107,13 @@ constexpr bool IsOneShotMode() { return true; }
 constexpr const KNOWNFOLDERID& kPublicFolderId = FOLDERID_Public;
 constexpr const KNOWNFOLDERID& kWindowsFolderId = FOLDERID_Windows;
 
-// gtest [+] everywhere
 std::string GetCurrentLogFileName();
 int GetCurrentDebugLevel();
 XLOG::EventLevel GetCurrentEventLevel();  // fixed at the moment on Critical
 bool GetCurrentWinDbg();
 bool GetCurrentEventLog();
 
-// gtest [+] everywhere
-inline const std::wstring GetDefaultPrefixName() {
-#if defined(LOCAL_LOG_PREFIX)
-    return LOCAL_LOG_PREFIX;
-#else
-    return L"agent: ";
-#endif
-}
+inline const std::wstring GetDefaultPrefixName() { return L"agent: "; }
 
 // where you can find executables
 std::vector<std::wstring>& ExternalCommandPaths();

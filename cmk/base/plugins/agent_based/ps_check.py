@@ -5,12 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, List, Mapping, Optional, Tuple
-from .agent_based_api.v1.type_defs import CheckResult
 
 from .agent_based_api.v1 import register
-from .utils import cpu
-from .utils import memory
-from .utils import ps
+from .agent_based_api.v1.type_defs import CheckResult
+from .utils import cpu, memory, ps
 
 
 def check_ps(
@@ -37,26 +35,28 @@ def check_ps(
         # no cluster in this function -> Node name is None:
         process_lines=[(None, ps_info, cmd_line) for ps_info, cmd_line in lines],
         cpu_cores=cpu_cores,
-        total_ram=total_ram,
+        total_ram_map={} if total_ram is None else {"": total_ram},
     )
 
 
 def cluster_check_ps(
-        item: str,
-        params: Mapping[str, Any],
-        section_ps: Dict[str, ps.Section],
-        section_mem: Dict[str, memory.SectionMem],  # unused
-        section_mem_used: Dict[str, memory.SectionMem],  # unused
-        section_cpu: Dict[str, cpu.Section],  # unused
+    item: str,
+    params: Mapping[str, Any],
+    section_ps: Dict[str, Optional[ps.Section]],
+    section_mem: Dict[str, Optional[memory.SectionMem]],
+    section_mem_used: Dict[str, Optional[memory.SectionMem]],
+    section_cpu: Dict[str, Optional[cpu.Section]],  # unused
 ) -> CheckResult:
     # introduce node name
     process_lines: List[Tuple[Optional[str], ps.PsInfo, List[str]]] = [
         (node_name, ps_info, cmd_line)
-        for node_name, (_cpu_cores, node_lines) in section_ps.items()
-        for (ps_info, cmd_line) in node_lines
+        for node_name, node_section in section_ps.items()
+        for (ps_info, cmd_line) in (node_section[1] if node_section else ())
     ]
 
-    core_counts = set(cpu_cores for (cpu_cores, _node_lines) in section_ps.values())
+    core_counts = set(
+        node_section[0] for node_section in section_ps.values() if node_section is not None
+    )
     if len(core_counts) == 1:
         cpu_cores = core_counts.pop()
     else:
@@ -69,7 +69,18 @@ def cluster_check_ps(
         params=params,
         process_lines=process_lines,
         cpu_cores=cpu_cores,
-        total_ram=None,
+        total_ram_map={
+            **{
+                node: section["MemTotal"]
+                for node, section in section_mem.items()
+                if section and "MemTotal" in section
+            },
+            **{
+                node: v
+                for node, section in section_mem_used.items()
+                if section and (v := section.get("MemTotal")) is not None
+            },
+        },
     )
 
 

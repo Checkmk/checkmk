@@ -45,6 +45,6 @@ item:
  would need four backslashes in a row in order to denote one
  backslash in the file's path.
 
-inventory:
+discovery:
  One service is created for each file that the agent sends.
 

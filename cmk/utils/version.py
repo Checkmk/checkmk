@@ -10,38 +10,25 @@ does not offer stable APIs. The code may change at any time."""
 
 __version__ = "2.1.0i1"
 
-import errno
 import enum
+import errno
 import os
-from pathlib import Path
 import subprocess
 import sys
 import time
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict
 
-from six import ensure_str
+import livestatus
 
 import cmk.utils.paths
-import livestatus
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.i18n import _
-from functools import lru_cache
 
 
 @lru_cache
 def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return ensure_str(version_link.resolve().name)
-
-
-@lru_cache
-def omd_site() -> str:
-    try:
-        return os.environ["OMD_SITE"]
-    except KeyError:
-        raise MKGeneralException(
-            _("OMD_SITE environment variable not set. You can "
-              "only execute this in an OMD site."))
+    return version_link.resolve().name
 
 
 @lru_cache
@@ -69,6 +56,11 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
+def is_daily_build() -> bool:
+    # Daily build version format: YYYY.MM.DD or MAJOR.MINOR.PATCH-YYYY.MM.DD
+    return "-" in __version__ or len(__version__.split(".", maxsplit=1)[0]) == 4
+
+
 def edition_title():
     if is_enterprise_edition():
         return "CEE"
@@ -81,6 +73,7 @@ def edition_title():
 
 class TrialState(enum.Enum):
     """All possible states of the free version"""
+
     VALID = enum.auto()
     EXPIRED = enum.auto()
     NO_LIVESTATUS = enum.auto()  # special case, no cmc impossible to determine status
@@ -156,7 +149,7 @@ def _get_os_info() -> str:
             for line in open(f).readlines():
                 if "=" in line:
                     k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip("\"")
+                    info[k.strip()] = v.strip().strip('"')
             break
 
     if "PRETTY_NAME" in info:
@@ -166,7 +159,7 @@ def _get_os_info() -> str:
         return "%s" % info
 
     if os.environ.get("OMD_ROOT"):
-        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
+        disto_info = os.environ["OMD_ROOT"] + "/share/omd/distro.info"
         if os.path.exists(disto_info):
             return open(disto_info).readline().split("=", 1)[1].strip()
 

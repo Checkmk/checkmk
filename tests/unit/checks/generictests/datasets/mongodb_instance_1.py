@@ -16,30 +16,34 @@ info = [
 ]
 
 discovery = {
-    "": [(None, None),],
+    "": [
+        (None, None),
+    ],
 }
 
 checks = {
-    "": [(
-        None,
-        {},
-        [
-            (
-                0,
-                "Mode: Primary",
-            ),
-            (
-                0,
-                "Address: idbv0068.ww-intern.de:27017",
-            ),
-            (
-                0,
-                "Version: 3.0.4",
-            ),
-            (
-                0,
-                "Pid: 1999",
-            ),
-        ],
-    ),],
+    "": [
+        (
+            None,
+            {},
+            [
+                (
+                    0,
+                    "Mode: Primary",
+                ),
+                (
+                    0,
+                    "Address: idbv0068.ww-intern.de:27017",
+                ),
+                (
+                    0,
+                    "Version: 3.0.4",
+                ),
+                (
+                    0,
+                    "Pid: 1999",
+                ),
+            ],
+        ),
+    ],
 }

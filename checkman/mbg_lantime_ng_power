@@ -10,7 +10,7 @@ description:
  The check handles the state of all power supplies present.
  All states other than "up" raise CRIT.
 
-inventory:
+discovery:
  One service is created for each power supply.
 
 item:

@@ -75,7 +75,7 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class SectionProviderOhm;
-    FRIEND_TEST(SectionProviderOhm, StartStop);
+    FRIEND_TEST(SectionProviderOhm, StartStopIntegration);
 #endif
 };
 
@@ -103,11 +103,10 @@ public:
         provider_uniq_name_ = engine_.getUniqName();
     }
 
-    // #TODO this function is not simple enough
     std::future<bool> kick(
         std::launch mode,             // type of execution
         const std::string& cmd_line,  // command line, first is Ip address
-        AnswerId Tp,                  // expected id
+        AnswerId answer_id,           // expected id
         ServiceProcessor* processor   // hosting object
     ) {
         engine_.registerOwner(processor);
@@ -116,26 +115,26 @@ public:
         section_expected_timeout_ = engine_.timeout();
         return std::async(
             mode,
-            [this](const std::string CommandLine,  //
-                   const AnswerId Tp,              //
+            [this](const std::string command_line,  //
+                   const AnswerId answer_id,        //
                    const ServiceProcessor* Proc) {
                 engine_.updateSectionStatus();  // actual data gathering is
                                                 // here for plugins and local
 
-                engine_.registerCommandLine(CommandLine);
+                engine_.registerCommandLine(command_line);
                 auto port_name = Proc->getInternalPort();
-                auto id = AnswerIdToNumber(Tp);
+                auto id = AnswerIdToNumber(answer_id);
                 XLOG::d.t(
                     "Provider '{}' is about to be started, id '{}' port [{}]",
                     provider_uniq_name_, id, port_name);
-                goGoGo(std::string(section::kUseEmbeddedName), CommandLine,
+                goGoGo(std::string(section::kUseEmbeddedName), command_line,
                        port_name, id);
 
                 return true;
             },
-            cmd_line,  //
-            Tp,        // param 1
-            processor  // param 2
+            cmd_line,   //
+            answer_id,  // param 1
+            processor   // param 2
 
         );
     }
@@ -169,15 +168,15 @@ protected:
     T engine_;
     int section_expected_timeout_ = 0;
 
-    void goGoGo(const std::string& SectionName,  //
-                const std::string& CommandLine,  //
-                const std::string& Port,         //
-                uint64_t Marker) {               // std marker
+    void goGoGo(const std::string& section_name,  //
+                const std::string& command_line,  //
+                const std::string& port,          //
+                uint64_t marker) {                // std marker
         engine_.stopWatchStart();
         auto cmd_line =
-            std::to_string(Marker) + " " + SectionName + " " + CommandLine;
+            fmt::format("{} {} {}", marker, section_name, command_line);
 
-        engine_.startExecution(Port, cmd_line);
+        engine_.startExecution(port, cmd_line);
         auto us_count = engine_.stopWatchStop();
         XLOG::d.i("perf: Section '{}' took [{}] milliseconds",
                   provider_uniq_name_, us_count / 1000);
@@ -191,8 +190,8 @@ class ServiceProcessor : public wtools::BaseServiceProcessor {
 public:
     using thread_callback = std::function<bool(const void*)>;
     using AnswerDataBlock = cma::srv::AsyncAnswer::DataBlock;
-    ServiceProcessor(std::chrono::milliseconds Delay, thread_callback Callback)
-        : delay_(Delay), callback_(Callback), external_port_(this) {}
+    ServiceProcessor(std::chrono::milliseconds delay, thread_callback callback)
+        : delay_(delay), callback_(callback), external_port_(this) {}
     ServiceProcessor() : external_port_(this) {
         using namespace std::chrono_literals;
         delay_ = 1000ms;
@@ -250,10 +249,10 @@ public:
     }
 
 private:
-    std::vector<uint8_t> makeTestString(const char* Text) {
-        const std::string answer_test = Text;
-        std::vector<uint8_t> answer_vector;
-        answer_vector.assign(answer_test.begin(), answer_test.end());
+    std::vector<uint8_t> makeTestString(const char* text) {
+        const std::string answer_test{text == nullptr ? "" : text};
+        std::vector<uint8_t> answer_vector{answer_test.begin(),
+                                           answer_test.end()};
         return answer_vector;
     }
 
@@ -465,11 +464,10 @@ private:
     /// \brief wait for all answers from all providers
     /// The call is *blocking*
     AsyncAnswer::DataBlock getAnswer(int count) {
-        using namespace std::chrono;
         XLOG::t.i("waiting futures(only start)");
 
         int future_count = 0;
-        auto start_point = steady_clock::now();
+        auto start_point = std::chrono::steady_clock::now();
 
         // NOTE: here we are starting futures, i.e. just fire all
         // futures in C++ kind of black magic, do not care too much
@@ -480,14 +478,16 @@ private:
                      ++future_count;
                  });
 
-        auto end_point = steady_clock::now();
-        XLOG::t.i("futures ready in {} milliseconds",
-                  duration_cast<milliseconds>(end_point - start_point).count());
+        auto end_point = std::chrono::steady_clock::now();
+        XLOG::t.i(
+            "futures ready in {} milliseconds",
+            duration_cast<std::chrono::milliseconds>(end_point - start_point)
+                .count());
 
         // set count of started to await for answer
         // count is from startProviders
         answer_.exeKickedCount(count);
-        auto success = answer_.waitAnswer(seconds(max_wait_time_));
+        auto success = answer_.waitAnswer(std::chrono::seconds{max_wait_time_});
         logAnswerProcessing(success);
         auto result = std::move(answer_.getDataAndClear());
         return wrapResultWithStaticSections(result);
@@ -495,25 +495,25 @@ private:
 
     class SectionProviderText {
     public:
-        SectionProviderText(const std::string& Name, const std::string& Text)
-            : name_(Name), text_(Text) {}
+        SectionProviderText(const std::string& name, const std::string& text)
+            : name_(name), text_(text) {}
 
-        std::future<bool> kick(AnswerId Tp, ServiceProcessor* Proc) {
+        std::future<bool> kick(AnswerId stamp, ServiceProcessor* proc) {
             return std::async(
                 std::launch::async,
-                [this](const AnswerId Tp, ServiceProcessor* Proc) {
+                [this](const AnswerId stamp, ServiceProcessor* proc) {
                     auto block = gatherData();
                     if (block) {
                         XLOG::d("Provider '{}' added answer", name_);
-                        return Proc->addSectionToAnswer(name_, Tp, *block);
+                        return proc->addSectionToAnswer(name_, stamp, *block);
                     } else {
                         XLOG::l("Provider '{}' FAILED answer", name_);
-                        Proc->addSectionToAnswer(name_, Tp);
+                        proc->addSectionToAnswer(name_, stamp);
                         return false;
                     }
                 },
-                Tp,   // param 1
-                Proc  // param 2
+                stamp,  // param 1
+                proc    // param 2
 
             );
         }
@@ -522,9 +522,7 @@ private:
         std::string name_;
         std::string text_;
         std::optional<std::vector<uint8_t>> gatherData() {
-            std::vector<uint8_t> v;
-            v.assign(text_.begin(), text_.end());
-            return v;
+            return std::vector<uint8_t>{text_.begin(), text_.end()};
         }
     };
 
@@ -681,7 +679,7 @@ private:
     FRIEND_TEST(ServiceProcessorTest, Generate);
 
     friend class SectionProviderOhm;
-    FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhm);
+    FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhmIntegration);
 
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, RestartBinaries);

@@ -48,6 +48,10 @@ body.login {
     left: 40px;
     width: 120px;
     height: auto;
+
+    &.custom {
+      width: 60px;
+    }
   }
 
   #version {
@@ -120,17 +124,16 @@ body.login {
     height: 16px;
     padding: 0;
     margin: 0;
-    color: $lightgrey;
+    color: $font-color-light-grey;
     background-color: $color-state-2-background;
     background-image: none;
     background-repeat: no-repeat;
-    border: 1px solid $color-state-error-border;
     border-radius: $theme-border-radius;
 
     div.error {
       padding: 1px 0 0;
       margin: 0;
-      color: $lightgrey;
+      color: $font-color-light-grey;
       background-color: transparent;
       border-style: none;
       border-radius: 0;
@@ -144,13 +147,13 @@ body.login {
     left: 10px;
     width: 350px;
     margin: 0 auto 10px;
-    color: $darkgrey;
+    color: $font-color-dimmed;
     text-align: center;
   }
 
   div#login div#foot a,
   div#login div#foot body.main .popup_menu span,
   body.main .popup_menu div#login div#foot span {
-    color: $darkgrey;
+    color: $font-color-dimmed;
   }
 }

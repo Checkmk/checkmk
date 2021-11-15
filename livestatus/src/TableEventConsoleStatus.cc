@@ -5,10 +5,13 @@
 
 #include "TableEventConsoleStatus.h"
 
+#include <memory>
+#include <vector>
+
 #include "Column.h"
 #include "DoubleColumn.h"
-#include "IntLambdaColumn.h"
-#include "ListLambdaColumn.h"
+#include "IntColumn.h"
+#include "ListColumn.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
 

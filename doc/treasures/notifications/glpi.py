@@ -7,8 +7,8 @@ import ast
 import logging
 import os
 import re
-from socket import socket, AF_UNIX, SOCK_STREAM, SHUT_WR
 import time
+from socket import AF_UNIX, SHUT_WR, SOCK_STREAM, socket
 
 log = logging.getLogger("ticket_log")
 
@@ -246,7 +246,7 @@ class Renderer(object):
     displayed to the user
     """
     def __init__(self, settings):
-        super(Renderer, self).__init__()
+        super().__init__()
 
     @staticmethod
     def __render_state(state):
@@ -312,7 +312,7 @@ class LiveStatus(object):
         self.__livestatus_path = socket_path
 
     def query(self, lql):
-        sock = ::socket(AF_UNIX, SOCK_STREAM)
+        sock = socket(AF_UNIX, SOCK_STREAM)
         sock.connect(self.__livestatus_path)
 
         sock.send(lql + "\n")
@@ -327,7 +327,7 @@ class LiveStatus(object):
         return ast.literal_eval(obj_string) if obj_string else []
 
     def execute(self, lql):
-        sock = ::socket(AF_UNIX, SOCK_STREAM)
+        sock = socket(AF_UNIX, SOCK_STREAM)
         sock.connect(self.__livestatus_path)
 
         sock.send(lql + "\n")
@@ -361,7 +361,7 @@ class TicketInterface(object):
         Low, Medium, High, Ultra = range(4)
 
     def __init__(self, settings):
-        super(TicketInterface, self).__init__()
+        super().__init__()
 
     def register_arguments(self, opt):
         pass
@@ -409,7 +409,7 @@ class TicketInterface(object):
 
 class InterfaceGLPI(TicketInterface):
 
-    from xmlrpc.client import ServerProxy, Error, ProtocolError, ResponseError, Fault  # nosec
+    from xmlrpc.client import Error, Fault, ProtocolError, ResponseError, ServerProxy  # nosec
 
     urgency_map = {
         TicketInterface.Urgency.Low: 1,
@@ -419,7 +419,7 @@ class InterfaceGLPI(TicketInterface):
     }
 
     def __init__(self, settings):
-        super(InterfaceGLPI, self).__init__(settings)
+        super().__init__(settings)
         self.__username = settings['username']
         self.__password = settings['password']
         self.__server = InterfaceGLPI.ServerProxy("http://%(host)s:%(port)s/%(url)s" % settings)

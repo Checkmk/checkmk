@@ -14,15 +14,15 @@ cpuload_default_levels = (5, 10)
 
 
 def inventory_statgrab_load(info):
-    return [(None, 'cpuload_default_levels')]
+    return [(None, "cpuload_default_levels")]
 
 
 def check_statgrab_load(item, params, info):
     load = [0.0, 0.0, 0.0]
     for var, value in info:
-        if var == 'min1':
+        if var == "min1":
             load[0] = float(value)
-        elif var == 'min5':
+        elif var == "min5":
             load[1] = float(value)
         else:
             load[2] = float(value)
@@ -31,9 +31,9 @@ def check_statgrab_load(item, params, info):
 
 
 check_info["statgrab_load"] = {
-    'check_function': check_statgrab_load,
-    'inventory_function': inventory_statgrab_load,
-    'service_description': 'CPU load',
-    'has_perfdata': True,
-    'group': 'cpu_load',
+    "check_function": check_statgrab_load,
+    "inventory_function": inventory_statgrab_load,
+    "service_description": "CPU load",
+    "has_perfdata": True,
+    "group": "cpu_load",
 }

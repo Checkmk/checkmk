@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<storeonce_stores:sep(9)>>>
 # [1/0]
 # Store ID        0
@@ -89,10 +90,10 @@ def check_storeonce_stores(item, _no_params, parsed):
             yield 0, "Description: %s" % description
 
 
-check_info['storeonce_stores'] = {
-    'parse_function': parse_storeonce_servicesets,
-    'inventory_function': inventory_storeonce_stores,
-    'check_function': check_storeonce_stores,
-    'service_description': '%s',
-    'has_perfdata': True,
+check_info["storeonce_stores"] = {
+    "parse_function": parse_storeonce_servicesets,
+    "inventory_function": inventory_storeonce_stores,
+    "check_function": check_storeonce_stores,
+    "service_description": "%s",
+    "has_perfdata": True,
 }

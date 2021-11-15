@@ -16,5 +16,5 @@ description:
 item:
  The IO summary or the volume identifier.
 
-inventory:
+discovery:
  One service is created for the summary or one service is created for each volume.

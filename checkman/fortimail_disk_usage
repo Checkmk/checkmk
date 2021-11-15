@@ -11,5 +11,5 @@ description:
  functionality for checking disks and filesystems because the device
  does not provide sufficient information).
 
-inventory:
+discovery:
  One check per host will be created.

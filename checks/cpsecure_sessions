@@ -18,7 +18,7 @@ cpsecure_sessions_default_levels = (2500, 5000)
 def inventory_cpsecure_sessions(info):
     inventory = []
     for service, enabled, _sessions in info:
-        if enabled == '1':
+        if enabled == "1":
             inventory.append((service, "cpsecure_sessions_default_levels"))
     return inventory
 
@@ -26,7 +26,7 @@ def inventory_cpsecure_sessions(info):
 def check_cpsecure_sessions(item, params, info):
     for service, enabled, sessions in info:
         if item == service:
-            if enabled != '1':
+            if enabled != "1":
                 return (1, "service not enabled")
             num_sessions = int(sessions)
             warn, crit = params
@@ -42,10 +42,10 @@ def check_cpsecure_sessions(item, params, info):
 
 
 check_info["cpsecure_sessions"] = {
-    'check_function': check_cpsecure_sessions,
-    'inventory_function': inventory_cpsecure_sessions,
-    'service_description': 'Number of %s sessions',
-    'has_perfdata': True,
-    'snmp_info': ('.1.3.6.1.4.1.26546.3.1.2.1.1.1', ['1', '2', '3']),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.26546.1.1.2",
+    "check_function": check_cpsecure_sessions,
+    "inventory_function": inventory_cpsecure_sessions,
+    "service_description": "Number of %s sessions",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.26546.3.1.2.1.1.1", ["1", "2", "3"]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.26546.1.1.2",
 }

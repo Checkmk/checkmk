@@ -14,5 +14,5 @@ description:
  The check only records the information. At the moment there are no thresholds
  for this check.
 
-inventory:
+discovery:
  One service is created for each DHCP Server.

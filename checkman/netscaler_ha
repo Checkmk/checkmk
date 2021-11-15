@@ -16,5 +16,5 @@ description:
  or {unkown} because these states are not documented in the MIB. It is
  critical in other states {haCurState} can be.
 
-inventory:
+discovery:
  One service is created for each host.

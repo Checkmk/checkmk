@@ -14,5 +14,5 @@ description:
  The CPU state can either be reported as running ({OK}), stopped ({CRITICAL}) and unknown
  ({UNKNOWN}).
 
-inventory:
+discovery:
  One service is created for each device.

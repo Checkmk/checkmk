@@ -14,16 +14,16 @@ import sys
 import time
 
 conf_file = None
-for path in ['/etc/dhcpd.conf', '/etc/dhcp/dhcpd.conf', '/usr/local/etc/dhcpd.conf']:
+for path in ["/etc/dhcpd.conf", "/etc/dhcp/dhcpd.conf", "/usr/local/etc/dhcpd.conf"]:
     if os.path.exists(path):
         conf_file = path
         break
 
 leases_file = None
 for path in [
-        '/var/lib/dhcp/db/dhcpd.leases',
-        '/var/lib/dhcp/dhcpd.leases',
-        '/var/lib/dhcpd/dhcpd.leases',  # CentOS
+    "/var/lib/dhcp/db/dhcpd.leases",
+    "/var/lib/dhcp/dhcpd.leases",
+    "/var/lib/dhcpd/dhcpd.leases",  # CentOS
 ]:
     if os.path.exists(path):
         leases_file = path
@@ -51,9 +51,9 @@ def get_pid():
 
 
 pidof_dhcpd = get_pid()
-sys.stdout.write('<<<isc_dhcpd>>>\n[general]\nPID: %s\n' % pidof_dhcpd)
+sys.stdout.write("<<<isc_dhcpd>>>\n[general]\nPID: %s\n" % pidof_dhcpd)
 
-sys.stdout.write('[pools]\n')
+sys.stdout.write("[pools]\n")
 
 
 def parse_config(filename):
@@ -82,7 +82,7 @@ parse_config(conf_file)
 #   set ddns-fwd-name = "Sebastians-MBP.dhcp.mathias-kettner.de";
 # }
 
-sys.stdout.write('[leases]\n')
+sys.stdout.write("[leases]\n")
 now = time.time()
 ip_address = None
 binding_state = None

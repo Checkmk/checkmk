@@ -9,5 +9,5 @@ description:
  the {CISCO-SYSTEM-EXT-MIB}. The device gives the utilization in precent,
  so that handling of absolute values is not available.
 
-inventory:
+discovery:
  One service is created.

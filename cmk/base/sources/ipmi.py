@@ -28,14 +28,14 @@ class IPMISource(AgentSource):
             fetcher_type=FetcherType.IPMI,
             description=IPMISource._make_description(
                 ipaddress,
-                cast(IPMICredentials,
-                     HostConfig.make_host_config(hostname).management_credentials),
+                cast(IPMICredentials, HostConfig.make_host_config(hostname).management_credentials),
             ),
             id_="mgmt_ipmi",
             main_data_source=False,
         )
         self.credentials: Final[IPMICredentials] = self.get_ipmi_credentials(
-            HostConfig.make_host_config(hostname))
+            HostConfig.make_host_config(hostname)
+        )
 
     @staticmethod
     def get_ipmi_credentials(host_config: HostConfig) -> IPMICredentials:

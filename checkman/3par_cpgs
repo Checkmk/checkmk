@@ -15,5 +15,5 @@ description:
 item:
  Name of the {{CPG}} (Common Provisioning Group).
 
-inventory:
+discovery:
  One service is created for each CPG Member.

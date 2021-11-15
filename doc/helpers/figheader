@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 
 
 def create_output(args):
@@ -39,15 +39,17 @@ def create_output(args):
         last_line = "#."
 
     width = 76
-    sepmid = sep + '-' * (width - len(sep) - 1) + '+'
+    sepmid = sep + "-" * (width - len(sep) - 1) + "+"
     title = " ".join(args.title)
     first_line = first + "-" + title
 
-    output = [first_line + '-' * (width - len(first_line) - 1) + '.']
-    proc = subprocess.Popen(["figlet", "-c", "-w", "%s" % (width - 7), title],
-                            shell=False,
-                            stdout=subprocess.PIPE,
-                            encoding="utf-8")
+    output = [first_line + "-" * (width - len(first_line) - 1) + "."]
+    proc = subprocess.Popen(
+        ["figlet", "-c", "-w", "%s" % (width - 7), title],
+        shell=False,
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    )
     if proc.stdout is None:
         raise Exception("Huh? stdout vanished...")
     for line in proc.stdout:
@@ -57,20 +59,21 @@ def create_output(args):
         output.append(sepmid)
         output.append(cont + "|" + " " * (width - len(cont) - 2) + "|")
 
-    output.append(last + '-' * (width - len(last) - len(end)) + end)
+    output.append(last + "-" * (width - len(last) - len(end)) + end)
     if last_line:
         output.append(last_line)
     return output
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument("--css", action="store_true", help="CSS header")
     parser.add_argument("--cpp", action="store_true", help="C++ header")
     parser.add_argument("--js", action="store_true", help="JS header")
     parser.add_argument("--no-subtitle", action="store_true", help="No subtitle line")
-    parser.add_argument("title", nargs='+', help="Title")
+    parser.add_argument("title", nargs="+", help="Title")
     return parser.parse_args(argv)
 
 

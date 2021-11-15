@@ -4,76 +4,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#
 
-datapower_fan_ids = {
-    "1": "CPU 1",
-    "2": "CPU 2",
-    "3": "Chassis 1",
-    "4": "Chassis 2",
-    "5": "Chassis 3",
-    "6": "Chassis 4",
-    "7": "Chassis 5",
-    "8": "Chassis 6",
-    "9": "Chassis 7",
-    "10": "Chassis 8",
-    "11": "Tray 1 Fan 1",
-    "12": "Tray 1 Fan 2",
-    "13": "Tray 1 Fan 3",
-    "14": "Tray 1 Fan 4",
-    "15": "Tray 2 Fan 1",
-    "16": "Tray 2 Fan 2",
-    "17": "Tray 2 Fan 3",
-    "18": "Tray 2 Fan 4",
-    "19": "Tray 3 Fan 1",
-    "20": "Tray 3 Fan 2",
-    "21": "Tray 3 Fan 3",
-    "22": "Tray 3 Fan 4",
-    "23": "Hard Disk Tray Fan 1",
-    "24": "Hard Disk Tray Fan 2",
+def inventory_datapower_fan(section):
+    yield from (
+        (
+            fan_name,
+            None,
+        )
+        for fan_name in section
+    )
+
+
+_FAN_STATE_TO_MON_STATE = {
+    "1": 2,
+    "2": 2,
+    "3": 1,
+    "4": 0,
+    "5": 1,
+    "6": 2,
+    "7": 2,
+    "8": 2,
+    "9": 2,
+    "10": 1,
 }
 
 
-def inventory_datapower_fan(info):
-    for fan_id, _speed, _status in info:
-        yield datapower_fan_ids[fan_id], None
-
-
-def check_datapower_fan(item, _no_params, info):
-    datapower_fan_status = {
-        "1": (2, "reached lower non-recoverable limit: "),
-        "2": (2, "reached lower critical limit: "),
-        "3": (1, "reached lower non-critical limit: "),
-        "4": (0, ""),  # OK
-        "5": (1, "reached upper non-critical limit: "),
-        "6": (2, "reached upper critical limit: "),
-        "7": (2, "reached upper non-recoverable limit: "),
-        "8": (2, "failure, "),
-        "9": (2, "no reading, "),
-        "10": (1, "invalid, "),
-    }
-    for fan_id, speed, status in info:
-        if item == datapower_fan_ids[fan_id]:
-            state, state_txt = datapower_fan_status[status]
-            infotext = "%s%s rpm" % (state_txt, speed)
-            return state, infotext
+def check_datapower_fan(item, _no_params, section):
+    if not (fan := section.get(item)):
+        return
+    return (
+        _FAN_STATE_TO_MON_STATE[fan.state],
+        f"{fan.state_txt}, {fan.speed} rpm",
+    )
 
 
 check_info["datapower_fan"] = {
     "inventory_function": inventory_datapower_fan,
     "check_function": check_datapower_fan,
     "service_description": "Fan %s",
-    "snmp_info": (
-        ".1.3.6.1.4.1.14685.3.1.97.1",
-        [
-            1,  # dpStatusEnvironmentalFanSensorsFanID
-            2,  # dpStatusEnvironmentalFanSensorsFanSpeed
-            4,  # dpStatusEnvironmentalFanSensorsReadingStatus
-        ]),
-    "snmp_scan_function": scan_datapower,
 }

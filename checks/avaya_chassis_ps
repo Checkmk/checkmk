@@ -30,14 +30,12 @@ def check_avaya_chassis_ps(item, _no_params, info):
 
 
 check_info["avaya_chassis_ps"] = {
-    'check_function': check_avaya_chassis_ps,
-    'inventory_function': inventory_avaya_chassis_ps,
-    'service_description': 'Power Supply %s',
-    'snmp_info': (
+    "check_function": check_avaya_chassis_ps,
+    "inventory_function": inventory_avaya_chassis_ps,
+    "service_description": "Power Supply %s",
+    "snmp_info": (
         ".1.3.6.1.4.1.2272.1.4.8.1.1",
-        [
-            1,  # rcChasPowerSupplyId
-            2
-        ]),  # rcChasPowerSupplyOperStatus
-    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
+        [1, 2],  # rcChasPowerSupplyId
+    ),  # rcChasPowerSupplyOperStatus
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2272" in oid(".1.3.6.1.2.1.1.2.0"),
 }

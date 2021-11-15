@@ -4,16 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_registry,
-)
+
+GlobalSettings = Dict[str, Any]
 
 
-def load_configuration_settings(site_specific=False, custom_site_path=None, full_config=False):
+def load_configuration_settings(
+    site_specific: bool = False, custom_site_path: Optional[str] = None, full_config: bool = False
+) -> GlobalSettings:
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
@@ -43,9 +44,9 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
     # Some settings are handed over from the central site but are not registered in the
     # configuration domains since the user must not change it directly.
     for varname in [
-            "wato_enabled",
-            "userdb_automatic_sync",
-            "user_login",
+        "wato_enabled",
+        "userdb_automatic_sync",
+        "user_login",
     ]:
         if varname in vars_:
             per_domain.setdefault(ConfigDomainGUI.ident(), {})[varname] = vars_[varname]
@@ -58,9 +59,11 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
             domain().save(domain_config, custom_site_path=custom_site_path)
 
 
-def load_site_global_settings(custom_site_path=None):
+def load_site_global_settings(custom_site_path: Optional[str] = None) -> GlobalSettings:
     return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
 
 
-def save_site_global_settings(settings, custom_site_path=None):
+def save_site_global_settings(
+    settings: GlobalSettings, custom_site_path: Optional[str] = None
+) -> None:
     save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)

@@ -10,10 +10,11 @@ configuration.
 """
 
 import copy
-from enum import Enum
 import logging
 import os
 import pprint
+from enum import Enum
+from pathlib import Path
 from typing import (
     AbstractSet,
     Any,
@@ -29,9 +30,6 @@ from typing import (
     Tuple,
     Union,
 )
-from pathlib import Path
-
-from six import ensure_str
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -40,7 +38,8 @@ from cmk.utils.exceptions import MKException
 
 from .config import ConfigFromWATO
 from .defaults import default_config, default_rule_pack
-from .settings import Settings, settings as create_settings
+from .settings import Settings
+from .settings import settings as create_settings
 
 ECRuleSpec = Dict[str, Any]
 ECRulePackSpec = Dict[str, Any]  # TODO: improve this type
@@ -60,6 +59,7 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
     A newly created instance is not yet connected to a specific rule pack.
     This is achieved via the method bind_to.
     """
+
     def __init__(self, rule_pack_id: str) -> None:
         super().__init__()
         # Ideally the 'id_' would not be necessary and the proxy object would
@@ -104,9 +104,10 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
 
     def bind_to(self, mkp_rule_pack: ECRulePackSpec) -> None:
         """Binds this rule pack to the given MKP rule pack"""
-        if self.id_ != mkp_rule_pack['id']:
-            raise MkpRulePackBindingError('The IDs of %s and %s cannot be different.' %
-                                          (self, mkp_rule_pack))
+        if self.id_ != mkp_rule_pack["id"]:
+            raise MkpRulePackBindingError(
+                "The IDs of %s and %s cannot be different." % (self, mkp_rule_pack)
+            )
 
         self.rule_pack = mkp_rule_pack
 
@@ -131,18 +132,19 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
     To get the type of a rule pack for an existing rule pack ID to
     MKP mapping the static method type_of can be used.
     """
-    internal = 'internal'
-    exported = 'exported'
-    unmodified_mkp = 'unmodified, packaged'
-    modified_mkp = 'modified, packaged'
+
+    internal = "internal"
+    exported = "exported"
+    unmodified_mkp = "unmodified, packaged"
+    modified_mkp = "modified, packaged"
 
     @staticmethod
-    def type_of(rule_pack: ECRulePack, id_to_mkp: Dict[Any, Any]) -> 'RulePackType':
+    def type_of(rule_pack: ECRulePack, id_to_mkp: Dict[Any, Any]) -> "RulePackType":
         """
         Returns the type of rule pack for a given rule pack ID to MKP mapping.
         """
         is_proxy = isinstance(rule_pack, MkpRulePackProxy)
-        is_packaged = id_to_mkp.get(rule_pack.get('id')) is not None
+        is_packaged = id_to_mkp.get(rule_pack.get("id")) is not None
 
         if not is_proxy and not is_packaged:
             return RulePackType.internal
@@ -155,8 +157,9 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 
 def _default_settings() -> Settings:
     """Returns default EC settings. This function should vanish in the long run!"""
-    return create_settings('', Path(cmk.utils.paths.omd_root),
-                           Path(cmk.utils.paths.default_config_dir), [''])
+    return create_settings(
+        "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
+    )
 
 
 def rule_pack_dir() -> Path:
@@ -182,8 +185,9 @@ def remove_exported_rule_pack(id_: str) -> None:
     export_file.unlink()
 
 
-def _bind_to_rule_pack_proxies(rule_packs: Iterable[Any], mkp_rule_packs: Mapping[Any,
-                                                                                  Any]) -> None:
+def _bind_to_rule_pack_proxies(
+    rule_packs: Iterable[Any], mkp_rule_packs: Mapping[Any, Any]
+) -> None:
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
@@ -193,8 +197,9 @@ def _bind_to_rule_pack_proxies(rule_packs: Iterable[Any], mkp_rule_packs: Mappin
             if isinstance(rule_pack, MkpRulePackProxy):
                 rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
         except KeyError:
-            raise MkpRulePackBindingError('Exported rule pack with ID "%s" not found.' %
-                                          rule_pack.id_)
+            raise MkpRulePackBindingError(
+                'Exported rule pack with ID "%s" not found.' % rule_pack.id_
+            )
 
 
 def load_config(settings: Settings) -> ConfigFromWATO:
@@ -202,13 +207,14 @@ def load_config(settings: Settings) -> ConfigFromWATO:
     # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the two casts below.
     global_context = cast(Dict[str, Any], default_config())
     global_context["MkpRulePackProxy"] = MkpRulePackProxy
-    for path in [settings.paths.main_config_file.value] + \
-            sorted(settings.paths.config_dir.value.glob('**/*.mk')):
+    for path in [settings.paths.main_config_file.value] + sorted(
+        settings.paths.config_dir.value.glob("**/*.mk")
+    ):
         with open(str(path), mode="rb") as file_object:
             exec(file_object.read(), global_context)  # pylint: disable=exec-used
     global_context.pop("MkpRulePackProxy", None)
     config = cast(ConfigFromWATO, global_context)
-    _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
+    _bind_to_rule_pack_proxies(config["rule_packs"], config["mkp_rule_packs"])
 
     # Convert livetime fields in rules into new format
     for rule in config["rules"]:
@@ -246,7 +252,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:
             "cmk.mkeventd.EventServer": level,
             "cmk.mkeventd.EventStatus": level,
             "cmk.mkeventd.StatusServer": level,
-            "cmk.mkeventd.lock": level
+            "cmk.mkeventd.lock": level,
         }
     if "cmk.mkeventd.lock" not in levels:
         levels["cmk.mkeventd.lock"] = levels["cmk.mkeventd"]
@@ -255,8 +261,11 @@ def load_config(settings: Settings) -> ConfigFromWATO:
     # TODO: Move this up to avoid the need for casting?
     # Convert pre 1.4 hostname translation config
     translation = config["hostname_translation"]
-    if isinstance(translation.get('regex'), tuple):
-        translation["regex"] = [cast(Tuple[str, str], translation.get('regex'))]
+    if isinstance(translation.get("regex"), tuple):
+        translation["regex"] = [cast(Tuple[str, str], translation.get("regex"))]
+
+    if config.get("translate_snmptraps") is True:  # type: ignore[comparison-overlap]
+        config["translate_snmptraps"] = (True, {})  # convert from pre-1.6.0 format
 
     return config
 
@@ -267,9 +276,9 @@ def load_rule_packs() -> Sequence[ECRulePackSpec]:
     return load_config(_default_settings())["rule_packs"]
 
 
-def save_rule_packs(rule_packs: Iterable[ECRulePack],
-                    pretty_print: bool = False,
-                    dir_: Optional[Path] = None) -> None:
+def save_rule_packs(
+    rule_packs: Iterable[ECRulePack], pretty_print: bool = False, dir_: Optional[Path] = None
+) -> None:
     """Saves the given rule packs to rules.mk. By default they are saved to the
     default directory for rule packs. If dir_ is given it is used instead of
     the default."""
@@ -285,15 +294,15 @@ def save_rule_packs(rule_packs: Iterable[ECRulePack],
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / "rules.mk", ensure_str(output))
+    store.save_text_to_file(dir_ / "rules.mk", output)
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
 # save_rule_packs(), otherwise there is a race condition when the EC
 # recursively reads all *.mk files!
-def export_rule_pack(rule_pack: ECRulePack,
-                     pretty_print: bool = False,
-                     dir_: Optional[Path] = None) -> None:
+def export_rule_pack(
+    rule_pack: ECRulePack, pretty_print: bool = False, dir_: Optional[Path] = None
+) -> None:
     """
     Export the representation of a rule pack (i.e. a dict) to a .mk
     file accessible by the WATO module Extension Packages. In case
@@ -310,17 +319,15 @@ def export_rule_pack(rule_pack: ECRulePack,
             raise MkpRulePackBindingError("Proxy is not bound")
         rule_pack = rule_pack.rule_pack
 
-    repr_ = (pprint.pformat(rule_pack) if pretty_print else repr(rule_pack))
-    output = ("# Written by WATO\n"
-              "# encoding: utf-8\n"
-              "\n"
-              "mkp_rule_packs['%s'] = \\\n"
-              "%s\n") % (rule_pack['id'], repr_)
+    repr_ = pprint.pformat(rule_pack) if pretty_print else repr(rule_pack)
+    output = (
+        "# Written by WATO\n" "# encoding: utf-8\n" "\n" "mkp_rule_packs['%s'] = \\\n" "%s\n"
+    ) % (rule_pack["id"], repr_)
 
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / ("%s.mk" % rule_pack['id']), str(output))
+    store.save_text_to_file(dir_ / ("%s.mk" % rule_pack["id"]), str(output))
 
 
 def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
@@ -331,7 +338,7 @@ def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
     """
     rule_packs: List[ECRulePack] = []
     rule_packs += load_rule_packs()
-    rule_pack_ids = {rp['id']: i for i, rp in enumerate(rule_packs)}
+    rule_pack_ids = {rp["id"]: i for i, rp in enumerate(rule_packs)}
     ids = [os.path.splitext(fn)[0] for fn in file_names]
     for id_ in ids:
         index = rule_pack_ids.get(id_)
@@ -348,8 +355,10 @@ def override_rule_pack_proxy(rule_pack_nr: str, rule_packs: Dict[str, Any]) -> N
     """
     proxy = rule_packs[rule_pack_nr]
     if not isinstance(proxy, MkpRulePackProxy):
-        raise TypeError('Expected an instance of %s got %s' %
-                        (MkpRulePackProxy.__name__, proxy.__class__.__name__))
+        raise TypeError(
+            "Expected an instance of %s got %s"
+            % (MkpRulePackProxy.__name__, proxy.__class__.__name__)
+        )
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 
@@ -369,7 +378,7 @@ def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
 
     rule_packs: List[ECRulePack] = []
     rule_packs += load_rule_packs()
-    rule_pack_ids = [rp['id'] for rp in rule_packs]
+    rule_pack_ids = [rp["id"] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 
     save = False

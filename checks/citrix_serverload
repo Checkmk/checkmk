@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#<<<citrix_serverload>>>
-#100
+# <<<citrix_serverload>>>
+# 100
 
 citrix_serverload_default_levels = (8500, 9500)
 
 
 def inventory_citrix_serverload(info):
-    return [(None, 'citrix_serverload_default_levels')]
+    return [(None, "citrix_serverload_default_levels")]
 
 
 def check_citrix_serverload(_no_item, params, info):
@@ -30,7 +30,7 @@ def check_citrix_serverload(_no_item, params, info):
         state = 2
     elif load >= warn:
         state = 1
-    yield state, "Current Citrix Load is: %.2f%%" % (load / 100.0), [('perf', load, warn, crit)]
+    yield state, "Current Citrix Load is: %.2f%%" % (load / 100.0), [("perf", load, warn, crit)]
 
 
 check_info["citrix_serverload"] = {

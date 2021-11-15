@@ -9,7 +9,7 @@ description:
  It evaluates the rate of cache misses and the percentage of
  cache hits.
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

@@ -40,6 +40,13 @@ do_query() {
 
 }
 
+if [ ! -f "${MK_CONFDIR}/mysql.local.cfg" ]; then
+    cat <<EOF > "${MK_CONFDIR}/mysql.local.cfg"
+# This file is created because some versions of mysqladmin
+# issue a warning if there are missing includes.
+EOF
+fi
+
 if type mysqladmin >/dev/null
 then
   mysql_sockets=$(fgrep -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')

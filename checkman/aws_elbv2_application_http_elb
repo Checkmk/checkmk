@@ -13,5 +13,5 @@ description:
 
  No default levels are set, but upper levels can be configured.
 
-inventory:
+discovery:
  One service is created if the required metric RequestCount is given.

@@ -4,24 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from enum import auto, Enum
 from typing import NamedTuple
-from enum import Enum, auto
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-from cmk.base.plugins.agent_based.utils.df import DfBlock
+from cmk.base.check_legacy_includes.size_trend import size_trend
+from cmk.base.plugins.agent_based.utils.df import df_discovery, DfBlock
 
 inventory_df_rules = []
-inventory_df_exclude_fs = ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660']
+inventory_df_exclude_fs = ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]
 
 
 def _filter_df_blocks(df_blocks, inventory_options):
@@ -32,7 +27,7 @@ def _filter_df_blocks(df_blocks, inventory_options):
         if df_block.mountpoint in inventory_df_exclude_mountpoints:
             continue
 
-        if df_block.mountpoint.startswith('/var/lib/docker/'):
+        if df_block.mountpoint.startswith("/var/lib/docker/"):
             # Always exclude filesystems below dockers local storage area
             # and also exclude docker mounts in containers which are reported
             # by the agent when the agent is executed in the container context
@@ -165,7 +160,7 @@ def inventory_df(parsed):
     #      df_inventory should also return a list of DfBlocks or similar.
     mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
 
-    for mountpoint, params in df_inventory(mplist):
+    for mountpoint, params in df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist):
         df_block = mp_to_df_block.get(mountpoint)
         if "patterns" in params:
             # Add the grouping_behaviour info to the discovered parameters of this service. With this information
@@ -192,10 +187,12 @@ def _get_mountpoint_from_item(item, params, df_blocks):
         _prepare_item_name(df_block, ItemBehaviour.volume_name): df_block.mountpoint
         for df_block in df_blocks
     }
-    item_to_mp.update({
-        _prepare_item_name(df_block, ItemBehaviour.uuid): df_block.mountpoint
-        for df_block in df_blocks
-    })
+    item_to_mp.update(
+        {
+            _prepare_item_name(df_block, ItemBehaviour.uuid): df_block.mountpoint
+            for df_block in df_blocks
+        }
+    )
 
     if "patterns" in params or item in [df_block.mountpoint for df_block in df_blocks]:
         return item
@@ -215,16 +212,28 @@ def check_df(item, params, parsed):
 
     item = _get_mountpoint_from_item(item, params, df_blocks)
 
-    raw_df_blocks = [(_prepare_item_name(df_block, item_and_grouping.for_all), df_block.size_mb,
-                      df_block.avail_mb, df_block.reserved_mb) for df_block in df_blocks]
-    raw_df_inodes = [(_prepare_item_name(df_inode,
-                                         item_and_grouping.for_all), df_inode.total, df_inode.avail)
-                     for df_inode in df_inodes]
+    raw_df_blocks = [
+        (
+            _prepare_item_name(df_block, item_and_grouping.for_all),
+            df_block.size_mb,
+            df_block.avail_mb,
+            df_block.reserved_mb,
+        )
+        for df_block in df_blocks
+    ]
+    raw_df_inodes = [
+        (_prepare_item_name(df_inode, item_and_grouping.for_all), df_inode.total, df_inode.avail)
+        for df_inode in df_inodes
+    ]
 
-    return df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)
+    if params.get("show_volume_name"):
+        volume_name = [d.device for d in df_blocks if d.mountpoint == item][0]
+        yield 0, f"[{volume_name}]"
+
+    yield from df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)
 
 
-check_info['df'] = {
+check_info["df"] = {
     "inventory_function": inventory_df,
     "check_function": check_df,
     "service_description": "Filesystem %s",

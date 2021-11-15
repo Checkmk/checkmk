@@ -4,18 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Mapping,
-)
-from .agent_based_api.v1 import (
-    Metric,
-    register,
-    Result,
-    Service,
-    State as state,
-    type_defs,
-)
+from typing import Dict, Mapping
+
+from .agent_based_api.v1 import Metric, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 
 Section = Dict[str, Dict[str, Mapping[str, int]]]
 
@@ -50,7 +43,7 @@ def parse_site_object_counts(string_table: type_defs.StringTable) -> Section:
 
 
 register.agent_section(
-    name='site_object_counts',
+    name="site_object_counts",
     parse_function=parse_site_object_counts,
 )
 
@@ -96,11 +89,13 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
 
 
 def cluster_check_site_object_counts(section: Mapping[str, Section]) -> type_defs.CheckResult:
-    yield from check_site_object_counts({
-        "%s/%s" % (site_name, node_name): site_counts
-        for node_name, node_section in section.items()
-        for site_name, site_counts in node_section.items()
-    })
+    yield from check_site_object_counts(
+        {
+            "%s/%s" % (site_name, node_name): site_counts
+            for node_name, node_section in section.items()
+            for site_name, site_counts in node_section.items()
+        }
+    )
 
 
 register.check_plugin(

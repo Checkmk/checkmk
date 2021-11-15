@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import abstractmethod
-from typing import Dict, Iterator, Mapping, TypeVar, Type
+from typing import Dict, Iterator, Mapping, Type, TypeVar
 
-_VT = TypeVar('_VT')
+_VT = TypeVar("_VT")
 
 # TODO: Refactor all plugins to one way of telling the registry it's name.
 #       for example let all use a static/class method .name().
@@ -42,6 +42,7 @@ class Registry(Mapping[str, _VT]):
         >>> assert my_registry['my_a'] == my_a
 
     """
+
     def __init__(self) -> None:
         super().__init__()
         self._entries: Dict[str, _VT] = {}

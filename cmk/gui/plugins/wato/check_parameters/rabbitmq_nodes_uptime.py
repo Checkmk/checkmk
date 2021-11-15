@@ -5,36 +5,39 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    TextInput,
-    Tuple,
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
-
-from cmk.gui.plugins.wato import (CheckParameterRulespecWithItem, rulespec_registry,
-                                  RulespecGroupCheckParametersApplications)
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _parameter_valuespec_rabbitmq_nodes_uptime():
-    return Dictionary(elements=[
-        ("min",
-         Tuple(
-             title=_("Minimum required uptime"),
-             elements=[
-                 Age(title=_("Warning if below")),
-                 Age(title=_("Critical if below")),
-             ],
-         )),
-        ("max",
-         Tuple(
-             title=_("Maximum allowed uptime"),
-             elements=[
-                 Age(title=_("Warning at")),
-                 Age(title=_("Critical at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "min",
+                Tuple(
+                    title=_("Minimum required uptime"),
+                    elements=[
+                        Age(title=_("Warning if below")),
+                        Age(title=_("Critical if below")),
+                    ],
+                ),
+            ),
+            (
+                "max",
+                Tuple(
+                    title=_("Maximum allowed uptime"),
+                    elements=[
+                        Age(title=_("Warning at")),
+                        Age(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -45,4 +48,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_rabbitmq_nodes_uptime,
         title=lambda: _("RabbitMQ nodes uptime"),
-    ))
+    )
+)

@@ -13,7 +13,7 @@
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
+#include <type_traits>
 
 #include "Aggregator.h"
 #include "AndingFilter.h"
@@ -77,8 +77,6 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _show_column_headers(true)
     , _output_format(OutputFormat::broken_csv)
     , _limit(-1)
-    , _time_limit(-1)
-    , _time_limit_timeout(0)
     , _current_line(0)
     , _timezone_offset(0)
     , _logger(logger) {
@@ -256,10 +254,6 @@ void Query::parseStatsNegateLine(char *line) {
 }
 
 namespace {
-// NOTE: The suppressions below are necessary because cppcheck doesn't seem to
-// understand default member initialization yet. :-/
-
-// cppcheck-suppress noConstructor
 class SumAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += value; }
@@ -269,7 +263,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class MinAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -288,7 +281,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class MaxAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -307,7 +299,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class AvgAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -322,7 +313,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class StdAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -342,7 +332,6 @@ private:
     double sum_of_squares_{0};
 };
 
-// cppcheck-suppress noConstructor
 class SumInvAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += 1.0 / value; }
@@ -352,7 +341,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class AvgInvAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -409,7 +397,7 @@ void Query::parseFilterLine(char *line, FilterStack &filters) {
     _all_columns.insert(column);
 }
 
-void Query::parseAuthUserHeader(char *line) {
+void Query::parseAuthUserHeader(const char *line) {
     // TODO(sp): Remove ugly cast.
     _auth_user =
         reinterpret_cast<const contact *>(_table.core()->find_contact(line));
@@ -426,7 +414,7 @@ void Query::parseStatsGroupLine(char *line) {
     parseColumnsLine(line);
 }
 
-void Query::parseColumnsLine(char *line) {
+void Query::parseColumnsLine(const char *line) {
     std::string str = line;
     std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
@@ -475,7 +463,7 @@ const std::map<std::string, OutputFormat> formats{
     {"python3", OutputFormat::python3}};
 }  // namespace
 
-void Query::parseOutputFormatLine(char *line) {
+void Query::parseOutputFormatLine(const char *line) {
     auto format_and_rest = mk::nextField(line);
     auto it = formats.find(format_and_rest.first);
     if (it == formats.end()) {
@@ -531,8 +519,8 @@ void Query::parseLimitLine(char *line) {
 }
 
 void Query::parseTimelimitLine(char *line) {
-    _time_limit = nextNonNegativeIntegerArgument(&line);
-    _time_limit_timeout = time(nullptr) + _time_limit;
+    auto duration = std::chrono::seconds{nextNonNegativeIntegerArgument(&line)};
+    _time_limit = {duration, std::chrono::steady_clock::now() + duration};
 }
 
 void Query::parseWaitTimeoutLine(char *line) {
@@ -544,7 +532,7 @@ void Query::parseWaitTriggerLine(char *line) {
     _wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
-void Query::parseWaitObjectLine(char *line) {
+void Query::parseWaitObjectLine(const char *line) {
     auto primary_key = mk::lstrip(line);
     _wait_object = _table.get(primary_key);
     if (_wait_object.isNull()) {
@@ -565,18 +553,16 @@ void Query::parseLocaltimeLine(char *line) {
     // different time zones. This would be a one-liner if we already had C++17's
     // std::chrono::round().
     using half_an_hour = std::chrono::duration<double, std::ratio<1800>>;
-    auto hah = std::chrono::duration_cast<half_an_hour>(diff);
-    auto rounded = half_an_hour(round(hah.count()));
+    auto rounded = half_an_hour(round(mk::ticks<half_an_hour>(diff)));
     auto offset = std::chrono::duration_cast<std::chrono::seconds>(rounded);
-    if (offset <= std::chrono::hours(-24) || offset >= std::chrono::hours(24)) {
+    if (std::chrono::abs(offset) >= 24h) {
         throw std::runtime_error(
             "timezone difference greater than or equal to 24 hours");
     }
 
     if (offset != 0s) {
         using hour = std::chrono::duration<double, std::ratio<3600>>;
-        Debug(_logger) << "timezone offset is "
-                       << std::chrono::duration_cast<hour>(offset).count()
+        Debug(_logger) << "timezone offset is " << mk::ticks<hour>(offset)
                        << "h";
     }
     _timezone_offset = offset;
@@ -593,14 +579,13 @@ bool Query::process() {
     doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     // TODO(sp) The construct below is horrible, refactor this!
-    // cppcheck-suppress danglingLifetime
     _renderer_query = &q;
     start(q);
     _table.answerQuery(this);
     finish(q);
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+    auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
-    Informational(_logger) << "processed request in " << elapsed.count()
+    Informational(_logger) << "processed request in " << elapsed_ms
                            << " ms, replied with " << _output.os().tellp()
                            << " bytes";
     return _keepalive;
@@ -624,11 +609,16 @@ void Query::start(QueryRenderer &q) {
 }
 
 bool Query::timelimitReached() const {
-    if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
-        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
-                         "Maximum query time of " +
-                             std::to_string(_time_limit) +
-                             " seconds exceeded!");
+    if (!_time_limit) {
+        return false;
+    }
+    const auto &[duration, timeout] = *_time_limit;
+    if (std::chrono::steady_clock::now() >= timeout) {
+        _output.setError(
+            OutputBuffer::ResponseCode::payload_too_large,
+            "Maximum query time of " +
+                std::to_string(mk::ticks<std::chrono::seconds>(duration)) +
+                " seconds exceeded!");
         return true;
     }
     return false;

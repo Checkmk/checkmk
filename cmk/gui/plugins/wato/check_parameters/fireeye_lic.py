@@ -5,31 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_fireeye_lic():
-    return Dictionary(elements=[(
-        "days",
-        Tuple(
-            title=_("Levels for Fireeye License Expiration"),
-            elements=[
-                Integer(title="Warning at", default_value=90, unit="days"),
-                Integer(title="Critical at", default_value=120, unit="days"),
-            ],
-        ),
-    )],)
+    return Dictionary(
+        elements=[
+            (
+                "days",
+                Tuple(
+                    title=_("Levels for Fireeye License Expiration"),
+                    elements=[
+                        Integer(title="Warning at", default_value=90, unit="days"),
+                        Integer(title="Critical at", default_value=120, unit="days"),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -40,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_lic,
         title=lambda: _("Fireeye Licenses"),
-    ))
+    )
+)

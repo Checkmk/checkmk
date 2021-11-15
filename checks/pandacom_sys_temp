@@ -9,14 +9,16 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.pandacom_temp import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.3652.3.1.1.6.0 27
 
-factory_settings['pandacom_temp_default_levels'] = PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS
+factory_settings["pandacom_temp_default_levels"] = PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS
 
 
 def inventory_pandacom_sys_temp(info):
@@ -27,13 +29,13 @@ def check_pandacom_sys_temp(item, params, info):
     return check_temperature(int(info[0][0]), params, "pandacom_sys_%s" % item)
 
 
-check_info['pandacom_sys_temp'] = {
-    'inventory_function': inventory_pandacom_sys_temp,
-    'check_function': check_pandacom_sys_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'snmp_info': (".1.3.6.1.4.1.3652.3.1.1.6", [""]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
-    'default_levels_variable': "pandacom_temp_default_levels",
-    'group': 'temperature',
+check_info["pandacom_sys_temp"] = {
+    "inventory_function": inventory_pandacom_sys_temp,
+    "check_function": check_pandacom_sys_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.3652.3.1.1.6", [""]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
+    "default_levels_variable": "pandacom_temp_default_levels",
+    "group": "temperature",
 }

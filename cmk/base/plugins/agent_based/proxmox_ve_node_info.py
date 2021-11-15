@@ -3,16 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping
 import json
+from typing import Any, Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    register,
-    Result,
-    Service,
-    State,
-)
-
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -62,19 +56,24 @@ def check_proxmox_ve_node_info(params: Mapping[str, Any], section: Section) -> C
     req_subs_status = (params.get("required_subscription_status") or "").lower()
     yield Result(
         state=State.OK if not req_node_status or node_status == req_node_status else State.WARN,
-        summary=(f"Status: {node_status}"
-                 f"{req_node_status and f' (required: {req_node_status})'}"),
+        summary=(
+            f"Status: {node_status}" f"{req_node_status and f' (required: {req_node_status})'}"
+        ),
     )
     yield Result(
         state=State.OK if not req_subs_status or subs_status == req_subs_status else State.WARN,
-        summary=(f"Subscription: {subs_status}"
-                 f"{req_subs_status and f' (required: {req_subs_status})'}"),
+        summary=(
+            f"Subscription: {subs_status}"
+            f"{req_subs_status and f' (required: {req_subs_status})'}"
+        ),
     )
     yield Result(state=State.OK, summary=f"Version: {proxmox_ve_version}")
     yield Result(
         state=State.OK,
-        summary=(f"Hosted VMs: {len(section.get('lxc', []))}x LXC,"
-                 f" {len(section.get('qemu', []))}x Qemu"),
+        summary=(
+            f"Hosted VMs: {len(section.get('lxc', []))}x LXC,"
+            f" {len(section.get('qemu', []))}x Qemu"
+        ),
     )
 
 

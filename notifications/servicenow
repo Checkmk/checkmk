@@ -10,7 +10,9 @@
 import sys
 
 try:
-    from cmk.cee.notification_plugins import servicenow  # pylint: disable=cmk-module-layer-violation
+    from cmk.cee.notification_plugins import (
+        servicenow,  # pylint: disable=cmk-module-layer-violation
+    )
 except ImportError:
     sys.stderr.write("ServiceNow notification script is only available with CEE / CME\n")
     sys.exit(1)

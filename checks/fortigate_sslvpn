@@ -13,7 +13,7 @@ def parse_fortigate_sslvpn(info):
             "users": int(domain_info[1]),
             "web_sessions": int(domain_info[2]),
             "tunnels": int(domain_info[3]),
-            "tunnels_max": int(domain_info[4])
+            "tunnels_max": int(domain_info[4]),
         }
     return parsed
 
@@ -26,17 +26,17 @@ def check_fortigate_sslvpn(_item, params, data):
     fn_bool_state = {"1": "disabled", "2": "enabled"}
     yield 0, "%s" % fn_bool_state[data["state"]]
 
-    yield check_levels(data["users"],
-                       "active_vpn_users",
-                       None,
-                       infoname="Users",
-                       human_readable_func=str)
+    yield check_levels(
+        data["users"], "active_vpn_users", None, infoname="Users", human_readable_func=str
+    )
 
-    yield check_levels(data["web_sessions"],
-                       "active_vpn_websessions",
-                       None,
-                       infoname="Web sessions",
-                       human_readable_func=str)
+    yield check_levels(
+        data["web_sessions"],
+        "active_vpn_websessions",
+        None,
+        infoname="Web sessions",
+        human_readable_func=str,
+    )
 
     yield check_levels(
         data["tunnels"],
@@ -66,6 +66,7 @@ check_info["fortigate_sslvpn"] = {
                 4,  # fgVpnSslStatsActiveWebSessions
                 6,  # fgVpnSslStatsActiveTunnels
                 7,  # fgVpnSslStatsMaxTunnels
-            ]),
-    ]
+            ],
+        ),
+    ],
 }

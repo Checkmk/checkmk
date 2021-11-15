@@ -46,8 +46,7 @@ def check_datadog_events(section: Section) -> CheckResult:
     """
     yield Result(
         state=State.OK,
-        summary=
-        f"Forwarded {section.n_events} event{'' if section.n_events == 1 else 's'} to the Event Console",
+        summary=f"Forwarded {section.n_events} event{'' if section.n_events == 1 else 's'} to the Event Console",
     )
 
 

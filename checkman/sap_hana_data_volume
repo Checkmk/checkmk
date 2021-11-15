@@ -17,7 +17,7 @@ description:
 item:
  The sid instance name followed by a {{-}} followed by the file type and the volume ID
 
-inventory:
+discovery:
  One service is created for each instance, file type and volume.
 
 cluster:

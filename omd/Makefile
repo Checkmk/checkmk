@@ -24,9 +24,10 @@ PACKAGES := \
     libgsf \
     postgresql \
     perl-modules \
-    Python3 \
+    Python \
     freetds \
     re2 \
+    protobuf \
     python3-modules \
     rrdtool \
     msitools \
@@ -35,7 +36,7 @@ PACKAGES := \
     lasso \
     mod_auth_mellon \
     mod_fcgid \
-    python3-mod_wsgi \
+    mod_wsgi \
     check_mk \
     check_mysql_health \
     check_oracle_health \
@@ -304,12 +305,7 @@ $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
-	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
-	    MIN_VERSION=1.4.0 ; \
-	else \
-	    MIN_VERSION=1.1.2 ; \
-	fi ; \
-	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
+	echo -e "MIN_VERSION=1.4.17\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
 

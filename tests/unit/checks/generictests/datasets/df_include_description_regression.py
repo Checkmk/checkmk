@@ -125,6 +125,14 @@ checks = {
     ],
 }
 
-mock_host_conf = {'': [[('myGroup', 'GROUPME')]]}  # old-style rule spec
+mock_host_conf = {
+    '': [{
+        "groups": [{
+            'group_name': 'myGroup',
+            'patterns_include': ['GROUPME'],
+            'patterns_exclude': []
+        }]
+    }]
+}  # new-style rule spec, old ones are always transformed now
 
 mock_host_conf_merged = {'': {"item_appearance": "volume_name_and_mountpoint",}}

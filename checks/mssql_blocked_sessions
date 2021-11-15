@@ -24,16 +24,17 @@
 # <<<mssql_blocked_sessions:sept(124)>>>
 # INST_ID1|No blocking sessions
 
-factory_settings['mssql_blocked_sessions_default_levels'] = {
-    'state': 2,
+factory_settings["mssql_blocked_sessions_default_levels"] = {
+    "state": 2,
 }
 
-NO_BLOCKING_SESSIONS_MSG = 'No blocking sessions'
+NO_BLOCKING_SESSIONS_MSG = "No blocking sessions"
 
 
 def parse_mssql_blocked_sessions(info):
-    db_instance = collections.namedtuple(
-        "DBInstance", ["session_id", "wait_type", "blocking_session_id", "wait_duration"])
+    db_instance = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+        "DBInstance", ["session_id", "wait_type", "blocking_session_id", "wait_duration"]
+    )
     parsed = {}
     for line in info:
         if line[-1].startswith("ERROR:"):
@@ -51,7 +52,8 @@ def parse_mssql_blocked_sessions(info):
                     wait_type,
                     blocking_session_id,
                     float(wait_duration_ms) / 1000,
-                ))
+                )
+            )
         elif len(line) == 5:
             inst, session_id, wait_duration_ms, wait_type, blocking_session_id = line
             parsed.setdefault(inst, []).append(
@@ -60,7 +62,8 @@ def parse_mssql_blocked_sessions(info):
                     wait_type,
                     blocking_session_id,
                     float(wait_duration_ms) / 1000,
-                ))
+                )
+            )
 
     return parsed
 
@@ -80,7 +83,7 @@ def check_mssql_blocked_sessions(item, params, parsed):
 
     summary = {}
     details = []
-    warn, crit = params.get('waittime', (None, None))
+    warn, crit = params.get("waittime", (None, None))
     ignored_waittypes = set()
     waittypes_to_be_ignored = params.get("ignore_waittypes", [])
 
@@ -98,18 +101,30 @@ def check_mssql_blocked_sessions(item, params, parsed):
 
         summary.setdefault(db_inst.session_id, 0)
         summary[db_inst.session_id] += 1
-        details.append((state, "Session %s blocked by %s (Type: %s, Wait: %s)" % \
-                       (db_inst.session_id, db_inst.blocking_session_id, db_inst.wait_type,
-                        get_age_human_readable(db_inst.wait_duration))))
+        details.append(
+            (
+                state,
+                "Session %s blocked by %s (Type: %s, Wait: %s)"
+                % (
+                    db_inst.session_id,
+                    db_inst.blocking_session_id,
+                    db_inst.wait_type,
+                    get_age_human_readable(db_inst.wait_duration),
+                ),
+            )
+        )
 
     if summary:
-        yield params['state'], "Summary: %s" % (", ".join(
-            ["%s blocked by %s ID(s)" % (k, v) for k, v in sorted(summary.items())]))
+        yield params["state"], "Summary: %s" % (
+            ", ".join(["%s blocked by %s ID(s)" % (k, v) for k, v in sorted(summary.items())])
+        )
 
         max_state = max([state for state, _infotext in details])
         if max_state:
-            yield max_state, 'At least one session above thresholds (warn/crit at %s/%s)' % (
-                get_age_human_readable(warn), get_age_human_readable(crit))
+            yield max_state, "At least one session above thresholds (warn/crit at %s/%s)" % (
+                get_age_human_readable(warn),
+                get_age_human_readable(crit),
+            )
         for state, infotext in details:
             yield state, "\n%s" % infotext
     else:
@@ -119,11 +134,11 @@ def check_mssql_blocked_sessions(item, params, parsed):
         yield 0, "\nIgnored wait types: %s" % ", ".join(ignored_waittypes)
 
 
-check_info['mssql_blocked_sessions'] = {
-    'parse_function': parse_mssql_blocked_sessions,
-    'inventory_function': discover(),
-    'check_function': check_mssql_blocked_sessions,
-    'service_description': 'MSSQL %s Blocked Sessions',
-    'group': 'mssql_instance_blocked_sessions',
-    'default_levels_variable': 'mssql_blocked_sessions_default_levels',
+check_info["mssql_blocked_sessions"] = {
+    "parse_function": parse_mssql_blocked_sessions,
+    "inventory_function": discover(),
+    "check_function": check_mssql_blocked_sessions,
+    "service_description": "MSSQL %s Blocked Sessions",
+    "group": "mssql_instance_blocked_sessions",
+    "default_levels_variable": "mssql_blocked_sessions_default_levels",
 }

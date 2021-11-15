@@ -5,58 +5,60 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    IPv4Address,
-    ListOf,
-    MonitoringState,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, IPv4Address, ListOf, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_vpn_tunnel():
-    return Dictionary(elements=[
-        ("tunnels",
-         ListOf(
-             Tuple(
-                 title=("VPN Tunnel Endpoints"),
-                 elements=[
-                     IPv4Address(
-                         title=_("IP-Address or Name of Tunnel Endpoint"),
-                         help=_(
-                             "The configured value must match a tunnel reported by the monitored "
-                             "device."),
-                     ),
-                     TextInput(
-                         title=_("Tunnel Alias"),
-                         help=_(
-                             "You can configure an individual alias here for the tunnel matching "
-                             "the IP-Address or Name configured in the field above."),
-                     ),
-                     MonitoringState(
-                         default_value=2,
-                         title=_("State if tunnel is not found"),
-                     )
-                 ],
-             ),
-             add_label=_("Add tunnel"),
-             movable=False,
-             title=_("VPN tunnel specific configuration"),
-         )),
-        ("state",
-         MonitoringState(
-             title=_("Default state to report when tunnel can not be found anymore"),
-             help=_("Default state if a tunnel, which is not listed above in this rule, "
-                    "can no longer be found."),
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "tunnels",
+                ListOf(
+                    Tuple(
+                        title=("VPN Tunnel Endpoints"),
+                        elements=[
+                            IPv4Address(
+                                title=_("IP-Address or Name of Tunnel Endpoint"),
+                                help=_(
+                                    "The configured value must match a tunnel reported by the monitored "
+                                    "device."
+                                ),
+                            ),
+                            TextInput(
+                                title=_("Tunnel Alias"),
+                                help=_(
+                                    "You can configure an individual alias here for the tunnel matching "
+                                    "the IP-Address or Name configured in the field above."
+                                ),
+                            ),
+                            MonitoringState(
+                                default_value=2,
+                                title=_("State if tunnel is not found"),
+                            ),
+                        ],
+                    ),
+                    add_label=_("Add tunnel"),
+                    movable=False,
+                    title=_("VPN tunnel specific configuration"),
+                ),
+            ),
+            (
+                "state",
+                MonitoringState(
+                    title=_("Default state to report when tunnel can not be found anymore"),
+                    help=_(
+                        "Default state if a tunnel, which is not listed above in this rule, "
+                        "can no longer be found."
+                    ),
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -67,4 +69,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_vpn_tunnel,
         title=lambda: _("VPN Tunnel"),
-    ))
+    )
+)

@@ -1,4 +1,6 @@
-FROM centos:centos8
+ARG IMAGE_CENTOS_8
+# hadolint ignore=DL3006
+FROM ${IMAGE_CENTOS_8}
 
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -115,6 +117,13 @@ RUN yum -y makecache \
     --nogpgcheck \
     && yum clean all
 
+# Avoid the annobin chaos on CentOS 8, part 2:
+# See also: omd/omd.spec.in
+RUN if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then \
+        rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1 \
+        && touch /usr/lib/rpm/redhat/redhat-annobin-cc1; \
+    fi
+
 # Install our standard tool chain for building
 # - gnu-toolchain is needed for compiling all the C++ stuff
 # - cmake is needed for e.g. building re2
@@ -130,12 +139,14 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-cmake.sh
+RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from

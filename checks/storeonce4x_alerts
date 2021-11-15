@@ -10,12 +10,15 @@ STATUS_MAP = {"CRITICAL": 2, "WARNING": 1, "OK": 0, "UNKNOWN": 3, "DISABLED": 3}
 
 def parse_storeonce4x_alerts(info):
     return {
-        "alerts": [{
-            "cleared": alert["state"].upper() == "CLEARED",
-            "status": STATUS_MAP[alert["status"].upper()],
-            "alertState": alert["alertState"],
-            "description": alert["description"],
-        } for alert in json.loads(info[0][0])["members"]]
+        "alerts": [
+            {
+                "cleared": alert["state"].upper() == "CLEARED",
+                "status": STATUS_MAP[alert["status"].upper()],
+                "alertState": alert["alertState"],
+                "description": alert["description"],
+            }
+            for alert in json.loads(info[0][0])["members"]
+        ]
     }
 
 
@@ -28,15 +31,19 @@ def check_storeonce4x_alerts(_item, _param, parsed):
         yield 0, "No uncleared alerts found"
         return
 
-    yield from ((
-        alert["status"],
-        f"Alert State: {alert['alertState']}, Description: {alert['description']}",
-    ) for alert in parsed["alerts"] if not alert["cleared"])
+    yield from (
+        (
+            alert["status"],
+            f"Alert State: {alert['alertState']}, Description: {alert['description']}",
+        )
+        for alert in parsed["alerts"]
+        if not alert["cleared"]
+    )
 
 
 check_info["storeonce4x_alerts"] = {
-    'parse_function': parse_storeonce4x_alerts,
-    'inventory_function': discover_single,
-    'check_function': check_storeonce4x_alerts,
-    'service_description': 'Alerts',
+    "parse_function": parse_storeonce4x_alerts,
+    "inventory_function": discover_single,
+    "check_function": check_storeonce4x_alerts,
+    "service_description": "Alerts",
 }

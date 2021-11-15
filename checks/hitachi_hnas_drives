@@ -18,7 +18,7 @@ def inventory_hitachi_hnas_drives(info):
 
 def parse_hitachi_hnas_drives(info):
     parsed = {}
-    for status in info:
+    for (status,) in info:
         parsed.setdefault(status, 0)
         parsed[status] += 1
     return parsed
@@ -50,6 +50,7 @@ check_info["hitachi_hnas_drives"] = {
         ".1.3.6.1.4.1.11096.6.1.1.1.3.4.2.1",
         [
             4,  # sysDriveStatus
-        ]),
+        ],
+    ),
     "snmp_scan_function": hitachin_hnas_scan_function,
 }

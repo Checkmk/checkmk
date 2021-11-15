@@ -12,66 +12,74 @@ You can find an introduction to time periods in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/timeperiods.html).
 """
 
-import http.client
 import datetime as dt
+import http.client
 import json
-
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from marshmallow.utils import from_iso_time
 
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.utils.type_defs import TimeperiodSpec
-from cmk.gui.http import Response
-
 import cmk.utils.defines as defines
-from cmk.gui.watolib.timeperiods import save_timeperiod, load_timeperiod, load_timeperiods, save_timeperiods
+from cmk.utils.type_defs import TimeperiodSpec
+
+from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
     Endpoint,
     request_schemas,
     response_schemas,
-    constructors,
+)
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.watolib.timeperiods import (
+    load_timeperiod,
+    load_timeperiods,
+    save_timeperiod,
+    save_timeperiods,
 )
 
 TIME_RANGE = Tuple[str, str]
 
 
-@Endpoint(constructors.collection_href('time_period'),
-          'cmk/create',
-          method='post',
-          etag='output',
-          request_schema=request_schemas.InputTimePeriod,
-          response_schema=response_schemas.DomainObject)
+@Endpoint(
+    constructors.collection_href("time_period"),
+    "cmk/create",
+    method="post",
+    etag="output",
+    request_schema=request_schemas.InputTimePeriod,
+    response_schema=response_schemas.DomainObject,
+)
 def create_timeperiod(params):
     """Create a time period"""
-    body = params['body']
-    name = body['name']
+    body = params["body"]
+    name = body["name"]
     exceptions = _format_exceptions(body.get("exceptions", []))
     periods = _daily_time_ranges(body["active_time_ranges"])
-    time_period = _to_checkmk_format(alias=body['alias'],
-                                     periods=periods,
-                                     exceptions=exceptions,
-                                     exclude=body.get("exclude", []))
+    time_period = _to_checkmk_format(
+        alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
+    )
     save_timeperiod(name, time_period)
     return _serve_time_period(_to_api_format(load_timeperiod(name)))
 
 
-@Endpoint(constructors.object_href('time_period', '{name}'),
-          '.../update',
-          method='put',
-          path_params=[NAME_FIELD],
-          additional_status_codes=[405],
-          request_schema=request_schemas.UpdateTimePeriod,
-          output_empty=True)
+@Endpoint(
+    constructors.object_href("time_period", "{name}"),
+    ".../update",
+    method="put",
+    path_params=[NAME_FIELD],
+    additional_status_codes=[405],
+    request_schema=request_schemas.UpdateTimePeriod,
+    output_empty=True,
+)
 def update_timeperiod(params):
     """Update a time period"""
 
-    body = params['body']
-    name = params['name']
+    body = params["body"]
+    name = params["name"]
     if name == "24X7":
-        raise ProblemException(405, http.client.responses[405],
-                               "You cannot change the built-in time period")
+        raise ProblemException(
+            405, http.client.responses[405], "You cannot change the built-in time period"
+        )
     try:
         time_period = load_timeperiod(name)
     except KeyError:
@@ -81,8 +89,9 @@ def update_timeperiod(params):
 
     updated_time_period = _to_checkmk_format(
         alias=body.get("alias", time_period["alias"]),
-        periods=_daily_time_ranges(body.get("active_time_ranges",
-                                            time_period["active_time_ranges"])),
+        periods=_daily_time_ranges(
+            body.get("active_time_ranges", time_period["active_time_ranges"])
+        ),
         exceptions=_format_exceptions(body.get("exceptions", time_period["exceptions"])),
         exclude=body.get("exclude", time_period["exclude"]),
     )
@@ -91,15 +100,17 @@ def update_timeperiod(params):
     return Response(status=204)
 
 
-@Endpoint(constructors.object_href('time_period', '{name}'),
-          '.../delete',
-          method='delete',
-          path_params=[NAME_FIELD],
-          etag='input',
-          output_empty=True)
+@Endpoint(
+    constructors.object_href("time_period", "{name}"),
+    ".../delete",
+    method="delete",
+    path_params=[NAME_FIELD],
+    etag="input",
+    output_empty=True,
+)
 def delete(params):
     """Delete a time period"""
-    name = params['name']
+    name = params["name"]
     time_periods = load_timeperiods()
     if name not in time_periods:
         raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
@@ -108,14 +119,16 @@ def delete(params):
     return Response(status=204)
 
 
-@Endpoint(constructors.object_href('time_period', '{name}'),
-          'cmk/show',
-          method='get',
-          path_params=[NAME_FIELD],
-          response_schema=response_schemas.ConcreteTimePeriod)
+@Endpoint(
+    constructors.object_href("time_period", "{name}"),
+    "cmk/show",
+    method="get",
+    path_params=[NAME_FIELD],
+    response_schema=response_schemas.ConcreteTimePeriod,
+)
 def show_time_period(params):
     """Show a time period"""
-    name = params['name']
+    name = params["name"]
     time_periods = load_timeperiods()
     if name not in time_periods:
         raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
@@ -123,30 +136,30 @@ def show_time_period(params):
     return _serve_time_period(_to_api_format(time_period, name == "24X7"))
 
 
-@Endpoint(constructors.collection_href('time_period'),
-          '.../collection',
-          method='get',
-          response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(
+    constructors.collection_href("time_period"),
+    ".../collection",
+    method="get",
+    response_schema=response_schemas.DomainObjectCollection,
+)
 def list_time_periods(params):
     """Show all time periods"""
     time_periods = []
     for time_period_id, time_period_details in load_timeperiods().items():
-        alias = time_period_details['alias']
+        alias = time_period_details["alias"]
         if not isinstance(alias, str):  # check for mypy
             continue
         time_periods.append(
             constructors.collection_item(
-                domain_type='time_period',
-                obj={
-                    'title': alias,
-                    'id': time_period_id
-                },
-            ))
+                domain_type="time_period",
+                obj={"title": alias, "id": time_period_id},
+            )
+        )
     time_period_collection = {
-        'id': "timeperiod",
-        'domainType': 'time_period',
-        'value': time_periods,
-        'links': [constructors.link_rel('self', constructors.collection_href('time_period'))],
+        "id": "timeperiod",
+        "domainType": "time_period",
+        "value": time_periods,
+        "links": [constructors.link_rel("self", constructors.collection_href("time_period"))],
     }
     return constructors.serve_json(time_period_collection)
 
@@ -154,14 +167,14 @@ def list_time_periods(params):
 def _serve_time_period(time_period):
     response = Response()
     response.set_data(json.dumps(time_period))
-    response.set_content_type('application/json')
-    response.headers.add('ETag', constructors.etag_of_dict(time_period).to_header())
+    response.set_content_type("application/json")
+    response.headers.add("ETag", constructors.etag_of_dict(time_period).to_header())
     return response
 
 
-def _to_api_format(time_period: TimeperiodSpec,
-                   builtin_period: bool = False,
-                   internal_format: bool = False):
+def _to_api_format(
+    time_period: TimeperiodSpec, builtin_period: bool = False, internal_format: bool = False
+):
     """Convert time_period to API format as specified in request schema
 
     Args:
@@ -186,12 +199,15 @@ def _to_api_format(time_period: TimeperiodSpec,
         time_period_readable["exclude"] = time_period.get("exclude", [])
 
     active_time_ranges = _active_time_ranges_readable(
-        {key: time_period[key] for key in defines.weekday_ids()})
-    exceptions = _exceptions_readable({
-        key: time_period[key]
-        for key in time_period
-        if key not in ['alias', 'exclude', *defines.weekday_ids()]
-    })
+        {key: time_period[key] for key in defines.weekday_ids()}
+    )
+    exceptions = _exceptions_readable(
+        {
+            key: time_period[key]
+            for key in time_period
+            if key not in ["alias", "exclude", *defines.weekday_ids()]
+        }
+    )
 
     if internal_format:
         active_time_ranges = _convert_to_dt(active_time_ranges)
@@ -269,7 +285,7 @@ def _convert_to_dt(exceptions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     for exception in exceptions:
         period = {k: v for k, v in exception.items() if k != "time_ranges"}
-        period["time_ranges"] = [convert_to_dt(entry) for entry in exception['time_ranges']]
+        period["time_ranges"] = [convert_to_dt(entry) for entry in exception["time_ranges"]]
         result.append(period)
     return result
 
@@ -280,7 +296,7 @@ def _format_exceptions(exceptions: List[Dict[str, Any]]) -> Dict[str, List[TIME_
         date_exception = []
         for time_range in exception["time_ranges"]:
             date_exception.append(_format_time_range(time_range))
-        result[str(exception['date'])] = date_exception
+        result[str(exception["date"])] = date_exception
     return result
 
 
@@ -315,16 +331,43 @@ def _time_readable(mk_time: str) -> str:
 
 def _format_time_range(time_range: Dict[str, dt.time]) -> TIME_RANGE:
     """Convert time iso format to Checkmk format"""
-    return _mk_time_format(time_range['start']), _mk_time_format(time_range['end'])
+    return _mk_time_format(time_range["start"]), _mk_time_format(time_range["end"])
 
 
-def _mk_time_format(time: dt.time) -> str:
-    minutes = time.strftime("%M")
-    minutes = "00" if minutes == "0" else minutes
-    return f"{time.strftime('%H')}:{minutes}"
+def _mk_time_format(time_or_str: Union[str, dt.time]) -> str:
+    """
+
+    Examples:
+
+        >>> _mk_time_format("12:00:05")
+        '12:00'
+
+        >>> _mk_time_format("09:00:30")
+        '09:00'
+
+    """
+    if isinstance(time_or_str, str):
+        parts = time_or_str.split(":")
+        time = dt.time(int(parts[0]), int(parts[1]))
+    elif isinstance(time_or_str, dt.time):
+        time = time_or_str
+    else:
+        raise NotImplementedError()
+    return f"{time.hour:02d}:{time.minute:02d}"
 
 
 def _mk_date_format(exception_date: dt.date) -> str:
+    """
+
+    Examples:
+
+        >>> _mk_date_format(dt.date(2021, 12, 21))
+        '2021-12-21'
+
+        >>> _mk_date_format(dt.date(2021, 1, 1))
+        '2021-01-01'
+
+    """
     return exception_date.strftime("%Y-%m-%d")
 
 

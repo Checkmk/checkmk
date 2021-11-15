@@ -44,8 +44,8 @@ the check function is called.
 
 """
 
-from ._utils import ValueStoreManager
 from ._global_state import get_value_store, load_host_value_store
+from ._utils import ValueStoreManager
 
 __all__ = [
     "get_value_store",

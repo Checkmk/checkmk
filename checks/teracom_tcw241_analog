@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-AnalogSensor = collections.namedtuple('AnalogSensor', 'description maximum minimum voltage')
+AnalogSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "AnalogSensor", "description maximum minimum voltage"
+)
 
 
 def parse_tcw241_analog(info):
@@ -42,10 +44,12 @@ def parse_tcw241_analog(info):
         if sensor_minimum < 1 or sensor_maximum < 1:
             continue
 
-        info_dict[oid.split(".")[0]] = AnalogSensor(description=str(description),
-                                                    maximum=sensor_maximum,
-                                                    minimum=sensor_minimum,
-                                                    voltage=sensor_voltage)
+        info_dict[oid.split(".")[0]] = AnalogSensor(
+            description=str(description),
+            maximum=sensor_maximum,
+            minimum=sensor_minimum,
+            voltage=sensor_voltage,
+        )
     return info_dict
 
 
@@ -59,10 +63,13 @@ def check_tcw241_analog(item, params, sensor):
     :param sensor: analog sensor data
     :return: status
     """
-    return check_levels(sensor.voltage,
-                        "voltage", (sensor.minimum, sensor.maximum),
-                        unit="V",
-                        infoname="[%s]" % sensor.description)
+    return check_levels(
+        sensor.voltage,
+        "voltage",
+        (sensor.minimum, sensor.maximum),
+        unit="V",
+        infoname="[%s]" % sensor.description,
+    )
 
 
 check_info["teracom_tcw241_analog"] = {
@@ -71,29 +78,26 @@ check_info["teracom_tcw241_analog"] = {
     "inventory_function": discover(),
     "service_description": "Analog Sensor %s",
     "has_perfdata": True,
-    'snmp_scan_function': lambda oid: "Teracom" in oid(".1.3.6.1.2.1.1.1.0"),
-    'snmp_info': [
+    "snmp_scan_function": lambda oid: "Teracom" in oid(".1.3.6.1.2.1.1.1.0"),
+    "snmp_info": [
         (
             ".1.3.6.1.4.1.38783.3.2.2.2",
-            [
-                "1",  # Voltage 1
-                "2",  # Voltage 2
-                "3",  # Voltage 3
-                "4"  # Voltage 4
-            ],
+            ["1", "2", "3", "4"],  # Voltage 1  # Voltage 2  # Voltage 3  # Voltage 4
             [
                 OID_END,
                 "1",  # Voltage description
                 "2",  # Voltage maximum x1000 in Integer format
-                "3"  # Voltage minimum x1000 in Integer format
-            ]),
+                "3",  # Voltage minimum x1000 in Integer format
+            ],
+        ),
         (
             ".1.3.6.1.4.1.38783.3.3.2",
             [
                 "1.0",  # Voltage 1 x1000 in Integer format
                 "2.0",  # Voltage 2 x1000 in Integer format
                 "3.0",  # Voltage 3 x1000 in Integer format
-                "4.0"  # Voltage 4 x1000 in Integer format
-            ])
-    ]
+                "4.0",  # Voltage 4 x1000 in Integer format
+            ],
+        ),
+    ],
 }

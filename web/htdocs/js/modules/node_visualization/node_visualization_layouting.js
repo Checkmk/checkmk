@@ -839,7 +839,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             .attr("id", d => d.id)
             .attr("title", d => d.title)
             .attr("src", d => "themes/facelift/images/" + d.icon)
-            .on("click", d => d.handler())
+            .on("click", (event, d) => d.handler())
             .merge(icon_selection);
 
         if (this.layout_manager.layout_applier._undo_history.length == 0)

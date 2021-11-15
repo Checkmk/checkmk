@@ -19,8 +19,10 @@ def test_init_scripts(site):
         "pnp_gearman_worker",
         "rrdcached",
         "xinetd",
+        "systemd",
         "stunnel",
         "redis",
+        "agent-receiver",
     ]
 
     if site.version.edition() == "enterprise":

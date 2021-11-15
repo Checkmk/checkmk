@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextInput,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_apc_power():
@@ -49,4 +45,5 @@ rulespec_registry.register(
         item_spec=_item_spec_apc_power,
         parameter_valuespec=_parameter_valuespec_apc_power,
         title=lambda: _("APC Power Consumption"),
-    ))
+    )
+)

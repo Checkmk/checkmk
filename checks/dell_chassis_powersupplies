@@ -19,8 +19,12 @@ def check_dell_chassis_powersupplies(item, _no_params, info):
             power = savefloat(voltage) * savefloat(current)
             state = 0
             infotext = ""
-            infotext += "current/max Power: %.2f / %s, Current: %s, Voltage: %s" \
-                            % ( power, maxpower, current, voltage )
+            infotext += "current/max Power: %.2f / %s, Current: %s, Voltage: %s" % (
+                power,
+                maxpower,
+                current,
+                voltage,
+            )
             perfdata = [("power", str(power) + "Watt", 0, maxpower, "", maxpower)]
 
             if savefloat(current) == 0:
@@ -43,6 +47,7 @@ check_info["dell_chassis_powersupplies"] = {
             "5",  # drsPSUVoltsReading  0
             "6",  # drsPSUAmpsReading   1
             "7",  # drsPSUWattsReading  2
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.674.10892.2",
 }

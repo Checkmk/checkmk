@@ -20,7 +20,8 @@ x_usv = 560
 
 
 def make_label(text, x, y, width):
-    print("""
+    print(
+        """
 define textbox {
     text=%s
     x=%d
@@ -28,7 +29,9 @@ define textbox {
     background_color=#C0C0C1
     border_color=#000055
     w=%d
-}""" % (text, x, y, width))
+}"""
+        % (text, x, y, width)
+    )
 
 
 def render_hostgroup(name, alias):
@@ -40,20 +43,25 @@ def render_hostgroup(name, alias):
 
     def display_servicegroup(sg_name, x):
         if live.query_value("GET servicegroups\nStats: name = %s\n" % sg_name) == 1:
-            print("""
+            print(
+                """
 define servicegroup {
             servicegroup_name = %s
             x=%d
             y=%d
-}""" % (sg_name, x, g_y))
+}"""
+                % (sg_name, x, g_y)
+            )
 
             # Einzelauflistung der Thermometer
             num = 0
             shift = 16
             for host, service in live.query(
-                    "GET services\nFilter: groups >= %s\nColumns: host_name description" % sg_name):
+                "GET services\nFilter: groups >= %s\nColumns: host_name description" % sg_name
+            ):
                 num += 1
-                print("""
+                print(
+                    """
 define service {
             host_name=%s
             service_description=%s
@@ -61,7 +69,9 @@ define service {
             y=%d
             url=/pnp4nagios/graph?host=%s&srv=%s
 }
-    """ % (host, service, x + 30 + shift * num, g_y, host, service))
+    """
+                    % (host, service, x + 30 + shift * num, g_y, host, service)
+                )
 
     # Gesamtzustand Thermometer
     display_servicegroup(name + "_therm", x_therm)
@@ -73,14 +83,16 @@ define service {
 socket_path = "unix:/var/run/nagios/rw/live"
 live = livestatus.SingleSiteConnection(socket_path)
 
-print("""
+print(
+    """
 define global {
     allowed_for_config=nagiosadmin
         allowed_user=nagiosadmin
         map_image=demo_background.png
         iconset=std_medium
 }
-""")
+"""
+)
 
 # hostgroups = live.query("GET hostgroups\nColumns: name alias")
 hostgroups = [

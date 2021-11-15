@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
 # TIMESTAMP 1426495343
@@ -91,26 +94,24 @@ def check_db2_logsizes(item, params, parsed):
     if "logfilsiz" not in db:
         return 3, "Invalid database info"
 
-    total = int(db["logfilsiz"][data_offset]) * (int(db["logprimary"][data_offset]) + \
-            int(db["logsecond"][data_offset])) * 4096
+    total = (
+        int(db["logfilsiz"][data_offset])
+        * (int(db["logprimary"][data_offset]) + int(db["logsecond"][data_offset]))
+        * 4096
+    )
     free = total - int(db["usedspace"][data_offset])
 
-    return df_check_filesystem_single(item,
-                                      total >> 20,
-                                      free >> 20,
-                                      0,
-                                      None,
-                                      None,
-                                      params,
-                                      this_time=timestamp)
+    return df_check_filesystem_single(
+        item, total >> 20, free >> 20, 0, None, None, params, this_time=timestamp
+    )
 
 
-check_info['db2_logsizes'] = {
+check_info["db2_logsizes"] = {
     "parse_function": parse_db2_logsizes,
     "service_description": "DB2 Logsize %s",
     "check_function": check_db2_logsizes,
     "inventory_function": inventory_db2_logsizes,
     "group": "db2_logsize",
     "has_perfdata": True,
-    "default_levels_variable": "db2_logsize_default_levels",
+    "default_levels_variable": "db2_logsizes_default_levels",
 }

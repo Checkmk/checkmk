@@ -8,7 +8,7 @@ description:
  Levels for the RAM can be configured using the WATO
  rule "Main memory usage of devices with  modules".
 
-inventory:
+discovery:
  One service is created for each node in the output.
 
 item:

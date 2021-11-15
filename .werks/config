@@ -24,6 +24,7 @@ components = [
    ( "nagvis",        "NagVis" ),
    ( "packages",      "Other Components" ),
    ( "distros",       "Linux Distributions" ),
+   ( "rest-api",      "REST API"),
 ]
 
 edition_components = {

@@ -3,8 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[attr-defined]  # TODO: see which are needed in this file
 
 from cmk.base.check_api import check_levels, get_percent_human_readable
 
@@ -16,7 +15,7 @@ _RENDER_FUNCTION_AND_UNIT = {
     "mA": (
         lambda current: f"{(current * 1000):.1f}",
         "mA",
-    )
+    ),
 }
 
 
@@ -28,6 +27,12 @@ _RENDER_FUNCTION_AND_UNIT = {
 #        "current" : 12.0,                                # without device state
 #     }
 # }
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_elphase(item, params, parsed):
     if item not in parsed:
         return  # Item not found in SNMP data

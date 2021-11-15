@@ -52,12 +52,13 @@ inline std::string MakeStateFileName(const std::string& name,
 class Basic {
 public:
     Basic(const std::string_view& Name, char Separator = 0)
-        : uniq_name_(Name)
-        , separator_(Separator)
-        , delay_on_fail_(0)
-        , timeout_(0)
-        , enabled_(true)
-        , headerless_(false) {
+        : uniq_name_{Name}
+        , separator_{Separator}
+        , delay_on_fail_{0}
+        , timeout_{0}
+        , enabled_{true}
+        , headerless_{false}
+        , error_count_{0} {
         allowed_from_time_ = std::chrono::steady_clock::now();
     }
     virtual ~Basic() {}
@@ -159,9 +160,6 @@ private:
     FRIEND_TEST(WmiProviderTest, SimulationIntegration);
     FRIEND_TEST(WmiProviderTest, BasicWmi);
     FRIEND_TEST(WmiProviderTest, BasicWmiDefaultsAndError);
-
-    friend class SectionProviders;
-    FRIEND_TEST(SectionProviders, Basic);
 #endif
 };
 

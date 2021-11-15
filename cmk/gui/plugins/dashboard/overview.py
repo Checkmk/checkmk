@@ -4,18 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, theme
-
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 
 
 @dashlet_registry.register
 class OverviewDashlet(Dashlet):
     """Dashlet that displays an introduction and Check_MK logo"""
+
     @classmethod
     def type_name(cls):
         return "overview"
@@ -48,8 +45,11 @@ class OverviewDashlet(Dashlet):
         html.open_td()
         html.h2("CheckMK")
         html.write_text(
-            _('Welcome to Checkmk. If you want to learn more about Checkmk, please visit '
-              'our <a href="https://checkmk.com/" target="_blank">user manual</a>.'))
+            _(
+                "Welcome to Checkmk. If you want to learn more about Checkmk, please visit "
+                'our <a href="https://checkmk.com/" target="_blank">user manual</a>.'
+            )
+        )
         html.close_td()
 
         html.close_tr()

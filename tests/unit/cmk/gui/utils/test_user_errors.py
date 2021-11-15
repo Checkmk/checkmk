@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import user_errors
 from cmk.gui.utils.user_errors import UserErrors
-from cmk.gui.exceptions import MKUserError
 
 
-def test_user_errors_request_context_integration(register_builtin_html) -> None:
+def test_user_errors_request_context_integration(request_context) -> None:
     assert not user_errors
     user_errors.add(MKUserError(None, "abc"))
     assert user_errors[None] == "abc"

@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import cmk.utils.version as cmk_version
+
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
 
 # Would move this to unit tests, but it would not work, because the
@@ -14,7 +15,7 @@ import cmk.utils.paths
 def test_omd_version(tmp_path, monkeypatch):
     link_path = str(tmp_path / "version")
 
-    monkeypatch.setattr(cmk.utils.paths, 'omd_root', os.path.dirname(link_path))
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", os.path.dirname(link_path))
 
     os.symlink("/omd/versions/2016.09.12.cee", link_path)
     cmk_version.omd_version.cache_clear()

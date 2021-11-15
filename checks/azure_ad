@@ -16,28 +16,29 @@ def parse_azure_ad(info):
     for line in info:
         key = line[0]
         value = AZURE_AGENT_SEPARATOR.join(line[1:])
-        if key == 'users_count':
+        if key == "users_count":
             try:
-                parsed[None] = {'count': int(value)}
+                parsed[None] = {"count": int(value)}
             except ValueError:
                 pass
-        elif key == 'ad_connect':
+        elif key == "ad_connect":
             for data in json.loads(value):
-                data['onPremisesLastSyncDateTime_parsed'] = _str_to_seconds(
-                    data['onPremisesLastSyncDateTime'])
-                item = data['displayName']
+                data["onPremisesLastSyncDateTime_parsed"] = _str_to_seconds(
+                    data["onPremisesLastSyncDateTime"]
+                )
+                item = data["displayName"]
                 parsed[item] = data
     return parsed
 
 
 def _str_to_seconds(value):
     try:
-        return utc_mktime(time.strptime(value, '%Y-%m-%dT%H:%M:%SZ'))
+        return utc_mktime(time.strptime(value, "%Y-%m-%dT%H:%M:%SZ"))
     except (ValueError, TypeError):
         return None
 
 
-#.
+# .
 #   .--user----------------------------------------------------------------.
 #   |                                                                      |
 #   |                         _   _ ___  ___ _ __                          |
@@ -57,26 +58,26 @@ def discover_ad_users(parsed):
 
 @get_parsed_item_data
 def check_azure_users(item, _no_params, data):
-    count = data.get('count')
+    count = data.get("count")
     if count is not None:
         yield check_levels(
             count,
             "count",
             None,
-            unit='User Accounts',
+            unit="User Accounts",
             human_readable_func=int,
         )
 
 
-check_info['azure_ad'] = {
-    'parse_function': parse_azure_ad,
-    'inventory_function': discover_ad_users,
-    'check_function': check_azure_users,
-    'service_description': 'AD Users',
-    'has_perfdata': True,
+check_info["azure_ad"] = {
+    "parse_function": parse_azure_ad,
+    "inventory_function": discover_ad_users,
+    "check_function": check_azure_users,
+    "service_description": "AD Users",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--sync----------------------------------------------------------------.
 #   |                                                                      |
 #   |                        ___ _   _ _ __   ___                          |
@@ -94,34 +95,39 @@ def discover_sync(parsed):
     # There are two keys important for synchronization data
     # onPremisesSyncEnabled: if the sync is enabled at all
     # onPremisesLastSyncDateTime: the actual sync data
-    return [(key, {}) for key, data in parsed.items() if key is not None \
-                and data.get('onPremisesSyncEnabled') is not None]
+    return [
+        (key, {})
+        for key, data in parsed.items()
+        if key is not None and data.get("onPremisesSyncEnabled") is not None
+    ]
 
 
 @get_parsed_item_data
 def check_azure_sync(item, params, data):
-    sync_enabled = data.get('onPremisesSyncEnabled')
+    sync_enabled = data.get("onPremisesSyncEnabled")
     if sync_enabled is None:
-        yield 1, 'Synchronization has been disabled'
+        yield 1, "Synchronization has been disabled"
         return
 
-    sync_time = data.get('onPremisesLastSyncDateTime_parsed')
+    sync_time = data.get("onPremisesLastSyncDateTime_parsed")
     if sync_time is None:
-        yield 1, 'Has never been synchronized'
+        yield 1, "Has never been synchronized"
         return
 
     time_delta = time.time() - sync_time
-    yield check_levels(time_delta,
-                       None,
-                       params.get('age'),
-                       human_readable_func=get_age_human_readable,
-                       infoname='Time since last synchronization')
+    yield check_levels(
+        time_delta,
+        None,
+        params.get("age"),
+        human_readable_func=get_age_human_readable,
+        infoname="Time since last synchronization",
+    )
 
 
-check_info['azure_ad.sync'] = {
-    'parse_function': parse_azure_ad,
-    'inventory_function': discover_sync,
-    'check_function': check_azure_sync,
-    'service_description': 'AD Sync %s',
-    'group': 'azure_ad',
+check_info["azure_ad.sync"] = {
+    "parse_function": parse_azure_ad,
+    "inventory_function": discover_sync,
+    "check_function": check_azure_sync,
+    "service_description": "AD Sync %s",
+    "group": "azure_ad",
 }

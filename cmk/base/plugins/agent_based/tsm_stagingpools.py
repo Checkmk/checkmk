@@ -5,15 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, List, Mapping
-from .agent_based_api.v1 import (
-    check_levels,
-    type_defs,
-    register,
-    State as state,
-    Result,
-    Service,
-    Metric,
-)
+
+from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 
 # <<<tsm_stagingpools>>>
 # tsmfarm2       SL8500_STGPOOL_05       99.9
@@ -112,8 +107,10 @@ def check_tsm_stagingpools(
         levels_lower=params.get("levels", (None, None)),
         metric_name="free",
         render_func=lambda v: "%d" % v,
-        label=(f"Total tapes: {num_tapes}, Utilization: {utilization:.1f} tapes, "
-               f"Tapes less then {params['free_below']}% full"),
+        label=(
+            f"Total tapes: {num_tapes}, Utilization: {utilization:.1f} tapes, "
+            f"Tapes less then {params['free_below']}% full"
+        ),
         boundaries=(0, num_tapes),
     )
 

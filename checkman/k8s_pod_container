@@ -17,5 +17,5 @@ description:
  {Maximum number of check attempts for service} should be
  used.
 
-inventory:
+discovery:
  One service is created for each pod.

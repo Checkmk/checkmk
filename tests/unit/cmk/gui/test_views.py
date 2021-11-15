@@ -6,28 +6,25 @@
 
 # yapf: disable
 
-from cmk.gui.plugins.visuals.utils import Filter
 import copy
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
-import cmk.gui.config as config
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
-
-from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
-from cmk.gui.plugins.views.utils import transform_painter_spec
-from cmk.gui.type_defs import PainterSpec
 import cmk.gui.views
+from cmk.gui.globals import config, html, user
+from cmk.gui.plugins.views.utils import transform_painter_spec
+from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.type_defs import PainterSpec
+from cmk.gui.valuespec import ValueSpec
 
 
 @pytest.fixture(name="view")
-def view_fixture(register_builtin_html):
+def view_fixture(request_context):
     view_name = "allhosts"
     view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name].copy())
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
@@ -706,7 +703,7 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
     assert painter.render(row={}, cell=dummy_cell) == ("abc", "xyz")
-    assert painter.group_by(row={}) == "xyz"
+    assert painter.group_by(row={}, cell=dummy_cell) == "xyz"
 
 
 # These tests make adding new elements needlessly painful.
@@ -2304,15 +2301,15 @@ def test_registered_sorters():
         },
         'wato_folder_abs': {
             'columns': ['host_filename'],
-            'title': u'WATO folder - complete path'
+            'title': u'Folder - complete path'
         },
         'wato_folder_plain': {
             'columns': ['host_filename'],
-            'title': u'WATO folder - just folder name'
+            'title': u'Folder - just folder name'
         },
         'wato_folder_rel': {
             'columns': ['host_filename'],
-            'title': u'WATO folder - relative path'
+            'title': u'Folder - relative path'
         },
     }
 
@@ -2356,7 +2353,7 @@ def test_register_sorter(monkeypatch):
 
 def test_get_needed_regular_columns(view):
     class SomeFilter(Filter):
-        def display(self):
+        def display(self, value):
             return
 
         def columns_for_filter_table(self, context):
@@ -2471,12 +2468,12 @@ def test_view_row_limit(view):
     ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
     ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
 ])
-def test_gui_view_row_limit(register_builtin_html, monkeypatch, mocker, limit, permissions, result):
+def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result):
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
 
     mocker.patch.object(config, "roles", {"nobody": {"permissions": permissions}})
-    mocker.patch.object(config.user, "role_ids", ["nobody"])
+    mocker.patch.object(user, "role_ids", ["nobody"])
     assert cmk.gui.views.get_limit() == result
 
 
@@ -2978,8 +2975,8 @@ def test_get_inventory_display_hint():
     assert isinstance(hint, dict)
 
 
-def test_view_page(logged_in_wsgi_app, mock_livestatus):
-    wsgi_app = logged_in_wsgi_app
+def test_view_page(logged_in_admin_wsgi_app, mock_livestatus):
+    wsgi_app = logged_in_admin_wsgi_app
 
     def _prepend(prefix, dict_):
         d = {}
@@ -2989,6 +2986,7 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
         return d
 
     live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(['NO_SITE', 'remote'])
     live.add_table('hosts', [_prepend('host_', {
         'accept_passive_checks': 0,
         'acknowledged': 0,
@@ -3026,7 +3024,6 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
         'state': 0,
         'host_labels': {"cmk/os_family": "linux","cmk/check_mk_server": "yes",},
     })])
-    live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     live.expect_query(
         "GET hosts\n"
         "Columns: host_accept_passive_checks host_acknowledged host_action_url_expanded "
@@ -3045,4 +3042,4 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
         resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
         assert 'heute' in resp
         assert 'query=null' not in resp
-        assert '/domain-types/host/collections/all' in resp
+        assert str(resp).count('/domain-types/host/collections/all') == 1

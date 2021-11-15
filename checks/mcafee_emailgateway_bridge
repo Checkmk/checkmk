@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#TODO states, traffic, params?
+
+# TODO states, traffic, params?
 
 
 def check_mcafee_emailgateway_bridge(item, params, info):
@@ -53,20 +54,21 @@ def check_mcafee_emailgateway_bridge(item, params, info):
         yield state, infotext, [tuple(perfdata)]
 
 
-check_info['mcafee_emailgateway_bridge'] = {
-    'inventory_function': inventory_mcafee_gateway_generic,
-    'check_function': check_mcafee_emailgateway_bridge,
-    'service_description': 'Bridge',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.4.1.2.2.1',
+check_info["mcafee_emailgateway_bridge"] = {
+    "inventory_function": inventory_mcafee_gateway_generic,
+    "check_function": check_mcafee_emailgateway_bridge,
+    "service_description": "Bridge",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.4.1.2.2.1",
         [
-            '1',  # wsnat-BridgePresent
-            '2',  # wsnat-BridgeUp
-            '3',  # wsnat-TcpTraffic
-            '4',  # wsnat-UdpTraffic
-            '5',  # wsnat-IcmpTraffic
-        ]),
-    'snmp_scan_function': scan_mcafee_emailgateway,
-    'group': 'mcafee_emailgateway_bridge',
-    'has_perfdata': True,
+            "1",  # wsnat-BridgePresent
+            "2",  # wsnat-BridgeUp
+            "3",  # wsnat-TcpTraffic
+            "4",  # wsnat-UdpTraffic
+            "5",  # wsnat-IcmpTraffic
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_emailgateway,
+    "group": "mcafee_emailgateway_bridge",
+    "has_perfdata": True,
 }

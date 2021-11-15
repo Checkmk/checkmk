@@ -4,16 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import Check  # type: ignore[import]
-from checktestlib import (
-    DiscoveryResult,
-    CheckResult,
-    assertDiscoveryResultsEqual,
+import pytest
+
+from tests.testlib import Check
+
+from cmk.base.plugins.agent_based.df_section import parse_df
+
+from .checktestlib import (
     assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+    CheckResult,
+    DiscoveryResult,
     MockHostExtraConf,
 )
-from cmk.base.plugins.agent_based.df_section import parse_df
 
 pytestmark = pytest.mark.checks
 
@@ -33,16 +36,16 @@ pytestmark = pytest.mark.checks
 #   '----------------------------------------------------------------------'
 
 info_df_lnx = [
-    ['/dev/sda4', 'ext4', '143786696', '101645524', '34814148', '75%', '/'],
-    ['[df_inodes_start]'],
-    ['/dev/sda4', 'ext4', '9142272', '1654272', '7488000', '19%', '/'],
-    ['[df_inodes_end]'],
+    ["/dev/sda4", "ext4", "143786696", "101645524", "34814148", "75%", "/"],
+    ["[df_inodes_start]"],
+    ["/dev/sda4", "ext4", "9142272", "1654272", "7488000", "19%", "/"],
+    ["[df_inodes_end]"],
 ]
 
 info_df_win = [
-    ['C:\\', 'NTFS', '8192620', '7724268', '468352', '95%', 'C:\\'],
-    ['New_Volume', 'NTFS', '10240796', '186256', '10054540', '2%', 'E:\\'],
-    ['New_Volume', 'NTFS', '124929596', '50840432', '74089164', '41%', 'F:\\'],
+    ["C:\\", "NTFS", "8192620", "7724268", "468352", "95%", "C:\\"],
+    ["New_Volume", "NTFS", "10240796", "186256", "10054540", "2%", "E:\\"],
+    ["New_Volume", "NTFS", "124929596", "50840432", "74089164", "41%", "F:\\"],
 ]
 
 # yapf: disable
@@ -123,12 +126,12 @@ info_df_btrfs = [
 # yapf: enable
 
 info_empty_inodes = [
-    ['[df_inodes_start]'],
-    ['/dev/mapper/vgdns-lvbindauthlog', '-', '-', '-', '-', '-', '/dns/bindauth/log'],
-    ['[df_inodes_end]'],
+    ["[df_inodes_start]"],
+    ["/dev/mapper/vgdns-lvbindauthlog", "-", "-", "-", "-", "-", "/dns/bindauth/log"],
+    ["[df_inodes_end]"],
 ]
 
-#.
+# .
 #   .--Test functions------------------------------------------------------.
 #   |   _____         _      __                  _   _                     |
 #   |  |_   _|__  ___| |_   / _|_   _ _ __   ___| |_(_) ___  _ __  ___     |
@@ -152,7 +155,7 @@ info_empty_inodes = [
             info_df_lnx,
             [
                 (
-                    '/',
+                    "/",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -166,7 +169,7 @@ info_empty_inodes = [
             info_df_lnx,
             [
                 (
-                    '/',
+                    "/",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -182,7 +185,7 @@ info_empty_inodes = [
             info_df_lnx,
             [
                 (
-                    '/dev/sda4 /',
+                    "/dev/sda4 /",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -198,21 +201,21 @@ info_empty_inodes = [
             info_df_win,
             [
                 (
-                    'E:/',
+                    "E:/",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'F:/',
+                    "F:/",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'C:/',
+                    "C:/",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -226,21 +229,21 @@ info_empty_inodes = [
             info_df_win,
             [
                 (
-                    'New_Volume E:/',
+                    "New_Volume E:/",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'New_Volume F:/',
+                    "New_Volume F:/",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'C:\\ C:/',
+                    "C:\\ C:/",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -261,16 +264,14 @@ info_empty_inodes = [
         (
             info_df_lnx_tmpfs,
             [],
-            {
-                "ignore_fs_types": ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660']
-            },
+            {"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]},
         ),
         # Ignoring tmpfs explicitly, but including one mountpoint explicitly:
         (
             info_df_lnx_tmpfs,
             [
                 (
-                    '/opt/omd/sites/heute/tmp',
+                    "/opt/omd/sites/heute/tmp",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -278,8 +279,8 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-                "never_ignore_mountpoints": ['/opt/omd/sites/heute/tmp']
+                "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                "never_ignore_mountpoints": ["/opt/omd/sites/heute/tmp"],
             },
         ),
         # Including tmpfs:
@@ -287,37 +288,35 @@ info_empty_inodes = [
             info_df_lnx_tmpfs,
             [
                 (
-                    '/opt/omd/sites/heute/tmp',
+                    "/opt/omd/sites/heute/tmp",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/shm',
+                    "/dev/shm",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
-            {
-                "ignore_fs_types": ['nfs', 'smbfs', 'cifs', 'iso9660']
-            },
+            {"ignore_fs_types": ["nfs", "smbfs", "cifs", "iso9660"]},
         ),
         # Including tmpfs and volume name:
         (
             info_df_lnx_tmpfs,
             [
                 (
-                    'tmpfs /opt/omd/sites/heute/tmp',
+                    "tmpfs /opt/omd/sites/heute/tmp",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'tmpfs /dev/shm',
+                    "tmpfs /dev/shm",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -325,7 +324,7 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ['nfs', 'smbfs', 'cifs', 'iso9660'],
+                "ignore_fs_types": ["nfs", "smbfs", "cifs", "iso9660"],
                 "item_appearance": "volume_name_and_mountpoint",
             },
         ),
@@ -334,7 +333,7 @@ info_empty_inodes = [
             info_df_lnx_tmpfs,
             [
                 (
-                    'tmpfs /opt/omd/sites/heute/tmp',
+                    "tmpfs /opt/omd/sites/heute/tmp",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -342,18 +341,17 @@ info_empty_inodes = [
                 ),
             ],
             {
-                "ignore_fs_types": ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+                "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
                 "item_appearance": "volume_name_and_mountpoint",
-                "never_ignore_mountpoints": ['~.*/omd/sites/[^/]+/tmp$']
+                "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
             },
         ),
-
         # btrfs:
         (
             info_df_btrfs,
             [
                 (
-                    'btrfs /dev/sda1',
+                    "btrfs /dev/sda1",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -367,7 +365,7 @@ info_empty_inodes = [
             info_df_btrfs,
             [
                 (
-                    '/dev/sda1 btrfs /dev/sda1',
+                    "/dev/sda1 btrfs /dev/sda1",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -385,14 +383,14 @@ info_empty_inodes = [
             info_df_lnx_docker,
             [
                 (
-                    '/var/lib/docker',
+                    "/var/lib/docker",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/var/lib/docker-latest',
+                    "/var/lib/docker-latest",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -401,9 +399,10 @@ info_empty_inodes = [
             ],
             {},
         ),
-    ])
+    ],
+)
 def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
-    check = Check('df')
+    check = Check("df")
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
         if ruleset is check.context.get("inventory_df_rules"):
@@ -418,130 +417,165 @@ def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
     assertDiscoveryResultsEqual(check, discovery_result, expected_result)
 
 
-df_params = {
-    'trend_range': 24,
-    'show_levels': 'onmagic',
-    'inodes_levels': (10.0, 5.0),
-    'magic_normsize': 20,
-    'show_inodes': 'onlow',
-    'levels': (80.0, 90.0),
-    'show_reserved': False,
-    'levels_low': (50.0, 60.0),
-    'trend_perfdata': True
-}
+def make_test_df_params():
+    return {
+        "trend_range": 24,
+        "show_levels": "onmagic",
+        "inodes_levels": (10.0, 5.0),
+        "magic_normsize": 20,
+        "show_inodes": "onlow",
+        "levels": (80.0, 90.0),
+        "show_reserved": False,
+        "levels_low": (50.0, 60.0),
+        "trend_perfdata": True,
+    }
 
 
-@pytest.mark.parametrize("item,params,info,expected_result", [
-    (
-        '/',
-        df_params,
-        info_df_lnx,
-        [
-            (
-                0,
-                '75.79% used (103.92 of 137.13 GB)',
-                [
-                    ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
-                    ('fs_size', 140416.6953125),
-                    ('fs_used_percent', 75.78764310712029),
-                ],
-            ),
-            (
-                0,
-                '',
-                [
-                    ('inodes_used', 1654272, 8228044.8, 8685158.4, 0, 9142272),
-                ],
-            ),
-        ],
-    ),
-    (
-        '/dev/sda4 /',
-        df_params,
-        info_df_lnx,
-        [
-            (
-                0,
-                '75.79% used (103.92 of 137.13 GB)',
-                [
-                    ('fs_used', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
-                    ('fs_size', 140416.6953125),
-                    ('fs_used_percent', 75.78764310712029),
-                ],
-            ),
-            (
-                0,
-                '',
-                [
-                    ('inodes_used', 1654272, 8228044.8, 8685158.4, 0, 9142272),
-                ],
-            ),
-        ],
-    ),
-    (
-        'E:/',
-        df_params,
-        info_df_win,
-        [
-            (
-                0,
-                '1.82% used (181.89 MB of 9.77 GB)',
-                [
-                    ('fs_used', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
-                    ('fs_size', 10000.77734375),
-                    ('fs_used_percent', 1.8187648694496015),
-                ],
-            ),
-        ],
-    ),
-    (
-        'New_Volume E:/',
-        df_params,
-        info_df_win,
-        [
-            (
-                0,
-                '1.82% used (181.89 MB of 9.77 GB)',
-                [
-                    ('fs_used', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
-                    ('fs_size', 10000.77734375, None, None, None, None),
-                    ('fs_used_percent', 1.8187648694496015),
-                ],
-            ),
-        ],
-    ),
-    (
-        'btrfs /dev/sda1',
-        df_params,
-        info_df_btrfs,
-        [
-            (
-                0,
-                '21.13% used (4.23 of 20.00 GB)',
-                [
-                    ('fs_used', 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
-                    ('fs_size', 20479.0, None, None, None, None),
-                    ('fs_used_percent', 21.130391956394355),
-                ],
-            ),
-        ],
-    ),
-    (
-        '/home',
-        df_params,
-        info_df_lnx,
-        [],
-    ),
-])
+@pytest.mark.parametrize(
+    "item,params,info,expected_result",
+    [
+        (
+            "/",
+            make_test_df_params(),
+            info_df_lnx,
+            [
+                (
+                    0,
+                    "75.79% used (103.92 of 137.13 GB)",
+                    [
+                        (
+                            "fs_used",
+                            106418.50390625,
+                            112333.35625,
+                            126375.02578125,
+                            0,
+                            140416.6953125,
+                        ),
+                        ("fs_size", 140416.6953125),
+                        ("fs_used_percent", 75.78764310712029),
+                    ],
+                ),
+                (
+                    0,
+                    "",
+                    [
+                        ("inodes_used", 1654272, 8228044.8, 8685158.4, 0, 9142272),
+                    ],
+                ),
+            ],
+        ),
+        (
+            "/dev/sda4 /",
+            make_test_df_params(),
+            info_df_lnx,
+            [
+                (
+                    0,
+                    "75.79% used (103.92 of 137.13 GB)",
+                    [
+                        (
+                            "fs_used",
+                            106418.50390625,
+                            112333.35625,
+                            126375.02578125,
+                            0,
+                            140416.6953125,
+                        ),
+                        ("fs_size", 140416.6953125),
+                        ("fs_used_percent", 75.78764310712029),
+                    ],
+                ),
+                (
+                    0,
+                    "",
+                    [
+                        ("inodes_used", 1654272, 8228044.8, 8685158.4, 0, 9142272),
+                    ],
+                ),
+            ],
+        ),
+        (
+            "E:/",
+            make_test_df_params(),
+            info_df_win,
+            [
+                (
+                    0,
+                    "1.82% used (181.89 MB of 9.77 GB)",
+                    [
+                        ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
+                        ("fs_size", 10000.77734375),
+                        ("fs_used_percent", 1.8187648694496015),
+                    ],
+                ),
+            ],
+        ),
+        (
+            "New_Volume E:/",
+            make_test_df_params(),
+            info_df_win,
+            [
+                (
+                    0,
+                    "1.82% used (181.89 MB of 9.77 GB)",
+                    [
+                        ("fs_used", 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
+                        ("fs_size", 10000.77734375, None, None, None, None),
+                        ("fs_used_percent", 1.8187648694496015),
+                    ],
+                ),
+            ],
+        ),
+        (
+            "btrfs /dev/sda1",
+            make_test_df_params(),
+            info_df_btrfs,
+            [
+                (
+                    0,
+                    "21.13% used (4.23 of 20.00 GB)",
+                    [
+                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
+                        ("fs_size", 20479.0, None, None, None, None),
+                        ("fs_used_percent", 21.130391956394355),
+                    ],
+                ),
+            ],
+        ),
+        (
+            "/home",
+            make_test_df_params(),
+            info_df_lnx,
+            [],
+        ),
+        (
+            "btrfs /dev/sda1",
+            {"show_volume_name": True},
+            info_df_btrfs,
+            [
+                (0, "[/dev/sda1]"),
+                (
+                    0,
+                    "21.13% used (4.23 of 20.00 GB)",
+                    [
+                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
+                        ("fs_size", 20479.0, None, None, None, None),
+                        ("fs_used_percent", 21.130391956394355),
+                    ],
+                ),
+            ],
+        ),
+    ],
+)
 def test_df_check_with_parse(item, params, info, expected_result):
-    check = Check('df')
+    check = Check("df")
 
     actual = CheckResult(check.run_check(item, params, parse_df(info)))
     expected = CheckResult(expected_result)
     assertCheckResultsEqual(actual, expected)
 
 
-#.
+# .
 #   .--groups--------------------------------------------------------------.
 #   |                                                                      |
 #   |                    __ _ _ __ ___  _   _ _ __  ___                    |
@@ -552,11 +586,11 @@ def test_df_check_with_parse(item, params, info, expected_result):
 #   '----------------------------------------------------------------------'
 
 info_df_groups = [
-    ['/dev/sda1', 'ext4', '100', '60', '10', '1%', '/'],
-    ['/dev/sda2', 'ext4', '110', '61', '11', '2%', '/foo'],
-    ['/dev/sda3', 'ext4', '120', '62', '12', '3%', '/bar'],
-    ['/dev/sdb1', 'btrfs', '130', '63', '13', '4%', '/one'],
-    ['/dev/sdb1', 'btrfs', '130', '63', '13', '4%', '/two'],
+    ["/dev/sda1", "ext4", "100", "60", "10", "1%", "/"],
+    ["/dev/sda2", "ext4", "110", "61", "11", "2%", "/foo"],
+    ["/dev/sda3", "ext4", "120", "62", "12", "3%", "/bar"],
+    ["/dev/sdb1", "btrfs", "130", "63", "13", "4%", "/one"],
+    ["/dev/sdb1", "btrfs", "130", "63", "13", "4%", "/two"],
 ]
 
 
@@ -569,28 +603,28 @@ info_df_groups = [
             [],
             [
                 (
-                    '/',
+                    "/",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/foo',
+                    "/foo",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/bar',
+                    "/bar",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'btrfs /dev/sdb1',
+                    "btrfs /dev/sdb1",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -605,28 +639,28 @@ info_df_groups = [
             [],
             [
                 (
-                    '/',
+                    "/",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/foo',
+                    "/foo",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/bar',
+                    "/bar",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'btrfs /dev/sdb1',
+                    "btrfs /dev/sdb1",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -641,28 +675,28 @@ info_df_groups = [
             [],
             [
                 (
-                    '/dev/sda1 /',
+                    "/dev/sda1 /",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda2 /foo',
+                    "/dev/sda2 /foo",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda3 /bar',
+                    "/dev/sda3 /bar",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sdb1 btrfs /dev/sdb1',
+                    "/dev/sdb1 btrfs /dev/sdb1",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -677,28 +711,28 @@ info_df_groups = [
             [],
             [
                 (
-                    '/dev/sda1 /',
+                    "/dev/sda1 /",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda2 /foo',
+                    "/dev/sda2 /foo",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda3 /bar',
+                    "/dev/sda3 /bar",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sdb1 btrfs /dev/sdb1',
+                    "/dev/sdb1 btrfs /dev/sdb1",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -709,30 +743,36 @@ info_df_groups = [
         # groups
         (
             {},
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/', '/foo'],
-                'patterns_exclude': ['/bar']
-            }]],
+            [
+                {
+                    "groups": [
+                        {
+                            "group_name": "my-group",
+                            "patterns_include": ["/", "/foo"],
+                            "patterns_exclude": ["/bar"],
+                        }
+                    ]
+                }
+            ],
             [
                 (
-                    'my-group',
+                    "my-group",
                     {
                         "item_appearance": "mountpoint",
                         "grouping_behaviour": "mountpoint",
-                        "patterns": (['/', '/foo'], ['/bar']),
+                        "patterns": (["/", "/foo"], ["/bar"]),
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/bar',
+                    "/bar",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    'btrfs /dev/sdb1',
+                    "btrfs /dev/sdb1",
                     {
                         "item_appearance": "mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -744,30 +784,36 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
             },
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/', '/foo'],
-                'patterns_exclude': ['/bar']
-            }]],
+            [
+                {
+                    "groups": [
+                        {
+                            "group_name": "my-group",
+                            "patterns_include": ["/", "/foo"],
+                            "patterns_exclude": ["/bar"],
+                        }
+                    ]
+                }
+            ],
             [
                 (
-                    'my-group',
+                    "my-group",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "grouping_behaviour": "mountpoint",
-                        "patterns": (['/', '/foo'], ['/bar']),
+                        "patterns": (["/", "/foo"], ["/bar"]),
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda3 /bar',
+                    "/dev/sda3 /bar",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sdb1 btrfs /dev/sdb1',
+                    "/dev/sdb1 btrfs /dev/sdb1",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -780,35 +826,41 @@ info_df_groups = [
                 "item_appearance": "volume_name_and_mountpoint",
             },
             # groups do not apply
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
-                'patterns_exclude': ['/dev/sda3 /bar']
-            }]],
+            [
+                {
+                    "groups": [
+                        {
+                            "group_name": "my-group",
+                            "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
+                            "patterns_exclude": ["/dev/sda3 /bar"],
+                        }
+                    ]
+                }
+            ],
             [
                 (
-                    '/dev/sda1 /',
+                    "/dev/sda1 /",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda2 /foo',
+                    "/dev/sda2 /foo",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda3 /bar',
+                    "/dev/sda3 /bar",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sdb1 btrfs /dev/sdb1',
+                    "/dev/sdb1 btrfs /dev/sdb1",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -821,30 +873,36 @@ info_df_groups = [
                 "item_appearance": "volume_name_and_mountpoint",
                 "grouping_behaviour": "volume_name_and_mountpoint",
             },
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
-                'patterns_exclude': ['/dev/sda3 /bar']
-            }]],
+            [
+                {
+                    "groups": [
+                        {
+                            "group_name": "my-group",
+                            "patterns_include": ["/dev/sda1 /", "/dev/sda2 /foo"],
+                            "patterns_exclude": ["/dev/sda3 /bar"],
+                        }
+                    ]
+                }
+            ],
             [
                 (
-                    'my-group',
+                    "my-group",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "grouping_behaviour": "volume_name_and_mountpoint",
-                        "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
+                        "patterns": (["/dev/sda1 /", "/dev/sda2 /foo"], ["/dev/sda3 /bar"]),
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda3 /bar',
+                    "/dev/sda3 /bar",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sdb1 btrfs /dev/sdb1',
+                    "/dev/sdb1 btrfs /dev/sdb1",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -858,35 +916,41 @@ info_df_groups = [
                 "grouping_behaviour": "volume_name_and_mountpoint",
             },
             # groups do not apply
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/', '/foo'],
-                'patterns_exclude': ['/bar']
-            }]],
+            [
+                {
+                    "groups": [
+                        {
+                            "group_name": "my-group",
+                            "patterns_include": ["/", "/foo"],
+                            "patterns_exclude": ["/bar"],
+                        }
+                    ]
+                }
+            ],
             [
                 (
-                    '/dev/sda1 /',
+                    "/dev/sda1 /",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda2 /foo',
+                    "/dev/sda2 /foo",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sda3 /bar',
+                    "/dev/sda3 /bar",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
-                    '/dev/sdb1 btrfs /dev/sdb1',
+                    "/dev/sdb1 btrfs /dev/sdb1",
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "mountpoint_for_block_devices": "volume_name",
@@ -894,21 +958,24 @@ info_df_groups = [
                 ),
             ],
         ),
-    ])
+    ],
+)
 def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, expected_result):
-    check = Check('df')
+    check = Check("df")
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
         if ruleset is check.context.get("inventory_df_rules"):
             return inventory_df_rules
         raise AssertionError(
-            "Unknown/unhandled ruleset 'inventory_df_rules' used in mock of host_extra_conf_merged")
+            "Unknown/unhandled ruleset 'inventory_df_rules' used in mock of host_extra_conf_merged"
+        )
 
     def mocked_host_extra_conf(_hostname, ruleset):
         if ruleset is check.context.get("filesystem_groups"):
             return filesystem_groups
         raise AssertionError(
-            "Unknown/unhandled ruleset 'filesystem_groups' used in mock of host_extra_conf")
+            "Unknown/unhandled ruleset 'filesystem_groups' used in mock of host_extra_conf"
+        )
 
     with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
         with MockHostExtraConf(check, mocked_host_extra_conf, "host_extra_conf"):
@@ -922,102 +989,154 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
 @pytest.mark.parametrize(
     "add_params, expected_result",
     [
-        ({
-            "grouping_behaviour": "mountpoint",
-            "patterns": (['/', '/foo'], ['/bar']),
-        }, [
-            (2, "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)", [
-                ('fs_used', 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
-                ('fs_size', 0.205078125, None, None, None, None),
-                ('fs_used_percent', 90.0, None, None, None, None),
-            ]),
-            (0, "2 filesystems", []),
-        ]),
-        ({
-            "item_appearance": "mountpoint",
-            "grouping_behaviour": "mountpoint",
-            "patterns": (['/', '/foo'], ['/bar']),
-        }, [
-            (2, '90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)', [
-                ('fs_used', 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
-                ('fs_size', 0.205078125, None, None, None, None),
-                ('fs_used_percent', 90.0, None, None, None, None),
-            ]),
-            (0, "2 filesystems", []),
-        ]),
-        ({
-            "item_appearance": "volume_name_and_mountpoint",
-            "grouping_behaviour": "volume_name_and_mountpoint",
-            "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
-        }, [
-            (2, "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)", [
-                ('fs_used', 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
-                ('fs_size', 0.205078125, None, None, None, None),
-                ('fs_used_percent', 90.0, None, None, None, None),
-            ]),
-            (0, "2 filesystems", []),
-        ]),
+        (
+            {
+                "grouping_behaviour": "mountpoint",
+                "patterns": (["/", "/foo"], ["/bar"]),
+            },
+            [
+                (
+                    2,
+                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    [
+                        ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
+                        ("fs_size", 0.205078125, None, None, None, None),
+                        ("fs_used_percent", 90.0, None, None, None, None),
+                    ],
+                ),
+                (0, "2 filesystems", []),
+            ],
+        ),
+        (
+            {
+                "item_appearance": "mountpoint",
+                "grouping_behaviour": "mountpoint",
+                "patterns": (["/", "/foo"], ["/bar"]),
+            },
+            [
+                (
+                    2,
+                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    [
+                        ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
+                        ("fs_size", 0.205078125, None, None, None, None),
+                        ("fs_used_percent", 90.0, None, None, None, None),
+                    ],
+                ),
+                (0, "2 filesystems", []),
+            ],
+        ),
+        (
+            {
+                "item_appearance": "volume_name_and_mountpoint",
+                "grouping_behaviour": "volume_name_and_mountpoint",
+                "patterns": (["/dev/sda1 /", "/dev/sda2 /foo"], ["/dev/sda3 /bar"]),
+            },
+            [
+                (
+                    2,
+                    "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)",
+                    [
+                        ("fs_used", 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
+                        ("fs_size", 0.205078125, None, None, None, None),
+                        ("fs_used_percent", 90.0, None, None, None, None),
+                    ],
+                ),
+                (0, "2 filesystems", []),
+            ],
+        ),
         # unknowns; only happens if patterns are adapted without discovery
-        ({
-            "item_appearance": "mountpoint",
-            "grouping_behaviour": "mountpoint",
-            "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
-        }, [
-            (3, "No filesystem matching the patterns", []),
-        ]),
-        ({
-            "item_appearance": "volume_name_and_mountpoint",
-            "grouping_behaviour": "volume_name_and_mountpoint",
-            "patterns": (['/', '/foo'], ['/bar']),
-        }, [
-            (3, "No filesystem matching the patterns", []),
-        ]),
+        (
+            {
+                "item_appearance": "mountpoint",
+                "grouping_behaviour": "mountpoint",
+                "patterns": (["/dev/sda1 /", "/dev/sda2 /foo"], ["/dev/sda3 /bar"]),
+            },
+            [
+                (3, "No filesystem matching the patterns", []),
+            ],
+        ),
+        (
+            {
+                "item_appearance": "volume_name_and_mountpoint",
+                "grouping_behaviour": "volume_name_and_mountpoint",
+                "patterns": (["/", "/foo"], ["/bar"]),
+            },
+            [
+                (3, "No filesystem matching the patterns", []),
+            ],
+        ),
         # mixed btrfs and mps
-        ({
-            "item_appearance": "mountpoint",
-            "grouping_behaviour": "mountpoint",
-            "patterns": (['/', 'btrfs /dev/sdb1'], ['/foo', '/bar']),
-        }, [
-            (2, "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)", [
-                ('fs_used', 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
-                ('fs_size', 0.224609375, None, None, None, None),
-                ('fs_used_percent', 90.0, None, None, None, None),
-            ]),
-            (0, "2 filesystems", []),
-        ]),
-        ({
-            "item_appearance": "volume_name_and_mountpoint",
-            "grouping_behaviour": "volume_name_and_mountpoint",
-            "patterns": (['/dev/sda1 /', '/dev/sdb1 btrfs /dev/sdb1'
-                         ], ['/dev/sda2 /foo', '/dev/sda3 /bar']),
-        }, [
-            (2, "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)", [
-                ('fs_used', 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
-                ('fs_size', 0.224609375, None, None, None, None),
-                ('fs_used_percent', 90.0, None, None, None, None),
-            ]),
-            (0, "2 filesystems", []),
-        ]),
+        (
+            {
+                "item_appearance": "mountpoint",
+                "grouping_behaviour": "mountpoint",
+                "patterns": (["/", "btrfs /dev/sdb1"], ["/foo", "/bar"]),
+            },
+            [
+                (
+                    2,
+                    "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)",
+                    [
+                        ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
+                        ("fs_size", 0.224609375, None, None, None, None),
+                        ("fs_used_percent", 90.0, None, None, None, None),
+                    ],
+                ),
+                (0, "2 filesystems", []),
+            ],
+        ),
+        (
+            {
+                "item_appearance": "volume_name_and_mountpoint",
+                "grouping_behaviour": "volume_name_and_mountpoint",
+                "patterns": (
+                    ["/dev/sda1 /", "/dev/sdb1 btrfs /dev/sdb1"],
+                    ["/dev/sda2 /foo", "/dev/sda3 /bar"],
+                ),
+            },
+            [
+                (
+                    2,
+                    "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)",
+                    [
+                        ("fs_used", 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
+                        ("fs_size", 0.224609375, None, None, None, None),
+                        ("fs_used_percent", 90.0, None, None, None, None),
+                    ],
+                ),
+                (0, "2 filesystems", []),
+            ],
+        ),
         # unknowns; only happens if patterns are adapted without discovery
-        ({
-            "item_appearance": "mountpoint",
-            "grouping_behaviour": "mountpoint",
-            "patterns": (['/dev/sda1 /', '/dev/sdb1 btrfs /dev/sdb1'
-                         ], ['/dev/sda2 /foo', '/dev/sda3 /bar']),
-        }, [
-            (3, "No filesystem matching the patterns", []),
-        ]),
-        ({
-            "item_appearance": "volume_name_and_mountpoint",
-            "grouping_behaviour": "volume_name_and_mountpoint",
-            "patterns": (['/', 'btrfs /dev/sdb1'], ['/foo', '/bar']),
-        }, [
-            (3, "No filesystem matching the patterns", []),
-        ]),
-    ])
+        (
+            {
+                "item_appearance": "mountpoint",
+                "grouping_behaviour": "mountpoint",
+                "patterns": (
+                    ["/dev/sda1 /", "/dev/sdb1 btrfs /dev/sdb1"],
+                    ["/dev/sda2 /foo", "/dev/sda3 /bar"],
+                ),
+            },
+            [
+                (3, "No filesystem matching the patterns", []),
+            ],
+        ),
+        (
+            {
+                "item_appearance": "volume_name_and_mountpoint",
+                "grouping_behaviour": "volume_name_and_mountpoint",
+                "patterns": (["/", "btrfs /dev/sdb1"], ["/foo", "/bar"]),
+            },
+            [
+                (3, "No filesystem matching the patterns", []),
+            ],
+        ),
+    ],
+)
 def test_df_check_groups_with_parse(add_params, expected_result):
-    check = Check('df')
-    params = df_params
+    check = Check("df")
+    params = make_test_df_params()
     params.update(add_params)
 
     actual = CheckResult(check.run_check("my-group", params, parse_df(info_df_groups)))

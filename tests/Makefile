@@ -164,7 +164,7 @@ test-composition: prepare-node-modules
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
 
 test-docker-docker:
-	DOCKER_RUN_ADDOPTS="-v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e HOME" \
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e HOME" \
 	    ../scripts/run-in-docker.sh make --quiet test-docker
 
 test-docker:

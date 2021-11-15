@@ -4876,12 +4876,17 @@ class Alternative(ValueSpec):
         return self._elements[0].canonical_value()
 
     def default_value(self):
-        try:
-            if isinstance(self._default_value, type(lambda: True)):
-                return self._default_value()
-            return self._default_value
-        except Exception:
+        if callable(self._default_value):
+            try:
+                value = self._default_value()
+            except Exception:
+                value = DEF_VALUE
+        else:
+            value = self._default_value
+
+        if isinstance(value, _Sentinel):
             return self._elements[0].default_value()
+        return value
 
     def value_to_text(self, value) -> ValueSpecText:
         vs, value = self.matching_alternative(value)

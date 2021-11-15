@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import shutil
 from pathlib import Path
-from shutil import copyfileobj
 from tempfile import mkstemp
 from typing import Dict, Mapping, Optional
 
 from agent_receiver.checkmk_rest_api import host_exists, post_csr
-from agent_receiver.constants import AGENT_OUTPUT_DIR, DATA_SOURCE_DIR
+from agent_receiver.constants import AGENT_OUTPUT_DIR, DATA_SOURCE_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
@@ -110,21 +110,47 @@ async def register_with_hostname(
     )
 
 
+def get_hostname(uuid: str) -> Optional[str]:
+    link_path = AGENT_OUTPUT_DIR / uuid
+
+    try:
+        target_path = os.readlink(link_path)
+    except FileNotFoundError:
+        return
+
+    return Path(target_path).name
+
+
 @app.post("/agent-data")
-async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
+async def agent_data(
+    uuid: str = Form(...), upload_file: UploadFile = File(...)
+) -> Dict[str, str]:
     file_dir = AGENT_OUTPUT_DIR / uuid
-    file_path = file_dir / "received_output"
+    file_path = file_dir / "received-output"
 
     try:
         file_handle, temp_path = mkstemp(dir=file_dir)
         with open(file_handle, "wb") as temp_file:
-            copyfileobj(upload_file.file, temp_file)
+            shutil.copyfileobj(upload_file.file, temp_file)
 
         os.rename(temp_path, file_path)
 
     except FileNotFoundError:
         logger.error(f"uuid={uuid} Host is not registered")
         raise HTTPException(status_code=403, detail="Host is not registered")
+
+    ready_file = REGISTRATION_REQUESTS / "READY" / f"{uuid}.json"
+    hostname = get_hostname(uuid)
+
+    if ready_file.exists() and hostname:
+        try:
+            shutil.move(
+                ready_file, REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{hostname}.json"
+            )
+        except FileNotFoundError:
+            logger.warn(
+                f"uuid={uuid} Could not move registration request from READY to DISCOVERABLE"
+            )
 
     logger.info(f"uuid={uuid} Agent data saved")
     return {"message": "Agent data saved."}

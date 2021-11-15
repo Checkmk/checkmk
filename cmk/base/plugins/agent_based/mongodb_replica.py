@@ -15,6 +15,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 @dataclass(frozen=True)
 class Secondaries:
     active: Sequence[str]
+    passive: Sequence[str]
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,7 @@ def _parse_mongodb_replica_legacy(string_table: StringTable) -> ReplicaSet:
         primary=primary if primary != "n/a" else None,
         secondaries=Secondaries(
             active=_parse_concatenated_hosts(section_dict.get("hosts")),
+            passive=[],
         ),
         arbiters=_parse_concatenated_hosts(section_dict.get("arbiters")),
     )
@@ -59,6 +61,7 @@ def parse_mongodb_replica(string_table: StringTable) -> ReplicaSet:
         primary=section_dict["primary"],
         secondaries=Secondaries(
             active=section_dict["secondaries"]["active"],
+            passive=section_dict["secondaries"]["passive"],
         ),
         arbiters=section_dict["arbiters"],
     )
@@ -86,26 +89,29 @@ def check_mongodb_replica(section: ReplicaSet) -> CheckResult:
             summary="Replica set does not have a primary node",
         )
     )
-    yield (
+    yield from (
         Result(
             state=State.OK,
-            summary=f"Hosts: {', '.join(section.secondaries.active)}",
+            summary=f"{designation.capitalize()}: {', '.join(hosts)}",
         )
-        if section.secondaries.active
+        if hosts
         else Result(
             state=State.OK,
-            summary="No hosts",
+            summary=f"No {designation}",
         )
-    )
-    yield (
-        Result(
-            state=State.OK,
-            summary=f"Arbiters: {', '.join(section.arbiters)}",
-        )
-        if section.arbiters
-        else Result(
-            state=State.OK,
-            summary="No arbiters",
+        for designation, hosts in (
+            (
+                "active secondaries",
+                section.secondaries.active,
+            ),
+            (
+                "passive secondaries",
+                section.secondaries.passive,
+            ),
+            (
+                "arbiters",
+                section.arbiters,
+            ),
         )
     )
 

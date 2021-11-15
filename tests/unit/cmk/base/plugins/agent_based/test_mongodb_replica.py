@@ -25,7 +25,8 @@ from cmk.base.plugins.agent_based.mongodb_replica import (
             [
                 [
                     '{"primary": "idbv0068.xyz.de:27017", "secondaries": {"active": '
-                    '["idbv0067.xyz:27017", "idbv0068.xyz.de:27017"]}, "arbiters": '
+                    '["idbv0067.xyz:27017", "idbv0068.xyz.de:27017"], "passive": '
+                    '["idbv0070.xyz:27017", "idbv0071.xyz.de:27017"]}, "arbiters": '
                     '["idbv0069.xyz.de:27017"]}'
                 ]
             ],
@@ -35,6 +36,10 @@ from cmk.base.plugins.agent_based.mongodb_replica import (
                     active=[
                         "idbv0067.xyz:27017",
                         "idbv0068.xyz.de:27017",
+                    ],
+                    passive=[
+                        "idbv0070.xyz:27017",
+                        "idbv0071.xyz.de:27017",
                     ],
                 ),
                 arbiters=["idbv0069.xyz.de:27017"],
@@ -63,6 +68,7 @@ from cmk.base.plugins.agent_based.mongodb_replica import (
                         "idbv0067.xyz:27017",
                         "idbv0068.xyz.de:27017",
                     ],
+                    passive=[],
                 ),
                 arbiters=["idbv0069.xyz.de:27017"],
             ),
@@ -88,6 +94,10 @@ def test_parse_mongodb_replica(
                         "idbv0067.xyz:27017",
                         "idbv0068.xyz.de:27017",
                     ],
+                    passive=[
+                        "idbv0070.xyz:27017",
+                        "idbv0071.xyz.de:27017",
+                    ],
                 ),
                 arbiters=["idbv0069.xyz.de:27017"],
             ),
@@ -98,7 +108,11 @@ def test_parse_mongodb_replica(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Hosts: idbv0067.xyz:27017, idbv0068.xyz.de:27017",
+                    summary="Active secondaries: idbv0067.xyz:27017, idbv0068.xyz.de:27017",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Passive secondaries: idbv0070.xyz:27017, idbv0071.xyz.de:27017",
                 ),
                 Result(
                     state=State.OK,
@@ -115,6 +129,7 @@ def test_parse_mongodb_replica(
                         "idbv0067.xyz:27017",
                         "idbv0068.xyz.de:27017",
                     ],
+                    passive=[],
                 ),
                 arbiters=["idbv0069.xyz.de:27017"],
             ),
@@ -125,7 +140,11 @@ def test_parse_mongodb_replica(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Hosts: idbv0067.xyz:27017, idbv0068.xyz.de:27017",
+                    summary="Active secondaries: idbv0067.xyz:27017, idbv0068.xyz.de:27017",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="No passive secondaries",
                 ),
                 Result(
                     state=State.OK,
@@ -139,6 +158,7 @@ def test_parse_mongodb_replica(
                 primary="idbv0068.xyz.de:27017",
                 secondaries=Secondaries(
                     active=[],
+                    passive=[],
                 ),
                 arbiters=[],
             ),
@@ -149,7 +169,11 @@ def test_parse_mongodb_replica(
                 ),
                 Result(
                     state=State.OK,
-                    summary="No hosts",
+                    summary="No active secondaries",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="No passive secondaries",
                 ),
                 Result(
                     state=State.OK,

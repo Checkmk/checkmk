@@ -142,6 +142,10 @@ def sections_replica(server_status):
                         "hosts",
                         [],
                     ),
+                    "passive": repl_info.get(
+                        "passives",
+                        [],
+                    ),
                 },
                 "arbiters": repl_info.get(
                     "arbiters",

@@ -122,6 +122,16 @@ def _build(request, client, version, prepare_package=True):
         logger.info("= Build log ==================")
         raise
 
+    logger.info("= Build log ==================")
+    for entry in build_logs:
+        if "stream" in entry:
+            logger.info(entry["stream"].rstrip())
+        elif "aux" in entry:
+            logger.info(entry["aux"])
+        else:
+            logger.info("UNEXPECTED FORMAT: %r", entry)
+    logger.info("= Build log ==================")
+
     # TODO: Enable this on CI system. Removing during development slows down testing
     # request.addfinalizer(lambda: client.images.remove(image.id, force=True))
 

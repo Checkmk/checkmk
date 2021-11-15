@@ -86,16 +86,28 @@ def check_mongodb_replica(section: ReplicaSet) -> CheckResult:
             summary="Replica set does not have a primary node",
         )
     )
-    if section.secondaries.active:
-        yield Result(
+    yield (
+        Result(
             state=State.OK,
             summary=f"Hosts: {', '.join(section.secondaries.active)}",
         )
-    if section.arbiters:
-        yield Result(
+        if section.secondaries.active
+        else Result(
+            state=State.OK,
+            summary="No hosts",
+        )
+    )
+    yield (
+        Result(
             state=State.OK,
             summary=f"Arbiters: {', '.join(section.arbiters)}",
         )
+        if section.arbiters
+        else Result(
+            state=State.OK,
+            summary="No arbiters",
+        )
+    )
 
 
 register.check_plugin(

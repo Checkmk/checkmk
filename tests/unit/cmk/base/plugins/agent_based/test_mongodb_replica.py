@@ -133,6 +133,14 @@ def test_parse_mongodb_replica(
                     state=State.OK,
                     summary="Primary: idbv0068.xyz.de:27017",
                 ),
+                Result(
+                    state=State.OK,
+                    summary="No hosts",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="No arbiters",
+                ),
             ],
             id="minimal case",
         ),

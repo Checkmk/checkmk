@@ -8,17 +8,14 @@ from typing import Sequence
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.mongodb_replica import (
+    check_mongodb_replica,
     parse_mongodb_replica,
     ReplicaSet,
     Secondaries,
 )
-
-from tests.unit.conftest import FixRegister
 
 
 @pytest.mark.parametrize(
@@ -135,17 +132,7 @@ def test_parse_mongodb_replica(
     ],
 )
 def test_check_mongodb_replica(
-    fix_register: FixRegister,
     section: ReplicaSet,
     expected_check_result: Sequence[Result],
 ) -> None:
-    assert (
-        list(
-            fix_register.check_plugins[CheckPluginName("mongodb_replica")].check_function(
-                item=None,
-                params={},
-                section=section,
-            )
-        )
-        == expected_check_result
-    )
+    assert list(check_mongodb_replica(section=section)) == expected_check_result

@@ -7,8 +7,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass(frozen=True)
@@ -38,4 +38,40 @@ def parse_mongodb_replica(string_table: StringTable) -> ReplicaSet:
 register.agent_section(
     name="mongodb_replica",
     parse_function=parse_mongodb_replica,
+)
+
+
+def discover_mongodb_replica(section: ReplicaSet) -> DiscoveryResult:
+    yield Service()
+
+
+def check_mongodb_replica(section: ReplicaSet) -> CheckResult:
+    yield (
+        Result(
+            state=State.OK,
+            summary=f"Primary: {section.primary}",
+        )
+        if section.primary is not None
+        else Result(
+            state=State.CRIT,
+            summary="Replica set does not have a primary node",
+        )
+    )
+    if section.secondaries.active:
+        yield Result(
+            state=State.OK,
+            summary=f"Hosts: {section.secondaries.active}",
+        )
+    if section.arbiters:
+        yield Result(
+            state=State.OK,
+            summary=f"Arbiters: {section.arbiters}",
+        )
+
+
+register.check_plugin(
+    name="mongodb_replica",
+    service_name="MongoDB Replica Set Status",
+    discovery_function=discover_mongodb_replica,
+    check_function=check_mongodb_replica,
 )

@@ -2088,7 +2088,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "mongodb_instance",
         "mongodb_locks",
         "mongodb_mem",
-        "mongodb_replica",
         "mongodb_replica_set",
         "mongodb_replica_set.election",
         "mongodb_replication_info",

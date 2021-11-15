@@ -29,8 +29,15 @@ Section = Mapping[str, Mapping[str, int]]
 def parse_mongodb_counters(string_table: StringTable) -> Section:
     parsed: MutableMapping[str, MutableMapping[str, int]] = {}
     for line in string_table:
-        document, counter_name, counter_value = line
-        parsed.setdefault(document, {})[counter_name] = int(counter_value)
+        document, counter_name, *counter_values = line
+
+        # the documentation says that this should only happen from 5.1 onwards:
+        # https://docs.mongodb.com/v5.1/reference/command/serverStatus/#mongodb-serverstatus-serverstatus.opcounters.deprecated
+        # however, according to SUP-8433, this can also happen with earlier version (4.2.15)
+        if counter_name == "deprecated":
+            continue
+
+        parsed.setdefault(document, {})[counter_name] = int(counter_values[0])
     return parsed
 
 

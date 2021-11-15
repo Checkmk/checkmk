@@ -162,18 +162,19 @@ def check_cisco_ip_sla(_item, params, data):
         yield state, infotext, perfdata
 
 
-check_info["cisco_ip_sla"] = {
-    "parse_function": parse_cisco_ip_sla,
-    "inventory_function": inventory_cisco_ip_sla,
-    "check_function": check_cisco_ip_sla,
-    "service_description": "Cisco IP SLA %s",
-    "group": "cisco_ip_sla",
-    "default_levels_variable": "cisco_ip_sla_default_levels",
-    "has_perfdata": True,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
-    in [
-        ".1.3.6.1.4.1.9.1.2068",
-        ".1.3.6.1.4.1.9.1.1858",
+check_info['cisco_ip_sla'] = {
+    'parse_function': parse_cisco_ip_sla,
+    'inventory_function': inventory_cisco_ip_sla,
+    'check_function': check_cisco_ip_sla,
+    'service_description': 'Cisco IP SLA %s',
+    'group': 'cisco_ip_sla',
+    'default_levels_variable': 'cisco_ip_sla_default_levels',
+    'has_perfdata': True,
+    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [
+        '.1.3.6.1.4.1.9.1.2068',
+        '.1.3.6.1.4.1.9.1.1858',
+        '.1.3.6.1.4.1.9.1.1861',
+        '.1.3.6.1.4.1.9.1.2348',
     ],
     "snmp_info": [
         (

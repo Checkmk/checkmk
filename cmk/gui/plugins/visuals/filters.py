@@ -2389,15 +2389,26 @@ class FilterAggrGroup(Filter):
     def selected_group(self):
         return html.request.get_unicode_input(self.htmlvars[0])
 
-    # TODO: get value to filter against from context instead of from html vars
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        group = self.selected_group()
+        group = _get_value_from_context(context, self.ident, self.htmlvars[0])
         if not group:
             return rows
         return [row for row in rows if row[self.column] == group]
 
     def heading_info(self):
         return html.request.get_unicode_input(self.htmlvars[0])
+
+
+def _get_value_from_context(context: VisualContext, ident: str, varname: str) -> Union[str, None]:
+    """
+    Workaround to fix missing htmlvars for VisualInfoBIAggregation and
+    VisualInfoBIAggregationGroup.
+    Already fixed in 2.1 (but with bigger changes in filter logic)
+    """
+    value: Union[str, Dict[str, str], None] = context.get(ident)
+    if isinstance(value, dict):
+        value = value.get(varname)
+    return value
 
 
 @filter_registry.register_instance
@@ -2489,9 +2500,9 @@ class BITextFilter(Filter):
     def heading_info(self):
         return html.request.get_unicode_input(self.htmlvars[0])
 
-    # TODO: get value to filter against from context instead of from html vars
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        val = html.request.get_unicode_input(self.htmlvars[0])
+        val = _get_value_from_context(context, self.ident, self.htmlvars[0])
+
         if not val:
             return rows
         if self.how == "regex":

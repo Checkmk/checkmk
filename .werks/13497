@@ -1,0 +1,14 @@
+Title: Fix BI name and group filter in report elements
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1636981080
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p16
+
+If you added an "Availability table" element with a datasource for BI
+aggregations, restricted to a single object, to an existing report, the Filter
+"BI Aggregation" and "BI Aggregation Group" were inoperative and all
+Aggregations were shown instead.

@@ -16,6 +16,7 @@ import cmk.gui.inventory
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
+from cmk.gui.type_defs import InfoName, VisualContext
 
 # Triggers plugin loading
 import cmk.gui.views
@@ -1067,14 +1068,18 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
 
     with html.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
-        html.request.del_vars()
-        for key, val in test.request_vars:
-            html.request.set_var(key, val)
+        if test.ident in ["aggr_name", "aggr_group"]:
+            context: VisualContext = {test.ident: dict(test.request_vars)}
+        else:
+            context = {}
+            html.request.del_vars()
+            for key, val in test.request_vars:
+                html.request.set_var(key, val)
 
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-            assert filt.filter_table({}, test.rows) == test.expected_rows
+            assert filt.filter_table(context, test.rows) == test.expected_rows
 
 
 # Filter form is not really checked. Only checking that no exception occurs

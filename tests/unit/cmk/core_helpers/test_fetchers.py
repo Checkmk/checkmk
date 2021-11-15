@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, NamedTuple, Optional, Sequence, Type, Union
 
+import mock
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -884,6 +885,35 @@ class TestTCPFetcher:
 
         with pytest.raises(MKFetcherError):
             fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:]))
+
+    def test_get_agent_data_without_tls(
+        self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher
+    ) -> None:
+        agent_output = b"<<<section:sep(0)>>>\nbody\n"
+
+        monkeypatch.setattr(fetcher, "_fetch_protocol_bytes", lambda: agent_output[:2])
+        monkeypatch.setattr(fetcher, "_raw_data", lambda: agent_output[2:])
+        agent_data, protocol = fetcher._get_agent_data()
+
+        assert agent_data == agent_output[2:]
+        assert protocol == TransportProtocol.PLAIN
+
+    def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
+        agent_output = b"16<<<section:sep(0)>>>\nbody\n"
+
+        monkeypatch.setattr(fetcher, "_fetch_protocol_bytes", lambda: agent_output[:2])
+        monkeypatch.setattr(fetcher, "_fetch_via_tls", lambda: agent_output[2:])
+        agent_data, protocol = fetcher._get_agent_data()
+
+        assert agent_data == agent_output[4:]
+        assert protocol == TransportProtocol.PLAIN
+
+    def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:
+        assert fetcher._detect_transport_protocol(b"02") == TransportProtocol.SHA256
+
+    def test_detect_transport_protocol_error(self, fetcher: TCPFetcher) -> None:
+        with pytest.raises(MKFetcherError, match="Unknown transport protocol: b'abc'"):
+            fetcher._detect_transport_protocol(b"abc")
 
 
 class TestFetcherCaching:

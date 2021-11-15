@@ -119,21 +119,21 @@ class TCPFetcher(AgentFetcher):
                 "Got no data: No usable cache file present at %s" % self.file_cache.base_path
             )
 
-        protocol = self._detect_transport_protocol()
+        agent_data, protocol = self._get_agent_data()
+        return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 
-        # TODO: make this configurable! This will be "auto":
-        fetch_from_tls = protocol == TransportProtocol.TLS
+    def _get_agent_data(self) -> Tuple[AgentRawData, TransportProtocol]:
+        raw_protocol = self._fetch_protocol_bytes()
+        protocol = self._detect_transport_protocol(raw_protocol)
 
-        return self._validate_decrypted_data(
-            self._fetch_via_tls() if fetch_from_tls else self._decrypt(protocol, self._raw_data())
-        )
+        if protocol == TransportProtocol.TLS:
+            agent_data = self._fetch_via_tls()
+            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(agent_data[:2])
 
-    def _detect_transport_protocol(self) -> TransportProtocol:
-        try:
-            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
-        except socket.error as e:
-            raise MKFetcherError(f"Communication failed: {e}") from e
+        return self._raw_data(), protocol
 
+    @staticmethod
+    def _detect_transport_protocol(raw_protocol: bytes) -> TransportProtocol:
         try:
             return TransportProtocol(raw_protocol)
         except ValueError:
@@ -149,6 +149,13 @@ class TCPFetcher(AgentFetcher):
         with ctx.wrap_socket(self._socket, server_hostname=self.controller_uuid) as ssock:
             self._logger.debug("Reading data from agent via TLS socket")
             return AgentRawData(self._recvall(ssock))
+
+    def _fetch_protocol_bytes(self) -> bytes:
+        try:
+            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
+        except socket.error as e:
+            raise MKFetcherError(f"Communication failed: {e}") from e
+        return raw_protocol
 
     def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")

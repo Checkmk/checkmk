@@ -24,6 +24,26 @@ from cmk.base.plugins.agent_based.mongodb_replica import (
         pytest.param(
             [
                 [
+                    '{"primary": "idbv0068.xyz.de:27017", "secondaries": {"active": '
+                    '["idbv0067.xyz:27017", "idbv0068.xyz.de:27017"]}, "arbiters": '
+                    '["idbv0069.xyz.de:27017"]}'
+                ]
+            ],
+            ReplicaSet(
+                primary="idbv0068.xyz.de:27017",
+                secondaries=Secondaries(
+                    active=[
+                        "idbv0067.xyz:27017",
+                        "idbv0068.xyz.de:27017",
+                    ],
+                ),
+                arbiters=["idbv0069.xyz.de:27017"],
+            ),
+            id="up-to-date case",
+        ),
+        pytest.param(
+            [
+                [
                     "primary",
                     "idbv0068.xyz.de:27017",
                 ],
@@ -39,35 +59,14 @@ from cmk.base.plugins.agent_based.mongodb_replica import (
             ReplicaSet(
                 primary="idbv0068.xyz.de:27017",
                 secondaries=Secondaries(
-                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                    active=[
+                        "idbv0067.xyz:27017",
+                        "idbv0068.xyz.de:27017",
+                    ],
                 ),
-                arbiters="idbv0069.xyz.de:27017",
+                arbiters=["idbv0069.xyz.de:27017"],
             ),
-            id="primary present",
-        ),
-        pytest.param(
-            [
-                [
-                    "primary",
-                    "n/a",
-                ],
-                [
-                    "hosts",
-                    "idbv0067.xyz:27017 idbv0068.xyz.de:27017",
-                ],
-                [
-                    "arbiters",
-                    "idbv0069.xyz.de:27017",
-                ],
-            ],
-            ReplicaSet(
-                primary=None,
-                secondaries=Secondaries(
-                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
-                ),
-                arbiters="idbv0069.xyz.de:27017",
-            ),
-            id="primary missing",
+            id="legacy case",
         ),
     ],
 )
@@ -85,9 +84,12 @@ def test_parse_mongodb_replica(
             ReplicaSet(
                 primary="idbv0068.xyz.de:27017",
                 secondaries=Secondaries(
-                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                    active=[
+                        "idbv0067.xyz:27017",
+                        "idbv0068.xyz.de:27017",
+                    ],
                 ),
-                arbiters="idbv0069.xyz.de:27017",
+                arbiters=["idbv0069.xyz.de:27017"],
             ),
             [
                 Result(
@@ -96,7 +98,7 @@ def test_parse_mongodb_replica(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Hosts: idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                    summary="Hosts: idbv0067.xyz:27017, idbv0068.xyz.de:27017",
                 ),
                 Result(
                     state=State.OK,
@@ -109,9 +111,12 @@ def test_parse_mongodb_replica(
             ReplicaSet(
                 primary=None,
                 secondaries=Secondaries(
-                    active="idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                    active=[
+                        "idbv0067.xyz:27017",
+                        "idbv0068.xyz.de:27017",
+                    ],
                 ),
-                arbiters="idbv0069.xyz.de:27017",
+                arbiters=["idbv0069.xyz.de:27017"],
             ),
             [
                 Result(
@@ -120,7 +125,7 @@ def test_parse_mongodb_replica(
                 ),
                 Result(
                     state=State.OK,
-                    summary="Hosts: idbv0067.xyz:27017 idbv0068.xyz.de:27017",
+                    summary="Hosts: idbv0067.xyz:27017, idbv0068.xyz.de:27017",
                 ),
                 Result(
                     state=State.OK,
@@ -128,6 +133,22 @@ def test_parse_mongodb_replica(
                 ),
             ],
             id="primary missing",
+        ),
+        pytest.param(
+            ReplicaSet(
+                primary="idbv0068.xyz.de:27017",
+                secondaries=Secondaries(
+                    active=[],
+                ),
+                arbiters=[],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Primary: idbv0068.xyz.de:27017",
+                ),
+            ],
+            id="minimal case",
         ),
     ],
 )

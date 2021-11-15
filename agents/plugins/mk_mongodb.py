@@ -132,13 +132,25 @@ def sections_replica(server_status):
 
     if not repl_info:
         return
-    sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-    sys.stdout.write("primary\t%s\n" % repl_info.get("primary", "n/a"))
-    if repl_info.get("hosts"):
-        sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
-
-    if repl_info.get("arbiters"):
-        sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
+    sys.stdout.write("<<<mongodb_replica:sep(0)>>>\n")
+    sys.stdout.write(
+        json.dumps(
+            {
+                "primary": repl_info.get("primary"),
+                "secondaries": {
+                    "active": repl_info.get(
+                        "hosts",
+                        [],
+                    ),
+                },
+                "arbiters": repl_info.get(
+                    "arbiters",
+                    [],
+                ),
+            }
+        )
+        + "\n"
+    )
 
 
 def sections_replica_set(client):

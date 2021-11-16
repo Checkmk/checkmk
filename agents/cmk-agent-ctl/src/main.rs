@@ -7,6 +7,7 @@ mod cli;
 mod config;
 mod marcv_api;
 mod monitoring_data;
+mod tls_server;
 use config::RegistrationState;
 use core::panic;
 use std::error::Error;
@@ -26,6 +27,7 @@ const CONFIG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl-config.json";
 
 const STATE_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl-state.json";
 const LOG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl.log";
+const TLS_ID: &[u8] = b"16";
 
 fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
     let marcv_addresses = config
@@ -98,6 +100,26 @@ fn status(_config: config::Config) {
     panic!("Status mode not yet implemented")
 }
 
+fn pull(config: config::Config, reg_state: config::RegistrationState) {
+    let mut stream = tls_server::IoStream::new();
+
+    stream.write(TLS_ID).unwrap();
+    stream.flush().unwrap();
+
+    let mut tls_connection = match tls_server::tls_connection(reg_state) {
+        Ok(conn) => conn,
+        Err(error) => panic!("Could not initialize TLS: {}", error),
+    };
+    let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
+
+    let mon_data = match monitoring_data::collect(config.package_name) {
+        Ok(mon_data) => mon_data,
+        Err(error) => panic!("Error collecting monitoring data: {}", error),
+    };
+    tls_stream.write_all(&mon_data).unwrap();
+    tls_stream.flush().unwrap();
+}
+
 fn get_configuration(path_config: &Path, args: cli::Args) -> io::Result<config::Config> {
     return Ok(config::Config::merge_two_configs(
         config::Config::from_file(path_config)?,
@@ -145,6 +167,7 @@ fn main() {
         "register" => register(config, reg_state, &path_state_file),
         "push" => push(config, reg_state),
         "status" => status(config),
+        "pull" => pull(config, reg_state),
         _ => {
             panic!("Invalid mode: {}", mode)
         }

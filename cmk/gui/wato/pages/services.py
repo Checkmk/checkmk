@@ -43,7 +43,6 @@ from cmk.gui.plugins.wato import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.sites import sitenames
 from cmk.gui.table import table_element
-from cmk.gui.utils.escaping import escape_html
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
@@ -331,6 +330,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     def _get_status_message(
         self, discovery_result: DiscoveryResult, performed_action: str
     ) -> Optional[str]:
+        if discovery_result.job_status["state"] == JobStatusStates.FINISHED:
+            return None
+
         if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
@@ -371,11 +373,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if discovery_result.job_status["state"] == JobStatusStates.STOPPED:
             messages.append(
                 _("%s was stopped after %s at %s.") % (job_title, duration_txt, finished_txt)
-            )
-
-        elif discovery_result.job_status["state"] == JobStatusStates.FINISHED:
-            messages.append(
-                _("%s finished after %s at %s.") % (job_title, duration_txt, finished_txt)
             )
 
         if cmk_check_entries:
@@ -522,12 +519,10 @@ class DiscoveryPageRenderer:
 
     def render(self, discovery_result: DiscoveryResult, api_request: dict) -> str:
         with output_funnel.plugged():
-            html.div("", id_="row_info")
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry("inline_help")
-            host_labels_row_count = self._show_discovered_host_labels(discovery_result)
-            details_row_count = self._show_discovery_details(discovery_result, api_request)
-            self._update_row_info(host_labels_row_count + details_row_count)
+            self._show_discovery_details(discovery_result, api_request)
+            self._show_discovered_host_labels(discovery_result)
             return output_funnel.drain()
 
     def render_fix_all(self, discovery_result: DiscoveryResult) -> str:
@@ -535,32 +530,30 @@ class DiscoveryPageRenderer:
             self._show_fix_all(discovery_result)
             return output_funnel.drain()
 
-    def _update_row_info(self, abs_row_count: int):
-        row_info = _("1 row") if abs_row_count == 1 else _("%d rows") % abs_row_count
-        html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
-
-    def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> int:
-        host_label_row_count = 0
+    def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result.host_labels:
-            return host_label_row_count
+            return
 
         with table_element(
-            css="data", searchable=False, limit=False, sortable=False, omit_update_header=False
+            table_id="host_labels",
+            title=_("Discovered host labels (%s)") % len(discovery_result.host_labels),
+            css="data",
+            searchable=False,
+            limit=False,
+            sortable=False,
+            foldable=True,
+            omit_update_header=False,
         ) as table:
-
             return self._render_host_labels(
                 table,
-                host_label_row_count,
                 discovery_result,
             )
 
     def _render_host_labels(
         self,
         table,
-        host_label_row_count: int,
         discovery_result: DiscoveryResult,
-    ) -> int:
-        table.groupheader(_("Discovered host labels"))
+    ) -> None:
         active_host_labels: Dict[str, Dict[str, str]] = {}
         changed_host_labels: Dict[str, Dict[str, str]] = {}
 
@@ -583,31 +576,30 @@ class DiscoveryPageRenderer:
             }:
                 active_host_labels.setdefault(label_id, label)
 
-        host_label_row_count += self._create_host_label_row(
+        self._create_host_label_row(
             table,
             discovery_result.new_labels,
             _("New"),
         )
-        host_label_row_count += self._create_host_label_row(
+        self._create_host_label_row(
             table,
             discovery_result.vanished_labels,
             _("Vanished"),
         )
-        host_label_row_count += self._create_host_label_row(
+        self._create_host_label_row(
             table,
             changed_host_labels,
             _("Changed"),
         )
-        host_label_row_count += self._create_host_label_row(
+        self._create_host_label_row(
             table,
             active_host_labels,
             _("Active"),
         )
-        return host_label_row_count
 
-    def _create_host_label_row(self, table, host_labels, text) -> int:
+    def _create_host_label_row(self, table, host_labels, text) -> None:
         if not host_labels:
-            return 0
+            return
 
         table.row()
         table.cell(_("Status"), text, css="labelstate")
@@ -620,7 +612,7 @@ class DiscoveryPageRenderer:
                 label_sources={label_id: "discovered" for label_id in host_labels.keys()},
             )
             table.cell(_("Host labels"), labels_html, css="expanding")
-            return 1
+            return
 
         plugin_names = HTML("")
         labels_html = HTML("")
@@ -641,14 +633,11 @@ class DiscoveryPageRenderer:
 
         table.cell(_("Host labels"), labels_html, css="expanding")
         table.cell(_("Check Plugin"), plugin_names, css="plugins")
-        return 1
+        return
 
-    def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> int:
-        detail_row_count = 0
+    def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
         if not discovery_result.check_table and self._is_active(discovery_result):
-            html.br()
-            html.show_message(_("Discovered no service yet."))
-            return detail_row_count
+            return
 
         if not discovery_result.check_table and self._host.is_cluster():
             html.br()
@@ -663,10 +652,10 @@ class DiscoveryPageRenderer:
                 )
                 % (url, _("Clustered services"))
             )
-            return detail_row_count
+            return
 
         if not discovery_result.check_table:
-            return detail_row_count
+            return
 
         # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
@@ -680,12 +669,17 @@ class DiscoveryPageRenderer:
                 continue
 
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
-            html.h3(self._get_group_header(entry))
-
             with table_element(
-                css="data", searchable=False, limit=False, sortable=False, omit_update_header=True
+                table_id="checks_%s" % entry.table_group,
+                title=f"{entry.title} ({len(checks)})",
+                css="data",
+                searchable=False,
+                limit=False,
+                sortable=False,
+                foldable=True,
+                omit_update_header=False,
+                help=entry.help_text,
             ) as table:
-                detail_row_count += len(checks)
                 for check in sorted(checks, key=lambda c: c[6].lower()):
                     self._show_check_row(
                         table, discovery_result, api_request, check, entry.show_bulk_actions
@@ -695,25 +689,9 @@ class DiscoveryPageRenderer:
                 self._toggle_bulk_action_page_menu_entries(discovery_result, entry.table_group)
             html.hidden_fields()
             html.end_form()
-        return detail_row_count
 
     def _is_active(self, discovery_result):
         return discovery_result.job_status["is_active"]
-
-    def _get_group_header(self, entry: TableGroupEntry) -> HTML:
-        map_icons = {
-            DiscoveryState.UNDECIDED: "undecided",
-            DiscoveryState.MONITORED: "monitored",
-            DiscoveryState.IGNORED: "disabled",
-        }
-
-        group_header = HTML("")
-        if entry.table_group in map_icons:
-            group_header += html.render_icon("%s_service" % map_icons[entry.table_group])
-            group_header += HTML(" ")
-        group_header += escape_html(entry.title)
-
-        return group_header + html.render_help(entry.help_text)
 
     def _group_check_table_by_state(
         self, check_table: CheckTable
@@ -781,15 +759,18 @@ class DiscoveryPageRenderer:
         html.close_li()
         html.close_ul()
 
-        html.jsbutton(
-            "_fixall",
-            _("Fix all"),
-            cssclass="action",
-            onclick=_start_js_call(
-                self._host,
-                self._options._replace(action=DiscoveryAction.FIX_ALL),
-            ),
-        )
+        if any(
+            [
+                undecided_services,
+                vanished_services,
+                new_host_labels,
+                vanished_host_labels,
+                changed_host_labels,
+            ]
+        ):
+            enable_page_menu_entry("fixall")
+        else:
+            disable_page_menu_entry("fixall")
 
     def _toggle_action_page_menu_entries(self, discovery_result: DiscoveryResult) -> None:
         if not user.may("wato.services"):
@@ -1253,7 +1234,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.UNDECIDED,
                 show_bulk_actions=True,
-                title=_("Undecided services (currently not monitored)"),
+                title=_("Undecided services - currently not monitored"),
                 help_text=_(
                     "These services have been found by the service discovery but are not yet added "
                     "to the monitoring. You should either decide to monitor them or to permanently "
@@ -1264,7 +1245,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 DiscoveryState.VANISHED,
                 show_bulk_actions=True,
-                title=_("Vanished services (monitored, but no longer exist)"),
+                title=_("Vanished services - monitored, but no longer exist"),
                 help_text=_(
                     "These services had been added to the monitoring by a previous discovery "
                     "but the actual items that are monitored are not present anymore. This might "
@@ -1277,7 +1258,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 DiscoveryState.CLUSTERED_VANISHED,
                 show_bulk_actions=False,
-                title=_("Vanished clustered services (located on cluster host)"),
+                title=_("Vanished clustered services - located on cluster host"),
                 help_text=_(
                     "These services have been found on this host and have been mapped to "
                     "a cluster host by a rule in the set <i>Clustered services</i> but disappeared "
@@ -1326,7 +1307,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.LEGACY,
                 show_bulk_actions=False,
-                title=_("Legacy services (defined in main.mk)"),
+                title=_("Legacy services - defined in main.mk"),
                 help_text=_(
                     "These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
                     "in <tt>main.mk</tt> or a similar configuration file."
@@ -1335,7 +1316,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.CUSTOM,
                 show_bulk_actions=False,
-                title=_("Custom checks (defined via rule)"),
+                title=_("Custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
                     "call a classical check plugin, that you have installed yourself."
@@ -1344,7 +1325,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.CLUSTERED_OLD,
                 show_bulk_actions=False,
-                title=_("Monitored clustered services (located on cluster host)"),
+                title=_("Monitored clustered services - located on cluster host"),
                 help_text=_(
                     "These services have been found on this host but have been mapped to "
                     "a cluster host by a rule in the set <i>Clustered services</i>."
@@ -1364,7 +1345,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.CLUSTERED_IGNORED,
                 show_bulk_actions=False,
-                title=_("Disabled clustered services (located on cluster host)"),
+                title=_("Disabled clustered services - located on cluster host"),
                 help_text=_(
                     "These services have been found on this host and have been mapped to "
                     "a cluster host by a rule in the set <i>Clustered services</i> but disabled via "
@@ -1386,7 +1367,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.CUSTOM_IGNORED,
                 show_bulk_actions=False,
-                title=_("Disabled custom checks (defined via rule)"),
+                title=_("Disabled custom checks - defined via rule"),
                 help_text=_(
                     "These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
                     "call a classical check plugin, that you have installed yourself. "
@@ -1399,7 +1380,7 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.LEGACY_IGNORED,
                 show_bulk_actions=False,
-                title=_("Disabled legacy services (defined in main.mk)"),
+                title=_("Disabled legacy services - defined in main.mk"),
                 help_text=_(
                     "These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
                     "in <tt>main.mk</tt> or a similar configuration file. "
@@ -1678,6 +1659,21 @@ def _page_menu_entry_show_plugin_names(
 def _page_menu_service_configuration_entries(
     host: watolib.CREHost, options: DiscoveryOptions
 ) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Apply changes"),
+        icon_name="accept",
+        item=make_javascript_link(
+            _start_js_call(
+                host,
+                options._replace(action=DiscoveryAction.FIX_ALL),
+            ),
+        ),
+        name="fixall",
+        is_enabled=False,
+        is_shortcut=True,
+        css_classes=["action"],
+    )
+
     yield PageMenuEntry(
         title=_("Refresh"),
         icon_name="services_refresh",

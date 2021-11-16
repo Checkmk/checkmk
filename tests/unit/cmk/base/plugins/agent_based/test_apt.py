@@ -28,6 +28,12 @@ _SECTION_SEC_UPDATES = [
     [
         "Inst libexpat1 [2.2.0-2+deb9u1] (2.2.0-2+deb9u3 Debian:9.13/oldstable, Debian-Security:9/oldstable [amd64])"
     ],
+    [
+        "Inst tzdata [2021a-0ubuntu0.16.04] (2021e-0ubuntu0.16.04+esm1 UbuntuESM:16.04/xenial-infra-security [all])"
+    ],
+    [
+        "Inst bind9-host [1:9.10.3.dfsg.P4-8ubuntu1.19] (1:9.10.3.dfsg.P4-8ubuntu1.19+esm1 UbuntuESM:16.04/xenial-infra-security [amd64]) []"
+    ]
 ]
 
 
@@ -90,7 +96,7 @@ def test_data_is_valid(
             Section(
                 ["linux-libc-dev"],
                 [],
-                ["libapt-pkg5.0", "libexpat1"],
+                ["libapt-pkg5.0", "libexpat1", "tzdata", "bind9-host"],
             ),
             id="security_upates_line",
         ),

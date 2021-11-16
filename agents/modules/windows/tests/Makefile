@@ -10,7 +10,7 @@ PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
 INTEGRATION_TIMESTAMP   := results\integration.timestamp
 
 # Pythons for deploy
-PYTHON_1		:= ..\..\..\..\artefacts\python-3.8.cab
+PYTHON_1		:= ..\..\..\..\artefacts\python-3.cab
 PYTHON_2		:= ..\..\..\..\artefacts\python-3.4.cab
 
 # Scripts to be compatible with pythons

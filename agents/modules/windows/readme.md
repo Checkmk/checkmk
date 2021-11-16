@@ -51,7 +51,7 @@ This procedure may quite annoying, you have to check next points:
 
    Usually it is conftest.py and Makefile.
 
-6. Check build_the_module.cmd for 3.8, 3.4 and et cetera
+6. Check build_the_module.cmd for 3.9, 3.4 and et cetera
 7. Check the Windows node builds artifacts succesfully.
 
 ### PROCESS
@@ -59,7 +59,7 @@ This procedure may quite annoying, you have to check next points:
 #### Execution local
 
 ##### Building
-make build PY_VER=3.8 PY_SUBVER=11
+make build PY_VER=3.9 PY_SUBVER=8
 make python_344 PY_VER=3.4 PY_SUBVER=4
 
 ##### Testing
@@ -74,7 +74,7 @@ build_the_module cached
 
 In a turn the script makes two calls:
 build_the_cached artefact_dir credentials url 3.4 4
-build_the_cached artefact_dir credentials url 3.8 11
+build_the_cached artefact_dir credentials url 3.9 8
 
 #### Caching
 
@@ -97,7 +97,7 @@ In latter case the git_hash is replaced with string "latest".
 6. Install pipenv
 7. Save whole folder to the *to_save*
 8. Uninstall python from *to_install*
-9. copy ~check_mk/virtual-envs/Windows/3.8/Pipfile~ in *to_save*
+9. copy ~pipfiles/3/Pipfile~ in *to_save*
 10. Build virtual environemtn *to_save*
 11. Copy correct *pyvenv.cfg* into *tO-save/.venv*
 12. Copy runtime from runtime to DLL
@@ -126,8 +126,8 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |
 |-- tmp/
 |    |
-|    |-- 3.8/
-|    |      |   python-3.8.cab  * resulting module file
+|    |-- 3.9/
+|    |      |   python-3.9.cab  * resulting module file
 |    |      |
 |    |      |-- to_save/		* to produce module *
 |    |      |
@@ -162,11 +162,11 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |
 |-- python/
      |
-     |-- 3.8/
+     |-- 3.9/
      |       |
-     |       |-- python-3.8.timestamp
+     |       |-- python-3.9.timestamp
      |       |
-     |       +-- python-3.8/
+     |       +-- python-3.9/
      |
      |-- 3.4/
              |

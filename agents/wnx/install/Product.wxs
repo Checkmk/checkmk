@@ -324,9 +324,9 @@ just to signal that real build script was not called -->
         </Component>
 
         <!-- Modules -->
-        <Component Id="python_3.8.cab" Guid="{7E376854-A4C0-43F1-BA93-170EDF3679A5}">
-            <File Id="python_3.8.cab"
-                Source="resources\modules\python-3.8.cab"
+        <Component Id="python_3.cab" Guid="{7E376854-A4C0-43F1-BA93-170EDF3679A5}">
+            <File Id="python_3.cab"
+                Source="resources\modules\python-3.cab"
                 KeyPath="yes"
                 Checksum="yes"
                 DiskId="2"/>
@@ -474,7 +474,7 @@ just to signal that real build script was not called -->
       <ComponentRef Id="check_mk.user.yml" />
         
       <!-- Modules -->
-      <ComponentRef Id="python_3.8.cab" />
+      <ComponentRef Id="python_3.cab" />
     </Feature>
 
     <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">

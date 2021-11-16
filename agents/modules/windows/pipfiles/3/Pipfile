@@ -17,4 +17,4 @@ pyopenssl = "19.1.0"    # cmk_update_agent
 pywin32 = "==300"       # logwatch
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"

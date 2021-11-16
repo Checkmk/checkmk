@@ -18,6 +18,7 @@ del /Q ar.zip
 :: root files 
 powershell Write-Host "Cleaning environment phase 1" -foreground Cyan
 powershell Write-Host "cabs" -foreground white
+del /Q python-3.cab
 del /Q python-3.8.cab
 del /Q python-3.4.cab
 powershell Write-Host "root files" -foreground white

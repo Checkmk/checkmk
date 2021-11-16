@@ -9,7 +9,7 @@
 :: Name format 'python-<version>.<subversion>_<hash>_<id>.cab
 :: where <hash> is pretty formatted output from git log .
 ::       <id> is fixed number(BUILD_NUM)
-::       <version> is either 3.4 or 3.8
+::       <version> is either 3.4 or 3.9
 ::       <subversion> is any digit
 
 @echo off
@@ -47,11 +47,11 @@ rem remove quotes from the result
 set git_hash=%git_hash:'=%
 
 set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
-set artifact_name=%arti_dir%\python-3.8.cab
+set artifact_name=%arti_dir%\python-3.cab
 if "%version%" == "3.4" (
 set artifact_name=%arti_dir%\python-3.4.cab
 ) else (
-set artifact_name=%arti_dir%\python-3.8.cab
+set artifact_name=%arti_dir%\python-3.cab
 )
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan

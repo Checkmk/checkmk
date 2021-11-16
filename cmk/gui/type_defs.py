@@ -232,11 +232,17 @@ class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
     valuespec: Any  # TODO: better typing
 
 
-class TranslatedMetric(TypedDict):
+class _TranslatedMetricRequired(TypedDict):
+    scale: List[float]
+
+
+class TranslatedMetric(_TranslatedMetricRequired, total=False):
+    # All keys seem to be optional. At least in one situation there is a translation object
+    # constructed which only has the scale member (see
+    # CustomGraphPage._show_metric_type_combined_summary)
     orig_name: List[str]
     value: float
     scalar: Dict[str, float]
-    scale: List[float]
     auto_graph: bool
     title: str
     unit: UnitInfo

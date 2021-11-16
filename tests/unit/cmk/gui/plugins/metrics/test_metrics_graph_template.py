@@ -177,7 +177,7 @@ def test_metric_unit_color(expression, perf_string, check_command, result_color)
 )
 def test_metric_unit_color_skip(expression, perf_string, check_command):
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
-    assert gt.metric_unit_color(expression, translated_metrics, ["test"]) == {}
+    assert gt.metric_unit_color(expression, translated_metrics, ["test"]) is None
 
 
 @pytest.mark.parametrize(

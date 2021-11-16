@@ -74,7 +74,7 @@ StackElement = Union[Atom, TransformedAtom]
 
 GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
 ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
-GraphConsoldiationFunction = Literal["max", "min"]
+GraphConsoldiationFunction = Literal["max", "min", "average"]
 
 
 GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
@@ -105,6 +105,11 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
 GraphRecipe = Dict[str, Any]
 GraphMetrics = Dict[str, Any]
 RRDData = Dict[Tuple[str, str, str, str, str, str], TimeSeries]
+
+
+class MetricUnitColor(TypedDict):
+    unit: str
+    color: str
 
 
 class CheckMetricEntry(TypedDict, total=False):
@@ -847,7 +852,7 @@ def get_graph_template(template_id: str) -> GraphTemplate:
 def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
-        "title": _("Metric: %s") % metric_name,
+        "title": metric_name,
         "metrics": [
             (metric_name, "area"),
         ],

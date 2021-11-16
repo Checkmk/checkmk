@@ -268,7 +268,7 @@ def main():
     else:
       subprocess.check_call(invocation)
   except:
-    print("Unable to run clang-tidy.", file=sys.stderr)
+    print(f"Unable to run {' '.join(invocation)!r}.", file=sys.stderr)
     sys.exit(1)
 
   # Load the database and extract all files.

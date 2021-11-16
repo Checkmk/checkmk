@@ -16,3 +16,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.68" }
 uuid = { version = "0.8.2", features = ["v4"] }
 openssl = { version = "*", features = ["vendored"] }
+log4rs = { version = "*" }
+log = { version = "*" }

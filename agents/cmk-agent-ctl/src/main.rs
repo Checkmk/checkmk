@@ -8,10 +8,19 @@ mod config;
 mod marcv_api;
 mod monitoring_data;
 use config::RegistrationState;
+use core::panic;
+use std::error::Error;
 use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
 use uuid::Uuid;
+
+use log::{info, LevelFilter};
+use log4rs::append::file::FileAppender;
+use log4rs::config::{Appender, Config, Root};
+use log4rs::encode::pattern::PatternEncoder;
+
+const LOG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl.log";
 
 fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
     let marcv_addresses = config
@@ -95,7 +104,23 @@ fn get_reg_state(path: &Path) -> io::Result<config::RegistrationState> {
     return Ok(config::RegistrationState::from_file(path)?);
 }
 
+fn init_logging(path: &Path) -> Result<(), Box<dyn Error>> {
+    let logfile = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+        .build(path)?;
+
+    let config = Config::builder()
+        .appender(Appender::builder().build("logfile", Box::new(logfile)))
+        .build(Root::builder().appender("logfile").build(LevelFilter::Info))?;
+
+    log4rs::init_config(config)?;
+
+    Ok(())
+}
 fn main() {
+    init_logging(Path::new(LOG_PATH)).unwrap();
+    info!("Starting cmk-agent-ctl");
+
     let path_state_file = Path::new("state.json");
     let args = cli::Args::from_args();
     let mode = String::from(&args.mode);

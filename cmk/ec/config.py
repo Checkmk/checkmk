@@ -75,7 +75,7 @@ class EventLimits(TypedDict):
 
 
 class HostnameTranslation(TypedDict, total=False):
-    case: Union[Literal["lower"], Literal["upper"]]
+    case: Literal["lower", "upper"]
     drop_domain: bool
     mapping: Iterable[Tuple[str, str]]
     regex: Iterable[Tuple[str, str]]
@@ -112,16 +112,16 @@ class Replication(ReplicationBase, total=False):
 class ContactGroups(TypedDict):
     groups: Iterable[str]
     notify: bool
-    precedence: Union[Literal["host"], Literal["rule"]]
+    precedence: Literal["host", "rule"]
 
 
 class Expect(TypedDict):
-    merge: Union[Literal["open"], Literal["acked"], Literal["never"]]
+    merge: Literal["open", "acked", "never"]
 
 
 class ServiceLevel(TypedDict):
     value: int
-    precedence: Union[Literal["message"], Literal["rule"]]
+    precedence: Literal["message", "rule"]
 
 
 StatePatterns = TypedDict(
@@ -155,7 +155,7 @@ class Rule(TypedDict, total=False):
     expect: Expect
     id: str
     invert_matching: bool
-    livetime: Tuple[Seconds, Iterable[Union[Literal["open"], Literal["ack"]]]]
+    livetime: Tuple[Seconds, Iterable[Literal["open", "ack"]]]
     match: str
     match_application: str
     match_facility: int
@@ -221,13 +221,13 @@ class SNMPCredential(SNMPCredentialBase, total=False):
 # This is what we get from the outside.
 class ConfigFromWATO(TypedDict):
     actions: Sequence[Action]
-    archive_mode: Union[Literal["file"], Literal["mongodb"]]
+    archive_mode: Literal["file", "mongodb"]
     archive_orphans: bool
     debug_rules: bool
     event_limit: EventLimits
     eventsocket_queue_len: int
     history_lifetime: int
-    history_rotation: Union[Literal["daily"], Literal["weekly"]]
+    history_rotation: Literal["daily", "weekly"]
     hostname_translation: HostnameTranslation  # TODO: Mutable???
     housekeeping_interval: int
     log_level: LogConfig  # TODO: Mutable???

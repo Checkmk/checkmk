@@ -89,7 +89,7 @@ class MatchPriority(NamedTuple):
 class SlaveStatus(TypedDict, total=False):
     last_master_down: Optional[float]
     last_sync: float
-    mode: Union[Literal["master"], Literal["sync"], Literal["takeover"]]
+    mode: Literal["master", "sync", "takeover"]
     success: bool
     average_sync_time: Optional[float]  # TODO: Never changed. Bug?
 

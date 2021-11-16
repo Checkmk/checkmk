@@ -86,7 +86,7 @@ class Parameters(ParametersTypeAlias):
 
 class OIDSpecTuple(NamedTuple):
     column: Union[int, str]
-    encoding: Union[Literal["string"], Literal["binary"]]
+    encoding: Literal["string", "binary"]
     save_to_cache: bool
 
     # we create a deepcopy in our unit tests, so support it.

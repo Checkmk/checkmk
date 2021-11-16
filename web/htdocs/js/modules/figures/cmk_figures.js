@@ -499,11 +499,14 @@ export class FigureBase {
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");
 
-        const title_padding_left = parseInt(
-            utils
-                .get_computed_style(d3.select("div.dashlet div.title").node(), "padding-left")
-                .replace("px", "")
+        let title_padding_left = 0;
+        const title_padding_left_raw = utils.get_computed_style(
+            d3.select("div.dashlet div.title").node(),
+            "padding-left"
         );
+        if (title_padding_left_raw) {
+            title_padding_left = parseInt(title_padding_left_raw.replace("px", ""));
+        }
 
         text_element.each((d, idx, nodes) => {
             this._svg_text_overflow_ellipsis(

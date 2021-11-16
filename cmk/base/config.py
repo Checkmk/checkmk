@@ -174,7 +174,10 @@ SpecialAgentInfoFunction = Callable[
 ]
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
-ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
+
+# TODO: Improve this, the config generation uses it in a totally chaotic way.
+ObjectAttributes = Dict[str, Any]
+
 GroupDefinitions = Dict[str, str]
 RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type

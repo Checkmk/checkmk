@@ -40,7 +40,7 @@ telling the user to change their configuration.
 
 <b>In Checkmk 2.1</b> even legacy plugins are no longer run
 on clusters in this unspecified manner.
-By default, all services on are cluster are run in the native
+By default, all services on a cluster are run in the native
 mode (or issueing a WARNING if it does not exist).
 If the plugin in question does not support a native cluster
 mode, you can use the ruleset

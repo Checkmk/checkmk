@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-11-12 07:00+0000\n"
-"Last-Translator: Axel Copur <copur.axel@protonmail.com>\n"
+"PO-Revision-Date: 2021-11-16 14:29+0000\n"
+"Last-Translator: Elias Voelker <elias.voelker@tribe29.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
 "Language: fr\n"
@@ -28,7 +28,7 @@ msgstr " (%d temps)"
 
 #, python-format
 msgid " (%s left)"
-msgstr " (%s restant)"
+msgstr " (%s left)"
 
 msgid " (Copy)"
 msgstr " (copie)"
@@ -175,7 +175,7 @@ msgid " or "
 msgstr " ou "
 
 msgid " or int"
-msgstr " ou int"
+msgstr " ou nombre"
 
 #, python-format
 msgid " spread over %d minutes "
@@ -183,7 +183,7 @@ msgstr " étalé sur %d minute(s) "
 
 #, python-format
 msgid " the following %d Event Console %s"
-msgstr " les %d Event Console %s suivants"
+msgstr " le journal d'évènement suivant %d (%s)"
 
 #, python-format
 msgid " the following %d crash %s"
@@ -234,14 +234,14 @@ msgstr "% sous la valeur prédite"
 
 #, no-python-format
 msgid "% free"
-msgstr "% gratuit"
+msgstr "% libre"
 
 msgid "% memory left"
 msgstr "% de mémoire restante"
 
 #, no-python-format
 msgid "% of Flash"
-msgstr "% de Flash"
+msgstr "% de mémoire Flash"
 
 #, no-python-format
 msgid "% of RAM"
@@ -280,11 +280,11 @@ msgstr "%% de %s"
 
 #, python-format
 msgid "%%d locked element"
-msgstr "%%d élément bloqué"
+msgstr "%%d éléments verrouillés"
 
 #, python-format
 msgid "%%d locked elements"
-msgstr "%%d éléments bloqués"
+msgstr "%%d éléments verrouillés"
 
 #, python-format
 msgid "%.1f mm"
@@ -344,11 +344,11 @@ msgstr "Il y a %d jours"
 
 #, python-format
 msgid "%d errors occured:"
-msgstr "%d erreurs se sont produites :"
+msgstr "%d d'erreurs produites :"
 
 #, python-format
 msgid "%d failed notifications"
-msgstr "%d notifications échouées"
+msgstr "%d de notifications échouées"
 
 #, python-format
 msgid "%d icons and actions"
@@ -360,7 +360,7 @@ msgstr "%d icônes personnalisées"
 
 #, python-format
 msgid "%d incompatible Werks have been acknowledged."
-msgstr "%d Werks incompatibles ont été reconnus."
+msgstr "%d de Werks incompatibles ayant été acquittés."
 
 #, python-format
 msgid "%d links"
@@ -368,11 +368,11 @@ msgstr "%d liens"
 
 #, python-format
 msgid "%d locked site"
-msgstr "%d site verrouillé"
+msgstr "%d site bloqué"
 
 #, python-format
 msgid "%d locked sites"
-msgstr "%d sites verrouillés"
+msgstr "%d sites bloqués"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -398,7 +398,7 @@ msgstr "%d lignes"
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
 msgstr[0] "Le site %d est %s."
-msgstr[1] "Les sites %d sont %s."
+msgstr[1] "les sites %d sont %s."
 
 #, python-format
 msgid "%d sites %s: %s"
@@ -414,11 +414,11 @@ msgstr "%d paramètres spécifiques"
 
 #, python-format
 msgid "%d timeranges"
-msgstr "%d timeranges"
+msgstr "%d intervalle de temps"
 
 #, python-format
 msgid "%d translations"
-msgstr "%d traductions"
+msgstr "%d transferts"
 
 #, python-format
 msgid "%d unacknowledged incompatible werk"
@@ -3551,6 +3551,8 @@ msgid ""
 "Add text of events to data forwarded to the Event Console. Newline "
 "characters are replaced by '~'."
 msgstr ""
+"Ajoute le texte des événements aux données transmises à la console "
+"d'événements. Les caractères de une nouvelle ligne sont remplacés par '~'."
 
 msgid "Add these contact groups to the host"
 msgstr "Ajouter ces groupes de contacts à l'hôte"
@@ -10229,6 +10231,8 @@ msgid ""
 "Configure the language of the user interface. Feel free to contribute to the "
 "translations on %s."
 msgstr ""
+"Configurez la langue de l'interface utilisateur. N'hésitez pas à contribuer "
+"aux traductions sur %s."
 
 msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
@@ -12650,7 +12654,7 @@ msgid "Decibel-milliwatts"
 msgstr "Décibel-milliwatts"
 
 msgid "Declare disabled services as undecided"
-msgstr "Déclarer les services pour handicapés comme indécis"
+msgstr "Déclarer les services désactivés comme non décidés"
 
 msgid "Declare monitored services as undecided"
 msgstr "Déclarer les services surveillés comme indécis"
@@ -14003,10 +14007,10 @@ msgid "Disable vanished services"
 msgstr "Désactiver les services disparus"
 
 msgid "Disabled"
-msgstr "Handicapés"
+msgstr "désactivé"
 
 msgid "Disabled "
-msgstr "Handicapés "
+msgstr "Désactivé "
 
 #, python-format
 msgid "Disabled %s are kept in the configuration but are not active."
@@ -14054,7 +14058,7 @@ msgid "Disabled schedule entries are not being executed."
 msgstr "Les entrées de calendrier désactivées ne sont pas exécutées."
 
 msgid "Disabled sections"
-msgstr "Sections pour handicapés"
+msgstr "Sections désactivées"
 
 msgid "Disabled sections (Linux agent)"
 msgstr "Sections désactivées (agent Linux)"
@@ -14063,7 +14067,7 @@ msgid "Disabled sections (Windows agent)"
 msgstr "Sections désactivées (agent Windows)"
 
 msgid "Disabled services"
-msgstr "Services aux personnes handicapées"
+msgstr "Services désactivés"
 
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
@@ -29815,7 +29819,7 @@ msgid "Monitor costs and usage"
 msgstr "Suivre les coûts et l'utilisation"
 
 msgid "Monitor disabled services"
-msgstr "Contrôler les services aux handicapés"
+msgstr "Contrôler les services désactivés"
 
 msgid "Monitor file operations with Inotify (Linux)"
 msgstr "Surveiller les opérations sur les fichiers avec Inotify (Linux)"
@@ -38971,7 +38975,7 @@ msgid "Search for deprecated rulesets"
 msgstr "Recherche de jeux de règles obsolètes"
 
 msgid "Search for disabled rules"
-msgstr "Recherche de règles pour les handicapés"
+msgstr "Recherche de règles désactivées"
 
 msgid "Search for effective rules"
 msgstr "Recherche de règles efficaces"
@@ -42730,7 +42734,7 @@ msgid "State flag (on/off)"
 msgstr "Drapeau d'État (on/off)"
 
 msgid "State for 'disabled since'"
-msgstr "État pour \"handicapé depuis\"."
+msgstr "État pour \"désactivé depuis\""
 
 msgid "State for 'is idle'"
 msgstr "État pour \"est inactif\"."
@@ -43365,7 +43369,7 @@ msgid "Status of last synchronization: <b>%s</b>"
 msgstr "Statut de la dernière synchronisation : <b>%s</b>"
 
 msgid "Status of service in case of disabled job"
-msgstr "Situation du service en cas d'emploi handicapé"
+msgstr "Situation du service en cas de désactivation"
 
 msgid "Status of service in case of missing job"
 msgstr "Statut du service en cas d'emploi manquant"

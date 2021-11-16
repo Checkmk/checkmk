@@ -30,43 +30,41 @@ const LOG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl.log";
 const TLS_ID: &[u8] = b"16";
 
 fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
-    let marcv_addresses = config
-        .marcv_addresses
+    let marcv_address = config
+        .marcv_address
         .expect("Server addresses not specified.");
     let credentials = config
         .credentials
         .expect("Missing credentials for registration.");
 
-    for marcv_address in marcv_addresses {
-        let uuid = Uuid::new_v4().to_string();
-        // TODO: what if registration_state.contains_key(marcv_address) (already registered)?
-        let root_cert = match &config.root_certificate {
-            Some(cert) => cert.clone(),
-            None => match certs::fetch_root_cert(&marcv_address) {
-                Ok(cert) => cert,
-                Err(error) => panic!("Error establishing trust with marcv: {}", error),
-            },
-        };
-
-        let (csr, private_key) = match certs::make_csr(&uuid) {
-            Ok(data) => data,
-            Err(error) => panic!("Error creating CSR: {}", error),
-        };
-        let certificate = match marcv_api::csr(&marcv_address, &root_cert, csr, &credentials) {
+    let uuid = Uuid::new_v4().to_string();
+    // TODO: what if registration_state.contains_key(marcv_address) (already registered)?
+    let root_cert = match &config.root_certificate {
+        Some(cert) => cert.clone(),
+        None => match certs::fetch_root_cert(&marcv_address) {
             Ok(cert) => cert,
-            Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
-        };
+            Err(error) => panic!("Error establishing trust with marcv: {}", error),
+        },
+    };
 
-        reg_state.server_specs.insert(
-            marcv_address,
-            config::ServerSpec {
-                uuid,
-                private_key,
-                certificate,
-                root_cert,
-            },
-        );
-    }
+    let (csr, private_key) = match certs::make_csr(&uuid) {
+        Ok(data) => data,
+        Err(error) => panic!("Error creating CSR: {}", error),
+    };
+    let certificate = match marcv_api::csr(&marcv_address, &root_cert, csr, &credentials) {
+        Ok(cert) => cert,
+        Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
+    };
+
+    reg_state.server_specs.insert(
+        marcv_address,
+        config::ServerSpec {
+            uuid,
+            private_key,
+            certificate,
+            root_cert,
+        },
+    );
 
     reg_state.to_file(path_state_out).unwrap();
 }

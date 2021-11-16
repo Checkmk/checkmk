@@ -20,6 +20,11 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
 
+// Normally, the config would be expected at /etc/check_mk/, but we
+// need to read it as cmk-agent user, so we use its home directory.
+const CONFIG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl-config.json";
+
+const STATE_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl-state.json";
 const LOG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl.log";
 
 fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
@@ -121,11 +126,11 @@ fn main() {
     init_logging(Path::new(LOG_PATH)).unwrap();
     info!("Starting cmk-agent-ctl");
 
-    let path_state_file = Path::new("state.json");
+    let path_state_file = Path::new(STATE_PATH);
     let args = cli::Args::from_args();
     let mode = String::from(&args.mode);
 
-    let config = match get_configuration(&Path::new("config.json"), args) {
+    let config = match get_configuration(Path::new(CONFIG_PATH), args) {
         Ok(cfg) => cfg,
         Err(error) => panic!("Error while obtaining configuration: {}", error),
     };

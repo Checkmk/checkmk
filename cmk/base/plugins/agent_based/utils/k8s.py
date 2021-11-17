@@ -163,3 +163,9 @@ class Memory(BaseModel):
 class Resources(BaseModel):
     limit: float = float("inf")
     requests: float = 0.0
+
+
+class StartTime(BaseModel):
+    """section: k8s_start_time_v1"""
+
+    start_time: int

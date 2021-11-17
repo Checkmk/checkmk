@@ -840,7 +840,7 @@ class ModeEditRuleset(WatoMode):
     def _page_menu_entries_rules(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Add rule"),
-            icon_name={"icon": "rulesets", "emblem": "add"},
+            icon_name="new",
             item=make_form_submit_link(form_name="new_rule", button_name="_new_dflt_rule"),
             is_shortcut=True,
             is_suggested=True,
@@ -849,7 +849,7 @@ class ModeEditRuleset(WatoMode):
         if not self._folder.is_root():
             yield PageMenuEntry(
                 title=_("Add rule in folder %s") % self._folder.title(),
-                icon_name={"icon": "rulesets", "emblem": "add"},
+                icon_name={"icon": "folder_blue", "emblem": "rulesets"},
                 item=make_form_submit_link(form_name="new_rule", button_name="_new_rule"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -863,7 +863,7 @@ class ModeEditRuleset(WatoMode):
 
             yield PageMenuEntry(
                 title=title,
-                icon_name={"icon": "rulesets", "emblem": "add"},
+                icon_name={"icon": "services_blue", "emblem": "rulesets"},
                 item=make_form_submit_link(form_name="new_rule", button_name="_new_host_rule"),
                 is_shortcut=True,
                 is_suggested=True,

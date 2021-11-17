@@ -186,7 +186,7 @@ SNMPDetectBaseType = List[List[Tuple[str, str, bool]]]
 
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
-TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
+TimeperiodSpec = Dict[str, Union[str, List[str], List[Tuple[str, str]]]]
 TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
 
 

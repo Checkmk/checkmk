@@ -9,7 +9,7 @@ from typing import List as _List
 from typing import Literal as _Literal
 from typing import Optional as _Optional
 
-from cmk.utils.type_defs import Ruleset, TagsOfHosts
+from cmk.utils.type_defs import Ruleset, TagsOfHosts, TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -206,7 +206,7 @@ define_contactgroups: _Optional[_Dict[str, str]] = None
 contactgroup_members: _Dict = {}
 contacts: _Dict = {}
 # needed for WATO
-timeperiods: _Dict = {}
+timeperiods: TimeperiodSpecs = {}
 clusters: _Dict = {}
 clustered_services: _List = []
 # new in 1.1.4

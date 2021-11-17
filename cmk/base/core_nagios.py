@@ -12,7 +12,7 @@ import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -32,6 +32,7 @@ from cmk.utils.type_defs import (
     Item,
     ServicegroupName,
     ServiceName,
+    TimeperiodName,
 )
 
 import cmk.core_helpers.config_path
@@ -866,16 +867,23 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
             }
 
             if "alias" in tp:
-                timeperiod_spec["alias"] = tp["alias"]
+                alias = tp["alias"]
+                assert isinstance(alias, str)
+                timeperiod_spec["alias"] = alias
 
             for key, value in tp.items():
                 if key not in ["alias", "exclude"]:
-                    times = ",".join([("%s-%s" % (fr, to)) for (fr, to) in value])
+                    # TODO: We should *really* improve TimeperiodSpec: We have no way to use assert
+                    # below to distinguish between a list of TimeperiodNames for "exclude" and the
+                    # list of tuples for the time ranges.
+                    times = ",".join(
+                        ("%s-%s" % (fr, to)) for (fr, to) in cast(List[Tuple[str, str]], value)
+                    )
                     if times:
                         timeperiod_spec[key] = times
 
             if "exclude" in tp:
-                timeperiod_spec["exclude"] = ",".join(tp["exclude"])
+                timeperiod_spec["exclude"] = ",".join(cast(List[TimeperiodName], tp["exclude"]))
 
             cfg.write(_format_nagios_object("timeperiod", timeperiod_spec))
 

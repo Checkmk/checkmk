@@ -2402,7 +2402,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'papouch_th2e_sensors',
         'papouch_th2e_sensors.dewpoint',
         'papouch_th2e_sensors.humidity',
-        'pdu_gude',
         'perle_chassis',
         'perle_chassis.temp',
         'perle_chassis_slots',

@@ -74,3 +74,10 @@ oracle_tablespaces_default_levels = (10.0, 5.0)
 oracle_tablespaces_check_autoext = True
 
 winperf_cpu_default_levels: dict = {}  # winperf_processor.util
+
+# pdu_gude
+pdu_gude_default_levels = {
+    "V": (220, 210),
+    "A": (15, 16),
+    "W": (3500, 3600),
+}

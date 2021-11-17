@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Iterable, Mapping
+from typing import Iterable, Mapping, Tuple
 
-from .agent_based_api.v1 import equals, register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import check_levels, equals, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass(frozen=True)
@@ -105,4 +105,50 @@ register.snmp_section(
             "10",  # Track power
         ],
     ),
+)
+
+
+def discover_pdu_gude(section: Section) -> DiscoveryResult:
+    yield from (Service(item=pdu_num) for pdu_num in section)
+
+
+def check_pdu_gude(
+    item: str,
+    params: Mapping[str, Tuple[float, float]],
+    section: Section,
+) -> CheckResult:
+    if not (pdu_properties := section.get(item)):
+        return
+
+    for pdu_property in pdu_properties:
+        levels_lower = levels_upper = None
+
+        if pdu_property.unit in params:
+            warn, crit = params[pdu_property.unit]
+            if warn > crit:
+                levels_lower = warn, crit
+            else:
+                levels_upper = warn, crit
+
+        yield from check_levels(
+            pdu_property.value,
+            levels_upper=levels_upper,
+            levels_lower=levels_lower,
+            metric_name=pdu_property.unit,
+            render_func=lambda v: f"{v:.2f} {pdu_property.unit}",  # pylint: disable=cell-var-from-loop
+            label=pdu_property.label,
+        )
+
+
+register.check_plugin(
+    name="pdu_gude",
+    service_name="Phase %s",
+    discovery_function=discover_pdu_gude,
+    check_function=check_pdu_gude,
+    check_ruleset_name="pdu_gude",
+    check_default_parameters={
+        "V": (220, 210),
+        "A": (15, 16),
+        "W": (3500, 3600),
+    },
 )

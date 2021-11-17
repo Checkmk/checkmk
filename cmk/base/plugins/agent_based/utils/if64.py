@@ -315,7 +315,7 @@ def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:
 
 
 def generic_parse_if64(
-    string_table: List[type_defs.StringByteTable],
+    string_table: type_defs.StringByteTable,
     port_map: Optional[Mapping[str, str]] = None,
 ) -> interfaces.Section:
     return [
@@ -342,13 +342,13 @@ def generic_parse_if64(
             phys_address=line[19],
             extra_info=port_mapping(line[1], port_map) if port_map else None,
         )
-        for line in string_table[0]
+        for line in string_table
     ]
 
 
-def parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
-    preprocessed_lines: List[type_defs.StringByteTable] = [[]]
-    for line in string_table[0]:
+def parse_if64(string_table: type_defs.StringByteTable) -> interfaces.Section:
+    preprocessed_lines: type_defs.StringByteTable = []
+    for line in string_table:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
         if interfaces.saveint(line[0]) > 0:
 
@@ -365,7 +365,7 @@ def parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Sect
             line[4] = _convert_status(str(line[4]))
 
             # remove ifHighSpeed
-            preprocessed_lines[0].append(line[:20])
+            preprocessed_lines.append(line[:20])
 
     return generic_parse_if64(preprocessed_lines)
 

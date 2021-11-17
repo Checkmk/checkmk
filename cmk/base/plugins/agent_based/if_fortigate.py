@@ -16,12 +16,10 @@ register.snmp_section(
     name="if_fortigate",
     parse_function=if64.parse_if64,
     parsed_section_name="interfaces",
-    fetch=[
-        SNMPTree(
-            base=if64.BASE_OID,
-            oids=END_OIDS,
-        ),
-    ],
+    fetch=SNMPTree(
+        base=if64.BASE_OID,
+        oids=END_OIDS,
+    ),
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356"),
     supersedes=["if", "if64"],
 )

@@ -121,12 +121,10 @@ def parse_if_brocade_lancom(
     """
     return if64.generic_parse_if64(
         [
-            [
-                _augment_name(line, description, name_map)
-                for *line, description in if_table
-                if isinstance(description, str)
-                if not any(description.startswith(d) for d in ignore_descriptions)
-            ]
+            _augment_name(line, description, name_map)
+            for *line, description in if_table
+            if isinstance(description, str)
+            if not any(description.startswith(d) for d in ignore_descriptions)
         ],
         port_map,
     )

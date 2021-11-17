@@ -4,18 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
-
 import cmk.utils.store as store
-from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec
+from cmk.utils.type_defs import TimeperiodSpec, TimeperiodSpecs
 
 from cmk.gui.globals import config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
-
-TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
 
 
 def builtin_timeperiods() -> TimeperiodSpecs:

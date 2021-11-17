@@ -1317,7 +1317,7 @@ def metrics_of_query(
         known_metrics = set([perf[0] for perf in parsed_perf_data] + row["service_metrics"])
         yield from metric_choices(str(check_command), tuple(map(str, known_metrics)))
 
-    if row["host_check_command"]:
+    if row.get("host_check_command"):
         yield from metric_choices(
             str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
         )

@@ -78,6 +78,28 @@ def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
     return match_list
 
 
+@autocompleter_registry.register_expression("opthostgroup")
+def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+
+    return sorted(
+        (v for v in sites.all_groups("host") if value.lower() in v[1].lower()),
+        key=lambda a: a[1].lower(),
+    )
+
+
+@autocompleter_registry.register_expression("optservicegroup")
+def service_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+
+    return sorted(
+        (v for v in sites.all_groups("service") if value.lower() in v[1].lower()),
+        key=lambda a: a[1].lower(),
+    )
+
+
 @autocompleter_registry.register_expression("monitored_service_description")
 def monitored_service_description_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices

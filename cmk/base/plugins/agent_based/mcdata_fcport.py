@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List, Sequence, Union
+from typing import Iterable, Sequence, Union
 
 from .agent_based_api.v1 import OIDBytes, register, SNMPTree, startswith, type_defs
 from .utils import if64, interfaces
@@ -42,29 +42,27 @@ def _line_to_interface(line: Iterable[Union[str, Sequence[int]]]) -> interfaces.
     )
 
 
-def parse_mcdata_fcport(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
-    return [_line_to_interface(line) for line in string_table[0]]
+def parse_mcdata_fcport(string_table: type_defs.StringByteTable) -> interfaces.Section:
+    return [_line_to_interface(line) for line in string_table]
 
 
 register.snmp_section(
     name="mcdata_fcport",
     parse_function=parse_mcdata_fcport,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.289.2.1.1.2.3.1.1",
-            oids=[
-                "1",  # EF-6000-MIB::ef6000PortIndex
-                "3",  # EF-6000-MIB::ef6000PortOpStatus
-                "11",  # EF-6000-MIB::ef6000PortSpeed
-                OIDBytes("67"),  # EF-6000-MIB::ef6000PortTxWords64
-                OIDBytes("68"),  # EF-6000-MIB::ef6000PortRxWords64
-                OIDBytes("69"),  # EF-6000-MIB::ef6000PortTxFrames64
-                OIDBytes("70"),  # EF-6000-MIB::ef6000PortRxFrames64
-                OIDBytes("83"),  # EF-6000-MIB::ef6000PortC3Discards64
-                "65",  # EF-6000-MIB::ef6000PortCrcs
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.289.2.1.1.2.3.1.1",
+        oids=[
+            "1",  # EF-6000-MIB::ef6000PortIndex
+            "3",  # EF-6000-MIB::ef6000PortOpStatus
+            "11",  # EF-6000-MIB::ef6000PortSpeed
+            OIDBytes("67"),  # EF-6000-MIB::ef6000PortTxWords64
+            OIDBytes("68"),  # EF-6000-MIB::ef6000PortRxWords64
+            OIDBytes("69"),  # EF-6000-MIB::ef6000PortTxFrames64
+            OIDBytes("70"),  # EF-6000-MIB::ef6000PortRxFrames64
+            OIDBytes("83"),  # EF-6000-MIB::ef6000PortC3Discards64
+            "65",  # EF-6000-MIB::ef6000PortCrcs
+        ],
+    ),
     # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.289."),
 )

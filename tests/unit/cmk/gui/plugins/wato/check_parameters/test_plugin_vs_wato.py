@@ -20,12 +20,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
 )
 
-# those imports should not be here, but you need them if you want to run
-# this test via `pytest -T unit tests/unit/test_plugin_vs_wato.py`
-# `cd tests; make test-unit` works fine without them, because the files
-# are imported implicitly by running the doctests
-
-
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)
 TC = t.TypeVar("TC", bound=t.Union[CheckPlugin, InventoryPlugin])

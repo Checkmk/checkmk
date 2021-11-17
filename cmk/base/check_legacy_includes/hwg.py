@@ -31,7 +31,7 @@ map_readable_states = {
     "alarm high": 2,
 }
 
-factory_settings["hwg_humidity_defaultlevels"] = {"levels": (60, 70)}
+factory_settings["hwg_humidity_defaultlevels"] = {"levels": (60.0, 70.0)}
 factory_settings["hwg_temp_defaultlevels"] = {"levels": (30, 35)}
 
 

@@ -8,25 +8,92 @@
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.pdu_gude import GudePDUProperty, parse_pdu_gude
 
 from tests.unit.conftest import FixRegister
+
+_SECTION = {
+    "1": [
+        GudePDUProperty(
+            value=13.478,
+            unit="kWh",
+            label="Total accumulated active energy",
+        ),
+        GudePDUProperty(
+            value=4010.0,
+            unit="W",
+            label="Active power",
+        ),
+        GudePDUProperty(
+            value=0.0,
+            unit="A",
+            label="Current",
+        ),
+        GudePDUProperty(
+            value=228.0,
+            unit="V",
+            label="Voltage",
+        ),
+        GudePDUProperty(
+            value=0.0,
+            unit="VA",
+            label="Mean apparent power",
+        ),
+    ],
+    "2": [
+        GudePDUProperty(
+            value=0.008,
+            unit="kWh",
+            label="Total accumulated active energy",
+        ),
+        GudePDUProperty(
+            value=0.0,
+            unit="W",
+            label="Active power",
+        ),
+        GudePDUProperty(
+            value=0.0,
+            unit="A",
+            label="Current",
+        ),
+        GudePDUProperty(
+            value=0.0,
+            unit="V",
+            label="Voltage",
+        ),
+        GudePDUProperty(
+            value=0.0,
+            unit="VA",
+            label="Mean apparent power",
+        ),
+    ],
+}
+
+
+def test_parse_pdu_gude() -> None:
+    assert (
+        parse_pdu_gude(
+            [
+                ["13478", "4010", "0", "228", "0"],
+                ["8", "0", "0", "0", "0"],
+            ]
+        )
+        == _SECTION
+    )
 
 
 def test_check_pdu_gude(
     fix_register: FixRegister,
 ) -> None:
     assert list(
-        fix_register.check_plugins[CheckPluginName("pdu_gude_8310")].check_function(
-            item=1,
+        fix_register.check_plugins[CheckPluginName("pdu_gude")].check_function(
+            item="1",
             params={
                 "V": (250, 210),
                 "A": (15, 16),
                 "W": (3500, 3600),
             },
-            section=[
-                ["13478", "4010", "0", "228", "0"],
-                ["8", "0", "0", "0", "0"],
-            ],
+            section=_SECTION,
         )
     ) == [
         Result(state=State.OK, summary="13.48 kWh"),

@@ -110,6 +110,8 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
     CheckPluginName("cisco_wlc_clients"): CheckPluginName("wlc_clients"),
     CheckPluginName("aruba_wlc_clients"): CheckPluginName("wlc_clients"),
+    CheckPluginName("pdu_gude_8301"): CheckPluginName("pdu_gude"),
+    CheckPluginName("pdu_gude_8310"): CheckPluginName("pdu_gude"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

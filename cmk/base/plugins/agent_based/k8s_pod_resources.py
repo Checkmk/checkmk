@@ -12,21 +12,22 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.k8s import PodResources
 
 
-def parse_k8s(string_table: StringTable):
+def parse_k8s_pod_resources(string_table: StringTable):
     return PodResources(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
-    name="k8s_pod_resources",
-    parse_function=parse_k8s,
+    name="k8s_pod_resources_v1",
+    parse_function=parse_k8s_pod_resources,
+    parsed_section_name="k8s_pod_resources",
 )
 
 
-def discovery_kubernetes_pod_resources(section: PodResources) -> DiscoveryResult:
+def discovery_k8s_pod_resources(section: PodResources) -> DiscoveryResult:
     yield Service()
 
 
-def check_kubernetes_pod_resources(section: PodResources) -> CheckResult:
+def check_k8s_pod_resources(section: PodResources) -> CheckResult:
     for resource, value in section.dict().items():
         if value is None:  # some k8 objects do not have allocatable, capacity
             continue
@@ -38,6 +39,6 @@ def check_kubernetes_pod_resources(section: PodResources) -> CheckResult:
 register.check_plugin(
     name="k8s_pod_resources",
     service_name="Pod Resources",
-    discovery_function=discovery_kubernetes_pod_resources,
-    check_function=check_kubernetes_pod_resources,
+    discovery_function=discovery_k8s_pod_resources,
+    check_function=check_k8s_pod_resources,
 )

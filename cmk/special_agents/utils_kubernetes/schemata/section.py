@@ -18,7 +18,7 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 
 
 class PodResources(BaseModel):
-    """section: k8s_pods_resources"""
+    """section: k8s_pods_resources_v1"""
 
     running: int = 0
     pending: int = 0

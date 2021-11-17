@@ -264,7 +264,6 @@ def test_section_parse_function_does_something(fix_register):
         "vms_diskstat",
         "vms_system",
         "winperf",
-        "pdu_gude",
     }
 
     for name, snmp_section in fix_register.snmp_sections.items():

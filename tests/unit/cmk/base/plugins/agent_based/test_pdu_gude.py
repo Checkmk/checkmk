@@ -4,13 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.pdu_gude import GudePDUProperty, parse_pdu_gude
-
-from tests.unit.conftest import FixRegister
+from cmk.base.plugins.agent_based.pdu_gude import check_pdu_gude, GudePDUProperty, parse_pdu_gude
 
 _SECTION = {
     "1": [
@@ -82,11 +77,9 @@ def test_parse_pdu_gude() -> None:
     )
 
 
-def test_check_pdu_gude(
-    fix_register: FixRegister,
-) -> None:
+def test_check_pdu_gude() -> None:
     assert list(
-        fix_register.check_plugins[CheckPluginName("pdu_gude")].check_function(
+        check_pdu_gude(
             item="1",
             params={
                 "V": (250, 210),

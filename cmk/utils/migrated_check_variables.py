@@ -85,3 +85,10 @@ checkpoint_connections_default_levels = (40000, 50000)
 
 # esx_vsphere_hostsystem_mem_usage
 esx_host_mem_default_levels = (80.0, 90.0)
+
+# pdu_gude
+pdu_gude_default_levels = {
+    "V": (220, 210),
+    "A": (15, 16),
+    "W": (3500, 3600),
+}

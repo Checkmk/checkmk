@@ -62,7 +62,7 @@ from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.logged_in import save_user_file
 from cmk.gui.utils.ntop import is_ntop_configured
-from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.urls import (
     make_confirm_link,
     makeactionuri,
@@ -529,26 +529,24 @@ class Overridable(Base):
     def parameters(cls, mode):
         parameters = super().parameters(mode)
 
-        if cls.has_overriding_permission("publish"):
+        if is_user_with_publish_permissions("pagetype", user.id, cls.type_name()):
             vs_visibility: ValueSpec = Optional(
                 title=_("Visibility"),
                 label=_("Make this %s available for other users") % cls.phrase("title"),
                 none_label=_("Don't publish to other users"),
                 none_value=False,
                 valuespec=PublishTo(
+                    publish_all=cls.has_overriding_permission("publish"),
+                    publish_groups=cls.has_overriding_permission("publish_to_groups"),
                     title="",
                     type_title=cls.phrase("title"),
                     with_foreign_groups=cls.has_overriding_permission("publish_to_foreign_groups"),
                 ),
             )
         else:
-            vs_visibility = FixedValue(
-                False,
+            vs_visibility = vs_no_permission_to_publish(
+                type_title=cls.phrase("title"),
                 title=_("Visibility"),
-                totext=_(
-                    "The view is only visible to you. You can not share it, "
-                    "because you don't have the permission to share it."
-                ),
             )
 
         return parameters + [
@@ -759,13 +757,15 @@ class Overridable(Base):
     def declare_overriding_permissions(cls):
         declare_permission_section(cls.type_name(), cls.phrase("title_plural"), do_sort=True)
 
+        title_lower = cls.phrase("title_plural").lower()
+
         permission_registry.register(
             Permission(
                 section=PermissionSectionGeneral,
                 name="edit_" + cls.type_name(),
-                title=_l("Customize and use %s") % cls.phrase("title_plural"),
+                title=_l("Customize and use %s") % title_lower,
                 description=_l("Allows to create own %s, customize builtin %s and use them.")
-                % (cls.phrase("title_plural"), cls.phrase("title_plural")),
+                % (title_lower, title_lower),
                 defaults=["admin", "user"],
             )
         )
@@ -774,9 +774,21 @@ class Overridable(Base):
             Permission(
                 section=PermissionSectionGeneral,
                 name="publish_" + cls.type_name(),
-                title=_l("Publish %s") % cls.phrase("title_plural"),
-                description=_l("Make %s visible and usable for other users.")
-                % cls.phrase("title_plural"),
+                title=_l("Publish %s") % title_lower,
+                description=_l("Make %s visible and usable for all users.") % title_lower,
+                defaults=["admin", "user"],
+            )
+        )
+
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="publish_to_groups_" + cls.type_name(),
+                title=_l("Publish %s to allowed contact groups") % title_lower,
+                description=_l(
+                    "Make %s visible and usable for users of contact groups the publishing user is a member of."
+                )
+                % title_lower,
                 defaults=["admin", "user"],
             )
         )
@@ -785,11 +797,11 @@ class Overridable(Base):
             Permission(
                 section=PermissionSectionGeneral,
                 name="publish_to_foreign_groups_" + cls.type_name(),
-                title=_l("Publish %s to foreign contact groups") % cls.phrase("title_plural"),
+                title=_l("Publish %s to foreign contact groups") % title_lower,
                 description=_l(
                     "Make %s visible and usable for users of contact groups the publishing user is not a member of."
                 )
-                % cls.phrase("title_plural"),
+                % title_lower,
                 defaults=["admin"],
             )
         )
@@ -799,9 +811,9 @@ class Overridable(Base):
             Permission(
                 section=PermissionSectionGeneral,
                 name="see_user_" + cls.type_name(),
-                title=_l("See user %s") % cls.phrase("title_plural"),
+                title=_l("See user %s") % title_lower,
                 description=_l("Is needed for seeing %s that other users have created.")
-                % cls.phrase("title_plural"),
+                % title_lower,
                 defaults=["admin", "user", "guest"],
             )
         )
@@ -810,9 +822,9 @@ class Overridable(Base):
             Permission(
                 section=PermissionSectionGeneral,
                 name="force_" + cls.type_name(),
-                title=_l("Modify builtin %s") % cls.phrase("title_plural"),
+                title=_l("Modify builtin %s") % title_lower,
                 description=_l("Make own published %s override builtin %s for all users.")
-                % (cls.phrase("title_plural"), cls.phrase("title_plural")),
+                % (title_lower, title_lower),
                 defaults=["admin"],
             )
         )
@@ -821,9 +833,8 @@ class Overridable(Base):
             Permission(
                 section=PermissionSectionGeneral,
                 name="edit_foreign_" + cls.type_name(),
-                title=_l("Edit foreign %s") % cls.phrase("title_plural"),
-                description=_("Allows to view and edit %s created by other users.")
-                % cls.phrase("title_plural"),
+                title=_l("Edit foreign %s") % title_lower,
+                description=_("Allows to view and edit %s created by other users.") % title_lower,
                 defaults=["admin"],
             )
         )
@@ -832,9 +843,8 @@ class Overridable(Base):
             Permission(
                 section=PermissionSectionGeneral,
                 name="delete_foreign_" + cls.type_name(),
-                title=_l("Delete foreign %s") % cls.phrase("title_plural"),
-                description=_l("Allows to delete %s created by other users.")
-                % cls.phrase("title_plural"),
+                title=_l("Delete foreign %s") % title_lower,
+                description=_l("Allows to delete %s created by other users.") % title_lower,
                 defaults=["admin"],
             )
         )
@@ -1442,7 +1452,20 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
             )
 
 
+def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
+    return FixedValue(
+        False,
+        title=title,
+        totext=_(
+            "The %s is only visible to you because you don't have the " "permission to share it."
+        )
+        % type_title.lower(),
+    )
+
+
 def PublishTo(
+    publish_all: bool,
+    publish_groups: bool,
     title: _Optional[str] = None,
     type_title: _Optional[str] = None,
     with_foreign_groups: bool = True,
@@ -1450,19 +1473,23 @@ def PublishTo(
     if title is None:
         title = _("Make this %s available for other users") % type_title
 
-    choices: List[CascadingDropdownChoice] = [
-        (True, _("Publish to all users")),
-        (
-            "contact_groups",
-            _("Publish to members of contact groups"),
-            ContactGroupChoice(
-                with_foreign_groups=with_foreign_groups,
-                title=_("Publish to members of contact groups"),
-                rows=5,
-                size=80,
-            ),
-        ),
-    ]
+    choices: List[CascadingDropdownChoice] = []
+    if publish_all:
+        choices.append((True, _("Publish to all users")))
+
+    if publish_groups or with_foreign_groups:
+        choices.append(
+            (
+                "contact_groups",
+                _("Publish to members of contact groups"),
+                ContactGroupChoice(
+                    with_foreign_groups=with_foreign_groups,
+                    title=_("Publish to members of contact groups"),
+                    rows=5,
+                    size=80,
+                ),
+            )
+        )
 
     return CascadingDropdown(title=title, choices=choices)
 

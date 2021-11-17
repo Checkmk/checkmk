@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
@@ -54,6 +54,34 @@ def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
         if he_may:
             return True
     return False
+
+
+def is_user_with_publish_permissions(
+    for_type: Literal["visual", "pagetype"],
+    user_id: Optional[UserId],
+    type_name: str,
+) -> bool:
+    """
+    Visuals and PageTypes have different permission naming. We handle both
+    types here to reduce duplicated code
+    """
+    publish_all_permission: str = "general.publish_" + type_name
+    publish_groups_permission: str = (
+        "general.publish_" + type_name + "_to_groups"
+        if for_type == "visual"
+        else "general.publish_to_groups_%s" % type_name
+    )
+    publish_foreign_groups_permission: str = (
+        "general.publish_" + type_name + "_to_foreign_groups"
+        if for_type == "visual"
+        else "general.publish_to_foreign_groups_%s" % type_name
+    )
+
+    return (
+        user_may(user_id, publish_all_permission)
+        or user_may(user_id, publish_groups_permission)
+        or user_may(user_id, publish_foreign_groups_permission)
+    )
 
 
 def roles_of_user(user_id: Optional[UserId]) -> List[str]:

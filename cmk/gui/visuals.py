@@ -89,7 +89,7 @@ from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import save_user_file
-from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.urls import (
     file_name_and_query_vars_from_url,
     make_confirm_link,
@@ -158,7 +158,17 @@ def declare_visual_permissions(what, what_plural):
     declare_permission(
         "general.publish_" + what,
         _("Publish %s") % what_plural,
-        _("Make %s visible and usable for other users.") % what_plural,
+        _("Make %s visible and usable for all users.") % what_plural,
+        ["admin", "user"],
+    )
+
+    declare_permission(
+        "general.publish_" + what + "_to_groups",
+        _("Publish %s to allowed contact groups") % what_plural,
+        _(
+            "Make %s visible and usable for users of contact groups the publishing user is a member of."
+        )
+        % what_plural,
         ["admin", "user"],
     )
 
@@ -1177,14 +1187,26 @@ def page_edit_visual(
             ),
         ),
     ]
-    if user.may("general.publish_" + what):
-        with_foreign_groups = user.may("general.publish_" + what + "_to_foreign_groups")
+
+    if is_user_with_publish_permissions("visual", user.id, what):
         visibility_elements.append(
             (
                 "public",
                 pagetypes.PublishTo(
+                    publish_all=user.may("general.publish_" + what),
+                    publish_groups=user.may("general.publish_" + what + "_to_groups"),
                     type_title=visual_type.title,
-                    with_foreign_groups=with_foreign_groups,
+                    with_foreign_groups=user.may("general.publish_" + what + "_to_foreign_groups"),
+                ),
+            )
+        )
+    else:
+        visibility_elements.append(
+            (
+                "public",
+                pagetypes.vs_no_permission_to_publish(
+                    type_title=what[:-1],
+                    title=_("Make this %s available for other users") % what[:-1],
                 ),
             )
         )

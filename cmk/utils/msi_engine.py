@@ -307,7 +307,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
         if src_dir != file_dir:
             shutil.copy(src_dir + "/checkmk.dat", file_dir + "/checkmk.dat")
         shutil.copy(src_dir + "/plugins.cap", file_dir + "/plugins_cap")
-        shutil.copy(src_dir + "/python-3.8.cab", file_dir + "/python_3.8.cab")
+        shutil.copy(src_dir + "/python-3.cab", file_dir + "/python_3.cab")
 
         patch_msi_files(work_dir, new_version_build)
         patch_msi_components(work_dir)

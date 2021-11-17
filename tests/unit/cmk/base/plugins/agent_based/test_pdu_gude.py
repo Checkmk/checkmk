@@ -96,14 +96,29 @@ def test_check_pdu_gude(
             section=_SECTION,
         )
     ) == [
-        Result(state=State.OK, summary="13.48 kWh"),
+        Result(
+            state=State.OK,
+            summary="Total accumulated active energy: 13.48 kWh",
+        ),
         Metric("kWh", 13.478),
-        Result(state=State.CRIT, summary="4010.00 W"),
+        Result(
+            state=State.CRIT,
+            summary="Active power: 4010.00 W (warn/crit at 3500.00 W/3600.00 W)",
+        ),
         Metric("W", 4010.0, levels=(3500.0, 3600.0)),
-        Result(state=State.OK, summary="0.00 A"),
+        Result(
+            state=State.OK,
+            summary="Current: 0.00 A",
+        ),
         Metric("A", 0.0, levels=(15.0, 16.0)),
-        Result(state=State.WARN, summary="228.00 V"),
-        Metric("V", 228.0, levels=(250.0, 210.0)),
-        Result(state=State.OK, summary="0.00 VA"),
+        Result(
+            state=State.WARN,
+            summary="Voltage: 228.00 V (warn/crit below 250.00 V/210.00 V)",
+        ),
+        Metric("V", 228.0),
+        Result(
+            state=State.OK,
+            summary="Mean apparent power: 0.00 VA",
+        ),
         Metric("VA", 0.0),
     ]

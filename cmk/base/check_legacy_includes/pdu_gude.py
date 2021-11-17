@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import check_levels
+
 pdu_gude_default_levels = {
     "V": (220, 210),  # Volt
     "A": (15, 16),  # Ampere
@@ -23,25 +25,17 @@ def check_pdu_gude(item, params, section):
         return
 
     for pdu_property in pdu_properties:
-        infotext = "%.2f %s" % (
+        levels_lower = levels_upper = (None, None)
+        warn, crit = params.get(pdu_property.unit, (None, None))
+        if warn is not None and warn > crit:
+            levels_lower = warn, crit
+        else:
+            levels_upper = warn, crit
+
+        yield check_levels(
             pdu_property.value,
             pdu_property.unit,
+            levels_upper + levels_lower,
+            human_readable_func=lambda v: f"{v:.2f} {pdu_property.unit}",  # pylint: disable=cell-var-from-loop
+            infoname=pdu_property.label,
         )
-
-        warn, crit = params.get(pdu_property.unit, (None, None))
-        perfdata = [(pdu_property.unit, pdu_property.value, warn, crit)]
-        status = 0
-
-        if warn is not None and warn > crit:
-            if pdu_property.value < crit:
-                status = 2
-            elif pdu_property.value < warn:
-                status = 1
-
-        else:
-            if crit is not None and pdu_property.value > crit:
-                status = 2
-            elif warn is not None and pdu_property.value > warn:
-                status = 1
-
-        yield status, infotext, perfdata

@@ -8,11 +8,12 @@
 import pytest
 
 from tests.testlib.event_console import CMKEventConsole
+from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
 
 @pytest.fixture(scope="module")
-def web(site):
+def web(site: Site):
     web = CMKWebSession(site)
     web.login()
     web.enforce_non_localized_gui()
@@ -20,5 +21,5 @@ def web(site):
 
 
 @pytest.fixture(scope="module")
-def ec(site, web):
+def ec(site: Site, web):
     return CMKEventConsole(site)

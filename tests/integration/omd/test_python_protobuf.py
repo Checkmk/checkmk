@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from tests.testlib import import_module
+from tests.testlib.site import Site
 
 
 def test_protobuf_api_implementation_is_cpp():
@@ -18,14 +19,14 @@ def test_protobuf_api_implementation_is_cpp():
 
 
 @pytest.fixture(name="test_dir")
-def fixture_test_dir(site):
+def fixture_test_dir(site: Site):
     site.makedirs("protobuf")
     yield Path(site.path("protobuf"))
     # site.delete_dir("protobuf")
 
 
 @pytest.fixture(name="proto_source_file")
-def fixture_proto_source_file(test_dir, site):
+def fixture_proto_source_file(test_dir, site: Site):
     proto_path = test_dir / "test.proto"
     with proto_path.open("w") as f:
         f.write(
@@ -60,7 +61,7 @@ message AddressBook {
 
 
 @pytest.fixture(name="protobuf_py")
-def fixture_protobuf_py(site, test_dir, proto_source_file):
+def fixture_protobuf_py(site: Site, test_dir, proto_source_file):
     p = site.execute(
         ["protoc", "-I=%s" % test_dir, "--python_out=%s" % test_dir, str(proto_source_file)]
     )
@@ -71,7 +72,7 @@ def fixture_protobuf_py(site, test_dir, proto_source_file):
     return py_file
 
 
-def test_python_protobuf(site, protobuf_py):
+def test_python_protobuf(site: Site, protobuf_py):
     test_pb2 = import_module(str(protobuf_py))
 
     address_book = test_pb2.AddressBook()

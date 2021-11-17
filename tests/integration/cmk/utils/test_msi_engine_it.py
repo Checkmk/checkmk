@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.site import Site
+
 import cmk.utils.msi_engine as msi_engine
 
 MSI_LOCATION = "share/check_mk/agents/windows"
@@ -22,24 +24,24 @@ EXPECTED_TEST_FILES = ["check_mk_agent.msi", "check_mk.user.yml"]
 
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
-def test_executables(site, executable):
+def test_executables(site: Site, executable):
     bin_path = Path(site.path("bin"))
     assert Path(bin_path / executable).exists(), "path: '{}' exe: '{}'".format(bin_path, executable)
 
 
 @pytest.mark.parametrize("test_file", EXPECTED_TEST_FILES)
-def test_files(site, test_file):
+def test_files(site: Site, test_file):
     msi_path = Path(site.path(MSI_LOCATION))
     assert Path(msi_path / test_file).exists(), "path: '{}' file: '{}'".format(msi_path, test_file)
 
 
-def _get_msi_file_path(site):
+def _get_msi_file_path(site: Site):
     msi_path = Path(site.path(MSI_LOCATION))
     return msi_path / "check_mk_agent.msi"
 
 
 # check the export with site/bin tools
-def test_export_msi_file(site, tmp_path):
+def test_export_msi_file(site: Site, tmp_path):
     msi_file = _get_msi_file_path(site=site)
 
     out_dir = tmp_path / "idts"

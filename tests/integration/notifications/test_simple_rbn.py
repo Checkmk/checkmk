@@ -11,13 +11,14 @@ import pytest
 
 from tests.testlib import WatchLog
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
 
 
 @pytest.fixture(name="fake_sendmail")
-def fake_sendmail_fixture(site):
-    site.write_file(
+def fake_sendmail_fixture(site: Site):
+    site.write_text_file(
         "local/bin/sendmail", "#!/bin/bash\n" "set -e\n" 'echo "sendmail called with: $@"\n'
     )
     os.chmod(site.path("local/bin/sendmail"), 0o775)
@@ -38,7 +39,7 @@ def fake_sendmail_fixture(site):
     ],
 )
 def test_log_fixture(
-    request, web, site, fake_sendmail
+    request, web, site: Site, fake_sendmail
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
     core, log = request.param
     site.set_config("CORE", core, with_restart=True)
@@ -79,7 +80,7 @@ def test_log_fixture(
     web.activate_changes()
 
 
-def test_simple_rbn_host_notification(test_log, site):
+def test_simple_rbn_host_notification(test_log, site: Site):
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
@@ -92,7 +93,7 @@ def test_simple_rbn_host_notification(test_log, site):
     )
 
 
-def test_simple_rbn_service_notification(test_log, site):
+def test_simple_rbn_service_notification(test_log, site: Site):
     site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution

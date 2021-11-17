@@ -8,16 +8,17 @@
 
 import fcntl
 import fnmatch
+import functools
 import os
 import re
 import subprocess
 import tarfile
 from contextlib import contextmanager
-from typing import Callable, Tuple
 
 import pytest
 
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.python_printer import pformat
@@ -67,7 +68,9 @@ def backup_lock_dir_fixture(request):
 
 
 @pytest.fixture(name="test_cfg", scope="function")
-def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=redefined-outer-name
+def test_cfg_fixture(
+    web, site: Site, backup_path
+):  # noqa:F811  # pylint: disable=redefined-outer-name
     site.ensure_running()
 
     cfg = {
@@ -109,7 +112,7 @@ def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=re
             },
         },
     }
-    site.write_file("etc/check_mk/backup.mk", pformat(cfg))
+    site.write_text_file("etc/check_mk/backup.mk", pformat(cfg))
 
     keys = {
         1: {
@@ -122,7 +125,7 @@ def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=re
         }
     }
 
-    site.write_file("etc/check_mk/backup_keys.mk", "keys.update(%s)" % pformat(keys))
+    site.write_text_file("etc/check_mk/backup_keys.mk", "keys.update(%s)" % pformat(keys))
 
     yield None
 
@@ -135,7 +138,7 @@ def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=re
     site.ensure_running()
 
 
-def _execute_backup(site, job_id="testjob"):
+def _execute_backup(site: Site, job_id="testjob"):
     # Perform the backup
     p = site.execute(
         ["mkbackup", "backup", job_id],
@@ -175,7 +178,7 @@ def _execute_backup(site, job_id="testjob"):
     return backup_id
 
 
-def _execute_restore(site, backup_id, env=None, restore_site=True):
+def _execute_restore(site: Site, backup_id, env=None, restore_site=True):
     p = site.execute(
         ["mkbackup", "restore", "test-target", backup_id],
         stdout=subprocess.PIPE,
@@ -211,7 +214,7 @@ def _execute_restore(site, backup_id, env=None, restore_site=True):
 #   '----------------------------------------------------------------------'
 
 
-def test_mkbackup_help(site):
+def test_mkbackup_help(site: Site):
     p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == "ERROR: Missing operation mode\n"
@@ -219,7 +222,7 @@ def test_mkbackup_help(site):
     assert p.wait() == 3
 
 
-def test_mkbackup_list_unconfigured(site):
+def test_mkbackup_list_unconfigured(site: Site):
     p = site.execute(
         ["mkbackup", "list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -228,7 +231,7 @@ def test_mkbackup_list_unconfigured(site):
     assert p.wait() == 3
 
 
-def test_mkbackup_list_targets(site, test_cfg):
+def test_mkbackup_list_targets(site: Site, test_cfg):
     p = site.execute(
         ["mkbackup", "targets"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -239,7 +242,7 @@ def test_mkbackup_list_targets(site, test_cfg):
     assert "tärget" in stdout
 
 
-def test_mkbackup_list_backups(site, test_cfg):
+def test_mkbackup_list_backups(site: Site, test_cfg):
     p = site.execute(
         ["mkbackup", "list", "test-target"],
         stdout=subprocess.PIPE,
@@ -253,7 +256,7 @@ def test_mkbackup_list_backups(site, test_cfg):
     assert "Details" in stdout
 
 
-def test_mkbackup_list_backups_invalid_target(site, test_cfg):
+def test_mkbackup_list_backups_invalid_target(site: Site, test_cfg):
     p = site.execute(
         ["mkbackup", "list", "xxx"],
         stdout=subprocess.PIPE,
@@ -266,7 +269,7 @@ def test_mkbackup_list_backups_invalid_target(site, test_cfg):
     assert stdout == ""
 
 
-def test_mkbackup_list_jobs(site, test_cfg):
+def test_mkbackup_list_jobs(site: Site, test_cfg):
     p = site.execute(
         ["mkbackup", "jobs"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -277,16 +280,16 @@ def test_mkbackup_list_jobs(site, test_cfg):
     assert "Tästjob" in stdout
 
 
-def test_mkbackup_simple_backup(site, test_cfg, backup_lock_dir):
+def test_mkbackup_simple_backup(site: Site, test_cfg, backup_lock_dir):
     _execute_backup(site)
 
 
-def test_mkbackup_simple_restore(site, test_cfg):
+def test_mkbackup_simple_restore(site: Site, test_cfg):
     backup_id = _execute_backup(site)
     _execute_restore(site, backup_id)
 
 
-def test_mkbackup_encrypted_backup(site, test_cfg):
+def test_mkbackup_encrypted_backup(site: Site, test_cfg):
     _execute_backup(site, job_id="testjob-encrypted")
 
 
@@ -322,15 +325,12 @@ def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
 
 
 def test_mkbackup_locking(site, test_cfg):
-
     backup_id = _execute_backup(site, job_id="testjob-no-history")
-    backup_fcts: Tuple[Callable[[object], object], ...]
     with simulate_backup_lock(site.id):
-        backup_fcts = (
+        for what in (
             _execute_backup,
-            lambda s: _execute_restore(s, backup_id),
-        )
-        for what in backup_fcts:
+            functools.partial(_execute_restore, backup_id=backup_id),
+        ):
             with pytest.raises(AssertionError) as locking_issue:
-                what(site)
+                what(site)  # type: ignore
             assert "Failed to get the exclusive backup lock" in str(locking_issue)

@@ -6,8 +6,10 @@
 
 import os
 
+from tests.testlib.site import Site
 
-def test_init_scripts(site):
+
+def test_init_scripts(site: Site):
     scripts = [
         "apache",
         "core",

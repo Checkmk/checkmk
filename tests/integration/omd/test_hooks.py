@@ -6,8 +6,10 @@
 
 import os
 
+from tests.testlib.site import Site
 
-def test_hooks(site):
+
+def test_hooks(site: Site):
     hooks = [
         "ADMIN_MAIL",
         "APACHE_MODE",

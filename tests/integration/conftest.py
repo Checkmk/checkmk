@@ -6,11 +6,11 @@
 
 import pytest
 
-from tests.testlib.site import get_site_factory
+from tests.testlib.site import get_site_factory, Site
 
 
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True)
-def site(request):
+def site(request) -> Site:
     sf = get_site_factory(prefix="int_", update_from_git=True, install_test_python_modules=True)
     return sf.get_existing_site("test")

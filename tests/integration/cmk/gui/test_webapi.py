@@ -18,13 +18,14 @@ import pytest
 from PIL import Image  # type: ignore[import]
 
 from tests.testlib import APIError, wait_until, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.version as cmk_version
 
 
 @pytest.fixture(name="local_test_hosts")
-def fixture_local_test_hosts(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def fixture_local_test_hosts(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     site.makedirs("var/check_mk/agent_output/")
 
     web.add_hosts(
@@ -46,13 +47,13 @@ def fixture_local_test_hosts(web, site):  # noqa: F811 # pylint: disable=redefin
         ]
     )
 
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/local-test-hosts.mk",
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host', 'test-host2']))\n",
     )
 
     for hostname in ["test-host", "test-host2"]:
-        site.write_file(
+        site.write_text_file(
             "var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output()
         )
 
@@ -325,12 +326,12 @@ def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
         assert response is None
 
 
-def test_get_site(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_get_site(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     response = web.get_site(site.id)
     assert "site_config" in response
 
 
-def test_get_all_sites(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_get_all_sites(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     response = web.get_all_sites()
     assert "sites" in response
     assert site.id in response["sites"]
@@ -423,7 +424,7 @@ def test_set_all_sites(web, site, sock_spec):  # noqa: F811 # pylint: disable=re
         web.delete_site(new_site_id)
 
 
-def test_write_host_tags(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_write_host_tags(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host(
             "test-host-dmz",
@@ -480,7 +481,7 @@ def test_write_host_tags(web, site):  # noqa: F811 # pylint: disable=redefined-o
         web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])
 
 
-def test_write_host_labels(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_write_host_labels(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host(
             "test-host-lan",
@@ -786,7 +787,7 @@ def test_bulk_discovery_start_multiple_with_subdir(
     assert status["job"]["state"] == "finished"
 
 
-def test_activate_changes(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_activate_changes(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host(
             "test-host-activate",
@@ -805,7 +806,7 @@ def test_activate_changes(web, site):  # noqa: F811 # pylint: disable=redefined-
 
 
 @pytest.fixture(scope="module")
-def graph_test_config(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     # No graph yet...
     with pytest.raises(APIError) as exc_info:
         web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
@@ -820,13 +821,13 @@ def graph_test_config(web, site):  # noqa: F811 # pylint: disable=redefined-oute
             },
         )
 
-        site.write_file(
+        site.write_text_file(
             "etc/check_mk/conf.d/test-host-get-graph.mk",
             "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host-get-graph']))\n",
         )
 
         site.makedirs("var/check_mk/agent_output/")
-        site.write_file(
+        site.write_text_file(
             "var/check_mk/agent_output/test-host-get-graph", get_standard_linux_agent_output()
         )
 
@@ -1126,7 +1127,7 @@ def test_get_inventory(web):  # noqa: F811 # pylint: disable=redefined-outer-nam
         web.add_host(host_name, attributes={"ipaddress": "127.0.0.1"})
         # NOTE: Deleting the host deletes the file, too.
         web.site.makedirs(inventory_dir)
-        web.site.write_file(
+        web.site.write_text_file(
             os.path.join(inventory_dir, host_name),
             "{'hardware': {'memory': {'ram': 10000, 'foo': 1}, 'blubb': 42}}",
         )

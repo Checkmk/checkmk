@@ -6,16 +6,18 @@
 
 import subprocess
 
+from tests.testlib.site import Site
+
 from cmk.utils.paths import mkbackup_lock_dir
 
 
-def test_backup_dir(site):
+def test_backup_dir(site: Site):
     backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
     assert backup_permission_mask == "0770"
     assert mkbackup_lock_dir.group() == "omd"
 
 
-def test_locales(site):
+def test_locales(site: Site):
     p = site.execute(["locale"], stdout=subprocess.PIPE)
     output = p.communicate()[0]
 

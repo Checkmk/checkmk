@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.datadog_monitors import (
     parse_datadog_monitors,
 )
 
-from cmk.gui.plugins.wato.check_parameters.datadog_monitors import (  # isort: skip
+from cmk.gui.plugins.wato.check_parameters.datadog_monitors import (
     _DEFAULT_DATADOG_AND_CHECKMK_STATES as WATO_DEFAULTS,
 )
 

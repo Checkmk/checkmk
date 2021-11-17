@@ -10,6 +10,7 @@ from typing import NamedTuple
 import pytest
 
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
 
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
         ),
     ],
 )
-def test_cfg_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_cfg_fixture(request, web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 

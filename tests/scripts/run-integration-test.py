@@ -26,7 +26,7 @@ from pathlib import Path
 script_path = Path(__file__).resolve()
 sys.path.insert(0, str(script_path.parent.parent.parent))
 
-from tests.testlib.site import get_site_factory
+from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import cmk_path, is_running_as_site_user
 from tests.testlib.version import CMKVersion
 
@@ -77,7 +77,7 @@ def main(args):
         sf.save_results()
 
 
-def _execute_as_site_user(site, args):
+def _execute_as_site_user(site: Site, args):
     env_vars = {
         "VERSION": site.version.version_spec,
         "EDITION": site.version.edition(),

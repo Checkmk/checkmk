@@ -6,6 +6,7 @@
 
 from tests.testlib import create_linux_test_host
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 from cmk.utils.type_defs import HostName
 
@@ -13,13 +14,13 @@ import cmk.base.autochecks as autochecks
 
 
 def test_test_check_1_merged_rule(
-    request, site, web
+    request, site: Site, web
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, web, site, host_name)
-    site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
+    site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_1.py"
 
@@ -31,7 +32,7 @@ def test_test_check_1_merged_rule(
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
+    site.write_text_file(
         test_check_path,
         """
 import pprint
@@ -74,7 +75,7 @@ register.check_plugin(
         raise AssertionError('"test_check_1" not discovered')
 
     # And now overwrite the setting in the config
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/test_check_1.mk",
         "discover_test_check_1 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
     )
@@ -92,13 +93,15 @@ register.check_plugin(
 
 
 def test_test_check_1_all_rule(
-    request, site, web
+    request, site: Site, web
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, web, site, host_name)
-    site.write_file("var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n")
+    site.write_text_file(
+        "var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n"
+    )
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_2.py"
 
@@ -110,7 +113,7 @@ def test_test_check_1_all_rule(
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
+    site.write_text_file(
         test_check_path,
         """
 import pprint
@@ -154,7 +157,7 @@ register.check_plugin(
         raise AssertionError('"test_check_2" not discovered')
 
     # And now overwrite the setting in the config
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/test_check_2.mk",
         "discover_test_check_2 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
     )

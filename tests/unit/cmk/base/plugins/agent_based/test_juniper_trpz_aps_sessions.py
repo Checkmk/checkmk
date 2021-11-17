@@ -11,13 +11,12 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state  # type: ignore[import]
-
-from cmk.base.plugins.agent_based.juniper_trpz_aps import (  # type: ignore[import] # isort: skip
+from cmk.base.plugins.agent_based.juniper_trpz_aps import (
     check_juniper_trpz_aps,
     cluster_check_juniper_trpz_aps,
     parse_juniper_trpz_aps,
 )
-from cmk.base.plugins.agent_based.juniper_trpz_aps_sessions import (  # type: ignore[import] # isort: skip
+from cmk.base.plugins.agent_based.juniper_trpz_aps_sessions import (
     _check_common_juniper_trpz_aps_sessions,
     discovery_juniper_trpz_aps_sessions,
     parse_juniper_trpz_aps_sessions,

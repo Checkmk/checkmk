@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.check_legacy_includes.bonding import (  # type: ignore[attr-defined] # isort: skip
+from cmk.base.check_legacy_includes.bonding import (  # type: ignore[attr-defined]
     _check_ieee_302_3ad_specific,
 )
 

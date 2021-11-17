@@ -9,10 +9,11 @@ import time
 import pytest
 
 from tests.testlib.fixtures import ec  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 
 def ensure_core_and_get_connection(
-    site, ec, core
+    site: Site, ec, core
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
     if core is None:
         return ec.status
@@ -22,7 +23,7 @@ def ensure_core_and_get_connection(
 
 @pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_command_reload(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_command_reload(site: Site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Checking core: %s" % core)
     live = ensure_core_and_get_connection(site, ec, core)
 
@@ -42,7 +43,9 @@ def test_command_reload(site, ec, core):  # noqa: F811 # pylint: disable=redefin
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_status_table_via_core(
+    site: Site, ec, core
+):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Checking core: %s" % core)
     live = ensure_core_and_get_connection(site, ec, core)
     prefix = "" if core is None else "eventconsole"
@@ -92,7 +95,9 @@ def test_status_table_via_core(site, ec, core):  # noqa: F811 # pylint: disable=
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_rules_table_via_core(
+    site: Site, ec, core
+):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Checking core: %s" % core)
     live = ensure_core_and_get_connection(site, ec, core)
     prefix = "" if core is None else "eventconsole"

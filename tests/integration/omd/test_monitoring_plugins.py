@@ -8,6 +8,8 @@ import os
 
 import pytest
 
+from tests.testlib.site import Site
+
 
 @pytest.mark.parametrize(
     "plugin",
@@ -98,7 +100,7 @@ import pytest
         "utils.sh",
     ],
 )
-def test_monitoring_plugins(site, plugin):
+def test_monitoring_plugins(site: Site, plugin):
     plugin_path = site.path(os.path.join("lib/nagios/plugins", plugin))
     assert os.path.exists(plugin_path)
     assert os.access(plugin_path, os.X_OK)

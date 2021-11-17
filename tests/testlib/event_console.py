@@ -8,11 +8,12 @@ import socket
 import time
 from typing import Any, Dict
 
+from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
 
 class CMKEventConsole:
-    def __init__(self, site):
+    def __init__(self, site: Site):
         super().__init__()
         self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)

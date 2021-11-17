@@ -12,6 +12,7 @@ from typing import Dict, List, NamedTuple
 import pytest
 
 from tests.testlib import create_linux_test_host, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
 
@@ -48,7 +49,7 @@ def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=red
 
 # Simply detects all tables by querying the columns table and then
 # queries each of those tables without any columns and filters
-def test_tables(default_cfg, site):
+def test_tables(default_cfg, site: Site):
     columns_per_table: Dict[str, List[str]] = {}
     for row in site.live.query_table_assoc("GET columns\n"):
         columns_per_table.setdefault(row["table"], []).append(row["name"])
@@ -64,13 +65,13 @@ def test_tables(default_cfg, site):
         assert isinstance(result, list)
 
 
-def test_host_table(default_cfg, site):
+def test_host_table(default_cfg, site: Site):
     rows = site.live.query("GET hosts")
     assert isinstance(rows, list)
     assert len(rows) >= 2  # header + min 1 host
 
 
-def test_host_custom_variables(default_cfg, site):
+def test_host_custom_variables(default_cfg, site: Site):
     rows = site.live.query(
         "GET hosts\nColumns: custom_variables tags\nFilter: name = livestatus-test-host\n"
     )
@@ -99,37 +100,31 @@ def test_host_custom_variables(default_cfg, site):
     }
 
 
-host_equal_queries = {
-    "nagios": {
-        "query": (
-            "GET hosts\n" "Columns: host_name\n" "Filter: host_name = livestatus-test-host.domain\n"
-        ),
-        "result": [
+def test_host_table_host_equal_filter(default_cfg, site: Site):
+    queries = {
+        "nagios": "GET hosts\n"
+        "Columns: host_name\n"
+        "Filter: host_name = livestatus-test-host.domain\n",
+        "cmc": "GET hosts\n" "Columns: host_name\n" "Filter: host_name = livestatus-test-host\n",
+    }
+    results = {
+        "nagios": [
             {
                 "name": "livestatus-test-host.domain",
             },
         ],
-    },
-    "cmc": {
-        "query": (
-            "GET hosts\n" "Columns: host_name\n" "Filter: host_name = livestatus-test-host\n"
-        ),
-        "result": [
+        "cmc": [
             {
                 "name": "livestatus-test-host",
             },
         ],
-    },
-}
+    }
+
+    rows = site.live.query_table_assoc(queries[default_cfg.core])
+    assert rows == results[default_cfg.core]
 
 
-def test_host_table_host_equal_filter(default_cfg, site):
-    query_and_result = host_equal_queries[default_cfg.core]
-    rows = site.live.query_table_assoc(query_and_result["query"])
-    assert rows == query_and_result["result"]
-
-
-def test_service_table(default_cfg, site):
+def test_service_table(default_cfg, site: Site):
     rows = site.live.query(
         "GET services\nFilter: host_name = livestatus-test-host\n" "Columns: description\n"
     )
@@ -144,7 +139,7 @@ def test_service_table(default_cfg, site):
     assert "Memory" in descriptions
 
 
-def test_usage_counters(default_cfg, site):
+def test_usage_counters(default_cfg, site: Site):
     rows = site.live.query(
         "GET status\nColumns: helper_usage_cmk helper_usage_fetcher helper_usage_checker\n"
     )
@@ -191,7 +186,7 @@ def configure_service_tags_fixture(
     web.activate_changes()
 
 
-def test_service_custom_variables(configure_service_tags, default_cfg, site):
+def test_service_custom_variables(configure_service_tags, default_cfg, site: Site):
     rows = site.live.query(
         "GET services\n"
         "Columns: custom_variables tags\n"
@@ -223,7 +218,7 @@ class TestCrashReport:
         assert site.file_exists("var/check_mk/crashes")
         dir_path = "var/check_mk/crashes/%s/%s/" % (component, uuid)
         site.makedirs(dir_path)
-        site.write_file(dir_path + "crash.info", _json.dumps(crash_info))
+        site.write_text_file(dir_path + "crash.info", _json.dumps(crash_info))
         yield
         site.delete_dir("var/check_mk/crashes/%s" % component)
 

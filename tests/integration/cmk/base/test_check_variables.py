@@ -10,6 +10,7 @@ import pytest
 
 from tests.testlib import create_linux_test_host
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
 from cmk.utils.type_defs import HostName
@@ -21,12 +22,14 @@ import cmk.base.config as config
 
 # Test whether or not registration of check configuration variables works
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
-def test_test_check_1(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_test_check_1(
+    request, site: Site, web
+):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, web, site, host_name)
-    site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
+    site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
 
     test_check_path = "local/share/check_mk/checks/test_check_1"
 
@@ -38,7 +41,7 @@ def test_test_check_1(request, site, web):  # noqa: F811 # pylint: disable=redef
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
+    site.write_text_file(
         test_check_path,
         """
 
@@ -87,7 +90,7 @@ check_info["test_check_1"] = {
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/test_check_1.mk", "test_check_1_default_levels = 5.0, 30.1\n"
     )
 
@@ -112,7 +115,7 @@ def test_test_check_2(request, site, web):  # noqa: F811 # pylint: disable=redef
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, web, site, host_name)
-    site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_2>>>\n1 2\n")
+    site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_2>>>\n1 2\n")
 
     test_check_path = "local/share/check_mk/checks/test_check_2"
 
@@ -124,7 +127,7 @@ def test_test_check_2(request, site, web):  # noqa: F811 # pylint: disable=redef
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
+    site.write_text_file(
         test_check_path,
         """
 
@@ -163,7 +166,7 @@ check_info["test_check_2"] = {
     web.discover_services(host_name)
 
     # And now overwrite the setting in the config
-    site.write_file("etc/check_mk/conf.d/test_check_2.mk", "discover_service = True\n")
+    site.write_text_file("etc/check_mk/conf.d/test_check_2.mk", "discover_service = True\n")
 
     web.discover_services(host_name)
 
@@ -178,13 +181,13 @@ check_info["test_check_2"] = {
 # Test whether or not factory settings and checkgroup parameters work
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
 def test_check_factory_settings(
-    request, site, web
+    request, site: Site, web
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, web, site, host_name)
-    site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_3>>>\n1 2\n")
+    site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_3>>>\n1 2\n")
 
     test_check_path = "local/share/check_mk/checks/test_check_3"
 
@@ -196,7 +199,7 @@ def test_check_factory_settings(
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
+    site.write_text_file(
         test_check_path,
         """
 
@@ -247,7 +250,7 @@ check_info["test_check_3"] = {
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/test_check_3.mk",
         """
 checkgroup_parameters.setdefault('asd', [])

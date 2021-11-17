@@ -8,6 +8,8 @@ import subprocess
 
 import pytest
 
+from tests.testlib.site import Site
+
 
 @pytest.mark.parametrize(
     "args",
@@ -16,12 +18,12 @@ import pytest
         ["-a"],
     ],
 )
-def test_simple_check_mkevents_call(site, args):
+def test_simple_check_mkevents_call(site: Site, args):
     p = site.execute(
         ["./check_mkevents"] + args + ["somehost"],
         stdout=subprocess.PIPE,
         cwd=site.path("lib/nagios/plugins"),
     )
-    output = p.stdout.read()
+    output = p.stdout.read() if p.stdout else "<NO STDOUT>"
     assert output == "OK - no events for somehost\n"
     assert p.wait() == 0

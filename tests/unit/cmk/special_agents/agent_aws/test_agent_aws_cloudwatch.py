@@ -17,7 +17,7 @@ from cmk.special_agents.agent_aws import (
     ResultDistributor,
 )
 
-from .agent_aws_fake_clients import FakeCloudwatchClient  # type: ignore[import] # pylint: disable=import-error # isort: skip
+from .agent_aws_fake_clients import FakeCloudwatchClient
 
 
 @pytest.fixture()

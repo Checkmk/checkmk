@@ -14,12 +14,12 @@ import subprocess
 import time
 from pathlib import Path
 
-from tests.testlib import cmk_path, is_enterprise_repo, repo_path
-
-from pylint.reporters.text import (  # type: ignore[import] # isort: skip
+from pylint.reporters.text import (  # type: ignore[import]
     ColorizedTextReporter,
     ParseableTextReporter,
 )
+
+from tests.testlib import cmk_path, is_enterprise_repo, repo_path
 
 
 def check_files(base_dir):

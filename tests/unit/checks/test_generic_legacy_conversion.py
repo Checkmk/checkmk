@@ -17,18 +17,14 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
 )
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
-from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
-
-from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined] # isort: skip
+from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (
     _has_table_2,
     _is_cisco,
     _is_cisco_nexus,
 )
-from cmk.base.check_legacy_includes.fsc import (  # type: ignore[attr-defined] # isort: skip
-    _is_fsc_or_windows,
-    is_fsc,
-)
-from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined] # isort: skip
+from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc
+from cmk.base.check_legacy_includes.ucd_hr import _is_ucd
 
 pytestmark = pytest.mark.checks
 

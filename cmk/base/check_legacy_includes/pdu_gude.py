@@ -14,12 +14,12 @@ pdu_gude_default_levels = {
 
 def inventory_pdu_gude(info):
     if len(info) > 0:
-        return [(x + 1, "pdu_gude_default_levels") for x in range(len(info))]
+        return [(str(x + 1), "pdu_gude_default_levels") for x in range(len(info))]
 
 
 def check_pdu_gude(item, params, info):
     try:
-        values = info[item - 1]
+        values = info[str(item - 1)]
     except ValueError:
         yield 3, "No phase %d found in agent output" % item
         return
@@ -42,7 +42,7 @@ def check_pdu_gude(item, params, info):
         perfdata = [(unit, value, warn, crit)]
         status = 0
 
-        if warn > crit:
+        if warn and warn > crit:
             if value < crit:
                 status = 2
             elif value < warn:

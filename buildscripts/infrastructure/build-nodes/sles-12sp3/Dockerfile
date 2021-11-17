@@ -9,6 +9,8 @@ ARG ARTIFACT_STORAGE
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp3 sles12sp3 \
     && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
+    && zypper in -f -y \
+    libpcre1-8.39-7.1.x86_64 \
     && zypper -n --no-gpg-checks in --replacefiles \
     curl \
     cyrus-sasl-devel \

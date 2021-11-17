@@ -128,6 +128,7 @@ class ContainerTerminatedState(BaseModel):
 
 class ContainerInfo(BaseModel):
     id: Optional[str]  # id of non-ready container is None
+    name: str
     image: str
     ready: bool
     state: Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]

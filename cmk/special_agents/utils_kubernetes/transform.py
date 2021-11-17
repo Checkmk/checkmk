@@ -154,11 +154,12 @@ def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
                 detail=details.message,
             )
         else:
-            raise AssertionError("Unknown contianer state {status.state}")
+            raise AssertionError(f"Unknown container state {status.state}")
 
         result.append(
             api.ContainerInfo(
                 id=status.container_id,
+                name=status.name,
                 image=status.image,
                 ready=status.ready,
                 state=state,

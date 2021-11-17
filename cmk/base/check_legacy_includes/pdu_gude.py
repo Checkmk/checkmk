@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 pdu_gude_default_levels = {
     "V": (220, 210),  # Volt
     "A": (15, 16),  # Ampere
@@ -42,7 +41,7 @@ def check_pdu_gude(item, params, info):
         perfdata = [(unit, value, warn, crit)]
         status = 0
 
-        if warn > crit:
+        if warn is not None and warn > crit:
             if value < crit:
                 status = 2
             elif value < warn:

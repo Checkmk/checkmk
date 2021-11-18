@@ -6,7 +6,7 @@
 
 import json
 import re
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import livestatus
 
@@ -290,10 +290,14 @@ class FilterIPAddress(Filter):
         html.br()
         display_filter_radiobuttons(
             varname=self.htmlvars[1],
-            options=[("yes", _("Prefix match")), ("no", _("Exact match"))],
+            options=self._options(),
             default="yes",
             value=value,
         )
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [("yes", _("Prefix match")), ("no", _("Exact match"))]
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         address_val = value.get(self.htmlvars[0])
@@ -368,14 +372,18 @@ class FilterAddressFamily(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
             varname=self.htmlvars[0],
-            options=[
-                ("4", _("IPv4")),
-                ("6", _("IPv6")),
-                ("both", _("Both")),
-            ],
+            options=self._options(),
             default="both",
             value=value,
         )
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [
+            ("4", _("IPv4")),
+            ("6", _("IPv6")),
+            ("both", _("Both")),
+        ]
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         family = value.get("address_family", "both")
@@ -400,17 +408,21 @@ class FilterAddressFamilies(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
             varname=self.htmlvars[0],
-            options=[
-                ("4", "v4"),
-                ("6", "v6"),
-                ("both", _("Both")),
-                ("4_only", _("only v4")),
-                ("6_only", _("only v6")),
-                ("", _("(ignore)")),
-            ],
+            options=self._options(),
             default="",
             value=value,
         )
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [
+            ("4", "v4"),
+            ("6", "v6"),
+            ("both", _("Both")),
+            ("4_only", _("only v4")),
+            ("6_only", _("only v6")),
+            ("", _("(ignore)")),
+        ]
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         family = value.get("address_families")
@@ -461,10 +473,11 @@ class FilterMultigroup(Filter):
         self.group_type = group_type
 
     def valuespec(self):
-        return DualListChoice(choices=self._get_choices(), rows=4, enlarge_active=True)
+        return DualListChoice(choices=self._options(self.group_type), rows=4, enlarge_active=True)
 
-    def _get_choices(self):
-        return sites.all_groups(self.group_type)
+    @staticmethod
+    def _options(group_type):
+        return sites.all_groups(group_type)
 
     def selection(self, value: FilterHTTPVariables) -> List[str]:
         current = value.get(self.htmlvars[0], "").strip().split("|")
@@ -475,7 +488,7 @@ class FilterMultigroup(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         html.open_div(class_="multigroup")
         self.valuespec().render_input(self.htmlvars[0], self.selection(value))
-        if self._get_choices():
+        if self._options(self.group_type):
             html.open_nobr()
             html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
             html.close_nobr()
@@ -549,17 +562,24 @@ class FilterGroupCombo(Filter):
         self.what = what
 
     def display(self, value: FilterHTTPVariables) -> None:
-        choices: Choices = list(sites.all_groups(self.what.split("_")[-1]))
-        if not self.enforce:
-            empty_choices: Choices = [("", "")]
-            choices = empty_choices + choices
         html.dropdown(
-            self.htmlvars[0], choices, deflt=value.get(self.htmlvars[0], ""), ordered=True
+            self.htmlvars[0],
+            self._options(self.what, self.enforce),
+            deflt=value.get(self.htmlvars[0], ""),
+            ordered=True,
         )
         if not self.enforce:
             html.open_nobr()
             html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
             html.close_nobr()
+
+    @staticmethod
+    def _options(what, enforce) -> Choices:
+        choices: Choices = list(sites.all_groups(what.split("_")[-1]))
+        if not enforce:
+            empty_choices: Choices = [("", "")]
+            choices = empty_choices + choices
+        return choices
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         current_value = value.get(self.htmlvars[0])
@@ -722,10 +742,16 @@ class FilterGroupSelection(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         # chop off "group", leaves host or service
-        choices: Choices = list(sites.all_groups(self.what[:-5]))
         html.dropdown(
-            self.htmlvars[0], choices, deflt=value.get(self.htmlvars[0], ""), ordered=True
+            self.htmlvars[0],
+            self._options(self.what[:-5]),
+            deflt=value.get(self.htmlvars[0], ""),
+            ordered=True,
         )
+
+    @staticmethod
+    def _options(group_type: str) -> Choices:
+        return list(sites.all_groups(group_type))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if current_value := value.get(self.htmlvars[0]):
@@ -822,12 +848,7 @@ class FilterHostgroupProblems(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
         html.write_text("Service states:" + " ")
-        for svc_var, svc_text in [
-            ("warn", _("WARN")),
-            ("crit", _("CRIT")),
-            ("pending", _("PEND")),
-            ("unknown", _("UNKNOWN")),
-        ]:
+        for svc_var, svc_text in self._options("service"):
             namevar = "hostgroups_having_services_%s" % svc_var
             html.checkbox(namevar, bool(value.get(namevar, True)), label=svc_text)
 
@@ -840,11 +861,7 @@ class FilterHostgroupProblems(Filter):
 
         html.br()
         html.write_text("Host states:" + " ")
-        for host_var, host_text in [
-            ("down", _("DOWN")),
-            ("unreach", _("UNREACH")),
-            ("pending", _("PEND")),
-        ]:
+        for host_var, host_text in self._options("host"):
             namevar = "hostgroups_having_hosts_%s" % host_var
             html.checkbox(namevar, bool(value.get(namevar, True)), label=host_text)
 
@@ -855,6 +872,24 @@ class FilterHostgroupProblems(Filter):
         )
 
         html.end_checkbox_group()
+
+    @staticmethod
+    def _options(target: Literal["host", "service"]) -> List[Tuple[str, str]]:
+        if target == "host":
+            return [
+                ("down", _("DOWN")),
+                ("unreach", _("UNREACH")),
+                ("pending", _("PEND")),
+            ]
+
+        if target == "service":
+            return [
+                ("warn", _("WARN")),
+                ("crit", _("CRIT")),
+                ("pending", _("PEND")),
+                ("unknown", _("UNKNOWN")),
+            ]
+        raise ValueError
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         headers = []
@@ -927,12 +962,19 @@ class FilterQueryDropdown(Filter):
         self.filterline = filterline
 
     def display(self, value: FilterHTTPVariables) -> None:
-        selection = sites.live().query_column_unique(self.query)
+        html.dropdown(
+            self.ident,
+            self._options(self.query),
+            deflt=value.get(self.htmlvars[0], ""),
+            ordered=True,
+        )
+
+    @staticmethod
+    def _options(query: livestatus.QueryTypes) -> Choices:
+        selection = sites.live().query_column_unique(query)
         empty_choices: Choices = [("", "")]
         sel: Choices = [(x, x) for x in selection]
-        html.dropdown(
-            self.ident, empty_choices + sel, deflt=value.get(self.htmlvars[0], ""), ordered=True
-        )
+        return empty_choices + sel
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if current := value.get(self.ident):
@@ -995,15 +1037,19 @@ class FilterServiceState(Filter):
         html.begin_checkbox_group()
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
         checkbox_default = not self._filter_used(value)
-        for var, text in [
-            (self.prefix + "st0", _("OK")),
-            (self.prefix + "st1", _("WARN")),
-            (self.prefix + "st2", _("CRIT")),
-            (self.prefix + "st3", _("UNKN")),
-            (self.prefix + "stp", _("PEND")),
-        ]:
+        for var, text in self._options(self.prefix):
             html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
         html.end_checkbox_group()
+
+    @staticmethod
+    def _options(prefix: str) -> List[Tuple[str, str]]:
+        return [
+            (prefix + "st0", _("OK")),
+            (prefix + "st1", _("WARN")),
+            (prefix + "st2", _("CRIT")),
+            (prefix + "st3", _("UNKN")),
+            (prefix + "stp", _("PEND")),
+        ]
 
     def _filter_used(self, value: FilterHTTPVariables) -> bool:
         return any(value.values())
@@ -1069,14 +1115,18 @@ class FilterHostState(Filter):
         html.begin_checkbox_group()
         html.hidden_field("hoststate_filled", "1", add_var=True)
         checkbox_default = not self._filter_used(value)
-        for var, text in [
+        for var, text in self._options():
+            html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
+        html.end_checkbox_group()
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [
             ("hst0", _("UP")),
             ("hst1", _("DOWN")),
             ("hst2", _("UNREACH")),
             ("hstp", _("PEND")),
-        ]:
-            html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
-        html.end_checkbox_group()
+        ]
 
     def _filter_used(self, value: FilterHTTPVariables) -> bool:
         return any(value.values())
@@ -1123,15 +1173,19 @@ class FilterHostsHavingServiceProblems(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
         checkbox_default = not any(value.values())  # everything by default
-        for var, text in [
+        for var, text in self._options():
+            varname = "hosts_having_services_%s" % var
+            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=text)
+        html.end_checkbox_group()
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [
             ("warn", _("WARN")),
             ("crit", _("CRIT")),
             ("pending", _("PEND")),
             ("unknown", _("UNKNOWN")),
-        ]:
-            varname = "hosts_having_services_%s" % var
-            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=text)
-        html.end_checkbox_group()
+        ]
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         conditions = [
@@ -1449,11 +1503,12 @@ class SiteFilter(Filter):
         )
         self.enforce = enforce
 
-    def choices(self):
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
         return filter_cme_choices() if cmk_version.is_managed_edition() else filter_cre_choices()
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.dropdown("site", ([] if self.enforce else [("", "")]) + self.choices())
+        html.dropdown("site", ([] if self.enforce else [("", "")]) + self._options())
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         if cmk_version.is_managed_edition():
@@ -1491,7 +1546,7 @@ class MultipleSitesFilter(SiteFilter):
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     def display(self, value: FilterHTTPVariables):
-        sites_vs = DualListChoice(choices=self.choices(), rows=4)
+        sites_vs = DualListChoice(choices=self._options(), rows=4)
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
 
@@ -1962,14 +2017,18 @@ class FilterLogNotificationPhase(FilterTristate):
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
             varname=self.varname,
-            options=[
-                ("-1", _("Show all phases of notifications")),
-                ("1", _("Show just preliminary notifications")),
-                ("0", _("Show just end-user-notifications")),
-            ],
+            options=self._options(),
             default=str(self.deflt),
             value=value,
         )
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [
+            ("-1", _("Show all phases of notifications")),
+            ("1", _("Show just preliminary notifications")),
+            ("0", _("Show just end-user-notifications")),
+        ]
 
     def filter_code(self, positive: bool) -> str:
         # Note: this filter also has to work for entries that are no notification.
@@ -2193,15 +2252,18 @@ class FilterHostAuxTags(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        aux_tag_choices = [("", "")] + config.tags.aux_tag_list.get_choices()
         for num in range(self.count):
             varname = "%s_%d" % (self.prefix, num)
             html.dropdown(
-                varname, aux_tag_choices, deflt=value.get(varname, ""), ordered=True, class_="neg"
+                varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_="neg"
             )
             html.open_nobr()
             html.checkbox(varname + "_neg", bool(value.get(varname)), label=_("negate"))
             html.close_nobr()
+
+    @staticmethod
+    def _options() -> Choices:
+        return [("", "")] + config.tags.aux_tag_list.get_choices()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         headers = []
@@ -2312,18 +2374,22 @@ class FilterCustomAttribute(Filter):
         return "%s_value" % ident
 
     def display(self, value: FilterHTTPVariables) -> None:
-        choices: Choices = [("", "")]
-        choices += self._custom_attribute_choices()
 
         html.dropdown(
             self.name_varname(self.ident),
-            choices,
+            self._options(self._custom_attribute_choices()),
             deflt=value.get(self.name_varname(self.ident), ""),
         )
         html.text_input(
             self.value_varname(self.ident),
             default_value=value.get(self.value_varname(self.ident), ""),
         )
+
+    @staticmethod
+    def _options(custom_attribute_choices: Choices) -> Choices:
+        choices: Choices = [("", "")]
+        choices += custom_attribute_choices
+        return choices
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if not value.get(self.name_varname(self.ident)):
@@ -2396,12 +2462,13 @@ class FilterECServiceLevelRange(Filter):
             is_show_more=True,
         )
 
-    def _prepare_choices(self):
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
         choices = sorted(config.mkeventd_service_levels[:])
-        return [(str(x[0]), "%s - %s" % (x[0], x[1])) for x in choices]
+        return [("", "")] + [(str(x[0]), "%s - %s" % (x[0], x[1])) for x in choices]
 
     def display(self, value: FilterHTTPVariables) -> None:
-        selection = [("", "")] + self._prepare_choices()
+        selection = self._options()
         html.open_div(class_="service_level min")
         html.write_text("From")
         html.dropdown(
@@ -2543,24 +2610,27 @@ filter_registry.register(
 @filter_registry.register_instance
 class FilterDiscoveryState(Filter):
     def __init__(self):
-        self.__options = [
-            ("discovery_state_ignored", _l("Hidden")),
-            ("discovery_state_vanished", _l("Vanished")),
-            ("discovery_state_unmonitored", _l("New")),
-        ]
         super().__init__(
             ident="discovery_state",
             title=_l("Discovery state"),
             sort_index=601,
             info="discovery",
-            htmlvars=[o[0] for o in self.__options],
+            htmlvars=[o[0] for o in self._options()],
             link_columns=[],
         )
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [
+            ("discovery_state_ignored", _("Hidden")),
+            ("discovery_state_vanished", _("Vanished")),
+            ("discovery_state_unmonitored", _("New")),
+        ]
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
         checkbox_default = not any(value.values())  # everything by default
-        for varname, title in self.__options:
+        for varname, title in self._options():
             html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=str(title))
         html.end_checkbox_group()
 
@@ -2592,10 +2662,12 @@ class FilterAggrGroup(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
+        html.dropdown(htmlvar, self._options(), deflt=value.get(htmlvar, ""))
+
+    @staticmethod
+    def _options() -> Choices:
         empty_choices: Choices = [("", "")]
-        html.dropdown(
-            htmlvar, empty_choices + bi.aggregation_group_choices(), deflt=value.get(htmlvar, "")
-        )
+        return empty_choices + bi.aggregation_group_choices()
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
@@ -2625,12 +2697,13 @@ class FilterAggrGroupTree(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        html.dropdown(htmlvar, [("", "")] + self._get_selection(), deflt=value.get(htmlvar, ""))
+        html.dropdown(htmlvar, self._options(), deflt=value.get(htmlvar, ""))
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         return value.get(self.htmlvars[0])
 
-    def _get_selection(self):
+    @staticmethod
+    def _options() -> Choices:
         def _build_tree(group, parent, path):
             this_node = group[0]
             path = path + (this_node,)
@@ -2658,13 +2731,15 @@ class FilterAggrGroupTree(Filter):
         for group in bi.get_aggregation_group_trees():
             _build_tree(group.split("/"), tree, tuple())
 
-        selection = []
+        selection: Choices = []
         index = 0
         for _unused, sub_tree in tree.items():
             selection.append(_get_selection_entry(sub_tree, index))
             _build_selection(selection, sub_tree.get("__children__", {}), index)
 
-        return selection
+        empty: Choices = [("", "")]
+
+        return empty + selection
 
 
 # how is either "regex" or "exact"
@@ -2854,20 +2929,24 @@ class BIStatusFilter(Filter):
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
         checkbox_default = not self._filter_used(value)  # everything by default
 
-        for varend, text in [
-            ("0", _("OK")),
-            ("1", _("WARN")),
-            ("2", _("CRIT")),
-            ("3", _("UNKN")),
-            ("-1", _("PEND")),
-            ("n", _("no assumed state set")),
-        ]:
+        for varend, text in self._options():
             if self.code != "a" and varend == "n":
                 continue  # no unset for read and effective state
             if varend == "n":
                 html.br()
             var = self.prefix + varend
             html.checkbox(var, deflt=bool(value.get(var, checkbox_default)), label=text)
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [
+            ("0", _("OK")),
+            ("1", _("WARN")),
+            ("2", _("CRIT")),
+            ("3", _("UNKN")),
+            ("-1", _("PEND")),
+            ("n", _("no assumed state set")),
+        ]
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})

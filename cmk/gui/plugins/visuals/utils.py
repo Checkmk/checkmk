@@ -383,10 +383,14 @@ class FilterTristate(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
             varname=self.varname,
-            options=[("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))],
+            options=self._options(),
             default=str(self.deflt),
             value=value,
         )
+
+    @staticmethod
+    def _options() -> List[Tuple[str, str]]:
+        return [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]
 
     def tristate_value(self, value: FilterHTTPVariables) -> int:
         try:
@@ -442,9 +446,6 @@ class FilterTime(Filter):
         )
 
     def display(self, value: FilterHTTPVariables):
-        choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]
-        choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
-
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what
@@ -454,10 +455,16 @@ class FilterTime(Filter):
             html.text_input(varprefix)
             html.close_td()
             html.open_td()
-            html.dropdown(varprefix + "_range", choices, deflt="3600")
+            html.dropdown(varprefix + "_range", self._options(self.ranges), deflt="3600")
             html.close_td()
             html.close_tr()
         html.close_table()
+
+    @staticmethod
+    def _options(ranges: List[Tuple[int, LazyString]]) -> Choices:
+        choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
+        choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
+        return choices
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         fromsecs, untilsecs = self.get_time_range(value)

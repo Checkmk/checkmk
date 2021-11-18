@@ -1,0 +1,17 @@
+Title: Fix calculation of issued rds_licenses
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637225092
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p16
+
+Previously, rds_license check incorrectly reported the number of licenses issued 
+in the situation when RDS license server had issued more licenses than were 
+added to its database. 
+
+With this version the problem had been solved and rds_license check always 
+reports the number of issued licenses correctly.

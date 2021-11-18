@@ -65,9 +65,9 @@ def check_rds_licenses(item, params, parsed):
     used = 0
     for pack in license_pack:
         pack_total = int(pack.get("TotalLicenses"))
-        pack_avail = int(pack.get("AvailableLicenses"))
+        pack_issued = int(pack.get("IssuedLicenses"))
         total += pack_total
-        used += pack_total - pack_avail
+        used += pack_issued
 
     return license_check_levels(total, used, params)
 

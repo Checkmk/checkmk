@@ -223,13 +223,13 @@ class Node:
     def append(self, pod: Pod) -> None:
         self._pods.append(pod)
 
-    def pod_resources(self) -> section.PodResources:
+    def pod_resources(self) -> section.PodResourcesWithCapacity:
         resources = {
             "capacity": self.resources["capacity"].pods,
             "allocatable": self.resources["allocatable"].pods,
         }
         resources.update(dict(Counter([pod.phase for pod in self._pods])))
-        return section.PodResources(**resources)
+        return section.PodResourcesWithCapacity(**resources)
 
     def kubelet(self) -> api.KubeletInfo:
         return self.kubelet_info

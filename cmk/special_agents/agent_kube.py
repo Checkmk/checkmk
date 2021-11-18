@@ -304,12 +304,13 @@ class Cluster:
             self._nodes[pod.node].append(pod)
         self._pods[pod.uid] = pod
 
-    def pod_resources(self) -> section.PodResources:
-        resources: DefaultDict[str, int] = defaultdict(int)
-        for node in self._nodes.values():
-            for k, v in dict(node.pod_resources()).items():
-                resources[k] += v
-        return section.PodResources(**resources)
+    def pod_resources(self) -> section.PodResourcesWithCapacity:
+        resources = {
+            "capacity": sum(node.resources["capacity"].pods for node in self._nodes.values()),
+            "allocatable": sum(node.resources["allocatable"].pods for node in self._nodes.values()),
+        }
+        resources.update(dict(Counter([pod.phase for pod in self._pods.values()])))
+        return section.PodResourcesWithCapacity(**resources)
 
     def pods(self) -> Sequence[Pod]:
         return list(self._pods.values())
@@ -352,7 +353,7 @@ def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]
 
 def output_cluster_api_sections(cluster: Cluster) -> None:
     sections = {
-        "k8s_pods_resources": cluster.pod_resources,
+        "k8s_cluster_pods_resources_v1": cluster.pod_resources,
         "k8s_node_count_v1": cluster.node_count,
         "k8s_cluster_details_v1": cluster.cluster_details,
     }

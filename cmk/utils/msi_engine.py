@@ -36,12 +36,12 @@ def bail_out(text):
 
 def msi_file_table():
     # we have to sort the table, the table is created by MSI installer
-    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.cab"]
+    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"]
 
 
 def msi_component_table():
     # we have to sort the table, the table is created by MSI installer too
-    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.cab"]
+    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.cab"]
 
 
 def remove_cab(path_to_msibuild, msi):

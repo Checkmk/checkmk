@@ -7,9 +7,10 @@
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
+from __future__ import annotations
+
 import abc
 import base64
-import contextlib
 import inspect
 import json
 import pprint
@@ -17,6 +18,7 @@ import sys
 import traceback
 import urllib.parse
 import uuid
+from contextlib import suppress
 from itertools import islice
 from pathlib import Path
 from typing import Any, Dict, Iterator, Optional, Tuple, Type
@@ -27,15 +29,6 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
 CrashInfo = Dict[str, Any]  # TODO: improve this type
-
-
-@contextlib.contextmanager
-def suppress(*exc):
-    # This is contextlib.suppress from Python 3.2
-    try:
-        yield
-    except exc:
-        pass
 
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
@@ -51,7 +44,7 @@ class CrashReportStore:
     _keep_num_crashes = 200
     """Caring about the persistance of crash reports in the local site"""
 
-    def save(self, crash: "ABCCrashReport") -> None:
+    def save(self, crash: ABCCrashReport) -> None:
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory(crash)
 
@@ -70,7 +63,7 @@ class CrashReportStore:
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
-    def _prepare_crash_dump_directory(self, crash: "ABCCrashReport") -> None:
+    def _prepare_crash_dump_directory(self, crash: ABCCrashReport) -> None:
         crash_dir = crash.crash_dir()
         crash_dir.mkdir(parents=True, exist_ok=True)
 
@@ -106,7 +99,7 @@ class CrashReportStore:
             with suppress(OSError):
                 crash_dir.rmdir()
 
-    def load_from_directory(self, crash_dir: Path) -> "ABCCrashReport":
+    def load_from_directory(self, crash_dir: Path) -> ABCCrashReport:
         """Populate the crash info from the given crash directory"""
         return ABCCrashReport.deserialize(self._load_decoded_from_directory(crash_dir))
 
@@ -139,7 +132,7 @@ class ABCCrashReport(abc.ABC):
     @classmethod
     def from_exception(
         cls, details: Optional[Dict] = None, type_specific_attributes: Optional[Dict] = None
-    ) -> "ABCCrashReport":
+    ) -> ABCCrashReport:
         """Create a crash info object from the current exception context
 
         details - Is an optional dictionary of crash type specific attributes
@@ -154,7 +147,7 @@ class ABCCrashReport(abc.ABC):
         return cls(**attributes)
 
     @classmethod
-    def deserialize(cls: Type["ABCCrashReport"], serialized: dict) -> "ABCCrashReport":
+    def deserialize(cls: Type[ABCCrashReport], serialized: dict) -> ABCCrashReport:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(**serialized)

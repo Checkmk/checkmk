@@ -61,11 +61,6 @@ class LiveContainer(NamedTuple):
     metrics: Dict[MetricName, MetricValue]
 
 
-class Resources(BaseModel):
-    limit: float
-    requests: float
-
-
 class PathPrefixAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not values:
@@ -142,14 +137,16 @@ class Pod:
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
-    def cpu_resources(self) -> Resources:
-        return Resources(
+    def cpu_resources(self) -> api.Resources:
+        return api.Resources(
             limit=self.resources.cpu.limit,
             requests=self.resources.cpu.requests,
         )
 
-    def memory_resources(self) -> Resources:
-        return Resources(limit=self.resources.memory.limit, requests=self.resources.memory.requests)
+    def memory_resources(self) -> api.Resources:
+        return api.Resources(
+            limit=self.resources.memory.limit, requests=self.resources.memory.requests
+        )
 
     def conditions(self) -> section.PodConditions:
         # TODO: separate section for custom conditions
@@ -194,12 +191,12 @@ class Deployment:
             resources[pod.phase] += 1
         return section.PodResources(**resources)
 
-    def memory_resources(self) -> Resources:
+    def memory_resources(self) -> api.Resources:
         resources: DefaultDict[str, float] = defaultdict(float)
         for pod in self._pods:
             for k, v in dict(pod.memory_resources()).items():
                 resources[k] += v
-        return Resources(**resources)
+        return api.Resources(**resources)
 
 
 class Node:

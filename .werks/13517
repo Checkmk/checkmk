@@ -1,0 +1,17 @@
+Title: <tt>gude_pdu</tt>: Fix errors during discovery and checking
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637166958
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p16
+
+The check plugins <tt>gude_pdu_8301</tt> and <tt>gude_pdu_8310</tt>
+crashed with
+"TypeError: list indices must be integers or slices, not str"
+for already discovered services. Furthermore, when discovering
+services, these plugins crashed with
+"ValueError (item must be None or of type `str`)".

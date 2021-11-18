@@ -94,6 +94,8 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("ucs_bladecenter_if"): CheckPluginName("interfaces"),
     CheckPluginName("vms_if"): CheckPluginName("interfaces"),
     CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
+    CheckPluginName("pdu_gude_8301"): CheckPluginName("pdu_gude"),
+    CheckPluginName("pdu_gude_8310"): CheckPluginName("pdu_gude"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

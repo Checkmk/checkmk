@@ -99,10 +99,14 @@ def test_unescape_attribute(inp, out):
             '<a href="xyz">abc</a>&lt;script&gt;alert(1)&lt;/script&gt;<a href="xyz">abc</a>',
         ),
         ("&nbsp;", None),
-        # Only http/https are allowed as schemes
+        # Only http/https/mailto are allowed as schemes
         ('<a href="http://checkmk.com/">abc</a>', None),
         ('<a href="https://checkmk.com/">abc</a>', None),
         ('<a href="HTTP://CHECKMK.COM/">abc</a>', None),
+        (
+            'Please download it manually and send it to <a href="mailto:feedback@checkmk.com?subject=Checkmk+Crash+Report+-+2021.11.12">feedback@checkmk.com</a>',
+            'Please download it manually and send it to <a href="mailto:feedback@checkmk.com?subject=Checkmk+Crash+Report+-+2021.11.12">feedback@checkmk.com</a>',
+        ),
         (
             '<a href="ftp://checkmk.com/">abc</a>',
             "&lt;a href=&quot;ftp://checkmk.com/&quot;&gt;abc</a>",

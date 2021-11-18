@@ -315,7 +315,9 @@ class PageCrash(ABCCrashReportPage):
                 + [
                     (
                         "crashdump",
-                        base64.b64encode(_pack_crash_report(self._get_serialized_crash_report())),
+                        base64.b64encode(
+                            _pack_crash_report(self._get_serialized_crash_report())
+                        ).decode("ascii"),
                     ),
                 ]
             )

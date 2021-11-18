@@ -128,8 +128,11 @@ def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
 
 
 def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
-    result = []
-    for status in pod.status.container_statuses:
+    container_statuses: List[client.V1ContainerStatus] = (
+        [] if pod.status.container_statuses is None else pod.status.container_statuses
+    )
+    result: List[api.ContainerInfo] = []
+    for status in container_statuses:
         state: Union[
             api.ContainerTerminatedState, api.ContainerRunningState, api.ContainerWaitingState
         ]

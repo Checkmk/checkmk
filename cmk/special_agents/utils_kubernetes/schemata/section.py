@@ -43,10 +43,10 @@ class PodCondition(BaseModel):
 class PodConditions(BaseModel):
     """section: k8s_pod_conditions_v1"""
 
-    initialized: PodCondition
+    initialized: Optional[PodCondition]
     scheduled: PodCondition
-    containersready: PodCondition
-    ready: PodCondition
+    containersready: Optional[PodCondition]
+    ready: Optional[PodCondition]
 
 
 class PodContainers(BaseModel):

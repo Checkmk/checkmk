@@ -98,7 +98,7 @@ class PodUsageResources(BaseModel):
 
 
 class PodSpec(BaseModel):
-    node: str
+    node: Optional[str] = None
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
     host_ip: Optional[str] = None

@@ -298,11 +298,10 @@ class Cluster:
         self._deployments.append(deployment)
 
     def add_pod(self, pod: Pod) -> None:
-        try:
-            node = self._nodes[pod.node]
-        except KeyError:
-            raise KeyError(f"Node {pod.node} of {pod.name} was not listed in the API")
-        node.append(pod)
+        if pod.node is not None:
+            if pod.node not in self._nodes:
+                raise KeyError(f"Node {pod.node} of {pod.name} was not listed in the API")
+            self._nodes[pod.node].append(pod)
         self._pods[pod.uid] = pod
 
     def pod_resources(self) -> section.PodResources:

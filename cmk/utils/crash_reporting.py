@@ -26,6 +26,8 @@ import cmk.utils.plugin_registry
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
+CrashInfo = Dict[str, Any]  # TODO: improve this type
+
 
 @contextlib.contextmanager
 def suppress(*exc):
@@ -172,7 +174,7 @@ class ABCCrashReport(abc.ABC):
 
         return self._serialize_attributes()
 
-    def __init__(self, crash_info: Dict) -> None:
+    def __init__(self, crash_info: CrashInfo) -> None:
         super().__init__()
         self.crash_info = crash_info
 
@@ -201,7 +203,7 @@ class ABCCrashReport(abc.ABC):
         )
 
 
-def _get_generic_crash_info(type_name: str, details: Dict) -> Dict:
+def _get_generic_crash_info(type_name: str, details: Dict) -> CrashInfo:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need

@@ -251,6 +251,7 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
         status=api.PodStatus(
             conditions=pod_conditions(pod.status.conditions),
             phase=api.Phase(pod.status.phase.lower()),
+            start_time=int(convert_to_timestamp(pod.status.start_time)),
         ),
         spec=parse_pod_info(pod),
         resources=pod_resources(pod),

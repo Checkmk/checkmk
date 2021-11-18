@@ -126,10 +126,13 @@ class Pod:
         self.uid = PodUID(uid)
         self.metadata = metadata
         self.node = spec.node
-        self.phase = status.phase
-        self.status_conditions = status.conditions
+        self.status = status
         self.resources = resources
         self.containers = containers
+
+    @property
+    def phase(self):
+        return self.status.phase
 
     def name(self, prepend_namespace=False) -> str:
         if not prepend_namespace:
@@ -157,7 +160,7 @@ class Pod:
                     reason=condition.reason,
                     detail=condition.detail,
                 )
-                for condition in self.status_conditions
+                for condition in self.status.conditions
                 if condition.type is not None
             }
         )
@@ -166,6 +169,9 @@ class Pod:
         if not self.containers:
             return None
         return section.PodContainers(containers=self.containers)
+
+    def start_time(self) -> api.StartTime:
+        return api.StartTime(start_time=self.status.start_time)
 
 
 class Deployment:
@@ -389,6 +395,7 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
             "k8s_cpu_resources": cluster_pod.cpu_resources,
             "k8s_pod_conditions_v1": cluster_pod.conditions,
             "k8s_pod_containers_v1": cluster_pod.containers_infos,
+            "k8s_start_time_v1": cluster_pod.start_time,
         }
         _write_sections(sections)
 

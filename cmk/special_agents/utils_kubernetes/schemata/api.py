@@ -134,6 +134,12 @@ class ContainerInfo(BaseModel):
     restart_count: int
 
 
+class StartTime(BaseModel):
+    """section: k8s_start_time_v1"""
+
+    start_time: int
+
+
 class ConditionType(str, enum.Enum):
     # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
     PODSCHEDULED = "scheduled"
@@ -160,6 +166,7 @@ class PodCondition(BaseModel):
 class PodStatus(BaseModel):
     conditions: List[PodCondition]
     phase: Phase
+    start_time: int
 
 
 class Pod(BaseModel):

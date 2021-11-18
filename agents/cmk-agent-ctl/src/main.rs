@@ -73,8 +73,7 @@ fn push(config: config::Config, reg_state: config::RegistrationState) {
     match monitoring_data::collect(config.package_name) {
         Ok(mon_data) => {
             for (marcv_address, server_spec) in reg_state.server_specs.iter() {
-                // TODO: Find a way we don't have to clone the mon_data (lifetimes?)
-                match marcv_api::agent_data(marcv_address, &server_spec.uuid, mon_data.clone()) {
+                match marcv_api::agent_data(marcv_address, &server_spec.uuid, &mon_data) {
                     Ok(message) => println!("{}", message),
                     Err(error) => panic!("Error pushing monitoring data: {}", error),
                 };

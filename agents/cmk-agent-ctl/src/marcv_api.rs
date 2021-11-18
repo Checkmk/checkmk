@@ -40,7 +40,7 @@ pub fn csr(
 pub fn agent_data(
     marcv_address: &str,
     uuid: &str,
-    monitoring_data: Vec<u8>,
+    monitoring_data: &Vec<u8>,
 ) -> Result<String, Box<dyn Error>> {
     // TODO:
     // - Send client cert in header
@@ -52,7 +52,7 @@ pub fn agent_data(
                 .text("uuid", String::from(uuid))
                 .part(
                     "upload_file",
-                    reqwest::blocking::multipart::Part::bytes(monitoring_data)
+                    reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
                         // Note: We need to set the file name, otherwise the request won't have the
                         // right format. However, the value itself does not matter.
                         .file_name("agent_data"),

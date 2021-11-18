@@ -432,10 +432,9 @@ def mode_dump_agent(hostname: HostName) -> None:
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = config.lookup_ip_address(host_config)
-        received_outputs = Path(cmk.utils.paths.omd_root, "var/agent-receiver/received-outputs")
-        data_source = Path(cmk.utils.paths.data_source_cache_dir, "push-agent")
         uuid = UUIDLinkManager(
-            received_outputs_dir=received_outputs, data_source_dir=data_source
+            received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+            data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
         ).get_uuid(host_config.hostname)
 
         output = []

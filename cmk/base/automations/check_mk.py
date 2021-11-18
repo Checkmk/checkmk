@@ -35,6 +35,7 @@ from cmk.utils.paths import (
     autochecks_dir,
     counters_dir,
     data_source_cache_dir,
+    data_source_push_agent_dir,
     discovered_host_labels_dir,
     local_agent_based_plugins_dir,
     local_checks_dir,
@@ -42,6 +43,7 @@ from cmk.utils.paths import (
     nagios_startscript,
     omd_root,
     precompiled_hostchecks_dir,
+    received_outputs_dir,
     snmpwalks_dir,
     tcp_cache_dir,
     tmp_dir,
@@ -1267,16 +1269,13 @@ class AutomationDiagHost(Automation):
                 )
 
             if test == "agent":
-                received_outputs = Path(
-                    cmk.utils.paths.omd_root, "var/agent-receiver/received-outputs"
-                )
-                data_source = Path(cmk.utils.paths.data_source_cache_dir, "push-agent")
                 return automation_results.DiagHostResult(
                     *self._execute_agent(
                         host_config,
                         ipaddress,
                         UUIDLinkManager(
-                            received_outputs_dir=received_outputs, data_source_dir=data_source
+                            received_outputs_dir=received_outputs_dir,
+                            data_source_dir=data_source_push_agent_dir,
                         ).get_uuid(hostname),
                         agent_port=agent_port,
                         cmd=cmd,
@@ -1668,12 +1667,9 @@ class AutomationGetAgentOutput(Automation):
                 cmk.core_helpers.cache.FileCacheFactory.maybe = (
                     not cmk.core_helpers.cache.FileCacheFactory.disabled
                 )
-                received_outputs = Path(
-                    cmk.utils.paths.omd_root, "var/agent-receiver/received-outputs"
-                )
-                data_source = Path(cmk.utils.paths.data_source_cache_dir, "push-agent")
                 uuid = UUIDLinkManager(
-                    received_outputs_dir=received_outputs, data_source_dir=data_source
+                    received_outputs_dir=received_outputs_dir,
+                    data_source_dir=data_source_push_agent_dir,
                 ).get_uuid(hostname)
                 for source in sources.make_sources(host_config, ipaddress, uuid):
                     source.file_cache_max_age = config.max_cachefile_age()

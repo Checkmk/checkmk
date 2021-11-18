@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -23,6 +22,7 @@ from typing import (
     TYPE_CHECKING,
 )
 
+import cmk.utils.paths as paths
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.agent_registration import UUIDLinkManager
@@ -368,10 +368,9 @@ def make_broker(
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
-    received_outputs = Path(cmk.utils.paths.omd_root, "var/agent-receiver/received-outputs")
-    data_source = Path(cmk.utils.paths.data_source_cache_dir, "push-agent")
     controller_uuids = UUIDLinkManager(
-        received_outputs_dir=received_outputs, data_source_dir=data_source
+        received_outputs_dir=paths.received_outputs_dir,
+        data_source_dir=paths.data_source_push_agent_dir,
     ).mapping()
     sources = (
         make_sources(

@@ -64,18 +64,19 @@ def parse_memory(value: str) -> float:
     return float(value)
 
 
-def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> api.MetaData:
-    def convert_to_timestamp(k8s_date_time) -> float:
-        if isinstance(k8s_date_time, str):
-            date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ")
-        elif isinstance(k8s_date_time, datetime.datetime):
-            date_time = k8s_date_time
-        else:
-            raise TypeError(
-                f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
-            )
-        return time.mktime(date_time.timetuple())
+def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
+    if isinstance(k8s_date_time, str):
+        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ")
+    elif isinstance(k8s_date_time, datetime.datetime):
+        date_time = k8s_date_time
+    else:
+        raise TypeError(
+            f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
+        )
+    return time.mktime(date_time.timetuple())
 
+
+def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> api.MetaData:
     if not labels:
         labels = metadata.labels if metadata.labels else {}
 
@@ -136,15 +137,15 @@ def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
             state = api.ContainerTerminatedState(
                 type="terminated",
                 exit_code=details.exit_code,
-                start_time=details.started_at.timestamp(),
-                end_time=details.finished_at.timestamp(),
+                start_time=int(convert_to_timestamp(details.started_at)),
+                end_time=int(convert_to_timestamp(details.finished_at)),
                 reason=details.reason,
                 detail=details.message,
             )
         elif (details := status.state.running) is not None:
             state = api.ContainerRunningState(
                 type="running",
-                start_time=details.started_at.timestamp(),
+                start_time=int(convert_to_timestamp(details.started_at)),
             )
         elif (details := status.state.waiting) is not None:
             state = api.ContainerWaitingState(

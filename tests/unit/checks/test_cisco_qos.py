@@ -82,19 +82,11 @@ pytestmark = pytest.mark.checks
                 ],
             ],
             (
-                2,
-                "post: 0 bit/s, drop: 0 bit/s(!!), Policy-Name: mypolicy, Int-Bandwidth: 0 "
-                "bit/s",
+                0,
+                "post: 0 bit/s, drop: 0 bit/s, Policy-Name: mypolicy, Int-Bandwidth: 0 bit/s",
                 [
-                    ("post", 0.0, None, None, 0.0, -5.960464477539063e-08),
-                    (
-                        "drop",
-                        0.0,
-                        -5.960464477539063e-12,
-                        -5.960464477539063e-12,
-                        0.0,
-                        -5.960464477539063e-08,
-                    ),
+                    ("post", 0.0, None, None, 0.0, 0.0),
+                    ("drop", 0.0, 0.0, 0.0, 0.0, 0.0),
                 ],
             ),
             id="Service is not critical when at 0 speed (i.e. 0 post, 0 dropped and bandwidth at "

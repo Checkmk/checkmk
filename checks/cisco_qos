@@ -212,7 +212,7 @@ def check_cisco_qos(item, params, info):
                         speed = speed * (qos_bandwidth / 100.0)
 
                     elif qos_unit == 3:
-                        remaining = (speed / 100.0) * qos_bandwidth
+                        remaining = speed * (qos_bandwidth / 100.0)
                         speed = speed - remaining
                     break
                 except KeyError:
@@ -281,10 +281,10 @@ def check_cisco_qos(item, params, info):
     for what, rate, warn, crit in [("post", post_rate, post_warn, post_crit),
                                    ("drop", drop_rate, drop_warn, drop_crit)]:
         infotext += ', %s: %s' % (what, format_value(rate))
-        if crit is not None and rate >= crit:
+        if crit is not None and rate >= crit and bw:
             state = max(2, state)
             infotext += '(!!)'
-        elif warn is not None and rate >= warn:
+        elif warn is not None and rate >= warn and bw:
             state = max(1, state)
             infotext += '(!)'
 

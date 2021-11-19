@@ -40,6 +40,18 @@ def _parameter_valuespec_brocade_sfp():
                     ],
                 ),
             ),
+            (
+                "voltage",
+                Tuple(
+                    title=_("Voltage level"),
+                    elements=[
+                        Float(title=_("Critical below"), unit=_("V")),
+                        Float(title=_("Warning below"), unit=_("V")),
+                        Float(title=_("Warning at"), unit=_("V")),
+                        Float(title=_("Critical at"), unit=_("V")),
+                    ],
+                ),
+            ),
         ],
     )
 

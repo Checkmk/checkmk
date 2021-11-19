@@ -95,7 +95,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_mongodb_replica(string_table, expected_check_result):
+def test_check_cisco_qos(string_table, expected_check_result):
     check = Check("cisco_qos")
     assert (check.run_check("QoS Ethernet1/8: c-out-q3", {"drop": (0.01, 0.01)},
                             string_table) == expected_check_result)

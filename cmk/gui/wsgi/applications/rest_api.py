@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
 import base64
 import binascii
 import functools
@@ -14,7 +16,7 @@ import os
 import re
 import traceback
 import urllib.parse
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from werkzeug import Request, Response
@@ -31,12 +33,21 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import user
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
-from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import OverrideRequestMethod, with_context_middleware
-from cmk.gui.wsgi.type_defs import RFC7662
 from cmk.gui.wsgi.wrappers import ParameterDict
+
+if TYPE_CHECKING:
+    from cmk.gui.plugins.openapi.restful_objects import Endpoint
+    from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
+    from cmk.gui.wsgi.type_defs import (
+        RFC7662,
+        StartResponse,
+        WSGIApplication,
+        WSGIEnvironment,
+        WSGIResponse,
+    )
 
 ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 
@@ -46,9 +57,6 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
     MKUserError: 400,
     MKAuthException: 401,
 }
-
-SpecExtension = Literal["json", "yaml"]
-WSGIEnvironment = Dict[str, Any]
 
 
 def _verify_user(environ) -> RFC7662:
@@ -193,6 +201,9 @@ class Authenticate:
     def __init__(self, func):
         self.func = func
 
+    def __repr__(self):
+        return f"<Authenticate {self.func!r}>"
+
     def __call__(self, environ, start_response):
         path_args = environ[ARGS_KEY]
 
@@ -224,7 +235,7 @@ def serve_file(file_name: str, content: bytes) -> Response:
 
 
 def get_url(environ: WSGIEnvironment) -> str:
-    """Reconstruct an URL from a WSGI environment
+    """Reconstruct a URL from a WSGI environment
 
     >>> get_url({
     ...     'HTTP_HOST': 'localhorst',
@@ -285,49 +296,51 @@ def serve_spec(
     return response
 
 
+class ServeSpec:
+    def __init__(self, target: EndpointTarget, extension: str) -> None:
+        self.target = target
+        self.extension = extension
+
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+        serializers = {"yaml": dict_to_yaml, "json": json.dumps}
+        content_types = {
+            "json": "application/json",
+            "yaml": "application/x-yaml; charset=utf-8",
+        }
+        return serve_spec(
+            site=_site(environ),
+            target=self.target,
+            url=_url(environ),
+            content_type=content_types[self.extension],
+            serializer=serializers[self.extension],
+        )(environ, start_response)
+
+
+def _site(environ: WSGIEnvironment) -> str:
+    path_info = environ["PATH_INFO"].split("/")
+    return path_info[1]
+
+
+def _url(environ: WSGIEnvironment) -> str:
+    return "/".join(get_url(environ).split("/")[:-1])
+
+
 class ServeSwaggerUI:
     def __init__(self, prefix=""):
         self.prefix = prefix
         self.data: Optional[Dict[str, Any]] = None
 
-    def _site(self, environ: WSGIEnvironment):
-        path_info = environ["PATH_INFO"].split("/")
-        return path_info[1]
-
-    def _url(self, environ: WSGIEnvironment):
-        return "/".join(get_url(environ).split("/")[:-1])
-
-    def serve_spec(self, target: EndpointTarget, extension: SpecExtension):
-        def _serve(environ: WSGIEnvironment, start_response):
-            serializers = {
-                "yaml": dict_to_yaml,
-                "json": json.dumps,
-            }
-            content_types = {
-                "json": "application/json",
-                "yaml": "application/x-yaml; charset=utf-8",
-            }
-            return serve_spec(
-                site=self._site(environ),
-                target=target,
-                url=self._url(environ),
-                content_type=content_types[extension],
-                serializer=serializers[extension],
-            )(environ, start_response)
-
-        return _serve
-
-    def _relative_path(self, environ: WSGIEnvironment):
+    def _relative_path(self, environ: WSGIEnvironment) -> str:
         path_info = environ["PATH_INFO"]
         relative_path = re.sub(self.prefix, "", path_info)
         if relative_path == "/":
             relative_path = "/index.html"
         return relative_path
 
-    def __call__(self, environ: WSGIEnvironment, start_response):
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self._serve_file(environ, start_response)
 
-    def _serve_file(self, environ, start_response):
+    def _serve_file(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         current_url = get_url(environ)
         yaml_filename = "openapi-swagger-ui.yaml"
         if current_url.endswith("/ui/"):
@@ -364,7 +377,17 @@ class ServeSwaggerUI:
 class CheckmkRESTAPI:
     def __init__(self, debug: bool = False):
         self.debug = debug
-        rules = []
+        # This intermediate data structure is necessary because `Rule`s can't contain anything
+        # other than str anymore. Technically they could, but the typing is now fixed to str.
+        self.endpoints: Dict[str, WSGIApplication] = {
+            "swagger-ui": ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui"),
+            "swagger-ui-yaml": ServeSpec("swagger-ui", "yaml"),
+            "swagger-ui-json": ServeSpec("swagger-ui", "json"),
+            "doc-yaml": ServeSpec("doc", "yaml"),
+            "doc-json": ServeSpec("doc", "json"),
+        }
+        rules: List[Rule] = []
+        endpoint: Endpoint
         for endpoint in ENDPOINT_REGISTRY:
             if self.debug:
                 # This helps us to make sure we can always generate a valid OpenAPI yaml file.
@@ -374,46 +397,41 @@ class CheckmkRESTAPI:
                 Rule(
                     endpoint.default_path,
                     methods=[endpoint.method],
-                    endpoint=Authenticate(endpoint.wrapped),
+                    endpoint=endpoint.ident,
                 )
             )
-
-        swagger_ui = ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui")
+            self.endpoints[endpoint.ident] = Authenticate(endpoint.wrapped)
 
         self.url_map = Map(
             [
                 Submount(
                     "/<path:_path>",
                     [
-                        Rule("/ui/", endpoint=swagger_ui),
-                        Rule("/ui/<path:path>", endpoint=swagger_ui),
-                        Rule(
-                            "/openapi-swagger-ui.yaml",
-                            endpoint=swagger_ui.serve_spec("swagger-ui", "yaml"),
-                        ),
-                        Rule(
-                            "/openapi-swagger-ui.json",
-                            endpoint=swagger_ui.serve_spec("swagger-ui", "json"),
-                        ),
-                        Rule("/openapi-doc.yaml", endpoint=swagger_ui.serve_spec("doc", "yaml")),
-                        Rule("/openapi-doc.json", endpoint=swagger_ui.serve_spec("doc", "json")),
+                        Rule("/ui/", endpoint="swagger-ui"),
+                        Rule("/ui/<path:path>", endpoint="swagger-ui"),
+                        Rule("/openapi-swagger-ui.yaml", endpoint="swagger-ui-yaml"),
+                        Rule("/openapi-swagger-ui.json", endpoint="swagger-ui-json"),
+                        Rule("/openapi-doc.yaml", endpoint="doc-yaml"),
+                        Rule("/openapi-doc.json", endpoint="doc-json"),
                         *rules,
                     ],
-                ),
+                )
             ]
         )
         self.wsgi_app = with_context_middleware(OverrideRequestMethod(self._wsgi_app))
 
-    def __call__(self, environ: WSGIEnvironment, start_response):
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.wsgi_app(environ, start_response)
 
-    def _wsgi_app(self, environ: WSGIEnvironment, start_response):
+    def _wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         urls = self.url_map.bind_to_environ(environ)
         try:
-            wsgi_app, path_args = urls.match()
+            result: Tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
+            endpoint_ident, matched_path_args = result  # pylint: disable=unpacking-non-sequence
+            wsgi_app = self.endpoints[endpoint_ident]
 
-            # Remove this again (see Submount above), so the validators don't go crazy.
-            del path_args["_path"]
+            # Remove _path again (see Submount above), so the validators don't go crazy.
+            path_args = {key: value for key, value in matched_path_args.items() if key != "_path"}
 
             # This is an implicit dependency, as we only know the args at runtime, but the
             # function at setup-time.

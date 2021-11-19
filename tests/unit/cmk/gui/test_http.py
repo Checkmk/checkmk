@@ -307,7 +307,7 @@ def test_response_del_cookie(request_context, monkeypatch):
 
     assert (
         response.headers.getlist("Set-Cookie")[-1]
-        == "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
+        == "auth_SITE=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/"
     )
 
 

@@ -27,7 +27,7 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
-HTTPVariables = List[Tuple[str, Union[None, int, str]]]
+HTTPVariables = List[Tuple[str, Optional[Union[int, str]]]]
 LivestatusQuery = str
 PermissionName = str
 RoleName = str

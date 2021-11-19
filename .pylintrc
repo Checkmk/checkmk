@@ -164,6 +164,8 @@ disable=
     # this provide some micro speedups if fixed
     use-dict-literal,
     use-list-literal,
+    # pylint 3.0.0-a4 sees assigning-non-slot everywhere!
+    assigning-non-slot,
     # pylint 2.11 enabled checks
     consider-using-f-string
 

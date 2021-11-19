@@ -268,12 +268,12 @@ class Request(
         return 110
 
     @property
-    def remote_ip(self) -> str:
+    def remote_ip(self) -> Optional[str]:
         """Selects remote addr from the given list of ips in
         X-Forwarded-For. Picks first non-trusted ip address.
         """
         trusted_proxies: List[str] = ["127.0.0.1", "::1"]
-        remote_addr: str = self.remote_addr
+        remote_addr: Optional[str] = self.remote_addr
         forwarded_for = self.environ.get("HTTP_X_FORWARDED_FOR", "").split(",")
         if remote_addr in trusted_proxies:
             return next(
@@ -408,10 +408,12 @@ class Request(
         """
         # Filter the variables even if there are multiple copies of them (this is allowed).
         decoded_qs = [(key, value) for key, value in self.args.items(multi=True) if key != varname]
-        self.environ["QUERY_STRING"] = urllib.parse.urlencode(decoded_qs)
+        self.query_string = urllib.parse.urlencode(decoded_qs).encode("utf-8")
+        self.environ["QUERY_STRING"] = self.query_string
         # We remove the form entry. As this entity is never copied it will be modified within
         # it's cache.
-        dict.pop(self.form, varname, None)
+        if varname in self.form:
+            del self.form[varname]
         # We remove the __dict__ entries to allow @cached_property to reload them from
         # the environment. The rest of the request object stays the same.
         self.__dict__.pop("args", None)

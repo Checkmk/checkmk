@@ -639,7 +639,7 @@ class LogoutPage(Page):
         session_id = _get_session_id_from_cookie(user.id, revalidate_cookie=True)
         userdb.on_logout(user.id, session_id)
 
-        if auth_type == "cookie":
+        if auth_type == "cookie":  # type: ignore[has-type]
             raise HTTPRedirect(url_prefix() + "check_mk/login.py")
 
         # Implement HTTP logout with cookie hack

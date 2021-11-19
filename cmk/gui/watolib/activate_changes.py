@@ -2621,6 +2621,9 @@ def append_query_string(url: str, variables: HTTPVariables) -> str:
             >>> append_query_string("foo", [('c', ''), ('a', 1), ('b', '2'),])
             'foo?a=1&b=2&c='
 
+            >>> append_query_string("foo", [('c', None), ('a', None), ('b', None),])
+            'foo'
+
     Args:
         url:
             The url to append the query string to.
@@ -2632,8 +2635,10 @@ def append_query_string(url: str, variables: HTTPVariables) -> str:
 
     """
     if variables:
-        # Encoding would work even with byte-string keys, yet these are
-        # excluded via our type signature.
-        url += "?" + werkzeug.urls.url_encode(variables, sort=True)
+        _vars: List[Tuple[str, str]] = [
+            (key, str(value)) for key, value in variables if value is not None
+        ]
+        if _vars:
+            url += "?" + werkzeug.urls.url_encode(_vars, sort=True)
 
     return url

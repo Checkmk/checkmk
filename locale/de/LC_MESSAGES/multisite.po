@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-11-12 07:00+0000\n"
-"Last-Translator: Florian Krieger <florian.krieger@johannesbad.com>\n"
+"PO-Revision-Date: 2021-11-19 07:22+0000\n"
+"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -191,7 +191,7 @@ msgstr " die folgenden %d Absturz-%s"
 msgid " to:"
 msgstr " An:"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
 "%r"
@@ -503,10 +503,6 @@ msgid ""
 msgstr ""
 "%s ist nach %s fehlgeschlagen: %s (siehe <tt>var/log/web.log</tt> für "
 "weitere Informationen)"
-
-#, python-format
-msgid "%s finished after %s at %s."
-msgstr "%s beendet nach %s um %s."
 
 #, python-format
 msgid "%s for %d hosts started (%s)..."
@@ -1134,6 +1130,11 @@ msgid ""
 "settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
 "matching hosts. Please keep this in mind when configuring this ruleset."
 msgstr ""
+"<b>Hinweis</b>: Auf Agentenseite wird die Verschlüsselung nur vom Linux- und "
+"Windows Agenten unterstützt. Wenn die Konfiguration für die Verschlüsselung "
+"auf <i>erzwungen</i> gestellt wird, erwartet Checkmk verschlüsselte Daten "
+"von allen zutreffenden Hosts. Bitte beachten Sie dieses beim Setzen dieser "
+"Einstellung."
 
 msgid ""
 "<b>Note</b>: Real-time check data is encrypted by default. Hence, an "
@@ -1146,6 +1147,17 @@ msgid ""
 "(This secret will win over the default secret). If no secret is found, the "
 "agent bakery will fail to bake agents."
 msgstr ""
+"<b>Hinweis</b>: Real-time Check Daten sind standardmäßig verschlüsselt. "
+"Daher ist ein Verschlüsselungspasswort notwendig, damit der gebackene Agent "
+"real-time Daten schicken kann. Ein Passwort kann durch Aktivierung der <a "
+"href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks\">Real-time "
+"Checks auf dieser Seite</a> angegeben werden (Die Agentenbäckerei verwendet "
+"das konfigurierte Passwort als Standard für Agenten, die <i>dieser</i> Regel "
+"matchen) oder durch explizite Angabe in der Agentenregel für <a href=\"wato."
+"py?mode=edit_ruleset&varname=agent_encryption\">Verschlüsselung</a> (Dieses "
+"Passwort wird das Standardpasswort überschreiben). Wenn kein "
+"Verschlüsselungspasswort angegeben ist bricht das Backen der Agenten in der "
+"Agentenbäckerei ab."
 
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plugin to Solaris, a Python "
@@ -1267,6 +1279,11 @@ msgid ""
 "using environment variables like OMD_SITE) to make the individual program "
 "call run correctly in all execution contexts (UI and console)."
 msgstr ""
+"<br> HINWEIS: Das einzelne Programm wird aus dem aktuellen "
+"Arbeitsverzeichnis heraus aufgerufen. Deshalb sollten absolute Pfadnamen in "
+"den Skripten angegeben werden (beim verwenden von Umgebungsvariablen wie "
+"OMD_SITE) um das einzelne Programm in allen Kontexten korrekt aufzurufen (UI "
+"und Konsole)."
 
 #, python-format
 msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
@@ -1276,6 +1293,8 @@ msgid ""
 "<br>If single values, table columns or subcategories are not restricted, "
 "then all entries are added respectively."
 msgstr ""
+"<br>Wenn einzelne Werte, Tabellenspalten oder Unterkategorien nicht "
+"beschränkt sind werden alle Einträge hinzugefügt."
 
 msgid ""
 "<br>If there are permission problems, please ensure the site user has write "
@@ -1324,6 +1343,10 @@ msgid ""
 "provide any new data for these entries.<br>Only entries corresponding to "
 "chosen single values or columns are added."
 msgstr ""
+"<br>Mit diesem Intervall kann angegeben werden, wie lange einzelne Werte "
+"oder Tabellenspalten vorgehalten werden, wenn die aktuelle Agentenausgabe "
+"keine neuen Daten für diese Einträge liefert.<br>Es werden nur Einträge "
+"hinzugefügt, die ausgewählten Einzelwerten oder Spalten entsprechen."
 
 #, python-format
 msgid "<i>%d more contact groups</i><br>"
@@ -1459,7 +1482,7 @@ msgstr ""
 "verarbeiten. Werfen Sie einen Blick auf <a href=\"werk.py?werk=7017\">werk "
 "#7017</a> für weitere Informationen."
 
-#, fuzzy, python-format
+#, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1470,10 +1493,10 @@ msgid ""
 "number of parallel livestatus connections or track down the clients to check "
 "whether or not you can reduce the usage somehow.</p>"
 msgstr ""
-"<p>Livestatus wird von einigen Komponenten, z.B. der Weboberfläche genutzt, "
-"um Informationen zu den überwachten Objekten zu erhalten. Für die "
-"Performance des Gesamtsystems ist es sehr wichtig, dass Livestatus "
-"zuverlässig und performant funktioniert.</p><p>Es sollten immer genütgen "
+"<p>Der Livestatus wird von einigen Komponenten, z.B. der Weboberfläche "
+"genutzt, um Informationen zu den überwachten Objekten zu erhalten. Für die "
+"Performance des Gesamtsystems ist es sehr wichtig, dass der Livestatus "
+"zuverlässig und performant funktioniert.</p><p>Es sollten immer genügend "
 "freie Livestatus-Verbindungen verfügbar sein um neue eingehenden Anfragen "
 "beantworten zu können.</p><p>Sie sollten niemals eine Auslastung von 100% "
 "über einen längeren Zeitraum erreichen. Falls doch, prüfen Sie, ob Sie die "
@@ -1518,7 +1541,7 @@ msgstr ""
 "werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
 "kann.</p>"
 
-#, fuzzy, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
 "the Checkmk and Checkmk Discovery services of the hosts monitored with "
@@ -1542,8 +1565,8 @@ msgstr ""
 "bearbeiten.</p><p>Wenn die Hilfsprozesse der Checker zu 100% ausgelastet "
 "sind, werden die konfigurierten Checks nicht rechtzeitig ausgeführt. Infolge "
 "dessen steigt die Latenz der Checks und die Check-Ergebnisse sind nicht "
-"aktuelle.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
-"Timeouts verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
+"aktuell.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
+"Timeouts verringern können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
 "\"view.py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
 "verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
 "mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
@@ -1809,17 +1832,17 @@ msgstr "<tt>%s</tt> ist ein reservierter Schlüsselbegriff."
 msgid "<tt>JAVA_HOME</tt> - path to Java installation"
 msgstr "<tt>JAVA_HOME</tt> - Pfad zur Java-Installation"
 
-#, fuzzy, python-format
+#, python-format
 msgid "<tt>ORACLE_HOME</tt> to use for remote access %s"
-msgstr "Für Remotezugriff zu benutzendes <tt>ORACLE_HOME</tt>"
+msgstr "Für Remotezugriff %s zu benutzendes <tt>ORACLE_HOME</tt>"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<tt>TNS_ADMIN</tt> to use for <tt>sqlnet.ora</tt> and <tt>tnsnames.ora</tt> "
 "%s"
 msgstr ""
 "Zu nutzender <tt>TNS_ADMIN</tt> für <tt>sqlnet.ora</tt> und <tt>tnsnames."
-"ora</tt>"
+"ora</tt> %s"
 
 msgid "??"
 msgstr "??"
@@ -2342,6 +2365,10 @@ msgstr "API Schlüssel aus dem Passwortspeicher"
 
 msgid "API key/token"
 msgstr "API-Schlüssel/-Token"
+
+#, fuzzy
+msgid "API server connection"
+msgstr "Instanz-Verbindung hinzufügen"
 
 msgid "API server endpoint"
 msgstr "API-Server-Endpunkt"
@@ -5144,6 +5171,10 @@ msgstr "Maximale Zeit für das Apply-Lag"
 msgid "Apply Lag Minimum Time"
 msgstr "Minimale Zeit für das Apply-Lag"
 
+#, fuzzy
+msgid "Apply changes"
+msgstr "Verzögerung des Anwendens"
+
 msgid "Apply conditions"
 msgstr "Bedingungen anwenden"
 
@@ -7041,10 +7072,9 @@ msgstr ""
 "neuen integrierten SNMP-Implementierung werden die Net-SNMP-Bibliotheken "
 "direkt aus dem Python-Programm angesprochen. Dies verringert den CPU-"
 "Verbrauch beim SNMP-Monitoring auf etwa die Hälfte, was vor allem für "
-"größere Installation nützlich ist.\n"
-"<b>Hinweis:</b> Diese Option ist veraltet und wurde durch '%s' ersetzt. "
-"Änderungen an dieser Option haben keinen Einfluss auf das Verhalten von "
-"Checkmk"
+"größere Installation nützlich ist.<b>Hinweis:</b> Diese Option ist veraltet "
+"und wurde durch '%s' ersetzt. Änderungen an dieser Option haben keinen "
+"Einfluss auf das Verhalten von Checkmk"
 
 msgid ""
 "By default all multiple graphs in emails are displayed floating nearby. You "
@@ -11675,7 +11705,8 @@ msgstr "Benutzerdefinierte Aktionen, die für den Alarm zur Verfügung stehen."
 msgid "Custom attributes"
 msgstr "Eigene Attribute"
 
-msgid "Custom checks (defined via rule)"
+#, fuzzy
+msgid "Custom checks - defined via rule"
 msgstr "Klassische aktive/passive Nagios-Checks"
 
 msgid "Custom event limit"
@@ -12796,7 +12827,7 @@ msgstr "Lösche %s"
 
 #, python-format
 msgid "Delete %s number %d?"
-msgstr "Bestätigen Sie bitte das Löschen von %s Nummer %d."
+msgstr "Lösche %s Nummer %d?"
 
 msgid "Delete MIBs"
 msgstr "Lösche MIBs"
@@ -13176,6 +13207,10 @@ msgstr "Das MS Office 365-Plugin ausrollen"
 msgid "Deploy MSSQL Server plugin"
 msgstr "Das MSSQL-Server-Plugin ausrollen"
 
+#, fuzzy
+msgid "Deploy MTR plugin asynchronously"
+msgstr "Asynchron ausführen"
+
 msgid "Deploy Mailman plugin"
 msgstr "Das Mailman Plugin ausrollen"
 
@@ -13255,9 +13290,6 @@ msgstr ""
 
 msgid "Deploy mk_mongodb.py with authentication."
 msgstr ""
-
-msgid "Deploy mtr plugin"
-msgstr "Das MTR-Plugin ausrollen"
 
 msgid "Deploy plugin for Citrix XenApp"
 msgstr "Plugin für Citrix XenApp ausrollen"
@@ -13865,16 +13897,19 @@ msgstr "Agentenupdates deaktiviert"
 msgid "Disabled checks"
 msgstr "Deaktivierte Checks"
 
-msgid "Disabled clustered services (located on cluster host)"
+#, fuzzy
+msgid "Disabled clustered services - located on cluster host"
 msgstr "Deaktivierte Cluster-Dienste (auf dem Cluster-Host)"
 
-msgid "Disabled custom checks (defined via rule)"
+#, fuzzy
+msgid "Disabled custom checks - defined via rule"
 msgstr "Abgeschaltete Customchecks, die mit Hilfe einer Regel definiert wurden"
 
 msgid "Disabled extensions"
 msgstr "Deaktivierte Erweiterungen"
 
-msgid "Disabled legacy services (defined in main.mk)"
+#, fuzzy
+msgid "Disabled legacy services - defined in main.mk"
 msgstr "Legacy Services (definiert in der main.mk)"
 
 msgid "Disabled or enabled sections (SNMP)"
@@ -13937,14 +13972,12 @@ msgstr "Erkenne einzelne Interfaces"
 msgid "Discovered host label synchronization"
 msgstr "Entdeckte Host-Labels"
 
-msgid "Discovered host labels"
+#, fuzzy, python-format
+msgid "Discovered host labels (%s)"
 msgstr "Entdeckte Host-Labels"
 
 msgid "Discovered labels"
 msgstr "Erkannte Host-Labels"
-
-msgid "Discovered no service yet."
-msgstr "Es wurde noch kein Service entdeckt."
 
 msgid "Discovered process name"
 msgstr "Erkannter Prozessname"
@@ -14446,6 +14479,10 @@ msgstr "Das LVM-Plugin nicht ausrollen"
 msgid "Do not deploy Linux filesystem quota plugin"
 msgstr "Das Linux filesystem quota Plugin nicht ausrollen"
 
+#, fuzzy
+msgid "Do not deploy MTR plugin"
+msgstr "Das SMART Plugin nicht ausrollen"
+
 msgid "Do not deploy Mailman plugin"
 msgstr "Das Mailman Plugin nicht ausrollen"
 
@@ -14500,9 +14537,6 @@ msgstr "Plugins für angemeldete Benutzer nicht ausrollen"
 #, fuzzy
 msgid "Do not deploy mk_mongodb.py plugin"
 msgstr "MongoDB-Plugin nicht ausrollen"
-
-msgid "Do not deploy mtr plugin"
-msgstr "Das MTR-Plugin nicht ausrollen"
 
 #, fuzzy
 msgid "Do not deploy plugin"
@@ -14793,7 +14827,7 @@ msgstr "Kontext übermitteln"
 
 #, python-format
 msgid "Do you really want to %s"
-msgstr "Wollen Sie wirklich %s?"
+msgstr "Wollen Sie wirklich %s"
 
 #, python-format
 msgid ""
@@ -14969,13 +15003,12 @@ msgstr "Wollen Sie die ausgewählten Regeln wirklich verschieben?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "Wollen Sie wirklich das Paket <tt>%s</tt> von Ihrem System entfernen?"
 
-#, fuzzy
 msgid ""
 "Do you really want to rename to following hosts?This involves a restart of "
 "the monitoring core!"
 msgstr ""
-"<b>Sind Sie sicher, dass Sie die folgenden Hosts umbenennen wollen? Das "
-"erfordert einen Neustart des Monitoring Cores!</b>"
+"Sind Sie sicher, dass Sie die folgenden Hosts umbenennen wollen? Das "
+"erfordert einen Neustart des Monitoring Cores!"
 
 msgid ""
 "Do you really want to reset all rule hit counters in <b>all rule packs</b> "
@@ -14988,7 +15021,7 @@ msgid ""
 "Do you really want to reset this configuration variable back to its default "
 "value?"
 msgstr ""
-"Wollen Sie die Konfigurationsvariable auf den Standardwert zurücksetzen? "
+"Wollen Sie die Konfigurationsvariable auf den Standardwert zurücksetzen?"
 
 msgid "Do you really want to start the restore of this backup?"
 msgstr "Wollen Sie die Wiederherstellung der Sicherung wirklich starten?"
@@ -15203,7 +15236,7 @@ msgid "Downloaded Agent"
 msgstr "Heruntergeladener Agent"
 
 msgid "Downloads Checkmk agent and plugins for Linux"
-msgstr ""
+msgstr "Checkmk Agent und Plugins für Linux herunterladen"
 
 msgid "Downloads Checkmk agent and plugins for Windows"
 msgstr "Checkmk Agent und Plugins für Windows herunterladen"
@@ -17454,7 +17487,7 @@ msgid "Fahrenheit"
 msgstr "Fahrenheit"
 
 msgid "Failed"
-msgstr "Fehlgeschlagen!"
+msgstr "Fehlgeschlagen"
 
 msgid "Failed File Requests"
 msgstr "Fehlgeschlagene Dateianfragen"
@@ -18228,9 +18261,6 @@ msgstr "Passgenauigkeit und Vorhersage für %s"
 
 msgid "Fix affected folders, hosts and rules."
 msgstr "Repariere betroffene Ordner/Hosts/Regeln"
-
-msgid "Fix all"
-msgstr "Alle reparieren"
 
 msgid "Fix this"
 msgstr "Problem beheben"
@@ -20727,9 +20757,7 @@ msgstr ""
 "Standardzuordnung nur teilweise zu überschreiben, indem Sie nur den neuen "
 "Monitoring-Zustand angeben. Der Standardtext wird dann als Zusammenfassung "
 "beibehalten.<br><br>Die folgenden Exit-Codes/Monitoring-Zustände/"
-"Zusammenfassungen werden als Standard angegeben:<br>%s\n"
-"\n"
-"Übersetzt mit www.DeepL.com/Translator (kostenlose Version)"
+"Zusammenfassungen werden als Standard angegeben:<br>%s"
 
 msgid "Hidden"
 msgstr "Versteckt"
@@ -22269,6 +22297,10 @@ msgstr ""
 "diesen Bereich."
 
 msgid "If no port is given, a default value of 443 will be used."
+msgstr "Wenn kein Port angegeben ist, wird ein Standardwert von 443 verwendet."
+
+#, fuzzy
+msgid "If no port is given, a default value of 6443 will be used."
 msgstr "Wenn kein Port angegeben ist, wird ein Standardwert von 443 verwendet."
 
 msgid ""
@@ -24690,6 +24722,10 @@ msgstr "Ungültiger Konfigurationshashwert"
 msgid "Invalid credentials"
 msgstr "Anmeldedaten sind ungültig"
 
+#, fuzzy, python-format
+msgid "Invalid datasource '%s' configured."
+msgstr "Ungültiger Typ"
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Üngultiger Datentyp des Zeitstempels (muss int/float sein)"
 
@@ -25493,9 +25529,8 @@ msgstr "Kubernetes Port"
 msgid "Kubernetes node container count"
 msgstr "Kubernetes-Knoten"
 
-#, fuzzy
 msgid "Kubernetes node count"
-msgstr "Kubernetes-Knoten"
+msgstr "Anzahl der Kubernetes-Knoten"
 
 msgid "Kubernetes nodes"
 msgstr "Kubernetes-Knoten"
@@ -25859,11 +25894,16 @@ msgstr "Veraltetes Perfometer angetroffen: %r"
 msgid "Legacy run"
 msgstr "Veralteter Lauf"
 
-msgid "Legacy services (defined in main.mk)"
+#, fuzzy
+msgid "Legacy services - defined in main.mk"
 msgstr "Legacy Services (aus main.mk)"
 
 msgid "Legal"
 msgstr "Legal"
+
+#, fuzzy
+msgid "Length of Z1 messenger mail queue"
+msgstr "Länge der Deferred-Mailqueue"
 
 msgid "Length of active mail queue"
 msgstr "Länge der Active-Mailqueue"
@@ -25954,6 +25994,10 @@ msgstr "Schwellen für %s"
 #, python-format
 msgid "Levels for %s %s"
 msgstr "Schwellen für %s %s"
+
+#, fuzzy, python-format
+msgid "Levels for %s mail queue"
+msgstr "Schwellwerte für die Swap-Nutzung"
 
 msgid "Levels for <i>device not responding</i>"
 msgstr "Schwellwerte für <i>device not responding</i>"
@@ -27658,6 +27702,10 @@ msgstr "MSSQL Datendatei- und Transaktionslog-Erkennung"
 msgid "MTR (Matt's traceroute) (Linux)"
 msgstr "MTR (Matt's traceroute) (Linux)"
 
+#, fuzzy
+msgid "MTR configuration"
+msgstr "RRA-Konfiguration"
+
 msgid "MTR destination"
 msgstr "MTR-Ziel"
 
@@ -28994,10 +29042,6 @@ msgstr ""
 "Aggregationen und Filterungen sind nur mit den Checkmk Enterprise Editions "
 "verfügbar"
 
-#, fuzzy, python-format
-msgid "Metric: %s"
-msgstr "Metrik: "
-
 msgid "Metrics"
 msgstr "Metriken"
 
@@ -29538,7 +29582,8 @@ msgstr "Per Checkmk-Agent überwachen"
 msgid "Monitor via SNMP"
 msgstr "Per SNMP überwachen"
 
-msgid "Monitored clustered services (located on cluster host)"
+#, fuzzy
+msgid "Monitored clustered services - located on cluster host"
 msgstr "Überwachte geclusterte Services (befinden sich auf dem Cluster-Host)"
 
 msgid "Monitored jobs"
@@ -34810,6 +34855,10 @@ msgstr "Bitte einen absoluten Pfad angeben"
 msgid "Please specify an application name"
 msgstr "Bitte einen Anwendungsnamen angeben"
 
+#, fuzzy
+msgid "Please specify at least on address"
+msgstr "Bitte mindestens einen Wert angeben"
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr ""
 "Bitte mindestens eine Option für die Erzeugung von Piggyback-Hosts angeben"
@@ -34941,6 +34990,10 @@ msgstr "Plugin-Dateimuster"
 
 msgid "Plugin heartbeat timeout"
 msgstr "Plugin Heartbeat Zeitüberschreitung"
+
+#, fuzzy
+msgid "Plugin is disabled"
+msgstr "Diese Instanz ist deaktiviert"
 
 msgid "Plugin output"
 msgstr "Plugin-Ausgabe"
@@ -39112,6 +39165,10 @@ msgstr "Servername"
 
 msgid "Server Time"
 msgstr "Uhrzeit des Servers"
+
+#, fuzzy
+msgid "Server endpoint"
+msgstr "API-Server-Endpunkt"
 
 msgid "Server latency"
 msgstr "Serverlatenz"
@@ -44105,7 +44162,7 @@ msgid "That many permissions do not use the factory defaults."
 msgstr "Soviele Berechtigungen befinden sich nicht in der Fabrikseinstellung."
 
 msgid "That many times the message must occur until an event is created"
-msgstr "Wie oft muss eine Meldung auftreten bis eine Aktion ausgelöst wird?"
+msgstr "So oft muss die Nachricht auftreten, bis ein Ereignis erstellt wird"
 
 #, python-format
 msgid ""
@@ -46828,11 +46885,12 @@ msgstr ""
 "Sekunden. Wenn Ihr Check-Intervall nicht höher als 1 Minute ist, dann sollte "
 "dieser Wert vergrößert werden."
 
+#, fuzzy
 msgid ""
 "The number of seconds to keep the TCP socket open before giving up on the "
 "connection. This will only affect the final hop. Using large values for "
 "this, especially combined with a short interval, will use up a lot of file "
-"descriptorson the host running this plugin."
+"descriptors on the host running this plugin."
 msgstr ""
 "Die Anzahl der Sekunden, die auf eine erfolgreiche Verbindung gewartet wird. "
 "Diese Einstellung betrifft nur den Zielhost. Ein großer Wert, besonders in "
@@ -49378,7 +49436,7 @@ msgid ""
 msgstr ""
 "Diese Option ist nur zum Testen! Der Agent sendet dann immer alle "
 "historischen Meldungen, nicht nur die neuen. Das führt zu enormen "
-"Datenmengen!"
+"Datenmengen."
 
 msgid "This is not a valid Checkmk version number"
 msgstr "Das ist keine gültige Checkmk-Versionsnummer"
@@ -49788,10 +49846,10 @@ msgid ""
 "of the users are never stored in WATO and therefor never cached!"
 msgstr ""
 "Diese Option definiert das Intervall der LDAP-Synchronisation. Diese "
-"Einstellung wird nur von Sites mit aktivierter <a href=\"wato.py?mode=sites"
-"\">automatischer Benutzer-Synchronization</a>. Bitte beachten Sie: "
-"Passwörter der Benutzer werden in WATO nicht gespeichert und daher auch "
-"nicht gecacht."
+"Einstellung wird nur von Instanzen mit aktivierter <a href=\"wato.py?"
+"mode=sites\">automatischen Benutzer-Synchronization</a> verwendet. Bitte "
+"beachten Sie: Passwörter der Benutzer werden in WATO nicht gespeichert und "
+"daher auch nicht gecacht!"
 
 msgid ""
 "This option defines the maximum age of unmodified checkbox selections stored "
@@ -49866,8 +49924,8 @@ msgid ""
 "This option is just for testing. It will be removed in future. Do not use it "
 "unless you are told to do so!"
 msgstr ""
-"Diese Option ist nur zum Testen. Sie wird in Zukunft entfernt. Bitte "
-"verwenden Sie sie nicht."
+"Diese Option ist nur zum Testen. Sie wird in Zukunft entfernt. Verwenden Sie "
+"es nicht, es sei denn, Sie werden dazu aufgefordert!"
 
 msgid ""
 "This option is macro-capable, please check the inline help for more "
@@ -50132,6 +50190,12 @@ msgstr ""
 "Berechtigung auf der Datenbank hat. Andernfalls können Sie die Zugangsdaten "
 "eines Datenbankbenutzers konfigurieren, welcher die Berechtigung hat, die "
 "nötigen Informationen aus der Datenbank auszulesen."
+
+msgid ""
+"This plugin can only be deployed asynchronously because it launches "
+"background processes (one per address). Under systemd, this only works when "
+"being run asynchronously."
+msgstr ""
 
 msgid "This plugin checks for Citrix Licenses on Window hosts."
 msgstr "Dieses Plugin überwacht Citrix-Lizenzen auf Windows-Rechnern."
@@ -52097,6 +52161,14 @@ msgstr ""
 "Dies akzeptiert automatisch bisher ungesehen Schlüssel, lehnt aber "
 "Verbindungen für geänderte oder ungültige Hostkeys ab."
 
+#, fuzzy
+msgid ""
+"This will be used as service description in Checkmk. It must be a unique "
+"name per host."
+msgstr ""
+"Dies wird als Service Beschreibung innerhalb von Check_MK benutzt. Es muss "
+"ein eindeutiger Name pro Host sein."
+
 msgid ""
 "This will be used as service description within Check_MK. It must be a "
 "unique name per host."
@@ -53025,6 +53097,10 @@ msgstr "Gesamtlatenz aller VDisks"
 
 msgid "Total latency for all drives"
 msgstr "Gesamtlatenz aller Laufwerke"
+
+#, fuzzy
+msgid "Total length of Postfix queue"
+msgstr "Länge der Outputqueue"
 
 msgid "Total log file size: Absolute upper levels"
 msgstr "Gesamtgröße der Protokolldatei: Absolute obere Schwellenwerte"
@@ -54005,7 +54081,8 @@ msgid_plural "Undecided services: "
 msgstr[0] "Unentschiedener Service: "
 msgstr[1] "Unentschiedene Services: "
 
-msgid "Undecided services (currently not monitored)"
+#, fuzzy
+msgid "Undecided services - currently not monitored"
 msgstr "Unentschiedene Services (aktuell nicht überwacht)"
 
 #, python-format
@@ -54558,6 +54635,10 @@ msgstr "Obere Schwellen für \"worker threads not created\" pro Sekunde"
 msgid "Upper levels for %s"
 msgstr "Obere Schwellen für %s"
 
+#, fuzzy, python-format
+msgid "Upper levels for %s mail queue"
+msgstr "Obere Schwellen für die Größe"
+
 msgid "Upper levels for Backend"
 msgstr "Obere Schwellwerte Backend"
 
@@ -54737,6 +54818,10 @@ msgstr "Obergrenze für Verbindungsfehler im Backend pro Sekunde"
 #, fuzzy
 msgid "Upper levels for provisioned concurrent invocations per second"
 msgstr "Obergrenze für Verbindungsfehler im Backend pro Sekunde"
+
+#, fuzzy
+msgid "Upper levels for queue lengths"
+msgstr "Obergrenze für Warteschlangenlänge"
 
 msgid "Upper levels for rate of server errors"
 msgstr "Obere Schwellen für die Rate der Serverfehler"
@@ -56242,7 +56327,8 @@ msgstr "Verschwunden"
 msgid "Vanished (checked, but no longer exist)"
 msgstr "Verschwundene Services (überwacht aber nicht mehr vorhanden)"
 
-msgid "Vanished clustered services (located on cluster host)"
+#, fuzzy
+msgid "Vanished clustered services - located on cluster host"
 msgstr "Verschwundene geclusterte Dienste (auf dem Cluster-Host)"
 
 msgid "Vanished host label: "
@@ -56255,7 +56341,8 @@ msgid_plural "Vanished services: "
 msgstr[0] "Verschwundener Service: "
 msgstr[1] "Verschwundene Services: "
 
-msgid "Vanished services (monitored, but no longer exist)"
+#, fuzzy
+msgid "Vanished services - monitored, but no longer exist"
 msgstr "Verschwundene Services (überwacht aber nicht mehr vorhanden)"
 
 msgid "Variable"
@@ -60473,6 +60560,10 @@ msgstr "ZFS Metadaten"
 msgid "ZFS storage pool status"
 msgstr "Status des ZFS Speicher-Pools"
 
+#, fuzzy
+msgid "Zertificon Mail Queues"
+msgstr "Postfix: Mail Queue"
+
 msgid "Zerto"
 msgstr "Zerto"
 
@@ -60694,11 +60785,10 @@ msgid "cartridge specification"
 msgstr "Spezifikation der Patrone"
 
 msgid "case"
-msgstr ""
+msgstr "Fall"
 
-#, fuzzy
 msgid "cases"
-msgstr "Phasen"
+msgstr "Fälle"
 
 msgid "change the state"
 msgstr "Status ändern"
@@ -60721,11 +60811,10 @@ msgstr "zugeklappt"
 msgid "command"
 msgstr "Kommando"
 
-#, fuzzy
 msgid "comment"
 msgid_plural "comments"
 msgstr[0] "Kommentar"
-msgstr[1] "Kommentar"
+msgstr[1] "Kommentare"
 
 msgid "complete"
 msgstr "vollständig"
@@ -62191,7 +62280,7 @@ msgstr "bis"
 
 #, python-format
 msgid "to %d of %d recipients"
-msgstr ""
+msgstr "zu %d von %d Empfängern"
 
 msgid "to port:"
 msgstr "zu Port:"
@@ -62386,9 +62475,30 @@ msgstr "gestern"
 msgid "z/OS"
 msgstr "z/OS"
 
-#, fuzzy, python-format
+#, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
-msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Deploy mtr plugin"
+#~ msgstr "Das MTR-Plugin ausrollen"
+
+#~ msgid "Do not deploy mtr plugin"
+#~ msgstr "Das MTR-Plugin nicht ausrollen"
+
+#, python-format
+#~ msgid "%s finished after %s at %s."
+#~ msgstr "%s beendet nach %s um %s."
+
+#~ msgid "Discovered no service yet."
+#~ msgstr "Es wurde noch kein Service entdeckt."
+
+#~ msgid "Fix all"
+#~ msgstr "Alle reparieren"
+
+#, fuzzy, python-format
+#~| msgid "Metric: "
+#~ msgid "Metric: %s"
+#~ msgstr "Metrik: "
 
 #~ msgid "Imprint"
 #~ msgstr "Impressum"

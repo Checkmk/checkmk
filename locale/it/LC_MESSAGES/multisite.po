@@ -508,10 +508,6 @@ msgstr ""
 "informazioni)"
 
 #, python-format
-msgid "%s finished after %s at %s."
-msgstr "%s ha finito dopo %s a %s."
-
-#, python-format
 msgid "%s for %d hosts started (%s)..."
 msgstr "%s per %d host avviato (%s)..."
 
@@ -1471,7 +1467,7 @@ msgstr ""
 "Livestatus. Dai un'occhiata a <a href=\"werk.py?werk=7017\">werk #7017</a> "
 "per ulteriori informazioni.</p>"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1530,7 +1526,7 @@ msgstr ""
 "picchi di carico quando si hanno molti processi di Checkmk helper "
 "configurati.</p>"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
 "the Checkmk and Checkmk Discovery services of the hosts monitored with "
@@ -2366,6 +2362,10 @@ msgstr "Chiave API dal negozio di password"
 
 msgid "API key/token"
 msgstr "Chiave/token API"
+
+#, fuzzy
+msgid "API server connection"
+msgstr "Aggiungi la connessione al sito"
 
 msgid "API server endpoint"
 msgstr "Endpoint del server API"
@@ -5172,6 +5172,10 @@ msgstr "Applicare il tempo massimo di ritardo"
 
 msgid "Apply Lag Minimum Time"
 msgstr "Applicare il tempo minimo di ritardo"
+
+#, fuzzy
+msgid "Apply changes"
+msgstr "Applicare Lag"
 
 msgid "Apply conditions"
 msgstr "Applicare le condizioni"
@@ -11707,7 +11711,8 @@ msgstr "Azioni personalizzate che saranno disponibili per l'avviso."
 msgid "Custom attributes"
 msgstr "Attributi personalizzati"
 
-msgid "Custom checks (defined via rule)"
+#, fuzzy
+msgid "Custom checks - defined via rule"
 msgstr "Controlli personalizzati (definiti tramite regola)"
 
 msgid "Custom event limit"
@@ -13201,6 +13206,10 @@ msgstr "Distribuire il plugin di MS Office 365"
 msgid "Deploy MSSQL Server plugin"
 msgstr "Distribuire il plugin MSSQL Server"
 
+#, fuzzy
+msgid "Deploy MTR plugin asynchronously"
+msgstr "Eseguire in modo asincrono"
+
 msgid "Deploy Mailman plugin"
 msgstr "Distribuire il plugin Mailman"
 
@@ -13279,9 +13288,6 @@ msgstr ""
 
 msgid "Deploy mk_mongodb.py with authentication."
 msgstr ""
-
-msgid "Deploy mtr plugin"
-msgstr "Distribuire il plugin mtr"
 
 msgid "Deploy plugin for Citrix XenApp"
 msgstr "Distribuire il plugin per Citrix XenApp"
@@ -13883,16 +13889,19 @@ msgstr "Aggiornamenti dell'agente disabilitati"
 msgid "Disabled checks"
 msgstr "Controlli disabilitati"
 
-msgid "Disabled clustered services (located on cluster host)"
+#, fuzzy
+msgid "Disabled clustered services - located on cluster host"
 msgstr "Servizi in cluster disabilitati (situati sull'host del cluster)"
 
-msgid "Disabled custom checks (defined via rule)"
+#, fuzzy
+msgid "Disabled custom checks - defined via rule"
 msgstr "Controlli personalizzati disabilitati (definiti tramite regola)"
 
 msgid "Disabled extensions"
 msgstr "Estensioni disabilitate"
 
-msgid "Disabled legacy services (defined in main.mk)"
+#, fuzzy
+msgid "Disabled legacy services - defined in main.mk"
 msgstr "Servizi legacy disabilitati (definiti in main.mk)"
 
 msgid "Disabled or enabled sections (SNMP)"
@@ -13954,14 +13963,12 @@ msgstr "Scoprire le singole interfacce"
 msgid "Discovered host label synchronization"
 msgstr "Sincronizzazione dell'etichetta dell'host scoperta"
 
-msgid "Discovered host labels"
+#, fuzzy, python-format
+msgid "Discovered host labels (%s)"
 msgstr "Etichette di host scoperte"
 
 msgid "Discovered labels"
 msgstr "Etichette scoperte"
-
-msgid "Discovered no service yet."
-msgstr "Scoperto nessun servizio ancora."
 
 msgid "Discovered process name"
 msgstr "Nome del processo scoperto"
@@ -14470,6 +14477,10 @@ msgstr "Non distribuire il plugin LVM"
 msgid "Do not deploy Linux filesystem quota plugin"
 msgstr "Non distribuire il plugin di quota del filesystem Linux"
 
+#, fuzzy
+msgid "Do not deploy MTR plugin"
+msgstr "Non distribuire il plugin SMART"
+
 msgid "Do not deploy Mailman plugin"
 msgstr "Non distribuire il plugin Mailman"
 
@@ -14524,9 +14535,6 @@ msgstr "Non distribuire il plugin per gli utenti loggati"
 #, fuzzy
 msgid "Do not deploy mk_mongodb.py plugin"
 msgstr "Non distribuire il plugin MongoDB"
-
-msgid "Do not deploy mtr plugin"
-msgstr "Non distribuire il plugin mtr"
 
 msgid "Do not deploy plugin"
 msgstr "Non distribuire il plugin"
@@ -18250,9 +18258,6 @@ msgstr "Adattamento e previsione di %s "
 
 msgid "Fix affected folders, hosts and rules."
 msgstr "Fissa le cartelle, gli host e le regole interessate."
-
-msgid "Fix all"
-msgstr "Fissare tutto"
 
 msgid "Fix this"
 msgstr "Fissare questo"
@@ -22281,6 +22286,11 @@ msgid "If no port is given, a default value of 443 will be used."
 msgstr ""
 "Se non viene data alcuna porta, verrà usato un valore predefinito di 443."
 
+#, fuzzy
+msgid "If no port is given, a default value of 6443 will be used."
+msgstr ""
+"Se non viene data alcuna porta, verrà usato un valore predefinito di 443."
+
 msgid ""
 "If non-zero, the the list of all the matching processes and their details in "
 "the long-output will include up to the first N arguments of each processes. "
@@ -24721,6 +24731,10 @@ msgstr "hash di configurazione non valido"
 msgid "Invalid credentials"
 msgstr "Credenziali non valide"
 
+#, fuzzy, python-format
+msgid "Invalid datasource '%s' configured."
+msgstr "Tipo specificato non valido."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipo di dato non valido del timestamp: deve essere int o float."
 
@@ -25884,11 +25898,16 @@ msgstr "Performer legacy incontrato: %r"
 msgid "Legacy run"
 msgstr "Corsa dell'eredità"
 
-msgid "Legacy services (defined in main.mk)"
+#, fuzzy
+msgid "Legacy services - defined in main.mk"
 msgstr "Servizi legacy (definiti in main.mk)"
 
 msgid "Legal"
 msgstr "Legale"
+
+#, fuzzy
+msgid "Length of Z1 messenger mail queue"
+msgstr "Lunghezza della coda di posta differita"
 
 msgid "Length of active mail queue"
 msgstr "Lunghezza della coda di posta attiva"
@@ -25979,6 +25998,10 @@ msgstr "Livelli per %s"
 #, python-format
 msgid "Levels for %s %s"
 msgstr "Livelli per %s %s"
+
+#, fuzzy, python-format
+msgid "Levels for %s mail queue"
+msgstr "Livelli per l'uso di swap"
 
 msgid "Levels for <i>device not responding</i>"
 msgstr "Livelli per <i>dispositivo che non risponde</i>"
@@ -27689,6 +27712,10 @@ msgstr "Scoperta del file di dati e del registro delle transazioni MSSQL"
 msgid "MTR (Matt's traceroute) (Linux)"
 msgstr "MTR (Matt's traceroute) (Linux)"
 
+#, fuzzy
+msgid "MTR configuration"
+msgstr "Configurazione RRA"
+
 msgid "MTR destination"
 msgstr "Destinazione MTR"
 
@@ -29027,10 +29054,6 @@ msgstr ""
 "previsioni, le aggregazioni e il filtraggio sono disponibili solo con le "
 "Edizioni Enterprise di Checkmk"
 
-#, fuzzy, python-format
-msgid "Metric: %s"
-msgstr "Metriche"
-
 msgid "Metrics"
 msgstr "Metriche"
 
@@ -29573,7 +29596,8 @@ msgstr "Controlla tramite l'agente Checkmk"
 msgid "Monitor via SNMP"
 msgstr "Monitoraggio via SNMP"
 
-msgid "Monitored clustered services (located on cluster host)"
+#, fuzzy
+msgid "Monitored clustered services - located on cluster host"
 msgstr "Servizi in cluster monitorati (situati sull'host del cluster)"
 
 msgid "Monitored jobs"
@@ -34852,6 +34876,10 @@ msgstr "Specificare un nome di percorso assoluto"
 msgid "Please specify an application name"
 msgstr "Si prega di specificare il nome di un'applicazione"
 
+#, fuzzy
+msgid "Please specify at least on address"
+msgstr "Si prega di specificare almeno un valore"
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr "Si prega di specificare almeno una \"opzione di creazione Piggyback\"."
 
@@ -34979,6 +35007,10 @@ msgstr "Modello di file plugin"
 
 msgid "Plugin heartbeat timeout"
 msgstr "Timeout dell'heartbeat del plugin"
+
+#, fuzzy
+msgid "Plugin is disabled"
+msgstr "Il sito è disabilitato"
 
 msgid "Plugin output"
 msgstr "Uscita del plugin"
@@ -39162,6 +39194,10 @@ msgstr "Nome del server"
 
 msgid "Server Time"
 msgstr "Tempo del server"
+
+#, fuzzy
+msgid "Server endpoint"
+msgstr "Endpoint del server API"
 
 msgid "Server latency"
 msgstr "Latenza del server"
@@ -46902,11 +46938,12 @@ msgstr ""
 "su un valore maggiore di un minuto, allora dovresti aumentarlo di "
 "conseguenza."
 
+#, fuzzy
 msgid ""
 "The number of seconds to keep the TCP socket open before giving up on the "
 "connection. This will only affect the final hop. Using large values for "
 "this, especially combined with a short interval, will use up a lot of file "
-"descriptorson the host running this plugin."
+"descriptors on the host running this plugin."
 msgstr ""
 "Il numero di secondi per tenere aperto il socket TCP prima di rinunciare "
 "alla connessione. Questo influenzerà solo l'ultimo salto. L'utilizzo di "
@@ -50224,6 +50261,12 @@ msgstr ""
 "database che ha il permesso di leggere le informazioni necessarie "
 "dall'istanza del server."
 
+msgid ""
+"This plugin can only be deployed asynchronously because it launches "
+"background processes (one per address). Under systemd, this only works when "
+"being run asynchronously."
+msgstr ""
+
 msgid "This plugin checks for Citrix Licenses on Window hosts."
 msgstr "Questo plugin controlla le licenze Citrix sugli host Windows."
 
@@ -52199,6 +52242,14 @@ msgstr ""
 "Questo accetterà automaticamente le chiavi non ancora viste, ma rifiuterà le "
 "connessioni per chiavi host cambiate o non valide."
 
+#, fuzzy
+msgid ""
+"This will be used as service description in Checkmk. It must be a unique "
+"name per host."
+msgstr ""
+"Questo sarà usato come descrizione del servizio all'interno di Check_MK. "
+"Deve essere un nome unico per ogni host."
+
 msgid ""
 "This will be used as service description within Check_MK. It must be a "
 "unique name per host."
@@ -53129,6 +53180,10 @@ msgstr "Latenza totale per tutti i VDischi"
 
 msgid "Total latency for all drives"
 msgstr "Latenza totale per tutte le unità"
+
+#, fuzzy
+msgid "Total length of Postfix queue"
+msgstr "Lunghezza della coda di uscita"
 
 msgid "Total log file size: Absolute upper levels"
 msgstr "Dimensione totale del file di log: Livelli superiori assoluti"
@@ -54109,7 +54164,8 @@ msgid_plural "Undecided services: "
 msgstr[0] "Servizio indeciso: "
 msgstr[1] ""
 
-msgid "Undecided services (currently not monitored)"
+#, fuzzy
+msgid "Undecided services - currently not monitored"
 msgstr "Servizi indecisi (attualmente non monitorati)"
 
 #, python-format
@@ -54665,6 +54721,10 @@ msgstr "Livelli superiori per \"thread lavoratori non creati\" al secondo"
 msgid "Upper levels for %s"
 msgstr "Livelli superiori per %s"
 
+#, fuzzy, python-format
+msgid "Upper levels for %s mail queue"
+msgstr "Livelli superiori per le dimensioni"
+
 msgid "Upper levels for Backend"
 msgstr "Livelli superiori per il Backend"
 
@@ -54844,6 +54904,10 @@ msgstr "Livelli superiori per gli errori di connessione del backend al secondo"
 #, fuzzy
 msgid "Upper levels for provisioned concurrent invocations per second"
 msgstr "Livelli superiori per gli errori di connessione del backend al secondo"
+
+#, fuzzy
+msgid "Upper levels for queue lengths"
+msgstr "Livello superiore per la lunghezza della coda"
 
 msgid "Upper levels for rate of server errors"
 msgstr "Livelli superiori per il tasso di errori del server"
@@ -56341,7 +56405,8 @@ msgstr "Svanito"
 msgid "Vanished (checked, but no longer exist)"
 msgstr "Servizi scomparsi (monitorati, ma non più esistenti)"
 
-msgid "Vanished clustered services (located on cluster host)"
+#, fuzzy
+msgid "Vanished clustered services - located on cluster host"
 msgstr "Servizi cluster svaniti (situati sull'host del cluster)"
 
 msgid "Vanished host label: "
@@ -56354,7 +56419,8 @@ msgid_plural "Vanished services: "
 msgstr[0] "Servizio scomparso: "
 msgstr[1] ""
 
-msgid "Vanished services (monitored, but no longer exist)"
+#, fuzzy
+msgid "Vanished services - monitored, but no longer exist"
 msgstr "Servizi scomparsi (monitorati, ma non più esistenti)"
 
 msgid "Variable"
@@ -60587,6 +60653,10 @@ msgstr "Metadati ZFS"
 msgid "ZFS storage pool status"
 msgstr "Stato dello storage pool ZFS"
 
+#, fuzzy
+msgid "Zertificon Mail Queues"
+msgstr "Postfix: Coda di posta"
+
 msgid "Zerto"
 msgstr "Zerto"
 
@@ -62504,6 +62574,27 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Deploy mtr plugin"
+#~ msgstr "Distribuire il plugin mtr"
+
+#~ msgid "Do not deploy mtr plugin"
+#~ msgstr "Non distribuire il plugin mtr"
+
+#, python-format
+#~ msgid "%s finished after %s at %s."
+#~ msgstr "%s ha finito dopo %s a %s."
+
+#~ msgid "Discovered no service yet."
+#~ msgstr "Scoperto nessun servizio ancora."
+
+#~ msgid "Fix all"
+#~ msgstr "Fissare tutto"
+
+#, fuzzy, python-format
+#~| msgid "Metrics"
+#~ msgid "Metric: %s"
+#~ msgstr "Metriche"
 
 #~ msgid "Imprint"
 #~ msgstr "Impronta"

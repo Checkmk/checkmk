@@ -7,15 +7,17 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2011-05-13 09:42+0200\n"
-"Last-Translator: Marius Pană\n"
-"Language-Team: SpearHead Systems\n"
+"PO-Revision-Date: 2021-11-17 07:00+0000\n"
+"Last-Translator: Joe Drake <Corneliu.Eva@premium-aerotec.com>\n"
+"Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/"
+"software/ro/>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
+"X-Generator: Weblate 4.8.1\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -195,9 +197,9 @@ msgid ""
 "%r"
 msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "\"%s\" is not a valid python encoding."
-msgstr "%s nu este un număr întreg valid."
+msgstr "\"%s\" nu este o codificare python validă."
 
 #, python-format
 msgid ""
@@ -222,7 +224,7 @@ msgstr "% peste valoarea prezisâ"
 msgid "% below predicted value"
 msgstr "% sub valoarea prezisă"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid "% free"
 msgstr "% liber"
 
@@ -489,10 +491,6 @@ msgstr ""
 #, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
-msgstr ""
-
-#, python-format
-msgid "%s finished after %s at %s."
 msgstr ""
 
 #, python-format
@@ -1376,7 +1374,7 @@ msgid ""
 "information.</p>"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1408,7 +1406,7 @@ msgid ""
 "load peaks when having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
 "the Checkmk and Checkmk Discovery services of the hosts monitored with "
@@ -2012,6 +2010,10 @@ msgstr ""
 #, fuzzy
 msgid "API key/token"
 msgstr "API accesibil"
+
+#, fuzzy
+msgid "API server connection"
+msgstr "Conexiune Noua"
 
 msgid "API server endpoint"
 msgstr ""
@@ -4890,6 +4892,10 @@ msgstr ""
 
 msgid "Apply Lag Minimum Time"
 msgstr ""
+
+#, fuzzy
+msgid "Apply changes"
+msgstr "%d schimbări"
 
 msgid "Apply conditions"
 msgstr ""
@@ -11077,7 +11083,7 @@ msgstr ""
 msgid "Custom attributes"
 msgstr "Atribute personalizate"
 
-msgid "Custom checks (defined via rule)"
+msgid "Custom checks - defined via rule"
 msgstr ""
 
 #, fuzzy
@@ -12599,6 +12605,9 @@ msgstr ""
 msgid "Deploy MSSQL Server plugin"
 msgstr ""
 
+msgid "Deploy MTR plugin asynchronously"
+msgstr ""
+
 msgid "Deploy Mailman plugin"
 msgstr ""
 
@@ -12678,9 +12687,6 @@ msgid "Deploy mk_mongodb.py wihtout authentication."
 msgstr ""
 
 msgid "Deploy mk_mongodb.py with authentication."
-msgstr ""
-
-msgid "Deploy mtr plugin"
 msgstr ""
 
 msgid "Deploy plugin for Citrix XenApp"
@@ -13282,17 +13288,18 @@ msgstr ""
 msgid "Disabled checks"
 msgstr ""
 
-msgid "Disabled clustered services (located on cluster host)"
-msgstr ""
+#, fuzzy
+msgid "Disabled clustered services - located on cluster host"
+msgstr "Grup nou"
 
-msgid "Disabled custom checks (defined via rule)"
+msgid "Disabled custom checks - defined via rule"
 msgstr ""
 
 #, fuzzy
 msgid "Disabled extensions"
 msgstr "Dezactiveaza Notificarile"
 
-msgid "Disabled legacy services (defined in main.mk)"
+msgid "Disabled legacy services - defined in main.mk"
 msgstr ""
 
 #, fuzzy
@@ -13358,15 +13365,13 @@ msgstr "servicii"
 msgid "Discovered host label synchronization"
 msgstr "Nici o schimbare"
 
-msgid "Discovered host labels"
-msgstr ""
+#, fuzzy, python-format
+msgid "Discovered host labels (%s)"
+msgstr "Nici o schimbare"
 
 #, fuzzy
 msgid "Discovered labels"
 msgstr "Nici o schimbare"
-
-msgid "Discovered no service yet."
-msgstr ""
 
 #, fuzzy
 msgid "Discovered process name"
@@ -13879,6 +13884,10 @@ msgstr ""
 msgid "Do not deploy Linux filesystem quota plugin"
 msgstr ""
 
+#, fuzzy
+msgid "Do not deploy MTR plugin"
+msgstr "Numele elementului pentru eveniment"
+
 msgid "Do not deploy Mailman plugin"
 msgstr ""
 
@@ -13933,9 +13942,6 @@ msgstr ""
 #, fuzzy
 msgid "Do not deploy mk_mongodb.py plugin"
 msgstr "Numele elementului pentru eveniment"
-
-msgid "Do not deploy mtr plugin"
-msgstr ""
 
 #, fuzzy
 msgid "Do not deploy plugin"
@@ -17679,9 +17685,6 @@ msgstr ""
 msgid "Fix affected folders, hosts and rules."
 msgstr ""
 
-msgid "Fix all"
-msgstr ""
-
 msgid "Fix this"
 msgstr ""
 
@@ -19244,7 +19247,7 @@ msgid "Height"
 msgstr ""
 
 msgid "Help"
-msgstr ""
+msgstr "Ajutor"
 
 msgid "Help Text"
 msgstr ""
@@ -21295,6 +21298,9 @@ msgstr ""
 msgid "If no port is given, a default value of 443 will be used."
 msgstr ""
 
+msgid "If no port is given, a default value of 6443 will be used."
+msgstr ""
+
 msgid ""
 "If non-zero, the the list of all the matching processes and their details in "
 "the long-output will include up to the first N arguments of each processes. "
@@ -23155,6 +23161,10 @@ msgstr ""
 msgid "Invalid credentials"
 msgstr ""
 
+#, python-format
+msgid "Invalid datasource '%s' configured."
+msgstr ""
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr ""
 
@@ -24308,10 +24318,13 @@ msgstr " Parametrul este: %r"
 msgid "Legacy run"
 msgstr ""
 
-msgid "Legacy services (defined in main.mk)"
+msgid "Legacy services - defined in main.mk"
 msgstr ""
 
 msgid "Legal"
+msgstr ""
+
+msgid "Length of Z1 messenger mail queue"
 msgstr ""
 
 msgid "Length of active mail queue"
@@ -24413,6 +24426,10 @@ msgstr ""
 #, python-format
 msgid "Levels for %s %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Levels for %s mail queue"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Levels for <i>device not responding</i>"
 msgstr ""
@@ -26221,6 +26238,10 @@ msgid "MTR (Matt's traceroute) (Linux)"
 msgstr ""
 
 #, fuzzy
+msgid "MTR configuration"
+msgstr "Activare Configurare"
+
+#, fuzzy
 msgid "MTR destination"
 msgstr "foloseste descrierea"
 
@@ -27613,10 +27634,6 @@ msgid ""
 "Editions"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Metric: %s"
-msgstr "serviciu"
-
 msgid "Metrics"
 msgstr ""
 
@@ -28180,7 +28197,7 @@ msgstr " pe siteul de monitorizare: "
 msgid "Monitor via SNMP"
 msgstr ""
 
-msgid "Monitored clustered services (located on cluster host)"
+msgid "Monitored clustered services - located on cluster host"
 msgstr ""
 
 #, fuzzy
@@ -33385,6 +33402,10 @@ msgstr ""
 msgid "Please specify an application name"
 msgstr ""
 
+#, fuzzy
+msgid "Please specify at least on address"
+msgstr "Adresă"
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr ""
 
@@ -33494,6 +33515,10 @@ msgstr "Editeaza regulile de loguri"
 
 msgid "Plugin heartbeat timeout"
 msgstr ""
+
+#, fuzzy
+msgid "Plugin is disabled"
+msgstr "Notificari"
 
 msgid "Plugin output"
 msgstr ""
@@ -37735,6 +37760,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Server Time"
+msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Server endpoint"
 msgstr "Numele Elementului"
 
 #, fuzzy
@@ -44622,7 +44651,7 @@ msgid ""
 "The number of seconds to keep the TCP socket open before giving up on the "
 "connection. This will only affect the final hop. Using large values for "
 "this, especially combined with a short interval, will use up a lot of file "
-"descriptorson the host running this plugin."
+"descriptors on the host running this plugin."
 msgstr ""
 
 msgid ""
@@ -47072,6 +47101,12 @@ msgid ""
 "instance."
 msgstr ""
 
+msgid ""
+"This plugin can only be deployed asynchronously because it launches "
+"background processes (one per address). Under systemd, this only works when "
+"being run asynchronously."
+msgstr ""
+
 msgid "This plugin checks for Citrix Licenses on Window hosts."
 msgstr ""
 
@@ -48410,6 +48445,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This will be used as service description in Checkmk. It must be a unique "
+"name per host."
+msgstr ""
+
+msgid ""
 "This will be used as service description within Check_MK. It must be a "
 "unique name per host."
 msgstr ""
@@ -49245,6 +49285,9 @@ msgid "Total latency for all VDisks"
 msgstr ""
 
 msgid "Total latency for all drives"
+msgstr ""
+
+msgid "Total length of Postfix queue"
 msgstr ""
 
 msgid "Total log file size: Absolute upper levels"
@@ -50223,7 +50266,7 @@ msgstr[0] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[1] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[2] "Vizibilitatea Elementelor/Serviciilor"
 
-msgid "Undecided services (currently not monitored)"
+msgid "Undecided services - currently not monitored"
 msgstr ""
 
 #, python-format
@@ -50825,6 +50868,10 @@ msgstr ""
 msgid "Upper levels for %s"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Upper levels for %s mail queue"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 #, fuzzy
 msgid "Upper levels for Backend"
 msgstr "Nivel-urile absolute de licențe neutilizate"
@@ -51026,6 +51073,10 @@ msgstr "Nivel-urile exacte în bits sau bytes per secundă"
 #, fuzzy
 msgid "Upper levels for provisioned concurrent invocations per second"
 msgstr "Nivel-urile exacte în bits sau bytes per secundă"
+
+#, fuzzy
+msgid "Upper levels for queue lengths"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Upper levels for rate of server errors"
 msgstr ""
@@ -52019,7 +52070,7 @@ msgid "Used storage space"
 msgstr "Spațiu liber exact"
 
 msgid "User"
-msgstr ""
+msgstr "Utilizator"
 
 msgid "User / Group Key"
 msgstr ""
@@ -52419,8 +52470,9 @@ msgstr ""
 msgid "Vanished (checked, but no longer exist)"
 msgstr ""
 
-msgid "Vanished clustered services (located on cluster host)"
-msgstr ""
+#, fuzzy
+msgid "Vanished clustered services - located on cluster host"
+msgstr "Grup nou"
 
 #, fuzzy
 msgid "Vanished host label: "
@@ -52436,7 +52488,7 @@ msgstr[0] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[1] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[2] "Vizibilitatea Elementelor/Serviciilor"
 
-msgid "Vanished services (monitored, but no longer exist)"
+msgid "Vanished services - monitored, but no longer exist"
 msgstr ""
 
 #, fuzzy
@@ -55740,6 +55792,9 @@ msgstr ""
 msgid "ZFS storage pool status"
 msgstr ""
 
+msgid "Zertificon Mail Queues"
+msgstr ""
+
 msgid "Zerto"
 msgstr ""
 
@@ -57728,11 +57783,15 @@ msgid "yesterday"
 msgstr "ieri"
 
 msgid "z/OS"
-msgstr ""
+msgstr "z/OS"
 
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "Metric: %s"
+#~ msgstr "serviciu"
 
 #, fuzzy
 #~ msgid "Major release"

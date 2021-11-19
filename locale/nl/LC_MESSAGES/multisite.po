@@ -506,10 +506,6 @@ msgstr ""
 "%s mislukt na %s: %s (kijk in <tt>var/log/web.log</tt> voor meer informatie)"
 
 #, python-format
-msgid "%s finished after %s at %s."
-msgstr "%s afgerond na %s om %s."
-
-#, python-format
 msgid "%s for %d hosts started (%s)..."
 msgstr "%s van %d hosts gestart (%s)..."
 
@@ -1473,7 +1469,7 @@ msgstr ""
 "communicatie. Kijk eens naar <a href=\"werk.py?werk=7017\">werk #7017</a> "
 "voor meer informatie.</p>"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1532,7 +1528,7 @@ msgstr ""
 "de belasting kan veroorzaken als er veel Checkmk helper processen zijn "
 "geconfigureerd.</p>"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
 "the Checkmk and Checkmk Discovery services of the hosts monitored with "
@@ -2366,6 +2362,10 @@ msgstr "API sleutel van wachtwoord opslag"
 
 msgid "API key/token"
 msgstr "API sleutel/teken"
+
+#, fuzzy
+msgid "API server connection"
+msgstr "Locatieverbinding toevoegen"
 
 msgid "API server endpoint"
 msgstr "API-server eindpunt"
@@ -5169,6 +5169,10 @@ msgstr "Breng vertraging aan Maximale tijd"
 
 msgid "Apply Lag Minimum Time"
 msgstr "Breng vertraging aan Minimum tijd"
+
+#, fuzzy
+msgid "Apply changes"
+msgstr "Solliciteer Lag"
 
 msgid "Apply conditions"
 msgstr "Voorwaarden toepassen"
@@ -11678,7 +11682,8 @@ msgstr "Aangepaste acties die beschikbaar zullen zijn voor de waarschuwing."
 msgid "Custom attributes"
 msgstr "Aangepaste attributen"
 
-msgid "Custom checks (defined via rule)"
+#, fuzzy
+msgid "Custom checks - defined via rule"
 msgstr "Aangepaste controles (gedefinieerd via regels)"
 
 msgid "Custom event limit"
@@ -13170,6 +13175,10 @@ msgstr "MS Office 365 plugin implementeren"
 msgid "Deploy MSSQL Server plugin"
 msgstr "MSSQL Server plugin implementeren"
 
+#, fuzzy
+msgid "Deploy MTR plugin asynchronously"
+msgstr "Asynchroon uitvoeren"
+
 msgid "Deploy Mailman plugin"
 msgstr "Implementeer Mailman plugin"
 
@@ -13247,9 +13256,6 @@ msgstr ""
 
 msgid "Deploy mk_mongodb.py with authentication."
 msgstr ""
-
-msgid "Deploy mtr plugin"
-msgstr "Implementeer mtr plugin"
 
 msgid "Deploy plugin for Citrix XenApp"
 msgstr "Inzet plugin voor Citrix XenApp"
@@ -13851,16 +13857,19 @@ msgstr "Uitgeschakelde agent updates"
 msgid "Disabled checks"
 msgstr "Uitgeschakelde controles"
 
-msgid "Disabled clustered services (located on cluster host)"
+#, fuzzy
+msgid "Disabled clustered services - located on cluster host"
 msgstr "Uitgeschakelde geclusterde diensten (gelokaliseerd op cluster host)"
 
-msgid "Disabled custom checks (defined via rule)"
+#, fuzzy
+msgid "Disabled custom checks - defined via rule"
 msgstr "Uitgeschakelde aangepaste controles (gedefinieerd via regels)"
 
 msgid "Disabled extensions"
 msgstr "Uitgeschakelde extensies"
 
-msgid "Disabled legacy services (defined in main.mk)"
+#, fuzzy
+msgid "Disabled legacy services - defined in main.mk"
 msgstr "Uitgeschakelde legacy diensten (gedefinieerd in main.mk)"
 
 msgid "Disabled or enabled sections (SNMP)"
@@ -13922,14 +13931,12 @@ msgstr "Ontdek enkele interfaces"
 msgid "Discovered host label synchronization"
 msgstr "Ontdekt host label synchronisatie"
 
-msgid "Discovered host labels"
+#, fuzzy, python-format
+msgid "Discovered host labels (%s)"
 msgstr "Ontdekte gastheerlabels"
 
 msgid "Discovered labels"
 msgstr "Ontdekte etiketten"
-
-msgid "Discovered no service yet."
-msgstr "Nog geen dienst ontdekt."
 
 msgid "Discovered process name"
 msgstr "Ontdekte procesnaam"
@@ -14430,6 +14437,10 @@ msgstr "LVM plugin niet implementeren"
 msgid "Do not deploy Linux filesystem quota plugin"
 msgstr "Linux bestandssysteem quota plugin niet implementeren"
 
+#, fuzzy
+msgid "Do not deploy MTR plugin"
+msgstr "SMART plugin niet implementeren"
+
 msgid "Do not deploy Mailman plugin"
 msgstr "Mailman plugin niet implementeren"
 
@@ -14484,9 +14495,6 @@ msgstr "Gebruik de plugin voor ingelogde gebruikers niet"
 #, fuzzy
 msgid "Do not deploy mk_mongodb.py plugin"
 msgstr "Niet implementeren MongoDB plugin"
-
-msgid "Do not deploy mtr plugin"
-msgstr "Gebruik de mtr plugin niet"
 
 msgid "Do not deploy plugin"
 msgstr "Plugin niet implementeren"
@@ -18196,9 +18204,6 @@ msgstr "Pasvorm en voorspelling van %s "
 
 msgid "Fix affected folders, hosts and rules."
 msgstr "Herstel getroffen mappen, hosts en regels."
-
-msgid "Fix all"
-msgstr "Repareer alles."
 
 msgid "Fix this"
 msgstr "Repareer dit."
@@ -22230,6 +22235,12 @@ msgstr ""
 "Indien geen poort wordt opgegeven, wordt een standaardwaarde van 443 "
 "gebruikt."
 
+#, fuzzy
+msgid "If no port is given, a default value of 6443 will be used."
+msgstr ""
+"Indien geen poort wordt opgegeven, wordt een standaardwaarde van 443 "
+"gebruikt."
+
 msgid ""
 "If non-zero, the the list of all the matching processes and their details in "
 "the long-output will include up to the first N arguments of each processes. "
@@ -24671,6 +24682,10 @@ msgstr "Ongeldige configuratie hash"
 msgid "Invalid credentials"
 msgstr "Ongeldige inloggegevens"
 
+#, fuzzy, python-format
+msgid "Invalid datasource '%s' configured."
+msgstr "Ongeldig type opgegeven."
+
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ongeldig datatype van timestamp: moet int of float zijn."
 
@@ -25839,11 +25854,16 @@ msgstr "Legacy performeter tegengekomen: %r"
 msgid "Legacy run"
 msgstr "Erfenis run"
 
-msgid "Legacy services (defined in main.mk)"
+#, fuzzy
+msgid "Legacy services - defined in main.mk"
 msgstr "Legacy diensten (gedefinieerd in main.mk)"
 
 msgid "Legal"
 msgstr "Wettelijk"
+
+#, fuzzy
+msgid "Length of Z1 messenger mail queue"
+msgstr "Lengte van de wachtrij voor uitgestelde post"
 
 msgid "Length of active mail queue"
 msgstr "Lengte van actieve e-mail wachtrij"
@@ -25934,6 +25954,10 @@ msgstr "Niveaus voor %s"
 #, python-format
 msgid "Levels for %s %s"
 msgstr "Niveaus voor %s %s"
+
+#, fuzzy, python-format
+msgid "Levels for %s mail queue"
+msgstr "Niveaus voor swapgebruik"
 
 msgid "Levels for <i>device not responding</i>"
 msgstr "Niveaus voor <i>apparaat reageert niet</i>"
@@ -27639,6 +27663,10 @@ msgstr "MSSQL datafile en transactielog discovery"
 msgid "MTR (Matt's traceroute) (Linux)"
 msgstr "MTR (Matt's traceroute) (Linux)"
 
+#, fuzzy
+msgid "MTR configuration"
+msgstr "RRA-configuratie"
+
 msgid "MTR destination"
 msgstr "MTR bestemming"
 
@@ -28967,10 +28995,6 @@ msgstr ""
 "aggregaties en filtering zijn alleen beschikbaar met de Checkmk Enterprise "
 "Editions"
 
-#, fuzzy, python-format
-msgid "Metric: %s"
-msgstr "(Selecteer een waarde)"
-
 msgid "Metrics"
 msgstr "Metriek"
 
@@ -29510,7 +29534,8 @@ msgstr "Monitor via Checkmk Agent"
 msgid "Monitor via SNMP"
 msgstr "Bewaking via SNMP"
 
-msgid "Monitored clustered services (located on cluster host)"
+#, fuzzy
+msgid "Monitored clustered services - located on cluster host"
 msgstr "Bewaakte geclusterde diensten (op de clustergastheer)"
 
 msgid "Monitored jobs"
@@ -34754,6 +34779,10 @@ msgstr "Geef een absolute padnaam op"
 msgid "Please specify an application name"
 msgstr "Gelieve een toepassingsnaam op te geven"
 
+#, fuzzy
+msgid "Please specify at least on address"
+msgstr "Geef ten minste één waarde op"
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr "Gelieve minstens één \"Piggyback creatie optie\" op te geven"
 
@@ -34882,6 +34911,10 @@ msgstr "Plugin bestandspatroon"
 
 msgid "Plugin heartbeat timeout"
 msgstr "Plugin heartbeat timeout"
+
+#, fuzzy
+msgid "Plugin is disabled"
+msgstr "Site is uitgeschakeld"
 
 msgid "Plugin output"
 msgstr "Plugin uitgang"
@@ -39053,6 +39086,10 @@ msgstr "Naam server"
 
 msgid "Server Time"
 msgstr "Server tijd"
+
+#, fuzzy
+msgid "Server endpoint"
+msgstr "API-server eindpunt"
 
 msgid "Server latency"
 msgstr "Serververtraging"
@@ -46792,11 +46829,12 @@ msgstr ""
 "90 seconden. Als je controlecyclus is ingesteld op een grotere waarde dan "
 "een minuut, dan moet je dit dienovereenkomstig verhogen."
 
+#, fuzzy
 msgid ""
 "The number of seconds to keep the TCP socket open before giving up on the "
 "connection. This will only affect the final hop. Using large values for "
 "this, especially combined with a short interval, will use up a lot of file "
-"descriptorson the host running this plugin."
+"descriptors on the host running this plugin."
 msgstr ""
 "Het aantal seconden om de TCP socket open te houden alvorens de verbinding "
 "op te geven. Dit zal alleen de laatste hop beïnvloeden. Het gebruik van "
@@ -50116,6 +50154,12 @@ msgstr ""
 "de credentials van een database gebruiker configureren die de rechten heeft "
 "om de benodigde informatie van de server instance te lezen."
 
+msgid ""
+"This plugin can only be deployed asynchronously because it launches "
+"background processes (one per address). Under systemd, this only works when "
+"being run asynchronously."
+msgstr ""
+
 msgid "This plugin checks for Citrix Licenses on Window hosts."
 msgstr "Deze plugin controleert op Citrix Licenties op Window hosts."
 
@@ -52082,6 +52126,14 @@ msgstr ""
 "Dit zal automatisch tot nu toe ongeziene sleutels aanvaarden maar zal "
 "verbindingen weigeren voor veranderde of ongeldige hostkeys"
 
+#, fuzzy
+msgid ""
+"This will be used as service description in Checkmk. It must be a unique "
+"name per host."
+msgstr ""
+"Deze zal worden gebruikt als servicebeschrijving binnen Check_MK. Het moet "
+"een unieke naam per host zijn."
+
 msgid ""
 "This will be used as service description within Check_MK. It must be a "
 "unique name per host."
@@ -53015,6 +53067,10 @@ msgstr "Totale latentie voor alle VDisks"
 
 msgid "Total latency for all drives"
 msgstr "Totale latentie voor alle schijven"
+
+#, fuzzy
+msgid "Total length of Postfix queue"
+msgstr "Lengte van uitvoerwachtrij"
 
 msgid "Total log file size: Absolute upper levels"
 msgstr "Totale grootte logbestand: Absolute bovenste niveaus"
@@ -53981,7 +54037,8 @@ msgid_plural "Undecided services: "
 msgstr[0] "Onbesliste dienst: "
 msgstr[1] ""
 
-msgid "Undecided services (currently not monitored)"
+#, fuzzy
+msgid "Undecided services - currently not monitored"
 msgstr "Niet-besloten diensten (momenteel niet gecontroleerd)"
 
 #, python-format
@@ -54539,6 +54596,10 @@ msgstr "Bovenste niveaus voor \"worker threads niet aangemaakt\" per seconde"
 msgid "Upper levels for %s"
 msgstr "Bovenste niveaus voor %s"
 
+#, fuzzy, python-format
+msgid "Upper levels for %s mail queue"
+msgstr "Bovenste niveaus voor grootte"
+
 msgid "Upper levels for Backend"
 msgstr "Bovenste niveaus voor Backend"
 
@@ -54718,6 +54779,10 @@ msgstr "Bovenste niveaus voor backend verbindingsfouten per seconde"
 #, fuzzy
 msgid "Upper levels for provisioned concurrent invocations per second"
 msgstr "Bovenste niveaus voor backend verbindingsfouten per seconde"
+
+#, fuzzy
+msgid "Upper levels for queue lengths"
+msgstr "Bovenste niveau voor wachtrijlengte"
 
 msgid "Upper levels for rate of server errors"
 msgstr "Bovenste niveaus voor foutenpercentage bij de server"
@@ -56213,7 +56278,8 @@ msgstr "Verdwenen"
 msgid "Vanished (checked, but no longer exist)"
 msgstr "Verdwenen diensten (gecontroleerd, maar bestaan niet meer)"
 
-msgid "Vanished clustered services (located on cluster host)"
+#, fuzzy
+msgid "Vanished clustered services - located on cluster host"
 msgstr "Verdwenen geclusterde diensten (gelokaliseerd op cluster host)"
 
 msgid "Vanished host label: "
@@ -56226,7 +56292,8 @@ msgid_plural "Vanished services: "
 msgstr[0] "Verdwenen dienst: "
 msgstr[1] ""
 
-msgid "Vanished services (monitored, but no longer exist)"
+#, fuzzy
+msgid "Vanished services - monitored, but no longer exist"
 msgstr "Verdwenen diensten (gecontroleerd, maar bestaan niet meer)"
 
 msgid "Variable"
@@ -60464,6 +60531,10 @@ msgstr "ZFS metagegevens"
 msgid "ZFS storage pool status"
 msgstr "ZFS opslagpool status"
 
+#, fuzzy
+msgid "Zertificon Mail Queues"
+msgstr "Postfix: Mail Queue"
+
 msgid "Zerto"
 msgstr "Zerto"
 
@@ -62377,6 +62448,26 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Deploy mtr plugin"
+#~ msgstr "Implementeer mtr plugin"
+
+#~ msgid "Do not deploy mtr plugin"
+#~ msgstr "Gebruik de mtr plugin niet"
+
+#, python-format
+#~ msgid "%s finished after %s at %s."
+#~ msgstr "%s afgerond na %s om %s."
+
+#~ msgid "Discovered no service yet."
+#~ msgstr "Nog geen dienst ontdekt."
+
+#~ msgid "Fix all"
+#~ msgstr "Repareer alles."
+
+#, fuzzy, python-format
+#~ msgid "Metric: %s"
+#~ msgstr "(Selecteer een waarde)"
 
 #~ msgid "Imprint"
 #~ msgstr "Afdruk"

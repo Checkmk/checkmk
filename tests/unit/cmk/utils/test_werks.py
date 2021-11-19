@@ -21,21 +21,56 @@ import cmk.utils.werks
 
 
 @pytest.mark.parametrize(
-    "version_str,expected",
+    "version_str",
     [
-        ("1.2.0", 1020050000),
-        ("1.2.0i1", 1020010100),
-        ("1.2.0b1", 1020020100),
-        ("1.2.0b10", 1020021000),
-        ("1.2.0p10", 1020050010),
-        ("2.0.0i1", 2000010100),
-        ("1.6.0-2020.05.26", 1060090000),
-        ("2020.05.26", 2020052650000),
-        ("2020.05.26-sandbox-lm-1.7-drop-py2", 2020052600000),
+        "1.2.0",
+        "1.2.0i1",
+        "1.2.0b1",
+        "1.2.0b10",
+        "1.2.0p10",
+        "2.0.0i1",
+        "1.6.0-2020.05.26",
+        "2020.05.26",
     ],
 )
-def test_parse_check_mk_version(version_str, expected):
-    assert cmk.utils.version.parse_check_mk_version(version_str) == expected
+def test_old_parse_check_mk_version_equals_new_version_class(version_str):
+    assert (
+        cmk_version.parse_check_mk_version(version_str)
+        == cmk_version.Version(version_str).parse_to_int()
+    )
+
+
+@pytest.mark.parametrize(
+    "version_str_a,version_str_b",
+    [
+        ("1.2.0", "1.2.0i1"),
+        ("1.2.0", "1.2.0b1"),
+        ("1.2.0p1", "1.2.0"),
+        ("1.2.0i2", "1.2.0i1"),
+        ("1.2.0b2", "1.2.0b1"),
+        ("1.2.0p2", "1.2.0p1"),
+        ("1.2.1", "1.2.0"),
+        ("1.3.0", "1.2.1"),
+        ("2.0.0", "1.2.1"),
+        ("2.0.0-2020.05.26", "2.0.0-2020.05.25"),
+        ("2.0.0-2020.05.26", "2.0.0-2020.04.26"),
+        ("2.0.0-2020.05.26", "2.0.0-2019.05.26"),
+        ("2.0.1-2020.05.26", "2.0.0-2020.05.26"),
+        ("2.1.0-2020.05.26", "2.0.0-2020.05.26"),
+        ("2.0.0-2020.05.26", "2.0.0i2"),
+        ("2.0.0-2020.05.26", "2.0.0b2"),
+        ("2.0.0-2020.05.26", "2.0.0"),
+        ("2.0.0-2020.05.26", "2.0.0p7"),
+        ("2020.05.26", "2020.05.25"),
+        ("2020.05.26", "2020.04.26"),
+        ("2020.05.26", "2.0.0-2020.05.25"),
+    ],
+)
+def test_version_comparison(version_str_a, version_str_b):
+    a = cmk_version.Version(version_str_a)
+    b = cmk_version.Version(version_str_b)
+
+    assert a > b
 
 
 @pytest.fixture(scope="function")
@@ -74,10 +109,10 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
 
 
 def test_werk_versions(precompiled_werks):
-    parsed_version = cmk.utils.version.parse_check_mk_version(cmk_version.__version__)
+    parsed_version = cmk_version.Version(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
-        parsed_werk_version = cmk.utils.version.parse_check_mk_version(werk["version"])
+        parsed_werk_version = cmk_version.Version(werk["version"])
 
         assert (
             parsed_werk_version <= parsed_version
@@ -103,7 +138,7 @@ def test_werk_versions_after_tagged(precompiled_werks):
         if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
             werk_tags = sorted(
                 _tags_containing_werk(werk_id),
-                key=lambda t: cmk.utils.version.parse_check_mk_version(t[1:]),
+                key=lambda t: cmk_version.Version(t[1:]),
             )
             list_of_offenders.append(
                 (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-")

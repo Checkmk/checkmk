@@ -682,7 +682,6 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._name in watolib.timeperiods.builtin_timeperiods():
             raise MKUserError("edit", _("Builtin timeperiods can not be modified"))
-
         if self._new:
             clone_name = request.var("clone")
             if request.var("mode") == "import_ical":
@@ -726,7 +725,6 @@ class ModeEditTimeperiod(WatoMode):
                 ),
                 allow_empty=False,
                 size=80,
-                validate=self._validate_id,
             )
         else:
             name_element = FixedValue(
@@ -744,7 +742,6 @@ class ModeEditTimeperiod(WatoMode):
                         help=_("An alias or description of the timeperiod"),
                         allow_empty=False,
                         size=80,
-                        validate=self._validate_alias,
                     ),
                 ),
                 ("weekdays", self._vs_weekdays()),
@@ -753,7 +750,12 @@ class ModeEditTimeperiod(WatoMode):
             ],
             render="form",
             optional_keys=False,
+            validate=self._validate_id_and_alias,
         )
+
+    def _validate_id_and_alias(self, value, varprefix):
+        self._validate_id(value["name"], "%s_p_name" % varprefix)
+        self._validate_alias(value["name"], value["alias"], "%s_p_alias" % varprefix)
 
     def _validate_id(self, value, varprefix):
         if value in self._timeperiods:
@@ -761,12 +763,11 @@ class ModeEditTimeperiod(WatoMode):
                 varprefix, _("This name is already being used by another timeperiod.")
             )
 
-    def _validate_alias(self, value, varprefix):
-        assert self._name is not None
-        unique, message = watolib.is_alias_used("timeperiods", self._name, value)
+    def _validate_alias(self, name, alias, varprefix):
+        unique, message = watolib.is_alias_used("timeperiods", name, alias)
         if not unique:
             assert message is not None
-            raise MKUserError("alias", message)
+            raise MKUserError(varprefix, message)
 
     def _vs_weekdays(self):
         return CascadingDropdown(

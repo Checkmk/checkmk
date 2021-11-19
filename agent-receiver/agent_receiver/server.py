@@ -9,19 +9,18 @@ from shutil import copyfileobj
 from tempfile import mkstemp
 from typing import Dict, Mapping, Optional
 
+from agent_receiver.checkmk_rest_api import post_csr
+from agent_receiver.constants import AGENT_OUTPUT_DIR
+from agent_receiver.log import logger
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from agent_receiver.checkmk_rest_api import post_csr
-from agent_receiver.constants import AGENT_OUTPUT_DIR
-from agent_receiver.log import logger
-
 app = FastAPI()
 
 
-class CSRBody(BaseModel):
+class PairingBody(BaseModel):
     csr: str
 
 
@@ -36,26 +35,26 @@ def _uuid_from_pem_csr(pem_csr: str) -> str:
         return "[CSR parsing failed]"
 
 
-@app.post("/csr")
-async def sign_csr(
+@app.post("/pairing")
+async def pairing(
     *,
     authentication: Optional[str] = Header(None),
-    csr_body: CSRBody,
+    pairing_body: PairingBody,
 ) -> Mapping[str, str]:
     rest_api_csr_resp = post_csr(
         str(authentication),
-        csr_body.csr,
+        pairing_body.csr,
     )
     if rest_api_csr_resp.ok:
         logger.info(
             "uuid=%s CSR signed",
-            _uuid_from_pem_csr(csr_body.csr),
+            _uuid_from_pem_csr(pairing_body.csr),
         )
         return rest_api_csr_resp.json()
 
     logger.info(
         "uuid=%s CSR failed with %s",
-        _uuid_from_pem_csr(csr_body.csr),
+        _uuid_from_pem_csr(pairing_body.csr),
         rest_api_csr_resp.text,
     )
     raise HTTPException(
@@ -65,9 +64,7 @@ async def sign_csr(
 
 
 @app.post("/agent-data")
-async def agent_data(
-    uuid: str = Form(...), upload_file: UploadFile = File(...)
-) -> Dict[str, str]:
+async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
     file_dir = AGENT_OUTPUT_DIR / uuid
     file_path = file_dir / "received_output"
 

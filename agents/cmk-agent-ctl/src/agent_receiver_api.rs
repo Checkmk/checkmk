@@ -13,27 +13,27 @@ struct JSONResponse {
 }
 
 #[derive(Serialize)]
-struct CSRBody {
+struct PairingBody {
     csr: String,
 }
 
 #[derive(Deserialize)]
-struct CSRResponse {
+struct PairingResponse {
     cert: String,
 }
 
-pub fn csr(
+pub fn pairing(
     server_address: &str,
     root_cert: &str,
     csr: String,
     credentials: &str,
 ) -> Result<String, Box<dyn Error>> {
     Ok(certs::client(Some(String::from(root_cert).into_bytes()))?
-        .post(format!("https://{}/csr", server_address))
+        .post(format!("https://{}/pairing", server_address))
         .header("authentication", format!("Bearer {}", credentials))
-        .json(&CSRBody { csr })
+        .json(&PairingBody { csr })
         .send()?
-        .json::<CSRResponse>()?
+        .json::<PairingResponse>()?
         .cert)
 }
 

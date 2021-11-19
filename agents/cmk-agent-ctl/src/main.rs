@@ -52,7 +52,7 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
         Err(error) => panic!("Error creating CSR: {}", error),
     };
     let certificate =
-        match agent_receiver_api::csr(&agent_receiver_address, &root_cert, csr, &credentials) {
+        match agent_receiver_api::pairing(&agent_receiver_address, &root_cert, csr, &credentials) {
             Ok(cert) => cert,
             Err(error) => panic!(
                 "Error registering at {}: {}",

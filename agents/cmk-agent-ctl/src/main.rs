@@ -36,6 +36,9 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
     let credentials = config
         .credentials
         .expect("Missing credentials for registration.");
+    let host_name = config
+        .host_name
+        .expect("Missing host name for registration");
 
     let uuid = Uuid::new_v4().to_string();
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
@@ -54,11 +57,21 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
     let certificate =
         match agent_receiver_api::pairing(&agent_receiver_address, &root_cert, csr, &credentials) {
             Ok(cert) => cert,
-            Err(error) => panic!(
-                "Error registering at {}: {}",
-                &agent_receiver_address, error
-            ),
+            Err(error) => panic!("Error pairing with {}: {}", &agent_receiver_address, error),
         };
+
+    if let Err(error) = agent_receiver_api::register_with_hostname(
+        &agent_receiver_address,
+        &root_cert,
+        &credentials,
+        &uuid,
+        &host_name,
+    ) {
+        panic!(
+            "Error registering at {}: {}",
+            &agent_receiver_address, error
+        )
+    }
 
     reg_state.server_specs.insert(
         agent_receiver_address,

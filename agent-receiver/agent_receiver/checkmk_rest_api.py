@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from http import HTTPStatus
 from typing import Any
 
 import requests
@@ -29,6 +30,18 @@ def _forward_post(
     )
 
 
+def _forward_get(
+    endpoint: str,
+    authentication: str,
+) -> requests.Response:
+    return requests.get(
+        f"{_local_rest_api_url()}/{endpoint}",
+        headers={
+            "Authorization": authentication,
+        },
+    )
+
+
 def post_csr(
     authentication: str,
     csr: str,
@@ -37,4 +50,14 @@ def post_csr(
         "csr",
         authentication,
         {"csr": csr},
+    )
+
+
+def host_exists(
+    authentication: str,
+    host_name: str,
+) -> bool:
+    return (
+        _forward_get(f"objects/host_config/{host_name}", authentication).status_code
+        == HTTPStatus.OK
     )

@@ -20,3 +20,4 @@ rustls = { version = "0.20.0" }
 rustls-pemfile = { version = "*" }
 log4rs = { version = "*" }
 log = { version = "*" }
+http = { version = "*" }

@@ -21,4 +21,7 @@ pub struct Args {
 
     #[structopt(long, short = "p", requires = "user", parse(from_str))]
     pub password: Option<String>,
+
+    #[structopt(long, short = "h", parse(from_str))]
+    pub host_name: Option<String>,
 }

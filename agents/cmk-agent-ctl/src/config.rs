@@ -23,6 +23,9 @@ pub struct Config {
 
     #[serde(default)]
     pub root_certificate: Option<String>,
+
+    #[serde(default)]
+    pub host_name: Option<String>,
 }
 
 impl Config {
@@ -39,10 +42,13 @@ impl Config {
 
     pub fn merge_two_configs(loser: Config, winner: Config) -> Config {
         return Config {
-            agent_receiver_address: winner.agent_receiver_address.or(loser.agent_receiver_address),
+            agent_receiver_address: winner
+                .agent_receiver_address
+                .or(loser.agent_receiver_address),
             package_name: winner.package_name.or(loser.package_name),
             credentials: winner.credentials.or(loser.credentials),
             root_certificate: winner.root_certificate.or(loser.root_certificate),
+            host_name: winner.host_name.or(loser.host_name),
         };
     }
 
@@ -56,6 +62,7 @@ impl Config {
                 None
             },
             root_certificate: None,
+            host_name: args.host_name,
         };
     }
 }

@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::certs;
+use http::StatusCode;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -22,6 +23,12 @@ struct PairingResponse {
     cert: String,
 }
 
+#[derive(Serialize)]
+struct RegistrationWithHNBody {
+    uuid: String,
+    host_name: String,
+}
+
 pub fn pairing(
     server_address: &str,
     root_cert: &str,
@@ -36,6 +43,34 @@ pub fn pairing(
         .json::<PairingResponse>()?
         .cert)
 }
+
+pub fn register_with_hostname(
+    server_address: &str,
+    root_cert: &str,
+    credentials: &str,
+    uuid: &str,
+    host_name: &str,
+) -> Result<(), Box<dyn Error>> {
+    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
+        .post(format!("https://{}/register_with_hostname", server_address))
+        .header("authentication", format!("Bearer {}", credentials))
+        .json(&RegistrationWithHNBody {
+            uuid: String::from(uuid),
+            host_name: String::from(host_name),
+        })
+        .send()?;
+    match response.status() {
+        StatusCode::NO_CONTENT => Ok(()),
+        _ => Err(response.text()?)?,
+    }
+}
+
+// .header(
+//     "client-cert",
+//     base64::encode_config(
+//         tls_server::certificate(&mut String::from(client_cert).as_bytes())?.0,
+//         base64::URL_SAFE,
+//     ),
 
 pub fn agent_data(
     agent_receiver_address: &str,

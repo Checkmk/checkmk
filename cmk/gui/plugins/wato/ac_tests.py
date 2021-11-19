@@ -155,8 +155,8 @@ class ACTestLivestatusUsage(ACTest):
         return _("Livestatus usage")
 
     def help(self) -> str:
-        # xgettext: no-python-format
         return _(
+            # xgettext: no-python-format
             "<p>Livestatus is used by several components, for example the GUI, to gather "
             "information about the monitored objects from the monitoring core. It is "
             "very important for the overall performance of the monitoring system that "
@@ -784,6 +784,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
 
     def help(self) -> str:
         return _(
+            # xgettext: no-python-format
             "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough fetcher processes to handle "

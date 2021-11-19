@@ -76,6 +76,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	# cmk needs to be a namespace package (CMK-3979)
 	rm \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/special_agents/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/check_legacy_includes/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/__init__.py \
@@ -92,6 +93,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	$(LN) -s python3/cmk $(DESTDIR)$(OMD_ROOT)/skel/local/lib/check_mk
 	# Create the plugin namespaces
 	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk/base/plugins/agent_based
+	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk/special_agents
 
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace

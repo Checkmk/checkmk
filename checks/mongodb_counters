@@ -42,6 +42,12 @@
 def parse_mongodb_counters(info):
     parsed = {}
     for line in info:
+        # the documentation says that this should only happen from 5.1 onwards:
+        # https://docs.mongodb.com/v5.1/reference/command/serverStatus/#mongodb-serverstatus-serverstatus.opcounters.deprecated
+        # however, according to SUP-8433, this can also happen with earlier version (4.2.15)
+        if line[1] == "deprecated":
+            continue
+
         what, name, value = line
         parsed.setdefault(what, {})
         parsed[what][name] = int(value)

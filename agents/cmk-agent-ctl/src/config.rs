@@ -13,7 +13,7 @@ use std::path::Path;
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     #[serde(default)]
-    pub marcv_address: Option<String>,
+    pub agent_receiver_address: Option<String>,
 
     #[serde(default)]
     pub package_name: Option<String>,
@@ -39,7 +39,7 @@ impl Config {
 
     pub fn merge_two_configs(loser: Config, winner: Config) -> Config {
         return Config {
-            marcv_address: winner.marcv_address.or(loser.marcv_address),
+            agent_receiver_address: winner.agent_receiver_address.or(loser.agent_receiver_address),
             package_name: winner.package_name.or(loser.package_name),
             credentials: winner.credentials.or(loser.credentials),
             root_certificate: winner.root_certificate.or(loser.root_certificate),
@@ -48,7 +48,7 @@ impl Config {
 
     pub fn from_args(args: Args) -> Config {
         return Config {
-            marcv_address: args.server,
+            agent_receiver_address: args.server,
             package_name: args.package_name,
             credentials: if let (Some(u), Some(p)) = (args.user, args.password) {
                 Some(String::from(format!("{} {}", &u, &p)))

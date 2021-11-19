@@ -2,10 +2,10 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+mod agent_receiver_api;
 mod certs;
 mod cli;
 mod config;
-mod marcv_api;
 mod monitoring_data;
 mod tls_server;
 use config::RegistrationState;
@@ -30,20 +30,20 @@ const LOG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl.log";
 const TLS_ID: &[u8] = b"16";
 
 fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
-    let marcv_address = config
-        .marcv_address
+    let agent_receiver_address = config
+        .agent_receiver_address
         .expect("Server addresses not specified.");
     let credentials = config
         .credentials
         .expect("Missing credentials for registration.");
 
     let uuid = Uuid::new_v4().to_string();
-    // TODO: what if registration_state.contains_key(marcv_address) (already registered)?
+    // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let root_cert = match &config.root_certificate {
         Some(cert) => cert.clone(),
-        None => match certs::fetch_root_cert(&marcv_address) {
+        None => match certs::fetch_root_cert(&agent_receiver_address) {
             Ok(cert) => cert,
-            Err(error) => panic!("Error establishing trust with marcv: {}", error),
+            Err(error) => panic!("Error establishing trust with agent_receiver: {}", error),
         },
     };
 
@@ -51,13 +51,17 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
         Ok(data) => data,
         Err(error) => panic!("Error creating CSR: {}", error),
     };
-    let certificate = match marcv_api::csr(&marcv_address, &root_cert, csr, &credentials) {
-        Ok(cert) => cert,
-        Err(error) => panic!("Error registering at {}: {}", &marcv_address, error),
-    };
+    let certificate =
+        match agent_receiver_api::csr(&agent_receiver_address, &root_cert, csr, &credentials) {
+            Ok(cert) => cert,
+            Err(error) => panic!(
+                "Error registering at {}: {}",
+                &agent_receiver_address, error
+            ),
+        };
 
     reg_state.server_specs.insert(
-        marcv_address,
+        agent_receiver_address,
         config::ServerSpec {
             uuid,
             private_key,
@@ -72,8 +76,12 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
 fn push(config: config::Config, reg_state: config::RegistrationState) {
     match monitoring_data::collect(config.package_name) {
         Ok(mon_data) => {
-            for (marcv_address, server_spec) in reg_state.server_specs.iter() {
-                match marcv_api::agent_data(marcv_address, &server_spec.uuid, &mon_data) {
+            for (agent_receiver_address, server_spec) in reg_state.server_specs.iter() {
+                match agent_receiver_api::agent_data(
+                    agent_receiver_address,
+                    &server_spec.uuid,
+                    &mon_data,
+                ) {
                     Ok(message) => println!("{}", message),
                     Err(error) => panic!("Error pushing monitoring data: {}", error),
                 };

@@ -38,7 +38,7 @@ pub fn csr(
 }
 
 pub fn agent_data(
-    marcv_address: &str,
+    agent_receiver_address: &str,
     uuid: &str,
     monitoring_data: &Vec<u8>,
 ) -> Result<String, Box<dyn Error>> {
@@ -46,7 +46,7 @@ pub fn agent_data(
     // - Send client cert in header
     // - Use root cert
     Ok(certs::client(None)?
-        .post(String::from(marcv_address) + "/agent-data")
+        .post(String::from(agent_receiver_address) + "/agent-data")
         .multipart(
             reqwest::blocking::multipart::Form::new()
                 .text("uuid", String::from(uuid))

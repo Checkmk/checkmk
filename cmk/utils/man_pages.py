@@ -618,7 +618,7 @@ class ManPageRenderer:
             self._print_textbody(self._header["item"])
 
         self._print_subheader("Discovery")
-        self._print_textbody(self._header.get("inventory", "No discovery supported."))
+        self._print_textbody(self._header.get("discovery", "No discovery supported."))
         self._print_empty_line()
         self._flush()
 

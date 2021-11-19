@@ -3,10 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# type: ignore[list-item,import,assignment,misc,operator,attr-defined]  # TODO: see which are needed in this file
+
+# type: ignore[attr-defined]
+
+from typing import Dict, Optional
 
 from cmk.base.check_api import get_parsed_item_data
-from cmk.base.config import factory_settings
 
 from .humidity import check_humidity
 from .temperature import check_temperature
@@ -31,13 +33,13 @@ map_readable_states = {
     "alarm high": 2,
 }
 
-factory_settings["hwg_humidity_defaultlevels"] = {"levels": (60.0, 70.0)}
-factory_settings["hwg_temp_defaultlevels"] = {"levels": (30, 35)}
+HWG_HUMIDITY_DEFAULTLEVELS = {"levels": (60.0, 70.0)}
+HWG_TEMP_DEFAULTLEVELS = {"levels": (30.0, 35.0)}
 
 
 def parse_hwg(info):
 
-    parsed = {}
+    parsed: Dict[str, Dict] = {}
 
     for index, descr, sensorstatus, current, unit in info:
 
@@ -57,7 +59,7 @@ def parse_hwg(info):
         # Parse Temperature
         else:
             try:
-                tempval = float(current)
+                tempval: Optional[float] = float(current)
             except ValueError:
                 tempval = None
 

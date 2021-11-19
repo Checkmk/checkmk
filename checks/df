@@ -15,6 +15,9 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 from cmk.base.check_legacy_includes.size_trend import size_trend
 from cmk.base.plugins.agent_based.utils.df import df_discovery, DfBlock
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 inventory_df_rules = []
 inventory_df_exclude_fs = ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]
 

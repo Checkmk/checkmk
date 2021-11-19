@@ -144,6 +144,9 @@ def inventory_storeonce_clusterinfo_space(parsed):
     return [("Total Capacity", {})]
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 check_info["storeonce_clusterinfo.space"] = {
     "inventory_function": inventory_storeonce_clusterinfo_space,
     "check_function": check_storeonce_space,

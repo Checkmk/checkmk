@@ -4,30 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-
 import collections
 import time
 from numbers import Integral
 from typing import Any, List, NamedTuple, Optional
 
 from cmk.base.check_api import get_average, get_bytes_human_readable, get_percent_human_readable
-from cmk.base.config import factory_settings
 from cmk.base.plugins.agent_based.utils.memory import compute_state, get_levels_mode_from_value
 from cmk.base.plugins.agent_based.utils.memory import normalize_levels as normalize_mem_levels
 
 memused_default_levels = (150.0, 200.0)
 
-factory_settings["memory_default_levels"] = {
+MEMORY_DEFAULT_LEVELS = {
     "levels": memused_default_levels,
 }
 
 
-class MemBytes(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "MemBytes", [("bytes", int), ("kb", float), ("mb", float)]
-    )
-):
+class _MemBytesTuple(NamedTuple):
+    bytes: int
+    kb: float
+    mb: float
+
+
+class MemBytes(_MemBytesTuple):
     def __new__(cls, value):
         return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 

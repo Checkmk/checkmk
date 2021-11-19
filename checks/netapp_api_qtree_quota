@@ -30,6 +30,9 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # quota fdo03   quota-type tree disk-limit 2684354560   volume vol_bronze1_fdo2 disk-used 788905236
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 def inventory_netapp_api_qtree_quota(parsed):
     for qtree, attrs in parsed.items():
         if attrs.get("quota-type") == "tree" and attrs.get("disk-limit").isdigit():

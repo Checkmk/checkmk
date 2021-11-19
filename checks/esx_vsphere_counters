@@ -23,7 +23,7 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.df import df_discovery
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FILESYSTEM_DEFAULT_LEVELS
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -222,6 +222,9 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
             ramdisks.append((name, size_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, ramdisks)
+
+
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
 
 
 check_info["esx_vsphere_counters.ramdisk"] = {

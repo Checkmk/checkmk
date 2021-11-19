@@ -4,17 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=chained-comparison
+# pylint: disable=chained-comparison,unused-import
 
 from typing import Any, Dict, List
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
-from cmk.base.config import factory_settings, Ruleset
-from cmk.base.plugins.agent_based.utils.df import _check_inodes
-from cmk.base.plugins.agent_based.utils.df import (
-    FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,
-)
+from cmk.base.config import Ruleset
+from cmk.base.plugins.agent_based.utils.df import _check_inodes, FILESYSTEM_DEFAULT_LEVELS
 from cmk.base.plugins.agent_based.utils.df import get_filesystem_levels as _get_filesystem_levels
 from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
 
@@ -39,8 +36,6 @@ inventory_df_exclude_mountpoints = ["/dev"]
 #         ( "Backup space 2", "/usr/backup2/*.xyz" ) ], ALL_HOSTS ),
 # ]
 filesystem_groups: Ruleset = []
-
-factory_settings["filesystem_default_levels"] = _FILESYSTEM_DEFAULT_LEVELS
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
 

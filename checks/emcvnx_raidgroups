@@ -233,6 +233,9 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
     return rc, message, perfdata
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 check_info["emcvnx_raidgroups.capacity"] = {
     "inventory_function": inventory_emcvnx_raidgroups_capacity,
     "check_function": check_emcvnx_raidgroups_capacity,

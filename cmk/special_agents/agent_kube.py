@@ -359,7 +359,7 @@ def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]
 
 def output_cluster_api_sections(cluster: Cluster) -> None:
     sections = {
-        "k8s_cluster_pods_resources_v1": cluster.pod_resources,
+        "k8s_pod_resources_with_capacity_v1": cluster.pod_resources,
         "k8s_node_count_v1": cluster.node_count,
         "k8s_cluster_details_v1": cluster.cluster_details,
     }
@@ -371,7 +371,7 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
         sections = {
             "k8s_node_container_count_v1": cluster_node.container_count,
             "k8s_node_kubelet_v1": cluster_node.kubelet,
-            "k8s_node_pods_resources_v1": cluster_node.pod_resources,
+            "k8s_pod_resources_with_capacity_v1": cluster_node.pod_resources,
         }
         _write_sections(sections)
 
@@ -385,7 +385,7 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
 
     def output_sections(cluster_deployment: Deployment) -> None:
         sections = {
-            "k8s_deployment_pods_resources_v1": cluster_deployment.pod_resources,
+            "k8s_pod_resources_v1": cluster_deployment.pod_resources,
             "k8s_memory_resources_v1": cluster_deployment.memory_resources,
         }
         _write_sections(sections)

@@ -20,7 +20,7 @@ PodSequence = Sequence[str]
 
 
 class PodResources(BaseModel):
-    """section: k8s_pods_resources_v1"""
+    """section: k8s_pod_resources_v1"""
 
     running: PodSequence = []
     pending: PodSequence = []
@@ -30,7 +30,7 @@ class PodResources(BaseModel):
 
 
 class PodResourcesWithCapacity(PodResources):
-    """section: k8s_pods_resources_with_capacity_v1"""
+    """section: k8s_pod_resources_with_capacity_v1"""
 
     capacity: int
     allocatable: int

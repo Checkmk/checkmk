@@ -62,24 +62,24 @@ class TestAgentSummarizerDefault_AllModes:
         return request.param
 
     def test_missing_section(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section(None, mode=mode) == (
-            0,
-            "Version: unknown, OS: unknown",
-        )
+        assert summarizer.summarize_check_mk_section(None, mode=mode) == (0, "")
 
     def test_random_section(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section(
-            [["some_random", "data"], ["that_does", "nothing"]],
-            mode=mode,
-        ) == (
-            0,
-            "Version: unknown, OS: unknown",
+        assert (
+            summarizer.summarize_check_mk_section(
+                [["some_random", "data"], ["that_does", "nothing"]],
+                mode=mode,
+            )
+            == (0, "")
         )
 
     def test_clear_version_and_os(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section([["version:"], ["agentos:"]], mode=mode,) == (
-            0,
-            "",
+        assert (
+            summarizer.summarize_check_mk_section(
+                [["version:"], ["agentos:"]],
+                mode=mode,
+            )
+            == (0, "")
         )
 
     def test_set_version_and_os(self, summarizer, mode):

@@ -712,7 +712,7 @@ class AgentSummarizerDefault(AgentSummarizer):
             val = " ".join(line[1:])
             section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
 
-        return {"version": "unknown", "agentos": "unknown", **section}
+        return {"version": None, "agentos": None, **section}
 
     def _check_version(
         self, agent_version: Optional[str]

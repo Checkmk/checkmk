@@ -80,12 +80,9 @@ class AutochecksManager:
     ) -> Iterable[Service]:
         """Read automatically discovered checks of one host"""
         for autocheck_entry in self._read_raw_autochecks(hostname):
-            try:
-                service_name = get_service_description(
-                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-                )
-            except Exception:  # I dont't really know why this is ignored. Feels utterly wrong.
-                continue
+            service_name = get_service_description(
+                hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+            )
 
             yield Service(
                 check_plugin_name=autocheck_entry.check_plugin_name,
@@ -118,14 +115,11 @@ class AutochecksManager:
         # check parameters. The latter would involve ruleset matching which
         # in turn would require already computed labels.
         for autocheck_entry in self._read_raw_autochecks(hostname):
-            try:
-                hosts_labels[
-                    get_service_description(
-                        hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-                    )
-                ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
-            except Exception:
-                continue  # ignore
+            hosts_labels[
+                get_service_description(
+                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+                )
+            ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
 
         if (labels := hosts_labels.get(service_desc)) is not None:
             return labels
@@ -165,18 +159,12 @@ def parse_autocheck_service(
     autocheck_entry: AutocheckEntry,
     service_description: GetServiceDescription,
 ) -> Optional[AutocheckService]:
-
-    try:
-        description = service_description(
-            hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-        )
-    except Exception:
-        return None  # ignore
-
     return AutocheckService(
         check_plugin_name=autocheck_entry.check_plugin_name,
         item=autocheck_entry.item,
-        description=description,
+        description=service_description(
+            hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+        ),
         parameters=autocheck_entry.parameters,
         service_labels={n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()},
     )

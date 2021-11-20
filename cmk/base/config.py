@@ -1127,24 +1127,10 @@ def service_description(
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
         return "Unimplemented check %s" % check_plugin_name
 
-    descr_format, item = _get_service_description_template_and_item(plugin, item)
-
-    if item is None:
-        descr = descr_format
-    else:
-        try:
-            descr = descr_format % item
-        except TypeError:
-            descr = f"{descr_format} {item}"
-
-    if "%s" in descr:
-        raise MKGeneralException(
-            "Found '%%s' in service description (Host: %s, Check plugin: %s, Item: %s). "
-            "Please try to rediscover the service to fix this issue."
-            % (hostname, plugin.name, item)
-        )
-
-    return get_final_service_description(hostname, descr)
+    return get_final_service_description(
+        hostname,
+        _format_item_with_template(*_get_service_description_template_and_item(plugin, item)),
+    )
 
 
 def _get_service_description_template_and_item(plugin: CheckPlugin, item: Item) -> Tuple[str, Item]:
@@ -1164,6 +1150,23 @@ def _get_service_description_template_and_item(plugin: CheckPlugin, item: Item) 
 
     preserve_item, descr_format = old_descr(item)
     return descr_format, item if preserve_item else None
+
+
+def _format_item_with_template(template: str, item: Item):
+    """
+    >>> _format_item_with_template("Foo", None)
+    'Foo'
+    >>> _format_item_with_template("Foo %s", None)
+    'Foo <missing an item>'
+    >>> _format_item_with_template("Foo", "bar")
+    'Foo bar'
+    >>> _format_item_with_template("Foo %s", "bar")
+    'Foo bar'
+    """
+    try:
+        return template % (item or "<missing an item>")
+    except TypeError:
+        return f"{template} {item or ''}".strip()
 
 
 def _old_active_http_check_service_description(params: Union[Dict, Tuple]) -> str:

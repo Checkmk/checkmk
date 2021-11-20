@@ -1118,27 +1118,15 @@ def service_description(
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
         return "Unimplemented check %s" % check_plugin_name
 
-    plugin_name_str = str(plugin.name)
-    add_item = True
-    # use user-supplied service description, if available
-    descr_format: Optional[ServiceName] = service_descriptions.get(plugin_name_str)
-    if not descr_format:
-        old_descr = _old_service_descriptions.get(plugin_name_str)
-        # handle renaming for backward compatibility
-        if old_descr and plugin_name_str not in use_new_descriptions_for:
-            # Can be a function to generate the old description more flexible.
-            if callable(old_descr):
-                add_item, descr_format = old_descr(item)
-            else:
-                descr_format = old_descr
+    descr_format, item = _get_service_description_template_and_item(plugin, item)
 
-        else:
-            descr_format = plugin.service_name
-
-    if add_item and item is not None:
-        descr = descr_format % item if "%s" in descr_format else f"{descr_format} {item}"
-    else:
+    if item is None:
         descr = descr_format
+    else:
+        try:
+            descr = descr_format % item
+        except TypeError:
+            descr = f"{descr_format} {item}"
 
     if "%s" in descr:
         raise MKGeneralException(
@@ -1148,6 +1136,25 @@ def service_description(
         )
 
     return get_final_service_description(hostname, descr)
+
+
+def _get_service_description_template_and_item(plugin: CheckPlugin, item: Item) -> Tuple[str, Item]:
+    plugin_name_str = str(plugin.name)
+
+    # use user-supplied service description, if available
+    descr_format: Optional[ServiceName] = service_descriptions.get(plugin_name_str)
+    if descr_format:
+        return descr_format, item
+
+    old_descr = _old_service_descriptions.get(plugin_name_str)
+    if old_descr is None or plugin_name_str in use_new_descriptions_for:
+        return plugin.service_name, item
+
+    if isinstance(old_descr, str):
+        return old_descr, item
+
+    preserve_item, descr_format = old_descr(item)
+    return descr_format, item if preserve_item else None
 
 
 def _old_active_http_check_service_description(params: Union[Dict, Tuple]) -> str:

@@ -16395,8 +16395,16 @@ msgstr "Sicherungen verschlüsseln"
 msgid "Encrypt communication"
 msgstr "Kommunikation verschlüsseln"
 
+#, fuzzy
+msgid "Encrypt communication with TLS"
+msgstr "Kommunikation verschlüsseln"
+
 msgid "Encrypt data using TLS"
 msgstr "Daten mit TLS verschlüsseln"
+
+#, fuzzy
+msgid "Encrypt notification daemon communication"
+msgstr "Kommunikation verschlüsseln"
 
 msgid "Encrypt the backup using the key:"
 msgstr "Die Sicherung mit diesem Schlüssel verschlüsseln:"
@@ -16419,6 +16427,10 @@ msgstr "Verschlüsselung"
 #, fuzzy
 msgid "Encryption (Linux, Windows)"
 msgstr "Text-Logdateien (Linux, Windows)"
+
+#, python-format
+msgid "Encryption for %s is only used if it is enabled on the remote site"
+msgstr ""
 
 msgid "Encryption for Agent"
 msgstr "Verschlüsselung des Agenten"
@@ -24090,6 +24102,10 @@ msgstr "Eingehende Bandbreite Maximum"
 
 msgid "Incoming Traffic Minimum"
 msgstr "Eingehende Bandbreite Minimum"
+
+#, python-format
+msgid "Incoming connections on port %s communicate via plain text"
+msgstr ""
 
 msgid "Incoming messages"
 msgstr "Eingehende Nachrichten"
@@ -34418,6 +34434,14 @@ msgstr "Einfaches Text-E-Mail (verwendet eingerichtete Templates)"
 msgid "Plain text (Unencrypted)"
 msgstr "Klartext (unverschlüsselt)"
 
+#, fuzzy
+msgid "Plain text communication"
+msgstr "Kommunikation verschlüsseln"
+
+#, python-format
+msgid "Plain text communication is enabled for %s"
+msgstr ""
+
 msgid "Plaintext"
 msgstr "Klartext"
 
@@ -40766,6 +40790,15 @@ msgid ""
 "prefixed with X-Y where X is the device number and Y the index of the sensor."
 msgstr ""
 
+msgid ""
+"Since version 2.1 it is possible to encrypt the communication of the "
+"notification daemon with TLS. After an upgrade of an existing site incoming "
+"connections will still use plain text communication and outgoing connections "
+"will try to use TLS and fall back to plain text communication if the remote "
+"site does not support TLS. It is recommended to enforce TLS encryption as "
+"soon as all sites support it."
+msgstr ""
+
 msgid "Single"
 msgstr "Einzeln"
 
@@ -45815,6 +45848,11 @@ msgid ""
 msgstr ""
 "Der Ausdruck \"%s\" nutzt eine andere Konsolidierungsfunktion als der Graph "
 "(%s). Dies ist nicht erlaubt."
+
+msgid ""
+"The fall back option tries to establish an encrypted TLS connection. If the "
+"other site does not supports it, plain text is used."
+msgstr ""
 
 msgid ""
 "The fetcher usage is below 50%, you may decrease the number of fetchers to "
@@ -55156,6 +55194,9 @@ msgstr "STARTTLS für Verbindung verwenden."
 
 msgid "Use STS AssumeRole to assume a different IAM role"
 msgstr "Verwende STS AssumeRole um eine andere IAM Rolle zu übernehmen"
+
+msgid "Use TLS encryption fall back to plain text"
+msgstr ""
 
 msgid "Use TLS for IMAP authentification"
 msgstr "TLS für IMAP-Authentifikation verwenden"

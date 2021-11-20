@@ -16400,8 +16400,16 @@ msgstr "Crittografare i backup"
 msgid "Encrypt communication"
 msgstr "Crittografare la comunicazione"
 
+#, fuzzy
+msgid "Encrypt communication with TLS"
+msgstr "Crittografare la comunicazione"
+
 msgid "Encrypt data using TLS"
 msgstr "Crittografare i dati usando TLS"
+
+#, fuzzy
+msgid "Encrypt notification daemon communication"
+msgstr "Crittografare la comunicazione"
 
 msgid "Encrypt the backup using the key:"
 msgstr "Crittografa il backup usando la chiave:"
@@ -16423,6 +16431,10 @@ msgstr "Crittografia"
 
 msgid "Encryption (Linux, Windows)"
 msgstr "Crittografia (Linux, Windows)"
+
+#, python-format
+msgid "Encryption for %s is only used if it is enabled on the remote site"
+msgstr ""
 
 msgid "Encryption for Agent"
 msgstr "Crittografia per agente"
@@ -24097,6 +24109,10 @@ msgstr "Traffico in entrata Massimo"
 
 msgid "Incoming Traffic Minimum"
 msgstr "Traffico in entrata minimo"
+
+#, python-format
+msgid "Incoming connections on port %s communicate via plain text"
+msgstr ""
 
 msgid "Incoming messages"
 msgstr "Messaggi in arrivo"
@@ -34448,6 +34464,14 @@ msgstr "Email di testo semplice (usando modelli configurati)"
 msgid "Plain text (Unencrypted)"
 msgstr "Testo semplice (non criptato)"
 
+#, fuzzy
+msgid "Plain text communication"
+msgstr "Crittografare la comunicazione"
+
+#, python-format
+msgid "Plain text communication is enabled for %s"
+msgstr ""
+
 msgid "Plaintext"
 msgstr "Testo in chiaro"
 
@@ -40801,6 +40825,15 @@ msgstr ""
 "opzione, devi assicurarti che tutti i sensori abbiano una descrizione unica. "
 "Altrimenti due o più sensori possono avere un alias per lo stesso servizio."
 
+msgid ""
+"Since version 2.1 it is possible to encrypt the communication of the "
+"notification daemon with TLS. After an upgrade of an existing site incoming "
+"connections will still use plain text communication and outgoing connections "
+"will try to use TLS and fall back to plain text communication if the remote "
+"site does not support TLS. It is recommended to enforce TLS encryption as "
+"soon as all sites support it."
+msgstr ""
+
 msgid "Single"
 msgstr "Singolo"
 
@@ -45857,6 +45890,11 @@ msgid ""
 msgstr ""
 "L'espressione \"%s\" usa una funzione di consolidamento diversa dal grafico "
 "(%s). Questo non è permesso."
+
+msgid ""
+"The fall back option tries to establish an encrypted TLS connection. If the "
+"other site does not supports it, plain text is used."
+msgstr ""
 
 msgid ""
 "The fetcher usage is below 50%, you may decrease the number of fetchers to "
@@ -55244,6 +55282,9 @@ msgstr "Usa STARTTLS per la connessione."
 
 msgid "Use STS AssumeRole to assume a different IAM role"
 msgstr "Usare STS AssumeRole per assumere un ruolo IAM diverso"
+
+msgid "Use TLS encryption fall back to plain text"
+msgstr ""
 
 msgid "Use TLS for IMAP authentification"
 msgstr "Utilizzare TLS per l'autenticazione IMAP"

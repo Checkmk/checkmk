@@ -15828,8 +15828,16 @@ msgstr "暗号化されたバックアップ"
 msgid "Encrypt communication"
 msgstr "通信を暗号化する"
 
+#, fuzzy
+msgid "Encrypt communication with TLS"
+msgstr "通信を暗号化する"
+
 msgid "Encrypt data using TLS"
 msgstr "TLSを使用してデータを暗号化する"
+
+#, fuzzy
+msgid "Encrypt notification daemon communication"
+msgstr "通信を暗号化する"
 
 msgid "Encrypt the backup using the key:"
 msgstr "鍵を使ってバックアップを暗号化する。"
@@ -15849,6 +15857,10 @@ msgstr "暗号化"
 
 msgid "Encryption (Linux, Windows)"
 msgstr "暗号化(Linux、Windows)"
+
+#, python-format
+msgid "Encryption for %s is only used if it is enabled on the remote site"
+msgstr ""
 
 msgid "Encryption for Agent"
 msgstr "エージェントの暗号化"
@@ -23128,6 +23140,10 @@ msgstr "着信トラフィックの最大値"
 
 msgid "Incoming Traffic Minimum"
 msgstr "着信トラフィックの最小"
+
+#, python-format
+msgid "Incoming connections on port %s communicate via plain text"
+msgstr ""
 
 msgid "Incoming messages"
 msgstr "着信メッセージ"
@@ -33192,6 +33208,14 @@ msgstr ""
 msgid "Plain text (Unencrypted)"
 msgstr "プレーンテキスト(暗号化されていない)"
 
+#, fuzzy
+msgid "Plain text communication"
+msgstr "通信を暗号化する"
+
+#, python-format
+msgid "Plain text communication is enabled for %s"
+msgstr ""
+
 msgid "Plaintext"
 msgstr "プレーンテキスト"
 
@@ -39326,6 +39350,15 @@ msgid ""
 "prefixed with X-Y where X is the device number and Y the index of the sensor."
 msgstr ""
 
+msgid ""
+"Since version 2.1 it is possible to encrypt the communication of the "
+"notification daemon with TLS. After an upgrade of an existing site incoming "
+"connections will still use plain text communication and outgoing connections "
+"will try to use TLS and fall back to plain text communication if the remote "
+"site does not support TLS. It is recommended to enforce TLS encryption as "
+"soon as all sites support it."
+msgstr ""
+
 msgid "Single"
 msgstr "シングル"
 
@@ -44077,6 +44110,11 @@ msgstr "クラスター内の予想されるリソース数"
 msgid ""
 "The expression \"%s\" uses a different consolidation function as the graph "
 "(%s). This is not allowed."
+msgstr ""
+
+msgid ""
+"The fall back option tries to establish an encrypted TLS connection. If the "
+"other site does not supports it, plain text is used."
 msgstr ""
 
 msgid ""
@@ -52688,6 +52726,9 @@ msgstr "接続にはSTARTTLSを使用します。"
 
 msgid "Use STS AssumeRole to assume a different IAM role"
 msgstr "STS AssumeRoleを使用して、別のIAMロールを引き受けます。"
+
+msgid "Use TLS encryption fall back to plain text"
+msgstr ""
 
 msgid "Use TLS for IMAP authentification"
 msgstr "IMAP認証にTLSを使用する"

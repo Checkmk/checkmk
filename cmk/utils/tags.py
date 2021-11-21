@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
-import abc
 import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
@@ -33,25 +32,33 @@ def _validate_tag_id(tag_id):
         )
 
 
-class ABCTag(abc.ABC):
-    def __init__(self):
-        super().__init__()
-        # TODO: See below, this was self._initialize()
+class AuxTag:
+    def __init__(self, data=None):
         # NOTE: All the Optionals below are probably just plain wrong and just
         # an artifact of our broken 2-stage initialization.
         self.id: Optional[str] = None
         self.title: Optional[str] = None
         self.topic: Optional[str] = None
+        if data:
+            self.parse_config(data)
 
-    # TODO: We *really* have to nuke these _initialize methods everywhere, they
-    # either effectively blocking sane typing or lead to code duplication. The
-    # solution is actually quite easy and standard: The parse_config method
-    # should *not* be an instance method at all, it should just be a factory
-    # method/function.
-    def _initialize(self):
-        self.id = None
-        self.title = None
-        self.topic = None
+    def parse_config(self, tag_info):
+        self.id = tag_info["id"]
+        self.title = tag_info["title"]
+        if "topic" in tag_info:
+            self.topic = tag_info["topic"]
+
+    def get_dict_format(self):
+        response = {"id": self.id, "title": self.title}
+        if self.topic:
+            response["topic"] = self.topic
+        return response
+
+    @property
+    def choice_title(self):
+        if self.topic:
+            return "%s / %s" % (self.topic, self.title)
+        return self.title
 
     def validate(self):
         if not self.id:
@@ -61,39 +68,6 @@ class ABCTag(abc.ABC):
 
         if not self.title:
             raise MKGeneralException(_("Please supply a title for you auxiliary tag."))
-
-    def parse_config(self, data):
-        self._initialize()
-        assert isinstance(data, dict)
-        self._parse_from_dict(data)
-
-    def _parse_from_dict(self, tag_info):
-        self.id = tag_info["id"]
-        self.title = tag_info["title"]
-
-    @property
-    def choice_title(self):
-        if self.topic:
-            return "%s / %s" % (self.topic, self.title)
-        return self.title
-
-
-class AuxTag(ABCTag):
-    def __init__(self, data=None):
-        super().__init__()
-        if data:
-            self.parse_config(data)
-
-    def _parse_from_dict(self, tag_info):
-        super()._parse_from_dict(tag_info)
-        if "topic" in tag_info:
-            self.topic = tag_info["topic"]
-
-    def get_dict_format(self):
-        response = {"id": self.id, "title": self.title}
-        if self.topic:
-            response["topic"] = self.topic
-        return response
 
 
 class AuxTagList:
@@ -175,20 +149,35 @@ class AuxTagList:
         return [(aux_tag.id, aux_tag.title) for aux_tag in self._tags]
 
 
-class GroupedTag(ABCTag):
+class GroupedTag:
     def __init__(self, group, data=None):
         super().__init__()
         self.id: Optional[str]
+        self.title: Optional[str] = None
         self.group = group
         self.aux_tag_ids = []
         self.parse_config(data)
 
-    def _parse_from_dict(self, tag_info):
-        super()._parse_from_dict(tag_info)
+    def parse_config(self, tag_info):
+        self.id = tag_info["id"]
+        self.title = tag_info["title"]
         self.aux_tag_ids = tag_info["aux_tags"]
 
     def get_dict_format(self):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
+
+    @property
+    def choice_title(self):
+        return self.title
+
+    def validate(self):
+        if not self.id:
+            raise MKGeneralException(_("Please specify a tag ID"))
+
+        _validate_tag_id(self.id)
+
+        if not self.title:
+            raise MKGeneralException(_("Please supply a title for you auxiliary tag."))
 
 
 class TagGroup:

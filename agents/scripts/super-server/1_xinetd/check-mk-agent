@@ -42,3 +42,4 @@ service check-mk-agent
 
     disable        = no
 }
+    only_from      = 127.0.0.1

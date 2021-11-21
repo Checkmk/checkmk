@@ -26,12 +26,6 @@ def get_effective_tag_config(tag_config: Dict) -> "TagConfig":
     return tags
 
 
-def _parse_legacy_title(title):
-    if "/" in title:
-        return title.split("/", 1)
-    return None, title
-
-
 def _validate_tag_id(tag_id):
     if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
         raise MKGeneralException(
@@ -70,17 +64,12 @@ class ABCTag(abc.ABC):
 
     def parse_config(self, data):
         self._initialize()
-        if isinstance(data, dict):
-            self._parse_from_dict(data)
-        else:
-            self._parse_legacy_format(data)
+        assert isinstance(data, dict)
+        self._parse_from_dict(data)
 
     def _parse_from_dict(self, tag_info):
         self.id = tag_info["id"]
         self.title = tag_info["title"]
-
-    def _parse_legacy_format(self, tag_info):
-        self.id, self.title = tag_info[:2]
 
     @property
     def choice_title(self):
@@ -99,10 +88,6 @@ class AuxTag(ABCTag):
         super()._parse_from_dict(tag_info)
         if "topic" in tag_info:
             self.topic = tag_info["topic"]
-
-    def _parse_legacy_format(self, tag_info):
-        super()._parse_legacy_format(tag_info)
-        self.topic, self.title = _parse_legacy_title(self.title)
 
     def get_dict_format(self):
         response = {"id": self.id, "title": self.title}
@@ -202,12 +187,6 @@ class GroupedTag(ABCTag):
         super()._parse_from_dict(tag_info)
         self.aux_tag_ids = tag_info["aux_tags"]
 
-    def _parse_legacy_format(self, tag_info):
-        super()._parse_legacy_format(tag_info)
-
-        if len(tag_info) == 3:
-            self.aux_tag_ids = tag_info[2]
-
     def get_dict_format(self):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
 
@@ -223,10 +202,8 @@ class TagGroup:
         self._initialize()
 
         if data:
-            if isinstance(data, dict):
-                self._parse_from_dict(data)
-            else:  # legacy tuple
-                self._parse_legacy_format(data)
+            assert isinstance(data, dict)
+            self._parse_from_dict(data)
 
     def _initialize(self):
         self.id = None
@@ -242,16 +219,6 @@ class TagGroup:
         self.topic = group_info.get("topic")
         self.help = group_info.get("help")
         self.tags = [GroupedTag(self, tag) for tag in group_info["tags"]]
-
-    def _parse_legacy_format(self, group_info):
-        self._initialize()
-        group_id, group_title, tag_list = group_info[:3]
-
-        self.id = group_id
-        self.topic, self.title = _parse_legacy_title(group_title)
-
-        for tag in tag_list:
-            self.tags.append(GroupedTag(self, tag))
 
     @property
     def choice_title(self):
@@ -434,23 +401,14 @@ class TagConfig:
 
     def parse_config(self, data):
         self._initialize()
-        if isinstance(data, dict):
-            self._parse_from_dict(data)
-        else:
-            self._parse_legacy_format(data[0], data[1])
+        assert isinstance(data, dict)
+        self._parse_from_dict(data)
 
     def _parse_from_dict(self, tag_info):  # new style
         for tag_group in tag_info["tag_groups"]:
             self.tag_groups.append(TagGroup(tag_group))
         for aux_tag in tag_info["aux_tags"]:
             self.aux_tag_list.append(AuxTag(aux_tag))
-
-    def _parse_legacy_format(self, taggroup_info, auxtags_info):  # legacy style
-        for tag_group_tuple in taggroup_info:
-            self.tag_groups.append(TagGroup(tag_group_tuple))
-
-        for aux_tag_tuple in auxtags_info:
-            self.aux_tag_list.append(AuxTag(aux_tag_tuple))
 
     # TODO: Change API to use __add__/__setitem__?
     def insert_tag_group(self, tag_group):

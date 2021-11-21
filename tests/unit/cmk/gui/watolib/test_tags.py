@@ -97,7 +97,16 @@ def test_tag_config_save(mocker):
     base_config_mock = mocker.patch.object(config_file, "_save_base_config")
 
     cfg = tags.TagConfig()
-    cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.insert_tag_group(
+        tags.TagGroup(
+            {
+                "id": "tgid2",
+                "topic": "Topics",
+                "title": "titlor",
+                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+            }
+        )
+    )
     config_file.save(cfg.get_dict_format())
 
     export_mock.assert_called_once()

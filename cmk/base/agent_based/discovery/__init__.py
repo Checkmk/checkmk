@@ -36,7 +36,6 @@ from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
-from cmk.utils.object_diff import make_object_diff
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -354,15 +353,9 @@ def automation_discovery(
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)
 
-        if mode is DiscoveryMode.ONLY_HOST_LABELS:
-            # This is the result of a refactoring, and the following code was added
-            # to ensure a compatible behaviour. I don't think it is particularly
-            # sensible. We used to only compare service descriptions of old and new
-            # services, so `make_object_diff` was always comparing two identical objects
-            # if the mode was DiscoveryMode.ONLY_HOST_LABEL.
-            # We brainlessly mimic that behaviour, for now.
-            result.diff_text = make_object_diff(set(), set())
-            return result
+            if mode is DiscoveryMode.ONLY_HOST_LABELS:
+                result.diff_text = _make_diff(host_labels.vanished, host_labels.new, (), ())
+                return result
 
         # Compute current state of new and existing checks
         services = _get_host_services(
@@ -372,7 +365,7 @@ def automation_discovery(
             on_error=on_error,
         )
 
-        old_services = services.get("old", [])
+        old_services = {x.service.id(): x for x in services.get("old", [])}
 
         # Create new list of checks
         final_services = _get_post_discovery_autocheck_services(
@@ -380,12 +373,11 @@ def automation_discovery(
         )
         host_config.set_autochecks(list(final_services.values()))
 
-        # If old_services == new_services, make_object_diff will return
-        # something along the lines of "nothing changed".
-        # I guess this was written before discovered host labels were invented.
-        result.diff_text = make_object_diff(
-            {x.service.description for x in old_services},
-            {x.service.description for x in final_services.values()},
+        result.diff_text = _make_diff(
+            host_labels.vanished,
+            host_labels.new,
+            (x.service for x in old_services.values() if x.service.id() not in final_services),
+            (x.service for x in final_services.values() if x.service.id() not in old_services),
         )
 
     except MKTimeout:
@@ -491,6 +483,44 @@ def _get_post_discovery_autocheck_services(
         for service_id, (service, nodes) in post_discovery_services.items()
         if isinstance(service, AutocheckService)
     }
+
+
+def _make_diff(
+    labels_vanished: Iterable[HostLabel],
+    labels_new: Iterable[HostLabel],
+    services_vanished: Iterable[Service],
+    services_new: Iterable[Service],
+) -> str:
+    """Textual representation of what changed
+
+    This is very similar to `cmk.utils.object_diff.make_object_diff`, but the rendering is easier to
+    read (since we have objects of different type), and we already know the new/removed items.
+    """
+    return (
+        "\n".join(
+            [
+                *(f"Removed host label: '{l.label}'." for l in labels_vanished),
+                *(f"Added host label: '{l.label}'." for l in labels_new),
+                *(
+                    (
+                        f"Removed service: Check plugin '{s.check_plugin_name}'."
+                        if s.item is None
+                        else f"Removed service: Check plugin '{s.check_plugin_name}' / item '{s.item}'."
+                    )
+                    for s in services_vanished
+                ),
+                *(
+                    (
+                        f"Added service: Check plugin '{s.check_plugin_name}'."
+                        if s.item is None
+                        else f"Added service: Check plugin '{s.check_plugin_name}' / item '{s.item}'."
+                    )
+                    for s in services_new
+                ),
+            ]
+        )
+        or "Nothing was changed."
+    )
 
 
 # .

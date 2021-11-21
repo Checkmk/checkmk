@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Literal, Mapping, NamedTuple, Sequence, Set, Tuple, Union
+from typing import Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -1665,3 +1665,26 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         )
         for discovery_status, service in services.items()
     }
+
+
+def test_make_discovery_diff_empty():
+    assert discovery._make_diff((), (), (), ()) == "Nothing was changed."
+
+
+class _MockService(NamedTuple):
+    check_plugin_name: CheckPluginName
+    item: Optional[str]
+
+
+def test_make_discovery_diff():
+    assert discovery._make_diff(
+        (HostLabel("foo", "bar"),),
+        (HostLabel("gee", "boo"),),
+        (_MockService(CheckPluginName("norris"), "chuck"),),  # type: ignore[arg-type]
+        (_MockService(CheckPluginName("chan"), None),),  # type: ignore[arg-type]
+    ) == (
+        "Removed host label: 'foo:bar'.\n"
+        "Added host label: 'gee:boo'.\n"
+        "Removed service: Check plugin 'norris' / item 'chuck'.\n"
+        "Added service: Check plugin 'chan'."
+    )

@@ -13,3 +13,4 @@ MaxConnectionsPerSource=3
 
 [Install]
 WantedBy=sockets.target
+IPAddressDeny=0.0.0.0/0 ::/0

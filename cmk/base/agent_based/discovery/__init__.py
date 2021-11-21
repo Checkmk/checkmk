@@ -375,17 +375,17 @@ def automation_discovery(
         old_services = services.get("old", [])
 
         # Create new list of checks
-        new_services = _get_post_discovery_autocheck_services(
+        final_services = _get_post_discovery_autocheck_services(
             host_name, services, service_filters or _ServiceFilters.accept_all(), result, mode
         )
-        host_config.set_autochecks(new_services)
+        host_config.set_autochecks(list(final_services.values()))
 
         # If old_services == new_services, make_object_diff will return
         # something along the lines of "nothing changed".
         # I guess this was written before discovered host labels were invented.
         result.diff_text = make_object_diff(
             {x.service.description for x in old_services},
-            {x.service.description for x in new_services},
+            {x.service.description for x in final_services.values()},
         )
 
     except MKTimeout:
@@ -406,7 +406,7 @@ def _get_post_discovery_autocheck_services(
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
     mode: DiscoveryMode,
-) -> List[autochecks.AutocheckServiceWithNodes]:
+) -> Mapping[ServiceID, autochecks.AutocheckServiceWithNodes]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
@@ -418,7 +418,7 @@ def _get_post_discovery_autocheck_services(
         Discovered checks that are shadowed by manual checks will vanish that way.
 
     """
-    post_discovery_services = []
+    post_discovery_services = {}
     for check_source, discovered_services_with_nodes in services.items():
         if check_source == "manual":
             # This is not an autocheck or ignored and currently not
@@ -428,22 +428,24 @@ def _get_post_discovery_autocheck_services(
 
         if check_source == "new":
             if mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH):
-                new = [
-                    s
+                new = {
+                    s.service.id(): s
                     for s in discovered_services_with_nodes
                     if service_filters.new(
                         config.service_description(
                             host_name, s.service.check_plugin_name, s.service.item
                         )
                     )
-                ]
+                }
                 result.self_new += len(new)
-                post_discovery_services.extend(new)
+                post_discovery_services.update(new)
             continue
 
         if check_source in ("old", "ignored"):
             # keep currently existing valid services in any case
-            post_discovery_services.extend(discovered_services_with_nodes)
+            post_discovery_services.update(
+                (s.service.id(), s) for s in discovered_services_with_nodes
+            )
             result.self_kept += len(discovered_services_with_nodes)
             continue
 
@@ -461,13 +463,15 @@ def _get_post_discovery_autocheck_services(
                 ):
                     result.self_removed += 1
                 else:
-                    post_discovery_services.append(entry)
+                    post_discovery_services[entry.service.id()] = entry
                     result.self_kept += 1
             continue
 
         if check_source.startswith("clustered_"):
             # Silently keep clustered services
-            post_discovery_services.extend(discovered_services_with_nodes)
+            post_discovery_services.update(
+                (s.service.id(), s) for s in discovered_services_with_nodes
+            )
             setattr(
                 result,
                 check_source,
@@ -482,11 +486,11 @@ def _get_post_discovery_autocheck_services(
     # these are only autochecks (and, in fact we skipped active and manual
     # checks in the loop above.
     # Currently it is not feasable to teach mypy about that.
-    return [
-        autochecks.AutocheckServiceWithNodes(service, nodes)
-        for service, nodes in post_discovery_services
+    return {
+        service_id: autochecks.AutocheckServiceWithNodes(service, nodes)
+        for service_id, (service, nodes) in post_discovery_services.items()
         if isinstance(service, AutocheckService)
-    ]
+    }
 
 
 # .

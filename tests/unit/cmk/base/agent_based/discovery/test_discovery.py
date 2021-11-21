@@ -414,7 +414,7 @@ def test__get_post_discovery_services(
             service_filters,
             result,
             mode,
-        )
+        ).values()
     ]
 
     count_new, count_kept, count_removed = result_counts

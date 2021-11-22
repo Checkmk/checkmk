@@ -640,7 +640,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         super().__init__()
 
         if self._new:
-            self._aux_tag = cmk.utils.tags.AuxTag()
+            self._aux_tag = cmk.utils.tags.AuxTag(tag_id="", title="", topic=None)
         else:
             self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
 
@@ -668,7 +668,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         aux_tag_spec = vs.from_html_vars("aux_tag")
         vs.validate_value(aux_tag_spec, "aux_tag")
 
-        self._aux_tag = cmk.utils.tags.AuxTag(aux_tag_spec)
+        self._aux_tag = cmk.utils.tags.AuxTag.from_config(aux_tag_spec)
         self._aux_tag.validate()
 
         changed_hosttags_config = cmk.utils.tags.TagConfig()

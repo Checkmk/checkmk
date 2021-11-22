@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
+from __future__ import annotations
+
 import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
@@ -13,7 +15,7 @@ from cmk.utils.i18n import _
 from cmk.utils.type_defs import TaggroupID, TaggroupIDToTagID, TagID
 
 
-def get_effective_tag_config(tag_config: Dict) -> "TagConfig":
+def get_effective_tag_config(tag_config: Dict) -> TagConfig:
     # We don't want to access the plain config data structure during GUI code processing
     tags = TagConfig()
     tags.parse_config(tag_config)
@@ -33,21 +35,20 @@ def _validate_tag_id(tag_id):
 
 
 class AuxTag:
-    def __init__(self, data=None):
-        # NOTE: All the Optionals below are probably just plain wrong and just
-        # an artifact of our broken 2-stage initialization.
-        self.id: Optional[str] = None
-        self.title: Optional[str] = None
-        self.topic: Optional[str] = None
-        if data:
-            self.parse_config(data)
+    @classmethod
+    def from_config(cls, tag_info) -> AuxTag:
+        return AuxTag(
+            tag_id=tag_info["id"],
+            title=tag_info["title"],
+            topic=tag_info.get("topic"),
+        )
 
-    def parse_config(self, tag_info):
-        self.id = tag_info["id"]
-        self.title = tag_info["title"]
-        if "topic" in tag_info:
-            self.topic = tag_info["topic"]
+    def __init__(self, tag_id: TagID, title: str, topic: Optional[str]) -> None:
+        self.id = tag_id
+        self.title = title
+        self.topic = topic
 
+    # TODO: Rename to "to_config"
     def get_dict_format(self):
         response = {"id": self.id, "title": self.title}
         if self.topic:
@@ -150,19 +151,22 @@ class AuxTagList:
 
 
 class GroupedTag:
-    def __init__(self, group, data=None):
-        super().__init__()
-        self.id: Optional[str]
-        self.title: Optional[str] = None
+    @classmethod
+    def from_config(cls, group: TagGroup, tag_info) -> GroupedTag:
+        return GroupedTag(
+            group,
+            tag_id=tag_info["id"],
+            title=tag_info["title"],
+            aux_tag_ids=tag_info["aux_tags"],
+        )
+
+    def __init__(self, group, tag_id: TagID, title: str, aux_tag_ids):
+        self.id = tag_id
+        self.title = title
         self.group = group
-        self.aux_tag_ids = []
-        self.parse_config(data)
+        self.aux_tag_ids = aux_tag_ids
 
-    def parse_config(self, tag_info):
-        self.id = tag_info["id"]
-        self.title = tag_info["title"]
-        self.aux_tag_ids = tag_info["aux_tags"]
-
+    # TODO: Rename to "to_config"
     def get_dict_format(self):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
 
@@ -207,7 +211,7 @@ class TagGroup:
         self.title = group_info["title"]
         self.topic = group_info.get("topic")
         self.help = group_info.get("help")
-        self.tags = [GroupedTag(self, tag) for tag in group_info["tags"]]
+        self.tags = [GroupedTag.from_config(self, tag) for tag in group_info["tags"]]
 
     @property
     def choice_title(self):
@@ -397,7 +401,7 @@ class TagConfig:
         for tag_group in tag_info["tag_groups"]:
             self.tag_groups.append(TagGroup(tag_group))
         for aux_tag in tag_info["aux_tags"]:
-            self.aux_tag_list.append(AuxTag(aux_tag))
+            self.aux_tag_list.append(AuxTag.from_config(aux_tag))
 
     # TODO: Change API to use __add__/__setitem__?
     def insert_tag_group(self, tag_group):

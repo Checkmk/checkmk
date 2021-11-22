@@ -98,8 +98,8 @@ def test_iadd_tag_config(test_cfg: tags.TagConfig) -> None:
             }
         )
     )
-    cfg2.aux_tag_list.append(tags.AuxTag({"id": "blub", "title": "BLUB"}))
-    cfg2.aux_tag_list.append(tags.AuxTag({"id": "bla", "title": "BLUB"}))
+    cfg2.aux_tag_list.append(tags.AuxTag.from_config({"id": "blub", "title": "BLUB"}))
+    cfg2.aux_tag_list.append(tags.AuxTag.from_config({"id": "bla", "title": "BLUB"}))
 
     test_cfg += cfg2
 
@@ -348,7 +348,7 @@ def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg: tags.TagConfig)
 
 
 def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: tags.TagConfig) -> None:
-    cfg.aux_tag_list.append(tags.AuxTag({"id": "bla", "title": "BLAAAA"}))
+    cfg.aux_tag_list.append(tags.AuxTag.from_config({"id": "bla", "title": "BLAAAA"}))
     tg = tags.TagGroup(
         {
             "id": "tgid6",

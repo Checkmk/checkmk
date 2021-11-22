@@ -21,7 +21,7 @@ def check_k8s_node_kubelet(section: KubeletInfo) -> CheckResult:
     yield Result(state=State.OK, summary=f"Version {section.version}")
     yield Result(
         state=State.OK if section.health.status_code == 200 else State.CRIT,
-        summary=f"Health check response is {section.health.response}",
+        summary="Health check response is %s" % section.health.response.replace("\n", ""),
         details=section.health.verbose_response,
     )
 

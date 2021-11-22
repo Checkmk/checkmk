@@ -3,10 +3,10 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::certs;
+use anyhow::{anyhow, Result as AnyhowResult};
 use http::StatusCode;
 use reqwest;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 
 #[derive(Deserialize)]
 struct JSONResponse {
@@ -34,7 +34,7 @@ pub fn pairing(
     root_cert: &str,
     csr: String,
     credentials: &str,
-) -> Result<String, Box<dyn Error>> {
+) -> AnyhowResult<String> {
     Ok(certs::client(Some(String::from(root_cert).into_bytes()))?
         .post(format!("https://{}/pairing", server_address))
         .header("authentication", format!("Bearer {}", credentials))
@@ -50,7 +50,7 @@ pub fn register_with_hostname(
     credentials: &str,
     uuid: &str,
     host_name: &str,
-) -> Result<(), Box<dyn Error>> {
+) -> AnyhowResult<()> {
     let response = certs::client(Some(String::from(root_cert).into_bytes()))?
         .post(format!("https://{}/register_with_hostname", server_address))
         .header("authentication", format!("Bearer {}", credentials))
@@ -61,7 +61,7 @@ pub fn register_with_hostname(
         .send()?;
     match response.status() {
         StatusCode::NO_CONTENT => Ok(()),
-        _ => Err(response.text()?)?,
+        _ => Err(anyhow!("{}", response.text()?)),
     }
 }
 
@@ -76,7 +76,7 @@ pub fn agent_data(
     agent_receiver_address: &str,
     uuid: &str,
     monitoring_data: &Vec<u8>,
-) -> Result<String, Box<dyn Error>> {
+) -> AnyhowResult<String> {
     // TODO:
     // - Send client cert in header
     // - Use root cert

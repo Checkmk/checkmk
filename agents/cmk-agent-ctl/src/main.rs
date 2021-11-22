@@ -8,9 +8,8 @@ mod cli;
 mod config;
 mod monitoring_data;
 mod tls_server;
+use anyhow::{anyhow, Context, Result as AnyhowResult};
 use config::RegistrationState;
-use core::panic;
-use std::error::Error;
 use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
@@ -29,49 +28,42 @@ const STATE_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl-state.json";
 const LOG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl.log";
 const TLS_ID: &[u8] = b"16";
 
-fn register(config: config::Config, mut reg_state: RegistrationState, path_state_out: &Path) {
+fn register(
+    config: config::Config,
+    mut reg_state: RegistrationState,
+    path_state_out: &Path,
+) -> AnyhowResult<()> {
     let agent_receiver_address = config
         .agent_receiver_address
-        .expect("Server addresses not specified.");
+        .context("Server addresses not specified.")?;
     let credentials = config
         .credentials
-        .expect("Missing credentials for registration.");
+        .context("Missing credentials for registration.")?;
     let host_name = config
         .host_name
-        .expect("Missing host name for registration");
+        .context("Missing host name for registration")?;
 
     let uuid = Uuid::new_v4().to_string();
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let root_cert = match &config.root_certificate {
         Some(cert) => cert.clone(),
-        None => match certs::fetch_root_cert(&agent_receiver_address) {
-            Ok(cert) => cert,
-            Err(error) => panic!("Error establishing trust with agent_receiver: {}", error),
-        },
+        None => certs::fetch_root_cert(&agent_receiver_address)
+            .context(format!("Error establishing trust with agent_receiver."))?,
     };
 
-    let (csr, private_key) = match certs::make_csr(&uuid) {
-        Ok(data) => data,
-        Err(error) => panic!("Error creating CSR: {}", error),
-    };
+    let (csr, private_key) = certs::make_csr(&uuid).context(format!("Error creating CSR."))?;
     let certificate =
-        match agent_receiver_api::pairing(&agent_receiver_address, &root_cert, csr, &credentials) {
-            Ok(cert) => cert,
-            Err(error) => panic!("Error pairing with {}: {}", &agent_receiver_address, error),
-        };
+        agent_receiver_api::pairing(&agent_receiver_address, &root_cert, csr, &credentials)
+            .context(format!("Error pairing with {}", &agent_receiver_address))?;
 
-    if let Err(error) = agent_receiver_api::register_with_hostname(
+    agent_receiver_api::register_with_hostname(
         &agent_receiver_address,
         &root_cert,
         &credentials,
         &uuid,
         &host_name,
-    ) {
-        panic!(
-            "Error registering at {}: {}",
-            &agent_receiver_address, error
-        )
-    }
+    )
+    .context(format!("Error registering {}", &agent_receiver_address))?;
 
     reg_state.server_specs.insert(
         agent_receiver_address,
@@ -84,58 +76,53 @@ fn register(config: config::Config, mut reg_state: RegistrationState, path_state
     );
 
     reg_state.to_file(path_state_out).unwrap();
+    Ok(())
 }
 
-fn push(config: config::Config, reg_state: config::RegistrationState) {
-    match monitoring_data::collect(config.package_name) {
-        Ok(mon_data) => {
-            for (agent_receiver_address, server_spec) in reg_state.server_specs.iter() {
-                match agent_receiver_api::agent_data(
-                    agent_receiver_address,
-                    &server_spec.uuid,
-                    &mon_data,
-                ) {
-                    Ok(message) => println!("{}", message),
-                    Err(error) => panic!("Error pushing monitoring data: {}", error),
-                };
-            }
-        }
-        Err(error) => panic!("Error collecting monitoring data: {}", error),
+fn push(config: config::Config, reg_state: config::RegistrationState) -> AnyhowResult<()> {
+    let mon_data = monitoring_data::collect(config.package_name)
+        .context("Error collecting monitoring data")?;
+
+    for (agent_receiver_address, server_spec) in reg_state.server_specs.iter() {
+        let message =
+            agent_receiver_api::agent_data(agent_receiver_address, &server_spec.uuid, &mon_data)
+                .context(format!("Error pushing monitoring data."))?;
+        println!("{}", message);
     }
+
+    Ok(())
 }
 
-fn dump(config: config::Config) {
-    match monitoring_data::collect(config.package_name) {
-        Ok(mon_data) => match io::stdout().write_all(&mon_data) {
-            Err(error) => panic!("Error writing monitoring data to stdout: {}", error),
-            _ => {}
-        },
-        Err(error) => panic!("Error collecting monitoring data: {}", error),
-    }
+fn dump(config: config::Config) -> AnyhowResult<()> {
+    let mon_data = monitoring_data::collect(config.package_name)
+        .context("Error collecting monitoring data.")?;
+    io::stdout()
+        .write_all(&mon_data)
+        .context("Error writing monitoring data to stdout.")?;
+
+    Ok(())
 }
 
-fn status(_config: config::Config) {
-    panic!("Status mode not yet implemented")
+fn status(_config: config::Config) -> AnyhowResult<()> {
+    Err(anyhow!("Status mode not yet implemented"))
 }
 
-fn pull(config: config::Config, reg_state: config::RegistrationState) {
+fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowResult<()> {
     let mut stream = tls_server::IoStream::new();
 
     stream.write(TLS_ID).unwrap();
     stream.flush().unwrap();
 
-    let mut tls_connection = match tls_server::tls_connection(reg_state) {
-        Ok(conn) => conn,
-        Err(error) => panic!("Could not initialize TLS: {}", error),
-    };
+    let mut tls_connection =
+        tls_server::tls_connection(reg_state).context("Could not initialize TLS.")?;
     let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
 
-    let mon_data = match monitoring_data::collect(config.package_name) {
-        Ok(mon_data) => mon_data,
-        Err(error) => panic!("Error collecting monitoring data: {}", error),
-    };
+    let mon_data = monitoring_data::collect(config.package_name)
+        .context("Error collecting monitoring data.")?;
     tls_stream.write_all(&mon_data).unwrap();
     tls_stream.flush().unwrap();
+
+    Ok(())
 }
 
 fn get_configuration(path_config: &Path, args: cli::Args) -> io::Result<config::Config> {
@@ -149,7 +136,7 @@ fn get_reg_state(path: &Path) -> io::Result<config::RegistrationState> {
     return Ok(config::RegistrationState::from_file(path)?);
 }
 
-fn init_logging(path: &Path) -> Result<(), Box<dyn Error>> {
+fn init_logging(path: &Path) -> AnyhowResult<()> {
     let logfile = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
         .build(path)?;
@@ -162,23 +149,21 @@ fn init_logging(path: &Path) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-fn main() {
-    init_logging(Path::new(LOG_PATH)).unwrap();
+fn main() -> AnyhowResult<()> {
+    if let Err(error) = init_logging(Path::new(LOG_PATH)).context("Failed to initialize logging") {
+        println!("Error: {:?}", error)
+    };
+
     info!("Starting cmk-agent-ctl");
 
     let path_state_file = Path::new(STATE_PATH);
     let args = cli::Args::from_args();
     let mode = String::from(&args.mode);
 
-    let config = match get_configuration(Path::new(CONFIG_PATH), args) {
-        Ok(cfg) => cfg,
-        Err(error) => panic!("Error while obtaining configuration: {}", error),
-    };
-
-    let reg_state = match get_reg_state(&path_state_file) {
-        Ok(cfg) => cfg,
-        Err(error) => panic!("Error while obtaining configuration: {}", error),
-    };
+    let config = get_configuration(Path::new(CONFIG_PATH), args)
+        .context("Error while obtaining configuration.")?;
+    let reg_state =
+        get_reg_state(&path_state_file).context("Error while obtaining registration state.")?;
 
     match mode.as_str() {
         "dump" => dump(config),
@@ -186,8 +171,6 @@ fn main() {
         "push" => push(config, reg_state),
         "status" => status(config),
         "pull" => pull(config, reg_state),
-        _ => {
-            panic!("Invalid mode: {}", mode)
-        }
+        _ => Err(anyhow!("Invalid mode: {}", mode)),
     }
 }

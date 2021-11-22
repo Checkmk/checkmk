@@ -1,3 +1,4 @@
+use anyhow::Result as AnyhowResult;
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
@@ -7,10 +8,9 @@ use openssl::x509::{X509Name, X509Req};
 use reqwest;
 use reqwest::blocking::{Client, ClientBuilder};
 use reqwest::Certificate;
-use std::error::Error;
 use std::net::TcpStream;
 
-pub fn make_csr(cn: &str) -> Result<(String, String), Box<dyn Error>> {
+pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     // https://github.com/sfackler/rust-openssl/blob/master/openssl/examples/mk_certs.rs
     let rsa = Rsa::generate(2048)?;
     let key_pair = PKey::from_rsa(rsa)?;
@@ -31,7 +31,7 @@ pub fn make_csr(cn: &str) -> Result<(String, String), Box<dyn Error>> {
     ))
 }
 
-pub fn client(root_cert: Option<Vec<u8>>) -> Result<Client, Box<dyn Error>> {
+pub fn client(root_cert: Option<Vec<u8>>) -> AnyhowResult<Client> {
     let client_builder = ClientBuilder::new();
 
     let client_builder = if let Some(cert) = root_cert {
@@ -45,7 +45,7 @@ pub fn client(root_cert: Option<Vec<u8>>) -> Result<Client, Box<dyn Error>> {
         .build()?)
 }
 
-pub fn fetch_root_cert(address: &str) -> Result<String, Box<dyn Error>> {
+pub fn fetch_root_cert(address: &str) -> AnyhowResult<String> {
     let tcp_stream = TcpStream::connect(address).unwrap();
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);

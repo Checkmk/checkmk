@@ -21,3 +21,4 @@ rustls-pemfile = { version = "*" }
 log4rs = { version = "*" }
 log = { version = "*" }
 http = { version = "*" }
+anyhow = { version = "1.0", features = ["backtrace"]}

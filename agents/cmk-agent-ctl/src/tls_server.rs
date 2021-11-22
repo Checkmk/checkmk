@@ -1,4 +1,5 @@
 use super::config;
+use anyhow::{anyhow, Result as AnyhowResult};
 use rustls::RootCertStore;
 use rustls::{
     server::AllowAnyAuthenticatedClient, server::ResolvesServerCertUsingSni, sign::CertifiedKey,
@@ -6,16 +7,13 @@ use rustls::{
     Stream as RustlsStream,
 };
 use rustls_pemfile::Item;
-use std::error::Error;
 use std::fs::File;
 use std::io::{self, Result as IoResult};
 use std::io::{Read, Write};
 use std::os::unix::prelude::FromRawFd;
 use std::sync::Arc;
 
-pub fn tls_connection(
-    reg_state: config::RegistrationState,
-) -> Result<ServerConnection, Box<dyn Error>> {
+pub fn tls_connection(reg_state: config::RegistrationState) -> AnyhowResult<ServerConnection> {
     let server_specs = reg_state.server_specs.into_values().collect();
     Ok(ServerConnection::new(tls_config(server_specs)?).unwrap())
 }
@@ -27,7 +25,7 @@ pub fn tls_stream<'a>(
     RustlsStream::new(server_connection, stream)
 }
 
-fn tls_config(server_specs: Vec<config::ServerSpec>) -> Result<Arc<ServerConfig>, Box<dyn Error>> {
+fn tls_config(server_specs: Vec<config::ServerSpec>) -> AnyhowResult<Arc<ServerConfig>> {
     Ok(Arc::new(
         ServerConfig::builder()
             .with_safe_defaults()
@@ -38,9 +36,7 @@ fn tls_config(server_specs: Vec<config::ServerSpec>) -> Result<Arc<ServerConfig>
     ))
 }
 
-fn root_cert_store(
-    server_specs: &Vec<config::ServerSpec>,
-) -> Result<RootCertStore, Box<dyn Error>> {
+fn root_cert_store(server_specs: &Vec<config::ServerSpec>) -> AnyhowResult<RootCertStore> {
     let mut cert_store = RootCertStore::empty();
 
     for spec in server_specs {
@@ -54,7 +50,7 @@ fn root_cert_store(
 
 fn sni_resolver(
     server_specs: &Vec<config::ServerSpec>,
-) -> Result<Arc<ResolvesServerCertUsingSni>, Box<dyn Error>> {
+) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 
     for spec in server_specs {
@@ -70,24 +66,20 @@ fn sni_resolver(
     Ok(Arc::new(resolver))
 }
 
-fn private_key(bytes: &mut dyn io::BufRead) -> Result<PrivateKey, Box<dyn Error>> {
-    Ok(
-        if let Item::PKCS8Key(it) = rustls_pemfile::read_one(bytes).unwrap().unwrap() {
-            Ok(PrivateKey(it))
-        } else {
-            Err("Could not load private key")
-        }?,
-    )
+fn private_key(bytes: &mut dyn io::BufRead) -> AnyhowResult<PrivateKey> {
+    if let Item::PKCS8Key(it) = rustls_pemfile::read_one(bytes).unwrap().unwrap() {
+        Ok(PrivateKey(it))
+    } else {
+        Err(anyhow!("Could not load private key"))
+    }
 }
 
-fn certificate(bytes: &mut dyn io::BufRead) -> Result<Certificate, Box<dyn Error>> {
-    Ok(
-        if let Item::X509Certificate(it) = rustls_pemfile::read_one(bytes).unwrap().unwrap() {
-            Ok(Certificate(it))
-        } else {
-            Err("Could not load certificate")
-        }?,
-    )
+fn certificate(bytes: &mut dyn io::BufRead) -> AnyhowResult<Certificate> {
+    if let Item::X509Certificate(it) = rustls_pemfile::read_one(bytes).unwrap().unwrap() {
+        Ok(Certificate(it))
+    } else {
+        Err(anyhow!("Could not load certificate"))
+    }
 }
 
 pub struct IoStream {

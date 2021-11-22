@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import sys
+import time
 from collections import defaultdict
 from typing import (
     Callable,
@@ -58,7 +59,7 @@ class PerformancePod(NamedTuple):
 
 class PerformanceContainer(NamedTuple):
     name: ContainerName
-    metrics: Mapping[MetricName, float]
+    metrics: Mapping[MetricName, section.PerformanceMetric]
     pod_uid: PodUID
 
 
@@ -419,52 +420,75 @@ def filter_outdated_pods(
 
 def deployment_performance_sections(pods: List[PerformancePod]) -> None:
     """Write deployment sections based on collected performance metrics"""
+    # TODO: fix Deployment Memory section
     sections = [
         (SectionName("memory"), section.Memory, ("memory_usage", "memory_swap")),
     ]
     for section_name, section_model, metrics in sections:
+        section_containers = _performance_section_containers(
+            container_model=_extract_container_model(section_model),
+            containers=[container for pod in pods for container in pod.containers],
+            metrics=metrics,
+        )
         write_performance_section(
             section_name,
-            [container for pod in pods for container in pod.containers],
-            metrics,
             section_model,
+            section_containers,
         )
 
 
 def pod_performance_sections(containers: Sequence[PerformanceContainer]) -> None:
     """Write pod sections based on collected performance metrics"""
     sections = [
-        # TODO: adjust check section
-        (SectionName("cpu_usage_total"), section.CpuUsage, ("cpu_usage_total")),
-        (SectionName("cpu_load"), section.CpuLoad, ("cpu_cfs_throttled_time", "cpu_load_average")),
+        (SectionName("cpu_usage_total"), section.CpuUsage, ("cpu_usage_seconds_total",)),
     ]
     for section_name, section_model, metrics in sections:
-        write_performance_section(section_name, containers, metrics, section_model)
+        section_containers = _performance_section_containers(
+            container_model=_extract_container_model(section_model),
+            containers=containers,
+            metrics=metrics,
+        )
+        write_performance_section(section_name, section_model, section_containers)
 
 
 def write_performance_section(
     section_name: SectionName,
-    containers: Sequence[PerformanceContainer],
-    metrics: Iterable[str],
     section_model: Type[BaseModel],
+    section_containers: Sequence[BaseModel],
 ) -> None:
     with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
-        containers_sections = {}
-        for container in containers:
-            try:
-                containers_sections[container.name] = dict(
-                    section_model(
-                        **{
-                            metric: container.metrics[MetricName(metric)]
-                            for metric in metrics
-                            if metric in container.metrics
-                        }
-                    )
-                )
-            except ValueError:  # TODO: decide if additional conditions are necessary
-                continue
+        writer.append(section_model(containers=section_containers).json())
 
-        writer.append_json(containers_sections)
+
+def _performance_section_containers(
+    container_model: Type[BaseModel],
+    containers: Sequence[PerformanceContainer],
+    metrics: Iterable[str],
+) -> Sequence[BaseModel]:
+    section_containers = []
+    for container in containers:
+        section_containers.append(
+            container_model(
+                name=container.name,
+                **{
+                    metric: container.metrics[MetricName(metric)]
+                    for metric in metrics
+                    if metric in container.metrics
+                },
+            )
+        )
+    return section_containers
+
+
+def _extract_container_model(section_model: Type[BaseModel]) -> Type[BaseModel]:
+    section_fields = section_model.__fields__
+    if "containers" not in section_fields:
+        raise DefinitionError("Performance return section should be a sequence of containers")
+    return section_fields["containers"].type_
+
+
+class DefinitionError(Exception):
+    pass
 
 
 class SetupError(Exception):
@@ -490,18 +514,23 @@ def collect_metrics_from_cluster_agent(
 def group_metrics_by_containers(
     performance_metrics: Sequence[Mapping[str, str]]
 ) -> Sequence[PerformanceContainer]:
-    containers: Dict[ContainerName, Dict[MetricName, float]] = {}
+    containers: Dict[ContainerName, Dict[MetricName, section.PerformanceMetric]] = {}
     container_pod_uid_mappings: Dict[ContainerName, PodUID] = {}
-    for container_metric in performance_metrics:
-        if (name := container_metric["container_name"]) not in container_pod_uid_mappings:
-            container_pod_uid_mappings[ContainerName(name)] = PodUID(container_metric["pod_uid"])
-        metrics = containers.setdefault(ContainerName(name), {})
+    for performance_metric in performance_metrics:
+        if (name := performance_metric["container_name"]) not in container_pod_uid_mappings:
+            container_pod_uid_mappings[ContainerName(name)] = PodUID(performance_metric["pod_uid"])
+
+        container_metrics = containers.setdefault(ContainerName(name), {})
         try:
-            metric_value, _metric_timestamp = container_metric["metric_value_string"].split(" ")
+            metric_value, timestamp = performance_metric["metric_value_string"].split(" ")
+            metric_timestamp = int(timestamp)
         except ValueError:
-            metric_value = container_metric["metric_value_string"]
-        metric_name = container_metric["metric_name"].replace("container_", "", 1)
-        metrics[MetricName(metric_name)] = float(metric_value)
+            metric_value = performance_metric["metric_value_string"]
+            metric_timestamp = int(time.time())
+        metric_name = performance_metric["metric_name"].replace("container_", "", 1)
+        container_metrics[MetricName(metric_name)] = section.PerformanceMetric(
+            value=float(metric_value), timestamp=metric_timestamp
+        )
 
     return [
         PerformanceContainer(name=name, metrics=metrics, pod_uid=container_pod_uid_mappings[name])
@@ -576,7 +605,6 @@ def main(args: Optional[List[str]] = None) -> int:
             performance_pods = group_containers_by_pods(performance_containers)
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
 
-            # TODO: fix sections for new output format
             for pod in filter_outdated_pods(
                 list(performance_pods.values()), uid_piggyback_mappings
             ):

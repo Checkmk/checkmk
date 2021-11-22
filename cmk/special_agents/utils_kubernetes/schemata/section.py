@@ -19,6 +19,15 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 PodSequence = Sequence[str]
 
 
+class PerformanceMetric(BaseModel):
+    value: float
+    timestamp: int
+
+
+class PerformanceContainer(BaseModel):
+    name: str
+
+
 class PodResources(BaseModel):
     """section: k8s_pod_resources_v1"""
 
@@ -72,17 +81,14 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
+class ContainerCpuUsage(PerformanceContainer):
+    cpu_usage_seconds_total: PerformanceMetric
+
+
 class CpuUsage(BaseModel):
     """section: k8s_live_cpu_usage_v1"""
 
-    cpu_usage_total: int
-
-
-class CpuLoad(BaseModel):
-    """section: k8s_live_cpu_load_v1"""
-
-    cpu_cfs_throttled_time: int
-    cpu_load_average: int
+    containers: Sequence[ContainerCpuUsage]
 
 
 class Memory(BaseModel):

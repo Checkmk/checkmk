@@ -27,6 +27,13 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INS
 	$(RM) -r $(PYTHON3_MODULES_BUILD_DIR)
 	$(MKDIR) $(PYTHON3_MODULES_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)
+	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
+	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
+            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple \
+	    `: rrdtool module is built with rrdtool omd package` \
+	    `: protobuf module is built with protobuf omd package` \
+	    `: fixup git local dependencies` \
+		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' | sed 's|-e \.\/\(.*\)|$(REPO_PATH)\/\1|g' > requirements-dist.txt ; \
 # rpath: Create some dummy rpath which has enough space for later replacement
 # by the final rpath
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
@@ -37,12 +44,6 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INS
 	    export LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
-	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
-            PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple \
-	    `: rrdtool module is built with rrdtool omd package` \
-	    `: protobuf module is built with protobuf omd package` \
-	    `: fixup git local dependencies` \
-		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' | sed 's|-e \.\/\(.*\)|$(REPO_PATH)\/\1|g' > requirements-dist.txt ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

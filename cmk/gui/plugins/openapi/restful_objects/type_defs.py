@@ -95,7 +95,8 @@ CmkEndpointName = Literal[
     "cmk/service.move-undecided",
     "cmk/service.move-ignored",
     "cmk/service.bulk-acknowledge",
-]  # yapf: disable
+    "cmk/link_uuid",
+]
 
 RestfulEndpointName = Literal[
     "describedby",  # sic

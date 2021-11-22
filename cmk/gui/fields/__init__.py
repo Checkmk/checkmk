@@ -20,6 +20,7 @@ from marshmallow.fields import (
     IPv6Interface,
     Str,
     Time,
+    UUID,
 )
 
 from cmk.gui.fields.attributes import (
@@ -101,6 +102,7 @@ __all__ = [
     "String",
     "Time",
     "Timestamp",
+    "UUID",
     "ValidateAnyOfValidators",
     "ValidateIPv4",
     "ValidateIPv4Network",

@@ -17,7 +17,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import DiscoveryResult, TagID
+from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
@@ -814,7 +814,7 @@ class APICallHosttags(APICallCollection):
     def _get(self, request):
         hosttags_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
 
-        hosttags_dict = hosttags_config.get_dict_format()
+        hosttags_dict: Dict[str, Any] = dict(hosttags_config.get_dict_format())
 
         # The configuration hash is computed for the configurable hosttags
         add_configuration_hash(hosttags_dict, hosttags_dict)  # Looks strange, but is OK
@@ -822,7 +822,7 @@ class APICallHosttags(APICallCollection):
         hosttags_dict["builtin"] = self._get_builtin_tags_configuration()
         return hosttags_dict
 
-    def _get_builtin_tags_configuration(self):
+    def _get_builtin_tags_configuration(self) -> TagConfigSpec:
         return cmk.utils.tags.BuiltinTagConfig().get_dict_format()
 
     def _set(self, request):

@@ -17,7 +17,7 @@ You can find an introduction to hosts including host tags and host tag groups in
 import json
 from typing import Any, Dict
 
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
 import cmk.gui.watolib as watolib
 from cmk.gui import fields
@@ -148,7 +148,8 @@ def update_host_tag_group(params):
     updated_details = {x: body[x] for x in body if x != "repair"}
     tag_group = _retrieve_group(ident)
     group_details = tag_group.get_dict_format()
-    group_details.update(updated_details)
+    # This is an incremental update of the TaggroupSpec
+    group_details.update(updated_details)  # type: ignore[typeddict-item]
     try:
         edit_tag_group(ident, TagGroup.from_config(group_details), allow_repair=body["repair"])
     except RepairError:
@@ -213,11 +214,11 @@ def _retrieve_group(ident: str) -> TagGroup:
     return tag_group
 
 
-def _serve_host_tag_group(tag_details: Dict[str, Any]) -> Response:
+def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
     response = Response()
-    response.set_data(json.dumps(serialize_host_tag_group(tag_details)))
+    response.set_data(json.dumps(serialize_host_tag_group(dict(tag_details))))
     response.set_content_type("application/json")
-    response.headers.add("ETag", constructors.etag_of_dict(tag_details).to_header())
+    response.headers.add("ETag", constructors.etag_of_dict(dict(tag_details)).to_header())
     return response
 
 

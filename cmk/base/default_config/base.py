@@ -9,7 +9,7 @@ from typing import List as _List
 from typing import Literal as _Literal
 from typing import Optional as _Optional
 
-from cmk.utils.type_defs import Ruleset, TagsOfHosts, TimeperiodSpecs
+from cmk.utils.type_defs import Ruleset, TagConfigSpec, TagsOfHosts, TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -138,7 +138,7 @@ nagios_illegal_chars = "`;~!$%^&*|'\"<>?,="
 cmc_illegal_chars = ";\t"  # Tab is an illegal character for CMC and semicolon breaks metric system
 
 # Data to be defined in main.mk
-tag_config: _Dict[str, _List] = {
+tag_config: TagConfigSpec = {
     "aux_tags": [],
     "tag_groups": [],
 }

@@ -866,7 +866,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         by_topic: Dict[str, List[TagGroup]] = {}
         for tag_group in config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
-            by_topic.setdefault(tag_group.topic, []).append(tag_group)
+            by_topic.setdefault(tag_group.topic or _("Tags"), []).append(tag_group)
 
         # Now search for checkbox-only-topics
         for topic, tag_groups in by_topic.items():
@@ -1496,7 +1496,7 @@ def _service_tag_rules_tag_group_choices():
                 tag_group.id,
                 tag_group.title,
                 DropdownChoice(
-                    choices=tag_group.get_tag_choices(),
+                    choices=list(tag_group.get_tag_choices()),
                 ),
             )
         )

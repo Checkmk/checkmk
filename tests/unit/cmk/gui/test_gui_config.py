@@ -1122,7 +1122,9 @@ def test_default_tags():
     assert sorted(dict(config.tags.get_tag_group_choices()).keys()) == sorted(groups.keys())
 
     for tag_group in config.tags.tag_groups:
-        assert sorted(tag_group.get_tag_ids()) == sorted(groups[tag_group.id])
+        assert sorted(tag_group.get_tag_ids(), key=lambda s: s or "") == sorted(
+            groups[tag_group.id]
+        )
 
 
 @pytest.mark.usefixtures("load_config")

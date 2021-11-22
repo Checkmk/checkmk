@@ -1348,14 +1348,14 @@ def _cmp_host_tag(r1, r2, tgid):
     return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 
-def _get_tag_group_value(row, what, tag_group_id):
+def _get_tag_group_value(row, what, tag_group_id) -> str:
     tag_id = get_tag_groups(row, "host").get(tag_group_id)
 
     tag_group = config.tags.get_tag_group(tag_group_id)
     if tag_group:
         label = dict(tag_group.get_tag_choices()).get(tag_id, _("N/A"))
     else:
-        label = tag_id
+        label = tag_id or _("N/A")
 
     return label or _("N/A")
 

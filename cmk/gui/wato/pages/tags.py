@@ -288,7 +288,7 @@ class ModeTags(ABCTagMode):
         return None
 
     def page(self):
-        if not self._tag_config.tag_groups + self._tag_config.get_aux_tags():
+        if not self._tag_config.tag_groups and not self._tag_config.get_aux_tags():
             MainMenu(
                 [
                     MenuItem(
@@ -419,7 +419,7 @@ class ModeTags(ABCTagMode):
                 table.cell(_("ID"), aux_tag.id)
 
                 table.cell(_("Title"), _u(aux_tag.title))
-                table.cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
+                table.cell(_("Topic"), _u(aux_tag.topic) if aux_tag.topic else _("Tags"))
                 table.cell(
                     _("Tags using this auxiliary tag"),
                     ", ".join(
@@ -499,7 +499,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
     def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
             title=_("Topic") + "<sup>*</sup>",
-            choices=self._effective_config.get_topic_choices(),
+            choices=list(self._effective_config.get_topic_choices()),
             explicit=TextInput(),
             otherlabel=_("Create new topic"),
             default_value=None,

@@ -123,6 +123,38 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
 
+
+class GroupedTagSpec(TypedDict):
+    id: Optional[TagID]
+    title: str
+    aux_tags: List[TagID]
+
+
+class _AuxTagSpecOpt(TypedDict, total=False):
+    topic: str
+
+
+class AuxTagSpec(_AuxTagSpecOpt):
+    id: TagID
+    title: str
+
+
+class _TaggroupSpecOpt(TypedDict, total=False):
+    topic: str
+    help: str
+
+
+class TaggroupSpec(_TaggroupSpecOpt):
+    id: TaggroupID
+    title: str
+    tags: List[GroupedTagSpec]
+
+
+class TagConfigSpec(TypedDict):
+    tag_groups: List[TaggroupSpec]
+    aux_tags: List[AuxTagSpec]
+
+
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int

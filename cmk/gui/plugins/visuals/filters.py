@@ -2139,13 +2139,14 @@ class TagFilter(Filter):
             % (json.dumps(self._object_type), json.dumps(grouped))
         )
         html.open_table()
+        group_choices: Choices = [("", "")]
         for num in range(self.count):
             prefix = "%s%d" % (self._var_prefix, num)
             html.open_tr()
             html.open_td()
             html.dropdown(
                 prefix + "_grp",
-                [("", "")] + groups,
+                group_choices + list(groups),
                 onchange="cmk.utils.tag_update_value('%s', '%s', this.value)"
                 % (self._object_type, prefix),
                 style="width:129px",
@@ -2263,7 +2264,8 @@ class FilterHostAuxTags(Filter):
 
     @staticmethod
     def _options() -> Choices:
-        return [("", "")] + config.tags.aux_tag_list.get_choices()
+        aux_tag_choices: Choices = [("", "")]
+        return aux_tag_choices + list(config.tags.aux_tag_list.get_choices())
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         headers = []

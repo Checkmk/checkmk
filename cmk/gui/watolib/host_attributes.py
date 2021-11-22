@@ -992,7 +992,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             return self._tag_value()
         return None
 
-    def _tag_value(self) -> TagID:
+    def _tag_value(self) -> Optional[TagID]:
         return self._tag_group.get_tag_choices()[0][0]
 
     def get_tag_groups(self, value: Optional[TagID]) -> TaggroupIDToTagID:

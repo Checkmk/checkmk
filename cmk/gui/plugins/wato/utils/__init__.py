@@ -13,7 +13,7 @@ import os
 import re
 import subprocess
 from contextlib import nullcontext
-from typing import Callable, cast, ContextManager, Dict, List, Mapping
+from typing import Callable, cast, ContextManager, List, Mapping
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type
@@ -2332,6 +2332,7 @@ class HostTagCondition(ValueSpec):
                 tagvalue = tag_group.default_value
             else:
                 tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
+            assert tagvalue is not None
 
             mode = request.var(varprefix + "tag_" + tag_group.id)
             if mode == "is":

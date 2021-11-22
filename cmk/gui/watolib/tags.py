@@ -66,8 +66,7 @@ class TagConfigFile(WatoSimpleConfigFile):
 
 def load_tag_config() -> TagConfig:
     """Load the tag config object based upon the most recently saved tag config file"""
-    tag_config = cmk.utils.tags.TagConfig()
-    tag_config.parse_config(TagConfigFile().load_for_modification())
+    tag_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_modification())
     return tag_config
 
 
@@ -185,7 +184,7 @@ def identify_modified_tags(updated_group: TagGroup, old_group: TagGroup):
 
     Example:
 
-    >>> _old_group = TagGroup({
+    >>> _old_group = TagGroup.from_config({
     ...    'id': 'foo',
     ...    'title': 'foobar',
     ...    'tags': [{
@@ -195,7 +194,7 @@ def identify_modified_tags(updated_group: TagGroup, old_group: TagGroup):
     ...    }],
     ...    'topic': 'nothing'
     ... })
-    >>> _updated_group = TagGroup({
+    >>> _updated_group = TagGroup.from_config({
     ...    'id': 'foo',
     ...    'title': 'foobar',
     ...    'tags': [{
@@ -467,8 +466,7 @@ def _export_hosttags_to_php(cfg):
     path = php_api_dir / "hosttags.php"
     store.mkdir(php_api_dir)
 
-    tag_config = cmk.utils.tags.TagConfig()
-    tag_config.parse_config(cfg)
+    tag_config = cmk.utils.tags.TagConfig.from_config(cfg)
     tag_config += cmk.utils.tags.BuiltinTagConfig()
 
     # Transform WATO internal data structures into easier usable ones

@@ -381,8 +381,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         return settings
 
     def _initialize_tag_config(self) -> None:
-        tag_config = TagConfig()
-        tag_config.parse_config(sample_tag_config())
+        tag_config = TagConfig.from_config(sample_tag_config())
         TagConfigFile().save(tag_config.get_dict_format())
 
 

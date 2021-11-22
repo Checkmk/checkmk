@@ -79,7 +79,7 @@ HOST_TAG_GROUP_NAME = {
 def create_host_tag_group(params):
     """Create a host tag group"""
     host_tag_group_details = params["body"]
-    save_tag_group(TagGroup(host_tag_group_details))
+    save_tag_group(TagGroup.from_config(host_tag_group_details))
     return _serve_host_tag_group(_retrieve_group(host_tag_group_details["id"]).get_dict_format())
 
 
@@ -150,7 +150,7 @@ def update_host_tag_group(params):
     group_details = tag_group.get_dict_format()
     group_details.update(updated_details)
     try:
-        edit_tag_group(ident, TagGroup(group_details), allow_repair=body["repair"])
+        edit_tag_group(ident, TagGroup.from_config(group_details), allow_repair=body["repair"])
     except RepairError:
         return problem(
             401,

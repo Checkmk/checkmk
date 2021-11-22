@@ -215,8 +215,7 @@ class UpdateConfig:
 
     def _rewrite_wato_tag_config(self):
         tag_config_file = cmk.gui.watolib.tags.TagConfigFile()
-        tag_config = cmk.utils.tags.TagConfig()
-        tag_config.parse_config(tag_config_file.load_for_reading())
+        tag_config = cmk.utils.tags.TagConfig.from_config(tag_config_file.load_for_reading())
         tag_config_file.save(tag_config.get_dict_format())
 
     def _rewrite_wato_host_and_folder_config(self):

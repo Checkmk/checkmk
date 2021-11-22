@@ -19,8 +19,7 @@ from cmk.gui.wato.pages.rulesets import config, RuleConditionRenderer
 
 @pytest.fixture(name="tag_config")
 def fixture_tag_config():
-    tag_config = TagConfig()
-    tag_config.parse_config(
+    tag_config = TagConfig.from_config(
         {
             "aux_tags": [
                 {

@@ -812,8 +812,7 @@ class APICallHosttags(APICallCollection):
         }
 
     def _get(self, request):
-        hosttags_config = cmk.utils.tags.TagConfig()
-        hosttags_config.parse_config(TagConfigFile().load_for_reading())
+        hosttags_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
 
         hosttags_dict = hosttags_config.get_dict_format()
 
@@ -828,16 +827,16 @@ class APICallHosttags(APICallCollection):
 
     def _set(self, request):
         tag_config_file = TagConfigFile()
-        hosttags_config = cmk.utils.tags.TagConfig()
-        hosttags_config.parse_config(tag_config_file.load_for_modification())
+        hosttags_config = cmk.utils.tags.TagConfig.from_config(
+            tag_config_file.load_for_modification()
+        )
 
         hosttags_dict = hosttags_config.get_dict_format()
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], hosttags_dict)
             del request["configuration_hash"]
 
-        changed_hosttags_config = cmk.utils.tags.TagConfig()
-        changed_hosttags_config.parse_config(request)
+        changed_hosttags_config = cmk.utils.tags.TagConfig.from_config(request)
         changed_hosttags_config.validate_config()
 
         self._verify_no_used_tags_missing(changed_hosttags_config)

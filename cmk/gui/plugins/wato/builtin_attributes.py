@@ -475,8 +475,7 @@ hooks.register_builtin("validate-host", validate_host_parents)
 @hooks.request_memoize()
 def _get_criticality_choices():
     """Returns the current configuration of the tag_group criticality"""
-    tags = cmk.utils.tags.TagConfig()
-    tags.parse_config(watolib.TagConfigFile().load_for_reading())
+    tags = cmk.utils.tags.TagConfig.from_config(watolib.TagConfigFile().load_for_reading())
     criticality_group = tags.get_tag_group("criticality")
     if not criticality_group:
         return []

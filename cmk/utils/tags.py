@@ -17,8 +17,7 @@ from cmk.utils.type_defs import TaggroupID, TaggroupIDToTagID, TagID
 
 def get_effective_tag_config(tag_config: Dict) -> TagConfig:
     # We don't want to access the plain config data structure during GUI code processing
-    tags = TagConfig()
-    tags.parse_config(tag_config)
+    tags = TagConfig.from_config(tag_config)
 
     # Merge builtin tags with configured tags. The logic favors the configured tags, even
     # when the user config should not conflict with the builtin tags. This is something
@@ -72,8 +71,8 @@ class AuxTag:
 
 
 class AuxTagList:
-    def __init__(self):
-        self._tags = []
+    def __init__(self, aux_tags) -> None:
+        self._tags = aux_tags
 
     def __iadd__(self, other):
         tag_ids = self.get_tag_ids()
@@ -185,33 +184,31 @@ class GroupedTag:
 
 
 class TagGroup:
-    def __init__(self, data=None):
-        super().__init__()
-        self.id: Optional[str]
-        self.title: Optional[str]
-        self.topic: Optional[str]
-        self.help: Optional[str]
-        self.tags: List[GroupedTag]
-        self._initialize()
+    @classmethod
+    def from_config(cls, group_info) -> TagGroup:
+        group = TagGroup(
+            group_id=group_info["id"],
+            title=group_info["title"],
+            topic=group_info.get("topic"),
+            help=group_info.get("help"),
+            tags=[],
+        )
+        group.tags = [GroupedTag.from_config(group, tag) for tag in group_info["tags"]]
+        return group
 
-        if data:
-            assert isinstance(data, dict)
-            self._parse_from_dict(data)
-
-    def _initialize(self):
-        self.id = None
-        self.title = None
-        self.topic = None
-        self.help = None
-        self.tags = []
-
-    def _parse_from_dict(self, group_info):
-        self._initialize()
-        self.id = group_info["id"]
-        self.title = group_info["title"]
-        self.topic = group_info.get("topic")
-        self.help = group_info.get("help")
-        self.tags = [GroupedTag.from_config(self, tag) for tag in group_info["tags"]]
+    def __init__(
+        self,
+        group_id: TaggroupID,
+        title: str,
+        topic: Optional[str],
+        help: Optional[str],  # pylint: disable=redefined-builtin
+        tags: List[GroupedTag],
+    ) -> None:
+        self.id = group_id
+        self.title = title
+        self.topic = topic
+        self.help = help
+        self.tags = tags
 
     @property
     def choice_title(self):
@@ -278,14 +275,18 @@ class TagConfig:
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
 
-    def __init__(self):
-        super().__init__()
-        self._initialize()
+    @classmethod
+    def from_config(cls, tag_config) -> TagConfig:
+        return TagConfig(
+            tag_groups=[TagGroup.from_config(tag_group) for tag_group in tag_config["tag_groups"]],
+            aux_tags=AuxTagList(
+                [AuxTag.from_config(aux_tag) for aux_tag in tag_config["aux_tags"]]
+            ),
+        )
 
-    # TODO: As usual, we *really* have to nuke our _initialize() methods, everywhere!
-    def _initialize(self):
-        self.tag_groups = []
-        self.aux_tag_list = AuxTagList()
+    def __init__(self, tag_groups=None, aux_tags=None) -> None:
+        self.tag_groups = tag_groups or []
+        self.aux_tag_list = aux_tags or AuxTagList([])
 
     def __iadd__(self, other):
         tg_ids = [tg.id for tg in self.tag_groups]
@@ -391,17 +392,6 @@ class TagConfig:
                 return aux_tag
 
         return None
-
-    def parse_config(self, data):
-        self._initialize()
-        assert isinstance(data, dict)
-        self._parse_from_dict(data)
-
-    def _parse_from_dict(self, tag_info):  # new style
-        for tag_group in tag_info["tag_groups"]:
-            self.tag_groups.append(TagGroup(tag_group))
-        for aux_tag in tag_info["aux_tags"]:
-            self.aux_tag_list.append(AuxTag.from_config(aux_tag))
 
     # TODO: Change API to use __add__/__setitem__?
     def insert_tag_group(self, tag_group):
@@ -516,24 +506,16 @@ class TagConfig:
         return result
 
 
-class BuiltinAuxTagList(AuxTagList):
-    def append(self, aux_tag):
-        self._append(aux_tag)
-
-
 class BuiltinTagConfig(TagConfig):
-    def __init__(self):
-        super().__init__()
-        self.parse_config(
-            {
-                "tag_groups": self._builtin_tag_groups(),
-                "aux_tags": self._builtin_aux_tags(),
-            }
+    def __init__(self) -> None:
+        super().__init__(
+            tag_groups=[
+                TagGroup.from_config(tag_group) for tag_group in self._builtin_tag_groups()
+            ],
+            aux_tags=AuxTagList(
+                [AuxTag.from_config(aux_tag) for aux_tag in self._builtin_aux_tags()]
+            ),
         )
-
-    def _initialize(self):
-        self.tag_groups = []
-        self.aux_tag_list = BuiltinAuxTagList()
 
     def _builtin_tag_groups(self):
         return [
@@ -655,7 +637,6 @@ class BuiltinTagConfig(TagConfig):
                 "id": "ip-v4",
                 "topic": _("Address"),
                 "title": _("IPv4"),
-                "help": _("Bar"),
             },
             {
                 "id": "ip-v6",

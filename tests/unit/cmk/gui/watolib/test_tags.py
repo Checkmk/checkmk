@@ -75,8 +75,7 @@ wato_tags = %s
     with hosttags_mk.open("w", encoding="utf-8") as f:
         f.write("")
 
-    cfg = tags.TagConfig()
-    cfg.parse_config(TagConfigFile().load_for_reading())
+    cfg = tags.TagConfig.from_config(TagConfigFile().load_for_reading())
 
     yield cfg
 
@@ -98,7 +97,7 @@ def test_tag_config_save(mocker):
 
     cfg = tags.TagConfig()
     cfg.insert_tag_group(
-        tags.TagGroup(
+        tags.TagGroup.from_config(
             {
                 "id": "tgid2",
                 "topic": "Topics",
@@ -112,7 +111,6 @@ def test_tag_config_save(mocker):
     export_mock.assert_called_once()
     base_config_mock.assert_called_once()
 
-    cfg = tags.TagConfig()
-    cfg.parse_config(config_file.load_for_reading())
+    cfg = tags.TagConfig.from_config(config_file.load_for_reading())
     assert len(cfg.tag_groups) == 1
     assert cfg.tag_groups[0].id == "tgid2"

@@ -642,8 +642,7 @@ def test_transform(case, rule_options):
 
 
 def test_get_tag_to_group_map(monkeypatch):
-    tag_config = cmk.utils.tags.TagConfig()
-    tag_config.parse_config(
+    tag_config = cmk.utils.tags.TagConfig.from_config(
         {
             "aux_tags": [{"id": "bla", "title": "bl\xfcb"}],
             "tag_groups": [

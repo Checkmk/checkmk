@@ -575,8 +575,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     expected_result: Sequence[RuleValue],
 ) -> None:
     ts = Scenario()
-    add_tag_config = TagConfig()
-    add_tag_config.parse_config(
+    add_tag_config = TagConfig.from_config(
         {
             "aux_tags": [],
             "tag_groups": [

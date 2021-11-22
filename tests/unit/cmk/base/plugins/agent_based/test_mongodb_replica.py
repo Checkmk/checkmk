@@ -43,6 +43,18 @@ from cmk.base.plugins.agent_based.mongodb_replica import (
             id="up-to-date case",
         ),
         pytest.param(
+            [['{"primary": null, "secondaries": {"active": [], "passive": []}, "arbiters": []}']],
+            ReplicaSet(
+                primary=None,
+                secondaries=Secondaries(
+                    active=[],
+                    passive=[],
+                ),
+                arbiters=[],
+            ),
+            id="everything missing",
+        ),
+        pytest.param(
             [
                 [
                     "primary",
@@ -148,6 +160,35 @@ def test_parse_mongodb_replica(
                 ),
             ],
             id="primary missing",
+        ),
+        pytest.param(
+            ReplicaSet(
+                primary=None,
+                secondaries=Secondaries(
+                    active=[],
+                    passive=[],
+                ),
+                arbiters=[],
+            ),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Replica set does not have a primary node",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="No active secondaries",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="No passive secondaries",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="No arbiters",
+                ),
+            ],
+            id="everything missing",
         ),
         pytest.param(
             ReplicaSet(

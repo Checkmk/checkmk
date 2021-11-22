@@ -97,30 +97,52 @@ def section_flushing(server_status):
     sys.stdout.write("flushed %s\n" % flushing_info.get("flushes", "n/a"))
 
 
-def sections_replica(server_status):
-    repl_info = server_status.get("repl")
-
-    if not repl_info:
-        return
+def _write_section_replica(
+    primary,
+    secondary_actives=None,
+    secondary_passives=None,
+    arbiters=None,
+):
+    """
+    >>> _write_section_replica(None)
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": null, "secondaries": {"active": [], "passive": []}, "arbiters": []}
+    >>> _write_section_replica("primary")
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": "primary", "secondaries": {"active": [], "passive": []}, "arbiters": []}
+    >>> _write_section_replica("primary", secondary_actives=["1", "2"], secondary_passives=["3"], arbiters=["4"])
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": "primary", "secondaries": {"active": ["1", "2"], "passive": ["3"]}, "arbiters": ["4"]}
+    """
     sys.stdout.write("<<<mongodb_replica:sep(0)>>>\n")
     sys.stdout.write(
         json.dumps({
-            "primary": repl_info.get("primary"),
+            "primary": primary,
             "secondaries": {
-                "active": repl_info.get(
-                    "hosts",
-                    [],
-                ),
-                "passive": repl_info.get(
-                    "passives",
-                    [],
-                ),
+                "active": secondary_actives or [],
+                "passive": secondary_passives or [],
             },
-            "arbiters": repl_info.get(
-                "arbiters",
-                [],
-            ),
+            "arbiters": arbiters or [],
         }) + "\n")
+
+
+def sections_replica(server_status):
+    """
+    >>> sections_replica({})
+    >>> sections_replica({"repl": {}})
+    >>> sections_replica({"repl": {"primary": "abc"}})
+    <<<mongodb_replica:sep(0)>>>
+    {"primary": "abc", "secondaries": {"active": [], "passive": []}, "arbiters": []}
+    """
+    repl_info = server_status.get("repl")
+    if not repl_info:
+        return
+    _write_section_replica(
+        repl_info.get("primary"),
+        secondary_actives=repl_info.get("hosts"),
+        secondary_passives=repl_info.get("passives"),
+        arbiters=repl_info.get("arbiters"),
+    )
 
 
 def sections_replica_set(client):
@@ -649,8 +671,7 @@ def main():
         # this is a special case: replica set without master
         # this is detected here
         if "primary" in repl_info and not repl_info.get("primary"):
-            sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-            sys.stdout.write("primary\tn/a\n")
+            _write_section_replica(None)
         return
 
     piggyhost = repl_info.get("setName") if repl_info else None

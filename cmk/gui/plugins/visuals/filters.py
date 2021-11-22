@@ -17,7 +17,7 @@ import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.globals import config, html, request, response, user, user_errors
+from cmk.gui.globals import config, html, request, response, user_errors
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.utils.labels import encode_labels_for_livestatus
@@ -32,6 +32,7 @@ if cmk_version.is_managed_edition():
         filter_cme_heading_info,
     )
 
+import cmk.gui.legacy_filters as legacy_filters
 from cmk.gui.plugins.visuals import Filter, filter_registry, FilterTime, FilterTristate
 from cmk.gui.plugins.visuals.utils import (
     display_filter_radiobuttons,
@@ -1197,285 +1198,217 @@ class FilterHostsHavingServiceProblems(Filter):
         return lq_logic("Filter:", conditions, "Or")
 
 
-class FilterStateType(FilterTristate):
-    def __init__(
-        self, *, ident: str, title: Union[str, LazyString], sort_index: int, info: str
-    ) -> None:
-        super().__init__(
+def filter_state_type_with_register(
+    *, ident: str, title: Union[str, LazyString], sort_index: int, info: str
+) -> None:
+    filter_registry.register(
+        FilterTristate(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            column=None,
+            legacy_filter=legacy_filters.FilterTristate(
+                ident=ident,
+                filter_code=legacy_filters.state_type,
+                options=legacy_filters.tri_state_type_options(),
+            ),
             is_show_more=True,
         )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        display_filter_radiobuttons(
-            varname=self.varname,
-            options=[
-                ("0", _("SOFT")),
-                ("1", _("HARD")),
-                ("-1", _("(ignore)")),
-            ],
-            default=str(self.deflt),
-            value=value,
-        )
-
-    def filter_code(self, positive: bool) -> str:
-        return "Filter: state_type = %d\n" % int(positive)
-
-
-filter_registry.register(
-    FilterStateType(
-        ident="host_state_type",
-        title=_l("Host state type"),
-        sort_index=116,
-        info="host",
     )
+
+
+filter_state_type_with_register(
+    ident="host_state_type",
+    title=_l("Host state type"),
+    sort_index=116,
+    info="host",
 )
 
-filter_registry.register(
-    FilterStateType(
-        ident="service_state_type",
-        title=_l("Service state type"),
-        sort_index=217,
-        info="service",
-    )
+filter_state_type_with_register(
+    ident="service_state_type",
+    title=_l("Service state type"),
+    sort_index=217,
+    info="service",
 )
 
 
-class FilterNagiosExpression(FilterTristate):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: Union[str, LazyString],
-        sort_index: int,
-        info: str,
-        pos: Union[Callable[[], str], str],
-        neg: Union[Callable[[], str], str],
-        is_show_more: bool = False,
-    ) -> None:
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=sort_index,
-            info=info,
-            column=None,
-            is_show_more=is_show_more,
-        )
-        self.pos = pos
-        self.neg = neg
-
-    def filter_code(self, positive: bool) -> str:
-        code_or_generator = self.pos if positive else self.neg
-        if callable(code_or_generator):
-            return code_or_generator()
-        return code_or_generator
-
-
 filter_registry.register(
-    FilterNagiosExpression(
+    FilterTristate(
         ident="has_performance_data",
         title=_l("Has performance data"),
         sort_index=251,
         info="service",
-        pos="Filter: service_perf_data != \n",
-        neg="Filter: service_perf_data = \n",
+        legacy_filter=legacy_filters.FilterTristate(
+            ident="has_performance_data", filter_code=legacy_filters.service_perfdata_toggle
+        ),
         is_show_more=True,
     )
 )
 
+
 filter_registry.register(
-    FilterNagiosExpression(
+    FilterTristate(
         ident="in_downtime",
         title=_l("Host/service in downtime"),
         sort_index=232,
         info="service",
-        pos="Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
-        neg="Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n",
+        legacy_filter=legacy_filters.FilterTristate(
+            ident="in_downtime", filter_code=legacy_filters.host_service_perfdata_toggle
+        ),
     )
 )
 
+
 filter_registry.register(
-    FilterNagiosExpression(
+    FilterTristate(
         ident="host_staleness",
         title=_l("Host is stale"),
         sort_index=232,
         info="host",
-        pos=lambda: "Filter: host_staleness >= %0.2f\n" % config.staleness_threshold,
-        neg=lambda: "Filter: host_staleness < %0.2f\n" % config.staleness_threshold,
+        legacy_filter=legacy_filters.FilterTristate(
+            ident="host_staleness", filter_code=legacy_filters.staleness("host")
+        ),
         is_show_more=True,
     )
 )
 
+
 filter_registry.register(
-    FilterNagiosExpression(
+    FilterTristate(
         ident="service_staleness",
         title=_l("Service is stale"),
         sort_index=232,
         info="service",
-        pos=lambda: "Filter: service_staleness >= %0.2f\n" % config.staleness_threshold,
-        neg=lambda: "Filter: service_staleness < %0.2f\n" % config.staleness_threshold,
+        legacy_filter=legacy_filters.FilterTristate(
+            ident="service_staleness", filter_code=legacy_filters.staleness("service")
+        ),
         is_show_more=True,
     )
 )
 
 
-class FilterNagiosFlag(FilterTristate):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: Union[str, LazyString],
-        sort_index: int,
-        info: str,
-        is_show_more: bool = False,
-    ) -> None:
-        super().__init__(
+def filter_nagios_flag_with_register(
+    *,
+    ident: str,
+    title: Union[str, LazyString],
+    sort_index: int,
+    info: str,
+    is_show_more: bool = False,
+) -> None:
+    filter_registry.register(
+        FilterTristate(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            column=ident,
+            legacy_filter=legacy_filters.FilterTristate(
+                ident=ident, filter_code=legacy_filters.column_flag(ident)
+            ),
             is_show_more=is_show_more,
         )
-
-    def filter_code(self, positive: bool) -> str:
-        if positive:
-            return "Filter: %s != 0\n" % self.column
-        return "Filter: %s = 0\n" % self.column
-
-
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_process_performance_data",
-        title=_l("Processes performance data"),
-        sort_index=250,
-        info="service",
-        is_show_more=True,
     )
+
+
+filter_nagios_flag_with_register(
+    ident="service_process_performance_data",
+    title=_l("Processes performance data"),
+    sort_index=250,
+    info="service",
+    is_show_more=True,
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="host_in_notification_period",
-        title=_l("Host in notification period"),
-        sort_index=130,
-        info="host",
-    )
+filter_nagios_flag_with_register(
+    ident="host_in_notification_period",
+    title=_l("Host in notification period"),
+    sort_index=130,
+    info="host",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="host_in_service_period",
-        title=_l("Host in service period"),
-        sort_index=130,
-        info="host",
-    )
+filter_nagios_flag_with_register(
+    ident="host_in_service_period",
+    title=_l("Host in service period"),
+    sort_index=130,
+    info="host",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="host_acknowledged",
-        title=_l("Host problem has been acknowledged"),
-        sort_index=131,
-        info="host",
-    )
+filter_nagios_flag_with_register(
+    ident="host_acknowledged",
+    title=_l("Host problem has been acknowledged"),
+    sort_index=131,
+    info="host",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="host_active_checks_enabled",
-        title=_l("Host active checks enabled"),
-        sort_index=132,
-        info="host",
-        is_show_more=True,
-    )
+filter_nagios_flag_with_register(
+    ident="host_active_checks_enabled",
+    title=_l("Host active checks enabled"),
+    sort_index=132,
+    info="host",
+    is_show_more=True,
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="host_notifications_enabled",
-        title=_l("Host notifications enabled"),
-        sort_index=133,
-        info="host",
-    )
+filter_nagios_flag_with_register(
+    ident="host_notifications_enabled",
+    title=_l("Host notifications enabled"),
+    sort_index=133,
+    info="host",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_acknowledged",
-        title=_l("Problem acknowledged"),
-        sort_index=230,
-        info="service",
-    )
+filter_nagios_flag_with_register(
+    ident="service_acknowledged",
+    title=_l("Problem acknowledged"),
+    sort_index=230,
+    info="service",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_in_notification_period",
-        title=_l("Service in notification period"),
-        sort_index=231,
-        info="service",
-    )
+filter_nagios_flag_with_register(
+    ident="service_in_notification_period",
+    title=_l("Service in notification period"),
+    sort_index=231,
+    info="service",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_in_service_period",
-        title=_l("Service in service period"),
-        sort_index=231,
-        info="service",
-    )
+filter_nagios_flag_with_register(
+    ident="service_in_service_period",
+    title=_l("Service in service period"),
+    sort_index=231,
+    info="service",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_active_checks_enabled",
-        title=_l("Active checks enabled"),
-        sort_index=233,
-        info="service",
-        is_show_more=True,
-    )
+filter_nagios_flag_with_register(
+    ident="service_active_checks_enabled",
+    title=_l("Active checks enabled"),
+    sort_index=233,
+    info="service",
+    is_show_more=True,
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_notifications_enabled",
-        title=_l("Notifications enabled"),
-        sort_index=234,
-        info="service",
-    )
+filter_nagios_flag_with_register(
+    ident="service_notifications_enabled",
+    title=_l("Notifications enabled"),
+    sort_index=234,
+    info="service",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_is_flapping",
-        title=_l("Flapping"),
-        sort_index=236,
-        info="service",
-        is_show_more=True,
-    )
+filter_nagios_flag_with_register(
+    ident="service_is_flapping",
+    title=_l("Flapping"),
+    sort_index=236,
+    info="service",
+    is_show_more=True,
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="service_scheduled_downtime_depth",
-        title=_l("Service in downtime"),
-        sort_index=231,
-        info="service",
-    )
+filter_nagios_flag_with_register(
+    ident="service_scheduled_downtime_depth",
+    title=_l("Service in downtime"),
+    sort_index=231,
+    info="service",
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="host_scheduled_downtime_depth",
-        title=_l("Host in downtime"),
-        sort_index=132,
-        info="host",
-    )
+filter_nagios_flag_with_register(
+    ident="host_scheduled_downtime_depth",
+    title=_l("Host in downtime"),
+    sort_index=132,
+    info="host",
 )
 
 
@@ -2011,34 +1944,21 @@ class FilterLogNotificationPhase(FilterTristate):
             title=_l("Notification phase"),
             sort_index=271,
             info="log",
-            column="log_command_name",
+            legacy_filter=legacy_filters.FilterTristate(
+                ident="log_notification_phase",
+                filter_code=legacy_filters.log_notification_phase("log_command_name"),
+                options=legacy_filters.tri_state_log_notifications_options(),
+            ),
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        display_filter_radiobuttons(
-            varname=self.varname,
-            options=self._options(),
-            default=str(self.deflt),
-            value=value,
-        )
 
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [
-            ("-1", _("Show all phases of notifications")),
-            ("1", _("Show just preliminary notifications")),
-            ("0", _("Show just end-user-notifications")),
-        ]
-
-    def filter_code(self, positive: bool) -> str:
-        # Note: this filter also has to work for entries that are no notification.
-        # In that case the filter is passive and lets everything through
-        if positive:
-            return "Filter: %s = check-mk-notify\nFilter: %s =\nOr: 2\n" % (
-                self.column,
-                self.column,
-            )
-        return "Filter: %s != check-mk-notify\n" % self.column
+def bi_aggr_service_used(on: bool, context: VisualContext, rows: Rows) -> Rows:
+    # should be in legacy_filters, but it creates a cyclical import at the moment
+    return [
+        row
+        for row in rows
+        if bi.is_part_of_aggregation(row["host_name"], row["service_description"]) is on
+    ]
 
 
 @filter_registry.register_instance
@@ -2049,27 +1969,13 @@ class FilterAggrServiceUsed(FilterTristate):
             title=_l("Used in BI aggregate"),
             sort_index=300,
             info="service",
-            column=None,
+            legacy_filter=legacy_filters.FilterTristate(
+                ident="aggr_service_used",
+                filter_code=lambda x: "",
+                filter_rows=bi_aggr_service_used,
+            ),
             is_show_more=True,
         )
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
-        tri = self.tristate_value(value)
-        if tri == -1:
-            return rows
-        new_rows = []
-        for row in rows:
-            is_part = bi.is_part_of_aggregation(row["host_name"], row["service_description"])
-            if (is_part and tri == 1) or (not is_part and tri == 0):
-                new_rows.append(row)
-        return new_rows
-
-    def filter_code(self, positive: bool) -> str:
-        pass
 
 
 filter_registry.register(
@@ -2535,76 +2441,38 @@ filter_registry.register(
 class FilterStarred(FilterTristate):
     # TODO: Rename "what"
     def __init__(
-        self, *, ident: str, title: Union[str, LazyString], sort_index: int, what: str
+        self,
+        *,
+        what: Literal["host", "service"],
+        title: Union[str, LazyString],
+        sort_index: int,
     ) -> None:
         super().__init__(
-            ident=ident,
+            ident=what + "_favorites",
             title=title,
             sort_index=sort_index,
             info=what,
-            column=what + "_favorite",  # Column, not used
+            legacy_filter=legacy_filters.FilterTristate(
+                ident=what + "_favorites",
+                filter_code=legacy_filters.starred(what),
+            ),
             is_show_more=True,
         )
-        self.what = what
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        current = self.tristate_value(value)
-        if current == -1:
-            return ""
-        if current:
-            aand, oor, eq = "And", "Or", "="
-        else:
-            aand, oor, eq = "Or", "And", "!="
-
-        stars = user.stars
-        filters = ""
-        count = 0
-        if self.what == "host":
-            for star in stars:
-                if ";" in star:
-                    continue
-                filters += "Filter: host_name %s %s\n" % (eq, livestatus.lqencode(star))
-                count += 1
-        else:
-            for star in stars:
-                if ";" not in star:
-                    continue
-                h, s = star.split(";")
-                filters += "Filter: host_name %s %s\n" % (eq, livestatus.lqencode(h))
-                filters += "Filter: service_description %s %s\n" % (eq, livestatus.lqencode(s))
-                filters += "%s: 2\n" % aand
-                count += 1
-
-        # No starred object and show only starred -> show nothing
-        if count == 0 and current:
-            return "Filter: host_state = -4612\n"
-
-        # no starred object and show unstarred -> show everything
-        if count == 0:
-            return ""
-
-        filters += "%s: %d\n" % (oor, count)
-        return filters
-
-    def filter_code(self, positive: bool) -> str:
-        pass
 
 
 filter_registry.register(
     FilterStarred(
-        ident="host_favorites",
+        what="host",
         title=_l("Favorite Hosts"),
         sort_index=501,
-        what="host",
     )
 )
 
 filter_registry.register(
     FilterStarred(
-        ident="service_favorites",
+        what="service",
         title=_l("Favorite Services"),
         sort_index=501,
-        what="service",
     )
 )
 
@@ -3145,13 +3013,11 @@ filter_registry.register(
     )
 )
 
-filter_registry.register(
-    FilterNagiosFlag(
-        ident="event_host_in_downtime",
-        title=_l("Host in downtime during event creation"),
-        sort_index=223,
-        info="event",
-    )
+filter_nagios_flag_with_register(
+    ident="event_host_in_downtime",
+    title=_l("Host in downtime during event creation"),
+    sort_index=223,
+    info="event",
 )
 
 

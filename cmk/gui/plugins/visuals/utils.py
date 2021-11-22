@@ -30,6 +30,7 @@ from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 
+import cmk.gui.legacy_filters as legacy_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, user_errors
@@ -363,49 +364,34 @@ class FilterTristate(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        column: Optional[str],
-        deflt: int = -1,
+        legacy_filter: legacy_filters.FilterTristate,
         is_show_more: bool = False,
     ):
-        self.column = column
-        self.varname = "is_" + ident
+        self.legacy_filter: legacy_filters.FilterTristate = legacy_filter
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=[self.varname],
+            htmlvars=[self.legacy_filter.varname],
             link_columns=[],
             is_show_more=is_show_more,
         )
-        self.deflt = deflt
 
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
-            varname=self.varname,
-            options=self._options(),
-            default=str(self.deflt),
+            varname=self.legacy_filter.varname,
+            options=self.legacy_filter.options,
+            default=str(self.legacy_filter.deflt),
             value=value,
         )
 
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]
-
-    def tristate_value(self, value: FilterHTTPVariables) -> int:
-        try:
-            return int(value.get(self.varname, ""))
-        except ValueError:
-            return self.deflt
-
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        current = self.tristate_value(value)
-        if current == -1:  # ignore
-            return ""
-        return self.filter_code(current == 1)
+        return self.legacy_filter.filter(value)
 
-    def filter_code(self, positive) -> str:
-        raise NotImplementedError()
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        """post-Livestatus filtering (e.g. for BI aggregations)"""
+        return self.legacy_filter.filter_table(context, rows)
 
 
 class FilterTime(Filter):

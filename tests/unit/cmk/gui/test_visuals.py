@@ -636,7 +636,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'has_performance_data': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_has_performance_data'],
         'info': 'service',
         'link_columns': [],
@@ -888,7 +888,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_staleness': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_host_staleness'],
         'info': 'host',
         'link_columns': [],
@@ -898,7 +898,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_state_type': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterStateType',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_host_state_type'],
         'info': 'host',
         'link_columns': [],
@@ -1034,7 +1034,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'in_downtime': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_in_downtime'],
         'info': 'service',
         'link_columns': [],
@@ -3316,7 +3316,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_staleness': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_service_staleness'],
         'info': 'service',
         'link_columns': [],
@@ -3326,7 +3326,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_state_type': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterStateType',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_service_state_type'],
         'info': 'service',
         'link_columns': [],

@@ -223,7 +223,7 @@ filter_tests = [
             "Filter: event_phase = ack\n" "Filter: event_phase = counting\n" "Or: 2\n"
         ),
     ),
-    # Testing base class FilterNagiosExpression, FilterTristate
+    # Testing base class FilterTristate
     FilterTest(
         ident="has_performance_data",
         request_vars=[("is_has_performance_data", "0")],

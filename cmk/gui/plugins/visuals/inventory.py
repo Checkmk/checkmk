@@ -11,6 +11,7 @@ from typing import List, Optional, Tuple, Union
 import cmk.utils.defines as defines
 
 import cmk.gui.inventory as inventory
+import cmk.gui.legacy_filters as legacy_filters
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
@@ -501,31 +502,16 @@ class FilterInvBool(FilterTristate):
             title=title,
             sort_index=800,
             info="host",
-            column=ident,
+            legacy_filter=legacy_filters.FilterTristate(
+                ident=ident,
+                filter_code=lambda x: "",  # No Livestatus filtering right now
+                filter_rows=legacy_filters.inside_inventory(inv_path),
+            ),
             is_show_more=is_show_more,
         )
-        self._invpath = inv_path
 
     def need_inventory(self, value) -> bool:
-        return self.tristate_value(value) != -1
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""  # No Livestatus filtering right now
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
-        assert not isinstance(value, str)
-        tri = self.tristate_value(value)
-        if tri == -1:
-            return rows
-
-        wanted_value = tri == 1
-        newrows = []
-        for row in rows:
-            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
-            if wanted_value == invdata:
-                newrows.append(row)
-        return newrows
+        return self.legacy_filter.tristate_value(value) != -1
 
 
 @filter_registry.register_instance
@@ -536,26 +522,16 @@ class FilterHasInv(FilterTristate):
             title=_l("Has Inventory Data"),
             sort_index=801,
             info="host",
-            column="host_inventory",
+            legacy_filter=legacy_filters.FilterTristate(
+                ident="has_inv",
+                filter_code=lambda x: "",  # No Livestatus filtering right now
+                filter_rows=legacy_filters.has_inventory,
+            ),
             is_show_more=True,
         )
 
     def need_inventory(self, value) -> bool:
-        return self.tristate_value(value) != -1
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""  # No Livestatus filtering right now
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
-        assert not isinstance(value, str)
-        tri = self.tristate_value(value)
-        if tri == -1:
-            return rows
-        if tri == 1:
-            return [row for row in rows if row["host_inventory"]]
-        # not
-        return [row for row in rows if not row["host_inventory"]]
+        return self.legacy_filter.tristate_value(value) != -1
 
 
 @filter_registry.register_instance

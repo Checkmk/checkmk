@@ -683,7 +683,7 @@ def test_check_verbose_perfdata(execute):
 
 
 def test_check_verbose_only_check(execute):
-    p = execute(["cmk", "-v", "--checks=lnx_thermal", "modes-test-host"])
+    p = execute(["cmk", "-v", "--plugins=lnx_thermal", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
     assert "Interface 2" not in p.stdout

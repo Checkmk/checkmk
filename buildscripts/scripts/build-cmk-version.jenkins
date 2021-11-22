@@ -6,7 +6,7 @@ def NODE = ''
 def DOCKER_TAG_DEFAULT
 def USE_OMD_PACKAGE_CACHE_DEFAULT
 withFolderProperties{
-    if(JOB_BASE_NAME == 'nightly_build_containerized') {
+    if(JOB_BASE_NAME == 'build-cmk-packages') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
         USE_OMD_PACKAGE_CACHE_DEFAULT = true
     } else {

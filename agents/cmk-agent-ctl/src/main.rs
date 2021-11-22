@@ -10,6 +10,8 @@ mod monitoring_data;
 mod tls_server;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use config::RegistrationState;
+use nix::unistd;
+use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
@@ -20,12 +22,14 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
 
+const CMK_AGENT_USER: &str = "cmk-agent";
+const HOME_DIR: &str = "/var/lib/cmk-agent";
 // Normally, the config would be expected at /etc/check_mk/, but we
 // need to read it as cmk-agent user, so we use its home directory.
-const CONFIG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl-config.json";
+const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
 
-const STATE_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl-state.json";
-const LOG_PATH: &str = "/var/lib/cmk-agent/cmk-agent-ctl.log";
+const STATE_FILE: &str = "cmk-agent-ctl-state.json";
+const LOG_FILE: &str = "cmk-agent-ctl.log";
 const TLS_ID: &[u8] = b"16";
 
 fn register(
@@ -149,28 +153,71 @@ fn init_logging(path: &Path) -> AnyhowResult<()> {
 
     Ok(())
 }
+
+fn ensure_home_directory(path: &Path) -> io::Result<()> {
+    if !Path::new(path).exists() {
+        fs::create_dir_all(path)?;
+    }
+    Ok(())
+}
+
+fn sanitize_home_dir_ownership(paths: [&Path; 4], user: &str) -> AnyhowResult<()> {
+    let cmk_agent_user =
+        unistd::User::from_name(user)?.context(format!("Could not find user {}", user))?;
+    let cmk_agent_group =
+        unistd::Group::from_name(user)?.context(format!("Could not find group {}", user))?;
+
+    // TODO: Change only if current ownership is wrong
+    for path in paths {
+        if path.exists() {
+            unistd::chown(path, Some(cmk_agent_user.uid), Some(cmk_agent_group.gid))?;
+        }
+    }
+
+    Ok(())
+}
+
 fn main() -> AnyhowResult<()> {
-    if let Err(error) = init_logging(Path::new(LOG_PATH)).context("Failed to initialize logging") {
+    let state_path = Path::new(HOME_DIR).join(STATE_FILE);
+    let config_path = Path::new(HOME_DIR).join(CONFIG_FILE);
+    let log_path = Path::new(HOME_DIR).join(LOG_FILE);
+
+    if let Err(error) = init_logging(&log_path).context("Failed to initialize logging") {
         println!("Error: {:?}", error)
     };
-
     info!("Starting cmk-agent-ctl");
 
-    let path_state_file = Path::new(STATE_PATH);
+    // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
+    ensure_home_directory(Path::new(HOME_DIR))
+        .context("Failed to create cmk-agent home directory")?;
+
     let args = cli::Args::from_args();
     let mode = String::from(&args.mode);
 
-    let config = get_configuration(Path::new(CONFIG_PATH), args)
-        .context("Error while obtaining configuration.")?;
+    let config =
+        get_configuration(&config_path, args).context("Error while obtaining configuration.")?;
     let reg_state =
-        get_reg_state(&path_state_file).context("Error while obtaining registration state.")?;
+        get_reg_state(&state_path).context("Error while obtaining registration state.")?;
 
-    match mode.as_str() {
+    let result = match mode.as_str() {
         "dump" => dump(config),
-        "register" => register(config, reg_state, &path_state_file),
+        "register" => register(config, reg_state, &state_path),
         "push" => push(config, reg_state),
         "status" => status(config),
         "pull" => pull(config, reg_state),
         _ => Err(anyhow!("Invalid mode: {}", mode)),
-    }
+    };
+
+    if let Err(error) = sanitize_home_dir_ownership(
+        [Path::new(HOME_DIR), &state_path, &config_path, &log_path],
+        CMK_AGENT_USER,
+    )
+    .context(format!(
+        "Failed to set ownership of {} to {}",
+        HOME_DIR, CMK_AGENT_USER
+    )) {
+        info!("{:?}", error)
+    };
+
+    result
 }

@@ -15,6 +15,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 @dataclass(frozen=True)
 class Secondaries:
     active: Sequence[str]
+    passive: Sequence[str]
 
 
 @dataclass(frozen=True)
@@ -43,7 +44,10 @@ def _parse_mongodb_replica_legacy(string_table: StringTable) -> ReplicaSet:
     primary = section_dict.get("primary")
     return ReplicaSet(
         primary=primary if primary != "n/a" else None,
-        secondaries=Secondaries(active=_parse_concatenated_hosts(section_dict.get("hosts")),),
+        secondaries=Secondaries(
+            active=_parse_concatenated_hosts(section_dict.get("hosts")),
+            passive=[],
+        ),
         arbiters=_parse_concatenated_hosts(section_dict.get("arbiters")),
     )
 
@@ -55,7 +59,10 @@ def parse_mongodb_replica(string_table: StringTable) -> ReplicaSet:
     section_dict = json.loads(string_table[0][0])
     return ReplicaSet(
         primary=section_dict["primary"],
-        secondaries=Secondaries(active=section_dict["secondaries"]["active"],),
+        secondaries=Secondaries(
+            active=section_dict["secondaries"]["active"],
+            passive=section_dict["secondaries"]["passive"],
+        ),
         arbiters=section_dict["arbiters"],
     )
 
@@ -78,19 +85,25 @@ def check_mongodb_replica(section: ReplicaSet) -> CheckResult:
         state=State.CRIT,
         summary="Replica set does not have a primary node",
     ))
-    yield (Result(
+    yield from (Result(
         state=State.OK,
-        summary=f"Hosts: {', '.join(section.secondaries.active)}",
-    ) if section.secondaries.active else Result(
+        summary=f"{designation.capitalize()}: {', '.join(hosts)}",
+    ) if hosts else Result(
         state=State.OK,
-        summary="No hosts",
-    ))
-    yield (Result(
-        state=State.OK,
-        summary=f"Arbiters: {', '.join(section.arbiters)}",
-    ) if section.arbiters else Result(
-        state=State.OK,
-        summary="No arbiters",
+        summary=f"No {designation}",
+    ) for designation, hosts in (
+        (
+            "active secondaries",
+            section.secondaries.active,
+        ),
+        (
+            "passive secondaries",
+            section.secondaries.passive,
+        ),
+        (
+            "arbiters",
+            section.arbiters,
+        ),
     ))
 
 

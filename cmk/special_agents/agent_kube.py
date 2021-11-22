@@ -45,20 +45,21 @@ from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, S
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
+ContainerName = NewType("ContainerName", str)
 MetricName = NewType("MetricName", str)
-MetricValue = NewType("MetricValue", float)
 PodUID = NewType("PodUID", str)
 SectionName = NewType("SectionName", str)
 
 
-class LivePod(NamedTuple):
+class PerformancePod(NamedTuple):
     uid: PodUID
-    containers: List[LiveContainer]
+    containers: List[PerformanceContainer]
 
 
-class LiveContainer(NamedTuple):
-    name: str
-    metrics: Dict[MetricName, MetricValue]
+class PerformanceContainer(NamedTuple):
+    name: ContainerName
+    metrics: Mapping[MetricName, float]
+    pod_uid: PodUID
 
 
 class PathPrefixAction(argparse.Action):
@@ -411,12 +412,12 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
 
 
 def filter_outdated_pods(
-    live_pods: List[LivePod], uid_piggyback_mappings: Mapping[PodUID, str]
-) -> Iterator[LivePod]:
+    live_pods: Sequence[PerformancePod], uid_piggyback_mappings: Mapping[PodUID, str]
+) -> Iterator[PerformancePod]:
     return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
 
 
-def deployment_performance_sections(pods: List[LivePod]) -> None:
+def deployment_performance_sections(pods: List[PerformancePod]) -> None:
     """Write deployment sections based on collected performance metrics"""
     sections = [
         (SectionName("memory"), section.Memory, ("memory_usage", "memory_swap")),
@@ -430,7 +431,7 @@ def deployment_performance_sections(pods: List[LivePod]) -> None:
         )
 
 
-def pod_performance_sections(containers: List[LiveContainer]) -> None:
+def pod_performance_sections(containers: Sequence[PerformanceContainer]) -> None:
     """Write pod sections based on collected performance metrics"""
     sections = [
         # TODO: adjust check section
@@ -443,7 +444,7 @@ def pod_performance_sections(containers: List[LiveContainer]) -> None:
 
 def write_performance_section(
     section_name: SectionName,
-    containers: Sequence[LiveContainer],
+    containers: Sequence[PerformanceContainer],
     metrics: Iterable[str],
     section_model: Type[BaseModel],
 ) -> None:
@@ -470,9 +471,11 @@ class SetupError(Exception):
     pass
 
 
-def collect_metrics_from_cluster_agent(cluster_agent_url: str, verify: bool) -> List[str]:
+def collect_metrics_from_cluster_agent(
+    cluster_agent_url: str, verify: bool
+) -> Sequence[Mapping[str, str]]:
     cluster_resp = requests.get(
-        f"{cluster_agent_url}/kmetrics", verify=verify
+        f"{cluster_agent_url}/container_metrics", verify=verify
     )  # TODO: certificate validation
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
@@ -480,38 +483,43 @@ def collect_metrics_from_cluster_agent(cluster_agent_url: str, verify: bool) -> 
     if not cluster_resp.content:
         raise SetupError("Worker nodes")
 
-    return cluster_resp.content.decode("utf-8").split("\n")
+    resp_content = cluster_resp.content.decode("utf-8").split("\n")
+    return json.loads(resp_content[0])
 
 
-def group_metrics_by_pods(nodes_metrics: List[str]) -> Mapping[PodUID, LivePod]:
-    def group_by_pods(containers_collection) -> List[LivePod]:
-        parsed_pods: Dict[str, List[LiveContainer]] = {}
-
-        for container_name, container_info in containers_collection.items():
-            pod_containers = parsed_pods.setdefault(container_info["pod_uid"], [])
-            pod_containers.append(
-                LiveContainer(
-                    name=container_name,
-                    metrics={
-                        MetricName(metric["name"]): MetricValue(metric["value"])
-                        for metric in container_info["metrics"].values()
-                    },
-                )
-            )
-        return [
-            LivePod(uid=PodUID(pod_uid), containers=containers)
-            for pod_uid, containers in parsed_pods.items()
-        ]
-
-    pods: Dict[PodUID, LivePod] = {}
-    for collection in nodes_metrics:
+def group_metrics_by_containers(
+    performance_metrics: Sequence[Mapping[str, str]]
+) -> Sequence[PerformanceContainer]:
+    containers: Dict[ContainerName, Dict[MetricName, float]] = {}
+    container_pod_uid_mappings: Dict[ContainerName, PodUID] = {}
+    for container_metric in performance_metrics:
+        if (name := container_metric["container_name"]) not in container_pod_uid_mappings:
+            container_pod_uid_mappings[ContainerName(name)] = PodUID(container_metric["pod_uid"])
+        metrics = containers.setdefault(ContainerName(name), {})
         try:
-            pods.update(
-                {pod.uid: pod for pod in group_by_pods(json.loads(collection)["containers"])}
-            )
-        except (KeyError, json.JSONDecodeError):
-            continue
-    return pods
+            metric_value, _metric_timestamp = container_metric["metric_value_string"].split(" ")
+        except ValueError:
+            metric_value = container_metric["metric_value_string"]
+        metric_name = container_metric["metric_name"].replace("container_", "", 1)
+        metrics[MetricName(metric_name)] = float(metric_value)
+
+    return [
+        PerformanceContainer(name=name, metrics=metrics, pod_uid=container_pod_uid_mappings[name])
+        for name, metrics in containers.items()
+    ]
+
+
+def group_containers_by_pods(
+    performance_containers: Sequence[PerformanceContainer],
+) -> Mapping[PodUID, PerformancePod]:
+    parsed_pods: Dict[PodUID, List[PerformanceContainer]] = {}
+    for container in performance_containers:
+        pod_containers = parsed_pods.setdefault(container.pod_uid, [])
+        pod_containers.append(container)
+    return {
+        pod_uid: PerformancePod(uid=pod_uid, containers=containers)
+        for pod_uid, containers in parsed_pods.items()
+    }
 
 
 def map_uid_to_piggyback_host_name(api_pods: Sequence[Pod]) -> Mapping[PodUID, str]:
@@ -563,10 +571,15 @@ def main(args: Optional[List[str]] = None) -> int:
             performance_metrics = collect_metrics_from_cluster_agent(
                 arguments.cluster_agent_endpoint, arguments.verify_cert
             )
-            live_pods = group_metrics_by_pods(performance_metrics)
+
+            performance_containers = group_metrics_by_containers(performance_metrics)
+            performance_pods = group_containers_by_pods(performance_containers)
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
 
-            for pod in filter_outdated_pods(list(live_pods.values()), uid_piggyback_mappings):
+            # TODO: fix sections for new output format
+            for pod in filter_outdated_pods(
+                list(performance_pods.values()), uid_piggyback_mappings
+            ):
                 with ConditionalPiggybackSection(f"pod_{uid_piggyback_mappings[pod.uid]}"):
                     pod_performance_sections(pod.containers)
 
@@ -574,12 +587,9 @@ def main(args: Optional[List[str]] = None) -> int:
                 with ConditionalPiggybackSection(
                     f"deployment_{deployment.name(prepend_namespace=True)}"
                 ):
-                    try:
-                        deployment_performance_sections(
-                            [live_pods[pod_uid] for pod_uid in deployment.pod_uids()]
-                        )
-                    except KeyError:
-                        continue
+                    deployment_performance_sections(
+                        [performance_pods[pod_uid] for pod_uid in deployment.pod_uids()]
+                    )
 
     except urllib3.exceptions.MaxRetryError as e:
         if arguments.debug:

@@ -14,7 +14,7 @@ factory_settings["enviromux_default_levels"] = ENVIROMUX_CHECK_DEFAULT_PARAMETER
 
 
 def inventory_enviromux_sems_digital(parsed):
-    for item in parsed.iertkeys():
+    for item in parsed:
         yield item, {}
 
 

@@ -13,7 +13,7 @@ BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
-GCC_TOOLCHAIN := /opt/gcc-10.1.0
+GCC_TOOLCHAIN := /opt/gcc-11.2.0
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.6 and 2.7, we need to convert them, just like it is done for the agent

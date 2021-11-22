@@ -27,7 +27,7 @@ def limit():
 
 @pytest.fixture
 def usage():
-    return 3000
+    return 3000.0
 
 
 @pytest.fixture
@@ -38,14 +38,21 @@ def container_count():
 @pytest.fixture
 def memory_performance(usage):
     return {
-        "memory_usage": usage,
-        "memory_swap": 0,
+        "name": "container",
+        "memory_usage_bytes": {
+            "value": usage,
+            "timestamp": 0,
+        },
+        "memory_swap": {
+            "value": 0,
+            "timestamp": 0,
+        },
     }
 
 
 @pytest.fixture
 def string_table_performance(container_count, memory_performance):
-    return [[json.dumps({str(i): memory_performance for i in range(container_count)})]]
+    return [[json.dumps({"containers": [memory_performance for i in range(container_count)]})]]
 
 
 @pytest.fixture
@@ -124,8 +131,8 @@ def test_parse_resources(string_table_resources, requests, limit):
 
 def test_parse_performance(string_table_performance, usage):
     section = k8s_memory.parse_performance_memory(string_table_performance)
-    for _container_name, metrics in section.items():
-        assert metrics.memory_usage == usage
+    for container in section.containers:
+        assert container.memory_usage_bytes.value == usage
 
 
 def test_discovery_returns_an_iterable(string_table_resources, string_table_performance):

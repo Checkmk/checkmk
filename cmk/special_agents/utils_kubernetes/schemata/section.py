@@ -10,12 +10,13 @@ The schemas contained in this file are used to serialize data in the agent outpu
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 """
-from typing import Mapping, Optional, Sequence
+from typing import Mapping, NewType, Optional, Sequence
 
 from pydantic import BaseModel
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 
+ContainerName = NewType("ContainerName", str)
 PodSequence = Sequence[str]
 
 
@@ -25,7 +26,7 @@ class PerformanceMetric(BaseModel):
 
 
 class PerformanceContainer(BaseModel):
-    name: str
+    name: ContainerName
 
 
 class PodResources(BaseModel):
@@ -91,8 +92,12 @@ class CpuUsage(BaseModel):
     containers: Sequence[ContainerCpuUsage]
 
 
+class ContainerMemory(PerformanceContainer):
+    memory_usage_bytes: PerformanceMetric
+    memory_swap: PerformanceMetric
+
+
 class Memory(BaseModel):
     """section: k8s_live_memory_v1"""
 
-    memory_usage: float
-    memory_swap: float
+    containers: Sequence[ContainerMemory]

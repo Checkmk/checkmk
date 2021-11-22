@@ -8,7 +8,7 @@ from typing import Mapping, Optional
 
 from .agent_based_api.v1 import Metric, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.k8s import ContainerName, Memory, Resources
+from .utils.k8s import Memory, Resources
 from .utils.memory import check_element, MemoryLevels
 
 
@@ -16,11 +16,8 @@ def parse_memory_resources(string_table: StringTable) -> Resources:
     return Resources(**json.loads(string_table[0][0]))
 
 
-def parse_performance_memory(string_table: StringTable) -> Mapping[ContainerName, Memory]:
-    return {
-        ContainerName(container_name): Memory(**metrics)
-        for container_name, metrics in json.loads(string_table[0][0]).items()
-    }
+def parse_performance_memory(string_table: StringTable) -> Memory:
+    return Memory(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
@@ -100,27 +97,29 @@ def _output_memory_usage(total_usage: float, limits: float, levels=Optional[Memo
 def check(
     params: Mapping[str, MemoryLevels],
     section_k8s_memory_resources: Optional[Resources],
-    section_k8s_live_memory: Optional[Mapping[ContainerName, Memory]],
+    section_k8s_live_memory: Optional[Memory],
 ) -> CheckResult:
-
-    resources = section_k8s_memory_resources
-    if not resources:
+    if not section_k8s_memory_resources:
         return
 
-    if performance := section_k8s_live_memory:
-        total_usage = sum([container.memory_usage for container in performance.values()])
+    if section_k8s_live_memory:
+        total_usage = sum(
+            [container.memory_usage_bytes.value for container in section_k8s_live_memory.containers]
+        )
         yield from _output_memory_usage(
             total_usage=total_usage,
-            limits=resources.limit,
+            limits=section_k8s_memory_resources.limit,
             levels=params.get("levels_ram"),
         )
         yield from _render_absolute_metrics(
             total_usage,
-            resources.requests,
-            resources.limit,
+            section_k8s_memory_resources.requests,
+            section_k8s_memory_resources.limit,
         )
 
-    yield from _output_config_summaries(resources.requests, resources.limit)
+    yield from _output_config_summaries(
+        section_k8s_memory_resources.requests, section_k8s_memory_resources.limit
+    )
 
 
 register.check_plugin(

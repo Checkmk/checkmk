@@ -92,10 +92,19 @@ class Subset:
 
 
 # agent_kube section schemas --------------------------------- #
-
+# TODO: move schemas to separate file (include reason for double definition)
 
 ContainerName = NewType("ContainerName", str)
 PodSequence = Sequence[str]
+
+
+class PerformanceMetric(BaseModel):
+    value: float  # TODO: introduce NewType
+    timestamp: int
+
+
+class PerformanceContainer(BaseModel):
+    name: ContainerName
 
 
 class NodeCount(BaseModel):
@@ -155,11 +164,15 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
+class ContainerMemory(PerformanceContainer):
+    memory_usage_bytes: PerformanceMetric
+    memory_swap: PerformanceMetric
+
+
 class Memory(BaseModel):
     """section: k8s_live_memory_v1"""
 
-    memory_usage: float
-    memory_swap: float
+    containers: Sequence[ContainerMemory]
 
 
 class Resources(BaseModel):

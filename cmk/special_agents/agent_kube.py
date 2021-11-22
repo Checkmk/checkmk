@@ -46,7 +46,6 @@ from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, S
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
-ContainerName = NewType("ContainerName", str)
 MetricName = NewType("MetricName", str)
 PodUID = NewType("PodUID", str)
 SectionName = NewType("SectionName", str)
@@ -58,7 +57,7 @@ class PerformancePod(NamedTuple):
 
 
 class PerformanceContainer(NamedTuple):
-    name: ContainerName
+    name: section.ContainerName
     metrics: Mapping[MetricName, section.PerformanceMetric]
     pod_uid: PodUID
 
@@ -420,9 +419,8 @@ def filter_outdated_pods(
 
 def deployment_performance_sections(pods: List[PerformancePod]) -> None:
     """Write deployment sections based on collected performance metrics"""
-    # TODO: fix Deployment Memory section
     sections = [
-        (SectionName("memory"), section.Memory, ("memory_usage", "memory_swap")),
+        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
     ]
     for section_name, section_model, metrics in sections:
         section_containers = _performance_section_containers(
@@ -469,7 +467,7 @@ def _performance_section_containers(
     for container in containers:
         section_containers.append(
             container_model(
-                name=container.name,
+                name=section.ContainerName(container.name),
                 **{
                     metric: container.metrics[MetricName(metric)]
                     for metric in metrics
@@ -514,13 +512,15 @@ def collect_metrics_from_cluster_agent(
 def group_metrics_by_containers(
     performance_metrics: Sequence[Mapping[str, str]]
 ) -> Sequence[PerformanceContainer]:
-    containers: Dict[ContainerName, Dict[MetricName, section.PerformanceMetric]] = {}
-    container_pod_uid_mappings: Dict[ContainerName, PodUID] = {}
+    containers: Dict[section.ContainerName, Dict[MetricName, section.PerformanceMetric]] = {}
+    container_pod_uid_mappings: Dict[section.ContainerName, PodUID] = {}
     for performance_metric in performance_metrics:
         if (name := performance_metric["container_name"]) not in container_pod_uid_mappings:
-            container_pod_uid_mappings[ContainerName(name)] = PodUID(performance_metric["pod_uid"])
+            container_pod_uid_mappings[section.ContainerName(name)] = PodUID(
+                performance_metric["pod_uid"]
+            )
 
-        container_metrics = containers.setdefault(ContainerName(name), {})
+        container_metrics = containers.setdefault(section.ContainerName(name), {})
         try:
             metric_value, timestamp = performance_metric["metric_value_string"].split(" ")
             metric_timestamp = int(timestamp)

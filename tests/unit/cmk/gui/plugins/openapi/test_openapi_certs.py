@@ -5,13 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-_URL = "/NO_SITE/check_mk/api/1.0/csr"
+_BASE = "/NO_SITE/check_mk/api/1.0"
+_URL_ROOT_CERT = f"{_BASE}/root_cert"
+_URL_CSR = f"{_BASE}/csr"
 
 _CSR = """-----BEGIN CERTIFICATE REQUEST-----
 MIICVDCCATwCAQIwDzENMAsGA1UEAwwEaHVyejCCASIwDQYJKoZIhvcNAQEBBQAD
@@ -49,22 +52,57 @@ nkrndRn3MoyHIO3cuT7inOlFb/VYPRWP
 """
 
 
-def test_csr_403(
+@pytest.fixture(name="user_may_not")
+def fixture_user_may_not(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.utils.logged_in.LoggedInUser.may",
+        return_value=False,
+    )
+
+
+def test_root_cert_403(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    user_may_not: MagicMock,
+) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "get",
+        _URL_ROOT_CERT,
+        status=403,
+        headers={"Accept": "application/json"},
+    )
+    user_may_not.assert_called_once_with("general.agent_pairing")
+
+
+def test_root_cert_200(
     mocker: MockerFixture,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.certs._user_is_authorized",
-        return_value=False,
+        "cmk.gui.plugins.openapi.endpoints.certs._serialized_root_cert",
+        return_value="fake_root_cert",
     )
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        _URL_ROOT_CERT,
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json_body["cert"] == "fake_root_cert"
+
+
+def test_csr_403(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    user_may_not: MagicMock,
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
-        _URL,
+        _URL_CSR,
         params=json.dumps({"csr": _CSR}),
         status=403,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
+    user_may_not.assert_called_once_with("general.agent_pairing")
 
 
 @pytest.mark.parametrize(
@@ -90,7 +128,7 @@ def test_csr_400(
 ) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
-        _URL,
+        _URL_CSR,
         params=json.dumps({"csr": csr_str}),
         status=400,
         headers={"Accept": "application/json"},
@@ -108,7 +146,7 @@ def test_csr_200(
     )
     aut_user_auth_wsgi_app.call_method(
         "post",
-        _URL,
+        _URL_CSR,
         params=json.dumps({"csr": _CSR}),
         status=200,
         headers={"Accept": "application/json"},

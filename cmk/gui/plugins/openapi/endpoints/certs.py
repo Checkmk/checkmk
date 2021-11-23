@@ -14,7 +14,7 @@ Checkmk uses SSL certificates to verify push hosts.
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import CertificateSigningRequest
 
-from cmk.utils.certs import sign_csr_with_local_ca
+from cmk.utils.certs import load_local_ca, sign_csr_with_local_ca
 
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.globals import user
@@ -49,6 +49,10 @@ def _user_is_authorized() -> bool:
     return user.may("general.agent_pairing")
 
 
+def _serialized_root_cert() -> str:
+    return load_local_ca()[0].public_bytes(Encoding.PEM).decode()
+
+
 def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
     return (
         sign_csr_with_local_ca(
@@ -57,6 +61,31 @@ def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
         )
         .public_bytes(Encoding.PEM)
         .decode()
+    )
+
+
+@Endpoint(
+    "/root_cert",
+    "cmk/show",
+    method="get",
+    tag_group="Checkmk Internal",
+    additional_status_codes=[403],
+    status_descriptions={
+        403: _403_STATUS_DESCRIPTION,
+    },
+    response_schema=response_schemas.X509PEM,
+)
+def root_cert(param) -> Response:
+    """X.509 PEM-encoded root certificate"""
+    if not _user_is_authorized():
+        raise ProblemException(
+            status=403,
+            title=_403_STATUS_DESCRIPTION,
+        )
+    return constructors.serve_json(
+        {
+            "cert": _serialized_root_cert(),
+        }
     )
 
 

@@ -103,9 +103,7 @@ def check(
         return
 
     if section_k8s_live_memory:
-        total_usage = sum(
-            [container.memory_usage_bytes.value for container in section_k8s_live_memory.containers]
-        )
+        total_usage = section_k8s_live_memory.memory_usage_bytes
         yield from _output_memory_usage(
             total_usage=total_usage,
             limits=section_kube_memory_resources.limit,

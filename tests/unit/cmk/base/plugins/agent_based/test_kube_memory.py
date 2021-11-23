@@ -31,28 +31,13 @@ def usage():
 
 
 @pytest.fixture
-def container_count():
-    return 2
-
-
-@pytest.fixture
 def memory_performance(usage):
-    return {
-        "name": "container",
-        "memory_usage_bytes": {
-            "value": usage,
-            "timestamp": 0,
-        },
-        "memory_swap": {
-            "value": 0,
-            "timestamp": 0,
-        },
-    }
+    return {"memory_usage_bytes": usage, "memory_swap": 0}
 
 
 @pytest.fixture
-def string_table_performance(container_count, memory_performance):
-    return [[json.dumps({"containers": [memory_performance for i in range(container_count)]})]]
+def string_table_performance(memory_performance):
+    return [[json.dumps(memory_performance)]]
 
 
 @pytest.fixture
@@ -131,8 +116,7 @@ def test_parse_resources(string_table_resources, requests, limit):
 
 def test_parse_performance(string_table_performance, usage):
     section = kube_memory.parse_performance_memory(string_table_performance)
-    for container in section.containers:
-        assert container.memory_usage_bytes.value == usage
+    assert section.memory_usage_bytes == usage
 
 
 def test_discovery_returns_an_iterable(string_table_resources, string_table_performance):
@@ -154,8 +138,8 @@ def test_check_metrics_count(check_result):
     assert len([m for m in check_result if isinstance(m, Metric)]) == 4
 
 
-def test_check_usage_value(check_result, usage, limit, container_count):
-    total_usage = container_count * usage
+def test_check_usage_value(check_result, usage, limit):
+    total_usage = usage
     percentage_usage = total_usage / limit * 100
     usage_result = next(check_result)
     assert (
@@ -164,8 +148,8 @@ def test_check_usage_value(check_result, usage, limit, container_count):
     )
 
 
-def test_check_no_limit_usage(section_performance, section_unset_resources, usage, container_count):
+def test_check_no_limit_usage(section_performance, section_unset_resources, usage):
     check_result = list(kube_memory.check({}, section_unset_resources, section_performance))
     usage_result = check_result[0]
     assert isinstance(usage_result, Result)
-    assert usage_result.summary == f"Usage: {render.bytes(container_count*usage)}"
+    assert usage_result.summary == f"Usage: {render.bytes(usage)}"

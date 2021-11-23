@@ -199,15 +199,11 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
-class ContainerMemory(PerformanceContainer):
-    memory_usage_bytes: PerformanceMetric
-    memory_swap: PerformanceMetric
-
-
 class Memory(BaseModel):
     """section: k8s_live_memory_v1"""
 
-    containers: Sequence[ContainerMemory]
+    memory_usage_bytes: float
+    memory_swap: float
 
 
 class NodeInfo(BaseModel):

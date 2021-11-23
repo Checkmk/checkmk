@@ -493,81 +493,64 @@ def filter_outdated_pods(
     return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
 
 
-def cluster_performance_sections(pods: List[PerformancePod]) -> None:
-    sections = [
+def write_kube_set_performance_sections(pods: List[PerformancePod]) -> None:
+    """Write cluster, node & deployment sections based on collected performance metrics"""
+    if not pods:
+        return
+
+    aggregated_sections = [
         (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
     ]
-    for section_name, section_model, metrics in sections:
-        section_containers = _performance_section_containers(
-            container_model=_extract_container_model(section_model),
-            containers=[container for pod in pods for container in pod.containers],
-            metrics=metrics,
-        )
-        write_performance_section(
-            section_name,
-            section_model,
-            section_containers,
+    for section_name, section_model, metrics in aggregated_sections:
+        _write_performance_section(
+            section_name=section_name,
+            section_output=section_model(
+                **metrics_to_aggregate(
+                    metrics, containers=[container for pod in pods for container in pod.containers]
+                )
+            ),
         )
 
 
-def node_performance_sections(pods: List[PerformancePod]) -> None:
-    """Write node sections based on collected performance metrics"""
-    sections = [
-        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
-    ]
-    for section_name, section_model, metrics in sections:
-        section_containers = _performance_section_containers(
-            container_model=_extract_container_model(section_model),
-            containers=[container for pod in pods for container in pod.containers],
-            metrics=metrics,
-        )
-        write_performance_section(
-            section_name,
-            section_model,
-            section_containers,
-        )
-
-
-def deployment_performance_sections(pods: List[PerformancePod]) -> None:
-    """Write deployment sections based on collected performance metrics"""
-    sections = [
-        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
-    ]
-    for section_name, section_model, metrics in sections:
-        section_containers = _performance_section_containers(
-            container_model=_extract_container_model(section_model),
-            containers=[container for pod in pods for container in pod.containers],
-            metrics=metrics,
-        )
-        write_performance_section(
-            section_name,
-            section_model,
-            section_containers,
-        )
-
-
-def pod_performance_sections(containers: Sequence[PerformanceContainer]) -> None:
+def pod_performance_sections(pod: PerformancePod) -> None:
     """Write pod sections based on collected performance metrics"""
     sections = [
         (SectionName("cpu_usage_total"), section.CpuUsage, ("cpu_usage_seconds_total",)),
-        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
     ]
     for section_name, section_model, metrics in sections:
         section_containers = _performance_section_containers(
             container_model=_extract_container_model(section_model),
-            containers=containers,
+            containers=pod.containers,
             metrics=metrics,
         )
-        write_performance_section(section_name, section_model, section_containers)
+        _write_performance_section(section_name, section_model(containers=section_containers))
 
 
-def write_performance_section(
-    section_name: SectionName,
-    section_model: Type[BaseModel],
-    section_containers: Sequence[BaseModel],
-) -> None:
+def pod_aggregated_performance_sections(pod_containers: Sequence[PerformanceContainer]) -> None:
+    """Write pod sections based on aggregated performance metrics"""
+    aggregated_sections = [
+        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
+    ]
+    for section_name, section_model, metrics in aggregated_sections:
+        _write_performance_section(
+            section_name, section_model(**metrics_to_aggregate(metrics, pod_containers))
+        )
+
+
+def metrics_to_aggregate(
+    metrics: Sequence[str], containers: Sequence[PerformanceContainer]
+) -> Dict[str, float]:
+    aggregated_metrics: DefaultDict[str, float] = defaultdict(float)
+    for container in containers:
+        for metric in metrics:
+            aggregated_metrics[metric] += container.metrics[MetricName(metric)].value
+    return aggregated_metrics
+
+
+def _write_performance_section(section_name: SectionName, section_output: BaseModel):
+    # TODO: change live to performance (including checks)
     with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
-        writer.append(section_model(containers=section_containers).json())
+        writer.append(section_output.json())
 
 
 def _performance_section_containers(
@@ -594,8 +577,8 @@ def _extract_container_model(section_model: Type[BaseModel]) -> Type[BaseModel]:
     """Retrieve the pydantic BaseModel type of the containers' included in the overall section model
 
     Examples:
-       >>> _extract_container_model(section.Memory)
-       <class 'cmk.special_agents.utils_kubernetes.schemata.section.ContainerMemory'>
+       >>> _extract_container_model(section.CpuUsage)
+       <class 'cmk.special_agents.utils_kubernetes.schemata.section.ContainerCpuUsage'>
     """
 
     section_fields = section_model.__fields__
@@ -724,15 +707,17 @@ def main(args: Optional[List[str]] = None) -> int:
             performance_pods = group_containers_by_pods(performance_containers)
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
 
+            # Write performance sections
+            # TODO: remove non aggregated sections with future agent
             for pod in filter_outdated_pods(
                 list(performance_pods.values()), uid_piggyback_mappings
             ):
                 with ConditionalPiggybackSection(f"pod_{uid_piggyback_mappings[pod.uid]}"):
-                    pod_performance_sections(pod.containers)
+                    pod_performance_sections(pod)
 
             for node in cluster.nodes():
                 with ConditionalPiggybackSection(f"node_{node.name}"):
-                    node_performance_sections(
+                    write_kube_set_performance_sections(
                         [
                             performance_pods[pod.uid]
                             for pod in node.pods(phase=api.Phase.RUNNING)
@@ -744,7 +729,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 with ConditionalPiggybackSection(
                     f"deployment_{deployment.name(prepend_namespace=True)}"
                 ):
-                    deployment_performance_sections(
+                    write_kube_set_performance_sections(
                         [
                             performance_pods[pod.uid]
                             for pod in deployment.pods(phase=api.Phase.RUNNING)
@@ -753,7 +738,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     )
 
             with ConditionalPiggybackSection("cluster_kube"):  # TODO: make name configurable
-                cluster_performance_sections(
+                write_kube_set_performance_sections(
                     [
                         performance_pods[pod.uid]
                         for pod in cluster.pods(phase=api.Phase.RUNNING)

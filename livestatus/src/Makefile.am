@@ -208,7 +208,7 @@ $(RRDTOOL_VERSION):
 # would totally hide any output of our own stuff, so we write it to a log file
 # in case something goes seriously wrong.
 	mkdir -p $$(dirname $(RRDTOOL_BUILD_LOG))
-	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
+	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $(RRDTOOL_PATH)))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile

@@ -21,6 +21,9 @@ RRDTOOL_WORK_DIR := $(PACKAGE_WORK_DIR)/$(RRDTOOL_DIR)
 
 RRDTOOL_WORK_MODULEBUILDRC := $(RRDTOOL_WORK_DIR)/.modulebuildrc
 
+# Used by other OMD packages
+PACKAGE_RRDTOOL_DESTDIR := $(RRDTOOL_INSTALL_DIR)
+
 # Executed from enterprise/core/src/Makefile.am and livestatus/src/Makefile.am
 # and enterprise/core/src/.f12
 $(RRDTOOL)-build-library: $(RRDTOOL_CACHE_PKG_PROCESS)

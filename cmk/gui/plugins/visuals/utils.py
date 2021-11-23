@@ -8,7 +8,6 @@
 # TODO: More feature related splitting up would be better
 
 import abc
-import time
 from itertools import chain
 from typing import (
     Any,
@@ -34,7 +33,7 @@ import cmk.gui.legacy_filters as legacy_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, user_errors
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import (
@@ -404,16 +403,10 @@ class FilterTime(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        column: Optional[str],
+        column: str,
         is_show_more: bool = False,
     ):
         self.column = column
-        self.ranges = [
-            (86400, _l("days")),
-            (3600, _l("hours")),
-            (60, _l("min")),
-            (1, _l("sec")),
-        ]
         varnames = [
             ident + "_from",
             ident + "_from_range",
@@ -430,6 +423,7 @@ class FilterTime(Filter):
             link_columns=[column] if column is not None else [],
             is_show_more=is_show_more,
         )
+        self.legacy_filter = legacy_filters.FilterTime(ident=ident, column=column)
 
     def display(self, value: FilterHTTPVariables):
         html.open_table(class_="filtertime")
@@ -441,54 +435,16 @@ class FilterTime(Filter):
             html.text_input(varprefix)
             html.close_td()
             html.open_td()
-            html.dropdown(varprefix + "_range", self._options(self.ranges), deflt="3600")
+            html.dropdown(varprefix + "_range", legacy_filters.time_filter_options(), deflt="3600")
             html.close_td()
             html.close_tr()
         html.close_table()
 
-    @staticmethod
-    def _options(ranges: List[Tuple[int, LazyString]]) -> Choices:
-        choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
-        choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
-        return choices
-
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        fromsecs, untilsecs = self.get_time_range(value)
-        filtertext = ""
-        if fromsecs is not None:
-            filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
-        if untilsecs is not None:
-            filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
-        return filtertext
+        return self.legacy_filter.filter(value)
 
-    # Extract timerange user has selected from HTML variables
-    def get_time_range(self, value: FilterHTTPVariables):
-        return self._get_time_range_of(value, "from"), self._get_time_range_of(value, "until")
-
-    def _get_time_range_of(self, value: FilterHTTPVariables, what: str) -> Union[None, int, float]:
-        varprefix = self.ident + "_" + what
-
-        rangename = value.get(varprefix + "_range")
-        if rangename == "abs":
-            try:
-                return time.mktime(time.strptime(value[varprefix], "%Y-%m-%d"))
-            except Exception:
-                user_errors.add(
-                    MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
-                )
-                return None
-
-        if rangename == "unix":
-            return int(value[varprefix])
-        if rangename is None:
-            return None
-
-        try:
-            count = int(value[varprefix])
-            secs = count * int(rangename)
-            return int(time.time()) - secs
-        except Exception:
-            return None
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.legacy_filter.filter_table(context, rows)
 
 
 def filter_cre_choices():

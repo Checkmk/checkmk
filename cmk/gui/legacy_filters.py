@@ -7,12 +7,14 @@
 # Here are livestatus filters isolated out of the visuals GUI logic. They shall
 # then later be replaced using the new query helpers.
 
-from typing import Callable, List, Literal, Optional, Tuple
+import time
+from typing import Callable, List, Literal, Optional, Tuple, Union
 
 import livestatus
 
 import cmk.gui.inventory as inventory
-from cmk.gui.globals import config, user
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, user, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
 
@@ -176,3 +178,65 @@ def has_inventory(on: bool, context: VisualContext, rows: Rows) -> Rows:
     if on:
         return [row for row in rows if row["host_inventory"]]
     return [row for row in rows if not row["host_inventory"]]
+
+
+### Filter Time
+def time_filter_options() -> List[Tuple[str, str]]:
+    ranges = [(86400, _("days")), (3600, _("hours")), (60, _("min")), (1, _("sec"))]
+    choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
+    choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
+    return choices
+
+
+class FilterTime:
+    def __init__(
+        self,
+        *,
+        ident: str,
+        column: str,
+    ):
+        self.ident = ident
+        self.column = column
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        fromsecs, untilsecs = self.get_time_range(value)
+        filtertext = ""
+        if fromsecs is not None:
+            filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
+        if untilsecs is not None:
+            filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
+        return filtertext
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return rows
+
+    # Extract timerange user has selected from HTML variables
+    def get_time_range(
+        self, value: FilterHTTPVariables
+    ) -> Tuple[Union[None, int, float], Union[None, int, float]]:
+        return self._get_time_range_of(value, "from"), self._get_time_range_of(value, "until")
+
+    def _get_time_range_of(self, value: FilterHTTPVariables, what: str) -> Union[None, int, float]:
+        varprefix = self.ident + "_" + what
+
+        rangename = value.get(varprefix + "_range")
+        if rangename == "abs":
+            try:
+                return time.mktime(time.strptime(value[varprefix], "%Y-%m-%d"))
+            except Exception:
+                user_errors.add(
+                    MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
+                )
+                return None
+
+        if rangename == "unix":
+            return int(value[varprefix])
+        if rangename is None:
+            return None
+
+        try:
+            count = int(value[varprefix])
+            secs = count * int(rangename)
+            return int(time.time()) - secs
+        except Exception:
+            return None

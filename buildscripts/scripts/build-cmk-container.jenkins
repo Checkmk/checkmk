@@ -50,6 +50,11 @@ timeout(time: 12, unit: 'HOURS') {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v /var/run/docker.sock:/var/run/docker.sock") {
+                    stage('Prepare package directory') {
+                        sh("rm -rf \"${PACKAGE_DIR}\"")
+                        sh("mkdir -p \"${PACKAGE_DIR}\"")
+                    }
+
                     stage('Build Container') {
                         def CREDENTIALS_ID
                         if (EDITION == "raw") {
@@ -58,7 +63,8 @@ timeout(time: 12, unit: 'HOURS') {
                             CREDENTIALS_ID = "registry.checkmk.com"
                         }
 
-                        upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS)
+                        upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION, "buster")
+                        upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION, "buster")
 
                         withCredentials([
                             usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),

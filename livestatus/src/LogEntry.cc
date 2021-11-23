@@ -5,7 +5,6 @@
 
 #include "LogEntry.h"
 
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <functional>

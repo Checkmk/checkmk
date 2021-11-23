@@ -54,7 +54,7 @@ def test_csr_403(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.csr._user_is_authorized",
+        "cmk.gui.plugins.openapi.endpoints.certs._user_is_authorized",
         return_value=False,
     )
     aut_user_auth_wsgi_app.call_method(
@@ -103,7 +103,7 @@ def test_csr_200(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.csr._serialized_signed_cert",
+        "cmk.gui.plugins.openapi.endpoints.certs._serialized_signed_cert",
         return_value="3pi4ghjwerihg",
     )
     aut_user_auth_wsgi_app.call_method(

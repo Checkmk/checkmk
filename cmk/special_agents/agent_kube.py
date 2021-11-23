@@ -321,6 +321,9 @@ class Cluster:
         resources.update(phases_pods)
         return section.PodResourcesWithCapacity(**resources)
 
+    def pod_uids(self) -> Sequence[PodUID]:
+        return [pod.uid for pod in self._pods.values()]
+
     def pods(self) -> Sequence[Pod]:
         return list(self._pods.values())
 
@@ -344,6 +347,9 @@ class Cluster:
         if self._cluster_details is None:
             raise AttributeError("cluster_details was not provided")
         return self._cluster_details
+
+    def memory_resources(self) -> api.Resources:
+        return _collect_memory_resources(list(self._pods.values()))
 
 
 def _collect_memory_resources(pods: Sequence[Pod]) -> api.Resources:
@@ -373,6 +379,7 @@ def output_cluster_api_sections(cluster: Cluster) -> None:
         "k8s_pod_resources_with_capacity_v1": cluster.pod_resources,
         "k8s_node_count_v1": cluster.node_count,
         "k8s_cluster_details_v1": cluster.cluster_details,
+        "k8s_memory_resources_v1": cluster.memory_resources,
     }
     _write_sections(sections)
 
@@ -426,6 +433,23 @@ def filter_outdated_pods(
     live_pods: Sequence[PerformancePod], uid_piggyback_mappings: Mapping[PodUID, str]
 ) -> Iterator[PerformancePod]:
     return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
+
+
+def cluster_performance_sections(pods: List[PerformancePod]) -> None:
+    sections = [
+        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
+    ]
+    for section_name, section_model, metrics in sections:
+        section_containers = _performance_section_containers(
+            container_model=_extract_container_model(section_model),
+            containers=[container for pod in pods for container in pod.containers],
+            metrics=metrics,
+        )
+        write_performance_section(
+            section_name,
+            section_model,
+            section_containers,
+        )
 
 
 def node_performance_sections(pods: List[PerformancePod]) -> None:
@@ -661,6 +685,11 @@ def main(args: Optional[List[str]] = None) -> int:
                     deployment_performance_sections(
                         [performance_pods[pod_uid] for pod_uid in deployment.pod_uids()]
                     )
+
+            with ConditionalPiggybackSection("cluster_kube"):  # TODO: make name configurable
+                cluster_performance_sections(
+                    [performance_pods[pod_uid] for pod_uid in cluster.pod_uids()]
+                )
 
     except urllib3.exceptions.MaxRetryError as e:
         if arguments.debug:

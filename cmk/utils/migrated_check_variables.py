@@ -92,3 +92,23 @@ pdu_gude_default_levels = {
     "A": (15, 16),
     "W": (3500, 3600),
 }
+
+# jenkins_jobs
+
+MAP_JOB_STATES = {
+    "aborted": {"state": 0, "info": "Aborted"},
+    "blue": {"state": 0, "info": "Success"},
+    "disabled": {"state": 0, "info": "Disabled"},
+    "notbuilt": {"state": 0, "info": "Not built"},
+    "red": {"state": 2, "info": "Failed"},
+    "yellow": {"state": 1, "info": "Unstable"},
+}
+
+MAP_BUILD_STATES = {
+    "success": 0,  # no errors
+    "unstable": 1,  # some errors but not fatal
+    "failure": 2,  # fatal error
+    "aborted": 0,  # manually aborted
+    "null": 1,  # module was not built
+    "none": 0,  # running
+}

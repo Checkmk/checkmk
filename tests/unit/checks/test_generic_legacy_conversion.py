@@ -1923,7 +1923,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "janitza_umg.temp",
         "jar_signature",
         "jenkins_instance",
-        "jenkins_jobs",
         "jenkins_queue",
         "jira_custom_svc",
         "jira_workflow",

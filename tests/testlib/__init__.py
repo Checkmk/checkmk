@@ -245,6 +245,11 @@ def wait_until(condition, timeout=1, interval=0.1):
 
 
 def wait_until_liveproxyd_ready(site, site_ids):
+    def _config_available():
+        return site.file_exists("etc/check_mk/liveproxyd.mk")
+
+    wait_until(_config_available, timeout=60, interval=0.5)
+
     # First wait for the site sockets to appear
     def _all_sockets_opened():
         return all((site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids))

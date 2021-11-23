@@ -20,8 +20,9 @@ struct PairingBody {
 }
 
 #[derive(Deserialize)]
-struct PairingResponse {
-    cert: String,
+pub struct PairingResponse {
+    pub root_cert: String,
+    pub client_cert: String,
 }
 
 #[derive(Serialize)]
@@ -32,11 +33,11 @@ struct RegistrationWithHNBody {
 
 pub fn pairing(
     server_address: &str,
-    root_cert: &str,
+    root_cert: Option<String>,
     csr: String,
     credentials: &str,
-) -> AnyhowResult<String> {
-    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
+) -> AnyhowResult<PairingResponse> {
+    let response = certs::client(root_cert.map(|cert_str| cert_str.into_bytes()))?
         .post(format!("https://{}/pairing", server_address))
         .header("authentication", format!("Bearer {}", credentials))
         .json(&PairingBody { csr })
@@ -48,8 +49,7 @@ pub fn pairing(
 
     if let StatusCode::OK = status {
         Ok(serde_json::from_str::<PairingResponse>(&body)
-            .context(format!("Error parsing this response body: {}", body))?
-            .cert)
+            .context(format!("Error parsing this response body: {}", body))?)
     } else {
         Err(anyhow!("Request failed with code {}: {}", status, body))
     }

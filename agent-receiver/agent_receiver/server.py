@@ -10,7 +10,12 @@ from pathlib import Path
 from tempfile import mkstemp
 from typing import Dict, Mapping, Optional
 
-from agent_receiver.checkmk_rest_api import host_exists, link_host_with_uuid, post_csr
+from agent_receiver.checkmk_rest_api import (
+    get_root_cert,
+    host_exists,
+    link_host_with_uuid,
+    post_csr,
+)
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
 from cryptography.x509 import load_pem_x509_csr
@@ -40,29 +45,50 @@ def _uuid_from_pem_csr(pem_csr: str) -> str:
 @app.post("/pairing")
 async def pairing(
     *,
-    authentication: Optional[str] = Header(None),
+    authentication: str = Header(...),
     pairing_body: PairingBody,
 ) -> Mapping[str, str]:
-    rest_api_csr_resp = post_csr(
-        str(authentication),
-        pairing_body.csr,
-    )
-    if rest_api_csr_resp.ok:
-        logger.info(
-            "uuid=%s CSR signed",
-            _uuid_from_pem_csr(pairing_body.csr),
-        )
-        return rest_api_csr_resp.json()
+    uuid = _uuid_from_pem_csr(pairing_body.csr)
 
+    if not (rest_api_root_cert_resp := get_root_cert(authentication)).ok:
+        logger.error(
+            "uuid=%s Getting root cert failed with %s",
+            uuid,
+            rest_api_root_cert_resp.text,
+        )
+        raise HTTPException(
+            status_code=rest_api_root_cert_resp.status_code,
+            detail=rest_api_root_cert_resp.text,
+        )
     logger.info(
-        "uuid=%s CSR failed with %s",
-        _uuid_from_pem_csr(pairing_body.csr),
-        rest_api_csr_resp.text,
+        "uuid=%s Got root cert",
+        uuid,
     )
-    raise HTTPException(
-        status_code=rest_api_csr_resp.status_code,
-        detail=rest_api_csr_resp.text,
+
+    if not (
+        rest_api_csr_resp := post_csr(
+            authentication,
+            pairing_body.csr,
+        )
+    ).ok:
+        logger.error(
+            "uuid=%s CSR failed with %s",
+            uuid,
+            rest_api_csr_resp.text,
+        )
+        raise HTTPException(
+            status_code=rest_api_csr_resp.status_code,
+            detail=rest_api_csr_resp.text,
+        )
+    logger.info(
+        "uuid=%s CSR signed",
+        uuid,
     )
+
+    return {
+        "root_cert": rest_api_root_cert_resp.json()["cert"],
+        "client_cert": rest_api_csr_resp.json()["cert"],
+    }
 
 
 class RegistrationWithHNBody(BaseModel):

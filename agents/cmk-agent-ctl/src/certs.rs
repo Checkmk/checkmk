@@ -37,7 +37,7 @@ pub fn client(root_cert: Option<Vec<u8>>) -> AnyhowResult<Client> {
     let client_builder = if let Some(cert) = root_cert {
         client_builder.add_root_certificate(Certificate::from_pem(&cert)?)
     } else {
-        client_builder
+        client_builder.danger_accept_invalid_certs(true)
     };
 
     Ok(client_builder
@@ -45,22 +45,22 @@ pub fn client(root_cert: Option<Vec<u8>>) -> AnyhowResult<Client> {
         .build()?)
 }
 
-pub fn fetch_root_cert(address: &str) -> AnyhowResult<String> {
+pub fn fetch_server_cert(address: &str) -> AnyhowResult<String> {
     let tcp_stream = TcpStream::connect(address).unwrap();
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
     let mut ssl_stream = ssl_connector_builder.build().connect("dummy", tcp_stream)?;
 
-    let root_cert = ssl_stream
+    let server_cert = ssl_stream
         .ssl()
         .peer_cert_chain()
         .unwrap()
         .iter()
-        .last()
+        .next()
         .unwrap()
         .to_pem()?;
 
     ssl_stream.shutdown()?;
 
-    Ok(String::from_utf8(root_cert)?)
+    Ok(String::from_utf8(server_cert)?)
 }

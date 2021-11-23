@@ -58,6 +58,13 @@ def _forward_put(
     )
 
 
+def get_root_cert(authentication: str) -> requests.Response:
+    return _forward_get(
+        "root_cert",
+        authentication,
+    )
+
+
 def post_csr(
     authentication: str,
     csr: str,

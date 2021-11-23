@@ -49,22 +49,26 @@ fn register(
         .host_name
         .context("Missing host name for registration")?;
 
-    let uuid = Uuid::new_v4().to_string();
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
-    let root_cert = match &config.root_certificate {
-        Some(cert) => cert.clone(),
-        None => certs::fetch_root_cert(&agent_receiver_address)
-            .context(format!("Error establishing trust with agent_receiver."))?,
+    let uuid = Uuid::new_v4().to_string();
+    let server_cert = match &config.root_certificate {
+        Some(cert) => Some(cert.clone()),
+        None => {
+            let fetched_server_cert = certs::fetch_server_cert(&agent_receiver_address)
+                .context(format!("Error establishing trust with agent_receiver."))?;
+            println!("Trusting \n\n{}\nfor pairing", &fetched_server_cert);
+            None
+        }
     };
 
     let (csr, private_key) = certs::make_csr(&uuid).context(format!("Error creating CSR."))?;
-    let certificate =
-        agent_receiver_api::pairing(&agent_receiver_address, &root_cert, csr, &credentials)
+    let pairing_response =
+        agent_receiver_api::pairing(&agent_receiver_address, server_cert, csr, &credentials)
             .context(format!("Error pairing with {}", &agent_receiver_address))?;
 
     agent_receiver_api::register_with_hostname(
         &agent_receiver_address,
-        &root_cert,
+        &pairing_response.root_cert,
         &credentials,
         &uuid,
         &host_name,
@@ -76,8 +80,8 @@ fn register(
         config::ServerSpec {
             uuid,
             private_key,
-            certificate,
-            root_cert,
+            certificate: pairing_response.client_cert,
+            root_cert: pairing_response.root_cert,
         },
     );
 

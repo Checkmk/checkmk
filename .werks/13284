@@ -1,0 +1,16 @@
+Title: BI: Reintroduced "sitename#hostname" filter for "Regex for hostname
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1637683241
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p17
+
+You may add the prefix <tt>{sitename}#</tt> to any <tt>Regex for hostname</tt> filter, e.g
+<tt>central_site#server_(.*)"<tt>
+This will further restrict the filter so that it only includes hosts for the given site.
+
+This feature is more or less undocumented and has been reintroduced to fix errors with older configurations.
+We do not recommend to use this special prefix and plan to offer a better alternative in a future version.

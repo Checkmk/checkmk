@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from cmk.utils.bi.bi_lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.utils.regex import regex
@@ -85,6 +85,11 @@ class BISearcher(ABCBISearcher):
         if not pattern_with_anchor.endswith("$"):
             pattern_with_anchor += "$"
 
+        # Another hidden "feature". Split site and hostname: {sitename}#{hostname}
+        tokens = pattern_with_anchor.split("#")
+        pattern_with_anchor = tokens[-1]
+        site_id_filter = None if len(tokens) < 2 else tokens[0]
+
         matched_hosts = []
         matched_re_groups = {}
         regex_pattern = regex(pattern_with_anchor)
@@ -92,6 +97,9 @@ class BISearcher(ABCBISearcher):
         pattern_miss_cache = self._host_regex_miss_cache.setdefault(pattern_with_anchor, {})
         for host in hosts:
             if host.name in pattern_miss_cache:
+                continue
+
+            if site_id_filter and host.site_id != site_id_filter:
                 continue
 
             cached_match = pattern_match_cache.get(host.name)

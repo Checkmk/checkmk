@@ -6,7 +6,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Type
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type
 
 from marshmallow import fields, pre_dump
 
@@ -240,16 +240,14 @@ class BIAggregationPacks:
     def get_rule_ids_of_aggregation(self, aggr_id: str) -> Set[str]:
         bi_aggregation = self.get_aggregation_mandatory(aggr_id)
         if isinstance(bi_aggregation.node.action, BICallARuleAction):
-            return self._get_rule_ids_of_rule(bi_aggregation.node.action.rule_id)
+            return set(self._get_rule_ids_of_rule(bi_aggregation.node.action.rule_id))
         return set()
 
-    def _get_rule_ids_of_rule(self, rule_id: str) -> Set[str]:
-        rule_ids = [rule_id] + [
-            bi_node.action.rule_id
-            for bi_node in self.get_rule_mandatory(rule_id).get_nodes()
-            if isinstance(bi_node.action, BICallARuleAction)
-        ]
-        return set(rule_ids)
+    def _get_rule_ids_of_rule(self, rule_id: str) -> Iterator[str]:
+        yield rule_id
+        for bi_node in self.get_rule_mandatory(rule_id).get_nodes():
+            if isinstance(bi_node.action, BICallARuleAction):
+                yield from self._get_rule_ids_of_rule(bi_node.action.rule_id)
 
     def rename_rule_id(self, old_id: str, new_id: str) -> None:
         # Rename the rule itself and all call_a_rule references in rules and aggregations

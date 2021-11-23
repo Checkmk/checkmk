@@ -3,10 +3,11 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::certs;
-use anyhow::{anyhow, Result as AnyhowResult};
+use anyhow::{anyhow, Context, Result as AnyhowResult};
 use http::StatusCode;
 use reqwest;
 use serde::{Deserialize, Serialize};
+use serde_json;
 
 #[derive(Deserialize)]
 struct JSONResponse {
@@ -35,13 +36,23 @@ pub fn pairing(
     csr: String,
     credentials: &str,
 ) -> AnyhowResult<String> {
-    Ok(certs::client(Some(String::from(root_cert).into_bytes()))?
+    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
         .post(format!("https://{}/pairing", server_address))
         .header("authentication", format!("Bearer {}", credentials))
         .json(&PairingBody { csr })
-        .send()?
-        .json::<PairingResponse>()?
-        .cert)
+        .send()?;
+    let status = response.status();
+    // Get the text() instead of directly calling json(), because both methods would consume the response.
+    // Otherwise, in case of a json parsing error, we would have no information about the body.
+    let body = response.text()?;
+
+    if let StatusCode::OK = status {
+        Ok(serde_json::from_str::<PairingResponse>(&body)
+            .context(format!("Error parsing this response body: {}", body))?
+            .cert)
+    } else {
+        Err(anyhow!("Request failed with code {}: {}", status, body))
+    }
 }
 
 pub fn register_with_hostname(
@@ -59,9 +70,12 @@ pub fn register_with_hostname(
             host_name: String::from(host_name),
         })
         .send()?;
-    match response.status() {
-        StatusCode::NO_CONTENT => Ok(()),
-        _ => Err(anyhow!("{}", response.text()?)),
+    let status = response.status();
+
+    if let StatusCode::NO_CONTENT = status {
+        Ok(())
+    } else {
+        Err(anyhow!("Request failed with code {}", status,))
     }
 }
 
@@ -80,7 +94,7 @@ pub fn agent_data(
     // TODO:
     // - Send client cert in header
     // - Use root cert
-    Ok(certs::client(None)?
+    let response = certs::client(None)?
         .post(String::from(agent_receiver_address) + "/agent-data")
         .multipart(
             reqwest::blocking::multipart::Form::new()
@@ -93,7 +107,11 @@ pub fn agent_data(
                         .file_name("agent_data"),
                 ),
         )
-        .send()?
-        .json::<JSONResponse>()?
-        .message)
+        .send()?;
+
+    if let StatusCode::OK = response.status() {
+        Ok(response.json::<JSONResponse>()?.message)
+    } else {
+        Err(anyhow!("{}", response.text()?))
+    }
 }

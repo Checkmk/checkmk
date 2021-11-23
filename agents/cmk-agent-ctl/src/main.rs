@@ -162,12 +162,15 @@ fn ensure_home_directory(path: &Path) -> io::Result<()> {
 }
 
 fn sanitize_home_dir_ownership(paths: [&Path; 4], user: &str) -> AnyhowResult<()> {
+    if !unistd::Uid::current().is_root() {
+        return Ok(());
+    }
+
     let cmk_agent_user =
         unistd::User::from_name(user)?.context(format!("Could not find user {}", user))?;
     let cmk_agent_group =
         unistd::Group::from_name(user)?.context(format!("Could not find group {}", user))?;
 
-    // TODO: Change only if current ownership is wrong
     for path in paths {
         if path.exists() {
             unistd::chown(path, Some(cmk_agent_user.uid), Some(cmk_agent_group.gid))?;
@@ -182,14 +185,15 @@ fn main() -> AnyhowResult<()> {
     let config_path = Path::new(HOME_DIR).join(CONFIG_FILE);
     let log_path = Path::new(HOME_DIR).join(LOG_FILE);
 
+    // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
+    ensure_home_directory(Path::new(HOME_DIR))
+        .context("Failed to create cmk-agent home directory")?;
+
     if let Err(error) = init_logging(&log_path).context("Failed to initialize logging") {
         println!("Error: {:?}", error)
     };
     info!("Starting cmk-agent-ctl");
 
-    // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
-    ensure_home_directory(Path::new(HOME_DIR))
-        .context("Failed to create cmk-agent home directory")?;
 
     let args = cli::Args::from_args();
     let mode = String::from(&args.mode);

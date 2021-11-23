@@ -127,5 +127,10 @@ RUN touch /etc/fstab
 RUN groupadd -g 1000 jenkins \
     && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
 
+# Remove the limitation of number of processes for other users than root
+# This is an attempt for fixing: "su: failed to execute /bin/bash: Resource temporarily unavailable"
+# Be aware that this allows so called "fork bombs"...
+RUN rm /etc/security/limits.d/20-nproc.conf
+
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

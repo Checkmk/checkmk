@@ -403,6 +403,7 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
             "k8s_pod_conditions_v1": cluster_pod.conditions,
             "k8s_pod_containers_v1": cluster_pod.containers_infos,
             "k8s_start_time_v1": cluster_pod.start_time,
+            "kube_memory_resources_v1": cluster_pod.memory_resources,
         }
         _write_sections(sections)
 
@@ -439,6 +440,7 @@ def pod_performance_sections(containers: Sequence[PerformanceContainer]) -> None
     """Write pod sections based on collected performance metrics"""
     sections = [
         (SectionName("cpu_usage_total"), section.CpuUsage, ("cpu_usage_seconds_total",)),
+        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
     ]
     for section_name, section_model, metrics in sections:
         section_containers = _performance_section_containers(

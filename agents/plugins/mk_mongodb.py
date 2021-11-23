@@ -182,8 +182,12 @@ def sections_replica(server_status):
 def sections_replica_set(client):
     try:
         rep_set_status = client.admin.command("replSetGetStatus")
-    except pymongo.errors.OperationFailure as e:
-        sys.stderr.write("%s\n" % e)
+    except pymongo.errors.OperationFailure:
+        LOGGER.debug(
+            "Calling replSetGetStatus returned an error. "
+            "This might be ok if you have not configured replication on you mongodb server.",
+            exc_info=True,
+        )
         return
 
     sys.stdout.write("<<<mongodb_replica_set:sep(9)>>>\n")
@@ -668,8 +672,8 @@ def _get_indexes_information(client, databases):
                         }
                     ]
                 )
-            except pymongo.errors.OperationFailure as e:
-                sys.stderr.write("%s\n" % e)
+            except pymongo.errors.OperationFailure:
+                LOGGER.debug("Could not access $indexStat", exc_info=True)
                 return
 
     return indexes_dict

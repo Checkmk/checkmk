@@ -19,7 +19,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.visuals import (
     Filter,
     filter_registry,
-    FilterTristate,
+    FilterOption,
     visual_info_registry,
     VisualInfo,
 )
@@ -495,7 +495,7 @@ class FilterInvFloat(Filter):
         return newrows
 
 
-class FilterInvBool(FilterTristate):
+class FilterInvBool(FilterOption):
     def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
         super().__init__(
             ident=ident,
@@ -511,11 +511,11 @@ class FilterInvBool(FilterTristate):
         )
 
     def need_inventory(self, value) -> bool:
-        return self.legacy_filter.tristate_value(value) != -1
+        return self.legacy_filter.selection_value(value) != self.legacy_filter.ignore
 
 
 @filter_registry.register_instance
-class FilterHasInv(FilterTristate):
+class FilterHasInv(FilterOption):
     def __init__(self) -> None:
         super().__init__(
             ident="has_inv",
@@ -531,7 +531,7 @@ class FilterHasInv(FilterTristate):
         )
 
     def need_inventory(self, value) -> bool:
-        return self.legacy_filter.tristate_value(value) != -1
+        return self.legacy_filter.selection_value(value) != self.legacy_filter.ignore
 
 
 @filter_registry.register_instance

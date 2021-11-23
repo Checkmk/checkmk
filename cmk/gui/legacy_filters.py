@@ -42,47 +42,68 @@ def tri_state_type_options() -> Options:
 
 def tri_state_log_notifications_options() -> Options:
     return [
-        ("-1", _("Show all phases of notifications")),
         ("1", _("Show just preliminary notifications")),
         ("0", _("Show just end-user-notifications")),
+        ("-1", _("Show all phases of notifications")),
     ]
 
 
-class FilterTristate:
+class FilterOption:
     def __init__(
         self,
         *,
         ident: str,
-        filter_code: Callable[[bool], FilterHeader],
-        filter_rows: Optional[Callable[[bool, VisualContext, Rows], Rows]] = None,
-        options: Optional[Options] = None,
-        default: Literal[-1, 0, 1] = -1,
+        options: Options,
+        filter_code: Callable[[str], FilterHeader],
+        filter_rows: Optional[Callable[[str, VisualContext, Rows], Rows]] = None,
     ):
         self.ident = ident
+        self.options = options
+        self.varname = ident
         self.filter_code = filter_code
         self.filter_rows = filter_rows
-        self.varname = "is_" + ident
-        self.deflt = default
-        self.options = options or default_tri_state_options()
+        self.ignore = self.options[-1][0]
 
-    def tristate_value(self, value: FilterHTTPVariables) -> int:
-        try:
-            return int(value.get(self.varname, ""))
-        except ValueError:
-            return self.deflt
+    def selection_value(self, value: FilterHTTPVariables) -> str:
+        selection = value.get(self.varname, "")
+        if selection in [x for (x, _) in self.options]:
+            return selection
+        return self.ignore
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        current = self.tristate_value(value)
-        if current == -1:  # ignore
+        selection = self.selection_value(value)
+        if selection == self.ignore:
             return ""
-        return self.filter_code(current == 1)
+        return self.filter_code(selection)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        tri = self.tristate_value(value)
-        if tri == -1 or self.filter_rows is None:
+        selection = self.selection_value(value)
+        if selection == self.ignore or self.filter_rows is None:
             return rows
-        return self.filter_rows(tri == 1, context, rows)
+        return self.filter_rows(selection, context, rows)
+
+
+class FilterTristate(FilterOption):
+    def __init__(
+        self,
+        *,
+        ident,
+        filter_code: Callable[[bool], FilterHeader],
+        filter_rows: Optional[Callable[[bool, VisualContext, Rows], Rows]] = None,
+        options=None,
+    ):
+        super().__init__(
+            ident=ident,
+            filter_code=lambda pick: filter_code(pick == "1"),
+            filter_rows=(
+                lambda pick, ctx, rows: filter_rows(pick == "1", ctx, rows)
+                if filter_rows is not None
+                else rows
+            ),
+            options=options or default_tri_state_options(),
+        )
+        self.varname = "is_" + ident
 
 
 def state_type(on: bool) -> FilterHeader:
@@ -188,7 +209,7 @@ def has_inventory(on: bool, context: VisualContext, rows: Rows) -> Rows:
 
 
 ### Filter Time
-def time_filter_options() -> List[Tuple[str, str]]:
+def time_filter_options() -> Options:
     ranges = [(86400, _("days")), (3600, _("hours")), (60, _("min")), (1, _("sec"))]
     choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
     choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
@@ -323,5 +344,44 @@ class FilterIPAddress:
         return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
 
 
-def ip_match_options() -> List[Tuple[str, str]]:
+def ip_match_options() -> Options:
     return [("yes", _("Prefix match")), ("no", _("Exact match"))]
+
+
+def address_family(family: str) -> FilterHeader:
+    return "Filter: tags = address_family ip-v%s-only\n" % livestatus.lqencode(family)
+
+
+def ip_address_family_options() -> Options:
+    return [("4", _("IPv4")), ("6", _("IPv6")), ("both", _("Both"))]
+
+
+def address_families(family: str) -> FilterHeader:
+    if family == "both":
+        return lq_logic("Filter: tags =", ["ip-v4 ip-v4", "ip-v6 ip-v6"], "Or")
+
+    if family[0] == "4":
+        tag = livestatus.lqencode("ip-v4")
+    elif family[0] == "6":
+        tag = livestatus.lqencode("ip-v6")
+    filt = "Filter: tags = %s %s\n" % (tag, tag)
+
+    if family.endswith("_only"):
+        if family[0] == "4":
+            tag = livestatus.lqencode("ip-v6")
+        elif family[0] == "6":
+            tag = livestatus.lqencode("ip-v4")
+        filt += "Filter: tags != %s %s\n" % (tag, tag)
+
+    return filt
+
+
+def ip_address_families_options() -> Options:
+    return [
+        ("4", "v4"),
+        ("6", "v6"),
+        ("both", _("Both")),
+        ("4_only", _("only v4")),
+        ("6_only", _("only v6")),
+        ("", _("(ignore)")),
+    ]

@@ -33,7 +33,7 @@ if cmk_version.is_managed_edition():
     )
 
 import cmk.gui.legacy_filters as legacy_filters
-from cmk.gui.plugins.visuals import Filter, filter_registry, FilterTime, FilterTristate
+from cmk.gui.plugins.visuals import Filter, filter_registry, FilterOption, FilterTime
 from cmk.gui.plugins.visuals.utils import (
     display_filter_radiobuttons,
     filter_cre_choices,
@@ -308,97 +308,36 @@ filter_registry.register(
     )
 )
 
-
-@filter_registry.register_instance
-class FilterAddressFamily(Filter):
-    def __init__(self):
-        super().__init__(
+filter_registry.register(
+    FilterOption(
+        ident="address_family",
+        title=_l("Host address family (Primary)"),
+        sort_index=103,
+        info="host",
+        legacy_filter=legacy_filters.FilterOption(
             ident="address_family",
-            title=_l("Host address family (Primary)"),
-            sort_index=103,
-            info="host",
-            htmlvars=["address_family"],
-            link_columns=[],
-            is_show_more=True,
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        display_filter_radiobuttons(
-            varname=self.htmlvars[0],
-            options=self._options(),
-            default="both",
-            value=value,
-        )
-
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [
-            ("4", _("IPv4")),
-            ("6", _("IPv6")),
-            ("both", _("Both")),
-        ]
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        family = value.get("address_family", "both")
-        if family == "both":
-            return ""
-        return "Filter: tags = address_family ip-v%s-only\n" % livestatus.lqencode(family)
+            options=legacy_filters.ip_address_family_options(),
+            filter_code=legacy_filters.address_family,
+        ),
+        is_show_more=True,
+    )
+)
 
 
-@filter_registry.register_instance
-class FilterAddressFamilies(Filter):
-    def __init__(self):
-        super().__init__(
+filter_registry.register(
+    FilterOption(
+        ident="address_families",
+        title=_l("Host address families"),
+        sort_index=103,
+        info="host",
+        legacy_filter=legacy_filters.FilterOption(
             ident="address_families",
-            title=_l("Host address families"),
-            sort_index=103,
-            info="host",
-            htmlvars=["address_families"],
-            link_columns=[],
-            is_show_more=True,
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        display_filter_radiobuttons(
-            varname=self.htmlvars[0],
-            options=self._options(),
-            default="",
-            value=value,
-        )
-
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [
-            ("4", "v4"),
-            ("6", "v6"),
-            ("both", _("Both")),
-            ("4_only", _("only v4")),
-            ("6_only", _("only v6")),
-            ("", _("(ignore)")),
-        ]
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        family = value.get("address_families")
-        if not family:
-            return ""
-
-        if family == "both":
-            return "Filter: tags = ip-v4 ip-v4\nFilter: tags = ip-v6 ip-v6\nOr: 2\n"
-
-        if family[0] == "4":
-            tag = "ip-v4"
-        elif family[0] == "6":
-            tag = "ip-v6"
-        filt = "Filter: tags = %s %s\n" % (livestatus.lqencode(tag), livestatus.lqencode(tag))
-
-        if family.endswith("_only"):
-            if family[0] == "4":
-                tag = "ip-v6"
-            elif family[0] == "6":
-                tag = "ip-v4"
-            filt += "Filter: tags != %s %s\n" % (livestatus.lqencode(tag), livestatus.lqencode(tag))
-
-        return filt
+            options=legacy_filters.ip_address_families_options(),
+            filter_code=legacy_filters.address_families,
+        ),
+        is_show_more=True,
+    )
+)
 
 
 class FilterMultigroup(Filter):
@@ -1153,7 +1092,7 @@ def filter_state_type_with_register(
     *, ident: str, title: Union[str, LazyString], sort_index: int, info: str
 ) -> None:
     filter_registry.register(
-        FilterTristate(
+        FilterOption(
             ident=ident,
             title=title,
             sort_index=sort_index,
@@ -1184,7 +1123,7 @@ filter_state_type_with_register(
 
 
 filter_registry.register(
-    FilterTristate(
+    FilterOption(
         ident="has_performance_data",
         title=_l("Has performance data"),
         sort_index=251,
@@ -1198,7 +1137,7 @@ filter_registry.register(
 
 
 filter_registry.register(
-    FilterTristate(
+    FilterOption(
         ident="in_downtime",
         title=_l("Host/service in downtime"),
         sort_index=232,
@@ -1211,7 +1150,7 @@ filter_registry.register(
 
 
 filter_registry.register(
-    FilterTristate(
+    FilterOption(
         ident="host_staleness",
         title=_l("Host is stale"),
         sort_index=232,
@@ -1225,7 +1164,7 @@ filter_registry.register(
 
 
 filter_registry.register(
-    FilterTristate(
+    FilterOption(
         ident="service_staleness",
         title=_l("Service is stale"),
         sort_index=232,
@@ -1247,7 +1186,7 @@ def filter_nagios_flag_with_register(
     is_show_more: bool = False,
 ) -> None:
     filter_registry.register(
-        FilterTristate(
+        FilterOption(
             ident=ident,
             title=title,
             sort_index=sort_index,
@@ -1882,7 +1821,7 @@ class FilterLogState(Filter):
 
 
 @filter_registry.register_instance
-class FilterLogNotificationPhase(FilterTristate):
+class FilterLogNotificationPhase(FilterOption):
     def __init__(self):
         super().__init__(
             ident="log_notification_phase",
@@ -1907,7 +1846,7 @@ def bi_aggr_service_used(on: bool, context: VisualContext, rows: Rows) -> Rows:
 
 
 @filter_registry.register_instance
-class FilterAggrServiceUsed(FilterTristate):
+class FilterAggrServiceUsed(FilterOption):
     def __init__(self):
         super().__init__(
             ident="aggr_service_used",
@@ -2383,7 +2322,7 @@ filter_registry.register(
 )
 
 
-class FilterStarred(FilterTristate):
+class FilterStarred(FilterOption):
     # TODO: Rename "what"
     def __init__(
         self,

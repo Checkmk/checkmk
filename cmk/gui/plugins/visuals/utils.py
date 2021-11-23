@@ -355,7 +355,7 @@ def display_filter_radiobuttons(
     html.end_radio_group()
 
 
-class FilterTristate(Filter):
+class FilterOption(Filter):
     def __init__(
         self,
         *,
@@ -363,10 +363,10 @@ class FilterTristate(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        legacy_filter: legacy_filters.FilterTristate,
+        legacy_filter: legacy_filters.FilterOption,
         is_show_more: bool = False,
     ):
-        self.legacy_filter: legacy_filters.FilterTristate = legacy_filter
+        self.legacy_filter = legacy_filter
         super().__init__(
             ident=ident,
             title=title,
@@ -381,7 +381,7 @@ class FilterTristate(Filter):
         display_filter_radiobuttons(
             varname=self.legacy_filter.varname,
             options=self.legacy_filter.options,
-            default=str(self.legacy_filter.deflt),
+            default=str(self.legacy_filter.ignore),
             value=value,
         )
 

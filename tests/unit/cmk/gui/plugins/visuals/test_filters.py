@@ -193,7 +193,7 @@ filter_tests = [
         request_vars=[("event_facility", "0")],
         expected_filters="Filter: event_facility = 0\n",
     ),
-    # Testing base class FilterNagiosFlag, FilterTristate
+    # Testing base class FilterNagiosFlag, FilterOption
     FilterTest(
         ident="event_host_in_downtime",
         request_vars=[
@@ -223,7 +223,7 @@ filter_tests = [
             "Filter: event_phase = ack\n" "Filter: event_phase = counting\n" "Or: 2\n"
         ),
     ),
-    # Testing base class FilterTristate
+    # Testing base class FilterOption
     FilterTest(
         ident="has_performance_data",
         request_vars=[("is_has_performance_data", "0")],
@@ -280,7 +280,7 @@ filter_tests = [
         ],
         expected_filters="Filter: host_custom_variables ~~ BLA ^blubz\n",
     ),
-    # Testing base class FilterStarred, FilterTristate
+    # Testing base class FilterStarred, FilterOption
     FilterTest(
         ident="host_favorites",
         request_vars=[("is_host_favorites", "0")],

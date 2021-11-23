@@ -199,11 +199,7 @@ class Deployment:
         return section.PodResources(**resources)
 
     def memory_resources(self) -> api.Resources:
-        resources: DefaultDict[str, float] = defaultdict(float)
-        for pod in self._pods:
-            for k, v in dict(pod.memory_resources()).items():
-                resources[k] += v
-        return api.Resources(**resources)
+        return _collect_memory_resources(self._pods)
 
 
 class Node:
@@ -226,6 +222,9 @@ class Node:
 
     def append(self, pod: Pod) -> None:
         self._pods.append(pod)
+
+    def pod_uids(self) -> Sequence[PodUID]:
+        return [pod.uid for pod in self._pods]
 
     def pod_resources(self) -> section.PodResourcesWithCapacity:
         resources = {
@@ -253,6 +252,9 @@ class Node:
                     result.terminated += 1
 
         return result
+
+    def memory_resources(self) -> api.Resources:
+        return _collect_memory_resources(self._pods)
 
 
 class Cluster:
@@ -344,6 +346,14 @@ class Cluster:
         return self._cluster_details
 
 
+def _collect_memory_resources(pods: Sequence[Pod]) -> api.Resources:
+    resources: DefaultDict[str, float] = defaultdict(float)
+    for pod in pods:
+        for k, v in dict(pod.memory_resources()).items():
+            resources[k] += v
+    return api.Resources(**resources)
+
+
 class JsonProtocol(Protocol):
     def json(self) -> str:
         ...
@@ -416,6 +426,24 @@ def filter_outdated_pods(
     live_pods: Sequence[PerformancePod], uid_piggyback_mappings: Mapping[PodUID, str]
 ) -> Iterator[PerformancePod]:
     return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
+
+
+def node_performance_sections(pods: List[PerformancePod]) -> None:
+    """Write node sections based on collected performance metrics"""
+    sections = [
+        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
+    ]
+    for section_name, section_model, metrics in sections:
+        section_containers = _performance_section_containers(
+            container_model=_extract_container_model(section_model),
+            containers=[container for pod in pods for container in pod.containers],
+            metrics=metrics,
+        )
+        write_performance_section(
+            section_name,
+            section_model,
+            section_containers,
+        )
 
 
 def deployment_performance_sections(pods: List[PerformancePod]) -> None:
@@ -619,6 +647,12 @@ def main(args: Optional[List[str]] = None) -> int:
             ):
                 with ConditionalPiggybackSection(f"pod_{uid_piggyback_mappings[pod.uid]}"):
                     pod_performance_sections(pod.containers)
+
+            for node in cluster.nodes():
+                with ConditionalPiggybackSection(f"node_{node.name}"):
+                    node_performance_sections(
+                        [performance_pods[pod_uid] for pod_uid in node.pod_uids()]
+                    )
 
             for deployment in cluster.deployments():
                 with ConditionalPiggybackSection(

@@ -299,3 +299,29 @@ class FilterHostnameOrAlias(FilterText):
         host = livestatus.lqencode(value[self.htmlvars[0]])
 
         return lq_logic("Filter:", [f"host_name {self.op} {host}", f"alias {self.op} {host}"], "Or")
+
+
+### IPAddress
+class FilterIPAddress:
+    def __init__(self, *, htmlvars: List[str], what: str):
+        self.htmlvars = htmlvars
+        self._what = what
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        address_val = value.get(self.htmlvars[0])
+        if not address_val:
+            return ""
+        if value.get(self.htmlvars[1]) == "yes":
+            op = "~"
+            address = "^" + livestatus.lqencode(address_val)
+        else:
+            op = "="
+            address = livestatus.lqencode(address_val)
+        if self._what == "primary":
+            return "Filter: host_address %s %s\n" % (op, address)
+        varname = "ADDRESS_4" if self._what == "ipv4" else "ADDRESS_6"
+        return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
+
+
+def ip_match_options() -> List[Tuple[str, str]]:
+    return [("yes", _("Prefix match")), ("no", _("Exact match"))]

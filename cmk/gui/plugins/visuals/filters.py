@@ -230,57 +230,39 @@ filter_registry.register(
 
 
 class FilterIPAddress(Filter):
-    # TODO: rename "what"
     def __init__(
         self,
         *,
         ident: str,
         title: Union[str, LazyString],
         sort_index: int,
-        htmlvars: List[str],
+        legacy_filter: legacy_filters.FilterIPAddress,
         link_columns: List[str],
-        what: Optional[str] = None,
         is_show_more: bool = False,
     ):
+        self.legacy_filter = legacy_filter
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info="host",
-            htmlvars=htmlvars,
+            htmlvars=self.legacy_filter.htmlvars,
             link_columns=link_columns,
             is_show_more=is_show_more,
         )
-        self._what = what
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(self.htmlvars[0], value.get(self.htmlvars[0], ""))
         html.br()
         display_filter_radiobuttons(
             varname=self.htmlvars[1],
-            options=self._options(),
+            options=legacy_filters.ip_match_options(),
             default="yes",
             value=value,
         )
 
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [("yes", _("Prefix match")), ("no", _("Exact match"))]
-
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        address_val = value.get(self.htmlvars[0])
-        if not address_val:
-            return ""
-        if value.get(self.htmlvars[1]) == "yes":
-            op = "~"
-            address = "^" + livestatus.lqencode(address_val)
-        else:
-            op = "="
-            address = livestatus.lqencode(address_val)
-        if self._what == "primary":
-            return "Filter: host_address %s %s\n" % (op, address)
-        varname = "ADDRESS_4" if self._what == "ipv4" else "ADDRESS_6"
-        return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
+        return self.legacy_filter.filter(value)
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.htmlvars[0]: row["host_address"]}
@@ -294,9 +276,10 @@ filter_registry.register(
         ident="host_address",
         title=_l("Host address (Primary)"),
         sort_index=102,
-        htmlvars=["host_address", "host_address_prefix"],
         link_columns=["host_address"],
-        what="primary",
+        legacy_filter=legacy_filters.FilterIPAddress(
+            htmlvars=["host_address", "host_address_prefix"], what="primary"
+        ),
         is_show_more=True,
     )
 )
@@ -306,9 +289,10 @@ filter_registry.register(
         ident="host_ipv4_address",
         title=_l("Host address (IPv4)"),
         sort_index=102,
-        htmlvars=["host_ipv4_address", "host_ipv4_address_prefix"],
         link_columns=[],
-        what="ipv4",
+        legacy_filter=legacy_filters.FilterIPAddress(
+            htmlvars=["host_ipv4_address", "host_ipv4_address_prefix"], what="ipv4"
+        ),
     )
 )
 
@@ -317,9 +301,10 @@ filter_registry.register(
         ident="host_ipv6_address",
         title=_l("Host address (IPv6)"),
         sort_index=102,
-        htmlvars=["host_ipv6_address", "host_ipv6_address_prefix"],
         link_columns=[],
-        what="ipv6",
+        legacy_filter=legacy_filters.FilterIPAddress(
+            htmlvars=["host_ipv6_address", "host_ipv6_address_prefix"], what="ipv6"
+        ),
     )
 )
 

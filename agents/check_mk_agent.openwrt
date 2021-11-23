@@ -263,16 +263,15 @@ section_df() {
     # settings, accessing those mounts from the agent would leave you with
     # thousands of agent processes and, ultimately, a dead monitored system.
     # These should generally be monitored on the NFS server, not on the clients.
-
     echo '<<<df>>>'
-    _df_excludefs="Type|smbfs|cifs|iso9660|udf|nfsv4|nfs|mvfs|zfs|prl_fs"
-    df -kPT | awk -v filter="${_df_excludefs}" '$2 !~ filter'
+    df -kPT
 
     # df inodes information
     if df -i >/dev/null 2>&1; then
-        printf -- '%s\n' "<<<df>>>" "[df_inodes_start]"
-        df -PTi | awk -v filter="${_df_excludefs}" '$2 !~ filter'
-        printf -- '%s\n'  '[df_inodes_end]'
+        echo '<<<df>>>'
+        echo '[df_inodes_start]'
+        df -PTi
+        echo '[df_inodes_end]'
     fi
 }
 

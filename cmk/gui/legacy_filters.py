@@ -21,6 +21,13 @@ from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualCon
 Options = List[Tuple[str, str]]
 
 
+def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
+    """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
+    conditions = "".join("%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
+    connective = "%s: %d\n" % (join, len(values)) if len(values) > 1 else ""
+    return conditions + connective
+
+
 def default_tri_state_options() -> Options:
     return [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]
 
@@ -240,3 +247,55 @@ class FilterTime:
             return int(time.time()) - secs
         except Exception:
             return None
+
+
+### TextFilter
+class FilterText:
+    def __init__(
+        self,
+        *,
+        htmlvar: str,
+        column: str,
+        op: str,
+        negateable: bool = False,
+    ):
+
+        htmlvars = [htmlvar]
+        if negateable:
+            htmlvars.append("neg_" + htmlvar)
+        self.htmlvars = htmlvars
+        self.op = op
+        self.column = column
+        self.negateable = negateable
+        self.link_columns = [column]
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        if value.get(self.htmlvars[0]):
+            return self._filter(value)
+        return ""
+
+    def _negate_symbol(self, value: FilterHTTPVariables) -> str:
+        return "!" if self.negateable and value.get(self.htmlvars[1]) else ""
+
+    def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return "Filter: %s %s%s %s\n" % (
+            self.column,
+            self._negate_symbol(value),
+            self.op,
+            livestatus.lqencode(value[self.htmlvars[0]]),
+        )
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        """post-Livestatus filtering (e.g. for BI aggregations)"""
+        return rows
+
+
+class FilterHostnameOrAlias(FilterText):
+    def __init__(self):
+        super().__init__(htmlvar="hostnameoralias", column="host_name", op="~~", negateable=False)
+        self.link_columns = ["host_alias", "host_name"]
+
+    def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        host = livestatus.lqencode(value[self.htmlvars[0]])
+
+        return lq_logic("Filter:", [f"host_name {self.op} {host}", f"alias {self.op} {host}"], "Or")

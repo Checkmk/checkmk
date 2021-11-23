@@ -984,7 +984,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'hostnameoralias': {
         'column': ['host_alias', 'host_name'],
         'comment': u'Search field allowing regular expressions and partial matches',
-        'filter_class': 'FilterHostnameOrAlias',
+        'filter_class': 'FilterText',
         'htmlvars': ['hostnameoralias'],
         'info': 'host',
         'link_columns': ['host_alias', 'host_name'],

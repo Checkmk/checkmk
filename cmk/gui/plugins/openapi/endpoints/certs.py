@@ -29,16 +29,16 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
 
-_403_STATUS_DESCRIPTION = "You do not have the permission to post CSRs."
+_403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 
 permission_registry.register(
     Permission(
         section=PermissionSectionGeneral,
-        name="post_csr_rest_api",
-        title=_l("Post Certificate Signing Requests (CSRs) via REST API"),
+        name="agent_pairing",
+        title=_l("Agent pairing"),
         description=_l(
-            "Post CSRs via the REST API. They will be signed by the local site CA. This used by "
-            "the Checkmk agent controller during the registration of new hosts."
+            "Pairing of Checkmk agents with the monitoring site. This step establishes trust "
+            "between the agent and the monitoring site."
         ),
         defaults=["admin"],
     )
@@ -46,7 +46,7 @@ permission_registry.register(
 
 
 def _user_is_authorized() -> bool:
-    return user.may("general.post_csr_rest_api")
+    return user.may("general.agent_pairing")
 
 
 def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:

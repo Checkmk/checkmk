@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, NamedTuple, Optional, Sequence, Type, Union
 
-import mock
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -836,7 +835,7 @@ class TestTCPFetcher:
             file_cache,
             family=socket.AF_INET,
             address=("1.2.3.4", 6556),
-            controller_uuid=None,
+            host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_settings={"encryption": "settings"},
             use_only_cache=False,
@@ -861,7 +860,7 @@ class TestTCPFetcher:
             file_cache,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
-            controller_uuid=None,
+            host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
             use_only_cache=False,
@@ -877,7 +876,7 @@ class TestTCPFetcher:
             file_cache,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
-            controller_uuid=None,
+            host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
             use_only_cache=False,
@@ -935,8 +934,8 @@ class TestFetcherCaching:
             StubFileCache.from_json(file_cache.to_json()),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
-            controller_uuid=None,
             timeout=0.0,
+            host_name=HostName("irrelevant_for_this_test"),
             encryption_settings={},
             use_only_cache=False,
         )

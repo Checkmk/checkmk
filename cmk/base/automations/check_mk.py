@@ -18,12 +18,10 @@ from contextlib import redirect_stderr, redirect_stdout
 from itertools import islice
 from pathlib import Path
 from typing import Any, cast, Dict, List, Mapping, Optional, Sequence, Tuple, Union
-from uuid import UUID
 
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
-from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
@@ -35,7 +33,6 @@ from cmk.utils.paths import (
     autochecks_dir,
     counters_dir,
     data_source_cache_dir,
-    data_source_push_agent_dir,
     discovered_host_labels_dir,
     local_agent_based_plugins_dir,
     local_checks_dir,
@@ -43,7 +40,6 @@ from cmk.utils.paths import (
     nagios_startscript,
     omd_root,
     precompiled_hostchecks_dir,
-    received_outputs_dir,
     snmpwalks_dir,
     tcp_cache_dir,
     tmp_dir,
@@ -1273,10 +1269,6 @@ class AutomationDiagHost(Automation):
                     *self._execute_agent(
                         host_config,
                         ipaddress,
-                        UUIDLinkManager(
-                            received_outputs_dir=received_outputs_dir,
-                            data_source_dir=data_source_push_agent_dir,
-                        ).get_uuid(hostname),
                         agent_port=agent_port,
                         cmd=cmd,
                         tcp_connect_timeout=tcp_connect_timeout,
@@ -1340,13 +1332,12 @@ class AutomationDiagHost(Automation):
         self,
         host_config: config.HostConfig,
         ipaddress: HostAddress,
-        controller_uuid: Optional[UUID],
         agent_port: int,
         cmd: str,
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
-        for source in sources.make_sources(host_config, ipaddress, controller_uuid):
+        for source in sources.make_sources(host_config, ipaddress):
             source.file_cache_max_age = config.max_cachefile_age()
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
                 source = source.ds(source.hostname, ipaddress, template=cmd)
@@ -1667,11 +1658,7 @@ class AutomationGetAgentOutput(Automation):
                 cmk.core_helpers.cache.FileCacheFactory.maybe = (
                     not cmk.core_helpers.cache.FileCacheFactory.disabled
                 )
-                uuid = UUIDLinkManager(
-                    received_outputs_dir=received_outputs_dir,
-                    data_source_dir=data_source_push_agent_dir,
-                ).get_uuid(hostname)
-                for source in sources.make_sources(host_config, ipaddress, uuid):
+                for source in sources.make_sources(host_config, ipaddress):
                     source.file_cache_max_age = config.max_cachefile_age()
                     if not isinstance(source, sources.agent.AgentSource):
                         continue

@@ -11,10 +11,11 @@ import ssl
 from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
+from cmk.utils import paths
+from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.paths import root_cert_file, site_cert_file
-from cmk.utils.type_defs import AgentRawData, HostAddress
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
@@ -28,8 +29,8 @@ class TCPFetcher(AgentFetcher):
         *,
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
-        controller_uuid: Optional[str],
         timeout: float,
+        host_name: HostName,
         encryption_settings: Mapping[str, str],
         use_only_cache: bool,
     ) -> None:
@@ -37,8 +38,8 @@ class TCPFetcher(AgentFetcher):
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
-        self.controller_uuid: Final = controller_uuid
         self.timeout: Final = timeout
+        self.host_name: Final = host_name
         self.encryption_settings: Final = encryption_settings
         self.use_only_cache: Final = use_only_cache
         self._opt_socket: Optional[socket.socket] = None
@@ -57,8 +58,8 @@ class TCPFetcher(AgentFetcher):
                     f"{type(self.file_cache).__name__}",
                     f"family={self.family!r}",
                     f"timeout={self.timeout!r}",
+                    f"host_name={self.host_name!r}",
                     f"encryption_settings={self.encryption_settings!r}",
-                    f"controller_uuid={self.controller_uuid!r}",
                     f"use_only_cache={self.use_only_cache!r}",
                 )
             )
@@ -69,9 +70,11 @@ class TCPFetcher(AgentFetcher):
     def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
         serialized_ = copy.deepcopy(dict(serialized))
         address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
+        host_name = HostName(serialized_.pop("host_name"))
         return cls(
             DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
             address=address,
+            host_name=host_name,
             **serialized_,
         )
 
@@ -80,8 +83,8 @@ class TCPFetcher(AgentFetcher):
             "file_cache": self.file_cache.to_json(),
             "family": self.family,
             "address": self.address,
-            "controller_uuid": self.controller_uuid,
             "timeout": self.timeout,
+            "host_name": str(self.host_name),
             "encryption_settings": self.encryption_settings,
             "use_only_cache": self.use_only_cache,
         }
@@ -140,13 +143,18 @@ class TCPFetcher(AgentFetcher):
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
     def _fetch_via_tls(self) -> AgentRawData:
-        if self.controller_uuid is None:
+        controller_uuid = UUIDLinkManager(
+            received_outputs_dir=paths.received_outputs_dir,
+            data_source_dir=paths.data_source_push_agent_dir,
+        ).get_uuid(self.host_name)
+
+        if controller_uuid is None:
             raise MKFetcherError("No agent controller registered, but TLS required")
 
-        ctx = ssl.create_default_context(cafile=root_cert_file)
-        ctx.load_cert_chain(certfile=site_cert_file)
+        ctx = ssl.create_default_context(cafile=paths.root_cert_file)
+        ctx.load_cert_chain(certfile=paths.site_cert_file)
 
-        with ctx.wrap_socket(self._socket, server_hostname=self.controller_uuid) as ssock:
+        with ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid)) as ssock:
             self._logger.debug("Reading data from agent via TLS socket")
             return AgentRawData(self._recvall(ssock))
 

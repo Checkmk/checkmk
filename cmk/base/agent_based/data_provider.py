@@ -22,10 +22,8 @@ from typing import (
     TYPE_CHECKING,
 )
 
-import cmk.utils.paths as paths
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
-from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -368,15 +366,10 @@ def make_broker(
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
-    controller_uuids = UUIDLinkManager(
-        received_outputs_dir=paths.received_outputs_dir,
-        data_source_dir=paths.data_source_push_agent_dir,
-    ).mapping()
     sources = (
         make_sources(
             host_config,
             ip_address,
-            controller_uuids.get(host_config.hostname),
             selected_sections=selected_sections,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             on_scan_error=on_scan_error,
@@ -385,7 +378,6 @@ def make_broker(
         else make_cluster_sources(
             config_cache,
             host_config,
-            controller_uuids,
         )
     )
 

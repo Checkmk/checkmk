@@ -46,7 +46,7 @@ def test_tcpdatasource_only_from(monkeypatch, res, reported, rule):
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
 
-    source = TCPSource(HostName("hostname"), "ipaddress", controller_uuid=None)
+    source = TCPSource(HostName("hostname"), "ipaddress")
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
     summarizer = AgentSummarizerDefault(
@@ -156,7 +156,7 @@ def test_tcpdatasource_restricted_address_mismatch(
         )
 
     ts.apply(monkeypatch)
-    source = TCPSource(hostname, "ipaddress", controller_uuid=None)
+    source = TCPSource(hostname, "ipaddress")
 
     summarizer = AgentSummarizerDefault(
         source.exit_spec,
@@ -174,7 +174,7 @@ def test_attribute_defaults(monkeypatch):
     hostname = HostName("testhost")
     Scenario().add_host(hostname).apply(monkeypatch)
 
-    source = TCPSource(hostname, ipaddress, controller_uuid=None)
+    source = TCPSource(hostname, ipaddress)
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "file_cache": {
@@ -187,7 +187,7 @@ def test_attribute_defaults(monkeypatch):
         },
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),
-        "controller_uuid": None,
+        "host_name": str(hostname),
         "timeout": 5.0,
         "encryption_settings": {
             "use_realtime": "enforce",

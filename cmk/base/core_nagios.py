@@ -1392,7 +1392,6 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
         for s in sources.make_sources(
             host_config,
             ipaddress,
-            None,
         )
         if isinstance(s, sources.programs.SpecialAgentSource)
     )

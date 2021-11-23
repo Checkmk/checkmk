@@ -6,7 +6,6 @@
 
 import socket
 from typing import Optional
-from uuid import UUID
 
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
@@ -31,7 +30,6 @@ class TCPSource(AgentSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
-        controller_uuid: Optional[UUID],
         main_data_source: bool = False,
     ) -> None:
         super().__init__(
@@ -43,9 +41,9 @@ class TCPSource(AgentSource):
             id_="agent",
             main_data_source=main_data_source,
         )
-        self.controller_uuid = controller_uuid
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
+        self.host_name = hostname
 
     def _make_file_cache(self) -> DefaultAgentFileCache:
         return DefaultAgentFileCacheFactory(
@@ -60,7 +58,7 @@ class TCPSource(AgentSource):
             self._make_file_cache(),
             family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             address=(self.ipaddress, self.port or self.host_config.agent_port),
-            controller_uuid=str(self.controller_uuid) if self.controller_uuid else None,
+            host_name=self.host_name,
             timeout=self.timeout or self.host_config.tcp_connect_timeout,
             encryption_settings=self.host_config.agent_encryption,
             use_only_cache=self.use_only_cache,

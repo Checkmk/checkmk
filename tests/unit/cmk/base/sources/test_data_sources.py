@@ -95,7 +95,7 @@ def test_host_config_creates_passing_source_sources(
     host_config = config.HostConfig.make_host_config(hostname)
     ipaddress = "127.0.0.1"
 
-    assert [type(c) for c in make_sources(host_config, ipaddress, None)] == sources
+    assert [type(c) for c in make_sources(host_config, ipaddress)] == sources
 
 
 @pytest.mark.parametrize(
@@ -104,7 +104,7 @@ def test_host_config_creates_passing_source_sources(
         (SpecialAgentSource, {"special_agent_id": None, "params": None}),
         (DSProgramSource, {"template": ""}),
         (PiggybackSource, {}),
-        (TCPSource, {"controller_uuid": None}),
+        (TCPSource, {}),
     ],
 )
 def test_data_source_preselected(monkeypatch, source, kwargs):

@@ -260,8 +260,11 @@ def _bi_host_choice_vs(title):
                 ("host_name_regex", _("Regex for host name"), TextAscii(_("Pattern"), size=60)),
                 ("host_alias_regex", _("Regex for host alias"), TextAscii(_("Pattern"), size=60)),
             ],
-            help=_("If you choose \"Regex for host name\" or \"Regex for host alias\", "
-                   "you need to provide a regex which results in exactly one match group."),
+            help=_(
+                "If you choose \"Regex for host name\" or \"Regex for host alias\", "
+                "you may use match groups as placeholder. The first match group can be used with the placeholder <tt>$1$</tt>. "
+                "The complete set of match groups is also available with the placeholders "
+                "<tt>$HOST_MG_1$</tt>, <tt>$HOST_MG_2$</tt> and so on."),
             default_value="all_hosts"),
         forth=convert_to_vs,
         back=convert_from_vs,

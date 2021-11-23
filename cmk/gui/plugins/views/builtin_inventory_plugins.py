@@ -387,7 +387,7 @@ inventory_displayhints.update({
     ".software.bios.vendor": {"title": _l("Vendor")},
     ".software.bios.version": {"title": _l("Version")},
     ".software.bios.date": {"title": _l("Date"), "paint": "date"},
-    ".software.firmware": {
+    ".software.firmware.": {
         "title": _l("Firmware"),
         "keyorder": [
             "vendor",
@@ -481,6 +481,7 @@ inventory_displayhints.update({
     ".software.applications.check_mk.sites:*.xinetd": {"paint": "service_status"},
     ".software.applications.check_mk.sites:*.nagios": {"paint": "service_status"},
     ".software.applications.check_mk.sites:*.npcd": {"paint": "service_status"},
+    ".software.applications.check_mk.cluster.": {"title": _l("Cluster")},
     ".software.applications.check_mk.cluster.is_cluster": {
         "title": _l("Cluster host"), "short": _l("Cluster"), "paint": "bool"
     },
@@ -621,6 +622,7 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.job_container:*.name": {"title": _l("Name")},
     ".software.applications.kubernetes.job_container:*.image": {"title": _l("Image")},
     ".software.applications.kubernetes.job_container:*.image_pull_policy": {"title": _l("Image pull policy")},
+    ".software.applications.kubernetes.daemon_pod_containers:": {"title": _l("Daemon pod containers")},
     ".software.applications.kubernetes.daemon_pod_containers:*.name": {"title": _l("Name")},
     ".software.applications.kubernetes.daemon_pod_containers:*.image": {"title": _l("Image")},
     ".software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy": {"title": _l("Image pull policy")},
@@ -969,8 +971,8 @@ inventory_displayhints.update({
     },
     ".networking.interfaces:*.vlans": {"title": _l("VLANs")},
     ".networking.interfaces:*.vlantype": {"title": _l("VLAN type")},
-    ".networking.wlan": {"title": _l("WLAN")},
-    ".networking.wlan.controller": {"title": _l("Controller")},
+    ".networking.wlan.": {"title": _l("WLAN")},
+    ".networking.wlan.controller.": {"title": _l("Controller")},
     ".networking.wlan.controller.accesspoints:": {
         "title": _l("Access Points"),
         "keyorder": ["name", "group", "ip_addr", "model", "serial", "sys_location"],

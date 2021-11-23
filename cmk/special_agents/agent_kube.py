@@ -481,6 +481,13 @@ def _performance_section_containers(
 
 
 def _extract_container_model(section_model: Type[BaseModel]) -> Type[BaseModel]:
+    """Retrieve the pydantic BaseModel type of the containers' included in the overall section model
+
+    Examples:
+       >>> _extract_container_model(section.Memory)
+       <class 'cmk.special_agents.utils_kubernetes.schemata.section.ContainerMemory'>
+    """
+
     section_fields = section_model.__fields__
     if "containers" not in section_fields:
         raise DefinitionError("Performance return section should be a sequence of containers")

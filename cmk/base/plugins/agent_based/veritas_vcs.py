@@ -8,12 +8,12 @@ from collections import namedtuple
 import functools
 from typing import (
     Any,
-    Iterable,
     Generator,
     List,
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
 )
 from .agent_based_api.v1 import (
     register,
@@ -172,14 +172,13 @@ def discover_veritas_vcs_subsection(subsection: SubSection,) -> type_defs.Discov
         yield Service(item=item_name)
 
 
-def veritas_vcs_boil_down_states_in_cluster(states: Iterable[str]) -> str:
-    _stat = set(states)
-    if len(_stat) == 1:
-        return _stat.pop()
+def veritas_vcs_boil_down_states_in_cluster(states: Sequence[str]) -> str:
+    if len(states) == 1:
+        return states[0]
     for dominant in ("FAULTED", "UNKNOWN", "ONLINE", "RUNNING"):
-        if dominant in _stat:
+        if dominant in states:
             return dominant
-    return "AGGREGATION: %s" % ', '.join(sorted(_stat))
+    return 'default'
 
 
 def check_veritas_vcs_subsection(
@@ -192,13 +191,8 @@ def check_veritas_vcs_subsection(
         return  # vanished
 
     map_frozen = params['map_frozen']
-    map_states = params['map_states']
 
-    infotexts = []
     for vcs in list_vcs_tuples:
-        if vcs.attr.endswith('State'):
-            infotexts.append(vcs.value.lower())
-
         if vcs.attr.endswith('Frozen') and vcs.value != '0':
             frozen_txt = vcs.attr.lower().replace('t', 'temporarily ').lower()
             yield Result(
@@ -206,13 +200,11 @@ def check_veritas_vcs_subsection(
                 summary=frozen_txt,
             )
 
-    states = (vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith('State'))
-    state_txt = veritas_vcs_boil_down_states_in_cluster(states)
-    state_int = map_states.get(state_txt, map_states['default'])
-    yield Result(
-        state=state(state_int),
-        summary="%s" % ", ".join(infotexts),
-    )
+    state_mapping = params['map_states']
+    states = [vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith('State')]
+    state_text = veritas_vcs_boil_down_states_in_cluster(states)
+    yield Result(state=state(state_mapping.get(state_text, state_mapping['default'])),
+                 summary=", ".join(map(lambda s: s.lower(), states)))
 
     # get last not None cluster name
     cluster_name = functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster

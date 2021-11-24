@@ -281,14 +281,14 @@ def test_discover_veritas_vcs_resource():
     ]
 
 
-@pytest.mark.parametrize('states, exp_res', [
+@pytest.mark.parametrize('states, expected_state', [
     (
         ['a'],
         'a',
     ),
     (
         ['a', 'b'],
-        'AGGREGATION: a, b',
+        'default',
     ),
     (
         ['a', 'b', 'RUNNING', 'ONLINE', 'UNKNOWN', 'FAULTED', 'x', 'y'],
@@ -307,8 +307,8 @@ def test_discover_veritas_vcs_resource():
         'RUNNING',
     ),
 ])
-def test_veritas_vcs_boil_down_states_in_cluster(states, exp_res):
-    assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == exp_res
+def test_veritas_vcs_boil_down_states_in_cluster(states, expected_state):
+    assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == expected_state
 
 
 PARAMS = {

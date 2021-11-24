@@ -156,6 +156,29 @@ def parse_process_entries(pre_parsed) -> List[Tuple[ps.ps_info, List[str]]]:
     return parsed
 
 
+def _consolidate_lines(string_table: StringTable) -> StringTable:
+    '''
+    >>> _consolidate_lines([['(mywinproc)', 'somescript.exe'], [' -Port 39999'], ['-UpdatePeriodMs 1000'], ['(mynextwinproc)', '']])
+    [['(mywinproc)', 'somescript.exe  -Port 39999 -UpdatePeriodMs 1000'], ['(mynextwinproc)', '']]
+
+    '''
+
+    iter_string_table = iter(string_table)
+    consolidated_lines: List[List[str]] = []
+
+    for line in iter_string_table:
+        if line[0].replace("'", "").strip().startswith("-"):
+            # For some reason, some of the Windows process descriptions can contain a newline.
+            # This leads to an extra line in string_table which is in fact a continuation
+            # of the previus line. This seems to be the case when executables are called with
+            # parameters.
+            consolidated_lines[-1][1] = f"{consolidated_lines[-1][1]} {' '.join(line)}"
+            continue
+        consolidated_lines.append(line)
+
+    return consolidated_lines
+
+
 def parse_ps(string_table: StringTable,) -> ps.Section:
     # Produces a list of Tuples where each sub list is built as follows:
     # [
@@ -163,7 +186,7 @@ def parse_ps(string_table: StringTable,) -> ps.Section:
     # ]
     # First element: The process info tuple (see ps.include: check_ps_common() for details on the elements)
     # second element:  The process command line
-    cpu_cores, info = merge_wmic_info(string_table)
+    cpu_cores, info = merge_wmic_info(_consolidate_lines(string_table))
     parsed = parse_process_entries(info)
     return cpu_cores, parsed
 

@@ -385,3 +385,32 @@ def ip_address_families_options() -> Options:
         ("6_only", _("only v6")),
         ("", _("(ignore)")),
     ]
+
+
+### Multipick
+class FilterMultiple:
+    def __init__(
+        self,
+        *,
+        ident: str,
+        column: str,
+    ):
+        self.ident = ident
+        self.htmlvars = [ident, "neg_" + ident]
+        self.column = column
+
+    def selection(self, value: FilterHTTPVariables) -> List[str]:
+        if folders := value.get(self.htmlvars[0], "").strip():
+            return folders.split("|")
+        return []
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        # not (A or B) => (not A) and (not B)
+        if value.get(self.htmlvars[1]):
+            negate = "!"
+            op = "And"
+        else:
+            negate = ""
+            op = "Or"
+
+        return lq_logic(f"Filter: {self.column} {negate}>=", self.selection(value), op)

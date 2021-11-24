@@ -348,16 +348,17 @@ class FilterMultigroup(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         group_type: str,
+        legacy_filter: legacy_filters.FilterMultiple,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = True,
     ):
-        htmlvar = group_type + "groups"
+        self.legacy_filter = legacy_filter
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=group_type,
-            htmlvars=[htmlvar, "neg_" + htmlvar],
+            htmlvars=self.legacy_filter.htmlvars,
             link_columns=[],
             description=description,
             is_show_more=is_show_more,
@@ -371,15 +372,10 @@ class FilterMultigroup(Filter):
     def _options(group_type):
         return sites.all_groups(group_type)
 
-    def selection(self, value: FilterHTTPVariables) -> List[str]:
-        current = value.get(self.htmlvars[0], "").strip().split("|")
-        if current == [""]:
-            return []
-        return current
-
     def display(self, value: FilterHTTPVariables) -> None:
         html.open_div(class_="multigroup")
-        self.valuespec().render_input(self.htmlvars[0], self.selection(value))
+        self.valuespec().render_input(self.htmlvars[0], self.legacy_filter.selection(value))
+        # TODO: this should be the negate flag not a test of options
         if self._options(self.group_type):
             html.open_nobr()
             html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
@@ -387,17 +383,7 @@ class FilterMultigroup(Filter):
         html.close_div()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        # not (A or B) => (not A) and (not B)
-        if value.get(self.htmlvars[1]):
-            negate = "!"
-            op = "And"
-        else:
-            negate = ""
-            op = "Or"
-
-        return lq_logic(
-            "Filter: %s_groups %s>=" % (self.group_type, negate), self.selection(value), op
-        )
+        return self.legacy_filter.filter(value)
 
 
 filter_registry.register(
@@ -407,6 +393,7 @@ filter_registry.register(
         sort_index=105,
         description=_l("Selection of multiple host groups"),
         group_type="host",
+        legacy_filter=legacy_filters.FilterMultiple(ident="hostgroups", column="host_groups"),
     )
 )
 
@@ -417,6 +404,7 @@ filter_registry.register(
         sort_index=205,
         description=_l("Selection of multiple service groups"),
         group_type="service",
+        legacy_filter=legacy_filters.FilterMultiple(ident="servicegroups", column="service_groups"),
     )
 )
 

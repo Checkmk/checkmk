@@ -125,26 +125,26 @@ def _build(request, client, version, prepare_package=True):
             },
         )
     except docker.errors.BuildError as e:
-        logger.info("= Build log ==================")
+        logger.error("= Build log ==================")
         for entry in e.build_log:
             if "stream" in entry:
-                logger.info(entry["stream"])
+                logger.error(entry["stream"])
             elif "errorDetail" in entry:
                 continue  # Is already part of the exception message
             else:
-                logger.info("UNEXPECTED FORMAT: %r", entry)
-        logger.info("= Build log ==================")
+                logger.error("UNEXPECTED FORMAT: %r", entry)
+        logger.error("= Build log ==================")
         raise
 
-    logger.info("= Build log ==================")
+    logger.info("(Set pytest log level to DEBUG (--log-cli-level=DEBUG) to see the build log)")
     for entry in build_logs:
         if "stream" in entry:
-            logger.info(entry["stream"].rstrip())
+            logger.debug(entry["stream"].rstrip())
         elif "aux" in entry:
-            logger.info(entry["aux"])
+            logger.debug(entry["aux"])
         else:
-            logger.info("UNEXPECTED FORMAT: %r", entry)
-    logger.info("= Build log ==================")
+            logger.debug("UNEXPECTED FORMAT: %r", entry)
+    logger.debug("= Build log ==================")
 
     # TODO: Enable this on CI system. Removing during development slows down testing
     # request.addfinalizer(lambda: client.images.remove(image.id, force=True))

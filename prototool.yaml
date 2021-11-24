@@ -17,3 +17,6 @@ lint:
       - FILE_OPTIONS_REQUIRE_JAVA_PACKAGE
       - FILE_OPTIONS_REQUIRE_OBJC_CLASS_PREFIX
       - FILE_OPTIONS_REQUIRE_PHP_NAMESPACE
+      # Results in questionable names. What we really want is configurable suffixes, including "_delay" etc.
+      - WKT_DURATION_SUFFIX
+      - WKT_TIMESTAMP_SUFFIX

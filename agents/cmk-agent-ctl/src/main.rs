@@ -155,7 +155,7 @@ fn init_logging(path: &Path) -> AnyhowResult<()> {
 }
 
 fn ensure_home_directory(path: &Path) -> io::Result<()> {
-    if !Path::new(path).exists() {
+    if !path.exists() {
         fs::create_dir_all(path)?;
     }
     Ok(())
@@ -187,7 +187,7 @@ fn main() -> AnyhowResult<()> {
 
     // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
     ensure_home_directory(Path::new(HOME_DIR))
-        .context("Failed to create cmk-agent home directory")?;
+        .context("Cannot go on: Missing cmk-agent home directory and failed to create it.")?;
 
     if let Err(error) = init_logging(&log_path).context("Failed to initialize logging") {
         println!("Error: {:?}", error)

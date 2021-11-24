@@ -12,6 +12,7 @@ use anyhow::{anyhow, Context, Result as AnyhowResult};
 use config::RegistrationState;
 use nix::unistd;
 use std::fs;
+use std::io::Result as IoResult;
 use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
@@ -30,6 +31,7 @@ const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
 
 const STATE_FILE: &str = "cmk-agent-ctl-state.json";
 const LOG_FILE: &str = "cmk-agent-ctl.log";
+const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 const TLS_ID: &[u8] = b"16";
 
 fn register(
@@ -80,6 +82,9 @@ fn register(
     );
 
     reg_state.to_file(path_state_out).unwrap();
+
+    disallow_legacy_pull()
+        .context("Registration successful, but could not delete marker for legacy pull mode")?;
     Ok(())
 }
 
@@ -112,6 +117,10 @@ fn status(_config: config::Config) -> AnyhowResult<()> {
 }
 
 fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowResult<()> {
+    if is_legacy_pull(&reg_state) {
+        return dump(config);
+    }
+
     let mut stream = tls_server::IoStream::new();
 
     stream.write(TLS_ID).unwrap();
@@ -126,7 +135,27 @@ fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
     tls_stream.write_all(&mon_data).unwrap();
     tls_stream.flush().unwrap();
 
+    disallow_legacy_pull().context("Just provided agent data via TLS, but legacy pull mode is still allowed, and could not delete marker")?;
     Ok(())
+}
+
+fn is_legacy_pull(reg_state: &config::RegistrationState) -> bool {
+    if !Path::new(HOME_DIR).join(LEGACY_PULL_FILE).exists() {
+        return false;
+    }
+    if !reg_state.server_specs.is_empty() {
+        return false;
+    }
+    true
+}
+
+fn disallow_legacy_pull() -> IoResult<()> {
+    let legacy_pull_marker = Path::new(HOME_DIR).join(LEGACY_PULL_FILE);
+    if !legacy_pull_marker.exists() {
+        return Ok(());
+    }
+
+    fs::remove_file(legacy_pull_marker)
 }
 
 fn get_configuration(path_config: &Path, args: cli::Args) -> io::Result<config::Config> {
@@ -194,7 +223,6 @@ fn main() -> AnyhowResult<()> {
     };
     info!("Starting cmk-agent-ctl");
 
-
     let args = cli::Args::from_args();
     let mode = String::from(&args.mode);
 
@@ -223,5 +251,7 @@ fn main() -> AnyhowResult<()> {
         info!("{:?}", error)
     };
 
+    // TODO: At least in pull and dump mode, we can't just pass an error here,
+    // because the fetcher will receive the error as agent output.
     result
 }

@@ -8,13 +8,11 @@
 
 import sys
 import os
-import re
 import subprocess
 import pytest  # type: ignore[import]
 import requests
 import requests.exceptions
 import docker  # type: ignore[import]
-from pathlib import Path
 
 import testlib
 import testlib.utils
@@ -46,32 +44,8 @@ def _image_name(version):
     return "docker-tests/check-mk-%s-%s-%s" % (version.edition(), branch_name, version.version)
 
 
-def _package_name(version: testlib.CMKVersion) -> str:
-    return f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
-
-
 def _prepare_build():
     assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
-
-
-def _prepare_package(version: testlib.CMKVersion):
-    """On Jenkins copies a previously built package to the build path."""
-    if "WORKSPACE" not in os.environ:
-        print("Not executed on CI: Do not prepare a Checkmk .deb in %s", build_path)
-        return
-
-    source_package_path = Path(os.environ["WORKSPACE"], "packages", version.version,
-                               _package_name(version))
-    test_package_path = Path(build_path, _package_name(version))
-
-    print("Executed on CI: Preparing package %s", test_package_path)
-
-    if test_package_path.exists():
-        print("File already exists - Fine")
-        return
-
-    print("Copying from %s", source_package_path)
-    test_package_path.write_bytes(source_package_path.read_bytes())
 
 
 def resolve_image_alias(alias):
@@ -89,11 +63,8 @@ def resolve_image_alias(alias):
     ).split("\n", maxsplit=1)[0]
 
 
-def _build(request, client, version, add_args=None, prepare_package=True):
+def _build(request, client, version, add_args=None):
     _prepare_build()
-
-    if prepare_package:
-        _prepare_package(version)
 
     print("Starting helper container for build secrets")
     secret_container = client.containers.run(
@@ -324,25 +295,16 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_path = Path(build_path, _package_name(version))
-    package_path.write_bytes(b"")
-    with pytest.raises(docker.errors.BuildError):
-        _build(request, client, version, prepare_package=False)
-    os.unlink(str(package_path))
-    _prepare_package(version)
+    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "buster")
+    pkg_path = os.path.join(build_path, package_name)
+    try:
+        with open(pkg_path, "w") as f:
+            f.write("")
 
-
-# Test that the deb package from the download server is used.
-# Works only with daily enterprise builds.
-def test_build_using_package_from_download_server(request, client, version):
-    if not (version.edition() == "enterprise" and
-            re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)):
-        pytest.skip("only enterprise daily packages are available on the download server")
-    package_path = Path(build_path, _package_name(version))
-    # make sure no local package is used.
-    if package_path.exists():
-        os.unlink(str(package_path))
-    _build(request, client, version, prepare_package=False)
+        with pytest.raises(docker.errors.BuildError):
+            _build(request, client, version)
+    finally:
+        os.unlink(pkg_path)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file

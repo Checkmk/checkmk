@@ -10,7 +10,7 @@ The schemas contained in this file are used to serialize data in the agent outpu
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 """
-from typing import List, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 from pydantic import BaseModel
 
@@ -54,7 +54,7 @@ class PodConditions(BaseModel):
 class PodContainers(BaseModel):
     """section: k8s_pod_containers_v1"""
 
-    containers: List[api.ContainerInfo]
+    containers: Mapping[str, api.ContainerInfo]
 
 
 class NodeCount(BaseModel):

@@ -14,7 +14,7 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Dict, List, Literal, NewType, Optional, Protocol, Sequence, Union
+from typing import Dict, List, Literal, Mapping, NewType, Optional, Protocol, Sequence, Union
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
@@ -176,7 +176,7 @@ class Pod(BaseModel):
     status: PodStatus
     spec: PodSpec
     resources: PodUsageResources
-    containers: List[ContainerInfo]
+    containers: Mapping[str, ContainerInfo]
 
 
 class ClusterInfo(BaseModel):

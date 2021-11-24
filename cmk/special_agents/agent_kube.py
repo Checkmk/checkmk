@@ -121,7 +121,7 @@ class Pod:
         status: api.PodStatus,
         spec: api.PodSpec,
         resources: api.PodUsageResources,
-        containers: Sequence[api.ContainerInfo],
+        containers: Mapping[str, api.ContainerInfo],
     ) -> None:
         self.uid = PodUID(uid)
         self.metadata = metadata
@@ -243,7 +243,7 @@ class Node:
     def container_count(self) -> section.ContainerCount:
         result = section.ContainerCount()
         for pod in self._pods:
-            for container in pod.containers:
+            for container in pod.containers.values():
                 if container.state.type == "running":
                     result.running += 1
                 elif container.state.type == "waiting":

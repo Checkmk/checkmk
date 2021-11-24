@@ -127,11 +127,11 @@ def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
     return api.PodUsageResources(cpu=api.Resources(**cpu), memory=api.Resources(**memory))
 
 
-def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
+def pod_containers(pod: client.V1Pod) -> Dict[str, api.ContainerInfo]:
     container_statuses: List[client.V1ContainerStatus] = (
         [] if pod.status.container_statuses is None else pod.status.container_statuses
     )
-    result: List[api.ContainerInfo] = []
+    result: Dict[str, api.ContainerInfo] = {}
     for status in container_statuses:
         state: Union[
             api.ContainerTerminatedState, api.ContainerRunningState, api.ContainerWaitingState
@@ -159,15 +159,13 @@ def pod_containers(pod: client.V1Pod) -> List[api.ContainerInfo]:
         else:
             raise AssertionError(f"Unknown container state {status.state}")
 
-        result.append(
-            api.ContainerInfo(
-                id=status.container_id,
-                name=status.name,
-                image=status.image,
-                ready=status.ready,
-                state=state,
-                restart_count=status.restart_count,
-            )
+        result[status.name] = api.ContainerInfo(
+            id=status.container_id,
+            name=status.name,
+            image=status.image,
+            ready=status.ready,
+            state=state,
+            restart_count=status.restart_count,
         )
     return result
 

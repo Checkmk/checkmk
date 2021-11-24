@@ -86,10 +86,12 @@ class TestAPIPod:
             pod = list(core_client.list_pod_for_all_namespaces().items)[0]
         containers = pod_containers(pod)
         assert len(containers) == 1
-        assert containers[0].ready is True
-        assert containers[0].state.type == "running"
-        assert containers[0].image == "some_image"
-        assert isinstance(containers[0].state.start_time, int)
+        assert "cadvisor" in containers
+        assert containers["cadvisor"].ready is True
+        assert containers["cadvisor"].state.type == "running"
+        assert containers["cadvisor"].image == "some_image"
+        assert isinstance(containers["cadvisor"].state, api.ContainerRunningState)
+        assert isinstance(containers["cadvisor"].state.start_time, int)
 
 
 class TestPodWithNoNode(TestCase):
@@ -149,7 +151,7 @@ class TestPodWithNoNode(TestCase):
 
         container_info_api_list = pod_containers(pod)
 
-        self.assertEqual(container_info_api_list, [])
+        self.assertEqual(container_info_api_list, {})
 
     def test_pod_conditions_pod_without_node(self) -> None:
         pod_condition_list = [
@@ -209,8 +211,8 @@ class TestPodStartUp(TestCase):
         )
         self.assertEqual(
             pod_containers(pod),
-            [
-                api.ContainerInfo(
+            {
+                "unready_container": api.ContainerInfo(
                     id=None,
                     name="unready_container",
                     image="gcr.io/kuar-demo/kuard-amd64:blue",
@@ -220,7 +222,7 @@ class TestPodStartUp(TestCase):
                     ),
                     restart_count=0,
                 )
-            ],
+            },
         )
 
     def test_pod_conditions_start_up(self) -> None:

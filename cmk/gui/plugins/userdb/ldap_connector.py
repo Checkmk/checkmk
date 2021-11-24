@@ -1209,9 +1209,8 @@ class LDAPUserConnector(UserConnector):
             else:
                 user = new_user_template(self.id())
                 mode_create = True
-
-            if cmk_version.is_managed_edition():
-                user["customer"] = self._config.get("customer", managed.default_customer_id())
+                if cmk_version.is_managed_edition():
+                    user["customer"] = self._config.get("customer", managed.default_customer_id())
 
             return mode_create, user
 

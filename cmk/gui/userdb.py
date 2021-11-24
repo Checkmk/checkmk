@@ -1484,7 +1484,7 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
 
         abandoned_profiles = sorted(profiles - users)
         if not abandoned_profiles:
-            self._logger.warning("Found no abandoned profile.")
+            self._logger.debug("Found no abandoned profile.")
             return
 
         self._logger.info("Found %d abandoned profiles", len(abandoned_profiles))

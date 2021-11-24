@@ -36,6 +36,24 @@ foreach ($tapeJob in $tapeJobs)
     }
 
 
+$myCdpJobsText = "<<<veeam_cdp_jobs:sep(124)>>>`n"
+
+$cdpjobs = Get-VBRCDPPolicy | select-Object Name,NextRun,PolicyState
+
+foreach ($mycdpjobs in $cdpjobs)
+	{
+	$MyCdpJobsName = $mycdpjobs.Name -replace "\'","_" -replace " ","_"
+
+	$MyCdpJobsNextRun = $mycdpjobs.NextRun
+    $MyCdpJobsNextRun = get-date -date $MyCdpJobsNextRun -Uformat %s
+
+	$MyCdpJobsPolicyState = $mycdpjobs.PolicyState
+
+	$myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|" + "$MyCdpJobsNextRun" + "|" + "$MyCdpJobsPolicyState" + "`n"
+	}
+
+write-host $myCdpJobsText
+
 $myJobsText = "<<<veeam_jobs:sep(9)>>>`n"
 $myTaskText = ""
 

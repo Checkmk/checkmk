@@ -258,6 +258,7 @@ CEE_UNUSED_PACKAGES = [
     "setuptools_scm",
     "snmpsim",
     "tenacity",
+    "typing_extensions",
     "uvicorn",
     "websocket_client",
     "wrapt",

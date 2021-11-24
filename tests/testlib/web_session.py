@@ -245,7 +245,10 @@ class CMKWebSession:
         req = self.post(url, data=data)
 
         if output_format == "json":
-            response = json.loads(req.text)
+            try:
+                response = json.loads(req.text)
+            except json.JSONDecodeError:
+                raise APIError(f"invalid json: {req.text}")
         elif output_format == "python":
             response = ast.literal_eval(req.text)
         else:

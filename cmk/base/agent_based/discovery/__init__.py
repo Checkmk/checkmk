@@ -17,7 +17,6 @@ from typing import (
     List,
     Literal,
     Mapping,
-    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -82,16 +81,11 @@ _Transition = Union[
 ]
 
 
-class ServiceWithNodes(NamedTuple):
-    service: Service
-    nodes: Sequence[HostName]
-
-
 _L = TypeVar("_L", bound=str)
 
-ServicesTableEntry = Tuple[_L, Service, List[HostName]]
+ServicesTableEntry = Tuple[_L, AutocheckService, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
-ServicesByTransition = Dict[_Transition, List[ServiceWithNodes]]
+ServicesByTransition = Dict[_Transition, List[autochecks.AutocheckServiceWithNodes]]
 
 
 #   .--Helpers-------------------------------------------------------------.
@@ -467,16 +461,7 @@ def _get_post_discovery_autocheck_services(
 
         raise MKGeneralException("Unknown check source '%s'" % check_source)
 
-    # Note: this final filtering step should in fact be unnecessary.
-    # We're about to write these into the autochecks file, so hopefully
-    # these are only autochecks (and, in fact we skipped active and manual
-    # checks in the loop above.
-    # Currently it is not feasable to teach mypy about that.
-    return {
-        service_id: autochecks.AutocheckServiceWithNodes(service, nodes)
-        for service_id, (service, nodes) in post_discovery_services.items()
-        if isinstance(service, AutocheckService)
-    }
+    return post_discovery_services
 
 
 def _make_diff(
@@ -994,9 +979,6 @@ def _may_rediscover(
 #    "new"           : Check is discovered but currently not yet monitored
 #    "old"           : Check is discovered and already monitored (most common)
 #    "vanished"      : Check had been discovered previously, but item has vanished
-#    "active"        : Check is defined via active_checks
-#    "custom"        : Check is defined via custom_checks
-#    "manual"        : Check is a manual Checkmk check without service discovery
 #    "ignored"       : discovered or static, but disabled via ignored_services
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
@@ -1127,7 +1109,7 @@ def _group_by_transition(
         services_by_transition.setdefault(
             transition,
             [],
-        ).append(ServiceWithNodes(service, found_on_nodes))
+        ).append(autochecks.AutocheckServiceWithNodes(service, found_on_nodes))
     return services_by_transition
 
 
@@ -1194,9 +1176,9 @@ def _cluster_service_entry(
     host_name: HostName,
     node_name: HostName,
     services_cluster: HostName,
-    service: Service,
-    existing_entry: Optional[Tuple[_BasicTransition, Service, List[HostName]]],
-) -> Iterable[Tuple[ServiceID, Tuple[_BasicTransition, Service, List[HostName]]]]:
+    service: AutocheckService,
+    existing_entry: Optional[ServicesTableEntry[_BasicTransition]],
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry[_BasicTransition]]]:
     if host_name != services_cluster:
         return  # not part of this host
 

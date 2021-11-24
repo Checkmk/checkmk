@@ -100,7 +100,7 @@ def service_table() -> discovery.ServicesTable:
     return {
         (CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "New Item 1",
                 "Test Description New Item 1",
@@ -110,7 +110,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "New Item 2",
                 "Test Description New Item 2",
@@ -120,7 +120,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 1",
                 "Test Description Vanished Item 1",
@@ -130,7 +130,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 2",
                 "Test Description Vanished Item 2",
@@ -145,7 +145,7 @@ def service_table() -> discovery.ServicesTable:
 def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
@@ -154,7 +154,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
@@ -165,7 +165,7 @@ def grouped_services() -> discovery.ServicesByTransition:
             ),
         ],
         "vanished": [
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
@@ -174,7 +174,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",

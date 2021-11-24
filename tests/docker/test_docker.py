@@ -239,7 +239,9 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             assert "cmkadmin with password:" not in output
 
         assert "STARTING SITE" in output
-        assert _exec_run(c, ["omd", "status"], user=site_id)[0] == 0
+
+        exit_code, status_output = _exec_run(c, ["omd", "status"], user=site_id)
+        assert exit_code == 0, f"Status is {exit_code}. Output: {status_output}"
     finally:
         logger.debug("Log so far: %s", c.logs().decode("utf-8"))
 

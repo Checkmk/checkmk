@@ -68,6 +68,7 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
 
     if version is None:
         # parsed contains memory usages in bytes
+        # this is the output of a checkmk agent run inside a docker container
         parsed = {}
         for line in string_table:
             if line[0] == "MemTotal:" and line[2] == "kB":
@@ -75,6 +76,7 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
             else:
                 parsed[line[0]] = int(line[1])
     else:
+        # this is the output of mk_docker.py
         try:
             parsed = _parse_docker_container_mem_plugin(string_table)
         except KeyError:
@@ -83,18 +85,29 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
             return {"MemTotal": 0}
 
     # Calculate used memory like docker does (https://github.com/moby/moby/issues/10824)
-    usage = (parsed["usage_in_bytes"] - parsed["cache"])
 
-    # Populate a dictionary in the format check_memory() form mem.include expects.
-    # The values are scaled to kB
-    section = {}
-    # Extract the real memory limit for the container. There is either the
-    # maximum amount of memory available or a configured limit for the
-    # container (cgroup).
-    section["MemTotal"] = min(parsed["MemTotal"], parsed["limit_in_bytes"])
-    section["MemFree"] = section["MemTotal"] - usage
-    # temporarily disabled. See CMK-5224
-    # section["Cached"] = parsed["cache"]
+    if "cache" in parsed:
+        # cgroup v1
+        usage = (parsed["usage_in_bytes"] - parsed["cache"])
+        # Populate a dictionary in the format check_memory() form mem.include expects.
+        # The values are scaled to kB
+        section = {}
+        # Extract the real memory limit for the container. There is either the
+        # maximum amount of memory available or a configured limit for the
+        # container (cgroup).
+        section["MemTotal"] = min(parsed["MemTotal"], parsed["limit_in_bytes"])
+        section["MemFree"] = section["MemTotal"] - usage
+        # temporarily disabled. See CMK-5224
+        # section["Cached"] = parsed["cache"]
+    else:
+        # cgroup v2
+        mem_total = parsed["limit"]
+        mem_usage = parsed["usage"]
+        mem_cache = parsed["inactive_file"]
+        section = {
+            "MemTotal": mem_total,
+            "MemFree": mem_total - max(mem_usage - mem_cache, 0),
+        }
 
     return section
 

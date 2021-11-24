@@ -6,9 +6,10 @@
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List, NewType, Optional, Sequence, TypedDict
+from typing import Dict, List, Mapping, NewType, Optional, Sequence, TypedDict, Union
 
 from pydantic import BaseModel
+from pydantic.fields import Field
 
 from ..agent_based_api.v1.type_defs import StringTable
 
@@ -185,3 +186,38 @@ class PodConditions(BaseModel):
     scheduled: PodCondition
     containersready: Optional[PodCondition]
     ready: Optional[PodCondition]
+
+
+class ContainerRunningState(BaseModel):
+    type: str = Field("running", const=True)
+    start_time: int
+
+
+class ContainerWaitingState(BaseModel):
+    type: str = Field("waiting", const=True)
+    reason: str
+    detail: Optional[str]
+
+
+class ContainerTerminatedState(BaseModel):
+    type: str = Field("terminated", const=True)
+    exit_code: int
+    start_time: int
+    end_time: int
+    reason: Optional[str]
+    detail: Optional[str]
+
+
+class ContainerInfo(BaseModel):
+    id: Optional[str]  # id of non-ready container is None
+    name: str
+    image: str
+    ready: bool
+    state: Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]
+    restart_count: int
+
+
+class PodContainers(BaseModel):
+    """section: k8s_pod_containers_v1"""
+
+    containers: Mapping[str, ContainerInfo]

@@ -1100,17 +1100,27 @@ class LDAPUserConnector(UserConnector):
 
     # This function only validates credentials, no locked checking or similar
     def check_credentials(self, user_id, password: str) -> CheckCredentialsResult:
+        # Connect only to servers of connections, the user is configured for,
+        # to avoid connection errors for unrelated servers
+        user_connection_id = self._connection_id_of_user(user_id)
+        if user_connection_id is not None and user_connection_id != self.id():
+            return None
+
         self.connect()
 
-        # Did the user provide an suffix with his user_id? This might enforce
-        # LDAP connections to be choosen or skipped.
-        # self._user_enforces_this_connection can return either:
-        #   True:  This connection is enforced
-        #   False: Another connection is enforced
-        #   None:  No connection is enforced
-        enforce_this_connection = self._user_enforces_this_connection(user_id)
-        if enforce_this_connection is False:
-            return None  # Skip this connection, another one is enforced
+        enforce_this_connection = None
+        # Also honor users that are currently not known, e.g. when sync did not
+        # already happened
+        if user_connection_id is None:
+            # Did the user provide an suffix with his user_id? This might enforce
+            # LDAP connections to be choosen or skipped.
+            # self._user_enforces_this_connection can return either:
+            #   True:  This connection is enforced
+            #   False: Another connection is enforced
+            #   None:  No connection is enforced
+            enforce_this_connection = self._user_enforces_this_connection(user_id)
+            if enforce_this_connection is False:
+                return None  # Skip this connection, another one is enforced
         # Always use the stripped user ID for communication with the LDAP server
         user_id = self._strip_suffix(user_id)
 
@@ -1130,17 +1140,7 @@ class LDAPUserConnector(UserConnector):
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, ("password", password))
-            if not self._has_suffix():
-                result = user_id
-            else:
-                # Does the user without suffix exist and is it related to this connection? Always
-                # use it in case it exists. If not, use the user with the suffix. A connection may
-                # have created users while the connection had no suffix and a suffix has been added
-                # to the connection later.
-                if self._connection_id_of_user(user_id) == self.id():
-                    result = user_id
-                else:
-                    result = self._add_suffix(user_id)
+            result = user_id if not self._has_suffix() else self._add_suffix(user_id)
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
                 "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)

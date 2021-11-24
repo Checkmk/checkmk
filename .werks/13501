@@ -1,0 +1,15 @@
+Title: Fix LDAP connection error for connections the user is not part of
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1637768844
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p17
+
+If a LDAP user did a login, all LDAP connections were contacted, what could
+lead to the error "LDAP connection failed", even if the LDAP server of the
+configured user connection was reachable.
+
+From now on, only the connection of the requested user will be connected.

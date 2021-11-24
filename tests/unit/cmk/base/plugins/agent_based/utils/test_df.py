@@ -82,7 +82,7 @@ def test_df_check_filesystem_single(params, expected):
             ["fake1", "fake2"],
         ),
         (
-            {
+            {  # pylint:disable= duplicate-key
                 "fake_same_name": {
                     "size_mb": None,
                     "avail_mb": None,

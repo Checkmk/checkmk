@@ -99,7 +99,7 @@ def test_bi_rule_outermost_transform_to_vs(rest_config):
     if rest_config is None:
         # Error page special handling
         # This handles html.var voodoo, never results in a rest config
-        assert _convert_bi_rule_to_vs(rest_config) == None
+        assert _convert_bi_rule_to_vs(rest_config) is None
         return
 
     assert _convert_bi_rule_from_vs(_convert_bi_rule_to_vs(rest_config)) == rest_config

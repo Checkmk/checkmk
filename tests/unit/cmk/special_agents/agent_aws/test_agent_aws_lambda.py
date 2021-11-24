@@ -258,5 +258,5 @@ def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPat
             timeout_seconds=0.001,
             sleep_duration=0.001,
         )
-        == None
+        is None
     )

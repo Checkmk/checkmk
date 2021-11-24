@@ -23,9 +23,9 @@ from tests.testlib.fixtures import ec, web  # noqa: F401 # pylint: disable=unuse
 from tests.testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName  # isort:skip
 
-from tests.testlib.web_session import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+from tests.testlib.web_session import (  # noqa: F401 # pylint: disable=unused-import  # isort: skip
     APIError,
     CMKWebSession,
 )
@@ -49,6 +49,7 @@ from tests.testlib.utils import (  # noqa: F401 # pylint: disable=unused-import 
     site_id,
     virtualenv_path,
 )
+
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

@@ -7,10 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.ibm_mq_channels import (
-    inventory_ibm_mq_channels,
-    parse_ibm_mq_channels,
-)
+from cmk.base.plugins.agent_based.ibm_mq_channels import inventory_ibm_mq_channels
 
 
 @pytest.mark.parametrize(

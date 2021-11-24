@@ -13,13 +13,12 @@ from tests.testlib import cmk_path, is_enterprise_repo
 
 
 def _scss_files() -> Set[Path]:
-    return {
-        f
-        for f in chain(
+    return set(
+        chain(
             Path(cmk_path(), "web", "htdocs", "themes").glob("**/*.scss"),
             Path(cmk_path(), "enterprise", "web", "htdocs", "themes").glob("**/*.scss"),
         )
-    }
+    )
 
 
 def _scss_variables(scss_files: Iterable[Path]) -> Tuple[Set[str], Set[str]]:

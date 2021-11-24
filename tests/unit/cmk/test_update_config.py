@@ -9,7 +9,6 @@ import argparse
 import io
 import sys
 from pathlib import Path
-from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture

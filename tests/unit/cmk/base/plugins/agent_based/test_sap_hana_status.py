@@ -7,12 +7,7 @@
 import pytest
 
 import cmk.base.plugins.agent_based.sap_hana_status as sap_hana_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    Service,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 ITEM = "H90 33"

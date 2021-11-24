@@ -412,8 +412,10 @@ class Request(
         self.environ["QUERY_STRING"] = self.query_string
         # We remove the form entry. As this entity is never copied it will be modified within
         # it's cache.
-        if varname in self.form:
-            del self.form[varname]
+        try:
+            dict.pop(self.form, varname)
+        except KeyError:
+            pass
         # We remove the __dict__ entries to allow @cached_property to reload them from
         # the environment. The rest of the request object stays the same.
         self.__dict__.pop("args", None)

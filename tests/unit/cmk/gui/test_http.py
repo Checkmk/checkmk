@@ -335,6 +335,23 @@ def test_pre_16_format_cookie_handling(monkeypatch):
     assert request.has_cookie("abc")
 
 
+def test_del_vars_from_post():
+    environ = {
+        **create_environ(
+            input_stream=io.StringIO("_username=foo&_secret=bar"),
+            content_type="application/x-www-form-urlencoded",
+        ),
+        "REQUEST_URI": "",
+    }
+    with application_and_request_context(environ):
+        assert global_request.form
+
+        global_request.del_var_from_env("_username")
+        global_request.del_var_from_env("_secret")
+
+        assert not global_request.form
+
+
 def test_del_vars_from_env():
     environ = dict(
         create_environ(), REQUEST_URI="", QUERY_STRING="foo=foo&_username=foo&_password=bar&bar=bar"
@@ -381,14 +398,7 @@ def test_del_vars():
         assert global_request.var("foo") == "foo"
 
 
-@pytest.mark.parametrize(
-    "invalid_url",
-    [
-        "http://localhost/",
-        "://localhost",
-        "localhost:80/bla",
-    ],
-)
+@pytest.mark.parametrize("invalid_url", ["http://localhost/", "://localhost", "localhost:80/bla"])
 def test_get_url_input_invalid_urls(request_context, invalid_url):
     html.request.set_var("varname", invalid_url)
 

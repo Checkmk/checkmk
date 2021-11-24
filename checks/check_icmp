@@ -28,6 +28,7 @@ def check_icmp_arguments(params):
 
     target = params.get("address", "address")
 
+    # Note: The following macros have to work with both Nagios and the CMC
     if target == "address":
         if is_ipv6_primary(host_name()):
             args.append("-6")
@@ -39,22 +40,22 @@ def check_icmp_arguments(params):
         args.append("$HOSTALIAS$")
 
     elif target == "all_ipv4addresses":
-        args += ["$HOST_ADDRESSES_4$", "$HOST_ADDRESS_4$"]
+        args += ["$_HOSTADDRESSES_4$", "$_HOSTADDRESS_4$"]
 
     elif target == "all_ipv6addresses":
-        args += ["-6", "$HOST_ADDRESSES_6$", "$HOST_ADDRESS_6$"]
+        args += ["-6", "$_HOSTADDRESSES_6$", "$_HOSTADDRESS_6$"]
 
     elif target == "additional_ipv4addresses":
-        args.append("$HOST_ADDRESSES_4$")
+        args.append("$_HOSTADDRESSES_4$")
 
     elif target == "additional_ipv6addresses":
-        args += ["-6", "$HOST_ADDRESSES_6$"]
+        args += ["-6", "$_HOSTADDRESSES_6$"]
 
     elif target[0] == "indexed_ipv4address":
-        args.append("$HOST_ADDRESS_4_%s$" % target[1])
+        args.append("$_HOSTADDRESS_4_%s$" % target[1])
 
     elif target[0] == "indexed_ipv6address":
-        args.append("$HOST_ADDRESS_6_%s$" % target[1])
+        args.append("$_HOSTADDRESS_6_%s$" % target[1])
 
     else:  # custom
         args.append(str(target[1]))
@@ -62,7 +63,7 @@ def check_icmp_arguments(params):
     # Unfortunately, we must return a single string here.
     # Otherwise shell quoting will be applied to every element
     # of the list, which will interfere with macro replacements like
-    # "$HOST_ADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
+    # "$_HOSTADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
     return " ".join(args)
 
 

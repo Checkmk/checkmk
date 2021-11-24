@@ -372,14 +372,14 @@ class FilterOption(Filter):
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=[self.legacy_filter.varname],
+            htmlvars=self.legacy_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
-            varname=self.legacy_filter.varname,
+            varname=self.legacy_filter.request_vars[0],
             options=self.legacy_filter.options,
             default=str(self.legacy_filter.ignore),
             value=value,
@@ -407,23 +407,17 @@ class FilterTime(Filter):
         is_show_more: bool = False,
     ):
         self.column = column
-        varnames = [
-            ident + "_from",
-            ident + "_from_range",
-            ident + "_until",
-            ident + "_until_range",
-        ]
+        self.legacy_filter = legacy_filters.FilterTime(ident=ident, column=column)
 
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=varnames,
+            htmlvars=self.legacy_filter.request_vars,
             link_columns=[column] if column is not None else [],
             is_show_more=is_show_more,
         )
-        self.legacy_filter = legacy_filters.FilterTime(ident=ident, column=column)
 
     def display(self, value: FilterHTTPVariables):
         html.open_table(class_="filtertime")

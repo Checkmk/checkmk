@@ -28,6 +28,21 @@ def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
     return conditions + connective
 
 
+class Filter:
+    "This is the Null filter and default class as it does nothing."
+
+    def __init__(self, *, ident: str, request_vars: List[str]):
+        self.ident = ident
+        self.request_vars = request_vars
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return ""
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return rows
+
+
+### Tri State filter
 def default_tri_state_options() -> Options:
     return [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]
 
@@ -48,7 +63,7 @@ def tri_state_log_notifications_options() -> Options:
     ]
 
 
-class FilterOption:
+class FilterOption(Filter):
     def __init__(
         self,
         *,
@@ -57,15 +72,15 @@ class FilterOption:
         filter_code: Callable[[str], FilterHeader],
         filter_rows: Optional[Callable[[str, VisualContext, Rows], Rows]] = None,
     ):
-        self.ident = ident
+        super().__init__(ident=ident, request_vars=[ident])
+        # TODO: options helps with data validation but conflicts with the Filter job
         self.options = options
-        self.varname = ident
         self.filter_code = filter_code
         self.filter_rows = filter_rows
         self.ignore = self.options[-1][0]
 
     def selection_value(self, value: FilterHTTPVariables) -> str:
-        selection = value.get(self.varname, "")
+        selection = value.get(self.request_vars[0], "")
         if selection in [x for (x, _) in self.options]:
             return selection
         return self.ignore
@@ -103,7 +118,7 @@ class FilterTristate(FilterOption):
             ),
             options=options or default_tri_state_options(),
         )
-        self.varname = "is_" + ident
+        self.request_vars = ["is_" + ident]
 
 
 def state_type(on: bool) -> FilterHeader:
@@ -216,14 +231,21 @@ def time_filter_options() -> Options:
     return choices
 
 
-class FilterTime:
+class FilterTime(Filter):
     def __init__(
         self,
         *,
         ident: str,
         column: str,
     ):
-        self.ident = ident
+        varnames = [
+            ident + "_from",
+            ident + "_from_range",
+            ident + "_until",
+            ident + "_until_range",
+        ]
+
+        super().__init__(ident=ident, request_vars=varnames)
         self.column = column
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -234,9 +256,6 @@ class FilterTime:
         if untilsecs is not None:
             filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
         return filtertext
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return rows
 
     # Extract timerange user has selected from HTML variables
     def get_time_range(
@@ -271,68 +290,66 @@ class FilterTime:
 
 
 ### TextFilter
-class FilterText:
+class FilterText(Filter):
     def __init__(
         self,
         *,
-        htmlvar: str,
-        column: str,
+        ident: str,
         op: str,
         negateable: bool = False,
+        request_var: Optional[str] = None,
+        column: Optional[str] = None,
     ):
 
-        htmlvars = [htmlvar]
+        request_vars = [request_var or ident]
         if negateable:
-            htmlvars.append("neg_" + htmlvar)
-        self.htmlvars = htmlvars
+            request_vars.append("neg_" + (request_var or ident))
+
+        super().__init__(ident=ident, request_vars=request_vars)
         self.op = op
-        self.column = column
+        self.column = column or ident
         self.negateable = negateable
-        self.link_columns = [column]
+        self.link_columns = [self.column]
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if value.get(self.htmlvars[0]):
+        if value.get(self.request_vars[0]):
             return self._filter(value)
         return ""
 
     def _negate_symbol(self, value: FilterHTTPVariables) -> str:
-        return "!" if self.negateable and value.get(self.htmlvars[1]) else ""
+        return "!" if self.negateable and value.get(self.request_vars[1]) else ""
 
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return "Filter: %s %s%s %s\n" % (
             self.column,
             self._negate_symbol(value),
             self.op,
-            livestatus.lqencode(value[self.htmlvars[0]]),
+            livestatus.lqencode(value[self.request_vars[0]]),
         )
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        """post-Livestatus filtering (e.g. for BI aggregations)"""
-        return rows
 
 
 class FilterHostnameOrAlias(FilterText):
     def __init__(self):
-        super().__init__(htmlvar="hostnameoralias", column="host_name", op="~~", negateable=False)
+        super().__init__(ident="hostnameoralias", column="host_name", op="~~", negateable=False)
         self.link_columns = ["host_alias", "host_name"]
 
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        host = livestatus.lqencode(value[self.htmlvars[0]])
+        host = livestatus.lqencode(value[self.request_vars[0]])
 
         return lq_logic("Filter:", [f"host_name {self.op} {host}", f"alias {self.op} {host}"], "Or")
 
 
 ### IPAddress
-class FilterIPAddress:
-    def __init__(self, *, htmlvars: List[str], what: str):
-        self.htmlvars = htmlvars
+class FilterIPAddress(Filter):
+    def __init__(self, *, ident: str, request_vars: List[str], what: str):
+        super().__init__(ident=ident, request_vars=request_vars)
         self._what = what
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        address_val = value.get(self.htmlvars[0])
+        address_val = value.get(self.request_vars[0])
         if not address_val:
             return ""
-        if value.get(self.htmlvars[1]) == "yes":
+        if value.get(self.request_vars[1]) == "yes":
             op = "~"
             address = "^" + livestatus.lqencode(address_val)
         else:
@@ -388,25 +405,24 @@ def ip_address_families_options() -> Options:
 
 
 ### Multipick
-class FilterMultiple:
+class FilterMultiple(Filter):
     def __init__(
         self,
         *,
         ident: str,
         column: str,
     ):
-        self.ident = ident
-        self.htmlvars = [ident, "neg_" + ident]
+        super().__init__(ident=ident, request_vars=[ident, "neg_" + ident])
         self.column = column
 
     def selection(self, value: FilterHTTPVariables) -> List[str]:
-        if folders := value.get(self.htmlvars[0], "").strip():
+        if folders := value.get(self.request_vars[0], "").strip():
             return folders.split("|")
         return []
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         # not (A or B) => (not A) and (not B)
-        if value.get(self.htmlvars[1]):
+        if value.get(self.request_vars[1]):
             negate = "!"
             op = "And"
         else:

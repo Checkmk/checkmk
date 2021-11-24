@@ -8,16 +8,16 @@ import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_livestatus_hosts_generic_filter(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -40,7 +40,7 @@ def test_openapi_livestatus_hosts_generic_filter(
         ],
     )
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/host/collections/all",
             headers={"Accept": "application/json"},
@@ -56,7 +56,7 @@ def test_openapi_livestatus_hosts_generic_filter(
         ],
     )
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base
             + '/domain-types/host/collections/all?query={"op": "~", "left": "alias", "right": "heute"}&columns=name&columns=alias',
@@ -68,14 +68,12 @@ def test_openapi_livestatus_hosts_generic_filter(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_livestatus_hosts_empty_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
 
     live = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
     live.add_table(
         "hosts",
@@ -96,7 +94,7 @@ def test_openapi_livestatus_hosts_empty_query(
         ],
     )
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/host/collections/all?query={}&columns=name&columns=alias",
             headers={"Accept": "application/json"},

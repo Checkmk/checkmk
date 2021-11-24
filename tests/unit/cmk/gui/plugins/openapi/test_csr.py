@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Tuple
 
 import pytest
 from pytest_mock import MockerFixture
@@ -50,24 +49,15 @@ nkrndRn3MoyHIO3cuT7inOlFb/VYPRWP
 """
 
 
-@pytest.fixture(name="wsgi_app_with_user")
-def fixture_wsgi_app_with_user(
-    wsgi_app: WebTestAppForCMK,
-    with_automation_user: Tuple[str, str],
-) -> WebTestAppForCMK:
-    wsgi_app.set_authorization(("Bearer", " ".join(with_automation_user)))
-    return wsgi_app
-
-
 def test_csr_403(
     mocker: MockerFixture,
-    wsgi_app_with_user: WebTestAppForCMK,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
         "cmk.gui.plugins.openapi.endpoints.csr._user_is_authorized",
         return_value=False,
     )
-    wsgi_app_with_user.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         _URL,
         params=json.dumps({"csr": _CSR}),
@@ -95,10 +85,10 @@ def test_csr_403(
     ],
 )
 def test_csr_400(
-    wsgi_app_with_user: WebTestAppForCMK,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     csr_str: str,
 ) -> None:
-    wsgi_app_with_user.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         _URL,
         params=json.dumps({"csr": csr_str}),
@@ -110,13 +100,13 @@ def test_csr_400(
 
 def test_csr_200(
     mocker: MockerFixture,
-    wsgi_app_with_user: WebTestAppForCMK,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
         "cmk.gui.plugins.openapi.endpoints.csr._serialized_signed_cert",
         return_value="3pi4ghjwerihg",
     )
-    wsgi_app_with_user.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         _URL,
         params=json.dumps({"csr": _CSR}),

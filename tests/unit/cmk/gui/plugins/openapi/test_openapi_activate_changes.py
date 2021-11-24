@@ -10,19 +10,14 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.plugins.openapi.restful_objects import constructors
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 CMK_WAIT_FOR_COMPLETION = "cmk/wait-for-completion"
 
 
-def test_openapi_show_activations(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
-
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/activation_run/asdf/actions/wait-for-completion/invoke",
         status=404,
@@ -30,16 +25,9 @@ def test_openapi_show_activations(
     )
 
 
-def test_openapi_list_currently_running_activations(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_list_currently_running_activations(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
-
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "get",
         base + constructors.collection_href("activation_run", "running"),
         status=200,
@@ -49,19 +37,15 @@ def test_openapi_list_currently_running_activations(
 
 def test_openapi_activate_changes(
     monkeypatch: pytest.MonkeyPatch,
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
     # We create a host
     live = mock_livestatus
 
-    host_created = wsgi_app.call_method(
+    host_created = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -71,7 +55,7 @@ def test_openapi_activate_changes(
     )
 
     with live(expect_status_query=True):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
             status=400,
@@ -81,7 +65,7 @@ def test_openapi_activate_changes(
         )
         assert "Unknown site" in repr(resp.json), resp.json
 
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
             status=200,
@@ -90,7 +74,7 @@ def test_openapi_activate_changes(
         )
 
     with live(expect_status_query=True):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
             status=302,
@@ -100,7 +84,7 @@ def test_openapi_activate_changes(
         )
 
     for _ in range(10):
-        resp = wsgi_app.follow_link(
+        resp = aut_user_auth_wsgi_app.follow_link(
             resp,
             CMK_WAIT_FOR_COMPLETION,
         )
@@ -112,7 +96,7 @@ def test_openapi_activate_changes(
         "cmk.gui.watolib.hosts_and_folders.delete_hosts",
         lambda *args, **kwargs: None,
     )
-    wsgi_app.follow_link(
+    aut_user_auth_wsgi_app.follow_link(
         host_created,
         ".../delete",
         status=204,
@@ -123,7 +107,7 @@ def test_openapi_activate_changes(
     # And activate the changes
 
     with live(expect_status_query=True):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
             headers={"Accept": "application/json"},
@@ -131,7 +115,7 @@ def test_openapi_activate_changes(
         )
 
     for _ in range(10):
-        resp = wsgi_app.follow_link(
+        resp = aut_user_auth_wsgi_app.follow_link(
             resp,
             CMK_WAIT_FOR_COMPLETION,
             headers={"Accept": "application/json"},

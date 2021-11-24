@@ -3,24 +3,24 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 
 import pytest
 
 from cmk.utils import version
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_password(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/password/collections/all",
         params=json.dumps(
@@ -38,7 +38,7 @@ def test_openapi_password(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/password/fooz",
         params=json.dumps({"title": "foobu", "comment": "Something but nothing random"}),
@@ -47,7 +47,7 @@ def test_openapi_password(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/password/foo",
         params=json.dumps({"title": "foobu", "comment": "Something but nothing random"}),
@@ -56,7 +56,7 @@ def test_openapi_password(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/password/foo",
         headers={"Accept": "application/json"},
@@ -74,13 +74,10 @@ def test_openapi_password(wsgi_app, with_automation_user):
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password_admin(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_password_admin(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/password/collections/all",
         params=json.dumps(
@@ -98,7 +95,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/password/test",
         headers={"Accept": "application/json"},
@@ -108,13 +105,10 @@ def test_openapi_password_admin(wsgi_app, with_automation_user):
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password_customer(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_password_customer(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/password/collections/all",
         params=json.dumps(
@@ -133,7 +127,7 @@ def test_openapi_password_customer(wsgi_app, with_automation_user):
     )
     assert resp.json_body["extensions"]["customer"] == "provider"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/password/test",
         params=json.dumps(
@@ -145,7 +139,7 @@ def test_openapi_password_customer(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/password/test",
         headers={"Accept": "application/json"},
@@ -156,13 +150,10 @@ def test_openapi_password_customer(wsgi_app, with_automation_user):
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password_delete(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/password/collections/all",
         params=json.dumps(
@@ -180,7 +171,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/password/collections/all",
         headers={"Accept": "application/json"},
@@ -188,25 +179,25 @@ def test_openapi_password_delete(wsgi_app, with_automation_user):
     )
     assert len(resp.json_body["value"]) == 1
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "delete",
         base + "/objects/password/nothing",
         headers={"Accept": "application/json"},
         status=404,
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "delete",
         base + "/objects/password/foo",
         headers={"Accept": "application/json"},
         status=204,
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "get", base + "/objects/password/foo", headers={"Accept": "application/json"}, status=404
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/password/collections/all",
         headers={"Accept": "application/json"},

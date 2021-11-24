@@ -3,13 +3,17 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 
 import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+
+@pytest.mark.usefixtures("with_host")
 @pytest.mark.parametrize(
     argnames=[
         "host_name",
@@ -22,17 +26,13 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
     ],
 )
 def test_openapi_acknowledge_all_services(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
     host_name,
     service,
     acknowledgement_sent,
-    with_host,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -62,7 +62,7 @@ def test_openapi_acknowledge_all_services(
         )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/service",
             params=json.dumps(
                 {
@@ -93,15 +93,12 @@ def test_openapi_acknowledge_all_services(
     ],
 )
 def test_openapi_acknowledge_specific_service(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
     service,
     acknowledgement_sent,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -143,7 +140,7 @@ def test_openapi_acknowledge_specific_service(
         )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/service",
             params=json.dumps(
                 {
@@ -167,6 +164,7 @@ def test_openapi_acknowledge_specific_service(
         )
 
 
+@pytest.mark.usefixtures("with_host")
 @pytest.mark.parametrize(
     argnames=[
         "host_name",
@@ -178,16 +176,12 @@ def test_openapi_acknowledge_specific_service(
     ],
 )
 def test_openapi_acknowledge_host(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
     host_name,
     acknowledgement_sent,
-    with_host,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -215,7 +209,7 @@ def test_openapi_acknowledge_host(
         )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/host",
             params=json.dumps(
                 {
@@ -234,13 +228,10 @@ def test_openapi_acknowledge_host(
 
 
 def test_openapi_bulk_acknowledge(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -277,7 +268,7 @@ def test_openapi_bulk_acknowledge(
     )
 
     with live():
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/service",
             params=json.dumps(
                 {
@@ -301,15 +292,12 @@ def test_openapi_bulk_acknowledge(
         )
 
 
+@pytest.mark.usefixtures("with_groups")
 def test_openapi_acknowledge_servicegroup(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_groups,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -334,7 +322,7 @@ def test_openapi_acknowledge_servicegroup(
         match_type="ellipsis",
     )
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/service",
             content_type="application/json",
             params=json.dumps(
@@ -352,15 +340,12 @@ def test_openapi_acknowledge_servicegroup(
         )
 
 
+@pytest.mark.usefixtures("with_groups")
 def test_openapi_acknowledge_hostgroup(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_groups,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -384,7 +369,7 @@ def test_openapi_acknowledge_hostgroup(
     )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -402,7 +387,7 @@ def test_openapi_acknowledge_hostgroup(
         )
 
     with live(expect_status_query=False):
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -423,7 +408,7 @@ def test_openapi_acknowledge_hostgroup(
     live.add_table("hostgroups", [])
     live.expect_query("GET hostgroups\nColumns: name\nFilter: name = windows")
     with live(expect_status_query=True):
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -442,13 +427,10 @@ def test_openapi_acknowledge_hostgroup(
 
 
 def test_openapi_acknowledge_host_with_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -473,7 +455,7 @@ def test_openapi_acknowledge_host_with_query(
     )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -492,13 +474,10 @@ def test_openapi_acknowledge_host_with_query(
 
 
 def test_openapi_acknowledge_host_with_non_matching_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-):
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -518,7 +497,7 @@ def test_openapi_acknowledge_host_with_non_matching_query(
     live.expect_query("GET hosts\nColumns: name\nFilter: name = servo")
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/acknowledge/collections/host",
             content_type="application/json",
             params=json.dumps(

@@ -10,15 +10,14 @@ import pytest
 
 from cmk.utils.tags import BuiltinTagConfig
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
@@ -39,7 +38,7 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_tag_group/foo",
         params=json.dumps(
@@ -57,7 +56,7 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/foo",
         headers={"Accept": "application/json"},
@@ -70,15 +69,12 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_get_collection(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     builtin_groups_count = len(BuiltinTagConfig().tag_groups)
 
-    col_resp = wsgi_app.call_method(
+    col_resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/host_tag_group/collections/all",
         headers={"Accept": "application/json"},
@@ -88,13 +84,10 @@ def test_openapi_host_tag_group_get_collection(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
@@ -115,7 +108,7 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "delete",
         base + "/objects/host_tag_group/foo",
         params=json.dumps({}),
@@ -124,7 +117,7 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/foo",
         headers={"Accept": "application/json"},
@@ -133,12 +126,9 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
@@ -157,13 +147,10 @@ def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/host_tag_group/collections/all",
         headers={"Accept": "application/json"},
@@ -174,14 +161,14 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
         title in (entry["title"] for entry in resp.json_body["value"]) for title in built_in_tags
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/agent",
         headers={"Accept": "application/json"},
         status=200,
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_tag_group/agent",
         params=json.dumps(
@@ -199,7 +186,7 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "delete",
         base + "/objects/host_tag_group/agent",
         params=json.dumps({}),
@@ -210,12 +197,9 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
@@ -232,7 +216,7 @@ def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_tag_group/group_id999",
         params=json.dumps(
@@ -248,7 +232,7 @@ def test_openapi_host_tag_group_update_use_case(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _ = wsgi_app.call_method(
+    _ = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_tag_group/group_id999",
         headers={"Accept": "application/json"},

@@ -10,15 +10,14 @@ import pytest
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_time_period(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_time_period(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/time_period/collections/all",
         params=json.dumps(
@@ -38,7 +37,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/time_period/foo",
         params=json.dumps(
@@ -54,7 +53,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/time_period/foo",
         headers={"Accept": "application/json"},
@@ -71,13 +70,10 @@ def test_openapi_time_period(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_time_period_collection(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_time_period_collection(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/time_period/collections/all",
         params=json.dumps(
@@ -97,7 +93,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp_col = wsgi_app.call_method(
+    resp_col = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/time_period/collections/all",
         headers={"Accept": "application/json"},
@@ -105,7 +101,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
     )
     assert len(resp_col.json_body["value"]) == 2
 
-    _ = wsgi_app.call_method(
+    _ = aut_user_auth_wsgi_app.call_method(
         "delete",
         base + "/objects/time_period/foo",
         headers={"If-Match": resp.headers["Etag"], "Accept": "application/json"},
@@ -113,7 +109,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp_col = wsgi_app.call_method(
+    resp_col = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/time_period/collections/all",
         headers={"Accept": "application/json"},
@@ -123,20 +119,17 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_timeperiod_builtin(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/time_period/24X7",
         headers={"Accept": "application/json"},
         status=200,
     )
 
-    _ = wsgi_app.call_method(
+    _ = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/time_period/24X7",
         headers={"Accept": "application/json"},
@@ -145,13 +138,10 @@ def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_timeperiod_unmodified_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/time_period/collections/all",
         params=json.dumps(
@@ -177,7 +167,7 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
         headers={"Accept": "application/json"},
@@ -240,7 +230,7 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
         "exclude": [],
     }
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/time_period/test_all_8x5",
         params=json.dumps({}),
@@ -249,7 +239,7 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
         headers={"Accept": "application/json"},
@@ -314,13 +304,10 @@ def test_openapi_timeperiod_unmodified_update(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_timeperiod_complex_update(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/time_period/collections/all",
         params=json.dumps(
@@ -346,7 +333,7 @@ def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/time_period/test_all_8x5",
         params=json.dumps(
@@ -387,13 +374,10 @@ def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user):
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_excluding_exclude(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_timeperiod_excluding_exclude(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/time_period/collections/all",
         params=json.dumps(
@@ -417,7 +401,7 @@ def test_openapi_timeperiod_excluding_exclude(wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/time_period/test_all_8x5",
         headers={"Accept": "application/json"},

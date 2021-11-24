@@ -279,7 +279,7 @@ class WebTestAppForCMK(webtest.TestApp):
         raise NotImplementedError("Format %s not implemented" % output_format)
 
     @contextmanager
-    def set_config(self, **kwargs: Dict[str, Any]) -> Iterator[None]:
+    def set_config(self, **kwargs: Any) -> Iterator[None]:
         """Patch the GUI config for the current test
 
         In normal tests, if you want to patch the GUI config, you can simply monkeypatch the

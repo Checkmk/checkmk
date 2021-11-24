@@ -10,17 +10,16 @@ import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_list_all_downtimes(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.expect_query(
@@ -31,7 +30,7 @@ def test_openapi_list_all_downtimes(
     )
 
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/downtime/collections/all",
             headers={"Accept": "application/json"},
@@ -40,15 +39,13 @@ def test_openapi_list_all_downtimes(
         assert len(resp.json["value"]) == 1
 
 
+@pytest.mark.usefixtures("with_groups")
 def test_openapi_schedule_hostgroup_downtime(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_groups,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -73,7 +70,7 @@ def test_openapi_schedule_hostgroup_downtime(
         match_type="ellipsis",
     )
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -89,15 +86,13 @@ def test_openapi_schedule_hostgroup_downtime(
         )
 
 
+@pytest.mark.usefixtures("with_host")
 def test_openapi_schedule_host_downtime(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
@@ -107,7 +102,7 @@ def test_openapi_schedule_host_downtime(
         match_type="ellipsis",
     )
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -123,15 +118,13 @@ def test_openapi_schedule_host_downtime(
         )
 
 
+@pytest.mark.usefixtures("with_groups")
 def test_openapi_schedule_servicegroup_downtime(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_groups,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -161,7 +154,7 @@ def test_openapi_schedule_servicegroup_downtime(
         match_type="ellipsis",
     )
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/service",
             content_type="application/json",
             params=json.dumps(
@@ -177,15 +170,13 @@ def test_openapi_schedule_servicegroup_downtime(
         )
 
 
+@pytest.mark.usefixtures("with_host")
 def test_openapi_schedule_service_downtime(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
@@ -199,7 +190,7 @@ def test_openapi_schedule_service_downtime(
         match_type="ellipsis",
     )
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/service",
             content_type="application/json",
             params=json.dumps(
@@ -217,19 +208,17 @@ def test_openapi_schedule_service_downtime(
 
 
 def test_openapi_schedule_service_downtime_with_non_matching_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.expect_query("GET services\nColumns: description host_name\nFilter: host_name = nothing")
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/service",
             content_type="application/json",
             params=json.dumps(
@@ -247,19 +236,17 @@ def test_openapi_schedule_service_downtime_with_non_matching_query(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_schedule_host_downtime_with_non_matching_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.expect_query("GET hosts\nColumns: name\nFilter: name = nothing")
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -276,13 +263,11 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
 
 
 def test_openapi_show_downtimes_with_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -321,7 +306,7 @@ def test_openapi_show_downtimes_with_query(
         ]
     )
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base
             + '/domain-types/downtime/collections/all?query={"op": "~", "left": "downtimes.host_name", "right": "heute"}',
@@ -333,13 +318,11 @@ def test_openapi_show_downtimes_with_query(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_show_downtime_with_params(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -380,7 +363,7 @@ def test_openapi_show_downtime_with_params(
         ]
     )
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/downtime/collections/all?host_name=example.com",
             headers={"Accept": "application/json"},
@@ -391,13 +374,11 @@ def test_openapi_show_downtime_with_params(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_show_downtime_of_non_existing_host(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -438,7 +419,7 @@ def test_openapi_show_downtime_of_non_existing_host(
         ]
     )
     with live:
-        _ = wsgi_app.call_method(
+        _ = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/downtime/collections/all?host_name=nothing",
             headers={"Accept": "application/json"},
@@ -448,13 +429,11 @@ def test_openapi_show_downtime_of_non_existing_host(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_create_host_downtime_with_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -512,7 +491,7 @@ def test_openapi_create_host_downtime_with_query(
         match_type="ellipsis",
     )
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/host",
             content_type="application/json",
             params=json.dumps(
@@ -530,13 +509,11 @@ def test_openapi_create_host_downtime_with_query(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_create_service_downtime_with_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -572,7 +549,7 @@ def test_openapi_create_service_downtime_with_query(
     )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/service",
             content_type="application/json",
             params=json.dumps(
@@ -590,13 +567,11 @@ def test_openapi_create_service_downtime_with_query(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_create_service_downtime_with_non_matching_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -619,7 +594,7 @@ def test_openapi_create_service_downtime_with_non_matching_query(
     )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/service",
             content_type="application/json",
             params=json.dumps(
@@ -641,13 +616,11 @@ def test_openapi_create_service_downtime_with_non_matching_query(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_delete_downtime_with_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -687,7 +660,7 @@ def test_openapi_delete_downtime_with_query(
     )
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/actions/delete/invoke",
             content_type="application/json",
             params=json.dumps(
@@ -703,13 +676,11 @@ def test_openapi_delete_downtime_with_query(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_delete_downtime_by_id(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
     live.add_table(
         "downtimes",
@@ -749,7 +720,7 @@ def test_openapi_delete_downtime_by_id(
     live.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;123", match_type="ellipsis")
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/actions/delete/invoke",
             content_type="application/json",
             params=json.dumps(
@@ -765,13 +736,11 @@ def test_openapi_delete_downtime_by_id(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_delete_downtime_with_params(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -817,7 +786,7 @@ def test_openapi_delete_downtime_with_params(
     live.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;124", match_type="ellipsis")
 
     with live:
-        wsgi_app.post(
+        aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/actions/delete/invoke",
             content_type="application/json",
             params=json.dumps(
@@ -833,15 +802,10 @@ def test_openapi_delete_downtime_with_params(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_downtime_non_existing_instance(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_downtime_non_existing_instance(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/domain-types/downtime/collections/host",
         content_type="application/json",
         params=json.dumps(
@@ -858,15 +822,10 @@ def test_openapi_downtime_non_existing_instance(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_downtime_non_existing_groups(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/domain-types/downtime/collections/host",
         content_type="application/json",
         params=json.dumps(
@@ -884,13 +843,11 @@ def test_openapi_downtime_non_existing_groups(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_get_single(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -930,7 +887,7 @@ def test_openapi_downtime_get_single(
     )
 
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/objects/downtime/123",
             headers={"Accept": "application/json"},
@@ -941,13 +898,11 @@ def test_openapi_downtime_get_single(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_invalid_single(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.expect_query(
@@ -959,7 +914,7 @@ def test_openapi_downtime_invalid_single(
     )
 
     with live:
-        _ = wsgi_app.call_method(
+        _ = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/objects/downtime/123",
             headers={"Accept": "application/json"},

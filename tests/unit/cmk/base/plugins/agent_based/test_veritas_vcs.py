@@ -506,3 +506,106 @@ def test_cluster_check_veritas_vcs_resource():
             ),
         ]
     del SECTION['resource']['lan_phantom']
+
+
+@pytest.mark.parametrize('section, expected_check_result', [
+    pytest.param(
+        {},
+        [Result(state=state.OK, summary='All nodes OK')],
+        id='No nodes/sections are OK',
+    ),
+    pytest.param(
+        {
+            'node1': {
+                'stripes': [Vcs(attr='ClusState', value='RUNNING', cluster=None)],
+            },
+            'node2': {
+                'stripes': [Vcs(attr='ClusState', value='RUNNING', cluster=None)],
+            },
+        },
+        [Result(state=state.OK, summary='All nodes OK')],
+        id='Item not in section is OK',
+    ),
+    pytest.param(
+        {
+            'node1': {
+                'minions': [Vcs(attr='ClusState', value='RUNNING', cluster=None)],
+            },
+            'node2': {
+                'minions': [Vcs(attr='ClusState', value='RUNNING', cluster=None)],
+            },
+        },
+        [
+            Result(state=state.OK, notice='[node1]: running'),
+            Result(state=state.OK, notice='[node2]: running'),
+            Result(state=state.OK, summary='All nodes OK'),
+        ],
+        id='State is OK when all nodes have state RUNNING',
+    ),
+    pytest.param(
+        {
+            'node1': {
+                'minions': [Vcs(attr='ClusState', value='RUNNING', cluster=None)],
+            },
+            'node2': {
+                'minions': [Vcs(attr='ClusState', value='OFFLINE', cluster=None)],
+            },
+        },
+        [
+            Result(state=state.OK, notice='[node1]: running'),
+            Result(state=state.WARN, summary='[node2]: offline'),
+        ],
+        id='State is WARN when at least one node has state RUNNING, and others are OFFLINE',
+    ),
+    pytest.param(
+        {
+            'node1': {
+                'minions': [Vcs(attr='ClusState', value='OFFLINE', cluster=None)],
+            },
+            'node2': {
+                'minions': [Vcs(attr='ClusState', value='OFFLINE', cluster=None)],
+            },
+        },
+        [
+            Result(state=state.WARN, summary='[node1]: offline'),
+            Result(state=state.WARN, summary='[node2]: offline'),
+        ],
+        id='State is WARN when all nodes are OFFLINE',
+    ),
+    pytest.param(
+        {
+            'node1': {
+                'minions': [Vcs(attr='ClusState', value='FAULTED', cluster=None)],
+            },
+            'node2': {
+                'minions': [Vcs(attr='ClusState', value='RUNNING', cluster=None)],
+            },
+        },
+        [
+            Result(state=state.CRIT, summary='[node1]: faulted'),
+            Result(state=state.OK, notice='[node2]: running'),
+        ],
+        id='State is CRIT when at least one node has state FAULTED, and others are RUNNING',
+    ),
+    pytest.param(
+        {
+            'node1': {
+                'minions': [Vcs(attr='ClusState', value='FAULTED', cluster=None)],
+            },
+            'node2': {
+                'minions': [Vcs(attr='ClusState', value='OFFLINE', cluster=None)],
+            },
+        },
+        [
+            Result(state=state.CRIT, summary='[node1]: faulted'),
+            Result(state=state.WARN, notice='[node2]: offline'),
+        ],
+        id='State is CRIT when at least one node has state FAULTED, and others are OFFLINE',
+    ),
+])
+def test_cluster_check_veritas_vcs_states(section, expected_check_result):
+    assert list(veritas_vcs.cluster_check_veritas_vcs_subsection(
+        'minions',
+        PARAMS,
+        section,
+    )) == expected_check_result

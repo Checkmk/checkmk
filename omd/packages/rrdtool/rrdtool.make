@@ -28,7 +28,7 @@ PACKAGE_RRDTOOL_DESTDIR := $(RRDTOOL_INSTALL_DIR)
 
 # Executed from enterprise/core/src/Makefile.am and livestatus/src/Makefile.am
 # and enterprise/core/src/.f12
-$(RRDTOOL)-build-library: $(BUILD_HELPER_DIR) $(RRDTOOL_CACHE_PKG_PROCESS_LIBRARY)
+$(RRDTOOL)-build-library: $(RRDTOOL_CACHE_PKG_PROCESS_LIBRARY)
 
 RRDTOOL_CONFIGUREOPTS  := \
 	--prefix="" \

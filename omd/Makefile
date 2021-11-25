@@ -134,11 +134,9 @@ install-clean:
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
 
-$(BUILD_HELPER_DIR):
-	$(MKDIR) $(BUILD_HELPER_DIR)
-
 # Prepare clean install environment
-$(PRE_INSTALL): $(BUILD_HELPER_DIR)
+$(PRE_INSTALL):
+	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 # The default physical base for OMD is /opt/omd. This may be changed by
 # the user locally, but the logical path for OMD is always /omd. We use

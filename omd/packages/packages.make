@@ -27,7 +27,7 @@ $(HUMAN_INSTALL_TARGETS): %-install:
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _INSTALL, $(call package_target_prefix,$*)))
 
-$(HUMAN_BUILD_TARGETS): %-build: $(BUILD_HELPER_DIR)
+$(HUMAN_BUILD_TARGETS): %-build:
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _BUILD, $(call package_target_prefix,$*)))
 

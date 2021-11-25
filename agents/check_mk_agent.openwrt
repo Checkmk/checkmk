@@ -241,23 +241,19 @@ if [ -n "$REMOTE_HOST" ]; then
 fi
 
 # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
-# Heads up: NFS-mounts are generally supressed to avoid agent hangs.
-# If hard NFS mounts are configured or you have too large nfs retry/timeout
-# settings, accessing those mounts from the agent would leave you with
-# thousands of agent processes and, ultimately, a dead monitored system.
-# These should generally be monitored on the NFS server, not on the clients.
+# Note: BusyBox df does not support -x and -l as arguments
+if inpath waitmax; then
+    echo '<<<df>>>'
+    waitmax -s 9 5 df -kPT
 
-echo '<<<df>>>'
-# The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
-# to be all but working.
-excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x prl_fs"
-df -PTlk $excludefs | sed 1d
-
-# df inodes information
-echo '<<<df>>>'
-echo '[df_inodes_start]'
-df -PTli $excludefs | sed 1d
-echo '[df_inodes_end]'
+    # df inodes information
+    if waitmax -s 9 5 df -i >/dev/null 2>&1; then
+        echo '<<<df>>>'
+        echo '[df_inodes_start]'
+        waitmax -s 9 5 df -PTi
+        echo '[df_inodes_end]'
+    fi
+fi
 
 # Filesystem usage for ZFS
 if type zfs >/dev/null 2>&1; then

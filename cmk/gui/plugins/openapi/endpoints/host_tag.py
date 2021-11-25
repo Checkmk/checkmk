@@ -125,7 +125,7 @@ def list_host_tag_groups(params):
     method='put',
     etag='both',
     path_params=[HOST_TAG_GROUP_NAME],
-    additional_status_codes=[405],
+    additional_status_codes=[401, 405],
     request_schema=request_schemas.UpdateHostTagGroup,
     response_schema=response_schemas.HostTagGroupObject,
 )

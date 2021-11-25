@@ -208,6 +208,14 @@ def fake_version_and_paths():
     monkeypatch.setattr(
         "agent_receiver.constants.LOG_FILE", Path(os.path.join(tmp_dir, "agent-receiver.log"))
     )
+    monkeypatch.setattr(
+        "cmk.utils.paths.received_outputs_dir",
+        Path(cmk.utils.paths.var_dir, "agent-receiver/received-outputs"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.data_source_push_agent_dir",
+        Path(cmk.utils.paths.data_source_cache_dir, "push-agent"),
+    )
 
 
 def import_module(pathname):

@@ -64,11 +64,6 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def is_daily_build() -> bool:
-    # Daily build version format: YYYY.MM.DD or MAJOR.MINOR.PATCH-YYYY.MM.DD
-    return "-" in __version__ or len(__version__.split(".", maxsplit=1)[0]) == 4
-
-
 def edition_title():
     if is_enterprise_edition():
         return "CEE"
@@ -210,6 +205,13 @@ class Version:
             self.version: _Version = self._parse_none_daily_version(vstring)
         except ValueError:
             self.version = self._parse_daily_version(vstring)
+
+    @property
+    def version_base(self) -> str:
+        v = self.version
+        if isinstance(v, _MasterDailyVersion):
+            return ""
+        return "%d.%d.%d" % (v.major, v.minor, v.sub)
 
     @classmethod
     def _parse_none_daily_version(cls, vstring: str) -> _NoneDailyVersion:

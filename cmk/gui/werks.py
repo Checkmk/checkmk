@@ -16,7 +16,7 @@ from typing import Any, Dict, Iterator, List, Union
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
-from cmk.utils.version import __version__, is_daily_build
+from cmk.utils.version import __version__, Version
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -493,7 +493,7 @@ def _werk_table_option_entries():
                     TextInput(label=_("to:"), size=12),
                 ],
             ),
-            ("" if is_daily_build() else re.sub("[a-z][1-9][0-9]*$", "", __version__), ""),
+            (Version(__version__).version_base, ""),
         ),
         (
             "grouping",

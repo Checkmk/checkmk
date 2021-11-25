@@ -395,23 +395,39 @@ clean:
 	       .werks/werks \
 	       ChangeLog
 
-mrproper:
-	git clean -d --force -x \
+EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
 	    --exclude="**/.idea" \
 	    --exclude=".werks/.last" \
 	    --exclude=".werks/.my_ids"
 
-mrclean:
-	git clean -d --force -x \
-	    --exclude="**/.vscode" \
-	    --exclude="**/.idea"  \
-	    --exclude=".werks/.last" \
-	    --exclude=".werks/.my_ids" \
+EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
 	    --exclude=".venv.lock" \
+	    --exclude="node_modules" \
 	    --exclude="livestatus/src/doc/plantuml.jar" \
 	    --exclude="enterprise/core/src/doc/plantuml.jar"
+
+EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
+	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe" \
+	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll" \
+	    --exclude="doc/plugin-api/build" \
+	    --exclude=".cargo" \
+	    --exclude="agents/cmk-agent-ctl/target" \
+	    --exclude="agents/plugins/*_2.py"
+
+mrproper:
+	git clean -d --force -x $(EXCLUDE_PROPER)
+
+mrclean:
+	git clean -d --force -x $(EXCLUDE_CLEAN)
+
+# Used by our version build (buildscripts/scripts/build-cmk-version.jenkins)
+# for cleaning up while keeping some build artifacts between version builds.
+# This helps to speed up "make dist"
+buildclean:
+	git clean -d --force -x $(EXCLUDE_BUILD_CLEAN)
+
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment

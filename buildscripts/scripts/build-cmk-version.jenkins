@@ -85,7 +85,7 @@ timeout(time: 12, unit: 'HOURS') {
     
                 // Clean up left overs from previous runs, but keep previously
                 // created virtual environments to save some time
-                sh("make mrclean")
+                sh("make buildclean")
     
                 // Load libraries
                 versioning = load 'buildscripts/scripts/lib/versioning.groovy'
@@ -121,7 +121,6 @@ timeout(time: 12, unit: 'HOURS') {
                 // previous runs
                 sh('rm -rf ${WORKSPACE}/agents/*')
                 sh('mkdir -p ${WORKSPACE}/agents')
-    
                 AGENT_LIST.each { AGENT ->
                     AGENT_BUILDS['build agent ' + AGENT] = {
                         if (AGENT == 'windows') {

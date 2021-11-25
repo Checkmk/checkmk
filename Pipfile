@@ -34,6 +34,7 @@ types-pytz = "*"  # used for type checking
 types-cryptography = "*"  # used for type checking
 types-redis = "*"  # used for type checking
 types-protobuf = "*"  # used for type checking
+types-setuptools = "*"  # used for type checking
 playwright = "*"  # used for in-browser testing
 pymongo = "*"  # used by mk_mongodb agent plugin
 pytest = "*"  # used by various test/Makefile targets

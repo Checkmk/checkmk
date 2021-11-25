@@ -16,6 +16,8 @@ cd "$(dirname $(dirname $(realpath "$0")))"
 SEARCH=
 PRUNE=
 SEARCH+=" active_checks"
+SEARCH+=" agent-receiver"
+PRUNE+=" -path $(realpath agent-receiver/build) -prune -o"
 SEARCH+=" agents"
 SEARCH+=" bin"
 PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory

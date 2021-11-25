@@ -116,15 +116,13 @@ def get_hostname(uuid: str) -> Optional[str]:
     try:
         target_path = os.readlink(link_path)
     except FileNotFoundError:
-        return
+        return None
 
     return Path(target_path).name
 
 
 @app.post("/agent-data")
-async def agent_data(
-    uuid: str = Form(...), upload_file: UploadFile = File(...)
-) -> Dict[str, str]:
+async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
     file_dir = AGENT_OUTPUT_DIR / uuid
     file_path = file_dir / "received-output"
 
@@ -136,7 +134,10 @@ async def agent_data(
         os.rename(temp_path, file_path)
 
     except FileNotFoundError:
-        logger.error(f"uuid={uuid} Host is not registered")
+        logger.error(
+            "uuid=%s Host is not registered",
+            uuid,
+        )
         raise HTTPException(status_code=403, detail="Host is not registered")
 
     ready_file = REGISTRATION_REQUESTS / "READY" / f"{uuid}.json"
@@ -144,13 +145,15 @@ async def agent_data(
 
     if ready_file.exists() and hostname:
         try:
-            shutil.move(
-                ready_file, REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{hostname}.json"
-            )
+            shutil.move(ready_file, REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{hostname}.json")
         except FileNotFoundError:
-            logger.warn(
-                f"uuid={uuid} Could not move registration request from READY to DISCOVERABLE"
+            logger.warning(
+                "uuid=%s Could not move registration request from READY to DISCOVERABLE",
+                uuid,
             )
 
-    logger.info(f"uuid={uuid} Agent data saved")
+    logger.info(
+        "uuid=%s Agent data saved",
+        uuid,
+    )
     return {"message": "Agent data saved."}

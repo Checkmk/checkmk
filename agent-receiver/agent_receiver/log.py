@@ -9,9 +9,7 @@ import logging
 from agent_receiver.constants import LOG_FILE
 
 handler = logging.FileHandler(LOG_FILE, encoding="UTF-8")
-formatter = logging.Formatter(
-    "%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"
-)
+formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
 handler.setFormatter(formatter)
 
 logger = logging.getLogger("agent-receiver")

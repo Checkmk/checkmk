@@ -1,0 +1,11 @@
+Title: docker_container_diskstat: fix stale service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1637837588
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p18
+
+The "Disk IO" services failed to display any values and were permanently stale.

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict, Tuple
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -101,6 +103,10 @@ def _parse_docker_container_diskstat_agent(info):
     return sections
 
 
+def _to_lowercase_keys(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    return {key.lower(): value for key, value in dictionary.items()}
+
+
 def _prepare_diskdata(device_name: str, timestamp: int, device: dict) -> Tuple[bool, dict]:
     uninitialized = False
 
@@ -110,15 +116,17 @@ def _prepare_diskdata(device_name: str, timestamp: int, device: dict) -> Tuple[b
     for io_op in ('read', 'write'):
         for unit in ('ios', 'bytes'):
             key = "%s_%s" % (io_op, 'ios' if unit == 'ios' else 'throughput')
+            if unit not in device:
+                continue
+            read_write_values = _to_lowercase_keys(device[unit])
+            if io_op not in read_write_values:
+                continue
+            counter_value = read_write_values[io_op]
             try:
                 diskdata[key] = get_rate(counter_template % key,
                                          timestamp,
-                                         device[unit][io_op.title()],
+                                         counter_value,
                                          onwrap=RAISE)
-            except KeyError:
-                # KeyError: Containers counters are not initialized
-                #           (may be because disk is not *ever* used by container)
-                pass
             except MKCounterWrapped:
                 # MKCounterWrapped: Checkmk counter is not initialized
                 uninitialized = True

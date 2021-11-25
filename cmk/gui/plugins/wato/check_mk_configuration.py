@@ -5316,17 +5316,37 @@ rulespec_registry.register(
 )
 
 
+def _encryption_secret(title) -> _Tuple[str, PasswordSpec]:
+    return ("passphrase", PasswordSpec(title=title, pwlen=16, allow_empty=False))
+
+
+def _realtime_encryption() -> _Tuple[str, DropdownChoice]:
+    return (
+        "use_realtime",
+        DropdownChoice(
+            title=_("Encryption for Realtime Updates"),
+            help=_("Choose if realtime updates are sent/expected encrypted"),
+            default_value="enforce",
+            choices=[
+                ("enforce", _("Enforce (drop unencrypted data)")),
+                ("allow", _("Enable  (accept encrypted and unencrypted data)")),
+                ("disable", _("Disable (drop encrypted data)")),
+            ],
+        ),
+    )
+
+
 def _valuespec_agent_encryption():
     return Dictionary(
         elements=[
-            ("passphrase", PasswordSpec(title=_("Encryption secret"), pwlen=16, allow_empty=False)),
+            _encryption_secret(_("Encryption secret")),
             (
                 "use_regular",
                 DropdownChoice(
                     title=_("Encryption for Agent"),
                     help=_(
-                        "Choose if the agent agents encrypt packages. This controls whether "
-                        "baked agents encrypt their output and whether check_mk expects "
+                        "Choose if the agent sends encrypted packages. This controls whether "
+                        "baked agents encrypt their output and whether Checkmk expects "
                         "encrypted output. "
                         "Please note: If you opt to enforce encryption, "
                         "agents that don't support encryption will not work any more. "
@@ -5336,24 +5356,12 @@ def _valuespec_agent_encryption():
                     default_value="disable",
                     choices=[
                         ("enforce", _("Enforce (drop unencrypted data)")),
-                        ("allow", _("Enable  (accept encrypted and unencrypted data)")),
+                        ("allow", _("Enable (accept encrypted and unencrypted data)")),
                         ("disable", _("Disable (drop encrypted data)")),
                     ],
                 ),
             ),
-            (
-                "use_realtime",
-                DropdownChoice(
-                    title=_("Encryption for Realtime Updates"),
-                    help=_("Choose if realtime updates are sent/expected encrypted"),
-                    default_value="enforce",
-                    choices=[
-                        ("enforce", _("Enforce (drop unencrypted data)")),
-                        ("allow", _("Enable  (accept encrypted and unencrypted data)")),
-                        ("disable", _("Disable (drop encrypted data)")),
-                    ],
-                ),
-            ),
+            _realtime_encryption(),
         ],
         optional_keys=[],
         title=_("Encryption (Linux, Windows)"),

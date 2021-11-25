@@ -134,6 +134,15 @@ from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-
 
 # TODO: Prefix helper functions with "_".
 
+# Default values for retry and check intervals in minutes
+# Hosts. Check and retry intervals are same
+SMARTPING_CHECK_INTERVAL: Final = 0.1
+HOST_CHECK_INTERVAL: Final = 1.0
+# Services. Check and retry intervals may differ
+SERVICE_RETRY_INTERVAL: Final = 1.0
+SERVICE_CHECK_INTERVAL: Final = 1.0
+
+
 service_service_levels = []
 host_service_levels = []
 
@@ -3617,7 +3626,7 @@ class ConfigCache:
         self, hostname: HostName, description: ServiceName
     ) -> Dict[str, Any]:
         attrs = {
-            "check_interval": 1.0,  # 1 minute
+            "check_interval": SERVICE_CHECK_INTERVAL,
         }
         for key, ruleset in extra_service_conf.items():
             values = self.service_extra_conf(hostname, description, ruleset)

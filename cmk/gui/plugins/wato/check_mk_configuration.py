@@ -5336,14 +5336,15 @@ def _realtime_encryption() -> _Tuple[str, DropdownChoice]:
     )
 
 
-def _valuespec_agent_encryption():
+def _valuespec_agent_encryption_no_tls() -> Dictionary:
     return Dictionary(
+        title=_("Allow non-TLS connections"),
         elements=[
             _encryption_secret(_("Encryption secret")),
             (
                 "use_regular",
                 DropdownChoice(
-                    title=_("Encryption for Agent"),
+                    title=_("Use the following setting for non-TLS connections"),
                     help=_(
                         "Choose if the agent sends encrypted packages. This controls whether "
                         "baked agents encrypt their output and whether Checkmk expects "
@@ -5364,7 +5365,6 @@ def _valuespec_agent_encryption():
             _realtime_encryption(),
         ],
         optional_keys=[],
-        title=_("Encryption (Linux, Windows)"),
         help=_("Control encryption of data sent from agents to Checkmk.")
         + "<br>"
         + _(
@@ -5373,6 +5373,39 @@ def _valuespec_agent_encryption():
             "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
             "Please keep this in mind when configuring this ruleset."
         ),
+    )
+
+
+def _valuespec_agent_encryption():
+    tls_alt_name_title = _("Use TLS encryption (Linux)")
+    return Alternative(
+        title=_("Encryption (Linux, Windows)"),
+        help=_("Control encryption of data sent from agents to Checkmk.")
+        + "<br>"
+        + _(
+            "<b>Note</b>: On the agent side, TLS is currently only supported on systemd based Linux machines. "
+            "However, when setting the Encryption settings to '%s', Checkmk will expect encrypted data from all matching hosts. "
+            "Please keep this in mind when configuring this ruleset."
+        )
+        % tls_alt_name_title,
+        elements=[
+            Dictionary(
+                title=tls_alt_name_title,
+                elements=[
+                    _realtime_encryption(),
+                    _encryption_secret(_("Encryption secret for Realtime Updates")),
+                ],
+                help=_("Control encryption of data sent from agents to Checkmk.")
+                + "<br>"
+                + _(
+                    "<b>Note</b>: On the agent side, this encryption is only supported by the Linux "
+                    "agent and the Windows agent. However, when setting the Encryption settings to "
+                    "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
+                    "Please keep this in mind when configuring this ruleset."
+                ),
+            ),
+            _valuespec_agent_encryption_no_tls(),
+        ],
     )
 
 

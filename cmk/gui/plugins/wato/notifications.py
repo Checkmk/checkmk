@@ -480,7 +480,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                 (
                     "webhook_url",
                     CascadingDropdown(
-                        title=_("VictorOPS REST Endpoint"),
+                        title=_("Splunk On-Call REST Endpoint"),
                         help=_(
                             "Learn how to setup a REST endpoint "
                             '<a href="https://help.victorops.com/knowledge-base/victorops-restendpoint-integration/" target="_blank">here</a>'

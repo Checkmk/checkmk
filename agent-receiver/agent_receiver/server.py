@@ -15,7 +15,7 @@ from agent_receiver.constants import AGENT_OUTPUT_DIR, DATA_SOURCE_DIR, REGISTRA
 from agent_receiver.log import logger
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
-from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, Header, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
@@ -88,7 +88,7 @@ async def register_with_hostname(
     *,
     authentication: Optional[str] = Header(None),
     registration_body: RegistrationWithHNBody,
-) -> None:
+) -> Response:
     if not host_exists(
         str(authentication),
         registration_body.host_name,
@@ -108,6 +108,7 @@ async def register_with_hostname(
         registration_body.uuid,
         registration_body.host_name,
     )
+    return Response(status_code=HTTP_204_NO_CONTENT)
 
 
 def get_hostname(uuid: str) -> Optional[str]:

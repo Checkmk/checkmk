@@ -479,7 +479,6 @@ def _active_check_main_core(
         # Bug in mypy's typeshed.
         imaplib.Debug = args.verbose  # type: ignore[attr-defined]
 
-    logging.debug("args: %r", args.__dict__)
     logging.debug("use protocol for fetching: %r", args.fetch_protocol)
     try:
         return check_fn(args)

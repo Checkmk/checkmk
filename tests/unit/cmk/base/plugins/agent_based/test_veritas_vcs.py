@@ -402,12 +402,12 @@ def test_cluster_check_veritas_vcs():
         )) == [
             Result(
                 state=state.OK,
-                notice='[node1]: running',
+                summary='All nodes OK',
             ),
             Result(
                 state=state.OK,
-                summary='All nodes OK',
-            )
+                notice='[node1]: running',
+            ),
         ]
 
 
@@ -423,15 +423,11 @@ def test_cluster_check_veritas_vcs_system():
         )) == [
             Result(
                 state=state.OK,
-                notice='[node1]: running',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: running',
-            ),
-            Result(
-                state=state.OK,
                 summary='All nodes OK',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node1]: running, [node2]: running',
             ),
             Result(
                 state=state.OK,
@@ -452,16 +448,8 @@ def test_cluster_check_veritas_vcs_group():
             },
         )) == [
             Result(
-                state=state.OK,
-                notice='[node1]: online',
-            ),
-            Result(
                 state=state.CRIT,
-                notice='[node2]: frozen',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: online',
+                notice='[node1]: online, [node2]: frozen, online',
             ),
             Result(
                 state=state.OK,
@@ -488,17 +476,10 @@ def test_cluster_check_veritas_vcs_resource():
                 'node3': third_section,
             },
         )) == [
-            Result(
-                state=state.WARN,
-                summary='[node1]: offline',
-            ),
+            Result(state=state.OK, summary='All nodes OK'),
             Result(
                 state=state.OK,
-                notice='[node2]: online',
-            ),
-            Result(
-                state=state.WARN,
-                summary='[node3]: offline',
+                notice='[node1]: offline, [node2]: online, [node3]: offline',
             ),
             Result(
                 state=state.OK,
@@ -511,8 +492,8 @@ def test_cluster_check_veritas_vcs_resource():
 @pytest.mark.parametrize('section, expected_check_result', [
     pytest.param(
         {},
-        [Result(state=state.OK, summary='All nodes OK')],
-        id='No nodes/sections are OK',
+        [],
+        id='No nodes/sections return no result',
     ),
     pytest.param(
         {
@@ -523,8 +504,8 @@ def test_cluster_check_veritas_vcs_resource():
                 'stripes': [Vcs(attr='ClusState', value='RUNNING', cluster=None)],
             },
         },
-        [Result(state=state.OK, summary='All nodes OK')],
-        id='Item not in section is OK',
+        [],
+        id='Item not in section returns no result',
     ),
     pytest.param(
         {
@@ -536,9 +517,8 @@ def test_cluster_check_veritas_vcs_resource():
             },
         },
         [
-            Result(state=state.OK, notice='[node1]: running'),
-            Result(state=state.OK, notice='[node2]: running'),
             Result(state=state.OK, summary='All nodes OK'),
+            Result(state=state.OK, notice='[node1]: running, [node2]: running'),
         ],
         id='State is OK when all nodes have state RUNNING',
     ),
@@ -552,8 +532,8 @@ def test_cluster_check_veritas_vcs_resource():
             },
         },
         [
-            Result(state=state.OK, notice='[node1]: running'),
-            Result(state=state.WARN, summary='[node2]: offline'),
+            Result(state=state.OK, summary='All nodes OK'),
+            Result(state=state.OK, notice='[node1]: running, [node2]: offline'),
         ],
         id='State is WARN when at least one node has state RUNNING, and others are OFFLINE',
     ),
@@ -567,8 +547,7 @@ def test_cluster_check_veritas_vcs_resource():
             },
         },
         [
-            Result(state=state.WARN, summary='[node1]: offline'),
-            Result(state=state.WARN, summary='[node2]: offline'),
+            Result(state=state.WARN, summary='[node1]: offline, [node2]: offline'),
         ],
         id='State is WARN when all nodes are OFFLINE',
     ),
@@ -582,8 +561,7 @@ def test_cluster_check_veritas_vcs_resource():
             },
         },
         [
-            Result(state=state.CRIT, summary='[node1]: faulted'),
-            Result(state=state.OK, notice='[node2]: running'),
+            Result(state=state.CRIT, summary='[node1]: faulted, [node2]: running'),
         ],
         id='State is CRIT when at least one node has state FAULTED, and others are RUNNING',
     ),
@@ -597,8 +575,7 @@ def test_cluster_check_veritas_vcs_resource():
             },
         },
         [
-            Result(state=state.CRIT, summary='[node1]: faulted'),
-            Result(state=state.WARN, notice='[node2]: offline'),
+            Result(state=state.CRIT, summary='[node1]: faulted, [node2]: offline'),
         ],
         id='State is CRIT when at least one node has state FAULTED, and others are OFFLINE',
     ),

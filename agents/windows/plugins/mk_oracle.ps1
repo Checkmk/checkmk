@@ -146,7 +146,11 @@ else {
      debug_echo "${CONFIG_FILE} not found"
 }
 
-
+# If sqlnet.ora or tnsnames.ora exist in MK_CONFDIR set it as %TNS_ADMIN%
+if ((test-path -path "${MK_CONFDIR}\sqlnet.ora") -or (test-path -path "${MK_CONFDIR}\tnsnames.ora")) {
+     $env:TNS_ADMIN = "${MK_CONFDIR}"
+}
+debug_echo "value of TNS_ADMIN = $env:TNS_ADMIN"
 
 if ($ORACLE_HOME) {
      # if the ORACLE_HOME is set in the config file then we

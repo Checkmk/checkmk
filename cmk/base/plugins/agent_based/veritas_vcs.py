@@ -9,6 +9,7 @@ import functools
 from typing import (
     Any,
     Generator,
+    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -181,6 +182,15 @@ def veritas_vcs_boil_down_states_in_cluster(states: Sequence[str]) -> str:
     return 'default'
 
 
+def _frozen_state_results(list_vcs_tuples: Sequence[Vcs],
+                          state_mapping: Mapping[str, int]) -> Iterable[Result]:
+    frozen_states = (vcs.attr.lower()
+                     for vcs in list_vcs_tuples
+                     if vcs.attr.endswith('Frozen') and vcs.value != '0')
+    yield from (Result(state=state(state_mapping.get(s, state(3))),
+                       summary=s.replace('t', 'temporarily ')) for s in frozen_states)
+
+
 def check_veritas_vcs_subsection(
     item: str,
     params: Mapping[str, Any],
@@ -190,15 +200,7 @@ def check_veritas_vcs_subsection(
     if list_vcs_tuples is None:
         return  # vanished
 
-    map_frozen = params['map_frozen']
-
-    for vcs in list_vcs_tuples:
-        if vcs.attr.endswith('Frozen') and vcs.value != '0':
-            frozen_txt = vcs.attr.lower().replace('t', 'temporarily ').lower()
-            yield Result(
-                state=state(map_frozen.get(vcs.attr.lower(), 3)),
-                summary=frozen_txt,
-            )
+    yield from (_frozen_state_results(list_vcs_tuples, params['map_frozen']))
 
     state_mapping = params['map_states']
     states = [vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith('State')]

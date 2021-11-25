@@ -415,7 +415,9 @@ filter_registry.register(
         sort_index=105,
         description=_l("Selection of multiple host groups"),
         group_type="host",
-        query_filter=query_filters.FilterMultiple(ident="hostgroups", column="host_groups"),
+        query_filter=query_filters.FilterMultiple(
+            ident="hostgroups", column="host_groups", op=">=", negateable=True
+        ),
     )
 )
 
@@ -426,81 +428,73 @@ filter_registry.register(
         sort_index=205,
         description=_l("Selection of multiple service groups"),
         group_type="service",
-        query_filter=query_filters.FilterMultiple(ident="servicegroups", column="service_groups"),
+        query_filter=query_filters.FilterMultiple(
+            ident="servicegroups", column="service_groups", op=">=", negateable=True
+        ),
     )
 )
+
+GroupType = Literal[
+    "host", "service", "contact", "host_contact", "service_contact", "event_effective_contact"
+]
 
 
 class FilterGroupCombo(Filter):
     """Selection of a host/service(-contact) group as an attribute of a host or service"""
 
-    # TODO: Rename "what"
     def __init__(
         self,
         *,
         ident: str,
         title: Union[str, LazyString],
         sort_index: int,
-        what: str,
-        enforce: bool,
+        group_type: GroupType,
+        query_filter: query_filters.FilterText,
         description: Union[None, str, LazyString] = None,
     ) -> None:
-        self.enforce = enforce
-        self.prefix = "opt" if not self.enforce else ""
-
-        htmlvars = [self.prefix + what + "_group"]
-        if not enforce:
-            htmlvars.append("neg_" + htmlvars[0])
+        self.query_filter = query_filter
+        self.group_type = group_type
 
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
-            info=what.split("_")[0],
-            htmlvars=htmlvars,
-            link_columns=[what + "group_name"],
+            info=group_type.split("_")[0],
+            htmlvars=self.query_filter.request_vars,
+            link_columns=[group_type + "group_name"],
             description=description,
         )
-        self.what = what
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.dropdown(
             self.htmlvars[0],
-            self._options(self.what, self.enforce),
+            self._options(self.group_type, not self.query_filter.negateable),
             deflt=value.get(self.htmlvars[0], ""),
             ordered=True,
         )
-        if not self.enforce:
+        if self.query_filter.negateable:
             html.open_nobr()
             html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
             html.close_nobr()
 
     @staticmethod
-    def _options(what, enforce) -> Choices:
-        choices: Choices = list(sites.all_groups(what.split("_")[-1]))
+    def _options(group_type: GroupType, enforce: bool) -> Choices:
+        group_type = "contact" if group_type.endswith("_contact") else group_type
+        choices: Choices = list(sites.all_groups(group_type))
         if not enforce:
             empty_choices: Choices = [("", "")]
             choices = empty_choices + choices
         return choices
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        current_value = value.get(self.htmlvars[0])
-        if not current_value:
-            return ""  # Skip if filter is not being set at all
-
-        col = self.what + "_groups"
-        if not self.enforce and value.get(self.htmlvars[1]):
-            negate = "!"
-        else:
-            negate = ""
-        return "Filter: %s %s>= %s\n" % (col, negate, livestatus.lqencode(current_value))
+        return self.query_filter.filter(value)
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         varname = self.htmlvars[0]
-        value = row.get(self.what + "group_name")
+        value = row.get(self.group_type + "group_name")
         if value:
             s = {varname: value}
-            if not self.enforce:
+            if self.query_filter.negateable:
                 negvar = self.htmlvars[1]
                 if request.var(negvar):  # This violates the idea of originating from row
                     s[negvar] = request.var(negvar)
@@ -509,12 +503,10 @@ class FilterGroupCombo(Filter):
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         if current_value := value.get(self.htmlvars[0]):
-            table = self.what.replace("host_contact", "contact").replace(
-                "service_contact", "contact"
-            )
+            group_type = "contact" if self.group_type.endswith("_contact") else self.group_type
             alias = sites.live().query_value(
                 "GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n"
-                % (table, livestatus.lqencode(current_value)),
+                % (group_type, livestatus.lqencode(current_value)),
                 current_value,
             )
             return alias
@@ -527,8 +519,14 @@ filter_registry.register(
         title=_l("Host is in Group"),
         sort_index=104,
         description=_l("Optional selection of host group"),
-        what="host",
-        enforce=False,
+        query_filter=query_filters.FilterMultiple(
+            ident="opthostgroup",
+            request_var="opthost_group",
+            column="host_groups",
+            op=">=",
+            negateable=True,
+        ),
+        group_type="host",
     )
 )
 
@@ -538,8 +536,14 @@ filter_registry.register(
         title=_l("Service is in Group"),
         sort_index=204,
         description=_l("Optional selection of service group"),
-        what="service",
-        enforce=False,
+        query_filter=query_filters.FilterMultiple(
+            ident="optservicegroup",
+            request_var="optservice_group",
+            column="service_groups",
+            op=">=",
+            negateable=True,
+        ),
+        group_type="service",
     )
 )
 
@@ -549,8 +553,14 @@ filter_registry.register(
         title=_l("Host Contact Group"),
         sort_index=106,
         description=_l("Optional selection of host contact group"),
-        what="host_contact",
-        enforce=False,
+        query_filter=query_filters.FilterMultiple(
+            ident="opthost_contactgroup",
+            request_var="opthost_contact_group",
+            column="host_contact_groups",
+            op=">=",
+            negateable=True,
+        ),
+        group_type="host_contact",
     )
 )
 
@@ -560,8 +570,14 @@ filter_registry.register(
         title=_l("Service Contact Group"),
         sort_index=206,
         description=_l("Optional selection of service contact group"),
-        what="service_contact",
-        enforce=False,
+        query_filter=query_filters.FilterMultiple(
+            ident="optservice_contactgroup",
+            request_var="optservice_contact_group",
+            column="service_contact_groups",
+            op=">=",
+            negateable=True,
+        ),
+        group_type="service_contact",
     )
 )
 
@@ -3129,50 +3145,16 @@ filter_registry.register(
     )
 )
 
-
+# TODO: Cleanup as a dropdown visual Filter later on
 @filter_registry.register_instance
 class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
     def __init__(self):
-        # TODO: Cleanup hierarchy here. The FilterGroupCombo constructor needs to be refactored
         super().__init__(
             ident="optevent_effective_contactgroup",
             title=_l("Contact group (effective)"),
             sort_index=212,
-            what="event_effective_contact",
-            enforce=False,
-        )
-        self.what = "contact"
-        self.info = "event"
-        self.link_columns = [
-            "event_contact_groups",
-            "event_contact_groups_precedence",
-            "host_contact_groups",
-        ]
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if not value.get(self.htmlvars[0]):
-            return ""  # Skip if filter is not being set at all
-
-        current_value = value[self.htmlvars[0]]
-        if not self.enforce and value.get(self.htmlvars[1]):
-            negate = "!"
-        else:
-            negate = ""
-
-        return (
-            "Filter: event_contact_groups_precedence = host\n"
-            "Filter: host_contact_groups %s>= %s\n"
-            "And: 2\n"
-            "Filter: event_contact_groups_precedence = rule\n"
-            "Filter: event_contact_groups %s>= %s\n"
-            "And: 2\n"
-            "Or: 2\n"
-            % (
-                negate,
-                livestatus.lqencode(current_value),
-                negate,
-                livestatus.lqencode(current_value),
-            )
+            group_type="event_effective_contact",
+            query_filter=query_filters.FilterOptEventEffectiveContactgroup(),
         )
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:

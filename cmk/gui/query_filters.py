@@ -339,6 +339,37 @@ class FilterHostnameOrAlias(FilterText):
         return lq_logic("Filter:", [f"host_name {self.op} {host}", f"alias {self.op} {host}"], "Or")
 
 
+class FilterOptEventEffectiveContactgroup(FilterText):
+    def __init__(self):
+        super().__init__(
+            ident="optevent_effective_contactgroup",
+            request_var="optevent_effective_contact_group",
+            column="host_contact_groups",
+            op=">=",
+            negateable=True,
+        )
+
+        self.link_columns = [
+            "event_contact_groups",
+            "event_contact_groups_precedence",
+            "host_contact_groups",
+        ]
+
+    def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        negate = self._negate_symbol(value)
+        selected_value = livestatus.lqencode(value[self.request_vars[0]])
+
+        return (
+            "Filter: event_contact_groups_precedence = host\n"
+            "Filter: host_contact_groups %s>= %s\n"
+            "And: 2\n"
+            "Filter: event_contact_groups_precedence = rule\n"
+            "Filter: event_contact_groups %s>= %s\n"
+            "And: 2\n"
+            "Or: 2\n" % (negate, selected_value, negate, selected_value)
+        )
+
+
 ### IPAddress
 class FilterIPAddress(Filter):
     def __init__(self, *, ident: str, request_vars: List[str], what: str):
@@ -405,28 +436,15 @@ def ip_address_families_options() -> Options:
 
 
 ### Multipick
-class FilterMultiple(Filter):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        column: str,
-    ):
-        super().__init__(ident=ident, request_vars=[ident, "neg_" + ident])
-        self.column = column
-
+class FilterMultiple(FilterText):
     def selection(self, value: FilterHTTPVariables) -> List[str]:
         if folders := value.get(self.request_vars[0], "").strip():
             return folders.split("|")
         return []
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        negate = self._negate_symbol(value)
         # not (A or B) => (not A) and (not B)
-        if value.get(self.request_vars[1]):
-            negate = "!"
-            op = "And"
-        else:
-            negate = ""
-            op = "Or"
+        joiner = "And" if negate else "Or"
 
-        return lq_logic(f"Filter: {self.column} {negate}>=", self.selection(value), op)
+        return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)

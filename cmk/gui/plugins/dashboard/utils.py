@@ -930,17 +930,6 @@ def transform_stats_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
     return dashlet_spec
 
 
-def transform_timerange_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
-    dashlet_spec["timerange"] = {
-        "0": "4h",
-        "1": "25h",
-        "2": "8d",
-        "3": "35d",
-        "4": "400d",
-    }.get(dashlet_spec["timerange"], dashlet_spec["timerange"])
-    return dashlet_spec
-
-
 # be compatible to old definitions, where even internal dashlets were
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.

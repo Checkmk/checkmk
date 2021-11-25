@@ -62,7 +62,6 @@ from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     get_all_dashboards,
     transform_stats_dashlet,
-    transform_timerange_dashlet,
     transform_topology_dashlet,
 )
 from cmk.gui.plugins.userdb.utils import (
@@ -871,14 +870,6 @@ class UpdateConfig:
                     modified_user_instances.add(owner)
                 elif dashlet["type"] in ("hoststats", "servicestats"):
                     transform_stats_dashlet(dashlet)
-                    modified_user_instances.add(owner)
-                elif dashlet["type"] in (
-                    "single_timeseries",
-                    "custom_graph",
-                    "combined_graph",
-                    "problem_graph",
-                ):
-                    transform_timerange_dashlet(dashlet)
                     modified_user_instances.add(owner)
 
         for user_id in modified_user_instances:

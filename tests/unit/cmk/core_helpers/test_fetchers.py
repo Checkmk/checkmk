@@ -854,7 +854,7 @@ class TestTCPFetcher:
             address=("1.2.3.4", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_settings={"encryption": "settings"},
+            encryption_settings={"use_regular": "allow"},
             use_only_cache=False,
         )
 
@@ -884,11 +884,10 @@ class TestTCPFetcher:
         )
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
-    def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(
+    def test_validate_protocol_plaintext_with_enforce_raises(
         self, file_cache: DefaultAgentFileCache
     ) -> None:
         settings = {"use_regular": "enforce"}
-        output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -900,7 +899,52 @@ class TestTCPFetcher:
         )
 
         with pytest.raises(MKFetcherError):
-            fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:]))
+            fetcher._validate_protocol(TransportProtocol.PLAIN)
+
+    def test_validate_protocol_tls_allways_ok(self, file_cache: DefaultAgentFileCache) -> None:
+        for setting in ("tls", "enforce", "enable", "disable"):
+            TCPFetcher(
+                file_cache,
+                family=socket.AF_INET,
+                address=("1.2.3.4", 0),
+                host_name=HostName("irrelevant_for_this_test"),
+                timeout=0.0,
+                encryption_settings={"use_regular": setting},
+                use_only_cache=False,
+            )._validate_protocol(TransportProtocol.TLS)
+
+    def test_validate_protocol_encryption_with_disabled_raises(
+        self, file_cache: DefaultAgentFileCache
+    ) -> None:
+        settings = {"use_regular": "disable"}
+        fetcher = TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_settings=settings,
+            use_only_cache=False,
+        )
+        with pytest.raises(MKFetcherError):
+            fetcher._validate_protocol(TransportProtocol.PBKDF2)
+
+    def test_validate_protocol_tls_required(self, file_cache: DefaultAgentFileCache) -> None:
+        settings = {"use_regular": "tls"}
+        fetcher = TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_settings=settings,
+            use_only_cache=False,
+        )
+        for p in TransportProtocol:
+            if p is TransportProtocol.TLS:
+                continue
+            with pytest.raises(MKFetcherError, match="TLS"):
+                fetcher._validate_protocol(p)
 
     def test_get_agent_data_without_tls(
         self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher

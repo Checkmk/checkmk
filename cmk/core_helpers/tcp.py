@@ -133,19 +133,42 @@ class TCPFetcher(AgentFetcher):
 
         protocol = self._detect_transport_protocol(raw_protocol)
 
-        if protocol == TransportProtocol.TLS:
+        self._validate_protocol(protocol)
+
+        if protocol is TransportProtocol.TLS:
             with self._wrap_tls() as ssock:
                 agent_data = self._recvall(ssock)
             return AgentRawData(agent_data[2:]), self._detect_transport_protocol(agent_data[:2])
 
         return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
 
-    @staticmethod
-    def _detect_transport_protocol(raw_protocol: bytes) -> TransportProtocol:
+    def _detect_transport_protocol(self, raw_protocol: bytes) -> TransportProtocol:
         try:
-            return TransportProtocol(raw_protocol)
+            protocol = TransportProtocol(raw_protocol)
+            self._logger.debug("Detected transport protocol: {protocol} ({raw_protocol!r})")
+            return protocol
         except ValueError:
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+
+    def _validate_protocol(self, protocol: TransportProtocol) -> None:
+        if protocol is TransportProtocol.TLS:
+            return
+
+        enc_setting = self.encryption_settings["use_regular"]
+        if enc_setting == "tls":
+            raise MKFetcherError("Refused: TLS not supported by agent")
+
+        if protocol is TransportProtocol.PLAIN:
+            if enc_setting in ("disable", "allow"):
+                return
+            raise MKFetcherError(
+                "Agent output is plaintext but encryption is enforced by configuration"
+            )
+
+        if enc_setting == "disable":
+            raise MKFetcherError(
+                "Agent output is encrypted but encryption is disabled by configuration"
+            )
 
     def _wrap_tls(self) -> ssl.SSLSocket:
         controller_uuid = UUIDLinkManager(
@@ -154,7 +177,7 @@ class TCPFetcher(AgentFetcher):
         ).get_uuid(self.host_name)
 
         if controller_uuid is None:
-            raise MKFetcherError("No agent controller registered, but TLS required")
+            raise MKFetcherError("Agent controller not registered")
 
         ctx = ssl.create_default_context(cafile=paths.root_cert_file)
         ctx.load_cert_chain(certfile=paths.site_cert_file)
@@ -183,18 +206,7 @@ class TCPFetcher(AgentFetcher):
             return output  # nothing to to, validation will fail
 
         if protocol is TransportProtocol.PLAIN:
-            self._logger.debug("Output is not encrypted")
-            if self.encryption_settings["use_regular"] == "enforce":
-                raise MKFetcherError(
-                    "Agent output is plaintext but encryption is enforced by configuration"
-                )
             return protocol.value + output  # bring back stolen bytes
-
-        self._logger.debug("Output is encrypted or invalid")
-        if self.encryption_settings["use_regular"] == "disable":
-            raise MKFetcherError(
-                "Agent output is either invalid or encrypted but encryption is disabled by configuration"
-            )
 
         self._logger.debug("Try to decrypt output")
         try:

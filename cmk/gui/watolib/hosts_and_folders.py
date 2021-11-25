@@ -75,6 +75,7 @@ from cmk.gui.utils import urls
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -1989,6 +1990,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             diff_text=make_diff_text(
                 {}, make_host_audit_log_object(host.attributes(), host.cluster_nodes())
             ),
+            domain_settings=ConfigDomainCore.generate_hosts_to_update_settings([self.name()]),
         )
 
     def delete_hosts(self, host_names):
@@ -2723,6 +2725,7 @@ class CREHost(WithPermissions, WithAttributes):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(old_object, new_object),
+            domain_settings=ConfigDomainCore.generate_hosts_to_update_settings([self.name()]),
         )
 
     def update_attributes(self, changed_attributes):

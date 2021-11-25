@@ -42,6 +42,7 @@ from cmk.gui.globals import config, request, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib import ABCConfigDomain, config_domain_registry
+from cmk.gui.plugins.watolib.utils import DomainSettings
 from cmk.gui.sites import activation_sites, site_is_local
 from cmk.gui.utils import escaping
 from cmk.gui.utils.urls import makeuri_contextless
@@ -293,6 +294,7 @@ def add_change(
     need_restart: Optional[bool] = None,
     domains: Optional[List[Type[ABCConfigDomain]]] = None,
     sites: Optional[List[SiteId]] = None,
+    domain_settings: Optional[DomainSettings] = None,
 ) -> None:
 
     log_audit(
@@ -313,7 +315,15 @@ def add_change(
     #    agent_bakery.mark_need_to_bake_agents()
 
     ActivateChangesWriter().add_change(
-        action_name, text, object_ref, add_user, need_sync, need_restart, domains, sites
+        action_name,
+        text,
+        object_ref,
+        add_user,
+        need_sync,
+        need_restart,
+        domains,
+        sites,
+        domain_settings,
     )
 
 
@@ -328,6 +338,7 @@ class ActivateChangesWriter:
         need_restart: Optional[bool],
         domains: Optional[List[Type[ABCConfigDomain]]],
         sites: Optional[Iterable[SiteId]],
+        domain_settings: Optional[DomainSettings],
     ) -> None:
         # Default to a core only change
         if domains is None:
@@ -350,6 +361,7 @@ class ActivateChangesWriter:
                 need_sync,
                 need_restart,
                 domains,
+                domain_settings,
             )
 
     def _new_change_id(self) -> str:
@@ -366,6 +378,7 @@ class ActivateChangesWriter:
         need_sync: Optional[bool],
         need_restart: Optional[bool],
         domains: List[Type[ABCConfigDomain]],
+        domain_settings: Optional[DomainSettings],
     ) -> None:
         # Individual changes may override the domain restart default value
         if need_restart is None:
@@ -397,6 +410,7 @@ class ActivateChangesWriter:
                 "time": time.time(),
                 "need_sync": need_sync,
                 "need_restart": need_restart,
+                "domain_settings": domain_settings or {},
             }
         )
 

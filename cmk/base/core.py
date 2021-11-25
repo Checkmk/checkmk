@@ -21,13 +21,13 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.utils.type_defs import TimeperiodName
+from cmk.utils.type_defs import HostsToUpdate, TimeperiodName
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
-from cmk.base.core_config import HostsToUpdate, MonitoringCore
+from cmk.base.core_config import MonitoringCore
 
 # .
 #   .--Control-------------------------------------------------------------.

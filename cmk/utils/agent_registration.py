@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 from pathlib import Path
 from typing import Any, Iterator, Mapping, NamedTuple, Optional
 from uuid import UUID
@@ -47,14 +46,7 @@ class UUIDLinkManager:
             return
 
         for source in self._received_outputs_dir.iterdir():
-            yield UUIDLink(
-                source=source,
-                # Since Python 3.9 pathlib provides Path.readlink()
-                target=Path(os.readlink(source)),
-            )
-
-    def mapping(self) -> Mapping[HostName, UUID]:
-        return {link.hostname: link.uuid for link in self}
+            yield UUIDLink(source=source, target=source.readlink())
 
     def get_uuid(self, host_name: HostName) -> Optional[UUID]:
         for link in self:
@@ -63,26 +55,30 @@ class UUIDLinkManager:
         return None
 
     def create_link(self, hostname: HostName, uuid: UUID) -> None:
-        """Create a link for encryption (CRE) or push agent (CCE).
-        The link points
-        - from:          'var/agent_receiver/receive_outputs/<uuid>'
-        - to the folder: 'tmp/check_mk/data_source_cache/push_agents/<hostname>'
-        (by default).
+        """Create a link for encryption or push agent
+
+        Make '<self._received_outputs_dir>/<uuid>' the only (!) symlink pointing to the folder
+        '<self._data_source_dir>/<hostname>'.
         """
-        self._may_cleanup_old_link(hostname, uuid)
+        if self._find_and_cleanup_existing_links(hostname, uuid):
+            return
 
+        source = self._received_outputs_dir / f"{uuid}"
         self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
-        source = self._received_outputs_dir.joinpath(str(uuid))
 
-        target_dir = self._data_source_dir.joinpath(hostname)
+        target_dir = self._data_source_dir / f"{hostname}"
         target_dir.mkdir(parents=True, exist_ok=True)
 
         source.symlink_to(target_dir)
 
-    def _may_cleanup_old_link(self, hostname: HostName, uuid: UUID) -> None:
+    def _find_and_cleanup_existing_links(self, hostname: HostName, uuid: UUID) -> bool:
         for link in self:
-            if link.hostname == hostname and link.uuid != uuid:
-                link.unlink_source()
+            if link.hostname != hostname:
+                continue
+            if link.uuid == uuid:
+                return True
+            link.unlink_source()
+        return False
 
     def update_links(self, host_configs: Mapping[HostName, Mapping[str, Any]]) -> None:
         for link in self:

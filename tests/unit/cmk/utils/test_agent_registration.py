@@ -32,6 +32,19 @@ def test_uuid_link_manager_create_link(tmp_path):
     assert str(link.target) == "{0}/data_source_cache/push-agent/{1}".format(tmp_path, hostname)
 
 
+def test_uuid_link_manager_create_existing_link(tmp_path):
+    hostname = "my-hostname"
+    raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
+
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=Path(tmp_path) / "receive_outputs",
+        data_source_dir=Path(tmp_path) / "data_source_cache" / "push-agent",
+    )
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+    # second time should be no-op, at least not fail
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+
+
 def test_uuid_link_manager_create_link_to_different_uuid(tmp_path):
     hostname = "my-hostname"
     raw_uuid_old = "59e631e9-de89-40d6-9662-ba54569a24fb"

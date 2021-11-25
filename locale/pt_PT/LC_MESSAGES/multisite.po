@@ -953,9 +953,6 @@ msgstr "200,0 - 500,0 ms"
 msgid "200.000 Services"
 msgstr "200.000 Serviços"
 
-msgid "25 Hours"
-msgstr "25 Horas"
-
 msgid "3 months"
 msgstr "3 meses"
 
@@ -1000,9 +997,6 @@ msgstr "Portos 3PAR"
 
 msgid "3PAR Remote Copy"
 msgstr "3PAR Cópia Remota"
-
-msgid "4 Hours"
-msgstr "4 Horas"
 
 msgid "5 Volt Output Lower Levels"
 msgstr "5 Volts de saída Níveis inferiores"
@@ -3362,6 +3356,10 @@ msgstr "Adicionar novo grupo"
 msgid "Add new grouping definition"
 msgstr "Adicionar nova definição de agrupamento"
 
+#, fuzzy
+msgid "Add new label"
+msgstr "Adicionar algum rótulo"
+
 msgid "Add new mapping"
 msgstr "Adicionar novo mapeamento"
 
@@ -3376,6 +3374,10 @@ msgstr "Adicionar novo projeto"
 
 msgid "Add new row"
 msgstr "Adicionar nova linha"
+
+#, fuzzy
+msgid "Add new rule"
+msgstr "Adicionar novo grupo"
 
 msgid "Add new scalar"
 msgstr "Adicionar novo escalar"
@@ -4100,12 +4102,24 @@ msgstr "Status de implantação do agente"
 msgid "Agent for %s (%s)"
 msgstr "Agente para %s (%s)"
 
+#, fuzzy
+msgid "Agent labels"
+msgstr "Regras dos agentes"
+
+#, fuzzy
+msgid "Agent labels simulator"
+msgstr "Simulador de Agente SNMP"
+
 msgid "Agent output"
 msgstr "Saída do agente"
 
 #, fuzzy
 msgid "Agent pairing"
 msgstr "Agente de cozimento"
+
+#, fuzzy
+msgid "Agent registration"
+msgstr "Versão agente"
 
 msgid "Agent rules"
 msgstr "Regras dos agentes"
@@ -5844,6 +5858,10 @@ msgstr ""
 msgid "Autostart Services"
 msgstr "Serviços Autostart"
 
+#, fuzzy, python-format
+msgid "Aux tag '%s' does not exist"
+msgstr "O \"%s\" anfitrião não existe"
+
 msgid "Auxiliary tags"
 msgstr "Etiquetas auxiliares"
 
@@ -7522,6 +7540,10 @@ msgstr ""
 "Carga e utilização da CPU, Número de threads, Desempenho do Kernel, OMD, "
 "Sistema de Arquivos, Estado do Apache, Conexões TCP dos intervalos de tempo "
 "25 horas e 35 dias"
+
+#, fuzzy
+msgid "CPU multi item discovery"
+msgstr "descoberta de valores SAP"
 
 msgid "CPU percentage usage"
 msgstr "utilização percentual de CPU"
@@ -9343,6 +9365,10 @@ msgstr "Clonagem de gráficos"
 msgid "Clone report schedule entry %s"
 msgstr "Clonar entrada de cronograma de relatórios %s"
 
+#, fuzzy, python-format
+msgid "Clone rule '%s'"
+msgstr "Regra de cópia: %s"
+
 msgid "Clone stored report"
 msgstr "Relatório de clone armazenado"
 
@@ -11076,6 +11102,10 @@ msgstr "Criar colecção de gráficos"
 msgid "Create graph tuning"
 msgstr "Criar afinação de gráficos"
 
+#, fuzzy
+msgid "Create hosts"
+msgstr "Criar anfitriões em"
+
 msgid "Create hosts in"
 msgstr "Criar anfitriões em"
 
@@ -11736,6 +11766,10 @@ msgstr "Mapeamento do estado de entrada personalizado"
 
 msgid "Custom integrations"
 msgstr "Integrações personalizadas"
+
+#, fuzzy
+msgid "Custom label"
+msgstr "Título personalizado"
 
 msgid "Custom limit"
 msgstr "Limite personalizado"
@@ -12681,6 +12715,23 @@ msgstr "Definir um período de tempo de tolerância para activar os serviços"
 
 #, fuzzy
 msgid "Define a tolerating time period for deactivating services"
+msgstr "Definir um período de tempo de tolerância para activar os serviços"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-initialized condition."
+msgstr "Definir um período de tempo de tolerância para activar os serviços"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-ready condition."
+msgstr "Definir um período de tempo de tolerância para a recarga de serviços"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-scheduled condition."
+msgstr "Definir um período de tempo de tolerância para a recarga de serviços"
+
+#, fuzzy
+msgid ""
+"Define a tolerating time period for pod's containers not in ready condition."
 msgstr "Definir um período de tempo de tolerância para activar os serviços"
 
 msgid "Define a tolerating time period for reloading services"
@@ -13923,6 +13974,17 @@ msgstr "Descartadas alterações pendentes (Restaurado %s)"
 msgid "Discontinue counting after time has elapsed"
 msgstr "Interromper a contagem depois de decorrido o tempo"
 
+#, fuzzy
+msgid "Discover"
+msgstr "Discovery"
+
+msgid "Discover a service checking the average of all CPUs"
+msgstr ""
+
+#, fuzzy
+msgid "Discover individual services for each CPU"
+msgstr "Descoberta de serviços individuais"
+
 msgid "Discover packages"
 msgstr "Descubra os pacotes"
 
@@ -14647,6 +14709,10 @@ msgstr "Não utilize os plugins plesk"
 msgid "Do not deploy."
 msgstr "Não implantar plugin"
 
+#, fuzzy
+msgid "Do not discover"
+msgstr "Não converter caso"
+
 msgid "Do not discover single interfaces"
 msgstr "Não descubra interfaces únicas"
 
@@ -14892,6 +14958,10 @@ msgstr ""
 msgid "Do you really want to delete the rule with the ID <b>%s</b>?"
 msgstr "Você realmente quer apagar a regra com o ID <b>%s</b>?"
 
+#, fuzzy, python-format
+msgid "Do you really want to delete the rule<b>%s</b> "
+msgstr "Quer mesmo apagar a regra <b>%s</b> <i>%s</i>?"
+
 #, python-format
 msgid "Do you really want to delete the selected %s?"
 msgstr "Você realmente quer apagar as %s selecionadas?"
@@ -15049,6 +15119,10 @@ msgstr "Arquivos de documentação"
 #, python-format
 msgid "Does not ends with \"%s\"."
 msgstr "Não termina com \"%s\"."
+
+#, fuzzy
+msgid "Does not exists"
+msgstr "As %s não existem."
 
 msgid "Does not match any service"
 msgstr "Não corresponde a nenhum serviço"
@@ -15495,6 +15569,10 @@ msgstr ""
 msgid "Each attribute may be specified only once."
 msgstr "Cada atributo pode ser especificado apenas uma vez."
 
+#, fuzzy
+msgid "Each label is allowed to be used once."
+msgstr "Este URL não pode ser usado como bookmark"
+
 msgid "Each metric must be unique for a service"
 msgstr "Cada métrica deve ser única para um serviço"
 
@@ -15714,6 +15792,10 @@ msgstr "Editar propriedades"
 msgid "Edit properties of this BI pack"
 msgstr "Editar propriedades deste pacote BI"
 
+#, fuzzy
+msgid "Edit properties of this rule"
+msgstr "Editar propriedades deste pacote de regras"
+
 msgid "Edit properties of this rule pack"
 msgstr "Editar propriedades deste pacote de regras"
 
@@ -15730,6 +15812,10 @@ msgstr "Editar papel %s"
 
 #, python-format
 msgid "Edit rule %s"
+msgstr "Editar regra %s"
+
+#, fuzzy, python-format
+msgid "Edit rule '%s'"
 msgstr "Editar regra %s"
 
 #, python-format
@@ -16588,6 +16674,9 @@ msgstr "Episódio 3: Janelas de Monitorização"
 msgid "Equal or more than"
 msgstr "Igual ou superior a"
 
+msgid "Equals"
+msgstr ""
+
 msgid "Error"
 msgstr "Erro"
 
@@ -17105,6 +17194,10 @@ msgstr "Executivo"
 
 msgid "Executors"
 msgstr "Executores"
+
+#, fuzzy
+msgid "Exists"
+msgstr "existe"
 
 msgid "Exit code"
 msgstr "Código de Saída"
@@ -19697,6 +19790,9 @@ msgstr "Manuseamento"
 msgid "Handling for required mirror space"
 msgstr "Manuseamento do espaço necessário para o espelho"
 
+msgid "Handling of agent registration..."
+msgstr ""
+
 msgid "Handling of context messages"
 msgstr "Manuseamento de mensagens de contexto"
 
@@ -20488,6 +20584,13 @@ msgstr ""
 "acesso dado está faltando (pode ser desligado). O ponto de acesso pode ser "
 "especificado pelo nome do AP ou pelo modelo de AP"
 
+#, python-format
+msgid ""
+"Here you can simulate an incoming agent request and check out which rules "
+"are matching.<br>An agent request contains several labels as key-value "
+"pairs, eg. %s."
+msgstr ""
+
 msgid "Here you can specifiy the measurement unit of the network interface"
 msgstr "Aqui você pode especificar a unidade de medida da interface de rede"
 
@@ -21042,6 +21145,10 @@ msgstr "Informações de contacto do anfitrião"
 msgid "Host contacts"
 msgstr "Contactos do anfitrião"
 
+#, fuzzy
+msgid "Host creation"
+msgstr "Configuração do anfitrião"
+
 msgid "Host custom attribute"
 msgstr "Atributo personalizado do anfitrião"
 
@@ -21360,6 +21467,10 @@ msgstr "Hostname"
 msgid "Hostname / IP address of Graphite server"
 msgstr "Hostname / endereço IP do servidor Graphite"
 
+#, fuzzy
+msgid "Hostname computation"
+msgstr "Correspondência de nomes de anfitriões"
+
 msgid "Hostname matching"
 msgstr "Correspondência de nomes de anfitriões"
 
@@ -21368,6 +21479,10 @@ msgstr "Hostname do Dispositivo"
 
 msgid "Hostname or IPv4 address for listener"
 msgstr "Hostname ou endereço IPv4 para o ouvinte"
+
+#, fuzzy
+msgid "Hostname template"
+msgstr "Correspondência de nomes de anfitriões"
 
 msgid "Hostname translation for incoming messages"
 msgstr "Tradução de nomes de hosts para mensagens recebidas"
@@ -27805,9 +27920,21 @@ msgstr "Falhas Principais de Página"
 msgid "Major change"
 msgstr "Grande mudança"
 
+#, fuzzy, python-format
+msgid "Make %s visible and usable for all users."
+msgstr "Torne as %s visíveis e utilizáveis por outros utilizadores."
+
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr "Torne as %s visíveis e utilizáveis por outros utilizadores."
+
+#, fuzzy, python-format
+msgid ""
+"Make %s visible and usable for users of contact groups the publishing user "
+"is a member of."
+msgstr ""
+"Torne as %s visíveis e utilizáveis pelos usuários de grupos de contato dos "
+"quais o usuário editor não é membro."
 
 #, python-format
 msgid ""
@@ -28130,6 +28257,10 @@ msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr ""
 "Combinar estados de administração (SNMP com contadores de 64 bits apenas)"
 
+#, fuzzy
+msgid "Match agent labels"
+msgstr "Combinar etiquetas de anfitrião"
+
 msgid "Match all control groups"
 msgstr "Combinar todos os grupos de controle"
 
@@ -28293,6 +28424,10 @@ msgid "Matching"
 msgstr "Correspondência"
 
 msgid "Matching Criteria"
+msgstr "Critérios de Correspondência"
+
+#, fuzzy
+msgid "Matching criteria"
 msgstr "Critérios de Correspondência"
 
 msgid "Matching is inverted in this rule"
@@ -28871,6 +29006,10 @@ msgstr "Uso de memória"
 msgid "Memory usage for %s hosts"
 msgstr "Uso de memória para anfitriões %s"
 
+#, fuzzy
+msgid "Memory usage for Kubernetes objects"
+msgstr "Uso de memória para anfitriões %s"
+
 msgid "Memory usage growth"
 msgstr "Crescimento do uso de memória"
 
@@ -28890,6 +29029,10 @@ msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr "Uso de memória dos dispositivos Fortigate (fortigate_memory_base)"
 
 msgid "Memory used"
+msgstr "Memória utilizada"
+
+#, fuzzy
+msgid "Memory used %"
 msgstr "Memória utilizada"
 
 msgid "Memory used by caches"
@@ -30627,6 +30770,9 @@ msgstr "Não é necessária ativação"
 
 msgid "No actual SLA computation"
 msgstr "Sem cálculo de SLA real"
+
+msgid "No agent labels present."
+msgstr ""
 
 msgid "No authentication, no privacy"
 msgstr "Sem autenticação, sem privacidade"
@@ -32404,17 +32550,8 @@ msgstr ""
 "escolha outro intervalo de tempo para o seu pintor do histórico métrico para "
 "corrigir este problema."
 
-msgid "One Month"
-msgstr "Um Mês"
-
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Um RRD por host/serviço (salva IO de disco, somente com CMC)"
-
-msgid "One Week"
-msgstr "Uma Semana"
-
-msgid "One Year"
-msgstr "Um Ano"
 
 msgid "One heartbeat every"
 msgstr "Um batimento cardíaco a cada"
@@ -34996,6 +35133,10 @@ msgstr "Plugins, verificações locais e MRPE para usuários não-rooticiais"
 msgid "Pod - Display the information for pod level"
 msgstr "Pod - Mostrar a informação para o nível do pod"
 
+#, fuzzy
+msgid "Pod conditions"
+msgstr "%d condições"
+
 msgid "Pod request"
 msgstr "Solicitação de Pod"
 
@@ -35673,6 +35814,10 @@ msgstr "Público"
 #, python-format
 msgid "Publish %s"
 msgstr "Publicar %s"
+
+#, fuzzy, python-format
+msgid "Publish %s to allowed contact groups"
+msgstr "Publicar %s para grupos de contato estrangeiros"
 
 #, python-format
 msgid "Publish %s to foreign contact groups"
@@ -36454,6 +36599,10 @@ msgstr ""
 "o limite que é configurado aqui. Nota: O tamanho real do arquivo de log pode "
 "exceder este tamanho em alguns por cento em situações com um alto volume de "
 "log."
+
+#, fuzzy
+msgid "Regex"
+msgstr "Conjuntos de regras"
 
 msgid "Regex for host alias"
 msgstr "Regex para o pseudónimo de anfitrião"
@@ -37731,6 +37880,10 @@ msgstr "Pacotes de regras"
 
 msgid "Rule search"
 msgstr "Pesquisa de regras"
+
+#, fuzzy
+msgid "Rule title"
+msgstr "Título da Regra"
 
 msgid "Rule tree"
 msgstr "Árvore de regras"
@@ -42998,6 +43151,10 @@ msgstr "Ainda não aconteceu nada."
 msgid "Stop"
 msgstr "Pare"
 
+#, fuzzy
+msgid "Stop and do not create hosts."
+msgstr "não criar hospedeiros de gateway"
+
 msgid "Stop creating new events"
 msgstr "Pare de criar novos eventos"
 
@@ -43010,6 +43167,11 @@ msgstr "Parar o trabalho"
 #, python-format
 msgid "Stop job %s%s?"
 msgstr "Parar trabalho %s%s?"
+
+msgid ""
+"Stop processing of the registration request. Do not iterate through the "
+"following rules."
+msgstr ""
 
 msgid "Stop this backup job"
 msgstr "Parar este trabalho de backup"
@@ -44155,6 +44317,14 @@ msgstr "As %s não existem."
 #, python-format
 msgid "The %s has been deleted."
 msgstr "As %s foram eliminadas."
+
+#, fuzzy, python-format
+msgid ""
+"The %s is only visible to you because you don't have the permission to share "
+"it."
+msgstr ""
+"A vista só é visível para si. Você não pode compartilhá-la, porque não tem a "
+"permissão para compartilhá-la."
 
 #, python-format
 msgid "The %s started flapping"
@@ -46129,6 +46299,10 @@ msgstr "O nome do controlador distinto esperado do cluster"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "O nome do nó hospedeiro do esperado para segurar este recurso."
 
+#, fuzzy
+msgid "The hostname template does not contain any label."
+msgstr "O nome do anfitrião não pode conter espaços."
+
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
 "had been correctly registered then. But they do not ask for updates anymore. "
@@ -46265,6 +46439,14 @@ msgstr ""
 "A chave com as %s de impressões digitais que é necessária para desencriptar "
 "o backup é o erro."
 
+#, fuzzy, python-format
+msgid "The label '%s' does not exist but is required."
+msgstr "O logfile não existe no site."
+
+#, fuzzy, python-format
+msgid "The label '%s' exists but is not expected."
+msgstr "A ação '%s' não é implementada"
+
 #, python-format
 msgid "The label ID %r is of type %s, but should be %s"
 msgstr "O ID do rótulo %r é do tipo %s, mas deve ser %s"
@@ -46272,6 +46454,10 @@ msgstr "O ID do rótulo %r é do tipo %s, mas deve ser %s"
 #, python-format
 msgid "The label value %r is of type %s, but should be %s"
 msgstr "O valor do rótulo %r é do tipo %s, mas deve ser %s"
+
+#, fuzzy, python-format
+msgid "The labels %s are not required."
+msgstr "O conjunto de regras \"%s\" não existe."
 
 msgid "The last "
 msgstr "O último "
@@ -46449,6 +46635,14 @@ msgstr "A partida é realizada sem distinção de maiúsculas e minúsculas."
 
 msgid "The match is performed case sensitive."
 msgstr "A partida é realizada em casos sensíveis."
+
+#, python-format
+msgid "The matching criteria must contain the label '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The matching criteria must not contain the label '%s'."
+msgstr "O comentário não deve conter ponto-e-vírgula."
 
 msgid ""
 "The maximum age for piggy back data from another host to be valid for "
@@ -48136,6 +48330,14 @@ msgstr ""
 msgid "The value of this rule is not valid. "
 msgstr "O valor desta regra não é válido. "
 
+#, fuzzy, python-format
+msgid "The values of the label '%s' are not equal: '%s' != '%s'"
+msgstr "O valor desta regra não é válido. "
+
+#, python-format
+msgid "The values of the label '%s' do not match: '%s' !~ '%s'."
+msgstr ""
+
 msgid "The vault name"
 msgstr "O nome da caixa-forte"
 
@@ -48161,13 +48363,6 @@ msgid ""
 msgstr ""
 "A visualização '%s' usando o layout '%s' não pode ser feita porque o layout "
 "não existe."
-
-msgid ""
-"The view is only visible to you. You can not share it, because you don't "
-"have the permission to share it."
-msgstr ""
-"A vista só é visível para si. Você não pode compartilhá-la, porque não tem a "
-"permissão para compartilhá-la."
 
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
@@ -50501,6 +50696,10 @@ msgstr "Este papel não existe."
 msgid "This rule"
 msgstr "Esta regra"
 
+#, fuzzy
+msgid "This rule ID is already used."
+msgstr "Esta regra está desactivada"
+
 msgid ""
 "This rule activates an agent which connects to an ACME Session Border "
 "Controller (SBC). This agent uses SSH, so you have to exchange an SSH key to "
@@ -50859,6 +51058,12 @@ msgstr ""
 
 msgid ""
 "This rule controls which and how many checks will be created for monitoring "
+"individual CPUs. Currently only cisco_cpu_multiitem supports this "
+"configuration. "
+msgstr ""
+
+msgid ""
+"This rule controls which and how many checks will be created for monitoring "
 "individual physical and logical disks. Note: the option <i>Create a summary "
 "for all read, one for write</i> has been removed. Some checks will still "
 "support this settings, but it will be removed there soon."
@@ -50888,6 +51093,10 @@ msgstr ""
 
 msgid "This rule does a cancelling match."
 msgstr "Esta regra faz uma partida de cancelamento."
+
+#, fuzzy
+msgid "This rule does not match."
+msgstr "A regra não corresponde"
 
 #, python-format
 msgid "This rule does not match: %s"
@@ -56594,6 +56803,10 @@ msgstr ""
 msgid "Voltage Sensor"
 msgstr "Sensor de voltagem"
 
+#, fuzzy
+msgid "Voltage level"
+msgstr "Nível de registo"
+
 msgid "Voltage levels (UPS / PDU / Other Devices)"
 msgstr "Níveis de voltagem (UPS / PDU / Outros Dispositivos)"
 
@@ -61426,6 +61639,14 @@ msgstr "não é um dos"
 msgid "is not one of regex"
 msgstr "não é um de regex"
 
+#, fuzzy
+msgid "is not required"
+msgstr "não está agrupado"
+
+#, fuzzy
+msgid "is required"
+msgstr "Esta regra"
+
 msgid "isnot"
 msgstr "isot"
 
@@ -61603,6 +61824,14 @@ msgstr "ms / entrada"
 
 msgid "ms/us"
 msgstr "m/nos"
+
+#, python-format
+msgid "must be equal to '%s'"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "must match '%s'"
+msgstr "Lista de jogos do anfitrião"
 
 msgid "myhost089"
 msgstr "myhost089"
@@ -62423,6 +62652,21 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
+#~ msgid "25 Hours"
+#~ msgstr "25 Horas"
+
+#~ msgid "4 Hours"
+#~ msgstr "4 Horas"
+
+#~ msgid "One Month"
+#~ msgstr "Um Mês"
+
+#~ msgid "One Week"
+#~ msgstr "Uma Semana"
+
+#~ msgid "One Year"
+#~ msgstr "Um Ano"
+
 #~ msgid "Deploy mtr plugin"
 #~ msgstr "Implementar o plugin mtr"
 
@@ -62551,9 +62795,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Affected hosts contain"
 #~ msgstr "Os hospedeiros afectados contêm"
-
-#~ msgid "Agent Version"
-#~ msgstr "Versão agente"
 
 #~ msgid "Aggregate PGA auto target"
 #~ msgstr "Alvo automático agregado PGA"

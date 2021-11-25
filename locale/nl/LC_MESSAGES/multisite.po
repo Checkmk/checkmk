@@ -955,9 +955,6 @@ msgstr "200.0 - 500.0 ms"
 msgid "200.000 Services"
 msgstr "200.000 Services"
 
-msgid "25 Hours"
-msgstr "25 Uur"
-
 msgid "3 months"
 msgstr "3 maanden"
 
@@ -1002,9 +999,6 @@ msgstr "3PAR Poorten"
 
 msgid "3PAR Remote Copy"
 msgstr "3PAR Remote Copy"
-
-msgid "4 Hours"
-msgstr "4 Uur"
 
 msgid "5 Volt Output Lower Levels"
 msgstr "5 Volt Uitvoer Ondergrens"
@@ -3364,6 +3358,10 @@ msgstr "Nieuwe groep toevoegen"
 msgid "Add new grouping definition"
 msgstr "Nieuwe groeperingsdefinitie toevoegen"
 
+#, fuzzy
+msgid "Add new label"
+msgstr "Voeg een etiket toe"
+
 msgid "Add new mapping"
 msgstr "Nieuwe mapping toevoegen"
 
@@ -3378,6 +3376,10 @@ msgstr "Nieuw project toevoegen"
 
 msgid "Add new row"
 msgstr "Nieuwe rij toevoegen"
+
+#, fuzzy
+msgid "Add new rule"
+msgstr "Nieuwe groep toevoegen"
 
 msgid "Add new scalar"
 msgstr "Nieuwe scalair toevoegen"
@@ -4105,12 +4107,24 @@ msgstr "Agent inzet status"
 msgid "Agent for %s (%s)"
 msgstr "Agent voor %s (%s)"
 
+#, fuzzy
+msgid "Agent labels"
+msgstr "Agent regels"
+
+#, fuzzy
+msgid "Agent labels simulator"
+msgstr "SNMP Agent Simulator"
+
 msgid "Agent output"
 msgstr "Agent uitgang"
 
 #, fuzzy
 msgid "Agent pairing"
 msgstr "Agent bakken"
+
+#, fuzzy
+msgid "Agent registration"
+msgstr "Agent Versie"
 
 msgid "Agent rules"
 msgstr "Agent regels"
@@ -5852,6 +5866,10 @@ msgstr ""
 msgid "Autostart Services"
 msgstr "Autostart diensten"
 
+#, fuzzy, python-format
+msgid "Aux tag '%s' does not exist"
+msgstr "De host '%s' bestaat niet"
+
 msgid "Auxiliary tags"
 msgstr "Hulplabels"
 
@@ -7531,6 +7549,10 @@ msgstr ""
 "CPU belasting en gebruik, Aantal threads, Kernel Prestaties, OMD, "
 "Bestandssysteem, Apache Status, TCP Verbindingen van de tijdbereiken 25 uur "
 "en 35 dagen"
+
+#, fuzzy
+msgid "CPU multi item discovery"
+msgstr "SAP-waarde ontdekking"
 
 msgid "CPU percentage usage"
 msgstr "CPU-percentage gebruik"
@@ -9342,6 +9364,10 @@ msgstr "Kloon grafiek afstemming"
 msgid "Clone report schedule entry %s"
 msgstr "Kloon rapport schema %s"
 
+#, fuzzy, python-format
+msgid "Clone rule '%s'"
+msgstr "Kopieer regel: %s"
+
 msgid "Clone stored report"
 msgstr "Opgeslagen rapport klonen"
 
@@ -11071,6 +11097,10 @@ msgstr "Grafiekverzameling maken"
 msgid "Create graph tuning"
 msgstr "Maak grafiek afstemming"
 
+#, fuzzy
+msgid "Create hosts"
+msgstr "Maak hosts in"
+
 msgid "Create hosts in"
 msgstr "Maak hosts in"
 
@@ -11730,6 +11760,10 @@ msgstr "Aangepaste invoer status mapping"
 
 msgid "Custom integrations"
 msgstr "Aangepaste integraties"
+
+#, fuzzy
+msgid "Custom label"
+msgstr "Aangepaste titel"
 
 msgid "Custom limit"
 msgstr "Aangepaste limiet"
@@ -12676,6 +12710,23 @@ msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
 #, fuzzy
 msgid "Define a tolerating time period for deactivating services"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-initialized condition."
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-ready condition."
+msgstr "Bepaal een tolerante periode voor herlaaddiensten"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-scheduled condition."
+msgstr "Bepaal een tolerante periode voor herlaaddiensten"
+
+#, fuzzy
+msgid ""
+"Define a tolerating time period for pod's containers not in ready condition."
 msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
 msgid "Define a tolerating time period for reloading services"
@@ -13916,6 +13967,17 @@ msgstr "In behandeling zijnde wijzigingen verwijderd (Hersteld %s)"
 msgid "Discontinue counting after time has elapsed"
 msgstr "Stop met tellen nadat de tijd is verstreken"
 
+#, fuzzy
+msgid "Discover"
+msgstr "Ontdekking"
+
+msgid "Discover a service checking the average of all CPUs"
+msgstr ""
+
+#, fuzzy
+msgid "Discover individual services for each CPU"
+msgstr "Ontdekking van individuele diensten"
+
 msgid "Discover packages"
 msgstr "Arrangementen ontdekken"
 
@@ -14643,6 +14705,10 @@ msgstr "Implementeer de plesk plugins niet"
 msgid "Do not deploy."
 msgstr "Plugin niet implementeren"
 
+#, fuzzy
+msgid "Do not discover"
+msgstr "Niet omzetten geval"
+
 msgid "Do not discover single interfaces"
 msgstr "Geen afzonderlijke interfaces ontdekken"
 
@@ -14891,6 +14957,10 @@ msgstr ""
 msgid "Do you really want to delete the rule with the ID <b>%s</b>?"
 msgstr "Wil je echt de regel met de ID <b>%s</b> verwijderen?"
 
+#, fuzzy, python-format
+msgid "Do you really want to delete the rule<b>%s</b> "
+msgstr "Wil je echt de regel <b>%s</b> <i>%s</i> verwijderen?"
+
 #, python-format
 msgid "Do you really want to delete the selected %s?"
 msgstr "Wilt u echt de geselecteerde %s verwijderen?"
@@ -15047,6 +15117,10 @@ msgstr "Documentatiebestanden"
 #, python-format
 msgid "Does not ends with \"%s\"."
 msgstr "Eindigt niet op \"%s\"."
+
+#, fuzzy
+msgid "Does not exists"
+msgstr "De %s bestaat niet."
 
 msgid "Does not match any service"
 msgstr "Komt niet overeen met een dienst"
@@ -15494,6 +15568,10 @@ msgstr ""
 msgid "Each attribute may be specified only once."
 msgstr "Elk kenmerk mag slechts eenmaal worden gespecificeerd."
 
+#, fuzzy
+msgid "Each label is allowed to be used once."
+msgstr "Deze URL mag niet als bladwijzer gebruikt worden"
+
 msgid "Each metric must be unique for a service"
 msgstr "Elke metriek moet uniek zijn voor een dienst"
 
@@ -15714,6 +15792,10 @@ msgstr "Eigenschappen bewerken"
 msgid "Edit properties of this BI pack"
 msgstr "Eigenschappen van dit BI-pakket bewerken"
 
+#, fuzzy
+msgid "Edit properties of this rule"
+msgstr "Bewerk de eigenschappen van dit regelpakket"
+
 msgid "Edit properties of this rule pack"
 msgstr "Bewerk de eigenschappen van dit regelpakket"
 
@@ -15730,6 +15812,10 @@ msgstr "Bewerk rol %s"
 
 #, python-format
 msgid "Edit rule %s"
+msgstr "Regel %s bewerken"
+
+#, fuzzy, python-format
+msgid "Edit rule '%s'"
 msgstr "Regel %s bewerken"
 
 #, python-format
@@ -16588,6 +16674,9 @@ msgstr "Aflevering 3: Windows bewaken"
 msgid "Equal or more than"
 msgstr "Gelijk aan of meer dan"
 
+msgid "Equals"
+msgstr ""
+
 msgid "Error"
 msgstr "Fout"
 
@@ -17108,6 +17197,10 @@ msgstr "Executive"
 
 msgid "Executors"
 msgstr "Executeurs"
+
+#, fuzzy
+msgid "Exists"
+msgstr "bestaat"
 
 msgid "Exit code"
 msgstr "Exit code"
@@ -19699,6 +19792,9 @@ msgstr "Behandeling van"
 msgid "Handling for required mirror space"
 msgstr "Verwerking voor vereiste spiegelruimte"
 
+msgid "Handling of agent registration..."
+msgstr ""
+
 msgid "Handling of context messages"
 msgstr "Behandeling van contextberichten"
 
@@ -20492,6 +20588,13 @@ msgstr ""
 "opgegeven toegangspunt ontbreekt (misschien uitgeschakeld is). Het "
 "toegangspunt kan worden gespecificeerd met de AP naam of het AP model"
 
+#, python-format
+msgid ""
+"Here you can simulate an incoming agent request and check out which rules "
+"are matching.<br>An agent request contains several labels as key-value "
+"pairs, eg. %s."
+msgstr ""
+
 msgid "Here you can specifiy the measurement unit of the network interface"
 msgstr "Hier kunt u de meeteenheid van de netwerkinterface specificeren"
 
@@ -21043,6 +21146,10 @@ msgstr "Contactinformatie gastheer"
 msgid "Host contacts"
 msgstr "Host contacten"
 
+#, fuzzy
+msgid "Host creation"
+msgstr "Host configuratie"
+
 msgid "Host custom attribute"
 msgstr "Host aangepast attribuut"
 
@@ -21361,6 +21468,10 @@ msgstr "Hostnaam"
 msgid "Hostname / IP address of Graphite server"
 msgstr "Hostnaam / IP-adres van Graphite server"
 
+#, fuzzy
+msgid "Hostname computation"
+msgstr "Hostnaam matching"
+
 msgid "Hostname matching"
 msgstr "Hostnaam matching"
 
@@ -21369,6 +21480,10 @@ msgstr "Hostnaam van het apparaat"
 
 msgid "Hostname or IPv4 address for listener"
 msgstr "Hostnaam of IPv4 adres voor luisteraar"
+
+#, fuzzy
+msgid "Hostname template"
+msgstr "Hostnaam matching"
 
 msgid "Hostname translation for incoming messages"
 msgstr "Hostname vertaling voor inkomende berichten"
@@ -27809,9 +27924,21 @@ msgstr "Belangrijke pagina fouten"
 msgid "Major change"
 msgstr "Grote verandering"
 
+#, fuzzy, python-format
+msgid "Make %s visible and usable for all users."
+msgstr "Maak %s zichtbaar en bruikbaar voor andere gebruikers."
+
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr "Maak %s zichtbaar en bruikbaar voor andere gebruikers."
+
+#, fuzzy, python-format
+msgid ""
+"Make %s visible and usable for users of contact groups the publishing user "
+"is a member of."
+msgstr ""
+"Maak %s zichtbaar en bruikbaar voor gebruikers van contactgroepen waar de "
+"publicerende gebruiker geen lid van is."
 
 #, python-format
 msgid ""
@@ -28130,6 +28257,10 @@ msgstr "Wedstrijdgroepen"
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "Overeenkomen met admin toestanden (alleen SNMP met 64-bit tellers)"
 
+#, fuzzy
+msgid "Match agent labels"
+msgstr "Overeenkomende host labels"
+
 msgid "Match all control groups"
 msgstr "Alle controlegroepen overeenkomen"
 
@@ -28293,6 +28424,10 @@ msgid "Matching"
 msgstr "Passend bij"
 
 msgid "Matching Criteria"
+msgstr "Bijbehorende criteria"
+
+#, fuzzy
+msgid "Matching criteria"
 msgstr "Bijbehorende criteria"
 
 msgid "Matching is inverted in this rule"
@@ -28870,6 +29005,10 @@ msgstr "Geheugengebruik"
 msgid "Memory usage for %s hosts"
 msgstr "Geheugengebruik voor %s hosts"
 
+#, fuzzy
+msgid "Memory usage for Kubernetes objects"
+msgstr "Geheugengebruik voor %s hosts"
+
 msgid "Memory usage growth"
 msgstr "Groei geheugengebruik"
 
@@ -28889,6 +29028,10 @@ msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr "Geheugengebruik van Fortigate apparaten (fortigate_memory_base)"
 
 msgid "Memory used"
+msgstr "Gebruikt geheugen"
+
+#, fuzzy
+msgid "Memory used %"
 msgstr "Gebruikt geheugen"
 
 msgid "Memory used by caches"
@@ -30618,6 +30761,9 @@ msgstr "Geen activering nodig"
 
 msgid "No actual SLA computation"
 msgstr "Geen eigenlijke SLA-berekening"
+
+msgid "No agent labels present."
+msgstr ""
 
 msgid "No authentication, no privacy"
 msgstr "Geen authenticatie, geen privacy"
@@ -32397,17 +32543,8 @@ msgstr ""
 "rapport, toch is dit een GUI weergave. Bewerk uw view en kies een ander "
 "tijdbereik voor uw metric history painter om dit probleem op te lossen."
 
-msgid "One Month"
-msgstr "Een maand"
-
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Eén RRD per host/service (spaart disk IO, alleen met CMC)"
-
-msgid "One Week"
-msgstr "Een week"
-
-msgid "One Year"
-msgstr "Een jaar"
 
 msgid "One heartbeat every"
 msgstr "Een hartslag elke"
@@ -34974,6 +35111,10 @@ msgstr "Plugins, lokale controles en MRPE voor niet-root gebruikers"
 msgid "Pod - Display the information for pod level"
 msgstr "Pod - Geef de informatie weer voor pod niveau"
 
+#, fuzzy
+msgid "Pod conditions"
+msgstr "%d voorwaarden"
+
 msgid "Pod request"
 msgstr "Pod verzoek"
 
@@ -35654,6 +35795,10 @@ msgstr "Publiek"
 #, python-format
 msgid "Publish %s"
 msgstr "%s publiceren"
+
+#, fuzzy, python-format
+msgid "Publish %s to allowed contact groups"
+msgstr "Publiceer %s naar buitenlandse contactgroepen"
 
 #, python-format
 msgid "Publish %s to foreign contact groups"
@@ -36433,6 +36578,10 @@ msgstr ""
 "hier ingestelde limiet overschrijdt. Opmerking: De werkelijke grootte van "
 "het logbestand kan deze grootte met een paar procent overschrijden in "
 "situaties met een hoog logvolume."
+
+#, fuzzy
+msgid "Regex"
+msgstr "Regelsets"
 
 msgid "Regex for host alias"
 msgstr "Regex voor host alias"
@@ -37708,6 +37857,10 @@ msgstr "Regel pakken"
 
 msgid "Rule search"
 msgstr "Regel zoeken"
+
+#, fuzzy
+msgid "Rule title"
+msgstr "Regel Titel"
 
 msgid "Rule tree"
 msgstr "Regelboom"
@@ -42982,6 +43135,10 @@ msgstr "Er gebeurde nog steeds niets."
 msgid "Stop"
 msgstr "Stop"
 
+#, fuzzy
+msgid "Stop and do not create hosts."
+msgstr "geen gateway hosts aanmaken"
+
 msgid "Stop creating new events"
 msgstr "Stop met het aanmaken van nieuwe evenementen"
 
@@ -42995,6 +43152,11 @@ msgstr "Stop job"
 #, python-format
 msgid "Stop job %s%s?"
 msgstr "Stop job %s%s?"
+
+msgid ""
+"Stop processing of the registration request. Do not iterate through the "
+"following rules."
+msgstr ""
 
 msgid "Stop this backup job"
 msgstr "Stop deze backuptaak"
@@ -44136,6 +44298,14 @@ msgstr "De %s bestaat niet."
 #, python-format
 msgid "The %s has been deleted."
 msgstr "De %s is verwijderd."
+
+#, fuzzy, python-format
+msgid ""
+"The %s is only visible to you because you don't have the permission to share "
+"it."
+msgstr ""
+"Het uitzicht is alleen voor u zichtbaar. Je kunt het niet delen, omdat je "
+"geen toestemming hebt om het te delen."
 
 #, python-format
 msgid "The %s started flapping"
@@ -46128,6 +46298,10 @@ msgstr "De hostnaam van de verwachte gedistingeerde controller van het cluster"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "De hostnaam van het verwachte knooppunt dat deze bron bevat."
 
+#, fuzzy
+msgid "The hostname template does not contain any label."
+msgstr "De hostnaam mag geen spaties bevatten."
+
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
 "had been correctly registered then. But they do not ask for updates anymore. "
@@ -46262,6 +46436,14 @@ msgstr ""
 "De sleutel met de vingerafdruk %s die nodig is om de backup te ontcijferen "
 "is fout."
 
+#, fuzzy, python-format
+msgid "The label '%s' does not exist but is required."
+msgstr "Het logbestand bestaat niet op de site."
+
+#, fuzzy, python-format
+msgid "The label '%s' exists but is not expected."
+msgstr "De actie '%s' is niet geïmplementeerd"
+
 #, python-format
 msgid "The label ID %r is of type %s, but should be %s"
 msgstr "Het label ID %r is van het type %s, maar moet %s zijn"
@@ -46269,6 +46451,10 @@ msgstr "Het label ID %r is van het type %s, maar moet %s zijn"
 #, python-format
 msgid "The label value %r is of type %s, but should be %s"
 msgstr "De labelwaarde %r is van het type %s, maar moet %s zijn"
+
+#, fuzzy, python-format
+msgid "The labels %s are not required."
+msgstr "De regelset \"%s\" bestaat niet."
 
 msgid "The last "
 msgstr "De laatste "
@@ -46442,6 +46628,14 @@ msgstr "De overeenkomst wordt hoofdletterongevoelig uitgevoerd."
 
 msgid "The match is performed case sensitive."
 msgstr "De overeenkomst wordt hoofdlettergevoelig uitgevoerd."
+
+#, python-format
+msgid "The matching criteria must contain the label '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The matching criteria must not contain the label '%s'."
+msgstr "Het commentaar mag geen puntkomma's bevatten."
 
 msgid ""
 "The maximum age for piggy back data from another host to be valid for "
@@ -48150,6 +48344,14 @@ msgstr ""
 msgid "The value of this rule is not valid. "
 msgstr "De waarde van deze regel is niet geldig. "
 
+#, fuzzy, python-format
+msgid "The values of the label '%s' are not equal: '%s' != '%s'"
+msgstr "De waarde van deze regel is niet geldig. "
+
+#, python-format
+msgid "The values of the label '%s' do not match: '%s' !~ '%s'."
+msgstr ""
+
 msgid "The vault name"
 msgstr "De naam van de kluis"
 
@@ -48174,13 +48376,6 @@ msgid ""
 msgstr ""
 "De weergave '%s' met de opmaak '%s' kan niet worden weergegeven omdat de "
 "opmaak niet bestaat."
-
-msgid ""
-"The view is only visible to you. You can not share it, because you don't "
-"have the permission to share it."
-msgstr ""
-"Het uitzicht is alleen voor u zichtbaar. Je kunt het niet delen, omdat je "
-"geen toestemming hebt om het te delen."
 
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
@@ -50537,6 +50732,10 @@ msgstr "Deze rol bestaat niet."
 msgid "This rule"
 msgstr "Deze regel"
 
+#, fuzzy
+msgid "This rule ID is already used."
+msgstr "Deze regel is uitgeschakeld"
+
 msgid ""
 "This rule activates an agent which connects to an ACME Session Border "
 "Controller (SBC). This agent uses SSH, so you have to exchange an SSH key to "
@@ -50897,6 +51096,12 @@ msgstr ""
 
 msgid ""
 "This rule controls which and how many checks will be created for monitoring "
+"individual CPUs. Currently only cisco_cpu_multiitem supports this "
+"configuration. "
+msgstr ""
+
+msgid ""
+"This rule controls which and how many checks will be created for monitoring "
 "individual physical and logical disks. Note: the option <i>Create a summary "
 "for all read, one for write</i> has been removed. Some checks will still "
 "support this settings, but it will be removed there soon."
@@ -50926,6 +51131,10 @@ msgstr ""
 
 msgid "This rule does a cancelling match."
 msgstr "Deze regel doet een annulerende wedstrijd."
+
+#, fuzzy
+msgid "This rule does not match."
+msgstr "De regel komt niet overeen met"
 
 #, python-format
 msgid "This rule does not match: %s"
@@ -56649,6 +56858,10 @@ msgstr ""
 msgid "Voltage Sensor"
 msgstr "Spanningssensor"
 
+#, fuzzy
+msgid "Voltage level"
+msgstr "Log niveau"
+
 msgid "Voltage levels (UPS / PDU / Other Devices)"
 msgstr "Spanningsniveaus (UPS / PDU / Andere apparaten)"
 
@@ -61492,6 +61705,14 @@ msgstr "is niet een van"
 msgid "is not one of regex"
 msgstr "is niet een van regex"
 
+#, fuzzy
+msgid "is not required"
+msgstr "is niet geclusterd"
+
+#, fuzzy
+msgid "is required"
+msgstr "Deze regel"
+
 msgid "isnot"
 msgstr "is niet"
 
@@ -61669,6 +61890,14 @@ msgstr "ms / invoer"
 
 msgid "ms/us"
 msgstr "ons"
+
+#, python-format
+msgid "must be equal to '%s'"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "must match '%s'"
+msgstr "Host wedstrijd lijst"
 
 msgid "myhost089"
 msgstr "myhost089"
@@ -62490,6 +62719,21 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
+#~ msgid "25 Hours"
+#~ msgstr "25 Uur"
+
+#~ msgid "4 Hours"
+#~ msgstr "4 Uur"
+
+#~ msgid "One Month"
+#~ msgstr "Een maand"
+
+#~ msgid "One Week"
+#~ msgstr "Een week"
+
+#~ msgid "One Year"
+#~ msgstr "Een jaar"
+
 #~ msgid "Deploy mtr plugin"
 #~ msgstr "Implementeer mtr plugin"
 
@@ -62614,9 +62858,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Affected hosts contain"
 #~ msgstr "Getroffen hosts bevatten"
-
-#~ msgid "Agent Version"
-#~ msgstr "Agent Versie"
 
 #~ msgid "Aggregate PGA auto target"
 #~ msgstr "Geaggregeerde PGA auto-doelstelling"

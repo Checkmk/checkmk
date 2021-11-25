@@ -959,9 +959,6 @@ msgstr ""
 msgid "200.000 Services"
 msgstr "servicii"
 
-msgid "25 Hours"
-msgstr "25 de ore"
-
 #, fuzzy
 msgid "3 months"
 msgstr "2 ore"
@@ -1015,9 +1012,6 @@ msgstr "rapoarte"
 
 msgid "3PAR Remote Copy"
 msgstr ""
-
-msgid "4 Hours"
-msgstr "4 ore"
 
 msgid "5 Volt Output Lower Levels"
 msgstr ""
@@ -3136,6 +3130,10 @@ msgstr "Adaugă group de model"
 msgid "Add new grouping definition"
 msgstr "Adaugp o noua configurație de utilizator"
 
+#, fuzzy
+msgid "Add new label"
+msgstr "Adaugă o regulă de rol"
+
 msgid "Add new mapping"
 msgstr "Adaugă o nouă mapare"
 
@@ -3154,6 +3152,10 @@ msgstr "Adaungă un nou element"
 #, fuzzy
 msgid "Add new row"
 msgstr "Adaugă Contoar"
+
+#, fuzzy
+msgid "Add new rule"
+msgstr "Adaugă group de model"
 
 #, fuzzy
 msgid "Add new scalar"
@@ -3866,12 +3868,24 @@ msgstr ""
 msgid "Agent for %s (%s)"
 msgstr ""
 
+#, fuzzy
+msgid "Agent labels"
+msgstr "Editeaza regulile de loguri"
+
+#, fuzzy
+msgid "Agent labels simulator"
+msgstr "Simularea unui Eveniment"
+
 msgid "Agent output"
 msgstr ""
 
 #, fuzzy
 msgid "Agent pairing"
 msgstr "actualizare"
+
+#, fuzzy
+msgid "Agent registration"
+msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Agent rules"
@@ -5530,6 +5544,10 @@ msgstr ""
 msgid "Autostart Services"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Aux tag '%s' does not exist"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid "Auxiliary tags"
 msgstr ""
 
@@ -7053,6 +7071,10 @@ msgid ""
 "Filesystem, Apache Status, TCP Connections of the time ranges 25 hours and "
 "35 days"
 msgstr ""
+
+#, fuzzy
+msgid "CPU multi item discovery"
+msgstr "Inventariere in masa"
 
 #, fuzzy
 msgid "CPU percentage usage"
@@ -8754,6 +8776,10 @@ msgstr ""
 msgid "Clone report schedule entry %s"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Clone rule '%s'"
+msgstr "Arata regulile de utilizator"
+
 #, fuzzy
 msgid "Clone stored report"
 msgstr "(nici un raport)"
@@ -10450,6 +10476,10 @@ msgid "Create graph tuning"
 msgstr ""
 
 #, fuzzy
+msgid "Create hosts"
+msgstr "Verificări active"
+
+#, fuzzy
 msgid "Create hosts in"
 msgstr "Verificări active"
 
@@ -11138,6 +11168,10 @@ msgstr "Atribute personalizate"
 
 #, fuzzy
 msgid "Custom integrations"
+msgstr "Atribute personalizate"
+
+#, fuzzy
+msgid "Custom label"
 msgstr "Atribute personalizate"
 
 #, fuzzy
@@ -12115,6 +12149,19 @@ msgid "Define a tolerating time period for activating services"
 msgstr ""
 
 msgid "Define a tolerating time period for deactivating services"
+msgstr ""
+
+msgid "Define a tolerating time period for non-initialized condition."
+msgstr ""
+
+msgid "Define a tolerating time period for non-ready condition."
+msgstr ""
+
+msgid "Define a tolerating time period for non-scheduled condition."
+msgstr ""
+
+msgid ""
+"Define a tolerating time period for pod's containers not in ready condition."
 msgstr ""
 
 msgid "Define a tolerating time period for reloading services"
@@ -13347,6 +13394,17 @@ msgid "Discontinue counting after time has elapsed"
 msgstr ""
 
 #, fuzzy
+msgid "Discover"
+msgstr "Inventariere in masa"
+
+msgid "Discover a service checking the average of all CPUs"
+msgstr ""
+
+#, fuzzy
+msgid "Discover individual services for each CPU"
+msgstr "servicii"
+
+#, fuzzy
 msgid "Discover packages"
 msgstr "servicii"
 
@@ -14091,6 +14149,10 @@ msgid "Do not deploy."
 msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
+msgid "Do not discover"
+msgstr "Inventariere in masa"
+
+#, fuzzy
 msgid "Do not discover single interfaces"
 msgstr "servicii"
 
@@ -14327,6 +14389,10 @@ msgstr ""
 msgid "Do you really want to delete the rule with the ID <b>%s</b>?"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Do you really want to delete the rule<b>%s</b> "
+msgstr "O agregare legată de un singur element"
+
 #, python-format
 msgid "Do you really want to delete the selected %s?"
 msgstr ""
@@ -14488,6 +14554,10 @@ msgstr "doua nivele"
 #, python-format
 msgid "Does not ends with \"%s\"."
 msgstr ""
+
+#, fuzzy
+msgid "Does not exists"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 msgid "Does not match any service"
@@ -14930,6 +15000,9 @@ msgstr ""
 msgid "Each attribute may be specified only once."
 msgstr ""
 
+msgid "Each label is allowed to be used once."
+msgstr ""
+
 msgid "Each metric must be unique for a service"
 msgstr ""
 
@@ -15147,6 +15220,10 @@ msgid "Edit properties of this BI pack"
 msgstr ""
 
 #, fuzzy
+msgid "Edit properties of this rule"
+msgstr "Un titlu descriptiv despre această acțiune."
+
+#, fuzzy
 msgid "Edit properties of this rule pack"
 msgstr "Un titlu descriptiv despre această acțiune."
 
@@ -15164,6 +15241,10 @@ msgstr ""
 #, python-format
 msgid "Edit rule %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Edit rule '%s'"
+msgstr "Editeaza regulile de loguri"
 
 #, python-format
 msgid "Edit rule pack %s"
@@ -16004,6 +16085,9 @@ msgstr ""
 msgid "Equal or more than"
 msgstr ""
 
+msgid "Equals"
+msgstr ""
+
 msgid "Error"
 msgstr ""
 
@@ -16562,6 +16646,9 @@ msgstr ""
 #, fuzzy
 msgid "Executors"
 msgstr "(selectează directorul)"
+
+msgid "Exists"
+msgstr ""
 
 #, fuzzy
 msgid "Exit code"
@@ -19093,6 +19180,9 @@ msgstr ""
 msgid "Handling for required mirror space"
 msgstr ""
 
+msgid "Handling of agent registration..."
+msgstr ""
+
 msgid "Handling of context messages"
 msgstr ""
 
@@ -19691,6 +19781,13 @@ msgid ""
 "name or the AP model"
 msgstr ""
 
+#, python-format
+msgid ""
+"Here you can simulate an incoming agent request and check out which rules "
+"are matching.<br>An agent request contains several labels as key-value "
+"pairs, eg. %s."
+msgstr ""
+
 msgid "Here you can specifiy the measurement unit of the network interface"
 msgstr ""
 
@@ -20191,6 +20288,10 @@ msgid "Host contacts"
 msgstr ""
 
 #, fuzzy
+msgid "Host creation"
+msgstr "Agregare noua"
+
+#, fuzzy
 msgid "Host custom attribute"
 msgstr "Atribute personalizate"
 
@@ -20530,6 +20631,10 @@ msgstr ""
 msgid "Hostname / IP address of Graphite server"
 msgstr ""
 
+#, fuzzy
+msgid "Hostname computation"
+msgstr "foloseste configuratia locala"
+
 msgid "Hostname matching"
 msgstr ""
 
@@ -20538,6 +20643,10 @@ msgstr ""
 
 msgid "Hostname or IPv4 address for listener"
 msgstr ""
+
+#, fuzzy
+msgid "Hostname template"
+msgstr " (potrivire exactă)"
 
 msgid "Hostname translation for incoming messages"
 msgstr ""
@@ -26386,7 +26495,17 @@ msgid "Major change"
 msgstr "Renunț la modificări."
 
 #, python-format
+msgid "Make %s visible and usable for all users."
+msgstr ""
+
+#, python-format
 msgid "Make %s visible and usable for other users."
+msgstr ""
+
+#, python-format
+msgid ""
+"Make %s visible and usable for users of contact groups the publishing user "
+"is a member of."
 msgstr ""
 
 #, python-format
@@ -26702,6 +26821,10 @@ msgstr ""
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr ""
 
+#, fuzzy
+msgid "Match agent labels"
+msgstr "Verificări active"
+
 msgid "Match all control groups"
 msgstr ""
 
@@ -26871,6 +26994,9 @@ msgid "Matching"
 msgstr ""
 
 msgid "Matching Criteria"
+msgstr ""
+
+msgid "Matching criteria"
 msgstr ""
 
 msgid "Matching is inverted in this rule"
@@ -27506,6 +27632,10 @@ msgstr "% utilizare"
 msgid "Memory usage for %s hosts"
 msgstr " pentru elementul %s"
 
+#, fuzzy
+msgid "Memory usage for Kubernetes objects"
+msgstr " pentru elementul %s"
+
 msgid "Memory usage growth"
 msgstr ""
 
@@ -27527,6 +27657,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Memory used"
+msgstr "% utilizare"
+
+#, fuzzy
+msgid "Memory used %"
 msgstr "% utilizare"
 
 msgid "Memory used by caches"
@@ -29355,6 +29489,9 @@ msgstr "Notificari"
 msgid "No actual SLA computation"
 msgstr ""
 
+msgid "No agent labels present."
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr ""
 
@@ -31126,16 +31263,7 @@ msgid ""
 "your metric history painter to fix this issue."
 msgstr ""
 
-msgid "One Month"
-msgstr ""
-
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
-msgstr ""
-
-msgid "One Week"
-msgstr ""
-
-msgid "One Year"
 msgstr ""
 
 msgid "One heartbeat every"
@@ -33574,6 +33702,10 @@ msgid "Pod - Display the information for pod level"
 msgstr ""
 
 #, fuzzy
+msgid "Pod conditions"
+msgstr "%d condiții"
+
+#, fuzzy
 msgid "Pod request"
 msgstr "cereri"
 
@@ -34289,6 +34421,10 @@ msgstr ""
 #, python-format
 msgid "Publish %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Publish %s to allowed contact groups"
+msgstr "Eticheta de grup nou"
 
 #, python-format
 msgid "Publish %s to foreign contact groups"
@@ -35102,6 +35238,10 @@ msgid ""
 "configured here. Note: The actual size of the log file can exceed this size "
 "by a few percent in situation with a high logging volume."
 msgstr ""
+
+#, fuzzy
+msgid "Regex"
+msgstr "Reguli"
 
 msgid "Regex for host alias"
 msgstr ""
@@ -36399,6 +36539,10 @@ msgstr "Reguli"
 #, fuzzy
 msgid "Rule search"
 msgstr "Cautare noua"
+
+#, fuzzy
+msgid "Rule title"
+msgstr "<b>reprogramează o verificare imediată"
 
 #, fuzzy
 msgid "Rule tree"
@@ -41448,6 +41592,10 @@ msgstr ""
 msgid "Stop"
 msgstr ""
 
+#, fuzzy
+msgid "Stop and do not create hosts."
+msgstr "(Nu trimite site-ului de la distanță)"
+
 msgid "Stop creating new events"
 msgstr ""
 
@@ -41460,6 +41608,11 @@ msgstr "de sus in jos"
 
 #, python-format
 msgid "Stop job %s%s?"
+msgstr ""
+
+msgid ""
+"Stop processing of the registration request. Do not iterate through the "
+"following rules."
 msgstr ""
 
 msgid "Stop this backup job"
@@ -42632,6 +42785,12 @@ msgstr ""
 
 #, python-format
 msgid "The %s has been deleted."
+msgstr ""
+
+#, python-format
+msgid ""
+"The %s is only visible to you because you don't have the permission to share "
+"it."
 msgstr ""
 
 #, python-format
@@ -44092,6 +44251,9 @@ msgstr ""
 msgid "The hostname of the expected node to hold this resource."
 msgstr ""
 
+msgid "The hostname template does not contain any label."
+msgstr ""
+
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
 "had been correctly registered then. But they do not ask for updates anymore. "
@@ -44206,6 +44368,14 @@ msgid ""
 "misssing."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The label '%s' does not exist but is required."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, python-format
+msgid "The label '%s' exists but is not expected."
+msgstr ""
+
 #, python-format
 msgid "The label ID %r is of type %s, but should be %s"
 msgstr ""
@@ -44213,6 +44383,10 @@ msgstr ""
 #, python-format
 msgid "The label value %r is of type %s, but should be %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "The labels %s are not required."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "The last "
 msgstr ""
@@ -44357,6 +44531,14 @@ msgid "The match is performed case insensitive."
 msgstr ""
 
 msgid "The match is performed case sensitive."
+msgstr ""
+
+#, python-format
+msgid "The matching criteria must contain the label '%s'."
+msgstr ""
+
+#, python-format
+msgid "The matching criteria must not contain the label '%s'."
 msgstr ""
 
 msgid ""
@@ -45692,6 +45874,14 @@ msgstr ""
 msgid "The value of this rule is not valid. "
 msgstr ""
 
+#, python-format
+msgid "The values of the label '%s' are not equal: '%s' != '%s'"
+msgstr ""
+
+#, python-format
+msgid "The values of the label '%s' do not match: '%s' !~ '%s'."
+msgstr ""
+
 #, fuzzy
 msgid "The vault name"
 msgstr "foloseste numele portului"
@@ -45712,11 +45902,6 @@ msgstr ""
 msgid ""
 "The view '%s' using the layout '%s' can not be rendered because the layout "
 "does not exist."
-msgstr ""
-
-msgid ""
-"The view is only visible to you. You can not share it, because you don't "
-"have the permission to share it."
 msgstr ""
 
 #, python-format
@@ -47375,6 +47560,9 @@ msgstr ""
 msgid "This rule"
 msgstr ""
 
+msgid "This rule ID is already used."
+msgstr ""
+
 msgid ""
 "This rule activates an agent which connects to an ACME Session Border "
 "Controller (SBC). This agent uses SSH, so you have to exchange an SSH key to "
@@ -47607,6 +47795,12 @@ msgstr ""
 
 msgid ""
 "This rule controls which and how many checks will be created for monitoring "
+"individual CPUs. Currently only cisco_cpu_multiitem supports this "
+"configuration. "
+msgstr ""
+
+msgid ""
+"This rule controls which and how many checks will be created for monitoring "
 "individual physical and logical disks. Note: the option <i>Create a summary "
 "for all read, one for write</i> has been removed. Some checks will still "
 "support this settings, but it will be removed there soon."
@@ -47626,6 +47820,10 @@ msgstr ""
 
 msgid "This rule does a cancelling match."
 msgstr ""
+
+#, fuzzy
+msgid "This rule does not match."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, python-format
 msgid "This rule does not match: %s"
@@ -52855,6 +53053,10 @@ msgstr ""
 msgid "Voltage Sensor"
 msgstr ""
 
+#, fuzzy
+msgid "Voltage level"
+msgstr "Editeaza regulile de loguri"
+
 msgid "Voltage levels (UPS / PDU / Other Devices)"
 msgstr ""
 
@@ -56794,6 +56996,12 @@ msgstr ""
 msgid "is not one of regex"
 msgstr ""
 
+msgid "is not required"
+msgstr ""
+
+msgid "is required"
+msgstr ""
+
 msgid "isnot"
 msgstr ""
 
@@ -56978,6 +57186,14 @@ msgid "ms / entry"
 msgstr ""
 
 msgid "ms/us"
+msgstr ""
+
+#, python-format
+msgid "must be equal to '%s'"
+msgstr ""
+
+#, python-format
+msgid "must match '%s'"
 msgstr ""
 
 msgid "myhost089"
@@ -57828,6 +58044,12 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "25 Hours"
+#~ msgstr "25 de ore"
+
+#~ msgid "4 Hours"
+#~ msgstr "4 ore"
 
 #, fuzzy, python-format
 #~ msgid "Metric: %s"
@@ -59954,10 +60176,6 @@ msgstr ""
 #~ msgstr "Editeaza regulile de loguri"
 
 #, fuzzy
-#~ msgid "Edit Rules"
-#~ msgstr "Editeaza regulile de loguri"
-
-#, fuzzy
 #~ msgid "Edit View"
 #~ msgstr "Editeaza regulile de loguri"
 
@@ -60074,10 +60292,6 @@ msgstr ""
 #~ msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
-#~ msgid "Host Aggregations"
-#~ msgstr "Agregare noua"
-
-#, fuzzy
 #~ msgid "Host Checks"
 #~ msgstr "serviciu"
 
@@ -60176,10 +60390,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Hostgroup (Regex)"
 #~ msgstr "Grup nou"
-
-#, fuzzy
-#~ msgid "Hostname (exact match)"
-#~ msgstr " (potrivire exactă)"
 
 #, fuzzy
 #~ msgid "Hostname of event, exact match"
@@ -61949,10 +62159,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Silver"
 #~ msgstr "Salveaza"
-
-#, fuzzy
-#~ msgid "Site %s does not exist"
-#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 #~ msgid "Site status"

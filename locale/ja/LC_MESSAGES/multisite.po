@@ -945,9 +945,6 @@ msgstr "200.0 - 500.0ミリ秒"
 msgid "200.000 Services"
 msgstr "200.000サービス"
 
-msgid "25 Hours"
-msgstr "25時間"
-
 msgid "3 months"
 msgstr "3ヶ月"
 
@@ -992,9 +989,6 @@ msgstr "3PARポート"
 
 msgid "3PAR Remote Copy"
 msgstr "3PARリモートコピー"
-
-msgid "4 Hours"
-msgstr "4時間"
 
 msgid "5 Volt Output Lower Levels"
 msgstr "5ボルト出力の下位レベル"
@@ -3240,6 +3234,10 @@ msgstr "新しいグループを追加する"
 msgid "Add new grouping definition"
 msgstr "新しいグループ定義を追加する"
 
+#, fuzzy
+msgid "Add new label"
+msgstr "ラベルを追加する"
+
 msgid "Add new mapping"
 msgstr "新しいマッピングを追加する"
 
@@ -3254,6 +3252,10 @@ msgstr "新しいプロジェクトを追加する"
 
 msgid "Add new row"
 msgstr "新しい行を追加します"
+
+#, fuzzy
+msgid "Add new rule"
+msgstr "新しいグループを追加する"
 
 msgid "Add new scalar"
 msgstr "新しいスカラーを追加する"
@@ -3945,12 +3947,24 @@ msgstr "エージェントのデプロイメントステータス"
 msgid "Agent for %s (%s)"
 msgstr "%sのエージェント(%s)"
 
+#, fuzzy
+msgid "Agent labels"
+msgstr "エージェントルール"
+
+#, fuzzy
+msgid "Agent labels simulator"
+msgstr "SNMPエージェントシミュレータ"
+
 msgid "Agent output"
 msgstr "エージェント出力"
 
 #, fuzzy
 msgid "Agent pairing"
 msgstr "エージェントベーキング"
+
+#, fuzzy
+msgid "Agent registration"
+msgstr "エージェントバージョン"
 
 msgid "Agent rules"
 msgstr "エージェントルール"
@@ -5640,6 +5654,10 @@ msgstr ""
 msgid "Autostart Services"
 msgstr "自動開始サービス"
 
+#, fuzzy, python-format
+msgid "Aux tag '%s' does not exist"
+msgstr "ホスト '%s' は存在しません"
+
 msgid "Auxiliary tags"
 msgstr "補助タグ"
 
@@ -7233,6 +7251,10 @@ msgid ""
 msgstr ""
 "CPUの負荷と使用率、スレッド数、カーネルパフォーマンス、OMD、ファイルシステ"
 "ム、Apacheステータス、25時間35日の時間範囲のTCP接続"
+
+#, fuzzy
+msgid "CPU multi item discovery"
+msgstr "SAPの価値発見"
 
 msgid "CPU percentage usage"
 msgstr "CPU使用率"
@@ -8980,6 +9002,10 @@ msgstr "クローングラフの調整"
 msgid "Clone report schedule entry %s"
 msgstr "レポートスケジュールエントリ %sのクローンを作成します。"
 
+#, fuzzy, python-format
+msgid "Clone rule '%s'"
+msgstr "コピールール: %s"
+
 msgid "Clone stored report"
 msgstr "保存されたレポートのクローン"
 
@@ -10645,6 +10671,10 @@ msgstr "グラフコレクションを作成する"
 msgid "Create graph tuning"
 msgstr "グラフ調整を作成する"
 
+#, fuzzy
+msgid "Create hosts"
+msgstr "ホストを作成する"
+
 msgid "Create hosts in"
 msgstr "ホストを作成する"
 
@@ -11293,6 +11323,10 @@ msgstr ""
 
 msgid "Custom integrations"
 msgstr "カスタム統合"
+
+#, fuzzy
+msgid "Custom label"
+msgstr "カスタムタイトル"
 
 msgid "Custom limit"
 msgstr "カスタム制限"
@@ -12226,6 +12260,23 @@ msgstr "サービスをアクティブ化するための許容期間を定義し
 
 #, fuzzy
 msgid "Define a tolerating time period for deactivating services"
+msgstr "サービスをアクティブ化するための許容期間を定義します"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-initialized condition."
+msgstr "サービスをアクティブ化するための許容期間を定義します"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-ready condition."
+msgstr "サービスをリロードするための許容期間を定義します"
+
+#, fuzzy
+msgid "Define a tolerating time period for non-scheduled condition."
+msgstr "サービスをリロードするための許容期間を定義します"
+
+#, fuzzy
+msgid ""
+"Define a tolerating time period for pod's containers not in ready condition."
 msgstr "サービスをアクティブ化するための許容期間を定義します"
 
 msgid "Define a tolerating time period for reloading services"
@@ -13432,6 +13483,17 @@ msgstr "保留中の変更を破棄しました(%s を復元しました)"
 msgid "Discontinue counting after time has elapsed"
 msgstr "時間が経過したらカウントを中止する"
 
+#, fuzzy
+msgid "Discover"
+msgstr "発見"
+
+msgid "Discover a service checking the average of all CPUs"
+msgstr ""
+
+#, fuzzy
+msgid "Discover individual services for each CPU"
+msgstr "ホストのサービスを発見"
+
 msgid "Discover packages"
 msgstr "パッケージを発見"
 
@@ -14146,6 +14208,10 @@ msgstr "pleskプラグインをデプロイしないでください"
 msgid "Do not deploy."
 msgstr "LVMプラグインをデプロイしないでください"
 
+#, fuzzy
+msgid "Do not discover"
+msgstr "ケースを変換しないでください"
+
 msgid "Do not discover single interfaces"
 msgstr "単一のインターフェースを発見しないでください"
 
@@ -14386,6 +14452,10 @@ msgstr ""
 msgid "Do you really want to delete the rule with the ID <b>%s</b>?"
 msgstr "ID <b>%s</b>のルールを本当に削除しますか？"
 
+#, fuzzy, python-format
+msgid "Do you really want to delete the rule<b>%s</b> "
+msgstr "ルール<b>%s </b> <i>%s </i>を本当に削除しますか?"
+
 #, python-format
 msgid "Do you really want to delete the selected %s?"
 msgstr "選択した %sを本当に削除しますか？"
@@ -14540,6 +14610,10 @@ msgstr "ドキュメントファイル"
 #, python-format
 msgid "Does not ends with \"%s\"."
 msgstr ""
+
+#, fuzzy
+msgid "Does not exists"
+msgstr "%s は存在しません"
 
 msgid "Does not match any service"
 msgstr "どのサービスとも一致しません"
@@ -14980,6 +15054,10 @@ msgstr ""
 msgid "Each attribute may be specified only once."
 msgstr "各属性は1回だけ指定できます。"
 
+#, fuzzy
+msgid "Each label is allowed to be used once."
+msgstr "このURLをブックマークとして使用することはできません"
+
 msgid "Each metric must be unique for a service"
 msgstr "各メトリックは、サービスに対して一意である必要があります"
 
@@ -15197,6 +15275,10 @@ msgstr "プロパティを編集する"
 msgid "Edit properties of this BI pack"
 msgstr "このBIパックのプロパティを編集する"
 
+#, fuzzy
+msgid "Edit properties of this rule"
+msgstr "このルールパックのプロパティを編集する"
+
 msgid "Edit properties of this rule pack"
 msgstr "このルールパックのプロパティを編集する"
 
@@ -15213,6 +15295,10 @@ msgstr "役割 %s を編集する"
 
 #, python-format
 msgid "Edit rule %s"
+msgstr "ルール %s を編集します"
+
+#, fuzzy, python-format
+msgid "Edit rule '%s'"
 msgstr "ルール %s を編集します"
 
 #, python-format
@@ -16052,6 +16138,9 @@ msgstr "エピソード3: Windowsの監視"
 msgid "Equal or more than"
 msgstr "等しいかそれ以上"
 
+msgid "Equals"
+msgstr ""
+
 msgid "Error"
 msgstr "エラー"
 
@@ -16566,6 +16655,10 @@ msgstr ""
 
 msgid "Executors"
 msgstr "遺言執行者"
+
+#, fuzzy
+msgid "Exists"
+msgstr "存在する"
 
 msgid "Exit code"
 msgstr "終了コード"
@@ -19089,6 +19182,9 @@ msgstr "ハンドリング"
 msgid "Handling for required mirror space"
 msgstr "必要なミラースペースの処理"
 
+msgid "Handling of agent registration..."
+msgstr ""
+
 msgid "Handling of context messages"
 msgstr "コンテキストメッセージの処理"
 
@@ -19805,6 +19901,13 @@ msgstr ""
 "ある)場合に設定するアラートタイプを設定できます。アクセスポイントは、AP名また"
 "はAPモデルで指定できます。"
 
+#, python-format
+msgid ""
+"Here you can simulate an incoming agent request and check out which rules "
+"are matching.<br>An agent request contains several labels as key-value "
+"pairs, eg. %s."
+msgstr ""
+
 msgid "Here you can specifiy the measurement unit of the network interface"
 msgstr "ここでは、ネットワークインターフェイスの測定単位を指定できます"
 
@@ -20332,6 +20435,10 @@ msgstr "ホストの連絡先情報"
 msgid "Host contacts"
 msgstr "ホストの連絡先"
 
+#, fuzzy
+msgid "Host creation"
+msgstr "ホスト構成"
+
 msgid "Host custom attribute"
 msgstr "ホストカスタム属性"
 
@@ -20648,6 +20755,10 @@ msgstr "ホスト名"
 msgid "Hostname / IP address of Graphite server"
 msgstr ""
 
+#, fuzzy
+msgid "Hostname computation"
+msgstr "ホスト名の一致"
+
 msgid "Hostname matching"
 msgstr "ホスト名の一致"
 
@@ -20656,6 +20767,10 @@ msgstr "デバイスのホスト名"
 
 msgid "Hostname or IPv4 address for listener"
 msgstr "リスナーのホスト名またはIPv4アドレス"
+
+#, fuzzy
+msgid "Hostname template"
+msgstr "ホスト名の一致"
 
 msgid "Hostname translation for incoming messages"
 msgstr "受信メッセージのホスト名変換"
@@ -26784,9 +26899,21 @@ msgstr "メジャーページフォールト"
 msgid "Major change"
 msgstr "主な変更"
 
+#, fuzzy, python-format
+msgid "Make %s visible and usable for all users."
+msgstr "%s を表示して、他のユーザーが使用できるようにします。"
+
 #, python-format
 msgid "Make %s visible and usable for other users."
 msgstr "%s を表示して、他のユーザーが使用できるようにします。"
+
+#, fuzzy, python-format
+msgid ""
+"Make %s visible and usable for users of contact groups the publishing user "
+"is a member of."
+msgstr ""
+"公開ユーザーがメンバーではない連絡先グループのユーザーが %s を表示して使用で"
+"きるようにします。"
 
 #, python-format
 msgid ""
@@ -27096,6 +27223,10 @@ msgstr "マッチグループ"
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "adminステータスの一致(64ビットカウンターのみのSNMP)"
 
+#, fuzzy
+msgid "Match agent labels"
+msgstr "ホストラベルと一致する"
+
 msgid "Match all control groups"
 msgstr "すべてのコントロールグループに一致"
 
@@ -27258,6 +27389,10 @@ msgid "Matching"
 msgstr "マッチング"
 
 msgid "Matching Criteria"
+msgstr "マッチング基準"
+
+#, fuzzy
+msgid "Matching criteria"
 msgstr "マッチング基準"
 
 msgid "Matching is inverted in this rule"
@@ -27824,6 +27959,10 @@ msgstr "メモリ使用量"
 msgid "Memory usage for %s hosts"
 msgstr "%s ホストのメモリ使用量"
 
+#, fuzzy
+msgid "Memory usage for Kubernetes objects"
+msgstr "%s ホストのメモリ使用量"
+
 msgid "Memory usage growth"
 msgstr "メモリ使用量の増加"
 
@@ -27843,6 +27982,10 @@ msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr "Fortigateデバイスのメモリ使用量(fortigate_memory_base)"
 
 msgid "Memory used"
+msgstr "使用メモリ"
+
+#, fuzzy
+msgid "Memory used %"
 msgstr "使用メモリ"
 
 msgid "Memory used by caches"
@@ -29570,6 +29713,9 @@ msgstr "アクティベーションは必要ありません"
 msgid "No actual SLA computation"
 msgstr "実際のSLA計算はありません"
 
+msgid "No agent labels present."
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr "認証なし、プライバシーなし"
 
@@ -31294,17 +31440,8 @@ msgstr ""
 "ますが、これはGUIビューです。この問題を修正するには、ビューを編集し、メトリッ"
 "ク履歴ペインタの別の時間範囲を選択してください。"
 
-msgid "One Month"
-msgstr "一か月"
-
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "ホスト/サービスごとに1つのRRD(CMCでのみディスクIOを節約)"
-
-msgid "One Week"
-msgstr "一週間"
-
-msgid "One Year"
-msgstr "1年"
 
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
@@ -33768,6 +33905,10 @@ msgstr "root以外のユーザー向けのプラグイン、ローカルチェ�
 msgid "Pod - Display the information for pod level"
 msgstr ""
 
+#, fuzzy
+msgid "Pod conditions"
+msgstr "%d条件"
+
 msgid "Pod request"
 msgstr "Podリクエスト"
 
@@ -34439,6 +34580,10 @@ msgstr "公衆"
 #, python-format
 msgid "Publish %s"
 msgstr "%sを公開する"
+
+#, fuzzy, python-format
+msgid "Publish %s to allowed contact groups"
+msgstr "%s を別の連絡先グループに公開する"
 
 #, python-format
 msgid "Publish %s to foreign contact groups"
@@ -35201,6 +35346,10 @@ msgid ""
 "configured here. Note: The actual size of the log file can exceed this size "
 "by a few percent in situation with a high logging volume."
 msgstr ""
+
+#, fuzzy
+msgid "Regex"
+msgstr "ルールセット"
 
 msgid "Regex for host alias"
 msgstr "ホストエイリアスの正規表現"
@@ -36461,6 +36610,10 @@ msgstr "ルールパック"
 
 msgid "Rule search"
 msgstr "ルール検索"
+
+#, fuzzy
+msgid "Rule title"
+msgstr "ルールタイトル"
 
 msgid "Rule tree"
 msgstr "ルールツリー"
@@ -41521,6 +41674,10 @@ msgstr "それでも何も起こりませんでした"
 msgid "Stop"
 msgstr "やめる"
 
+#, fuzzy
+msgid "Stop and do not create hosts."
+msgstr "ゲートウェイホストを作成しないでください"
+
 msgid "Stop creating new events"
 msgstr "新しいイベントの作成を停止します"
 
@@ -41533,6 +41690,11 @@ msgstr "実行を止める"
 #, python-format
 msgid "Stop job %s%s?"
 msgstr "ジョブ %s%s を停止しますか？"
+
+msgid ""
+"Stop processing of the registration request. Do not iterate through the "
+"following rules."
+msgstr ""
 
 msgid "Stop this backup job"
 msgstr "このバックアップジョブを停止します"
@@ -42646,6 +42808,13 @@ msgstr "%s は存在しません"
 #, python-format
 msgid "The %s has been deleted."
 msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"The %s is only visible to you because you don't have the permission to share "
+"it."
+msgstr ""
+"ビューはあなただけに表示されます。共有する権限がないため、共有できません。"
 
 #, python-format
 msgid "The %s started flapping"
@@ -44423,6 +44592,10 @@ msgstr "クラスターの予想される識別コントローラーのホスト
 msgid "The hostname of the expected node to hold this resource."
 msgstr "このリソースを保持することが期待されるノードのホスト名。"
 
+#, fuzzy
+msgid "The hostname template does not contain any label."
+msgstr "ホスト名にスペースを含めることはできません。"
+
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
 "had been correctly registered then. But they do not ask for updates anymore. "
@@ -44548,6 +44721,14 @@ msgstr ""
 "バックアップを復号化するために必要なフィンガープリント %s のキーがありませ"
 "ん。"
 
+#, fuzzy, python-format
+msgid "The label '%s' does not exist but is required."
+msgstr "ログファイルがサイトに存在しません。"
+
+#, fuzzy, python-format
+msgid "The label '%s' exists but is not expected."
+msgstr "アクション '%s' は実装されていません"
+
 #, python-format
 msgid "The label ID %r is of type %s, but should be %s"
 msgstr "ラベルID %r のタイプは %s ですが、%s である必要があります"
@@ -44555,6 +44736,10 @@ msgstr "ラベルID %r のタイプは %s ですが、%s である必要があ�
 #, python-format
 msgid "The label value %r is of type %s, but should be %s"
 msgstr "ラベル値%rはタイプ%sですが、%sである必要があります"
+
+#, fuzzy, python-format
+msgid "The labels %s are not required."
+msgstr "ルールセット \"%s\" は存在しません。"
 
 msgid "The last "
 msgstr "最後 "
@@ -44710,6 +44895,14 @@ msgstr "一致は大文字と小文字を区別せずに実行されます。"
 
 msgid "The match is performed case sensitive."
 msgstr "一致は大文字と小文字を区別して実行されます。"
+
+#, python-format
+msgid "The matching criteria must contain the label '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The matching criteria must not contain the label '%s'."
+msgstr "コメントにセミコロンを含めることはできません"
 
 msgid ""
 "The maximum age for piggy back data from another host to be valid for "
@@ -46256,6 +46449,14 @@ msgstr ""
 msgid "The value of this rule is not valid. "
 msgstr "このルールの値は無効です。 "
 
+#, fuzzy, python-format
+msgid "The values of the label '%s' are not equal: '%s' != '%s'"
+msgstr "このルールの値は無効です。 "
+
+#, python-format
+msgid "The values of the label '%s' do not match: '%s' !~ '%s'."
+msgstr ""
+
 msgid "The vault name"
 msgstr "ボールト名"
 
@@ -46282,12 +46483,6 @@ msgid ""
 msgstr ""
 "ビュー '%s' はレイアウト '%s' を使用します。レイアウトが存在しないためレンダ"
 "リングできません。"
-
-msgid ""
-"The view is only visible to you. You can not share it, because you don't "
-"have the permission to share it."
-msgstr ""
-"ビューはあなただけに表示されます。共有する権限がないため、共有できません。"
 
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
@@ -48394,6 +48589,10 @@ msgstr "この役割は存在しません"
 msgid "This rule"
 msgstr "このルール"
 
+#, fuzzy
+msgid "This rule ID is already used."
+msgstr "このルールは無効になっています"
+
 msgid ""
 "This rule activates an agent which connects to an ACME Session Border "
 "Controller (SBC). This agent uses SSH, so you have to exchange an SSH key to "
@@ -48687,6 +48886,12 @@ msgstr ""
 
 msgid ""
 "This rule controls which and how many checks will be created for monitoring "
+"individual CPUs. Currently only cisco_cpu_multiitem supports this "
+"configuration. "
+msgstr ""
+
+msgid ""
+"This rule controls which and how many checks will be created for monitoring "
 "individual physical and logical disks. Note: the option <i>Create a summary "
 "for all read, one for write</i> has been removed. Some checks will still "
 "support this settings, but it will be removed there soon."
@@ -48713,6 +48918,10 @@ msgstr ""
 
 msgid "This rule does a cancelling match."
 msgstr "このルールはキャンセルマッチを行います。"
+
+#, fuzzy
+msgid "This rule does not match."
+msgstr "ルールが一致しません"
 
 #, python-format
 msgid "This rule does not match: %s"
@@ -54145,6 +54354,10 @@ msgstr ""
 msgid "Voltage Sensor"
 msgstr "電圧センサー"
 
+#, fuzzy
+msgid "Voltage level"
+msgstr "ログレベル"
+
 msgid "Voltage levels (UPS / PDU / Other Devices)"
 msgstr "電圧レベル(UPS / PDU /その他のデバイス)"
 
@@ -58605,6 +58818,14 @@ msgstr "の1つではありません"
 msgid "is not one of regex"
 msgstr "正規表現の1つではありません"
 
+#, fuzzy
+msgid "is not required"
+msgstr "クラスター化されていません"
+
+#, fuzzy
+msgid "is required"
+msgstr "このルール"
+
 msgid "isnot"
 msgstr "ではありません"
 
@@ -58781,6 +59002,14 @@ msgstr "ms /エントリ"
 
 msgid "ms/us"
 msgstr "ms/us"
+
+#, python-format
+msgid "must be equal to '%s'"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "must match '%s'"
+msgstr "ホストマッチリスト"
 
 msgid "myhost089"
 msgstr "myhost089"
@@ -59597,6 +59826,21 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "25 Hours"
+#~ msgstr "25時間"
+
+#~ msgid "4 Hours"
+#~ msgstr "4時間"
+
+#~ msgid "One Month"
+#~ msgstr "一か月"
+
+#~ msgid "One Week"
+#~ msgstr "一週間"
+
+#~ msgid "One Year"
+#~ msgstr "1年"
+
 #~ msgid "Deploy mtr plugin"
 #~ msgstr "mtrプラグインをデプロイする"
 
@@ -59705,9 +59949,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Affected hosts contain"
 #~ msgstr "影響を受けるホストには次のものが含まれます"
-
-#~ msgid "Agent Version"
-#~ msgstr "エージェントバージョン"
 
 #~ msgid "Aggregate PGA auto target"
 #~ msgstr "PGA自動ターゲットを集約する"

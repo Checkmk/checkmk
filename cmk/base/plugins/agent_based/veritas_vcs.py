@@ -201,6 +201,11 @@ def _frozen_state_results(
     )
 
 
+def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> Optional[str]:
+    # get last not None cluster name
+    return functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster
+
+
 def check_veritas_vcs_subsection(
     item: str,
     params: Mapping[str, Any],
@@ -220,8 +225,7 @@ def check_veritas_vcs_subsection(
         summary=", ".join(map(lambda s: s.lower(), states)),
     )
 
-    # get last not None cluster name
-    cluster_name = functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster
+    cluster_name = _cluster_name(list_vcs_tuples)
     if cluster_name is not None:
         yield Result(
             state=state.OK,

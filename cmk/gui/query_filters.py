@@ -372,7 +372,8 @@ class FilterOptEventEffectiveContactgroup(FilterText):
 
 ### IPAddress
 class FilterIPAddress(Filter):
-    def __init__(self, *, ident: str, request_vars: List[str], what: str):
+    def __init__(self, *, ident: str, what: str):
+        request_vars = [ident, ident + "_prefix"]
         super().__init__(ident=ident, request_vars=request_vars)
         self._what = what
 

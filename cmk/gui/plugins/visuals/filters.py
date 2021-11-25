@@ -19,7 +19,15 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.globals import config, html, request, response, user_errors
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import (
+    Choices,
+    ColumnName,
+    FilterHeader,
+    FilterHTTPVariables,
+    Row,
+    Rows,
+    VisualContext,
+)
 from cmk.gui.utils.labels import encode_labels_for_livestatus
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.regex import validate_regex
@@ -45,13 +53,20 @@ from cmk.gui.plugins.visuals.utils import (
 )
 
 
-class FilterText(Filter):
-    """Filters for substring search, displaying a text input field"""
+def checkbox_component(htmlvar: str, value: FilterHTTPVariables, label: str):
+    html.open_nobr()
+    html.checkbox(
+        htmlvar,
+        bool(value.get(htmlvar)),
+        label=label,
+    )
+    html.close_nobr()
 
+
+class InputTextFilter(Filter):
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
@@ -63,7 +78,7 @@ class FilterText(Filter):
         self.query_filter = query_filter
 
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=sort_index,
             info=info,
@@ -75,35 +90,13 @@ class FilterText(Filter):
         self._show_heading = show_heading
 
     def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.htmlvars[0], "")
-        column = self.link_columns[0]
-
-        if column in ["host_name", "service_description"] and not is_mobile(request, response):
-            input_type = (
-                "monitored_hostname" if column == "host_name" else "monitored_service_description"
-            )
-            choices = [(current_value, current_value)] if current_value else []
-            html.dropdown(
-                self.htmlvars[0],
-                choices,
-                current_value,
-                style="width: 250px;",
-                class_=["ajax-vals", input_type],
-                data_strict="True" if self.query_filter.op == "=" else "False",
-            )
-        else:
-            html.text_input(
-                self.htmlvars[0], current_value, self.query_filter.negateable and "neg" or ""
-            )
+        current_value = value.get(self.query_filter.request_vars[0], "")
+        html.text_input(
+            self.htmlvars[0], current_value, self.query_filter.negateable and "neg" or ""
+        )
 
         if self.query_filter.negateable:
-            html.open_nobr()
-            html.checkbox(
-                self.query_filter.request_vars[1],
-                bool(value.get(self.query_filter.request_vars[1])),
-                label=_("negate"),
-            )
-            html.close_nobr()
+            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.htmlvars[0]: row[self.query_filter.column]}
@@ -120,15 +113,91 @@ class FilterText(Filter):
         return self.query_filter.filter_table(context, rows)
 
 
-class FilterRegExp(FilterText):
+class FilterRegExp(InputTextFilter):
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
         validate_regex(value.get(htmlvar, ""), htmlvar)
 
 
+class DropdownFilter(Filter):
+    "Select options from dropdown"
+
+    def __init__(
+        self,
+        *,
+        title: Union[str, LazyString],
+        sort_index: int,
+        info: str,
+        query_filter: query_filters.FilterText,
+        options: query_filters.Options,
+        link_columns: Optional[List[ColumnName]] = None,
+        description: Union[None, str, LazyString] = None,
+        is_show_more: bool = False,
+    ) -> None:
+        self.query_filter = query_filter
+        self.options = options
+
+        super().__init__(
+            ident=self.query_filter.ident,
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            htmlvars=self.query_filter.request_vars,
+            link_columns=link_columns or self.query_filter.link_columns,
+            description=description,
+            is_show_more=is_show_more,
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        current_value = value.get(self.query_filter.request_vars[0], "")
+        html.dropdown(
+            self.query_filter.request_vars[0],
+            self.options,
+            deflt=current_value,
+            ordered=True,
+        )
+
+        if self.query_filter.negateable:
+            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return self.query_filter.filter(value)
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
+
+
+class AjaxDropdownFilter(DropdownFilter):
+    def display(self, value: FilterHTTPVariables) -> None:
+        current_value = value.get(self.query_filter.request_vars[0], "")
+        choices = [(current_value, current_value)] if current_value else []
+
+        endpoint_tag = {
+            "host_name": "monitored_hostname",
+            "service_description": "monitored_service_description",
+        }.get(self.query_filter.column)
+        if endpoint_tag is None:
+            raise MKUserError(self.query_filter.request_vars[0], "Unregistered ajax endpoint")
+
+        html.dropdown(
+            self.query_filter.request_vars[0],
+            choices,
+            current_value,
+            style="width: 250px;",
+            class_=["ajax-vals", endpoint_tag],
+            data_strict="True" if self.query_filter.op == "=" else "False",
+        )
+
+        if self.query_filter.negateable:
+            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
+
+
+# TODO: Dare for the moment not to validate the regex, because user can only
+# select what comes back. In general we should validate all input although that
+# is not yet implemented. Only the regex had a control, and the dropdown display
+# was a hack
 filter_registry.register(
-    FilterRegExp(
-        ident="hostregex",
+    AjaxDropdownFilter(
         title=_l("Hostname"),
         sort_index=100,
         info="host",
@@ -139,27 +208,27 @@ filter_registry.register(
             op="~~",
             negateable=True,
         ),
+        options=[],
         description=_l("Search field allowing regular expressions and partial matches"),
     )
 )
 
 filter_registry.register(
-    FilterText(
-        ident="host",
+    AjaxDropdownFilter(
         title=_l("Hostname (exact match)"),
         sort_index=101,
         info="host",
         query_filter=query_filters.FilterText(
             ident="host", column="host_name", op="=", negateable=True
         ),
+        options=[],
         description=_l("Exact match, used for linking"),
         is_show_more=True,
     )
 )
 
 filter_registry.register(
-    FilterText(
-        ident="hostalias",
+    InputTextFilter(
         title=_l("Hostalias"),
         sort_index=102,
         info="host",
@@ -172,8 +241,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
-        ident="serviceregex",
+    AjaxDropdownFilter(
         title=_l("Service"),
         sort_index=200,
         info="service",
@@ -184,19 +252,20 @@ filter_registry.register(
             op="~~",
             negateable=True,
         ),
+        options=[],
         description=_l("Search field allowing regular expressions and partial matches"),
     )
 )
 
 filter_registry.register(
-    FilterText(
-        ident="service",
+    AjaxDropdownFilter(
         title=_l("Service (exact match)"),
         sort_index=201,
         info="service",
         query_filter=query_filters.FilterText(
             ident="service", column="service_description", op="="
         ),
+        options=[],
         description=_l("Exact match, used for linking"),
         is_show_more=True,
     )
@@ -204,7 +273,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterRegExp(
-        ident="service_display_name",
         title=_l("Service alternative display name"),
         sort_index=202,
         description=_l("Alternative display name of the service, regex match"),
@@ -218,8 +286,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="output",
+    InputTextFilter(
         title=_l("Summary (Plugin output)"),
         sort_index=202,
         info="service",
@@ -234,8 +301,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="hostnameoralias",
+    InputTextFilter(
         title=_l("Hostname or Alias"),
         sort_index=102,
         info="host",
@@ -249,7 +315,6 @@ class FilterIPAddress(Filter):
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
         query_filter: query_filters.FilterIPAddress,
@@ -258,7 +323,7 @@ class FilterIPAddress(Filter):
     ):
         self.query_filter = query_filter
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=sort_index,
             info="host",
@@ -268,10 +333,12 @@ class FilterIPAddress(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.text_input(self.htmlvars[0], value.get(self.htmlvars[0], ""))
+        html.text_input(
+            self.query_filter.request_vars[0], value.get(self.query_filter.request_vars[0], "")
+        )
         html.br()
         display_filter_radiobuttons(
-            varname=self.htmlvars[1],
+            varname=self.query_filter.request_vars[1],
             options=query_filters.ip_match_options(),
             default="yes",
             value=value,
@@ -281,21 +348,19 @@ class FilterIPAddress(Filter):
         return self.query_filter.filter(value)
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
-        return {self.htmlvars[0]: row["host_address"]}
+        return {self.query_filter.request_vars[0]: row["host_address"]}
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
-        return value.get(self.htmlvars[0])
+        return value.get(self.query_filter.request_vars[0])
 
 
 filter_registry.register(
     FilterIPAddress(
-        ident="host_address",
         title=_l("Host address (Primary)"),
         sort_index=102,
         link_columns=["host_address"],
         query_filter=query_filters.FilterIPAddress(
             ident="host_address",
-            request_vars=["host_address", "host_address_prefix"],
             what="primary",
         ),
         is_show_more=True,
@@ -304,13 +369,11 @@ filter_registry.register(
 
 filter_registry.register(
     FilterIPAddress(
-        ident="host_ipv4_address",
         title=_l("Host address (IPv4)"),
         sort_index=102,
         link_columns=[],
         query_filter=query_filters.FilterIPAddress(
             ident="host_ipv4_address",
-            request_vars=["host_ipv4_address", "host_ipv4_address_prefix"],
             what="ipv4",
         ),
     )
@@ -318,13 +381,11 @@ filter_registry.register(
 
 filter_registry.register(
     FilterIPAddress(
-        ident="host_ipv6_address",
         title=_l("Host address (IPv6)"),
         sort_index=102,
         link_columns=[],
         query_filter=query_filters.FilterIPAddress(
             ident="host_ipv6_address",
-            request_vars=["host_ipv6_address", "host_ipv6_address_prefix"],
             what="ipv6",
         ),
     )
@@ -582,8 +643,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="host_ctc",
+    InputTextFilter(
         title=_l("Host Contact"),
         sort_index=107,
         info="host",
@@ -594,7 +654,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterRegExp(
-        ident="host_ctc_regex",
         title=_l("Host Contact (Regex)"),
         sort_index=107,
         info="host",
@@ -606,8 +665,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="service_ctc",
+    InputTextFilter(
         title=_l("Service Contact"),
         sort_index=207,
         info="service",
@@ -620,7 +678,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterRegExp(
-        ident="service_ctc_regex",
         title=_l("Service Contact (Regex)"),
         sort_index=207,
         info="service",
@@ -703,7 +760,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterRegExp(
-        ident="hostgroupnameregex",
         title=_l("Hostgroup (Regex)"),
         sort_index=101,
         description=_l(
@@ -833,7 +889,6 @@ class FilterHostgroupProblems(Filter):
 
 filter_registry.register(
     FilterRegExp(
-        ident="servicegroupnameregex",
         title=_l("Servicegroup (Regex)"),
         sort_index=101,
         description=_l("Search field allowing regular expression and partial matches"),
@@ -849,8 +904,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="servicegroupname",
+    InputTextFilter(
         title=_l("Servicegroup (enforced)"),
         sort_index=101,
         description=_l("Exact match, used for linking"),
@@ -1540,8 +1594,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="comment_comment",
+    InputTextFilter(
         title=_l("Comment"),
         sort_index=258,
         info="comment",
@@ -1554,8 +1607,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="comment_author",
+    InputTextFilter(
         title=_l("Author comment"),
         sort_index=259,
         info="comment",
@@ -1578,8 +1630,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="downtime_comment",
+    InputTextFilter(
         title=_l("Downtime comment"),
         sort_index=254,
         info="downtime",
@@ -1598,8 +1649,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="downtime_author",
+    InputTextFilter(
         title=_l("Downtime author"),
         sort_index=256,
         info="downtime",
@@ -1689,8 +1739,7 @@ class FilterLogClass(Filter):
 
 
 filter_registry.register(
-    FilterText(
-        ident="log_plugin_output",
+    InputTextFilter(
         title=_l("Log: plugin output"),
         sort_index=202,
         info="log",
@@ -1702,8 +1751,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="log_type",
+    InputTextFilter(
         title=_l("Log: message type"),
         sort_index=203,
         info="log",
@@ -1713,8 +1761,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="log_state_type",
+    InputTextFilter(
         title=_l('Log: state type (DEPRECATED: Use "state information")'),
         sort_index=204,
         info="log",
@@ -1723,8 +1770,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="log_state_info",
+    InputTextFilter(
         title=_l("Log: state information"),
         sort_index=204,
         info="log",
@@ -1733,7 +1779,7 @@ filter_registry.register(
 )
 
 
-class FilterLogContactName(FilterText):
+class FilterLogContactName(InputTextFilter):
     """Special filter class to correctly filter the column contact_name from the log table. This
     list contains comma-separated contact names (user ids), but it is of type string."""
 
@@ -1747,7 +1793,6 @@ class FilterLogContactName(FilterText):
 
 filter_registry.register(
     FilterLogContactName(
-        ident="log_contact_name",
         title=_l("Log: contact name (exact match)"),
         sort_index=260,
         description=_l("Exact match, used for linking"),
@@ -1758,7 +1803,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterRegExp(
-        ident="log_contact_name_regex",
         title=_l("Log: contact name"),
         sort_index=261,
         info="log",
@@ -1773,7 +1817,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterRegExp(
-        ident="log_command_name_regex",
         title=_l("Log: command"),
         sort_index=262,
         info="log",
@@ -1900,8 +1943,7 @@ class FilterAggrServiceUsed(FilterOption):
 
 
 filter_registry.register(
-    FilterText(
-        ident="downtime_id",
+    InputTextFilter(
         title=_l("Downtime ID"),
         sort_index=301,
         info="downtime",
@@ -2789,8 +2831,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_id",
+    InputTextFilter(
         title=_l("Event ID"),
         sort_index=200,
         info="event",
@@ -2799,8 +2840,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_rule_id",
+    InputTextFilter(
         title=_l("ID of rule"),
         sort_index=200,
         info="event",
@@ -2809,8 +2849,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_text",
+    InputTextFilter(
         title=_l("Message/Text of event"),
         sort_index=201,
         info="event",
@@ -2819,8 +2858,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_application",
+    InputTextFilter(
         title=_l("Application / Syslog-Tag"),
         sort_index=201,
         info="event",
@@ -2832,8 +2870,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_contact",
+    InputTextFilter(
         title=_l("Contact Person"),
         sort_index=201,
         info="event",
@@ -2842,8 +2879,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_comment",
+    InputTextFilter(
         title=_l("Comment to the event"),
         sort_index=201,
         info="event",
@@ -2853,7 +2889,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterRegExp(
-        ident="event_host_regex",
         title=_l("Hostname of original event"),
         sort_index=201,
         info="event",
@@ -2864,8 +2899,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_host",
+    InputTextFilter(
         title=_l("Hostname of event, exact match"),
         sort_index=201,
         info="event",
@@ -2874,8 +2908,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_ipaddress",
+    InputTextFilter(
         title=_l("Original IP Address of event"),
         sort_index=201,
         info="event",
@@ -2884,8 +2917,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="event_owner",
+    InputTextFilter(
         title=_l("Owner of event"),
         sort_index=201,
         info="event",
@@ -2894,8 +2926,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="history_who",
+    InputTextFilter(
         title=_l("User that performed action"),
         sort_index=221,
         info="history",
@@ -2904,8 +2935,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterText(
-        ident="history_line",
+    InputTextFilter(
         title=_l("Line number in history logfile"),
         sort_index=222,
         info="history",

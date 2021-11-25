@@ -24,12 +24,6 @@ def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
         "repoze-profile": "repoze.profile",
     }
 
-    # Quick hack - trying to unbreak integration tests. It looks like top_level.txt is an
-    # optional file and the desired information needs to be gathered in a different way.
-    # At least in case of typing_extensions.
-    if dist_name == "typing_extensions":
-        return ["typing_extensions"]
-
     metadata_dir = pkg.get_distribution(
         dist_renamings.get(dist_name, dist_name)
     ).egg_info  # type: ignore[attr-defined]

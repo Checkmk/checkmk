@@ -122,6 +122,13 @@ info_df_btrfs = [
     ['/dev/sda1', 'btrfs', '0', '0', '0', '-', '/boot/grub2/x86_64-efi'],
     ['/dev/sda1', 'btrfs', '0', '0', '0', '-', '/boot/grub2/i386-pc'],
     ['[df_inodes_end]'],
+    ['[df_lsblk_start]'],
+    ['{'],
+    ['"blockdevices":', '['],
+    ['{"name":"/dev/sda1",', '"uuid":"12345678-9012-3456-7890-123456789012"}'],
+    [']'],
+    ['}'],
+    ['[df_lsblk_end]']
 ]
 # yapf: enable
 
@@ -399,6 +406,22 @@ info_empty_inodes = [
             ],
             {},
         ),
+        # btrfs with uuid as mountpoint
+        (
+            info_df_btrfs,
+            [
+                (
+                    "btrfs 12345678-9012-3456-7890-123456789012",
+                    {
+                        "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "uuid",
+                    },
+                ),
+            ],
+            {
+                "mountpoint_for_block_devices": "uuid_as_mountpoint",
+            },
+        ),
     ],
 )
 def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
@@ -410,11 +433,9 @@ def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
         raise AssertionError("Unknown/unhandled ruleset used in mock of host_extra_conf")
 
     with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
-        raw_discovery_result = check.run_discovery(parse_df(info))
-        discovery_result = DiscoveryResult(raw_discovery_result)
+        discovery_result = DiscoveryResult(check.run_discovery(parse_df(info)))
 
-    expected_result = DiscoveryResult(expected_result)
-    assertDiscoveryResultsEqual(check, discovery_result, expected_result)
+    assertDiscoveryResultsEqual(check, discovery_result, DiscoveryResult(expected_result))
 
 
 def make_test_df_params():
@@ -565,14 +586,47 @@ def make_test_df_params():
                 ),
             ],
         ),
+        (
+            "btrfs /dev/sda1",
+            {},
+            info_df_btrfs,
+            [
+                (
+                    0,
+                    "21.13% used (4.23 of 20.00 GB)",
+                    [
+                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
+                        ("fs_size", 20479.0, None, None, None, None),
+                        ("fs_used_percent", 21.130391956394355, None, None, None, None),
+                    ],
+                ),
+            ],
+        ),
+        # btrfs with uuid as mountpoint
+        (
+            "btrfs 12345678-9012-3456-7890-123456789012",
+            {
+                "mountpoint_for_block_devices": "uuid",
+            },
+            info_df_btrfs,
+            [
+                (
+                    0,
+                    "21.13% used (4.23 of 20.00 GB)",
+                    [
+                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
+                        ("fs_size", 20479.0, None, None, None, None),
+                        ("fs_used_percent", 21.130391956394355, None, None, None, None),
+                    ],
+                ),
+            ],
+        ),
     ],
 )
 def test_df_check_with_parse(item, params, info, expected_result):
     check = Check("df")
-
     actual = CheckResult(check.run_check(item, params, parse_df(info)))
-    expected = CheckResult(expected_result)
-    assertCheckResultsEqual(actual, expected)
+    assertCheckResultsEqual(actual, CheckResult(expected_result))
 
 
 # .

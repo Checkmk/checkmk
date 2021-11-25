@@ -29,7 +29,7 @@ from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.legacy_filters as legacy_filters
+import cmk.gui.query_filters as query_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, user_errors
@@ -363,34 +363,34 @@ class FilterOption(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        legacy_filter: legacy_filters.FilterOption,
+        query_filter: query_filters.FilterOption,
         is_show_more: bool = False,
     ):
-        self.legacy_filter = legacy_filter
+        self.query_filter = query_filter
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=self.legacy_filter.request_vars,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
-            varname=self.legacy_filter.request_vars[0],
-            options=self.legacy_filter.options,
-            default=str(self.legacy_filter.ignore),
+            varname=self.query_filter.request_vars[0],
+            options=self.query_filter.options,
+            default=str(self.query_filter.ignore),
             value=value,
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.legacy_filter.filter(value)
+        return self.query_filter.filter(value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         """post-Livestatus filtering (e.g. for BI aggregations)"""
-        return self.legacy_filter.filter_table(context, rows)
+        return self.query_filter.filter_table(context, rows)
 
 
 class FilterTime(Filter):
@@ -407,14 +407,14 @@ class FilterTime(Filter):
         is_show_more: bool = False,
     ):
         self.column = column
-        self.legacy_filter = legacy_filters.FilterTime(ident=ident, column=column)
+        self.query_filter = query_filters.FilterTime(ident=ident, column=column)
 
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=self.legacy_filter.request_vars,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[column] if column is not None else [],
             is_show_more=is_show_more,
         )
@@ -429,16 +429,16 @@ class FilterTime(Filter):
             html.text_input(varprefix)
             html.close_td()
             html.open_td()
-            html.dropdown(varprefix + "_range", legacy_filters.time_filter_options(), deflt="3600")
+            html.dropdown(varprefix + "_range", query_filters.time_filter_options(), deflt="3600")
             html.close_td()
             html.close_tr()
         html.close_table()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.legacy_filter.filter(value)
+        return self.query_filter.filter(value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return self.legacy_filter.filter_table(context, rows)
+        return self.query_filter.filter_table(context, rows)
 
 
 def filter_cre_choices():

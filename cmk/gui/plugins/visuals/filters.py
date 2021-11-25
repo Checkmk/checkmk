@@ -32,7 +32,7 @@ if cmk_version.is_managed_edition():
         filter_cme_heading_info,
     )
 
-import cmk.gui.legacy_filters as legacy_filters
+import cmk.gui.query_filters as query_filters
 from cmk.gui.plugins.visuals.utils import (
     display_filter_radiobuttons,
     Filter,
@@ -55,20 +55,20 @@ class FilterText(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        legacy_filter: legacy_filters.FilterText,
+        query_filter: query_filters.FilterText,
         show_heading: bool = True,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
     ):
-        self.legacy_filter = legacy_filter
+        self.query_filter = query_filter
 
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=self.legacy_filter.request_vars,
-            link_columns=self.legacy_filter.link_columns,
+            htmlvars=self.query_filter.request_vars,
+            link_columns=self.query_filter.link_columns,
             description=description,
             is_show_more=is_show_more,
         )
@@ -89,35 +89,35 @@ class FilterText(Filter):
                 current_value,
                 style="width: 250px;",
                 class_=["ajax-vals", input_type],
-                data_strict="True" if self.legacy_filter.op == "=" else "False",
+                data_strict="True" if self.query_filter.op == "=" else "False",
             )
         else:
             html.text_input(
-                self.htmlvars[0], current_value, self.legacy_filter.negateable and "neg" or ""
+                self.htmlvars[0], current_value, self.query_filter.negateable and "neg" or ""
             )
 
-        if self.legacy_filter.negateable:
+        if self.query_filter.negateable:
             html.open_nobr()
             html.checkbox(
-                self.legacy_filter.request_vars[1],
-                bool(value.get(self.legacy_filter.request_vars[1])),
+                self.query_filter.request_vars[1],
+                bool(value.get(self.query_filter.request_vars[1])),
                 label=_("negate"),
             )
             html.close_nobr()
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
-        return {self.htmlvars[0]: row[self.legacy_filter.column]}
+        return {self.htmlvars[0]: row[self.query_filter.column]}
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         if self._show_heading:
-            return value.get(self.legacy_filter.request_vars[0])
+            return value.get(self.query_filter.request_vars[0])
         return None
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.legacy_filter.filter(value)
+        return self.query_filter.filter(value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return self.legacy_filter.filter_table(context, rows)
+        return self.query_filter.filter_table(context, rows)
 
 
 class FilterRegExp(FilterText):
@@ -132,7 +132,7 @@ filter_registry.register(
         title=_l("Hostname"),
         sort_index=100,
         info="host",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="hostregex",
             column="host_name",
             request_var="host_regex",
@@ -149,7 +149,7 @@ filter_registry.register(
         title=_l("Hostname (exact match)"),
         sort_index=101,
         info="host",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="host", column="host_name", op="=", negateable=True
         ),
         description=_l("Exact match, used for linking"),
@@ -163,7 +163,7 @@ filter_registry.register(
         title=_l("Hostalias"),
         sort_index=102,
         info="host",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="hostalias", column="host_alias", op="~~", negateable=True
         ),
         description=_l("Search field allowing regular expressions and partial matches"),
@@ -177,7 +177,7 @@ filter_registry.register(
         title=_l("Service"),
         sort_index=200,
         info="service",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="serviceregex",
             column="service_description",
             request_var="service_regex",
@@ -194,7 +194,7 @@ filter_registry.register(
         title=_l("Service (exact match)"),
         sort_index=201,
         info="service",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="service", column="service_description", op="="
         ),
         description=_l("Exact match, used for linking"),
@@ -209,7 +209,7 @@ filter_registry.register(
         sort_index=202,
         description=_l("Alternative display name of the service, regex match"),
         info="service",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="service_display_name",
             op="~~",
         ),
@@ -223,7 +223,7 @@ filter_registry.register(
         title=_l("Summary (Plugin output)"),
         sort_index=202,
         info="service",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="output",
             column="service_plugin_output",
             request_var="service_output",
@@ -240,7 +240,7 @@ filter_registry.register(
         sort_index=102,
         info="host",
         description=_l("Search field allowing regular expressions and partial matches"),
-        legacy_filter=legacy_filters.FilterHostnameOrAlias(),
+        query_filter=query_filters.FilterHostnameOrAlias(),
     )
 )
 
@@ -252,17 +252,17 @@ class FilterIPAddress(Filter):
         ident: str,
         title: Union[str, LazyString],
         sort_index: int,
-        legacy_filter: legacy_filters.FilterIPAddress,
+        query_filter: query_filters.FilterIPAddress,
         link_columns: List[str],
         is_show_more: bool = False,
     ):
-        self.legacy_filter = legacy_filter
+        self.query_filter = query_filter
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info="host",
-            htmlvars=self.legacy_filter.request_vars,
+            htmlvars=self.query_filter.request_vars,
             link_columns=link_columns,
             is_show_more=is_show_more,
         )
@@ -272,13 +272,13 @@ class FilterIPAddress(Filter):
         html.br()
         display_filter_radiobuttons(
             varname=self.htmlvars[1],
-            options=legacy_filters.ip_match_options(),
+            options=query_filters.ip_match_options(),
             default="yes",
             value=value,
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.legacy_filter.filter(value)
+        return self.query_filter.filter(value)
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.htmlvars[0]: row["host_address"]}
@@ -293,7 +293,7 @@ filter_registry.register(
         title=_l("Host address (Primary)"),
         sort_index=102,
         link_columns=["host_address"],
-        legacy_filter=legacy_filters.FilterIPAddress(
+        query_filter=query_filters.FilterIPAddress(
             ident="host_address",
             request_vars=["host_address", "host_address_prefix"],
             what="primary",
@@ -308,7 +308,7 @@ filter_registry.register(
         title=_l("Host address (IPv4)"),
         sort_index=102,
         link_columns=[],
-        legacy_filter=legacy_filters.FilterIPAddress(
+        query_filter=query_filters.FilterIPAddress(
             ident="host_ipv4_address",
             request_vars=["host_ipv4_address", "host_ipv4_address_prefix"],
             what="ipv4",
@@ -322,7 +322,7 @@ filter_registry.register(
         title=_l("Host address (IPv6)"),
         sort_index=102,
         link_columns=[],
-        legacy_filter=legacy_filters.FilterIPAddress(
+        query_filter=query_filters.FilterIPAddress(
             ident="host_ipv6_address",
             request_vars=["host_ipv6_address", "host_ipv6_address_prefix"],
             what="ipv6",
@@ -336,10 +336,10 @@ filter_registry.register(
         title=_l("Host address family (Primary)"),
         sort_index=103,
         info="host",
-        legacy_filter=legacy_filters.FilterOption(
+        query_filter=query_filters.FilterOption(
             ident="address_family",
-            options=legacy_filters.ip_address_family_options(),
-            filter_code=legacy_filters.address_family,
+            options=query_filters.ip_address_family_options(),
+            filter_code=query_filters.address_family,
         ),
         is_show_more=True,
     )
@@ -352,10 +352,10 @@ filter_registry.register(
         title=_l("Host address families"),
         sort_index=103,
         info="host",
-        legacy_filter=legacy_filters.FilterOption(
+        query_filter=query_filters.FilterOption(
             ident="address_families",
-            options=legacy_filters.ip_address_families_options(),
-            filter_code=legacy_filters.address_families,
+            options=query_filters.ip_address_families_options(),
+            filter_code=query_filters.address_families,
         ),
         is_show_more=True,
     )
@@ -370,17 +370,17 @@ class FilterMultigroup(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         group_type: str,
-        legacy_filter: legacy_filters.FilterMultiple,
+        query_filter: query_filters.FilterMultiple,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = True,
     ):
-        self.legacy_filter = legacy_filter
+        self.query_filter = query_filter
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=group_type,
-            htmlvars=self.legacy_filter.request_vars,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
             description=description,
             is_show_more=is_show_more,
@@ -396,7 +396,7 @@ class FilterMultigroup(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.open_div(class_="multigroup")
-        self.valuespec().render_input(self.htmlvars[0], self.legacy_filter.selection(value))
+        self.valuespec().render_input(self.htmlvars[0], self.query_filter.selection(value))
         # TODO: this should be the negate flag not a test of options
         if self._options(self.group_type):
             html.open_nobr()
@@ -405,7 +405,7 @@ class FilterMultigroup(Filter):
         html.close_div()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.legacy_filter.filter(value)
+        return self.query_filter.filter(value)
 
 
 filter_registry.register(
@@ -415,7 +415,7 @@ filter_registry.register(
         sort_index=105,
         description=_l("Selection of multiple host groups"),
         group_type="host",
-        legacy_filter=legacy_filters.FilterMultiple(ident="hostgroups", column="host_groups"),
+        query_filter=query_filters.FilterMultiple(ident="hostgroups", column="host_groups"),
     )
 )
 
@@ -426,7 +426,7 @@ filter_registry.register(
         sort_index=205,
         description=_l("Selection of multiple service groups"),
         group_type="service",
-        legacy_filter=legacy_filters.FilterMultiple(ident="servicegroups", column="service_groups"),
+        query_filter=query_filters.FilterMultiple(ident="servicegroups", column="service_groups"),
     )
 )
 
@@ -571,7 +571,7 @@ filter_registry.register(
         title=_l("Host Contact"),
         sort_index=107,
         info="host",
-        legacy_filter=legacy_filters.FilterText(ident="host_ctc", column="host_contacts", op=">="),
+        query_filter=query_filters.FilterText(ident="host_ctc", column="host_contacts", op=">="),
         is_show_more=True,
     )
 )
@@ -582,7 +582,7 @@ filter_registry.register(
         title=_l("Host Contact (Regex)"),
         sort_index=107,
         info="host",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="host_ctc_regex", column="host_contacts", op="~~"
         ),
         is_show_more=True,
@@ -595,7 +595,7 @@ filter_registry.register(
         title=_l("Service Contact"),
         sort_index=207,
         info="service",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="service_ctc", column="service_contacts", op=">="
         ),
         is_show_more=True,
@@ -608,7 +608,7 @@ filter_registry.register(
         title=_l("Service Contact (Regex)"),
         sort_index=207,
         info="service",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="service_ctc_regex",
             column="service_contacts",
             op="~~",
@@ -694,7 +694,7 @@ filter_registry.register(
             "Search field allowing regular expressions and partial matches on the names of hostgroups"
         ),
         info="hostgroup",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="hostgroupnameregex",
             column="hostgroup_name",
             request_var="hostgroup_regex",
@@ -822,7 +822,7 @@ filter_registry.register(
         sort_index=101,
         description=_l("Search field allowing regular expression and partial matches"),
         info="servicegroup",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="servicegroupnameregex",
             column="servicegroup_name",
             request_var="servicegroup_regex",
@@ -839,7 +839,7 @@ filter_registry.register(
         sort_index=101,
         description=_l("Exact match, used for linking"),
         info="servicegroup",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="servicegroupname",
             column="servicegroup_name",
             request_var="servicegroup_name",
@@ -1117,10 +1117,10 @@ def filter_state_type_with_register(
             title=title,
             sort_index=sort_index,
             info=info,
-            legacy_filter=legacy_filters.FilterTristate(
+            query_filter=query_filters.FilterTristate(
                 ident=ident,
-                filter_code=legacy_filters.state_type,
-                options=legacy_filters.tri_state_type_options(),
+                filter_code=query_filters.state_type,
+                options=query_filters.tri_state_type_options(),
             ),
             is_show_more=True,
         )
@@ -1148,8 +1148,8 @@ filter_registry.register(
         title=_l("Has performance data"),
         sort_index=251,
         info="service",
-        legacy_filter=legacy_filters.FilterTristate(
-            ident="has_performance_data", filter_code=legacy_filters.service_perfdata_toggle
+        query_filter=query_filters.FilterTristate(
+            ident="has_performance_data", filter_code=query_filters.service_perfdata_toggle
         ),
         is_show_more=True,
     )
@@ -1162,8 +1162,8 @@ filter_registry.register(
         title=_l("Host/service in downtime"),
         sort_index=232,
         info="service",
-        legacy_filter=legacy_filters.FilterTristate(
-            ident="in_downtime", filter_code=legacy_filters.host_service_perfdata_toggle
+        query_filter=query_filters.FilterTristate(
+            ident="in_downtime", filter_code=query_filters.host_service_perfdata_toggle
         ),
     )
 )
@@ -1175,8 +1175,8 @@ filter_registry.register(
         title=_l("Host is stale"),
         sort_index=232,
         info="host",
-        legacy_filter=legacy_filters.FilterTristate(
-            ident="host_staleness", filter_code=legacy_filters.staleness("host")
+        query_filter=query_filters.FilterTristate(
+            ident="host_staleness", filter_code=query_filters.staleness("host")
         ),
         is_show_more=True,
     )
@@ -1189,8 +1189,8 @@ filter_registry.register(
         title=_l("Service is stale"),
         sort_index=232,
         info="service",
-        legacy_filter=legacy_filters.FilterTristate(
-            ident="service_staleness", filter_code=legacy_filters.staleness("service")
+        query_filter=query_filters.FilterTristate(
+            ident="service_staleness", filter_code=query_filters.staleness("service")
         ),
         is_show_more=True,
     )
@@ -1211,8 +1211,8 @@ def filter_nagios_flag_with_register(
             title=title,
             sort_index=sort_index,
             info=info,
-            legacy_filter=legacy_filters.FilterTristate(
-                ident=ident, filter_code=legacy_filters.column_flag(ident)
+            query_filter=query_filters.FilterTristate(
+                ident=ident, filter_code=query_filters.column_flag(ident)
             ),
             is_show_more=is_show_more,
         )
@@ -1529,7 +1529,7 @@ filter_registry.register(
         title=_l("Comment"),
         sort_index=258,
         info="comment",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="comment_comment",
             op="~~",
             negateable=True,
@@ -1543,7 +1543,7 @@ filter_registry.register(
         title=_l("Author comment"),
         sort_index=259,
         info="comment",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="comment_author",
             op="~~",
             negateable=True,
@@ -1567,7 +1567,7 @@ filter_registry.register(
         title=_l("Downtime comment"),
         sort_index=254,
         info="downtime",
-        legacy_filter=legacy_filters.FilterText(ident="downtime_comment", op="~"),
+        query_filter=query_filters.FilterText(ident="downtime_comment", op="~"),
     )
 )
 
@@ -1587,7 +1587,7 @@ filter_registry.register(
         title=_l("Downtime author"),
         sort_index=256,
         info="downtime",
-        legacy_filter=legacy_filters.FilterText(ident="downtime_author", op="~"),
+        query_filter=query_filters.FilterText(ident="downtime_author", op="~"),
     )
 )
 
@@ -1678,7 +1678,7 @@ filter_registry.register(
         title=_l("Log: plugin output"),
         sort_index=202,
         info="log",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="log_plugin_output",
             op="~~",
         ),
@@ -1691,7 +1691,7 @@ filter_registry.register(
         title=_l("Log: message type"),
         sort_index=203,
         info="log",
-        legacy_filter=legacy_filters.FilterText(ident="log_type", op="~~"),
+        query_filter=query_filters.FilterText(ident="log_type", op="~~"),
         show_heading=False,
     )
 )
@@ -1702,7 +1702,7 @@ filter_registry.register(
         title=_l('Log: state type (DEPRECATED: Use "state information")'),
         sort_index=204,
         info="log",
-        legacy_filter=legacy_filters.FilterText(ident="log_state_type", op="~~"),
+        query_filter=query_filters.FilterText(ident="log_state_type", op="~~"),
     )
 )
 
@@ -1712,7 +1712,7 @@ filter_registry.register(
         title=_l("Log: state information"),
         sort_index=204,
         info="log",
-        legacy_filter=legacy_filters.FilterText(ident="log_state_info", op="~~"),
+        query_filter=query_filters.FilterText(ident="log_state_info", op="~~"),
     )
 )
 
@@ -1725,7 +1725,7 @@ class FilterLogContactName(FilterText):
         if current_value := value.get(self.htmlvars[0]):
             new_value = dict(value.items())
             new_value[self.htmlvars[0]] = "(,|^)" + current_value.replace(".", "\\.") + "(,|$)"
-            return self.legacy_filter._filter(new_value)
+            return self.query_filter._filter(new_value)
         return ""
 
 
@@ -1736,7 +1736,7 @@ filter_registry.register(
         sort_index=260,
         description=_l("Exact match, used for linking"),
         info="log",
-        legacy_filter=legacy_filters.FilterText(ident="log_contact_name", op="~"),
+        query_filter=query_filters.FilterText(ident="log_contact_name", op="~"),
     )
 )
 
@@ -1746,7 +1746,7 @@ filter_registry.register(
         title=_l("Log: contact name"),
         sort_index=261,
         info="log",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="log_contact_name_regex",
             column="log_contact_name",
             op="~~",
@@ -1761,7 +1761,7 @@ filter_registry.register(
         title=_l("Log: command"),
         sort_index=262,
         info="log",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="log_command_name_regex",
             column="log_command_name",
             op="~~",
@@ -1849,16 +1849,16 @@ class FilterLogNotificationPhase(FilterOption):
             title=_l("Notification phase"),
             sort_index=271,
             info="log",
-            legacy_filter=legacy_filters.FilterTristate(
+            query_filter=query_filters.FilterTristate(
                 ident="log_notification_phase",
-                filter_code=legacy_filters.log_notification_phase("log_command_name"),
-                options=legacy_filters.tri_state_log_notifications_options(),
+                filter_code=query_filters.log_notification_phase("log_command_name"),
+                options=query_filters.tri_state_log_notifications_options(),
             ),
         )
 
 
 def bi_aggr_service_used(on: bool, context: VisualContext, rows: Rows) -> Rows:
-    # should be in legacy_filters, but it creates a cyclical import at the moment
+    # should be in query_filters, but it creates a cyclical import at the moment
     return [
         row
         for row in rows
@@ -1874,7 +1874,7 @@ class FilterAggrServiceUsed(FilterOption):
             title=_l("Used in BI aggregate"),
             sort_index=300,
             info="service",
-            legacy_filter=legacy_filters.FilterTristate(
+            query_filter=query_filters.FilterTristate(
                 ident="aggr_service_used",
                 filter_code=lambda x: "",
                 filter_rows=bi_aggr_service_used,
@@ -1889,7 +1889,7 @@ filter_registry.register(
         title=_l("Downtime ID"),
         sort_index=301,
         info="downtime",
-        legacy_filter=legacy_filters.FilterText(ident="downtime_id", op="="),
+        query_filter=query_filters.FilterText(ident="downtime_id", op="="),
     )
 )
 
@@ -2355,9 +2355,9 @@ class FilterStarred(FilterOption):
             title=title,
             sort_index=sort_index,
             info=what,
-            legacy_filter=legacy_filters.FilterTristate(
+            query_filter=query_filters.FilterTristate(
                 ident=what + "_favorites",
-                filter_code=legacy_filters.starred(what),
+                filter_code=query_filters.starred(what),
             ),
             is_show_more=True,
         )
@@ -2778,7 +2778,7 @@ filter_registry.register(
         title=_l("Event ID"),
         sort_index=200,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_id", op="="),
+        query_filter=query_filters.FilterText(ident="event_id", op="="),
     )
 )
 
@@ -2788,7 +2788,7 @@ filter_registry.register(
         title=_l("ID of rule"),
         sort_index=200,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_rule_id", op="="),
+        query_filter=query_filters.FilterText(ident="event_rule_id", op="="),
     )
 )
 
@@ -2798,7 +2798,7 @@ filter_registry.register(
         title=_l("Message/Text of event"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_text", op="~~"),
+        query_filter=query_filters.FilterText(ident="event_text", op="~~"),
     )
 )
 
@@ -2808,7 +2808,7 @@ filter_registry.register(
         title=_l("Application / Syslog-Tag"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="event_application",
             op="~~",
         ),
@@ -2821,7 +2821,7 @@ filter_registry.register(
         title=_l("Contact Person"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_contact", op="~~"),
+        query_filter=query_filters.FilterText(ident="event_contact", op="~~"),
     )
 )
 
@@ -2831,7 +2831,7 @@ filter_registry.register(
         title=_l("Comment to the event"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_comment", op="~~"),
+        query_filter=query_filters.FilterText(ident="event_comment", op="~~"),
     )
 )
 
@@ -2841,7 +2841,7 @@ filter_registry.register(
         title=_l("Hostname of original event"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(
+        query_filter=query_filters.FilterText(
             ident="event_host_regex", op="~~", column="event_host"
         ),
     )
@@ -2853,7 +2853,7 @@ filter_registry.register(
         title=_l("Hostname of event, exact match"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_host", op="="),
+        query_filter=query_filters.FilterText(ident="event_host", op="="),
     )
 )
 
@@ -2863,7 +2863,7 @@ filter_registry.register(
         title=_l("Original IP Address of event"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_ipaddress", op="~~"),
+        query_filter=query_filters.FilterText(ident="event_ipaddress", op="~~"),
     )
 )
 
@@ -2873,7 +2873,7 @@ filter_registry.register(
         title=_l("Owner of event"),
         sort_index=201,
         info="event",
-        legacy_filter=legacy_filters.FilterText(ident="event_owner", op="~~"),
+        query_filter=query_filters.FilterText(ident="event_owner", op="~~"),
     )
 )
 
@@ -2883,7 +2883,7 @@ filter_registry.register(
         title=_l("User that performed action"),
         sort_index=221,
         info="history",
-        legacy_filter=legacy_filters.FilterText(ident="history_who", op="~~"),
+        query_filter=query_filters.FilterText(ident="history_who", op="~~"),
     )
 )
 
@@ -2893,7 +2893,7 @@ filter_registry.register(
         title=_l("Line number in history logfile"),
         sort_index=222,
         info="history",
-        legacy_filter=legacy_filters.FilterText(ident="history_line", op="="),
+        query_filter=query_filters.FilterText(ident="history_line", op="="),
     )
 )
 

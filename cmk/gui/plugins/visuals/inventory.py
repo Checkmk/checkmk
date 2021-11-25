@@ -11,7 +11,7 @@ from typing import List, Optional, Tuple, Union
 import cmk.utils.defines as defines
 
 import cmk.gui.inventory as inventory
-import cmk.gui.legacy_filters as legacy_filters
+import cmk.gui.query_filters as query_filters
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
@@ -502,16 +502,16 @@ class FilterInvBool(FilterOption):
             title=title,
             sort_index=800,
             info="host",
-            legacy_filter=legacy_filters.FilterTristate(
+            query_filter=query_filters.FilterTristate(
                 ident=ident,
                 filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_rows=legacy_filters.inside_inventory(inv_path),
+                filter_rows=query_filters.inside_inventory(inv_path),
             ),
             is_show_more=is_show_more,
         )
 
     def need_inventory(self, value) -> bool:
-        return self.legacy_filter.selection_value(value) != self.legacy_filter.ignore
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 @filter_registry.register_instance
@@ -522,16 +522,16 @@ class FilterHasInv(FilterOption):
             title=_l("Has Inventory Data"),
             sort_index=801,
             info="host",
-            legacy_filter=legacy_filters.FilterTristate(
+            query_filter=query_filters.FilterTristate(
                 ident="has_inv",
                 filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_rows=legacy_filters.has_inventory,
+                filter_rows=query_filters.has_inventory,
             ),
             is_show_more=True,
         )
 
     def need_inventory(self, value) -> bool:
-        return self.legacy_filter.selection_value(value) != self.legacy_filter.ignore
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 @filter_registry.register_instance

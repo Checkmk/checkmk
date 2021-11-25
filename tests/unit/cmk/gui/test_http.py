@@ -18,6 +18,31 @@ from cmk.gui.globals import response
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 
+def test_request_del_vars_from_query_string():
+    r = http.Request(
+        create_environ(
+            method="GET",
+            query_string="a=1&b=2",
+        )
+    )
+    r.del_var_from_env("a")
+    assert r.query_string == b"b=2"
+
+
+def test_request_del_vars_from_post_body():
+    r = http.Request(
+        create_environ(
+            method="GET",
+            query_string="a=1&b=2",
+            content_type="application/x-www-form-urlencoded",
+            input_stream=io.BytesIO(b"a=2&c=3"),
+        )
+    )
+    r.del_var_from_env("a")
+    assert len(r.form) == 1
+    assert r.query_string == b"b=2"
+
+
 def test_http_request_allowed_vars():
     environ = dict(
         create_environ(
@@ -336,13 +361,10 @@ def test_pre_16_format_cookie_handling(monkeypatch):
 
 
 def test_del_vars_from_post():
-    environ = {
-        **create_environ(
-            input_stream=io.StringIO("_username=foo&_secret=bar"),
-            content_type="application/x-www-form-urlencoded",
-        ),
-        "REQUEST_URI": "",
-    }
+    environ = create_environ(
+        input_stream=io.BytesIO(b"_username=foo&_secret=bar"),
+        content_type="application/x-www-form-urlencoded",
+    )
     with application_and_request_context(environ):
         assert global_request.form
 
@@ -353,14 +375,16 @@ def test_del_vars_from_post():
 
 
 def test_del_vars_from_env():
-    environ = dict(
-        create_environ(), REQUEST_URI="", QUERY_STRING="foo=foo&_username=foo&_password=bar&bar=bar"
+    environ = create_environ(
+        query_string="foo=foo&_username=foo&_password=bar&bar=bar",
     )
     with application_and_request_context(environ):
-        # First we hit the cached property so we can see that the underlying Request object
+        # First we hit the cached property, so we can see that the underlying Request object
         # actually got replaced later.
         _ = global_request.args
         _ = html.request.args
+
+        assert html.request.query_string
 
         html.request.set_var("foo", "123")
 
@@ -383,7 +407,9 @@ def test_del_vars_from_env():
 
 
 def test_del_vars():
-    environ = dict(create_environ(), REQUEST_URI="", QUERY_STRING="opt_x=x&foo=foo")
+    environ = create_environ(
+        query_string="opt_x=x&foo=foo",
+    )
     with application_and_request_context(environ):
         assert html.request.var("opt_x") == "x"
         assert html.request.var("foo") == "foo"

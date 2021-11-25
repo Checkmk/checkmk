@@ -11,10 +11,7 @@ import urllib.parse
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, TypeVar, Union
 
-import werkzeug.wrappers
-
-# NOTE: 'JSONMixin' is deprecated and will be removed in Werkzeug 2.1. 'Request' now includes the functionality directly.
-import werkzeug.wrappers.json  # type: ignore[import]
+import werkzeug
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
@@ -232,8 +229,7 @@ class Request(
     LegacyVarsMixin,
     LegacyUploadMixin,
     LegacyDeprecatedMixin,
-    werkzeug.wrappers.json.JSONMixin,
-    werkzeug.wrappers.Request,
+    werkzeug.Request,
 ):
     """Provides information about the users HTTP-request to the application
 
@@ -411,7 +407,7 @@ class Request(
         self.query_string = urllib.parse.urlencode(decoded_qs).encode("utf-8")
         self.environ["QUERY_STRING"] = self.query_string
         # We remove the form entry. As this entity is never copied it will be modified within
-        # it's cache.
+        # its cache.
         try:
             dict.pop(self.form, varname)
         except KeyError:
@@ -436,18 +432,18 @@ class Request(
             exclude_vars = []
 
         if self.var("request_format") == "python":
+            python_request = self.var("request", "{}")
+            assert python_request is not None
             try:
-                python_request = self.var("request", "{}")
-                assert python_request is not None
                 request = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
                     "request", _("Failed to parse Python request: '%s': %s") % (python_request, e)
                 )
         else:
+            json_request = self.var("request", "{}")
+            assert json_request is not None
             try:
-                json_request = self.var("request", "{}")
-                assert json_request is not None
                 request = json.loads(json_request)
                 request["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
@@ -462,7 +458,7 @@ class Request(
         return request
 
 
-class Response(werkzeug.wrappers.Response):
+class Response(werkzeug.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 

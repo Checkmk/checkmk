@@ -23,8 +23,8 @@ int32_t HostListState::operator()(const value_type &hsts,
             for (const auto &s : hst->_services) {
                 svcs.emplace(s.get());
             }
-            update(auth_user, static_cast<HostState>(state->_current_state),
-                   state->_has_been_checked, svcs, hst->handled(), result);
+            update(auth_user, static_cast<HostState>(state->current_state_),
+                   state->has_been_checked_, svcs, hst->handled(), result);
         }
     }
 #else

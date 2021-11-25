@@ -25,9 +25,9 @@ int32_t ServiceListState::getValueFromServices(
     for (const auto &svc : svcs) {
         if (is_authorized_for_svc(service_auth, auth_user, svc)) {
             const auto *state = svc->state();
-            update(logictype, static_cast<ServiceState>(state->_current_state),
+            update(logictype, static_cast<ServiceState>(state->current_state_),
                    static_cast<ServiceState>(state->hard_state_.last_),
-                   state->_has_been_checked, svc->handled(), result);
+                   state->has_been_checked_, svc->handled(), result);
         }
     }
 #else

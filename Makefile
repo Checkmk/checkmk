@@ -210,6 +210,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		--exclude check_mk_agent.spec \
 		--exclude special/lib \
 		--exclude plugins/Makefile \
+		--exclude plugins/*.checksum \
 		cfg_examples \
 		plugins \
 		sap \
@@ -414,7 +415,8 @@ EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \
 	    --exclude="agents/cmk-agent-ctl/target" \
-	    --exclude="agents/plugins/*_2.py"
+	    --exclude="agents/plugins/*_2.py" \
+	    --exclude="agents/plugins/*.py.checksum"
 
 mrproper:
 	git clean -d --force -x $(EXCLUDE_PROPER)

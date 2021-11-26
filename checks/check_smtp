@@ -51,7 +51,7 @@ def check_smtp_arguments(params):
 
     if "auth" in settings:
         username, password = settings["auth"]
-        args += ["-A", "LOGIN", "-U", username, "-P", password]
+        args += ["-A", "LOGIN", "-U", username, "-P", passwordstore_get_cmdline("%s", password)]
 
     if settings.get("starttls", False):
         args.append("-S")

@@ -59,7 +59,7 @@ def test_get_annotation_date_render_function(annotation_times, result):
     annotations = [((None, None, None), {"from": s, "until": e}) for s, e in annotation_times]
     with on_time(1572253746, "CET"):
         assert (
-            availability.get_annotation_date_render_function(
+            availability.get_annotation_date_render_function(  # pylint:disable=comparison-with-callable
                 annotations, {"range": ((1543446000, 1543446000 + 86399), "bla")}
             )
             == result

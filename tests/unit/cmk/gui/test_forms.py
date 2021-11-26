@@ -198,7 +198,7 @@ def test_vars_to_delete(
         html.request.set_var(var, val)
 
     remove_unused_vars(form_prefix, _is_var_to_delete)
-    for varname, value in html.request.itervars(form_prefix):
+    for varname, _value in html.request.itervars(form_prefix):
         if varname in expected_removed:
             assert not html.request.var(varname)
         else:

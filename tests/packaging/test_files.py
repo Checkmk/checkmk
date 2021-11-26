@@ -11,8 +11,6 @@ import subprocess
 
 import pytest
 
-from cmk.utils.misc import is_daily_build_version
-
 LOGGER = logging.getLogger()
 
 
@@ -23,7 +21,7 @@ def _get_omd_version(cmk_version, package_path):
 
 
 def _is_demo(package_path):
-    return "cfe" == _edition_short_from_pkg_path(package_path)
+    return _edition_short_from_pkg_path(package_path) == "cfe"
 
 
 def _edition_short_from_pkg_path(package_path):

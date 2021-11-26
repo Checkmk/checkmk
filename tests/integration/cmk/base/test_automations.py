@@ -334,7 +334,7 @@ def test_automation_update_dns_cache(
 
         assert site.file_exists(cache_path)
 
-        cache = eval(site.read_file(cache_path))
+        cache = eval(site.read_file(cache_path))  # pylint:disable=eval-used
         assert isinstance(cache, dict)
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache

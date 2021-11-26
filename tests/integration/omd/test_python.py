@@ -61,7 +61,7 @@ def test_03_python_interpreter_version(site):
 
 def test_03_python_path(site):
     p = site.execute(["python3", "-c", "import sys ; print(sys.path)"], stdout=subprocess.PIPE)
-    sys_path = eval(p.stdout.read())
+    sys_path = eval(p.stdout.read())  # pylint:disable=eval-used
     assert sys_path[0] == ""
     assert site.root + "/local/lib/python3" in sys_path
     assert site.root + "/lib/python3" in sys_path

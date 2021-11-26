@@ -124,7 +124,7 @@ def test_parse_resources(string_table_resources, requests, limit):
 
 def test_parse_performance(string_table_performance, usage):
     section = k8s_memory.parse_performance_memory(string_table_performance)
-    for container_name, metrics in section.items():
+    for _container_name, metrics in section.items():
         assert metrics.memory_usage == usage
 
 

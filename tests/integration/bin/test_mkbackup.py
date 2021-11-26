@@ -13,6 +13,7 @@ import re
 import subprocess
 import tarfile
 from contextlib import contextmanager
+from typing import Callable, Tuple
 
 import pytest
 
@@ -323,11 +324,13 @@ def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
 def test_mkbackup_locking(site, test_cfg):
 
     backup_id = _execute_backup(site, job_id="testjob-no-history")
+    backup_fcts: Tuple[Callable[[object], object], ...]
     with simulate_backup_lock(site.id):
-        for what in (
-            lambda s: _execute_backup(s),
+        backup_fcts = (
+            _execute_backup,
             lambda s: _execute_restore(s, backup_id),
-        ):
+        )
+        for what in backup_fcts:
             with pytest.raises(AssertionError) as locking_issue:
                 what(site)
             assert "Failed to get the exclusive backup lock" in str(locking_issue)

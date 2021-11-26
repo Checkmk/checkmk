@@ -18,7 +18,7 @@ info = [
     ['"progress_events":', '{}'], ['}']
 ]
 
-discovery = {'': [(None, {})], 'osds': [], 'pgs': [], 'mgrs': [(None, {})]}
+discovery = {'': [(None, {})], 'osds': [], 'pgs': []}
 
 checks = {
     '': [

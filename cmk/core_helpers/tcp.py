@@ -196,25 +196,17 @@ class TCPFetcher(AgentFetcher):
                 "Agent output is either invalid or encrypted but encryption is disabled by configuration"
             )
 
+        self._logger.debug("Try to decrypt output")
         try:
-            self._logger.debug("Try to decrypt output")
-            output = AgentRawData(
+            return AgentRawData(
                 decrypt_by_agent_protocol(
                     self.encryption_settings["passphrase"],
                     protocol,
                     output,
                 )
             )
-        except MKFetcherError:
-            raise
         except Exception as e:
-            if self.encryption_settings["use_regular"] == "enforce":
-                raise MKFetcherError("Failed to decrypt agent output: %s" % e)
-
-        # of course the package might indeed have been encrypted but
-        # in an incorrect format, but how would we find that out?
-        # In this case processing the output will fail
-        return output
+            raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 
     def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
         if not output:  # may be caused by xinetd not allowing our address

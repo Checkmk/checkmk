@@ -817,6 +817,23 @@ class TestPushAgentFetcher:
         assert other.use_only_cache == fetcher.use_only_cache
 
 
+class _MockSock:
+    def __init__(self, data: bytes) -> None:
+        self.data = data
+        self._used = 0
+
+    def recv(self, count: int, *_flags: int) -> bytes:
+        use = self.data[self._used : self._used + count]
+        self._used += len(use)
+        return use
+
+    def __enter__(self, *_args) -> "_MockSock":
+        return self
+
+    def __exit__(self, *_args) -> None:
+        pass
+
+
 class TestTCPFetcher:
     @pytest.fixture
     def file_cache(self) -> DefaultAgentFileCache:
@@ -888,23 +905,20 @@ class TestTCPFetcher:
     def test_get_agent_data_without_tls(
         self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher
     ) -> None:
-        agent_output = b"<<<section:sep(0)>>>\nbody\n"
+        mock_sock = _MockSock(b"<<<section:sep(0)>>>\nbody\n")
+        monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
 
-        monkeypatch.setattr(fetcher, "_fetch_protocol_bytes", lambda: agent_output[:2])
-        monkeypatch.setattr(fetcher, "_raw_data", lambda: agent_output[2:])
         agent_data, protocol = fetcher._get_agent_data()
-
-        assert agent_data == agent_output[2:]
+        assert agent_data == mock_sock.data[2:]
         assert protocol == TransportProtocol.PLAIN
 
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
-        agent_output = b"16<<<section:sep(0)>>>\nbody\n"
+        mock_sock = _MockSock(b"16<<<section:sep(0)>>>\nbody\n")
+        monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
+        monkeypatch.setattr(fetcher, "_wrap_tls", lambda: mock_sock)
 
-        monkeypatch.setattr(fetcher, "_fetch_protocol_bytes", lambda: agent_output[:2])
-        monkeypatch.setattr(fetcher, "_fetch_via_tls", lambda: agent_output[2:])
         agent_data, protocol = fetcher._get_agent_data()
-
-        assert agent_data == agent_output[4:]
+        assert agent_data == mock_sock.data[4:]
         assert protocol == TransportProtocol.PLAIN
 
     def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:

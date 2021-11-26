@@ -126,14 +126,19 @@ class TCPFetcher(AgentFetcher):
         return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 
     def _get_agent_data(self) -> Tuple[AgentRawData, TransportProtocol]:
-        raw_protocol = self._fetch_protocol_bytes()
+        try:
+            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
+        except socket.error as e:
+            raise MKFetcherError(f"Communication failed: {e}") from e
+
         protocol = self._detect_transport_protocol(raw_protocol)
 
         if protocol == TransportProtocol.TLS:
-            agent_data = self._fetch_via_tls()
+            with self._wrap_tls() as ssock:
+                agent_data = self._recvall(ssock)
             return AgentRawData(agent_data[2:]), self._detect_transport_protocol(agent_data[:2])
 
-        return self._raw_data(), protocol
+        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
 
     @staticmethod
     def _detect_transport_protocol(raw_protocol: bytes) -> TransportProtocol:
@@ -142,7 +147,7 @@ class TCPFetcher(AgentFetcher):
         except ValueError:
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
-    def _fetch_via_tls(self) -> AgentRawData:
+    def _wrap_tls(self) -> ssl.SSLSocket:
         controller_uuid = UUIDLinkManager(
             received_outputs_dir=paths.received_outputs_dir,
             data_source_dir=paths.data_source_push_agent_dir,
@@ -154,23 +159,11 @@ class TCPFetcher(AgentFetcher):
         ctx = ssl.create_default_context(cafile=paths.root_cert_file)
         ctx.load_cert_chain(certfile=paths.site_cert_file)
 
-        with ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid)) as ssock:
-            self._logger.debug("Reading data from agent via TLS socket")
-            return AgentRawData(self._recvall(ssock))
+        self._logger.debug("Reading data from agent via TLS socket")
+        return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
 
-    def _fetch_protocol_bytes(self) -> bytes:
-        try:
-            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
-        except socket.error as e:
-            raise MKFetcherError(f"Communication failed: {e}") from e
-        return raw_protocol
-
-    def _raw_data(self) -> AgentRawData:
+    def _recvall(self, sock: socket.socket, flags: int = 0) -> bytes:
         self._logger.debug("Reading data from agent")
-        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL))
-
-    @staticmethod
-    def _recvall(sock: socket.socket, flags: int = 0) -> bytes:
         buffer: List[bytes] = []
         try:
             while True:

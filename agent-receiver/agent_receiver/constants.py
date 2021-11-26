@@ -11,5 +11,4 @@ OMD_ROOT = Path(os.environ.get("OMD_ROOT", ""))
 
 LOG_FILE = OMD_ROOT / "var/log/agent-receiver/agent-receiver.log"
 AGENT_OUTPUT_DIR = OMD_ROOT / "var/agent-receiver/received-outputs"
-DATA_SOURCE_DIR = OMD_ROOT / "tmp/check_mk/data_source_cache/push-agent"
 REGISTRATION_REQUESTS = OMD_ROOT / "var/check_mk/wato/requests-for-registration"

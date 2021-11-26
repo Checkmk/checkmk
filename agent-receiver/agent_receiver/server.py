@@ -10,8 +10,8 @@ from pathlib import Path
 from tempfile import mkstemp
 from typing import Dict, Mapping, Optional
 
-from agent_receiver.checkmk_rest_api import host_exists, post_csr
-from agent_receiver.constants import AGENT_OUTPUT_DIR, DATA_SOURCE_DIR, REGISTRATION_REQUESTS
+from agent_receiver.checkmk_rest_api import host_exists, link_host_with_uuid, post_csr
+from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
@@ -70,38 +70,27 @@ class RegistrationWithHNBody(BaseModel):
     host_name: str
 
 
-def _create_link(
-    *,
-    source_dir: Path,
-    target_dir: Path,
-    uuid: str,
-    host_name: str,
-) -> None:
-    (source_dir / uuid).symlink_to(target_dir / host_name)
-
-
 @app.post(
     "/register_with_hostname",
     status_code=HTTP_204_NO_CONTENT,
 )
 async def register_with_hostname(
     *,
-    authentication: Optional[str] = Header(None),
+    authentication: str = Header(...),
     registration_body: RegistrationWithHNBody,
 ) -> Response:
     if not host_exists(
-        str(authentication),
+        authentication,
         registration_body.host_name,
     ):
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"Host {registration_body.host_name} does not exist",
         )
-    _create_link(
-        source_dir=AGENT_OUTPUT_DIR,
-        target_dir=DATA_SOURCE_DIR,
-        uuid=registration_body.uuid,
-        host_name=registration_body.host_name,
+    link_host_with_uuid(
+        authentication,
+        registration_body.host_name,
+        registration_body.uuid,
     )
     logger.info(
         "uuid=%s registered host %s",

@@ -9,6 +9,7 @@ from http import HTTPStatus
 from typing import Any
 
 import requests
+from fastapi import HTTPException
 
 
 def _local_rest_api_url() -> str:
@@ -42,6 +43,21 @@ def _forward_get(
     )
 
 
+def _forward_put(
+    endpoint: str,
+    authentication: str,
+    json_body: Any,
+) -> requests.Response:
+    return requests.put(
+        f"{_local_rest_api_url()}/{endpoint}",
+        headers={
+            "Authorization": authentication,
+            "Accept": "application/json",
+        },
+        json=json_body,
+    )
+
+
 def post_csr(
     authentication: str,
     csr: str,
@@ -61,3 +77,21 @@ def host_exists(
         _forward_get(f"objects/host_config/{host_name}", authentication).status_code
         == HTTPStatus.OK
     )
+
+
+def link_host_with_uuid(
+    authentication: str,
+    host_name: str,
+    uuid: str,
+) -> None:
+    if (
+        respone := _forward_put(
+            f"objects/host_config/{host_name}/actions/link_uuid/invoke",
+            authentication,
+            {"uuid": uuid},
+        )
+    ).status_code != HTTPStatus.NO_CONTENT:
+        raise HTTPException(
+            status_code=respone.status_code,
+            detail=respone.text,
+        )

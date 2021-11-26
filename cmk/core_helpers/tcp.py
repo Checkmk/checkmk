@@ -179,11 +179,13 @@ class TCPFetcher(AgentFetcher):
         if controller_uuid is None:
             raise MKFetcherError("Agent controller not registered")
 
-        ctx = ssl.create_default_context(cafile=paths.root_cert_file)
-        ctx.load_cert_chain(certfile=paths.site_cert_file)
-
         self._logger.debug("Reading data from agent via TLS socket")
-        return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
+        try:
+            ctx = ssl.create_default_context(cafile=paths.root_cert_file)
+            ctx.load_cert_chain(certfile=paths.site_cert_file)
+            return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
+        except ssl.SSLError as e:
+            raise MKFetcherError("Error establishing TLS connection") from e
 
     def _recvall(self, sock: socket.socket, flags: int = 0) -> bytes:
         self._logger.debug("Reading data from agent")

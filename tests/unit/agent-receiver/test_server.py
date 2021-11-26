@@ -18,7 +18,7 @@ def test_agent_data_no_host() -> None:
     client = TestClient(app)
     mock_file = io.StringIO("mock file")
     response = client.post(
-        "/agent-data",
+        "/agent_data",
         data={"uuid": 1234},
         files={"upload_file": ("filename", mock_file)},
     )
@@ -40,7 +40,7 @@ def test_agent_data_success(tmp_path: Path) -> None:
 
         client = TestClient(app)
         response = client.post(
-            "/agent-data",
+            "/agent_data",
             data={"uuid": 1234},
             files={"upload_file": ("filename", mock_file)},
         )
@@ -73,7 +73,7 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
 
         client = TestClient(app)
         response = client.post(
-            "/agent-data",
+            "/agent_data",
             data={"uuid": 1234},
             files={"upload_file": ("filename", mock_file)},
         )
@@ -103,7 +103,7 @@ def test_agent_data_move_ready(tmp_path: Path) -> None:
 
             client = TestClient(app)
             client.post(
-                "/agent-data",
+                "/agent_data",
                 data={"uuid": 1234},
                 files={"upload_file": ("filename", mock_file)},
             )

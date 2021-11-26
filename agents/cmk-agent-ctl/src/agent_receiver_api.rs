@@ -88,14 +88,15 @@ pub fn register_with_hostname(
 
 pub fn agent_data(
     agent_receiver_address: &str,
+    root_cert: &str,
     uuid: &str,
     monitoring_data: &Vec<u8>,
 ) -> AnyhowResult<String> {
     // TODO:
     // - Send client cert in header
     // - Use root cert
-    let response = certs::client(None)?
-        .post(String::from(agent_receiver_address) + "/agent-data")
+    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
+        .post(format!("https://{}/agent_data", agent_receiver_address))
         .multipart(
             reqwest::blocking::multipart::Form::new()
                 .text("uuid", String::from(uuid))

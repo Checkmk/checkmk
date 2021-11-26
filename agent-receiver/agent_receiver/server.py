@@ -6,8 +6,8 @@
 
 import os
 import shutil
+import tempfile
 from pathlib import Path
-from tempfile import mkstemp
 from typing import Dict, Mapping, Optional
 
 from agent_receiver.checkmk_rest_api import (
@@ -137,24 +137,26 @@ def get_hostname(uuid: str) -> Optional[str]:
     return Path(target_path).name
 
 
-@app.post("/agent-data")
+@app.post("/agent_data")
 async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
-    file_dir = AGENT_OUTPUT_DIR / uuid
-    file_path = file_dir / "received-output"
+    target_dir = AGENT_OUTPUT_DIR / uuid
+    target_path = target_dir / "received-output"
 
     try:
-        file_handle, temp_path = mkstemp(dir=file_dir)
-        with open(file_handle, "wb") as temp_file:
-            shutil.copyfileobj(upload_file.file, temp_file)
-
-        os.rename(temp_path, file_path)
-
+        temp_file = tempfile.NamedTemporaryFile(dir=target_dir, delete=False)
     except FileNotFoundError:
+        # TODO: What are the exact criteria for "registered" and "being a push host"?
         logger.error(
-            "uuid=%s Host is not registered",
+            "uuid=%s Host is not registered or is not configured as push host.",
             uuid,
         )
         raise HTTPException(status_code=403, detail="Host is not registered")
+
+    shutil.copyfileobj(upload_file.file, temp_file)
+    try:
+        os.rename(temp_file.name, target_path)
+    finally:
+        Path(temp_file.name).unlink(missing_ok=True)
 
     ready_file = REGISTRATION_REQUESTS / "READY" / f"{uuid}.json"
     hostname = get_hostname(uuid)

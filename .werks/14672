@@ -1,0 +1,15 @@
+Title: The Ceph MGRs check now checks if epoch information is available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1660892089
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+
+The epoch information is not available in the ceph status information since
+Octopus (15.x.x). The Ceph MGRs check is now only discovered if the epoch information
+is available.

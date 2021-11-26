@@ -959,6 +959,9 @@ msgstr ""
 msgid "200.000 Services"
 msgstr "servicii"
 
+msgid "25 Hours"
+msgstr "25 de ore"
+
 #, fuzzy
 msgid "3 months"
 msgstr "2 ore"
@@ -1012,6 +1015,9 @@ msgstr "rapoarte"
 
 msgid "3PAR Remote Copy"
 msgstr ""
+
+msgid "4 Hours"
+msgstr "4 ore"
 
 msgid "5 Volt Output Lower Levels"
 msgstr ""
@@ -2392,15 +2398,16 @@ msgstr "Numele punctului de acces"
 msgid "Access points"
 msgstr "Punct de Acces"
 
-msgid "Access to Agents"
-msgstr "Acces la Agenți"
-
 #, fuzzy
 msgid "Access to Livestatus via TCP"
 msgstr "Acces la starea evenimentului via TCP"
 
 msgid "Access to NagVis Maps"
 msgstr "Acces la Hărțile NagVis"
+
+#, fuzzy
+msgid "Access to agents"
+msgstr "Acces la Agenți"
 
 msgid "Access to event status via TCP"
 msgstr "Acces la starea evenimentului via TCP"
@@ -8414,8 +8421,8 @@ msgid "Choose if realtime updates are sent/expected encrypted"
 msgstr ""
 
 msgid ""
-"Choose if the agent agents encrypt packages. This controls whether baked "
-"agents encrypt their output and whether check_mk expects encrypted output. "
+"Choose if the agent sends encrypted packages. This controls whether baked "
+"agents encrypt their output and whether Checkmk expects encrypted output. "
 "Please note: If you opt to enforce encryption, agents that don't support "
 "encryption will not work any more. Further note: This only affects regular "
 "agents, not special agents aka datasource programs."
@@ -15581,6 +15588,9 @@ msgstr ""
 msgid "Enable 'Run As <b>User</b>' for scripts"
 msgstr ""
 
+msgid "Enable (accept encrypted and unencrypted data)"
+msgstr ""
+
 msgid "Enable Caching"
 msgstr ""
 
@@ -21731,8 +21741,10 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If you choose \"Regex for host name\" or \"Regex for host alias\", you need "
-"to provide a regex which results in exactly one match group."
+"If you choose \"Regex for host name\" or \"Regex for host alias\", you may "
+"use match groups as placeholder. The first match group can be used with the "
+"placeholder <tt>$1$</tt>. The complete set of match groups is also available "
+"with the placeholders <tt>$HOST_MG_1$</tt>, <tt>$HOST_MG_2$</tt> and so on."
 msgstr ""
 
 msgid ""
@@ -31263,8 +31275,18 @@ msgid ""
 "your metric history painter to fix this issue."
 msgstr ""
 
+msgid "One Month"
+msgstr ""
+
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr ""
+
+msgid "One Week"
+msgstr ""
+
+#, fuzzy
+msgid "One Year"
+msgstr "2 ore"
 
 msgid "One heartbeat every"
 msgstr ""
@@ -40626,6 +40648,9 @@ msgstr "Stare adiministrativă"
 #, fuzzy
 msgid "Splunk License Usage"
 msgstr "% utilizare"
+
+msgid "Splunk On-Call REST Endpoint"
+msgstr ""
 
 msgid ""
 "Splunk calls a search a zombie when the search is no longer running, but did "
@@ -52904,9 +52929,6 @@ msgstr ""
 msgid "Vibrate only"
 msgstr ""
 
-msgid "VictorOPS REST Endpoint"
-msgstr ""
-
 msgid "View"
 msgstr ""
 
@@ -58044,12 +58066,6 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
-
-#~ msgid "25 Hours"
-#~ msgstr "25 de ore"
-
-#~ msgid "4 Hours"
-#~ msgstr "4 ore"
 
 #, fuzzy, python-format
 #~ msgid "Metric: %s"

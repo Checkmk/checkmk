@@ -945,6 +945,9 @@ msgstr "200.0 - 500.0ミリ秒"
 msgid "200.000 Services"
 msgstr "200.000サービス"
 
+msgid "25 Hours"
+msgstr "25時間"
+
 msgid "3 months"
 msgstr "3ヶ月"
 
@@ -989,6 +992,9 @@ msgstr "3PARポート"
 
 msgid "3PAR Remote Copy"
 msgstr "3PARリモートコピー"
+
+msgid "4 Hours"
+msgstr "4時間"
 
 msgid "5 Volt Output Lower Levels"
 msgstr "5ボルト出力の下位レベル"
@@ -2595,14 +2601,15 @@ msgstr "アクセスポイントの統計"
 msgid "Access points"
 msgstr "アクセスポイント"
 
-msgid "Access to Agents"
-msgstr "エージェントへのアクセス"
-
 msgid "Access to Livestatus via TCP"
 msgstr "TCPを介したLivestatusへのアクセス"
 
 msgid "Access to NagVis Maps"
 msgstr "NagVisマップへのアクセス"
+
+#, fuzzy
+msgid "Access to agents"
+msgstr "エージェントへのアクセス"
 
 msgid "Access to event status via TCP"
 msgstr "TCPを介したイベントステータスへのアクセス"
@@ -8625,9 +8632,10 @@ msgstr ""
 msgid "Choose if realtime updates are sent/expected encrypted"
 msgstr "リアルタイムの更新を送信するか、暗号化するかを選択します"
 
+#, fuzzy
 msgid ""
-"Choose if the agent agents encrypt packages. This controls whether baked "
-"agents encrypt their output and whether check_mk expects encrypted output. "
+"Choose if the agent sends encrypted packages. This controls whether baked "
+"agents encrypt their output and whether Checkmk expects encrypted output. "
 "Please note: If you opt to enforce encryption, agents that don't support "
 "encryption will not work any more. Further note: This only affects regular "
 "agents, not special agents aka datasource programs."
@@ -15627,6 +15635,10 @@ msgstr "スクリプトに対して'<b>ローカルグループ</b>として実�
 msgid "Enable 'Run As <b>User</b>' for scripts"
 msgstr "スクリプトに対して\"<b>ユーザー</ b>として実行\"を有効にする"
 
+#, fuzzy
+msgid "Enable (accept encrypted and unencrypted data)"
+msgstr "有効にする(暗号化、暗号化されていないデータを受け入れる)"
+
 msgid "Enable Caching"
 msgstr "キャッシュを有効にする"
 
@@ -22028,11 +22040,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If you choose \"Regex for host name\" or \"Regex for host alias\", you need "
-"to provide a regex which results in exactly one match group."
+"If you choose \"Regex for host name\" or \"Regex for host alias\", you may "
+"use match groups as placeholder. The first match group can be used with the "
+"placeholder <tt>$1$</tt>. The complete set of match groups is also available "
+"with the placeholders <tt>$HOST_MG_1$</tt>, <tt>$HOST_MG_2$</tt> and so on."
 msgstr ""
-"\"ホスト名の正規表現\"または\"ホストエイリアスの正規表現\"を選択する場合は、"
-"一致グループが1つだけになる正規表現を指定する必要があります。"
 
 msgid ""
 "If you choose to query for failed index operations, use this option to set "
@@ -31440,8 +31452,17 @@ msgstr ""
 "ますが、これはGUIビューです。この問題を修正するには、ビューを編集し、メトリッ"
 "ク履歴ペインタの別の時間範囲を選択してください。"
 
+msgid "One Month"
+msgstr "一か月"
+
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "ホスト/サービスごとに1つのRRD(CMCでのみディスクIOを節約)"
+
+msgid "One Week"
+msgstr "一週間"
+
+msgid "One Year"
+msgstr "1年"
 
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
@@ -40738,6 +40759,9 @@ msgstr "Splunkライセンスの状態"
 
 msgid "Splunk License Usage"
 msgstr "Splunkライセンスの使用"
+
+msgid "Splunk On-Call REST Endpoint"
+msgstr ""
 
 msgid ""
 "Splunk calls a search a zombie when the search is no longer running, but did "
@@ -54213,9 +54237,6 @@ msgstr ""
 msgid "Vibrate only"
 msgstr ""
 
-msgid "VictorOPS REST Endpoint"
-msgstr "VictorOPS RESTエンドポイント"
-
 msgid "View"
 msgstr "ビュー"
 
@@ -59826,20 +59847,15 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
-#~ msgid "25 Hours"
-#~ msgstr "25時間"
+#~ msgid ""
+#~ "If you choose \"Regex for host name\" or \"Regex for host alias\", you "
+#~ "need to provide a regex which results in exactly one match group."
+#~ msgstr ""
+#~ "\"ホスト名の正規表現\"または\"ホストエイリアスの正規表現\"を選択する場合"
+#~ "は、一致グループが1つだけになる正規表現を指定する必要があります。"
 
-#~ msgid "4 Hours"
-#~ msgstr "4時間"
-
-#~ msgid "One Month"
-#~ msgstr "一か月"
-
-#~ msgid "One Week"
-#~ msgstr "一週間"
-
-#~ msgid "One Year"
-#~ msgstr "1年"
+#~ msgid "VictorOPS REST Endpoint"
+#~ msgstr "VictorOPS RESTエンドポイント"
 
 #~ msgid "Deploy mtr plugin"
 #~ msgstr "mtrプラグインをデプロイする"

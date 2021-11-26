@@ -955,6 +955,9 @@ msgstr "200.0 - 500.0 ms"
 msgid "200.000 Services"
 msgstr "200.000 Services"
 
+msgid "25 Hours"
+msgstr "25 Std."
+
 msgid "3 months"
 msgstr "3 Monate"
 
@@ -999,6 +1002,9 @@ msgstr "3PAR Ports"
 
 msgid "3PAR Remote Copy"
 msgstr "3PAR Remote Copy"
+
+msgid "4 Hours"
+msgstr "4 Std."
 
 msgid "5 Volt Output Lower Levels"
 msgstr "Untere Schwellen für 5 Volt"
@@ -2717,14 +2723,15 @@ msgstr "Accesspoint-Statistiken"
 msgid "Access points"
 msgstr "Accesspoint"
 
-msgid "Access to Agents"
-msgstr "Zugriff auf Agenten"
-
 msgid "Access to Livestatus via TCP"
 msgstr "Zugriff auf Livestatus über TCP"
 
 msgid "Access to NagVis Maps"
 msgstr "Zugang zu NagVis Karten"
+
+#, fuzzy
+msgid "Access to agents"
+msgstr "Zugriff auf Agenten"
 
 msgid "Access to event status via TCP"
 msgstr "Zugriff auf Ereignisstatus über TCP"
@@ -8975,9 +8982,10 @@ msgstr ""
 msgid "Choose if realtime updates are sent/expected encrypted"
 msgstr "Wählen Sie, ob Echtzeitchecks verschlüsselt übertragen werden sollen"
 
+#, fuzzy
 msgid ""
-"Choose if the agent agents encrypt packages. This controls whether baked "
-"agents encrypt their output and whether check_mk expects encrypted output. "
+"Choose if the agent sends encrypted packages. This controls whether baked "
+"agents encrypt their output and whether Checkmk expects encrypted output. "
 "Please note: If you opt to enforce encryption, agents that don't support "
 "encryption will not work any more. Further note: This only affects regular "
 "agents, not special agents aka datasource programs."
@@ -16189,6 +16197,10 @@ msgstr "Aktiviere 'Run As <b>Local Group</b>' für Skripte"
 msgid "Enable 'Run As <b>User</b>' for scripts"
 msgstr "Aktiviere 'Run As <b>User</b>' für Skripte"
 
+#, fuzzy
+msgid "Enable (accept encrypted and unencrypted data)"
+msgstr "Erlauben (Verschlüsselte und Unverschlüsselte Daten annehmen)"
+
 msgid "Enable Caching"
 msgstr "Caching Aktivieren"
 
@@ -22920,12 +22932,11 @@ msgstr ""
 "Anzahl) aber nicht übernommen."
 
 msgid ""
-"If you choose \"Regex for host name\" or \"Regex for host alias\", you need "
-"to provide a regex which results in exactly one match group."
+"If you choose \"Regex for host name\" or \"Regex for host alias\", you may "
+"use match groups as placeholder. The first match group can be used with the "
+"placeholder <tt>$1$</tt>. The complete set of match groups is also available "
+"with the placeholders <tt>$HOST_MG_1$</tt>, <tt>$HOST_MG_2$</tt> and so on."
 msgstr ""
-"Wenn Sie \"Regulärer Ausdruck für Hostnamen\" oder \"Regulärer Ausdruck für "
-"Hostalias\" verwenden, dann müssen Sie einen regulären Ausdruck mit genau "
-"einer Matchgruppe angeben."
 
 msgid ""
 "If you choose to query for failed index operations, use this option to set "
@@ -32606,8 +32617,17 @@ msgstr ""
 "Ihre Ansicht und wählen Sie einen anderen Zeitbereich für Ihren Metric "
 "History Painter, um dieses Problem zu beheben."
 
+msgid "One Month"
+msgstr "1 Monat"
+
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Eine RRD pro Host/Service (spart Disk I/O, nur mit CMC)"
+
+msgid "One Week"
+msgstr "1 Woche"
+
+msgid "One Year"
+msgstr "1 Jahr"
 
 msgid "One heartbeat every"
 msgstr "Ein Lebenszeichen alle"
@@ -42270,6 +42290,9 @@ msgstr "Splunk Lizenzstatus"
 
 msgid "Splunk License Usage"
 msgstr "Splunk Lizenznutzung"
+
+msgid "Splunk On-Call REST Endpoint"
+msgstr ""
 
 msgid ""
 "Splunk calls a search a zombie when the search is no longer running, but did "
@@ -56769,9 +56792,6 @@ msgstr ""
 msgid "Vibrate only"
 msgstr "Nur vibrieren"
 
-msgid "VictorOPS REST Endpoint"
-msgstr "VictorOPS REST-Endpunkt"
-
 msgid "View"
 msgstr "Ansicht"
 
@@ -62755,20 +62775,16 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
-#~ msgid "25 Hours"
-#~ msgstr "25 Std."
+#~ msgid ""
+#~ "If you choose \"Regex for host name\" or \"Regex for host alias\", you "
+#~ "need to provide a regex which results in exactly one match group."
+#~ msgstr ""
+#~ "Wenn Sie \"Regulärer Ausdruck für Hostnamen\" oder \"Regulärer Ausdruck "
+#~ "für Hostalias\" verwenden, dann müssen Sie einen regulären Ausdruck mit "
+#~ "genau einer Matchgruppe angeben."
 
-#~ msgid "4 Hours"
-#~ msgstr "4 Std."
-
-#~ msgid "One Month"
-#~ msgstr "1 Monat"
-
-#~ msgid "One Week"
-#~ msgstr "1 Woche"
-
-#~ msgid "One Year"
-#~ msgstr "1 Jahr"
+#~ msgid "VictorOPS REST Endpoint"
+#~ msgstr "VictorOPS REST-Endpunkt"
 
 #~ msgid "Deploy mtr plugin"
 #~ msgstr "Das MTR-Plugin ausrollen"

@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-07-15 13:21+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2021-11-26 15:03+0000\n"
+"Last-Translator: Luis Henriques <luis.henriques@compta.pt>\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/software/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.3.2\n"
+"X-Generator: Weblate 4.8.1\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -63,9 +63,8 @@ msgstr " (em relação a todos os successful packets)"
 msgid " (invalid)"
 msgstr " (inválido)"
 
-#, fuzzy
 msgid " (outdated)"
-msgstr "Rodado"
+msgstr " (Desatualizado)"
 
 #, python-format
 msgid " (owned by %s)"
@@ -953,6 +952,9 @@ msgstr "200,0 - 500,0 ms"
 msgid "200.000 Services"
 msgstr "200.000 Serviços"
 
+msgid "25 Hours"
+msgstr "25 Horas"
+
 msgid "3 months"
 msgstr "3 meses"
 
@@ -997,6 +999,9 @@ msgstr "Portos 3PAR"
 
 msgid "3PAR Remote Copy"
 msgstr "3PAR Cópia Remota"
+
+msgid "4 Hours"
+msgstr "4 Horas"
 
 msgid "5 Volt Output Lower Levels"
 msgstr "5 Volts de saída Níveis inferiores"
@@ -2711,14 +2716,15 @@ msgstr "Estatísticas dos pontos de acesso"
 msgid "Access points"
 msgstr "Pontos de Acesso"
 
-msgid "Access to Agents"
-msgstr "Acesso a Agentes"
-
 msgid "Access to Livestatus via TCP"
 msgstr "Acesso ao Livestatus via TCP"
 
 msgid "Access to NagVis Maps"
 msgstr "Acesso aos mapas NagVis"
+
+#, fuzzy
+msgid "Access to agents"
+msgstr "Acesso a Agentes"
 
 msgid "Access to event status via TCP"
 msgstr "Acesso ao status do evento via TCP"
@@ -8971,9 +8977,10 @@ msgid "Choose if realtime updates are sent/expected encrypted"
 msgstr ""
 "Escolha se as actualizações em tempo real são enviadas/esperadas encriptadas"
 
+#, fuzzy
 msgid ""
-"Choose if the agent agents encrypt packages. This controls whether baked "
-"agents encrypt their output and whether check_mk expects encrypted output. "
+"Choose if the agent sends encrypted packages. This controls whether baked "
+"agents encrypt their output and whether Checkmk expects encrypted output. "
 "Please note: If you opt to enforce encryption, agents that don't support "
 "encryption will not work any more. Further note: This only affects regular "
 "agents, not special agents aka datasource programs."
@@ -16143,6 +16150,10 @@ msgstr "Habilitar 'Run As <b>Local Group</b>' para scripts"
 msgid "Enable 'Run As <b>User</b>' for scripts"
 msgstr "Habilitar 'Run As <b>User</b>' para scripts"
 
+#, fuzzy
+msgid "Enable (accept encrypted and unencrypted data)"
+msgstr "Habilitar (aceitar dados criptografados e não criptografados)"
+
 msgid "Enable Caching"
 msgstr "Habilitar Caching"
 
@@ -22858,11 +22869,11 @@ msgstr ""
 "seja, sua contagem), mas não são levados em conta."
 
 msgid ""
-"If you choose \"Regex for host name\" or \"Regex for host alias\", you need "
-"to provide a regex which results in exactly one match group."
+"If you choose \"Regex for host name\" or \"Regex for host alias\", you may "
+"use match groups as placeholder. The first match group can be used with the "
+"placeholder <tt>$1$</tt>. The complete set of match groups is also available "
+"with the placeholders <tt>$HOST_MG_1$</tt>, <tt>$HOST_MG_2$</tt> and so on."
 msgstr ""
-"Se você escolher \"Regex for host name\" ou \"Regex for host alias\", você "
-"precisa fornecer um regex que resulta exatamente em um grupo de partida."
 
 msgid ""
 "If you choose to query for failed index operations, use this option to set "
@@ -32550,8 +32561,17 @@ msgstr ""
 "escolha outro intervalo de tempo para o seu pintor do histórico métrico para "
 "corrigir este problema."
 
+msgid "One Month"
+msgstr "Um Mês"
+
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Um RRD por host/serviço (salva IO de disco, somente com CMC)"
+
+msgid "One Week"
+msgstr "Uma Semana"
+
+msgid "One Year"
+msgstr "Um Ano"
 
 msgid "One heartbeat every"
 msgstr "Um batimento cardíaco a cada"
@@ -42199,6 +42219,9 @@ msgstr "Estado da Licença Splunk"
 
 msgid "Splunk License Usage"
 msgstr "Utilização da Licença Splunk"
+
+msgid "Splunk On-Call REST Endpoint"
+msgstr ""
 
 msgid ""
 "Splunk calls a search a zombie when the search is no longer running, but did "
@@ -56660,9 +56683,6 @@ msgstr ""
 msgid "Vibrate only"
 msgstr "Vibrar apenas"
 
-msgid "VictorOPS REST Endpoint"
-msgstr "VictorOPS REST Endpoint"
-
 msgid "View"
 msgstr "Ver"
 
@@ -62006,9 +62026,8 @@ msgstr "apenas quando o anfitrião não está em inactividade"
 msgid "optional"
 msgstr "opcional"
 
-#, fuzzy
 msgid "or "
-msgstr " ou "
+msgstr "ou "
 
 msgid "orderly stop"
 msgstr "paragem ordeira"
@@ -62177,9 +62196,9 @@ msgstr ""
 msgid "remove"
 msgstr "remover"
 
-#, fuzzy, python-format
+#, python-format
 msgid "remove the following %d %s?"
-msgstr " as seguintes %d crash %s"
+msgstr "remover as seguintes %d %s"
 
 msgid "repeat every 20'th row"
 msgstr "repetir a cada 20'th row"
@@ -62652,20 +62671,16 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
-#~ msgid "25 Hours"
-#~ msgstr "25 Horas"
+#~ msgid ""
+#~ "If you choose \"Regex for host name\" or \"Regex for host alias\", you "
+#~ "need to provide a regex which results in exactly one match group."
+#~ msgstr ""
+#~ "Se você escolher \"Regex for host name\" ou \"Regex for host alias\", "
+#~ "você precisa fornecer um regex que resulta exatamente em um grupo de "
+#~ "partida."
 
-#~ msgid "4 Hours"
-#~ msgstr "4 Horas"
-
-#~ msgid "One Month"
-#~ msgstr "Um Mês"
-
-#~ msgid "One Week"
-#~ msgstr "Uma Semana"
-
-#~ msgid "One Year"
-#~ msgstr "Um Ano"
+#~ msgid "VictorOPS REST Endpoint"
+#~ msgstr "VictorOPS REST Endpoint"
 
 #~ msgid "Deploy mtr plugin"
 #~ msgstr "Implementar o plugin mtr"

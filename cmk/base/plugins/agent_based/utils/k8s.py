@@ -6,7 +6,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List, NewType, Optional, TypedDict
+from typing import Dict, List, NewType, Optional, Sequence, TypedDict
 
 from pydantic import BaseModel
 
@@ -94,6 +94,7 @@ class Subset:
 
 
 ContainerName = NewType("ContainerName", str)
+PodSequence = Sequence[str]
 
 
 class NodeCount(BaseModel):
@@ -131,11 +132,11 @@ class ClusterInfo(BaseModel):
 class PodResources(BaseModel):
     """section: k8s_pods_resources_v1"""
 
-    running: int = 0
-    pending: int = 0
-    succeeded: int = 0
-    failed: int = 0
-    unknown: int = 0
+    running: PodSequence = []
+    pending: PodSequence = []
+    succeeded: PodSequence = []
+    failed: PodSequence = []
+    unknown: PodSequence = []
 
 
 class PodResourcesWithCapacity(PodResources):

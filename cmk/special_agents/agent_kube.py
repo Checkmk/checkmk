@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import sys
-from collections import Counter, defaultdict
+from collections import defaultdict
 from typing import (
     Callable,
     DefaultDict,
@@ -192,9 +192,9 @@ class Deployment:
         self._pods.append(pod)
 
     def pod_resources(self) -> section.PodResources:
-        resources: DefaultDict[str, int] = defaultdict(int)
+        resources: DefaultDict[str, List[str]] = defaultdict(list)
         for pod in self._pods:
-            resources[pod.phase] += 1
+            resources[pod.phase].append(pod.name())
         return section.PodResources(**resources)
 
     def memory_resources(self) -> api.Resources:
@@ -231,7 +231,10 @@ class Node:
             "capacity": self.resources["capacity"].pods,
             "allocatable": self.resources["allocatable"].pods,
         }
-        resources.update(dict(Counter([pod.phase for pod in self._pods])))
+        phases_pods = defaultdict(list)
+        for pod in self._pods:
+            phases_pods[pod.phase].append(pod.name())
+        resources.update(phases_pods)
         return section.PodResourcesWithCapacity(**resources)
 
     def kubelet(self) -> api.KubeletInfo:
@@ -309,7 +312,10 @@ class Cluster:
             "capacity": sum(node.resources["capacity"].pods for node in self._nodes.values()),
             "allocatable": sum(node.resources["allocatable"].pods for node in self._nodes.values()),
         }
-        resources.update(dict(Counter([pod.phase for pod in self._pods.values()])))
+        phases_pods = defaultdict(list)
+        for pod in self._pods.values():
+            phases_pods[pod.phase].append(pod.name())
+        resources.update(phases_pods)
         return section.PodResourcesWithCapacity(**resources)
 
     def pods(self) -> Sequence[Pod]:

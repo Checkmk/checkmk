@@ -10,21 +10,23 @@ The schemas contained in this file are used to serialize data in the agent outpu
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 """
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from pydantic import BaseModel
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 
+PodSequence = Sequence[str]
+
 
 class PodResources(BaseModel):
     """section: k8s_pods_resources_v1"""
 
-    running: int = 0
-    pending: int = 0
-    succeeded: int = 0
-    failed: int = 0
-    unknown: int = 0
+    running: PodSequence = []
+    pending: PodSequence = []
+    succeeded: PodSequence = []
+    failed: PodSequence = []
+    unknown: PodSequence = []
 
 
 class PodResourcesWithCapacity(PodResources):

@@ -58,11 +58,9 @@ std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
             if (!dir.empty()) {
                 break;
             }
-            dir = wtools::GetCurrentExePath();
             XLOG::l.i(
-                "Environment variable {} not found, fallback to exe path '{}'",
-                wtools::ToUtf8(env::test_root), wtools::ToUtf8(dir));
-            break;
+                "Environment variable {} not found, fallback to SOLUTION_DIR");
+            return {fs::path{SOLUTION_DIR} / "install" / "resources", {}};
         }
         default:
             XLOG::l("Bad Mode [{}]", static_cast<int>(app_type));

@@ -244,7 +244,6 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& exe_unit,
                           const std::vector<YAML::Node>& yaml_node) noexcept {
     for (const auto& entry : yaml_node) {
         try {
-            // --exception control start --
             auto pattern = entry[vars::kPluginPattern].as<std::string>();
             pattern = ReplacePredefinedMarkers(pattern);
             auto async = entry[vars::kPluginAsync].as<bool>(false);
@@ -253,27 +252,29 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& exe_unit,
             auto timeout =
                 entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
             auto cache_age = entry[vars::kPluginCacheAge].as<int>(0);
+            if (cache_age < 0) {
+                cache_age = 0;
+            }
 
             auto group = entry[vars::kPluginGroup].as<std::string>("");
             auto user = entry[vars::kPluginUser].as<std::string>("");
 
-            if (cache_age != 0 && !async) {
+            std::optional<int> age;
+            if (cache_age != 0 || async) {
+                age = cache_age;
+            }
+
+            if (!async && age.has_value()) {
                 XLOG::d.t(
                     "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
                     pattern, cache_age);
-                async = true;
             }
 
-            if (async)
-                exe_unit.emplace_back(pattern, timeout, cache_age, retry, run);
-            else
-                exe_unit.emplace_back(pattern, timeout, retry, run);
+            exe_unit.emplace_back(pattern, timeout, age, retry, run);
             exe_unit.back().assign(entry);
 
             exe_unit.back().assignGroup(group);
             exe_unit.back().assignUser(user);
-
-            // --exception control end  --
         } catch (const std::exception& e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
                     vars::kPluginsExecution, e.what());

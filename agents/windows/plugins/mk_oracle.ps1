@@ -593,7 +593,7 @@ Function sql_performance {
                ||'|'|| b.pinhits
                ||'|'|| b.reloads
                ||'|'|| b.invalidations
-          from v$instance i, v$librarycache b;"
+          from v$instance i, v$librarycache b;
 
 '@
           echo $query_performance

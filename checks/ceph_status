@@ -251,7 +251,7 @@ factory_settings['ceph_mgrs_default_levels'] = {
 
 
 def inventory_ceph_status_mgrs(parsed):
-    if "mgrmap" in parsed:
+    if "epoch" in parsed.get("mgrmap", {}):
         return [(None, {})]
 
 

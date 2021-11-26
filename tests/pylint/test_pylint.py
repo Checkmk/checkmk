@@ -82,28 +82,6 @@ def _get_files_to_check(pylint_test_dir):
         # TODO: We should also test them...
         if (
             rel_path == "werk"
-            or rel_path.startswith("tests/unit/cmk/gui/")
-            or rel_path.startswith("tests/unit/cmk/base/api/agent_based")
-            or rel_path.startswith("tests/agent-plugin-unit/")
-            or rel_path.startswith("tests/integration/")
-            or rel_path.startswith(
-                "tests/composition/agents/plugins/cee/agent_updater/test_agent_updater.py"
-            )
-            or rel_path.startswith("tests/packaging/test_files.py")
-            or rel_path.startswith("tests/unit/active_checks/test_ac_check_form_submit.py")
-            or rel_path.startswith(
-                "tests/unit/cmk/base/agent_based/discovery/test_discovery_utils.py"
-            )
-            or rel_path.startswith(
-                "tests/unit/cmk/base/agent_based/test_data_provider_collect_host_sections.py"
-            )
-            or rel_path.startswith("tests/unit/cmk/base/check_legacy_includes/test_wmi.py")
-            or rel_path.startswith("tests/unit/cmk/base/plugins/agent_based/test_k8s_memory.py")
-            or rel_path.startswith("tests/unit/cmk/core_helpers/test_config_paths.py")
-            or rel_path.startswith("tests/unit/inventory/test_generic_legacy_conversion_inv.py")
-            or rel_path.startswith("tests/scripts/misc/fetcher_ram_usage_test")
-            or rel_path.startswith("tests/testlib/__init__.py")
-            or rel_path.startswith("tests/unit/cmk/base/test_ip_lookup.py")
             or rel_path.startswith("scripts/")
             or rel_path.startswith("agents/wnx/integration/")
         ):

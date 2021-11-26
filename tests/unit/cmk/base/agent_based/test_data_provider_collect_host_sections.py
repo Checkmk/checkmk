@@ -171,10 +171,7 @@ class TestMakeHostSectionsHosts:
                 ipaddress,
                 template="",
             ),
-            lambda hostname, ipaddress: TCPSource(
-                hostname,
-                ipaddress,
-            ),
+            TCPSource,
         ],
     )
     def test_one_nonsnmp_source(self, hostname, ipaddress, config_cache, host_config, source):

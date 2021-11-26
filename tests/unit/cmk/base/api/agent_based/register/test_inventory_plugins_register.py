@@ -20,10 +20,10 @@ def dummy_generator(section):  # pylint: disable=unused-argument
 
 def test_create_inventory_plugin_missing_kwarg():
     with pytest.raises(TypeError):
-        _ = inventory_plugins.create_inventory_plugin(name="norris")  # type: ignore[call-arg]
+        _ = inventory_plugins.create_inventory_plugin(name="norris")  # type: ignore[call-arg] #pylint: disable=missing-kwoa
 
     with pytest.raises(TypeError):
-        _ = inventory_plugins.create_inventory_plugin(
+        _ = inventory_plugins.create_inventory_plugin(  # pylint: disable=missing-kwoa
             inventory_function=dummy_generator
         )  # type: ignore[call-arg]
 

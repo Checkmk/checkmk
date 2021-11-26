@@ -23,8 +23,10 @@ from tests.testlib.fixtures import ec, web  # noqa: F401 # pylint: disable=unuse
 from tests.testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 
-from cmk.utils.type_defs import HostName  # isort:skip
+# pylint: disable=ungrouped-imports
+from cmk.utils.type_defs import HostName
 
+# pylint: enable=ungrouped-imports
 from tests.testlib.web_session import (  # noqa: F401 # pylint: disable=unused-import  # isort: skip
     APIError,
     CMKWebSession,

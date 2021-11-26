@@ -174,7 +174,7 @@ def test_output_aggregator_single_file_servicename(mk_filestats, lazyfile, group
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):
+    def read(self, cfg_file):  # pylint:disable=arguments-differ
         pass
 
 
@@ -340,9 +340,9 @@ def test_grouping_multiple_groups(
     )
     expected_results_list = sorted(expected_result)
     for results_idx, (
-        section_name,
+        section_name_arg,
         files,
     ) in enumerate(results_list):
-        assert section_name == expected_results_list[results_idx][0]
+        assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
             assert single_file == expected_results_list[results_idx][1][files_idx]

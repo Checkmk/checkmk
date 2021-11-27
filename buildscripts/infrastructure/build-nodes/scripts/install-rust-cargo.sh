@@ -19,7 +19,7 @@ ARCHIVE_NAME="${DIR_NAME}.tar.gz"
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=1
+BUILD_ID=2
 
 build_package() {
     WORK_DIR=`mktemp -d`
@@ -43,6 +43,7 @@ build_package() {
     tar xf "${ARCHIVE_NAME}"
     cd "${DIR_NAME}"
     ./install.sh --destdir="$TARGET_DIR" --prefix="${DIR_NAME}"
+    rm -rf ${TARGET_DIR}/${DIR_NAME}/share/doc/rust
 }
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"

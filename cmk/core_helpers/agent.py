@@ -685,6 +685,9 @@ class AgentSummarizerDefault(AgentSummarizer):
                     self._check_python_plugins(
                         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
                     ),
+                    self._check_transport(
+                        agent_info.get("agentcontroller"), agent_info.get("legacypullmode")
+                    ),
                 ]
                 if r
             )
@@ -847,3 +850,25 @@ class AgentSummarizerDefault(AgentSummarizer):
                 "Unable to check agent version (Agent: %s Expected: %s, Error: %s)"
                 % (agent_version, expected_version, e)
             )
+
+    def _check_transport(
+        self,
+        controller: Optional[str],
+        legacy_pull_mode: Optional[str],
+    ) -> Optional[ActiveCheckResult]:
+        if controller is None or controller == "":
+            return None
+
+        if not legacy_pull_mode or legacy_pull_mode == "no":
+            return None
+
+        return ActiveCheckResult(
+            self.exit_spec.get("legacy_pull_mode", 1),
+            "TLS is not activated on monitored host (see details)",
+            (
+                "The hosts agent supports TLS, but it is not being used.",
+                "We strongly recommend to enable TLS by registering the host to the site "
+                "(using the `cmk-agent-ctl register` command on the monitored host).",
+                "However you can configure missing TLS to be OK in the settings of this service.",
+            ),
+        )

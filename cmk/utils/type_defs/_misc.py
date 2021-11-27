@@ -280,6 +280,7 @@ class ExitSpec(TypedDict, total=False):
     missing_sections: int
     specific_missing_sections: List[Tuple[str, int]]
     restricted_address_mismatch: int
+    legacy_pull_mode: int
 
 
 class HostLabelValueDict(TypedDict):

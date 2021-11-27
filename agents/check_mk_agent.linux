@@ -333,15 +333,24 @@ preamble_7() {
 }
 
 section_checkmk() {
-    echo "<<<check_mk>>>"
-    echo "Version: 2.1.0i1"
-    echo "AgentOS: linux"
-    echo "Hostname: $(uname -n)"
-    echo "AgentDirectory: $MK_CONFDIR"
-    echo "DataDirectory: $MK_VARDIR"
-    echo "SpoolDirectory: $SPOOLDIR"
-    echo "PluginsDirectory: $PLUGINSDIR"
-    echo "LocalDirectory: $LOCALDIR"
+    cat <<HERE
+<<<check_mk>>>
+Version: 2.1.0i1
+AgentOS: linux
+Hostname: $(uname -n)
+AgentDirectory: ${MK_CONFDIR}
+DataDirectory: ${MK_VARDIR}
+SpoolDirectory: ${SPOOLDIR}
+PluginsDirectory: ${PLUGINSDIR}
+LocalDirectory: ${LOCALDIR}
+AgentController: $(command -v cmk-agent-ctl)
+HERE
+
+    if id cmk-agent >/dev/null && [ -f ~cmk-agent/"allow-legacy-pull" ]; then
+        printf "LegacyPullMode: yes\n"
+    else
+        printf "LegacyPullMode: no\n"
+    fi
 
     # try to find only_from configuration
     if [ -n "$REMOTE_HOST" ]; then # xinetd

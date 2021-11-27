@@ -3219,9 +3219,10 @@ class HostConfig:
     ) -> ExitSpec:
         # Additional optional parameters which are not part of individual
         # or overall parameters
-        value = spec.get("restricted_address_mismatch")
-        if value is not None:
+        if (value := spec.get("restricted_address_mismatch")) is not None:
             merged_spec["restricted_address_mismatch"] = value
+        if (value := spec.get("legacy_pull_mode")) is not None:
+            merged_spec["legacy_pull_mode"] = value
         return merged_spec
 
     @property

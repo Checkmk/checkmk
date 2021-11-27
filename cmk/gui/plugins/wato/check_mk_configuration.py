@@ -5590,8 +5590,33 @@ def _valuespec_check_mk_exit_status():
                         default_value=1,
                     ),
                 ),
+                (
+                    "legacy_pull_mode",
+                    MonitoringState(
+                        title=_("State in case of available but not enabled TLS"),
+                        help=_(
+                            "New agent installations that support TLS will refuse to send any data "
+                            "without TLS. However, if you upgrade an existing installation, the "
+                            "old transport mode (with optional encryption) will continue to work, "
+                            "to ease migration."
+                        )
+                        + "<br>"
+                        + _(
+                            "It is recommended to enable TLS as soon as possible by running the "
+                            "`register` command of the `cmk-agent-ctl` utility on the monitored "
+                            "host."
+                        )
+                        + "<br>"
+                        + _(
+                            "However, if that is not feasable, you can configure the legacy mode "
+                            "(which may or <b>may not</b> include encryption) to be OK using this "
+                            "setting. Note that this option may become ineffective in a future "
+                            "Checkmk version."
+                        ),
+                        default_value=1,
+                    ),
+                ),
             ],
-            optional_keys=["individual", "restricted_address_mismatch"],
         ),
         forth=transform_exit_code_spec,
         title=_("Status of the Checkmk services"),

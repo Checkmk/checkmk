@@ -228,28 +228,27 @@ def test_get_section_cluster_kwargs(
 
 
 def test_check_parsing_errors_no_errors() -> None:
-    assert check_parsing_errors(()) == ActiveCheckResult(0, [], (), ())
+    assert not check_parsing_errors(())
 
 
 def test_check_parsing_errors_are_ok() -> None:
-    assert check_parsing_errors(("error - message",), error_state=0,) == ActiveCheckResult(
-        0,
-        ["error"],
-        ("error - message",),
-        (),
+    assert (
+        check_parsing_errors(
+            ("error - message",),
+            error_state=0,
+        )
+        == [ActiveCheckResult(0, "error", ("error - message",))]
     )
 
 
 def test_check_parsing_errors_with_errors_() -> None:
-    assert check_parsing_errors(("error - message",)) == ActiveCheckResult(
-        1,
-        ["error(!)"],
-        ("error - message",),
-        (),
-    )
-    assert check_parsing_errors(("error - message",), error_state=2,) == ActiveCheckResult(
-        2,
-        ["error(!!)"],
-        ("error - message",),
-        (),
+    assert check_parsing_errors(("error - message",)) == [
+        ActiveCheckResult(1, "error", ("error - message",))
+    ]
+    assert (
+        check_parsing_errors(
+            ("error - message",),
+            error_state=2,
+        )
+        == [ActiveCheckResult(2, "error", ("error - message",))]
     )

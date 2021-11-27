@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, Sequence
+import dataclasses
+from typing import Any, List, Mapping, Tuple, Union
+
+from cmk.utils.type_defs import state_markers
 
 
 def section_name_of(check_plugin_name: str) -> str:
@@ -41,20 +44,28 @@ def worst_service_state(*states: int, default: int) -> int:
     return 2 if 2 in states else max(states, default=default)
 
 
-class ActiveCheckResult(NamedTuple):
-    state: int
-    summaries: Sequence[str]
-    details: Sequence[str]
-    metrics: Sequence[str]
+@dataclasses.dataclass
+class ActiveCheckResult:
+    state: int = 0
+    summary: str = ""
+    details: Union[Tuple[str, ...], List[str]] = ()  # Sequence, but not str...
+    metrics: Union[Tuple[str, ...], List[str]] = ()
 
     @classmethod
     def from_subresults(cls, *subresults: "ActiveCheckResult") -> "ActiveCheckResult":
-        states_iter, summaries_iter, details_iter, metrics_iter = zip(*subresults)
         return cls(
-            state=worst_service_state(*states_iter, default=0),
-            summaries=sum((list(s) for s in summaries_iter), []),
-            details=sum((list(d) for d in details_iter), []),
-            metrics=sum((list(m) for m in metrics_iter), []),
+            state=worst_service_state(*(s.state for s in subresults), default=0),
+            summary=", ".join(
+                f"{s.summary}{state_markers[s.state]}" for s in subresults if s.summary
+            ),
+            details=sum(
+                (
+                    [*s.details[:-1], *(f"{d}{state_markers[s.state]}" for d in s.details[-1:])]
+                    for s in subresults
+                ),
+                [],
+            ),
+            metrics=sum((list(s.metrics) for s in subresults), []),
         )
 
 

@@ -14,6 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 from tests.testlib.debug_utils import cmk_debug_enabled
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
@@ -679,12 +680,7 @@ def test__check_service_table(
     rediscovery_parameters = parameters.get("inventory_rediscovery", {}).copy()
     discovery_mode = rediscovery_parameters.pop("mode", discovery.DiscoveryMode.FALLBACK)
     assert isinstance(discovery_mode, discovery.DiscoveryMode)  # for mypy
-    (
-        status,
-        infotexts,
-        long_infotexts,
-        perfdata,
-    ), need_rediscovery = discovery._check_service_lists(
+    results, need_rediscovery = discovery._check_service_lists(
         host_name=HostName("hostname"),
         services_by_transition=grouped_services,
         params=parameters,
@@ -692,22 +688,38 @@ def test__check_service_table(
         discovery_mode=discovery_mode,
     )
 
-    assert status == 1
-    assert sorted(infotexts) == sorted(
-        [
-            "2 unmonitored services (check_plugin_name:2)(!)",
-            "2 vanished services (check_plugin_name:2)",
-        ]
-    )
-    assert sorted(long_infotexts) == sorted(
-        [
-            "unmonitored: check_plugin_name: Test Description New Item 1",
-            "unmonitored: check_plugin_name: Test Description New Item 2",
-            "vanished: check_plugin_name: Test Description Vanished Item 1",
-            "vanished: check_plugin_name: Test Description Vanished Item 2",
-        ]
-    )
-    assert perfdata == []
+    assert results == [
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "unmonitored: check_plugin_name: Test Description New Item 1",
+            ],
+        ),
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "unmonitored: check_plugin_name: Test Description New Item 2",
+            ],
+        ),
+        ActiveCheckResult(1, "2 unmonitored services (check_plugin_name:2)"),
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "vanished: check_plugin_name: Test Description Vanished Item 1",
+            ],
+        ),
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "vanished: check_plugin_name: Test Description Vanished Item 2",
+            ],
+        ),
+        ActiveCheckResult(0, "2 vanished services (check_plugin_name:2)"),
+    ]
     assert need_rediscovery == result_need_rediscovery
 
 

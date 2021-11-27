@@ -195,13 +195,13 @@ def _execute_checkmk_checks(
                     ipaddress,
                     parsed_sections_broker=broker,
                 )
-            timed_results = ActiveCheckResult.from_subresults(
+            timed_results = [
                 *check_sources(
                     source_results=source_results,
                     mode=mode,
                     include_ok_results=True,
                 ),
-                check_parsing_errors(
+                *check_parsing_errors(
                     errors=broker.parsing_errors(),
                 ),
                 *_check_plugins_missing_data(
@@ -209,9 +209,9 @@ def _execute_checkmk_checks(
                     exit_spec,
                     bool(num_success),
                 ),
-            )
+            ]
         return ActiveCheckResult.from_subresults(
-            timed_results,
+            *timed_results,
             _timing_results(tracker, fetcher_messages),
         )
 
@@ -226,10 +226,10 @@ def _timing_results(
     for msg in fetcher_messages:
         total_times += msg.stats.duration
 
-    infotexts = ("execution time %.1f sec" % total_times.process.elapsed,)
+    infotext = "execution time %.1f sec" % total_times.process.elapsed
     if not config.check_mk_perfdata_with_times:
         return ActiveCheckResult(
-            0, infotexts, (), ("execution_time=%.3f" % total_times.process.elapsed,)
+            0, infotext, (), ("execution_time=%.3f" % total_times.process.elapsed,)
         )
 
     perfdata = [
@@ -259,7 +259,7 @@ def _timing_results(
     for phase, duration in summary.items():
         perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
 
-    return ActiveCheckResult(0, infotexts, (), perfdata)
+    return ActiveCheckResult(0, infotext, (), perfdata)
 
 
 def _check_plugins_missing_data(
@@ -271,9 +271,7 @@ def _check_plugins_missing_data(
         return
 
     if not some_success:
-        yield ActiveCheckResult(
-            exit_spec.get("empty_output", 2), ("Got no information from host",), (), ()
-        )
+        yield ActiveCheckResult(exit_spec.get("empty_output", 2), "Got no information from host")
         return
 
     # key is a legacy name, kept for compatibility.
@@ -293,13 +291,10 @@ def _check_plugins_missing_data(
     plugin_list = ", ".join(sorted(generic_plugins))
     yield ActiveCheckResult(
         missing_status,
-        (f"Missing monitoring data for plugins: {plugin_list}{state_markers[missing_status]}",),
-        (),
-        (),
+        f"Missing monitoring data for plugins: {plugin_list}",
     )
     yield from (
-        ActiveCheckResult(status, f"{plugin}{state_markers[status]}", (), ())
-        for plugin, status in sorted(specific_plugins)
+        ActiveCheckResult(status, str(plugin)) for plugin, status in sorted(specific_plugins)
     )
 
 

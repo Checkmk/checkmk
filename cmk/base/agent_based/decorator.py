@@ -84,11 +84,10 @@ def handle_check_mk_check_result(
 
 
 def _combine_texts(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
-    state, summaries, details, metrics = result
-    return state, "\n".join(
+    return result.state, "\n".join(
         (
-            " | ".join((", ".join(summaries), " ".join(metrics))),
-            "".join(f"{line}\n" for line in details),
+            " | ".join((result.summary, " ".join(result.metrics))),
+            "".join(f"{line}\n" for line in result.details),
         )
     )
 

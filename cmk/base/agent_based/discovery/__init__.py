@@ -32,7 +32,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
@@ -46,7 +46,6 @@ from cmk.utils.type_defs import (
     HostName,
     RulesetName,
     ServiceName,
-    state_markers,
 )
 
 import cmk.core_helpers.cache
@@ -278,8 +277,9 @@ def _commandline_discovery_on_host(
     count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} services")
 
-    for detail in check_parsing_errors(parsed_sections_broker.parsing_errors()).details:
-        console.warning(detail)
+    for result in check_parsing_errors(parsed_sections_broker.parsing_errors()):
+        for line in result.details:
+            console.warning(line)
 
 
 # determine changed services on host.
@@ -589,17 +589,17 @@ def active_check_discovery(
         discovery_mode,
     )
 
-    parsing_errors_result = check_parsing_errors(parsed_sections_broker.parsing_errors())
+    parsing_errors_results = check_parsing_errors(parsed_sections_broker.parsing_errors())
 
     return ActiveCheckResult.from_subresults(
-        services_result,
+        *services_result,
         host_labels_result,
         *check_sources(source_results=source_results, mode=Mode.DISCOVERY),
-        parsing_errors_result,
+        *parsing_errors_results,
         _schedule_rediscovery(
             host_config=host_config,
             need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery)
-            and parsing_errors_result.state == 0,
+            and all(r.state == 0 for r in parsing_errors_results),
         ),
     )
 
@@ -611,11 +611,9 @@ def _check_service_lists(
     params: config.DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
     discovery_mode: DiscoveryMode,
-) -> Tuple[ActiveCheckResult, bool]:
+) -> Tuple[Sequence[ActiveCheckResult], bool]:
 
-    status = 0
-    infotexts = []
-    long_infotexts = []
+    subresults = []
     need_rediscovery = False
 
     for transition, t_services, title, params_key, default_state, service_filter in [
@@ -653,22 +651,27 @@ def _check_service_lists(
             # TODO In service_filter:we use config.service_description(...)
             # in order to finalize service_description (translation, etc.).
             # Why do we use discovered_service.description here?
-            long_infotexts.append(
-                "%s: %s: %s"
-                % (title, discovered_service.check_plugin_name, discovered_service.description)
+            subresults.append(
+                ActiveCheckResult(
+                    0,
+                    "",
+                    [
+                        "%s: %s: %s"
+                        % (
+                            title,
+                            discovered_service.check_plugin_name,
+                            discovered_service.description,
+                        )
+                    ],
+                )
             )
 
         if affected_check_plugin_names:
             info = ", ".join(["%s:%d" % e for e in affected_check_plugin_names.items()])
             st = params.get(params_key, default_state)
-            status = worst_service_state(status, st, default=0)
-            infotexts.append(
-                "%d %s services (%s)%s"
-                % (
-                    sum(affected_check_plugin_names.values()),
-                    title,
-                    info,
-                    state_markers[st],
+            subresults.append(
+                ActiveCheckResult(
+                    st, f"{sum(affected_check_plugin_names.values())} {title} services ({info})"
                 )
             )
 
@@ -686,15 +689,20 @@ def _check_service_lists(
             ):
                 need_rediscovery = True
         else:
-            infotexts.append("no %s services found" % title)
+            subresults.append(ActiveCheckResult(0, f"no {title} services found"))
 
     for (discovered_service, _found_on_nodes) in services_by_transition.get("ignored", []):
-        long_infotexts.append(
-            "ignored: %s: %s"
-            % (discovered_service.check_plugin_name, discovered_service.description)
+        subresults.append(
+            ActiveCheckResult(
+                0,
+                "",
+                [
+                    f"ignored: {discovered_service.check_plugin_name}: {discovered_service.description}"
+                ],
+            )
         )
 
-    return ActiveCheckResult(status, infotexts, long_infotexts, []), need_rediscovery
+    return subresults, need_rediscovery
 
 
 def _check_host_labels(
@@ -704,14 +712,12 @@ def _check_host_labels(
 ) -> Tuple[ActiveCheckResult, bool]:
     return (
         (
-            ActiveCheckResult(
-                severity_new_host_label, [f"{len(host_labels.new)} new host labels"], [], []
-            ),
+            ActiveCheckResult(severity_new_host_label, f"{len(host_labels.new)} new host labels"),
             discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
         )
         if host_labels.new
         else (
-            ActiveCheckResult(0, ["no new host labels"], [], []),
+            ActiveCheckResult(0, "no new host labels"),
             False,
         )
     )
@@ -723,7 +729,7 @@ def _schedule_rediscovery(
     need_rediscovery: bool,
 ) -> ActiveCheckResult:
     if not need_rediscovery:
-        return ActiveCheckResult(0, (), (), ())
+        return ActiveCheckResult()
 
     autodiscovery_queue = _AutodiscoveryQueue()
     if host_config.is_cluster and host_config.nodes:
@@ -732,7 +738,7 @@ def _schedule_rediscovery(
     else:
         autodiscovery_queue.add(host_config.hostname)
 
-    return ActiveCheckResult(0, ("rediscovery scheduled",), (), ())
+    return ActiveCheckResult(0, "rediscovery scheduled")
 
 
 class _AutodiscoveryQueue:
@@ -1242,8 +1248,9 @@ def get_check_preview(
         on_error=on_error,
     )
 
-    for detail in check_parsing_errors(parsed_sections_broker.parsing_errors()).details:
-        console.warning(detail)
+    for result in check_parsing_errors(parsed_sections_broker.parsing_errors()):
+        for line in result.details:
+            console.warning(line)
 
     grouped_services = _get_host_services(
         host_config,

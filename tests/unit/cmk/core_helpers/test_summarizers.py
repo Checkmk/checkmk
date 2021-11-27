@@ -112,8 +112,6 @@ class TestAgentSummarizerDefault_OnlyFrom:
         assert (
             summarizer.summarize_check_mk_section(
                 [
-                    ["version:"],
-                    ["agentos:"],
                     ["onlyfrom:", "deep_space"],
                 ],
                 mode=mode,
@@ -125,8 +123,6 @@ class TestAgentSummarizerDefault_OnlyFrom:
         assert (
             summarizer.summarize_check_mk_section(
                 [
-                    ["version:"],
-                    ["agentos:"],
                     ["onlyfrom:", "deep_space somewhere_else"],
                 ],
                 mode=mode,
@@ -137,14 +133,32 @@ class TestAgentSummarizerDefault_OnlyFrom:
     def test_exceeding_missing(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
             [
-                ["version:"],
-                ["agentos:"],
                 ["onlyfrom:", "somewhere_else"],
             ],
             mode=mode,
         ) == (
             1,
             "Unexpected allowed IP ranges (exceeding: somewhere_else, missing: deep_space)(!)",
+        )
+
+    @pytest.mark.parametrize("state", [0, 1, 2, 3])
+    def test_configure_missmatch(self, mode, state):
+        assert (
+            AgentSummarizerDefault(
+                ExitSpec(restricted_address_mismatch=state),
+                is_cluster=False,
+                agent_min_version=0,
+                agent_target_version=None,
+                only_from=["deep_space"],
+            ).summarize_check_mk_section(
+                [
+                    ["onlyfrom:", "somewhere_else"],
+                ],
+                mode=mode,
+            )[
+                0
+            ]
+            == state
         )
 
 
@@ -177,7 +191,7 @@ class TestAgentSummarizerDefault_FailedPythonPlugins:
         ) == (
             1,
             "Failed to execute python plugins: one two"
-            " (I'm not in the mood to execute python plugins)",
+            " (I'm not in the mood to execute python plugins)(!)",
         )
 
     def test_no_plugins_failed(self, summarizer, mode):
@@ -221,7 +235,7 @@ class TestAgentSummarizerDefault_Fails:
                 ],
                 mode=Mode.CHECKING,
             )
-            == (1, "what why")
+            == (1, "what why(!)")
         )
 
     def test_update_agent_success(self, summarizer, mode):

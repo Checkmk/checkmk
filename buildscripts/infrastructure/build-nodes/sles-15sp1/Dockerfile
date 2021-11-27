@@ -135,3 +135,6 @@ RUN groupadd -g 1000 jenkins \
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt
+
+LABEL \
+    com.tribe29.image_type="build-image"

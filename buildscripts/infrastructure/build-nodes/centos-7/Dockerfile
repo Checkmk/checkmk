@@ -134,3 +134,6 @@ RUN rm /etc/security/limits.d/20-nproc.conf
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt
+
+LABEL \
+    com.tribe29.image_type="build-image"

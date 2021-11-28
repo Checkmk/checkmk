@@ -6,6 +6,7 @@
 # pylint: disable=undefined-variable
 import pytest
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.piggyback import PiggybackRawDataInfo
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostName
@@ -18,7 +19,7 @@ from cmk.core_helpers.type_defs import Mode
 
 class Summarizer(AgentSummarizer):
     def summarize_success(self, host_sections, *, mode):
-        return 0, ""
+        return [ActiveCheckResult()]
 
 
 class TestAgentSummarizer:
@@ -31,19 +32,19 @@ class TestAgentSummarizer:
         return request.param
 
     def test_summarize_success(self, summarizer, mode):
-        assert summarizer.summarize_success(AgentRawData(b""), mode=mode) == (0, "")
+        assert summarizer.summarize_success(AgentRawData(b""), mode=mode) == [ActiveCheckResult(0)]
 
     def test_summarize_base_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(Exception(), mode=mode) == (3, "(?)")
+        assert summarizer.summarize_failure(Exception(), mode=mode) == [ActiveCheckResult(3)]
 
     def test_summarize_MKEmptyAgentData_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(MKEmptyAgentData(), mode=mode) == (2, "(!!)")
+        assert summarizer.summarize_failure(MKEmptyAgentData(), mode=mode) == [ActiveCheckResult(2)]
 
     def test_summarize_MKAgentError_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(MKAgentError(), mode=mode) == (2, "(!!)")
+        assert summarizer.summarize_failure(MKAgentError(), mode=mode) == [ActiveCheckResult(2)]
 
     def test_summarize_MKTimeout_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(MKTimeout(), mode=mode) == (2, "(!!)")
+        assert summarizer.summarize_failure(MKTimeout(), mode=mode) == [ActiveCheckResult(2)]
 
 
 class TestAgentSummarizerDefault_AllModes:
@@ -62,7 +63,7 @@ class TestAgentSummarizerDefault_AllModes:
         return request.param
 
     def test_missing_section(self, summarizer, mode):
-        assert summarizer.summarize_check_mk_section(None, mode=mode) == (0, "")
+        assert not summarizer.summarize_check_mk_section(None, mode=mode)
 
     def test_random_section(self, summarizer, mode):
         assert (
@@ -70,7 +71,7 @@ class TestAgentSummarizerDefault_AllModes:
                 [["some_random", "data"], ["that_does", "nothing"]],
                 mode=mode,
             )
-            == (0, "")
+            == []
         )
 
     def test_clear_version_and_os(self, summarizer, mode):
@@ -79,17 +80,17 @@ class TestAgentSummarizerDefault_AllModes:
                 [["version:"], ["agentos:"]],
                 mode=mode,
             )
-            == (0, "")
+            == []
         )
 
     def test_set_version_and_os(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
             [["version:", "42"], ["agentos:", "BeOS", "or", "Haiku", "OS"]],
             mode=mode,
-        ) == (
-            0,
-            "Version: 42, OS: BeOS or Haiku OS",
-        )
+        ) == [
+            ActiveCheckResult(0, "Version: 42"),
+            ActiveCheckResult(0, "OS: BeOS or Haiku OS"),
+        ]
 
 
 class TestAgentSummarizerDefault_OnlyFrom:
@@ -116,7 +117,7 @@ class TestAgentSummarizerDefault_OnlyFrom:
                 ],
                 mode=mode,
             )
-            == (0, "Allowed IP ranges: deep_space")
+            == [ActiveCheckResult(0, "Allowed IP ranges: deep_space")]
         )
 
     def test_exceeding(self, summarizer, mode):
@@ -127,7 +128,7 @@ class TestAgentSummarizerDefault_OnlyFrom:
                 ],
                 mode=mode,
             )
-            == (1, "Unexpected allowed IP ranges (exceeding: somewhere_else)(!)")
+            == [ActiveCheckResult(1, "Unexpected allowed IP ranges (exceeding: somewhere_else)")]
         )
 
     def test_exceeding_missing(self, summarizer, mode):
@@ -136,10 +137,12 @@ class TestAgentSummarizerDefault_OnlyFrom:
                 ["onlyfrom:", "somewhere_else"],
             ],
             mode=mode,
-        ) == (
-            1,
-            "Unexpected allowed IP ranges (exceeding: somewhere_else, missing: deep_space)(!)",
-        )
+        ) == [
+            ActiveCheckResult(
+                1,
+                "Unexpected allowed IP ranges (exceeding: somewhere_else, missing: deep_space)",
+            )
+        ]
 
     @pytest.mark.parametrize("state", [0, 1, 2, 3])
     def test_configure_missmatch(self, mode, state):
@@ -150,14 +153,14 @@ class TestAgentSummarizerDefault_OnlyFrom:
                 agent_min_version=0,
                 agent_target_version=None,
                 only_from=["deep_space"],
-            ).summarize_check_mk_section(
+            )
+            .summarize_check_mk_section(
                 [
                     ["onlyfrom:", "somewhere_else"],
                 ],
                 mode=mode,
-            )[
-                0
-            ]
+            )[0]
+            .state
             == state
         )
 
@@ -188,23 +191,22 @@ class TestAgentSummarizerDefault_FailedPythonPlugins:
                 ["FailedPythonReason:", "I'm not in the mood to execute python plugins"],
             ],
             mode=mode,
-        ) == (
-            1,
-            "Failed to execute python plugins: one two"
-            " (I'm not in the mood to execute python plugins)(!)",
-        )
+        ) == [
+            ActiveCheckResult(
+                1,
+                "Failed to execute python plugins: one two"
+                " (I'm not in the mood to execute python plugins)",
+            )
+        ]
 
     def test_no_plugins_failed(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:"],
-                    ["agentos:"],
-                    ["FailedPythonReason:", "I'm not in the mood to execute python plugins"],
-                ],
-                mode=mode,
-            )
-            == (0, "")
+        assert not summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["FailedPythonReason:", "I'm not in the mood to execute python plugins"],
+            ],
+            mode=mode,
         )
 
 
@@ -235,20 +237,17 @@ class TestAgentSummarizerDefault_Fails:
                 ],
                 mode=Mode.CHECKING,
             )
-            == (1, "what why(!)")
+            == [ActiveCheckResult(1, "what why")]
         )
 
     def test_update_agent_success(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:"],
-                    ["agentos:"],
-                    ["UpdateFailed:", "what"],
-                ],
-                mode=mode,
-            )
-            == (0, "")
+        assert not summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["UpdateFailed:", "what"],
+            ],
+            mode=mode,
         )
 
 
@@ -279,21 +278,21 @@ class TestAgentSummarizerDefault_CheckVersion:
                 ],
                 mode=mode,
             )
-            == (0, "Version: 42")
+            == [ActiveCheckResult(0, "Version: 42")]
         )
 
     @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
     def test_mismatch(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "69"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == (1, "Version: 69, unexpected agent version 69 (should be 42)(!)")
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == [
+            ActiveCheckResult(0, "Version: 69"),
+            ActiveCheckResult(1, "unexpected agent version 69 (should be 42)"),
+        ]
 
     @pytest.mark.parametrize(
         "summarizer",
@@ -314,7 +313,7 @@ class TestAgentSummarizerDefault_CheckVersion:
                 ],
                 mode=mode,
             )
-            == (0, "Version: 69")
+            == [ActiveCheckResult(0, "Version: 69")]
         )
 
     @pytest.mark.parametrize("summarizer", [("at_least", {})], indirect=True)
@@ -327,7 +326,7 @@ class TestAgentSummarizerDefault_CheckVersion:
                 ],
                 mode=mode,
             )
-            == (0, "Version: 69")
+            == [ActiveCheckResult(0, "Version: 69")]
         )
 
 
@@ -371,22 +370,16 @@ class TestPiggybackSummarizer:
 
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")
     def test_discovery_is_noop(self, summarizer, host_sections):
-        assert (
-            summarizer.summarize_success(
-                host_sections,
-                mode=Mode.DISCOVERY,
-            )
-            == (0, "")
+        assert not summarizer.summarize_success(
+            host_sections,
+            mode=Mode.DISCOVERY,
         )
 
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")
     def test_summarize_missing_data(self, summarizer, host_sections):
-        assert (
-            summarizer.summarize_success(
-                host_sections,
-                mode=Mode.CHECKING,
-            )
-            == (0, "")
+        assert not summarizer.summarize_success(
+            host_sections,
+            mode=Mode.CHECKING,
         )
 
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")
@@ -403,7 +396,7 @@ class TestPiggybackSummarizer:
                 host_sections,
                 mode=Mode.CHECKING,
             )
-            == (1, "Missing data")
+            == [ActiveCheckResult(1, "Missing data")]
         )
 
     def test_summarize_existing_data_with_always_option(
@@ -435,15 +428,11 @@ class TestPiggybackSummarizer:
 
         if summarizer.hostname is None and summarizer.ipaddress is None:
             return pytest.skip()
-        if summarizer.hostname is None or summarizer.ipaddress is None:
-            reason = "success"
-        else:
-            reason = "success, success"
 
-        assert (
-            summarizer.summarize_success(
+        assert all(
+            r == ActiveCheckResult(0, "success")
+            for r in summarizer.summarize_success(
                 host_sections,
                 mode=Mode.CHECKING,
             )
-            == (0, reason)
         )

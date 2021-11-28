@@ -26,8 +26,9 @@ from typing import (
     Union,
 )
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import HostName, SectionName, ServiceDetails, ServiceState
+from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
@@ -458,5 +459,5 @@ class SNMPSummarizer(Summarizer[SNMPHostSections]):
         host_sections: SNMPHostSections,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
-        return 0, "Success"
+    ) -> Sequence[ActiveCheckResult]:
+        return [ActiveCheckResult(0, "Success")]

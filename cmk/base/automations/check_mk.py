@@ -1665,14 +1665,14 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = source.fetch(Mode.CHECKING)
                     host_sections = source.parse(raw_data, selection=NO_SELECTION)
-                    source_state, source_output = source.summarize(
+                    source_results = source.summarize(
                         host_sections,
                         mode=Mode.CHECKING,
                     )
-                    if source_state != 0:
+                    if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources
                         success = False
-                        output += "[%s] %s\n" % (source.id, source_output)
+                        output += f"[{source.id}] {', '.join(r.summary for r in source_results)}\n"
                     assert raw_data.ok is not None
                     info += raw_data.ok
             else:

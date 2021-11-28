@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Final, List, Mapping, Optional, Sequence, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -20,9 +20,10 @@ if TYPE_CHECKING:
 
 from six import ensure_binary
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import AgentRawData, HostAddress, SectionName, ServiceDetails, ServiceState
+from cmk.utils.type_defs import AgentRawData, HostAddress, SectionName
 
 from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, DefaultAgentFileCache
 from .type_defs import Mode
@@ -289,11 +290,11 @@ class IPMISummarizer(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
-        return 0, "Version: %s" % self._get_ipmi_version(host_sections)
+    ) -> Sequence[ActiveCheckResult]:
+        return [ActiveCheckResult(0, f"Version: {self._get_ipmi_version(host_sections)}")]
 
     @staticmethod
-    def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> ServiceDetails:
+    def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> str:
         if host_sections is None:
             return "unknown"
 

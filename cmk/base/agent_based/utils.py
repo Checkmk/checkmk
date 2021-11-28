@@ -73,11 +73,25 @@ def check_sources(
     override_non_ok_state: Optional[ServiceState] = None,
 ) -> Iterable[ActiveCheckResult]:
     for source, host_sections in source_results:
-        state, output = source.summarize(host_sections, mode=mode)
-        if include_ok_results or state != 0:
-            yield ActiveCheckResult(
-                state if override_non_ok_state is None else override_non_ok_state,
-                f"[{source.id}] {output}",
+        subresults = source.summarize(host_sections, mode=mode)
+        if include_ok_results or any(s.state != 0 for s in subresults):
+            yield from (
+                ActiveCheckResult(
+                    s.state if override_non_ok_state is None else override_non_ok_state,
+                    f"[{source.id}] {s.summary}",
+                    s.details,
+                    s.metrics,
+                )
+                for s in subresults[:1]
+            )
+            yield from (
+                ActiveCheckResult(
+                    s.state if override_non_ok_state is None else override_non_ok_state,
+                    s.summary,
+                    s.details,
+                    s.metrics,
+                )
+                for s in subresults[1:]
             )
 
 

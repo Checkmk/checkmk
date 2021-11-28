@@ -7,9 +7,10 @@
 import abc
 import logging
 from types import TracebackType
-from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Tuple, Type, TypeVar
+from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
 
 import cmk.utils
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
     MKAgentError,
     MKEmptyAgentData,
@@ -19,14 +20,7 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import (
-    ExitSpec,
-    HostAddress,
-    result,
-    ServiceDetails,
-    ServiceState,
-    state_markers,
-)
+from cmk.utils.type_defs import ExitSpec, HostAddress, result
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -158,7 +152,7 @@ class Summarizer(Generic[THostSections], abc.ABC):
         host_sections: THostSections,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         raise NotImplementedError
 
     def summarize_failure(
@@ -166,9 +160,8 @@ class Summarizer(Generic[THostSections], abc.ABC):
         exc: Exception,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
-        status = self._extract_status(exc)
-        return status, str(exc) + state_markers[status]
+    ) -> Sequence[ActiveCheckResult]:
+        return [ActiveCheckResult(self._extract_status(exc), str(exc))]
 
     def _extract_status(self, exc: Exception) -> int:
         if isinstance(exc, MKEmptyAgentData):

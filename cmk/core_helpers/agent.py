@@ -19,6 +19,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
     Tuple,
     Union,
 )
@@ -29,15 +30,7 @@ import cmk.utils.misc
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import (
-    AgentRawData,
-    AgentTargetVersion,
-    ExitSpec,
-    HostName,
-    SectionName,
-    ServiceDetails,
-    ServiceState,
-)
+from cmk.utils.type_defs import AgentRawData, AgentTargetVersion, ExitSpec, HostName, SectionName
 from cmk.utils.version import parse_check_mk_version
 
 from ._base import Fetcher, Parser, Summarizer
@@ -658,7 +651,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         return self.summarize_check_mk_section(
             host_sections.sections.get(SectionName("check_mk")),
             mode=mode,
@@ -669,7 +662,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         cmk_section: Optional[AgentRawDataSection],
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         agent_info = self._get_agent_info(cmk_section)
 
         subresults = []
@@ -696,14 +689,7 @@ class AgentSummarizerDefault(AgentSummarizer):
                 if r
             )
 
-        aggregated = ActiveCheckResult.from_subresults(*subresults)
-
-        return aggregated.state, "\n".join(
-            (
-                aggregated.summary,
-                *aggregated.details,
-            )
-        )
+        return subresults
 
     @staticmethod
     def _get_agent_info(

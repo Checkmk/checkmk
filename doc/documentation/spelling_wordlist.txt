@@ -5,6 +5,7 @@ backends
 backend
 cmk
 Livestatus
+Liveproxyd
 microcore
 Nagios
 parsers
@@ -21,3 +22,5 @@ omd
 Makefile
 Makefiles
 Systemd
+preforking
+keepalive

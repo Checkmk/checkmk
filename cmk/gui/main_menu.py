@@ -16,7 +16,7 @@ from typing import List
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.version import (
     __version__,
-    edition_title,
+    edition_title_acronym,
     get_age_trial,
     is_expired_trial,
     is_free_edition,
@@ -173,7 +173,7 @@ mega_menu_registry.register(
         icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
-        info_line=lambda: f"{__version__} ({edition_title()}){free_edition_status()}",
+        info_line=lambda: f"{__version__} ({edition_title_acronym()}){free_edition_status()}",
     )
 )
 

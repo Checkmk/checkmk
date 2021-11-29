@@ -66,6 +66,16 @@ def is_cma() -> bool:
 
 def edition_title():
     if is_enterprise_edition():
+        return "Checkmk Enterprise Edition"
+    if is_managed_edition():
+        return "Checkmk Managed Services Edition"
+    if is_free_edition():
+        return "Checkmk Free Edition"
+    return "Checkmk Raw Edition"
+
+
+def edition_title_acronym():
+    if is_enterprise_edition():
         return "CEE"
     if is_managed_edition():
         return "CME"

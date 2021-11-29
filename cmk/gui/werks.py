@@ -16,7 +16,7 @@ from typing import Any, Dict, Iterator, List, Union
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
-from cmk.utils.version import __version__, Version
+from cmk.utils.version import __version__, edition_title, Version
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -55,7 +55,7 @@ g_werks: Dict[int, Dict[str, Any]] = {}
 @cmk.gui.pages.page_registry.register_page("version")
 class ModeReleaseNotesPage(cmk.gui.pages.Page):
     def _title(self) -> str:
-        return _("Welcome to Checkmk %s") % __version__
+        return _("Release Notes - %s %s") % (edition_title(), __version__)
 
     def page(self) -> cmk.gui.pages.PageResult:
         if request.get_integer_input_mandatory("major", 0):
@@ -146,14 +146,7 @@ def handle_acknowledgement():
 
 
 def _release_notes_breadcrumb() -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_setup())
-
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=_("Maintenance"),
-            url=None,
-        )
-    )
+    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry["help_links"])
 
     breadcrumb.append(
         BreadcrumbItem(

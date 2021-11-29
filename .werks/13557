@@ -1,0 +1,12 @@
+Title: agent_vsphere: wrongly configured connection timeout leads to high CPU usage
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p28
+Date: 1638192927
+Class: fix
+
+The special agent for vSphere did not have a properly configured connection
+timeout. This lead to several long-running agent_vsphere processes that
+consumed a lot of CPU. This has been fixed.

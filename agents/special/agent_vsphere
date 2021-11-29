@@ -1206,15 +1206,8 @@ def get_agent_info_tcp(address):
         else:
             ipaddress = socket.gethostbyname(address)
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            soc.settimeout(opt_timeout)
-        except AttributeError:
-            pass  # some old Python versions lack settimeout(). Better ignore than fail
+        soc.settimeout(opt_timeout)
         soc.connect((ipaddress, 6556))
-        try:
-            soc.setblocking(1)
-        except AttributeError:
-            pass
         raw_response = ""
         while True:
             received = soc.recv(4096, socket.MSG_WAITALL)

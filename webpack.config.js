@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 const path = require("path");
-const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
+const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
@@ -42,7 +42,7 @@ module.exports = {
     },
     externals: {
         // canvas-5-polyfill for IE11: tell webpack that canvas is provided by the browser
-        canvas: 'canvas',
+        canvas: "canvas",
     },
     resolve: {
         modules: [
@@ -116,7 +116,7 @@ module.exports = {
         ],
     },
     plugins: [
-        new FixStyleOnlyEntriesPlugin(),
+        new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
     ],
 };

@@ -406,6 +406,7 @@ class Site:
             self._ensure_sample_config_is_present()
             if not self.version.is_raw_edition():
                 self._set_number_of_helpers()
+                self._log_cmc_startup()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
                 self._disable_cmc_log_rotation()
@@ -519,6 +520,16 @@ class Site:
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20
             })
+
+    def _log_cmc_startup(self):
+        self.write_file(
+            "etc/init.d/cmc",
+            self.read_file("etc/init.d/cmc").replace(
+                "\n    if $DAEMON $CONFIGFILE; then\n",
+                ("\n"
+                 "    date >>$OMD_ROOT/var/log/cmc-startup.log\n"
+                 "    ps -fu heute >>$OMD_ROOT/var/log/cmc-startup.log\n"
+                 "    if $DAEMON $CONFIGFILE >>$OMD_ROOT/var/log/cmc-startup.log 2>&1; then\n")))
 
     def _enable_cmc_core_dumps(self):
         self.makedirs("etc/check_mk/conf.d")

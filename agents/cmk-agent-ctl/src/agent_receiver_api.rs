@@ -7,11 +7,6 @@ use anyhow::{anyhow, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-struct JSONResponse {
-    message: String,
-}
-
 #[derive(Serialize)]
 struct PairingBody {
     csr: String,
@@ -53,6 +48,18 @@ pub fn pairing(
     }
 }
 
+fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
+    if let StatusCode::NO_CONTENT = response.status() {
+        Ok(())
+    } else {
+        Err(anyhow!(
+            "Request failed with code {}: {}",
+            response.status(),
+            response.text().unwrap_or_else(|_| String::from(""))
+        ))
+    }
+}
+
 pub fn register_with_hostname(
     server_address: &str,
     root_cert: &str,
@@ -60,21 +67,16 @@ pub fn register_with_hostname(
     uuid: &str,
     host_name: &str,
 ) -> AnyhowResult<()> {
-    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
-        .post(format!("https://{}/register_with_hostname", server_address))
-        .header("authentication", format!("Bearer {}", credentials))
-        .json(&RegistrationWithHNBody {
-            uuid: String::from(uuid),
-            host_name: String::from(host_name),
-        })
-        .send()?;
-    let status = response.status();
-
-    if let StatusCode::NO_CONTENT = status {
-        Ok(())
-    } else {
-        Err(anyhow!("Request failed with code {}", status,))
-    }
+    check_response_204(
+        certs::client(Some(String::from(root_cert).into_bytes()))?
+            .post(format!("https://{}/register_with_hostname", server_address))
+            .header("authentication", format!("Bearer {}", credentials))
+            .json(&RegistrationWithHNBody {
+                uuid: String::from(uuid),
+                host_name: String::from(host_name),
+            })
+            .send()?,
+    )
 }
 
 // .header(
@@ -89,28 +91,24 @@ pub fn agent_data(
     root_cert: &str,
     uuid: &str,
     monitoring_data: &[u8],
-) -> AnyhowResult<String> {
+) -> AnyhowResult<()> {
     // TODO:
     // - Send client cert in header
-    // - Use root cert
-    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
-        .post(format!("https://{}/agent_data", agent_receiver_address))
-        .multipart(
-            reqwest::blocking::multipart::Form::new()
-                .text("uuid", String::from(uuid))
-                .part(
-                    "upload_file",
+    check_response_204(
+        certs::client(Some(String::from(root_cert).into_bytes()))?
+            .post(format!(
+                "https://{}/agent_data/{}",
+                agent_receiver_address, uuid,
+            ))
+            .multipart(
+                reqwest::blocking::multipart::Form::new().part(
+                    "monitoring_data",
                     reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
                         // Note: We need to set the file name, otherwise the request won't have the
                         // right format. However, the value itself does not matter.
                         .file_name("agent_data"),
                 ),
-        )
-        .send()?;
-
-    if let StatusCode::OK = response.status() {
-        Ok(response.json::<JSONResponse>()?.message)
-    } else {
-        Err(anyhow!("{}", response.text()?))
-    }
+            )
+            .send()?,
+    )
 }

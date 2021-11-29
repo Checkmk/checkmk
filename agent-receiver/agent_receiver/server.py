@@ -9,7 +9,7 @@ import shutil
 import tempfile
 from contextlib import suppress
 from pathlib import Path
-from typing import Dict, Mapping
+from typing import Mapping
 
 from agent_receiver.checkmk_rest_api import (
     get_root_cert,
@@ -21,7 +21,7 @@ from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
 from agent_receiver.models import PairingBody, RegistrationWithHNBody
 from agent_receiver.utils import uuid_from_pem_csr
-from fastapi import FastAPI, File, Form, Header, HTTPException, Response, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, Response, UploadFile
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 app = FastAPI()
@@ -114,8 +114,14 @@ def _move_ready_file(uuid: str) -> None:
         )
 
 
-@app.post("/agent_data")
-async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
+@app.post(
+    "/agent_data/{uuid}",
+    status_code=HTTP_204_NO_CONTENT,
+)
+async def agent_data(
+    uuid: str,
+    monitoring_data: UploadFile = File(...),
+) -> Response:
     target_dir = AGENT_OUTPUT_DIR / uuid
     target_path = target_dir / "received-output"
 
@@ -129,7 +135,7 @@ async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...))
         )
         raise HTTPException(status_code=403, detail="Host is not registered")
 
-    shutil.copyfileobj(upload_file.file, temp_file)
+    shutil.copyfileobj(monitoring_data.file, temp_file)
     try:
         os.rename(temp_file.name, target_path)
     finally:
@@ -141,4 +147,4 @@ async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...))
         "uuid=%s Agent data saved",
         uuid,
     )
-    return {"message": "Agent data saved."}
+    return Response(status_code=HTTP_204_NO_CONTENT)

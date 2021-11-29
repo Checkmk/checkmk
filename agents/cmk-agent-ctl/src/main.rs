@@ -97,14 +97,16 @@ fn push(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
         .context("Error collecting monitoring data")?;
 
     for (agent_receiver_address, server_spec) in reg_state.server_specs.iter() {
-        let message = agent_receiver_api::agent_data(
+        agent_receiver_api::agent_data(
             agent_receiver_address,
             &server_spec.root_cert,
             &server_spec.uuid,
             &mon_data,
         )
-        .context("Error pushing monitoring data.")?;
-        println!("{}", message);
+        .context(format!(
+            "Error pushing monitoring data to {}.",
+            agent_receiver_address
+        ))?
     }
 
     Ok(())

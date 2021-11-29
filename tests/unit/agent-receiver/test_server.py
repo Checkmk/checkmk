@@ -27,9 +27,8 @@ def test_agent_data_no_host() -> None:
     client = TestClient(app)
     mock_file = io.StringIO("mock file")
     response = client.post(
-        "/agent_data",
-        data={"uuid": 1234},
-        files={"upload_file": ("filename", mock_file)},
+        "/agent_data/1234",
+        files={"monitoring_data": ("filename", mock_file)},
     )
 
     assert response.status_code == 403
@@ -46,16 +45,14 @@ def test_agent_data_success(tmp_path: Path) -> None:
 
     client = TestClient(app)
     response = client.post(
-        "/agent_data",
-        data={"uuid": 1234},
-        files={"upload_file": ("filename", mock_file)},
+        "/agent_data/1234",
+        files={"monitoring_data": ("filename", mock_file)},
     )
 
     file_path = tmp_path / "hostname" / "received-output"
     assert file_path.exists()
 
-    assert response.status_code == 200
-    assert response.json() == {"message": "Agent data saved."}
+    assert response.status_code == 204
 
 
 def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
@@ -76,12 +73,11 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
 
         client = TestClient(app)
         response = client.post(
-            "/agent_data",
-            data={"uuid": 1234},
-            files={"upload_file": ("filename", mock_file)},
+            "/agent_data/1234",
+            files={"monitoring_data": ("filename", mock_file)},
         )
 
-    assert response.status_code == 200
+    assert response.status_code == 204
     assert caplog.records[0].message == "uuid=1234 Agent data saved"
 
 
@@ -99,9 +95,8 @@ def test_agent_data_move_ready(tmp_path: Path) -> None:
 
     client = TestClient(app)
     client.post(
-        "/agent_data",
-        data={"uuid": 1234},
-        files={"upload_file": ("filename", mock_file)},
+        "/agent_data/1234",
+        files={"monitoring_data": ("filename", mock_file)},
     )
 
     registration_request = tmp_path / "DISCOVERABLE" / "1234.json"

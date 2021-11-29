@@ -14,7 +14,7 @@ use nix::unistd;
 use std::fs;
 use std::io::Result as IoResult;
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use uuid::Uuid;
 
@@ -85,7 +85,7 @@ fn register(
         },
     );
 
-    reg_state.to_file(path_state_out).unwrap();
+    reg_state.to_file(path_state_out)?;
 
     disallow_legacy_pull()
         .context("Registration successful, but could not delete marker for legacy pull mode")?;
@@ -127,8 +127,8 @@ fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
 
     let mut stream = tls_server::IoStream::new();
 
-    stream.write(TLS_ID).unwrap();
-    stream.flush().unwrap();
+    stream.write(TLS_ID)?;
+    stream.flush()?;
 
     let mut tls_connection =
         tls_server::tls_connection(reg_state).context("Could not initialize TLS.")?;
@@ -136,8 +136,8 @@ fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
 
     let mon_data = monitoring_data::collect(config.package_name)
         .context("Error collecting monitoring data.")?;
-    tls_stream.write_all(&mon_data).unwrap();
-    tls_stream.flush().unwrap();
+    tls_stream.write_all(&mon_data)?;
+    tls_stream.flush()?;
 
     disallow_legacy_pull().context("Just provided agent data via TLS, but legacy pull mode is still allowed, and could not delete marker")?;
     Ok(())
@@ -162,14 +162,14 @@ fn disallow_legacy_pull() -> IoResult<()> {
     fs::remove_file(legacy_pull_marker)
 }
 
-fn get_configuration(path_config: &Path, args: cli::Args) -> io::Result<config::Config> {
+fn get_configuration(path_config: &Path, args: cli::Args) -> AnyhowResult<config::Config> {
     return Ok(config::Config::merge_two_configs(
         config::Config::from_file(path_config)?,
         config::Config::from_args(args),
     ));
 }
 
-fn get_reg_state(path: &Path) -> io::Result<config::RegistrationState> {
+fn get_reg_state(path: &Path) -> AnyhowResult<config::RegistrationState> {
     return Ok(config::RegistrationState::from_file(path)?);
 }
 
@@ -194,6 +194,21 @@ fn ensure_home_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+fn try_sanitize_home_dir_ownership(home_dir: &Path, paths: [&Path; 3], user: &str) {
+    if let Err(error) = sanitize_home_dir_ownership([home_dir, paths[0], paths[1], paths[2]], user)
+        .context(format!(
+            "Failed to set ownership of {} to {}",
+            home_dir.display(),
+            user
+        ))
+    {
+        io::stderr()
+            .write_all(format!("{:?}", error).as_bytes())
+            .unwrap_or(());
+        info!("{:?}", error)
+    };
+}
+
 fn sanitize_home_dir_ownership(paths: [&Path; 4], user: &str) -> AnyhowResult<()> {
     if !unistd::Uid::current().is_root() {
         return Ok(());
@@ -213,49 +228,62 @@ fn sanitize_home_dir_ownership(paths: [&Path; 4], user: &str) -> AnyhowResult<()
     Ok(())
 }
 
-fn main() -> AnyhowResult<()> {
+fn init() -> (cli::Args, PathBuf, PathBuf, PathBuf) {
     let state_path = Path::new(HOME_DIR).join(STATE_FILE);
     let config_path = Path::new(HOME_DIR).join(CONFIG_FILE);
     let log_path = Path::new(HOME_DIR).join(LOG_FILE);
 
-    // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
-    ensure_home_directory(Path::new(HOME_DIR))
-        .context("Cannot go on: Missing cmk-agent home directory and failed to create it.")?;
-
-    if let Err(error) = init_logging(&log_path).context("Failed to initialize logging") {
-        println!("Error: {:?}", error)
-    };
-    info!("Starting cmk-agent-ctl");
-
+    // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
-    let mode = String::from(&args.mode);
 
+    // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
+    if let Err(error) = ensure_home_directory(Path::new(HOME_DIR)) {
+        panic!(
+            "Cannot go on: Missing cmk-agent home directory and failed to create it: {}",
+            error
+        );
+    }
+
+    if let Err(error) = init_logging(&log_path) {
+        io::stderr()
+            .write_all(format!("Failed to initialize logging: {:?}", error).as_bytes())
+            .unwrap_or(());
+    }
+
+    (args, config_path, state_path, log_path)
+}
+
+fn run_requested_mode(args: cli::Args, config_path: &Path, state_path: &Path) -> AnyhowResult<()> {
+    let mode = String::from(&args.mode);
     let config =
         get_configuration(&config_path, args).context("Error while obtaining configuration.")?;
     let reg_state =
         get_reg_state(&state_path).context("Error while obtaining registration state.")?;
 
-    let result = match mode.as_str() {
+    Ok(match mode.as_str() {
         "dump" => dump(config),
         "register" => register(config, reg_state, &state_path),
         "push" => push(config, reg_state),
         "status" => status(config),
         "pull" => pull(config, reg_state),
         _ => Err(anyhow!("Invalid mode: {}", mode)),
-    };
+    }
+    .context(format!("{} failed", mode))?)
+}
+fn main() -> AnyhowResult<()> {
+    let (args, state_path, config_path, log_path) = init();
 
-    if let Err(error) = sanitize_home_dir_ownership(
-        [Path::new(HOME_DIR), &state_path, &config_path, &log_path],
-        CMK_AGENT_USER,
-    )
-    .context(format!(
-        "Failed to set ownership of {} to {}",
-        HOME_DIR, CMK_AGENT_USER
-    )) {
+    let result = run_requested_mode(args, &config_path, &state_path);
+
+    if let Err(error) = &result {
         info!("{:?}", error)
-    };
+    }
 
-    // TODO: At least in pull and dump mode, we can't just pass an error here,
-    // because the fetcher will receive the error as agent output.
+    try_sanitize_home_dir_ownership(
+        Path::new(HOME_DIR),
+        [&state_path, &config_path, &log_path],
+        CMK_AGENT_USER,
+    );
+
     result
 }

@@ -1,4 +1,4 @@
-use anyhow::Result as AnyhowResult;
+use anyhow::{Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
@@ -20,9 +20,9 @@ pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     let name = name.build();
 
     let mut crt_builder = X509Req::builder()?;
-    crt_builder.set_version(2).unwrap();
-    crt_builder.set_subject_name(&name).unwrap();
-    crt_builder.set_pubkey(&key_pair).unwrap();
+    crt_builder.set_version(2)?;
+    crt_builder.set_subject_name(&name)?;
+    crt_builder.set_pubkey(&key_pair)?;
     crt_builder.sign(&key_pair, MessageDigest::sha256())?;
 
     Ok((
@@ -46,7 +46,7 @@ pub fn client(root_cert: Option<Vec<u8>>) -> AnyhowResult<Client> {
 }
 
 pub fn fetch_server_cert(address: &str) -> AnyhowResult<String> {
-    let tcp_stream = TcpStream::connect(address).unwrap();
+    let tcp_stream = TcpStream::connect(address)?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
     let mut ssl_stream = ssl_connector_builder.build().connect("dummy", tcp_stream)?;
@@ -54,10 +54,10 @@ pub fn fetch_server_cert(address: &str) -> AnyhowResult<String> {
     let server_cert = ssl_stream
         .ssl()
         .peer_cert_chain()
-        .unwrap()
+        .context("Failed fetching peer cert chain")?
         .iter()
         .next()
-        .unwrap()
+        .context("Failed unpacking peer cert chain")?
         .to_pem()?;
 
     ssl_stream.shutdown()?;

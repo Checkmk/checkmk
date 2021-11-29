@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::cli::Args;
+use anyhow::Result as AnyhowResult;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -29,15 +30,16 @@ pub struct Config {
 }
 
 impl Config {
-    fn empty_config() -> Config {
-        return serde_json::from_str("{}").unwrap();
+    fn empty_config() -> AnyhowResult<Config> {
+        Ok(serde_json::from_str("{}")?)
     }
 
-    pub fn from_file(path: &Path) -> io::Result<Config> {
+    pub fn from_file(path: &Path) -> AnyhowResult<Config> {
         if path.exists() {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
-        return Ok(Config::empty_config());
+
+        Ok(Config::empty_config()?)
     }
 
     pub fn merge_two_configs(loser: Config, winner: Config) -> Config {
@@ -82,15 +84,16 @@ pub struct ServerSpec {
 }
 
 impl RegistrationState {
-    fn empty_state() -> RegistrationState {
-        return serde_json::from_str("{}").unwrap();
+    fn empty_state() -> AnyhowResult<RegistrationState> {
+        Ok(serde_json::from_str("{}")?)
     }
 
-    pub fn from_file(path: &Path) -> io::Result<RegistrationState> {
+    pub fn from_file(path: &Path) -> AnyhowResult<RegistrationState> {
         if path.exists() {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
-        return Ok(RegistrationState::empty_state());
+
+        Ok(RegistrationState::empty_state()?)
     }
 
     pub fn to_file(self, path: &Path) -> io::Result<()> {

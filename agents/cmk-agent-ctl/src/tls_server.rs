@@ -1,5 +1,5 @@
 use super::config;
-use anyhow::{anyhow, Result as AnyhowResult};
+use anyhow::{anyhow, Context, Result as AnyhowResult};
 use rustls::RootCertStore;
 use rustls::{
     server::AllowAnyAuthenticatedClient, server::ResolvesServerCertUsingSni, sign::CertifiedKey,
@@ -15,7 +15,7 @@ use std::sync::Arc;
 
 pub fn tls_connection(reg_state: config::RegistrationState) -> AnyhowResult<ServerConnection> {
     let server_specs = reg_state.server_specs.into_values().collect();
-    Ok(ServerConnection::new(tls_config(server_specs)?).unwrap())
+    Ok(ServerConnection::new(tls_config(server_specs)?)?)
 }
 
 pub fn tls_stream<'a>(
@@ -40,9 +40,7 @@ fn root_cert_store(server_specs: &Vec<config::ServerSpec>) -> AnyhowResult<RootC
     let mut cert_store = RootCertStore::empty();
 
     for spec in server_specs {
-        cert_store
-            .add(&certificate(&mut spec.root_cert.as_bytes())?)
-            .unwrap();
+        cert_store.add(&certificate(&mut spec.root_cert.as_bytes())?)?;
     }
 
     Ok(cert_store)
@@ -57,28 +55,31 @@ fn sni_resolver(
         let key = private_key(&mut spec.private_key.as_bytes())?;
         let cert = certificate(&mut spec.certificate.as_bytes())?;
 
-        let certified_key =
-            CertifiedKey::new(vec![cert], Arc::new(RsaSigningKey::new(&key).unwrap()));
+        let certified_key = CertifiedKey::new(vec![cert], Arc::new(RsaSigningKey::new(&key)?));
 
-        resolver.add(&spec.uuid, certified_key).unwrap();
+        resolver.add(&spec.uuid, certified_key)?;
     }
 
     Ok(Arc::new(resolver))
 }
 
 fn private_key(bytes: &mut dyn io::BufRead) -> AnyhowResult<PrivateKey> {
-    if let Item::PKCS8Key(it) = rustls_pemfile::read_one(bytes).unwrap().unwrap() {
+    if let Item::PKCS8Key(it) =
+        rustls_pemfile::read_one(bytes)?.context("Could not load private key")?
+    {
         Ok(PrivateKey(it))
     } else {
-        Err(anyhow!("Could not load private key"))
+        Err(anyhow!("Could not process private key"))
     }
 }
 
 fn certificate(bytes: &mut dyn io::BufRead) -> AnyhowResult<Certificate> {
-    if let Item::X509Certificate(it) = rustls_pemfile::read_one(bytes).unwrap().unwrap() {
+    if let Item::X509Certificate(it) =
+        rustls_pemfile::read_one(bytes)?.context("Could not load certificate")?
+    {
         Ok(Certificate(it))
     } else {
-        Err(anyhow!("Could not load certificate"))
+        Err(anyhow!("Could not process certificate"))
     }
 }
 

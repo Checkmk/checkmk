@@ -101,6 +101,7 @@ fn push(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
             agent_receiver_address,
             &server_spec.root_cert,
             &server_spec.uuid,
+            &server_spec.certificate,
             &mon_data,
         )
         .context(format!(

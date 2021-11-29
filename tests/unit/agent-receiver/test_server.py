@@ -12,6 +12,7 @@ from unittest import mock
 import pytest
 from agent_receiver.server import app
 from fastapi.testclient import TestClient
+from pytest_mock import MockerFixture
 
 
 @pytest.fixture(autouse=True)
@@ -22,12 +23,21 @@ def mock_paths(tmp_path: Path):
         yield
 
 
+@pytest.fixture(autouse=True)
+def deactivate_certificate_validation(mocker: MockerFixture) -> None:
+    mocker.patch(
+        "agent_receiver.certificates._invalid_certificate_response",
+        lambda _h: None,
+    )
+
+
 def test_agent_data_no_host() -> None:
 
     client = TestClient(app)
     mock_file = io.StringIO("mock file")
     response = client.post(
         "/agent_data/1234",
+        headers={"certificate": "irrelevant"},
         files={"monitoring_data": ("filename", mock_file)},
     )
 
@@ -46,6 +56,7 @@ def test_agent_data_success(tmp_path: Path) -> None:
     client = TestClient(app)
     response = client.post(
         "/agent_data/1234",
+        headers={"certificate": "irrelevant"},
         files={"monitoring_data": ("filename", mock_file)},
     )
 
@@ -74,6 +85,7 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
         client = TestClient(app)
         response = client.post(
             "/agent_data/1234",
+            headers={"certificate": "irrelevant"},
             files={"monitoring_data": ("filename", mock_file)},
         )
 
@@ -96,6 +108,7 @@ def test_agent_data_move_ready(tmp_path: Path) -> None:
     client = TestClient(app)
     client.post(
         "/agent_data/1234",
+        headers={"certificate": "irrelevant"},
         files={"monitoring_data": ("filename", mock_file)},
     )
 

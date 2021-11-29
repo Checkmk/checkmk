@@ -151,6 +151,7 @@ name = "cmk-agent-ctl"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64",
  "http",
  "log",
  "log4rs",

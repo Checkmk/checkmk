@@ -73,7 +73,7 @@ fn private_key(bytes: &mut dyn io::BufRead) -> AnyhowResult<PrivateKey> {
     }
 }
 
-fn certificate(bytes: &mut dyn io::BufRead) -> AnyhowResult<Certificate> {
+pub fn certificate(bytes: &mut dyn io::BufRead) -> AnyhowResult<Certificate> {
     if let Item::X509Certificate(it) =
         rustls_pemfile::read_one(bytes)?.context("Could not load certificate")?
     {

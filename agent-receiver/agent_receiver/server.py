@@ -115,12 +115,14 @@ def _move_ready_file(uuid: str) -> None:
         )
 
 
-@app.post(
+@cert_validation_router.post(
     "/agent_data/{uuid}",
     status_code=HTTP_204_NO_CONTENT,
 )
 async def agent_data(
     uuid: str,
+    *,
+    certificate: str = Header(...),
     monitoring_data: UploadFile = File(...),
 ) -> Response:
     target_dir = AGENT_OUTPUT_DIR / uuid

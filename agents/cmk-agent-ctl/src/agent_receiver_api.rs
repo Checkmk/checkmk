@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::certs;
+use crate::{certs, tls_server};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -79,27 +79,27 @@ pub fn register_with_hostname(
     )
 }
 
-// .header(
-//     "client-cert",
-//     base64::encode_config(
-//         tls_server::certificate(&mut String::from(client_cert).as_bytes())?.0,
-//         base64::URL_SAFE,
-//     ),
+fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
+    Ok(base64::encode_config(
+        tls_server::certificate(&mut String::from(cert).as_bytes())?.0,
+        base64::URL_SAFE,
+    ))
+}
 
 pub fn agent_data(
     agent_receiver_address: &str,
     root_cert: &str,
     uuid: &str,
+    certificate: &str,
     monitoring_data: &[u8],
 ) -> AnyhowResult<()> {
-    // TODO:
-    // - Send client cert in header
     check_response_204(
         certs::client(Some(String::from(root_cert).into_bytes()))?
             .post(format!(
                 "https://{}/agent_data/{}",
                 agent_receiver_address, uuid,
             ))
+            .header("certificate", encode_pem_cert_base64(certificate)?)
             .multipart(
                 reqwest::blocking::multipart::Form::new().part(
                     "monitoring_data",

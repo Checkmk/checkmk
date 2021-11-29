@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from agent_receiver.server import app  # type: ignore[import]
+from agent_receiver.server import app
 from fastapi.testclient import TestClient
 
 
@@ -71,8 +71,6 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
     source.symlink_to(target_dir)
 
     with mock.patch("agent_receiver.server.shutil.move") as move_mock:
-        from agent_receiver.server import app  # type: ignore[import]
-
         move_mock.side_effect = FileNotFoundError()
 
         client = TestClient(app)
@@ -100,8 +98,6 @@ def test_agent_data_move_ready(tmp_path: Path) -> None:
     target_dir = tmp_path / "hostname"
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
-
-    from agent_receiver.server import app  # type: ignore[import]
 
     client = TestClient(app)
     client.post(

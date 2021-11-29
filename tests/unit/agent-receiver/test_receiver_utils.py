@@ -7,7 +7,7 @@
 from pathlib import Path
 from unittest import mock
 
-from agent_receiver.utils import get_hostname_from_link  # type: ignore[import]
+from agent_receiver.utils import get_hostname_from_link
 
 
 def test_get_hostname_from_link_no_hostname(tmp_path: Path) -> None:

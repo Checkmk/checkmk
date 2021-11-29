@@ -91,7 +91,6 @@ def _get_files_to_check(pylint_test_dir):
             )
             or rel_path.startswith("tests/packaging/test_files.py")
             or rel_path.startswith("tests/unit/active_checks/test_ac_check_form_submit.py")
-            or rel_path.startswith("tests/unit/agent-receiver/test_server.py")
             or rel_path.startswith(
                 "tests/unit/cmk/base/agent_based/discovery/test_discovery_utils.py"
             )

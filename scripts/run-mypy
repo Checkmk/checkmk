@@ -30,7 +30,10 @@ fi
 
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
-MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd" \
+MYPYPATH="$REPO_PATH:\
+$REPO_PATH/livestatus/api/python:\
+$REPO_PATH/omd/packages/omd:\
+$REPO_PATH/agent-receiver" \
     exec "$REPO_PATH/scripts/run-pipenv" run mypy \
     --python-version ${PYTHON_MAJOR_DOT_MINOR} \
     --scripts-are-modules \

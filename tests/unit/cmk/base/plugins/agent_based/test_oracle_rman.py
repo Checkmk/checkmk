@@ -218,13 +218,13 @@ def test_cluster_check():
                 'sid': 'MYDB',
                 'backuptype': 'DB_INCR',
                 'backuplevel': '1',
-                'backupage': 15045,
+                'backupage': 12,
                 'status': 'COMPLETED',
-                'backupscn': 1014721683,
+                'backupscn': 1022591235,
                 'used_incr_0': False
             },
         },
-        id='Status quo: multiple backups lead to oldest backup written to section',
+        id='Latest backup is written to section in case of multiple backups for the same item',
     ),
 ])
 def test_parse_oracle_rman(string_table, section):

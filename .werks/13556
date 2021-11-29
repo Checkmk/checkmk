@@ -1,0 +1,13 @@
+Title: oracle_rman: multiple backups lead to oldest backup shown
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638179841
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p18
+
+The check oracle_rman monitors incremental backups on Oracle databases. In the
+event that there are multiple backups for the same increment, the oldest backup
+was shown. This has been fixed, so that the latest backup is now visible.

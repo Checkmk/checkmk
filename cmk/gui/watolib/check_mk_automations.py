@@ -4,18 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence, Tuple, Type, TypeVar
 
 from livestatus import SiteId
 
@@ -250,16 +239,16 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: Optional[List[HostName]] = None) -> results.RestartResult:
+def restart() -> results.RestartResult:
     return _deserialize(
-        _automation_serialized("restart", args=hosts_to_update),
+        _automation_serialized("restart"),
         results.RestartResult,
     )
 
 
-def reload(hosts_to_update: Optional[List[HostName]] = None) -> results.ReloadResult:
+def reload() -> results.ReloadResult:
     return _deserialize(
-        _automation_serialized("reload", args=hosts_to_update),
+        _automation_serialized("reload"),
         results.ReloadResult,
     )
 

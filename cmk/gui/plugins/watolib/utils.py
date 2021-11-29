@@ -7,13 +7,11 @@
 import abc
 import os
 import pprint
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Type
+from typing import Any, Dict, List, Optional, Type
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
-from cmk.utils.type_defs import ConfigurationWarnings
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
@@ -24,19 +22,6 @@ from cmk.gui.valuespec import ValueSpec
 
 def wato_fileheader() -> str:
     return "# Created by WATO\n\n"
-
-
-SerializedSettings = Mapping[str, Any]
-DomainSettings = Mapping[ConfigDomainName, SerializedSettings]
-
-
-@dataclass
-class DomainRequest:
-    name: str
-    settings: SerializedSettings = field(default_factory=dict)
-
-
-DomainRequests = Sequence[DomainRequest]
 
 
 class ABCConfigDomain(abc.ABC):
@@ -54,9 +39,9 @@ class ABCConfigDomain(abc.ABC):
     def enabled_domains(cls):
         return [d for d in config_domain_registry.values() if d.enabled()]
 
-    @abc.abstractmethod
-    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
-        raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
+    @classmethod
+    def get_always_activate_domain_idents(cls) -> List[ConfigDomainName]:
+        return [d.ident() for d in config_domain_registry.values() if d.always_activate]
 
     @classmethod
     def get_class(cls, ident):
@@ -81,6 +66,9 @@ class ABCConfigDomain(abc.ABC):
         if site_specific:
             return os.path.join(self.config_dir(), "sitespecific.mk")
         return os.path.join(self.config_dir(), "global.mk")
+
+    def activate(self):
+        raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
 
     def load_full_config(self, site_specific=False, custom_site_path=None):
         filename = Path(self.config_file(site_specific))
@@ -138,22 +126,6 @@ class ABCConfigDomain(abc.ABC):
             for (varname, v) in config_variable_registry.items()
             if v().domain() == self.__class__
         ]
-
-    @classmethod
-    def get_domain_settings(cls, change) -> Optional[SerializedSettings]:
-        return change.get("domain_settings", {}).get(cls.ident())
-
-    @classmethod
-    def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:
-        return DomainRequest(cls.ident())
-
-
-def get_config_domain(domain_ident: ConfigDomainName):
-    return config_domain_registry[domain_ident]
-
-
-def get_always_activate_domains() -> Sequence[Type[ABCConfigDomain]]:
-    return [d for d in config_domain_registry.values() if d.always_activate]
 
 
 class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDomain]]):
@@ -323,7 +295,7 @@ def register_configvar(
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
     if isinstance(domain, str):
-        domain = get_config_domain(domain)
+        domain = ABCConfigDomain.get_class(domain)
 
     # New API is to hand over the class via group argument
     if isinstance(group, str):

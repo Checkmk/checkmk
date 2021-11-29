@@ -1164,7 +1164,7 @@ def _format_item_with_template(template: str, item: Item):
     'Foo bar'
     """
     try:
-        return template % (item or "<missing an item>")
+        return template % ("<missing an item>" if item is None else item)
     except TypeError:
         return f"{template} {item or ''}".strip()
 

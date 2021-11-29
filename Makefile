@@ -23,6 +23,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := python3 $(realpath scripts/iwyu_tool.py)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
+# TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple scripts/run-pipenv
 BLACK              := scripts/run-black
 
@@ -586,11 +587,11 @@ format-python-yapf:
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PIPENV) run yapf --parallel --style .style.yapf --verbose -i
+	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run yapf --parallel --style .style.yapf --verbose -i
 
 format-python-isort:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PIPENV) run isort --settings-path pyproject.toml
+	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run isort --settings-path pyproject.toml
 
 format-python-black:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \

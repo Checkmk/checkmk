@@ -1201,7 +1201,6 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                 self._logger.info("Check activation: %s", activation_id)
                 delete = False
                 manager = ActivateChangesManager()
-                manager.load()
 
                 # Try to detect whether or not the activation is still in progress. In case the
                 # activation information can not be read, it is likely that the activation has
@@ -1582,7 +1581,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         # Is this activation still in progress?
         manager = ActivateChangesManager()
-        manager.load()
 
         try:
             manager.load_activation(current_activation_id)
@@ -2667,7 +2665,6 @@ def activate_changes_wait(
         The activation-state when finished, if not yet finished it will return None
     """
     manager = ActivateChangesManager()
-    manager.load()
     manager.load_activation(activation_id)
     if manager.wait_for_completion(timeout=timeout):
         return manager.get_state()

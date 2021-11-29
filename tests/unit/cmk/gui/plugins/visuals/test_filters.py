@@ -1107,24 +1107,17 @@ def test_filters_display_with_empty_request(request_context, live):
 
 
 def _set_expected_queries(filt_ident, live):
-    if filt_ident in ["hostgroups", "opthostgroup", "hostgroup"]:
+    if filt_ident in ["hostgroups"]:
         live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")
-        if filt_ident == "hostgroups":
-            live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")
         return
 
-    if filt_ident in ["servicegroups", "optservicegroup", "servicegroup"]:
+    if filt_ident in ["servicegroups"]:
         live.expect_query("GET servicegroups\nCache: reload\nColumns: name alias\n")
-        if filt_ident == "servicegroups":
-            live.expect_query("GET servicegroups\nCache: reload\nColumns: name alias\n")
         return
 
     if filt_ident in [
         "contactgroups",
         "optcontactgroup",
-        "opthost_contactgroup",
-        "optservice_contactgroup",
-        "optevent_effective_contactgroup",
     ]:
         live.expect_query("GET contactgroups\nCache: reload\nColumns: name alias\n")
         if filt_ident == "contactgroups":

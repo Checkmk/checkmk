@@ -816,6 +816,14 @@ function hostnames_autocompleter(css_class, container) {
     select2_vs_autocomplete(container, css_class, params);
 }
 
+function allgroups_autocompleter(css_class, container) {
+    let params = elem => ({
+        strict: elem.dataset.strict,
+        group_type: elem.id,
+    });
+    select2_vs_autocomplete(container, css_class, params);
+}
+
 function service_desc_autocompleter(css_class, container) {
     let params = elem => {
         let host_id = elem.id.endsWith("_service_hint")
@@ -855,6 +863,7 @@ export function initialize_autocompleters(container) {
     service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);
+    allgroups_autocompleter("allgroups", container);
 }
 
 var vs_color_pickers = [];

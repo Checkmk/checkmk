@@ -166,6 +166,9 @@ class DropdownFilter(Filter):
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {self.query_filter.request_vars[0]: row[self.query_filter.column]}
+
 
 class AjaxDropdownFilter(DropdownFilter):
     def display(self, value: FilterHTTPVariables) -> None:
@@ -175,6 +178,12 @@ class AjaxDropdownFilter(DropdownFilter):
         endpoint_tag = {
             "host_name": "monitored_hostname",
             "service_description": "monitored_service_description",
+            "host_groups": "allgroups",
+            "service_groups": "allgroups",
+            "host_contact_groups": "allgroups",
+            "service_contact_groups": "allgroups",
+            "hostgroup_name": "allgroups",
+            "servicegroup_name": "allgroups",
         }.get(self.query_filter.column)
         if endpoint_tag is None:
             raise MKUserError(self.query_filter.request_vars[0], "Unregistered ajax endpoint")
@@ -457,12 +466,11 @@ class FilterMultigroup(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.open_div(class_="multigroup")
-        self.valuespec().render_input(self.htmlvars[0], self.query_filter.selection(value))
-        # TODO: this should be the negate flag not a test of options
-        if self._options(self.group_type):
-            html.open_nobr()
-            html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
-            html.close_nobr()
+        self.valuespec().render_input(
+            self.query_filter.request_vars[0], self.query_filter.selection(value)
+        )
+        if self.query_filter.negateable:
+            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
         html.close_div()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -500,13 +508,12 @@ GroupType = Literal[
 ]
 
 
-class FilterGroupCombo(Filter):
+class FilterGroupCombo(AjaxDropdownFilter):
     """Selection of a host/service(-contact) group as an attribute of a host or service"""
 
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
         group_type: GroupType,
@@ -517,38 +524,14 @@ class FilterGroupCombo(Filter):
         self.group_type = group_type
 
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=sort_index,
             info=group_type.split("_")[0],
-            htmlvars=self.query_filter.request_vars,
+            query_filter=query_filter,
+            options=[],
             link_columns=[group_type + "group_name"],
             description=description,
         )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.dropdown(
-            self.htmlvars[0],
-            self._options(self.group_type, not self.query_filter.negateable),
-            deflt=value.get(self.htmlvars[0], ""),
-            ordered=True,
-        )
-        if self.query_filter.negateable:
-            html.open_nobr()
-            html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
-            html.close_nobr()
-
-    @staticmethod
-    def _options(group_type: GroupType, enforce: bool) -> Choices:
-        group_type = "contact" if group_type.endswith("_contact") else group_type
-        choices: Choices = list(sites.all_groups(group_type))
-        if not enforce:
-            empty_choices: Choices = [("", "")]
-            choices = empty_choices + choices
-        return choices
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.query_filter.filter(value)
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         varname = self.htmlvars[0]
@@ -556,14 +539,15 @@ class FilterGroupCombo(Filter):
         if value:
             s = {varname: value}
             if self.query_filter.negateable:
-                negvar = self.htmlvars[1]
+                negvar = self.query_filter.request_vars[1]
                 if request.var(negvar):  # This violates the idea of originating from row
                     s[negvar] = request.var(negvar)
             return s
         return {}
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
-        if current_value := value.get(self.htmlvars[0]):
+        # TODO: This should be part of the general options query
+        if current_value := value.get(self.query_filter.request_vars[0]):
             group_type = "contact" if self.group_type.endswith("_contact") else self.group_type
             alias = sites.live().query_value(
                 "GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n"
@@ -576,7 +560,6 @@ class FilterGroupCombo(Filter):
 
 filter_registry.register(
     FilterGroupCombo(
-        ident="opthostgroup",
         title=_l("Host is in Group"),
         sort_index=104,
         description=_l("Optional selection of host group"),
@@ -593,7 +576,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterGroupCombo(
-        ident="optservicegroup",
         title=_l("Service is in Group"),
         sort_index=204,
         description=_l("Optional selection of service group"),
@@ -610,7 +592,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterGroupCombo(
-        ident="opthost_contactgroup",
         title=_l("Host Contact Group"),
         sort_index=106,
         description=_l("Optional selection of host contact group"),
@@ -627,7 +608,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterGroupCombo(
-        ident="optservice_contactgroup",
         title=_l("Service Contact Group"),
         sort_index=206,
         description=_l("Optional selection of service contact group"),
@@ -690,71 +670,33 @@ filter_registry.register(
     )
 )
 
-
-class FilterGroupSelection(Filter):
-    """Selection of one group to be used in the info "hostgroup" or "servicegroup"."""
-
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: Union[str, LazyString],
-        sort_index: int,
-        info: str,
-        description: Union[None, str, LazyString] = None,
-    ) -> None:
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=sort_index,
-            info=info,
-            htmlvars=[info],
-            link_columns=[],
-            description=description,
-        )
-        # TODO: Rename "what"
-        self.what = info
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        # chop off "group", leaves host or service
-        html.dropdown(
-            self.htmlvars[0],
-            self._options(self.what[:-5]),
-            deflt=value.get(self.htmlvars[0], ""),
-            ordered=True,
-        )
-
-    @staticmethod
-    def _options(group_type: str) -> Choices:
-        return list(sites.all_groups(group_type))
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if current_value := value.get(self.htmlvars[0]):
-            return "Filter: %s_name = %s\n" % (self.what, livestatus.lqencode(current_value))
-        return ""
-
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
-        group_name = row[self.what + "_name"]
-        return {self.htmlvars[0]: group_name}
-
-
 filter_registry.register(
-    FilterGroupSelection(
-        ident="hostgroup",
+    AjaxDropdownFilter(
         title=_l("Host Group"),
         sort_index=104,
         description=_l("Selection of the host group"),
         info="hostgroup",
+        options=[],
+        query_filter=query_filters.FilterText(
+            ident="hostgroup",
+            column="hostgroup_name",
+            op="=",
+        ),
     )
 )
 
 filter_registry.register(
-    FilterGroupSelection(
-        ident="servicegroup",
+    AjaxDropdownFilter(
         title=_l("Service Group"),
         sort_index=104,
         description=_l("Selection of the service group"),
         info="servicegroup",
+        options=[],
+        query_filter=query_filters.FilterText(
+            ident="servicegroup",
+            column="servicegroup_name",
+            op="=",
+        ),
     )
 )
 
@@ -3180,7 +3122,6 @@ filter_registry.register(
 class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
     def __init__(self):
         super().__init__(
-            ident="optevent_effective_contactgroup",
             title=_l("Contact group (effective)"),
             sort_index=212,
             group_type="event_effective_contact",

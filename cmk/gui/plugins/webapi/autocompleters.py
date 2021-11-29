@@ -78,26 +78,24 @@ def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
     return match_list
 
 
-@autocompleter_registry.register_expression("opthostgroup")
+@autocompleter_registry.register_expression("allgroups")
 def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-
-    return sorted(
-        (v for v in sites.all_groups("host") if value.lower() in v[1].lower()),
+    group_type = params["group_type"]
+    # Have something without ifs
+    group_type = (
+        "contact" if "_contact" in group_type else "host" if "host" in group_type else "service"
+    )
+    choices: Choices = sorted(
+        (v for v in sites.all_groups(group_type) if value.lower() in v[1].lower()),
         key=lambda a: a[1].lower(),
     )
-
-
-@autocompleter_registry.register_expression("optservicegroup")
-def service_autocompleter(value: str, params: Dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-
-    return sorted(
-        (v for v in sites.all_groups("service") if value.lower() in v[1].lower()),
-        key=lambda a: a[1].lower(),
-    )
+    # This part should not exists as the optional(not enforce) would better be not having the filter at all
+    if not params.get("strict"):
+        empty_choice: Choices = [("", "")]
+        choices = empty_choice + choices
+    return choices
 
 
 @autocompleter_registry.register_expression("monitored_service_description")

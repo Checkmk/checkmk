@@ -71,6 +71,7 @@ endif
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
+INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 INSTALL := $(BUILD_HELPER_DIR)/install
@@ -146,11 +147,15 @@ $(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
+	$(call log_time,$@,done)
 	touch $@
 
 $(INSTALL_TARGETS): $(PRE_INSTALL)
 
-$(INSTALL): $(INSTALL_TARGETS)
+$(INSTALL_LOG_TARGETS): %-log: %
+	$(call log_time,$@,done)
+
+$(INSTALL): $(INSTALL_LOG_TARGETS)
 # Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(TOUCH) $@

@@ -76,6 +76,10 @@ NEXUS_BUILD_CACHE_URL ?=
 NEXUS_USERNAME ?=
 NEXUS_PASSWORD ?=
 
+define log_time
+	@echo "+++ [$(shell date +%s)] Build step '$1': $2" | tee --append omd_build_times.log
+endef
+
 define cache_pkg_name
 $1_$2_$(BRANCH_VERSION)_$(DISTRO_NAME)_$(DISTRO_VERSION).tar.gz
 endef

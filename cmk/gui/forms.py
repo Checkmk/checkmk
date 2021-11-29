@@ -270,7 +270,7 @@ def remove_unused_vars(
 
     * is_var_to_delete: determines variables to keep
     """
-    checkboxes, variables = set(), dict()
+    checkboxes, variables = set(), {}
     for varname, value in html.request.itervars(form_prefix):
         if varname.endswith("_USE"):
             checkboxes.add(varname)

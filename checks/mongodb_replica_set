@@ -21,7 +21,7 @@ def parse_mongodb_replica_set(info):
     """
     if info:
         return json.loads(str(info[0][0]))
-    return dict()
+    return {}
 
 
 #   .--replication lag-----------------------------------------------------.

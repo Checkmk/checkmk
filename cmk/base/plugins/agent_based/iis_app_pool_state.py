@@ -76,7 +76,7 @@ def check_iis_app_pool_state(
         yield Result(state=State.UNKNOWN, summary=f"{item} is unknown")
         return
 
-    state_value = params.get("state_mapping", dict()).get(app_state.name, State.CRIT.value)
+    state_value = params.get("state_mapping", {}).get(app_state.name, State.CRIT.value)
     yield Result(state=State(state_value), summary=f"State: {section[item].name}")
 
 

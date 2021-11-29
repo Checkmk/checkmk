@@ -219,7 +219,7 @@ def _get_replication_info(client, databases):
     :return: result
     """
     oplog = databases.get("local", {}).get("collstats", {}).get("oplog.rs", {})
-    result = dict()
+    result = {}
 
     # Returns the total size of the oplog in bytes
     # This refers to the total amount of space allocated to the oplog rather than
@@ -307,7 +307,7 @@ def _get_balancer_info(client):
     :param client: mongdb client
     :return: balancer status dictionary
     """
-    balancer_dict = dict()
+    balancer_dict = {}
 
     # check if balancer is enabled for cluster
     settings = client["config"]["settings"]
@@ -379,7 +379,7 @@ def _aggregate_chunks_and_shards_info(
     _lensing_data(databases_dict)
 
     # shards_dict: add shard information to collections statistic dictionary
-    all_information_dict = dict()
+    all_information_dict = {}
     all_information_dict["databases"] = databases_dict
     all_information_dict["shards"] = shards_dict
     all_information_dict["balancer"] = balancer_dict
@@ -476,7 +476,7 @@ def _get_shards_information(client):
     :param client: mongodb client
     :return: dictionary with shards information
     """
-    shard_dict = dict()
+    shard_dict = {}
     for shard in client.config.shards.find():
         shard_name = shard.get("_id")
         shard.pop("_id", None)

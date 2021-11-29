@@ -120,7 +120,7 @@ def test_cisco_wlc_clients(item, result):
 
 PARAM_STATUS = [
     # summary: 186 connections
-    [dict(), State.OK],
+    [{}, State.OK],
     [dict(levels=(300, 400)), State.OK],
     [dict(levels=(100, 400)), State.WARN],
     [dict(levels=(50, 100)), State.CRIT],

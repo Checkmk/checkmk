@@ -15,7 +15,7 @@ factory_settings["mongodb_collections_levels"] = {"levels_nindexes": (62, 65)}
 def parse_mongodb_collections(info):
     if info:
         return json.loads(str(info[0][0]))
-    return dict()
+    return {}
 
 
 def inventory_mongodb_collections(databases_dict):

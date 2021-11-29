@@ -31,10 +31,10 @@ class MockStructuredDataNode:
         return tuple(path.strip(":.").split("."))
 
     def get_dict(self, path: str):
-        return self.attributes.setdefault(self._normalize(path), dict())
+        return self.attributes.setdefault(self._normalize(path), {})
 
     def get_list(self, path: str):
-        return self.tables.setdefault(self._normalize(path), list())
+        return self.tables.setdefault(self._normalize(path), [])
 
 
 g_inv_tree = MockStructuredDataNode()  # every plugin will get its own!

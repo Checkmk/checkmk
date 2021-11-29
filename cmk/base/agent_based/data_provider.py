@@ -190,9 +190,9 @@ class ParsedSectionsResolver:
 
     def resolve_all(self, parser: SectionsParser) -> Iterator[ResolvedResult]:
         return iter(
-            result
+            res
             for psn in {section.parsed_section_name for section in self._section_plugins}
-            if (result := self.resolve(parser, psn)) is not None
+            if (res := self.resolve(parser, psn)) is not None
         )
 
 

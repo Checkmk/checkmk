@@ -782,7 +782,7 @@ class Options(object):  # pylint: disable=useless-object-inheritance
                         "Invalid overflow: %r (choose from %r)"
                         % (
                             value,
-                            Options.MAP_OVERFLOW.keys(),  # pylint: disable=dict-keys-not-iterating
+                            Options.MAP_OVERFLOW.keys(),
                         )
                     )
                 self.values["overflow"] = value
@@ -796,7 +796,7 @@ class Options(object):  # pylint: disable=useless-object-inheritance
                         % (
                             key,
                             value,
-                            Options.MAP_BOOL.keys(),  # pylint: disable=dict-keys-not-iterating
+                            Options.MAP_BOOL.keys(),
                         )
                     )
                 self.values[key] = Options.MAP_BOOL[value.lower()]

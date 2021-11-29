@@ -167,9 +167,9 @@ disable=
     # pylint 3.0.0-a4 sees assigning-non-slot everywhere!
     assigning-non-slot,
     # pylint 2.11 enabled checks
-    consider-using-f-string
-
-
+    consider-using-f-string,
+    # new in pylint 2.12
+    use-implicit-booleaness-not-comparison
 
 enable=
     #---------------------------------------------------------------------------

@@ -2431,7 +2431,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         if self._new:
             self._rule_packs = [self._rule_pack] + self._rule_packs
         else:
-            if self._type == ec.RulePackType.internal or self._type == ec.RulePackType.modified_mkp:
+            if self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
                 self._rule_packs[self._edit_nr] = self._rule_pack
             else:
                 self._rule_packs[self._edit_nr].rule_pack = self._rule_pack

@@ -18,6 +18,7 @@ from typing import (
     Mapping,
     NamedTuple,
     NewType,
+    NoReturn,
     Optional,
     Sequence,
     Set,
@@ -25,6 +26,23 @@ from typing import (
     TypedDict,
     Union,
 )
+
+
+def assert_never(x: NoReturn) -> NoReturn:
+    """A helper function that allows exhaustiveness checking with mypy:
+
+    >>> from typing import Union
+    >>> def f(x: Union[str, int]) -> None:
+    ...     if isinstance(x, str):
+    ...         print("str")
+    ...     elif isinstance(x, int):
+    ...         print("int")
+    ...     else:
+    ...         assert_never(foo)
+    ...
+    """
+    raise AssertionError(f"Invalid value: {x!r}")
+
 
 HostName = str
 HostAddress = str

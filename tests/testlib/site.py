@@ -526,9 +526,8 @@ class Site:
             "etc/init.d/cmc",
             self.read_file("etc/init.d/cmc").replace(
                 "\n    if $DAEMON $CONFIGFILE; then\n",
-                ("\n"
-                 "    date >>$OMD_ROOT/var/log/cmc-startup.log\n"
-                 "    ps -fu heute >>$OMD_ROOT/var/log/cmc-startup.log\n"
+                ("\n    date >>$OMD_ROOT/var/log/cmc-startup.log\n" +
+                 ("    ps -fu %s >>$OMD_ROOT/var/log/cmc-startup.log\n" % self.id) +
                  "    if $DAEMON $CONFIGFILE >>$OMD_ROOT/var/log/cmc-startup.log 2>&1; then\n")))
 
     def _enable_cmc_core_dumps(self):

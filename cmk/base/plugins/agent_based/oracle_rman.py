@@ -111,18 +111,18 @@ def parse_oracle_rman(string_table: StringTable) -> SectionOracleRman:
         except (ValueError, TypeError):
             backupage = None
 
-        section.setdefault(
-            item,
-            {
-                "sid": sid,
-                "backuptype": backuptype,
-                "backuplevel": backuplevel,
-                "backupage": backupage,
-                "status": status,
-                "backupscn": backupscn,
-                "used_incr_0": False,  # True when last incr0 is newer then incr1
-            },
-        )
+        # Backups can occur multiple times for the same item. The lines are
+        # already ordered by the DB, meaning that the entry that overwrites the
+        # previous is always the latest backup.
+        section[item] = {
+            "sid": sid,
+            "backuptype": backuptype,
+            "backuplevel": backuplevel,
+            "backupage": backupage,
+            "status": status,
+            "backupscn": backupscn,
+            "used_incr_0": False,  # True when last incr0 is newer then incr1
+        }
 
     # some tweaks in section for change in behavior of oracle
     # correct backupage for INCR_1 when newer INCR_0 is existing

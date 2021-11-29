@@ -12,3 +12,5 @@ OMD_ROOT = Path(os.environ.get("OMD_ROOT", ""))
 LOG_FILE = OMD_ROOT / "var/log/agent-receiver/agent-receiver.log"
 AGENT_OUTPUT_DIR = OMD_ROOT / "var/agent-receiver/received-outputs"
 REGISTRATION_REQUESTS = OMD_ROOT / "var/check_mk/wato/requests-for-registration"
+
+ROOT_CERT = OMD_ROOT / "etc/ssl/ca.pem"

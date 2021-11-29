@@ -41,18 +41,21 @@ from cmk.utils.certs import (
     sign_csr,
 )
 
-CERT_NOT_AFTER = 999 * 365  # 999 years by default
-CA_CERT_NOT_AFTER = CERT_NOT_AFTER
-
 
 class CertificateAuthority:
     """Management of the site local CA and certificates issued by it"""
 
-    def __init__(self, ca_path: Path, ca_name: str) -> None:
+    def __init__(
+        self,
+        ca_path: Path,
+        ca_name: str,
+        days_valid: int = 999 * 365,  # 999 years by default
+    ) -> None:
         super().__init__()
         self._ca_path = ca_path
         self._ca_name = ca_name
         self._agent_receiver_cert_path = ca_path / "agent_receiver_cert.pem"
+        self._days_valid = days_valid
 
     @property
     def _root_cert_path(self) -> Path:
@@ -65,7 +68,7 @@ class CertificateAuthority:
         return (
             make_root_certificate(
                 make_subject_name(self._ca_name),
-                CA_CERT_NOT_AFTER,
+                self._days_valid,
                 private_key := make_private_key(),
             ),
             private_key,
@@ -74,7 +77,10 @@ class CertificateAuthority:
     def _get_root_certificate(self) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
         return load_cert_and_private_key(self._root_cert_path)
 
-    def _certificate_from_root(self, cn: str) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+    def _certificate_from_root(
+        self,
+        cn: str,
+    ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
         if not self.is_initialized:
             raise RuntimeError("Certificate authority is not initialized yet")
         private_key = make_private_key()
@@ -84,7 +90,7 @@ class CertificateAuthority:
                     make_subject_name(cn),
                     private_key,
                 ),
-                CERT_NOT_AFTER,
+                self._days_valid,
                 *self._get_root_certificate(),
             ),
             private_key,

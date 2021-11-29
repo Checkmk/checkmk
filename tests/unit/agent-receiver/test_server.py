@@ -9,8 +9,17 @@ import os
 from pathlib import Path
 from unittest import mock
 
+import pytest
 from agent_receiver.server import app  # type: ignore[import]
 from fastapi.testclient import TestClient
+
+
+@pytest.fixture(autouse=True)
+def mock_paths(tmp_path: Path):
+    with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path), mock.patch(
+        "agent_receiver.server.REGISTRATION_REQUESTS", tmp_path
+    ), mock.patch("agent_receiver.utils.AGENT_OUTPUT_DIR", tmp_path):
+        yield
 
 
 def test_agent_data_no_host() -> None:
@@ -35,15 +44,12 @@ def test_agent_data_success(tmp_path: Path) -> None:
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
 
-    with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path):
-        from agent_receiver.server import app  # type: ignore[import]
-
-        client = TestClient(app)
-        response = client.post(
-            "/agent_data",
-            data={"uuid": 1234},
-            files={"upload_file": ("filename", mock_file)},
-        )
+    client = TestClient(app)
+    response = client.post(
+        "/agent_data",
+        data={"uuid": 1234},
+        files={"upload_file": ("filename", mock_file)},
+    )
 
     file_path = tmp_path / "hostname" / "received-output"
     assert file_path.exists()
@@ -64,9 +70,7 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
 
-    with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path), mock.patch(
-        "agent_receiver.server.REGISTRATION_REQUESTS", tmp_path
-    ), mock.patch("agent_receiver.server.shutil.move") as move_mock:
+    with mock.patch("agent_receiver.server.shutil.move") as move_mock:
         from agent_receiver.server import app  # type: ignore[import]
 
         move_mock.side_effect = FileNotFoundError()
@@ -97,16 +101,14 @@ def test_agent_data_move_ready(tmp_path: Path) -> None:
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
 
-    with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path):
-        with mock.patch("agent_receiver.server.REGISTRATION_REQUESTS", tmp_path):
-            from agent_receiver.server import app  # type: ignore[import]
+    from agent_receiver.server import app  # type: ignore[import]
 
-            client = TestClient(app)
-            client.post(
-                "/agent_data",
-                data={"uuid": 1234},
-                files={"upload_file": ("filename", mock_file)},
-            )
+    client = TestClient(app)
+    client.post(
+        "/agent_data",
+        data={"uuid": 1234},
+        files={"upload_file": ("filename", mock_file)},
+    )
 
     registration_request = tmp_path / "DISCOVERABLE" / "hostname.json"
     assert registration_request.exists()

@@ -8,7 +8,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping
 
 from agent_receiver.checkmk_rest_api import (
     get_root_cert,
@@ -18,28 +18,12 @@ from agent_receiver.checkmk_rest_api import (
 )
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
-from cryptography.x509 import load_pem_x509_csr
-from cryptography.x509.oid import NameOID
+from agent_receiver.models import PairingBody, RegistrationWithHNBody
+from agent_receiver.utils import get_hostname_from_link, uuid_from_pem_csr
 from fastapi import FastAPI, File, Form, Header, HTTPException, Response, UploadFile
-from pydantic import BaseModel
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 app = FastAPI()
-
-
-class PairingBody(BaseModel):
-    csr: str
-
-
-def _uuid_from_pem_csr(pem_csr: str) -> str:
-    try:
-        return (
-            load_pem_x509_csr(pem_csr.encode())
-            .subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
-            .value
-        )
-    except ValueError:
-        return "[CSR parsing failed]"
 
 
 @app.post("/pairing")
@@ -48,7 +32,7 @@ async def pairing(
     authentication: str = Header(...),
     pairing_body: PairingBody,
 ) -> Mapping[str, str]:
-    uuid = _uuid_from_pem_csr(pairing_body.csr)
+    uuid = uuid_from_pem_csr(pairing_body.csr)
 
     if not (rest_api_root_cert_resp := get_root_cert(authentication)).ok:
         logger.error(
@@ -91,11 +75,6 @@ async def pairing(
     }
 
 
-class RegistrationWithHNBody(BaseModel):
-    uuid: str
-    host_name: str
-
-
 @app.post(
     "/register_with_hostname",
     status_code=HTTP_204_NO_CONTENT,
@@ -126,17 +105,6 @@ async def register_with_hostname(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-def get_hostname(uuid: str) -> Optional[str]:
-    link_path = AGENT_OUTPUT_DIR / uuid
-
-    try:
-        target_path = os.readlink(link_path)
-    except FileNotFoundError:
-        return None
-
-    return Path(target_path).name
-
-
 @app.post("/agent_data")
 async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
     target_dir = AGENT_OUTPUT_DIR / uuid
@@ -159,7 +127,7 @@ async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...))
         Path(temp_file.name).unlink(missing_ok=True)
 
     ready_file = REGISTRATION_REQUESTS / "READY" / f"{uuid}.json"
-    hostname = get_hostname(uuid)
+    hostname = get_hostname_from_link(uuid)
 
     if ready_file.exists() and hostname:
         try:

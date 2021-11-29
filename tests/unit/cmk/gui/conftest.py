@@ -77,8 +77,8 @@ def monkeypatch(monkeypatch, request_context) -> Generator[MonkeyPatch, None, No
     The drawback here may be that we create some unnecessary application / request context objects
     for some tests. If you have an idea for a cleaner approach, let me know.
     """
-    yield monkeypatch
-    monkeypatch.undo()
+    with monkeypatch.context() as m:
+        yield m
 
 
 @pytest.fixture()

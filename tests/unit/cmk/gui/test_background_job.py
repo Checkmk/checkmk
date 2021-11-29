@@ -13,10 +13,12 @@ import pytest
 
 import tests.testlib as testlib
 
+import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 import cmk.gui.background_job as background_job
+import cmk.gui.globals as gui_globals
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log
 
@@ -26,9 +28,11 @@ import cmk.gui.modules
 
 @pytest.fixture(autouse=True)
 def debug_logging():
-    cmk.gui.log.set_log_levels({"cmk.web": logging.DEBUG})
+    cmk.gui.log.set_log_levels(
+        {"cmk.web": logging.DEBUG, "cmk.web.background-job": cmk.utils.log.VERBOSE}
+    )
     yield
-    cmk.gui.log.set_log_levels({"cmk.web": logging.INFO})
+    cmk.gui.log.set_log_levels(gui_globals.config.log_levels)
 
 
 def test_registered_background_jobs():
@@ -111,7 +115,6 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-@pytest.mark.non_resilient
 def test_start_job(request_context):
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)

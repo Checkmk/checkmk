@@ -10,6 +10,7 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
+import cmk.gui.permissions
 import cmk.gui.views
 
 if not cmk_version.is_raw_edition():
@@ -67,7 +68,9 @@ def test_builtin_icons_and_actions(registry_reset):
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
-@pytest.mark.registry_reset(cmk.gui.views.icon_and_action_registry)
+@pytest.mark.registry_reset(
+    cmk.gui.views.icon_and_action_registry, cmk.gui.permissions.permission_registry
+)
 def test_legacy_icon_plugin(monkeypatch, registry_reset):
     icon: Dict[str, Any] = {
         "columns": ["column"],
@@ -89,7 +92,9 @@ def test_legacy_icon_plugin(monkeypatch, registry_reset):
     assert registered_icon.sort_index() == 10
 
 
-@pytest.mark.registry_reset(cmk.gui.views.icon_and_action_registry)
+@pytest.mark.registry_reset(
+    cmk.gui.views.icon_and_action_registry, cmk.gui.permissions.permission_registry
+)
 def test_legacy_icon_plugin_defaults(monkeypatch, registry_reset):
     icon = {
         "columns": ["column"],

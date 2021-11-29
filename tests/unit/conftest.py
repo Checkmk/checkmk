@@ -19,6 +19,7 @@ from tests.testlib.debug_utils import cmk_debug_enabled
 
 import livestatus
 
+import cmk.utils.caching
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-def fixture_umask(autouse=True):
+def fixture_umask():
     """Ensure the unit tests always use the same umask"""
     with cmk.utils.misc.umask(0o0007):
         yield
@@ -107,6 +108,25 @@ def cleanup_after_test():
 @pytest.fixture(scope="session")
 def site(request):
     pass
+
+
+def _clear_caches():
+    cmk.utils.caching.config_cache.clear()
+    cmk.utils.caching.runtime_cache.clear()
+
+    cmk_version.edition_short.cache_clear()
+
+
+@pytest.fixture(autouse=True, scope="module")
+def clear_caches_per_module():
+    """Ensures that module-scope fixtures are executed with clean caches."""
+    _clear_caches()
+
+
+@pytest.fixture(autouse=True)
+def clear_caches_per_function():
+    """Ensures that each test is executed with a non-polluted cache from a previous test."""
+    _clear_caches()
 
 
 # TODO: This fixes our unit tests when executing the tests while the local
@@ -305,12 +325,15 @@ def registry_reset(request):
     marker = request.node.get_closest_marker("registry_reset")
     if marker is None:
         raise TypeError("registry_reset fixture needs reset_registry maker")
-    registry = marker.args[0]
 
-    default_entries = list(registry)
+    registries = marker.args
+
+    default_entries = [(registry, list(registry)) for registry in registries]
+
     try:
-        yield registry
+        yield registries
     finally:
-        for entry in list(registry):
-            if entry not in default_entries:
-                registry.unregister(entry)
+        for registry, defaults in default_entries:
+            for entry in list(registry):
+                if entry not in defaults:
+                    registry.unregister(entry)

@@ -273,7 +273,6 @@ def test_registered_permission_sections():
         assert section.do_sort == do_sort
 
 
-@pytest.mark.non_resilient
 def test_registered_permissions():
     load_dynamic_permissions()
 

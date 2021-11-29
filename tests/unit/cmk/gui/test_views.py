@@ -2410,7 +2410,7 @@ def test_get_needed_regular_columns(view):
     ])
 
 
-def test_get_needed_join_columns(view):
+def test_get_needed_join_columns(view, load_config):
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))

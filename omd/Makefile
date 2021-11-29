@@ -286,6 +286,7 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="NEXUS_*" \
 	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
+	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \
 	    --no-lintian \

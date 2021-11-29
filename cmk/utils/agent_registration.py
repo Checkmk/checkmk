@@ -31,9 +31,12 @@ class UUIDLink(NamedTuple):
         self.source.unlink(missing_ok=True)
 
     def unlink_target(self) -> None:
-        for filepath in self.target.iterdir():
-            filepath.unlink(missing_ok=True)
-        self.target.rmdir()
+        try:
+            for filepath in self.target.iterdir():
+                filepath.unlink(missing_ok=True)
+            self.target.rmdir()
+        except FileNotFoundError:  # from iterdir
+            pass
 
 
 class UUIDLinkManager:

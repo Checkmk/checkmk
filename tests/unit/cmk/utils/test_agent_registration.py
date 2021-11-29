@@ -4,10 +4,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from uuid import UUID
 
-from cmk.utils.agent_registration import UUIDLinkManager
+import pytest
+
+from cmk.utils.agent_registration import UUIDLink, UUIDLinkManager
 from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
+from cmk.utils.type_defs import HostName
+
+
+class TestUUIDLink:
+    @pytest.fixture
+    def link(self, tmp_path: Path) -> UUIDLink:
+        return UUIDLink(tmp_path / "59e631e9-de89-40d6-9662-ba54569a24fb", tmp_path / "hostname")
+
+    def test_uuid(self, link: UUIDLink) -> None:
+        assert isinstance(link.uuid, UUID)
+
+    def test_hostname(self, link: UUIDLink) -> None:
+        assert isinstance(link.hostname, HostName)
+
+    def test_unlink_nonexisiting_target(self, link: UUIDLink) -> None:
+        link.source.symlink_to(link.target)
+
+        assert not link.target.exists()
+        link.unlink_target()
+
+    def test_unlink_nonexisiting_source(self, link: UUIDLink) -> None:
+        assert not link.source.exists()
+        link.unlink_source()
 
 
 def test_uuid_link_manager_create_link():
@@ -29,7 +55,7 @@ def test_uuid_link_manager_create_link():
     assert link.target == data_source_push_agent_dir.joinpath(hostname)
 
 
-def test_uuid_link_manager_create_existing_link(tmp_path):
+def test_uuid_link_manager_create_existing_link():
     hostname = "my-hostname"
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 

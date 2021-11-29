@@ -77,8 +77,8 @@ disable=
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
     #---------------------------------------------------------------------------
-    # Enable these would improve readability, but currently there are quite a
-    # few places to fix.
+    # isort and pylint disagree about the order when some "normal" code is
+    # interspersed with imports.
     wrong-import-position,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
@@ -116,7 +116,8 @@ disable=
     # them might be a good idea some day...
     fixme,
     #---------------------------------------------------------------------------
-    # The the warnings below will be fixed by black
+    # Black doesn't split long strings, we'll have to this by ourselves, see
+    # https://github.com/psf/black/issues/1331
     line-too-long,
     #---------------------------------------------------------------------------
     # We are light years away from enabling this...
@@ -135,11 +136,11 @@ disable=
     # https://github.com/PyCQA/pylint/issues/3162.
     no-member,
     #---------------------------------------------------------------------------
-    # This one got introduced with pylint 2.6.0
-    # TODO: Evaluate
+    # Lots of warning due to this, but we should really go through them one by
+    # one, this might drastically improve the usefulness of our backtraces.
     raise-missing-from,
     #---------------------------------------------------------------------------
-    # imports are handled by isort
+    # Only a handful of findings, this should be fixed.
     wrong-import-order,
     #---------------------------------------------------------------------------
     # pylint 2.7.[012] has totally screwed this up... :-/
@@ -152,11 +153,6 @@ disable=
     ## pylint 2.9.0 introduced these checker. Investigate.
     consider-using-from-import,
     consider-using-dict-items,
-    # pylint 2.9.0 introduced this checker which fails because of the
-    # definition in cmk/base/check_api.py. The test could not be disabled in
-    # the file for some reason and the code is OK. Last defense line: disable
-    # it globally.
-    invalid-all-format,
     # TODO pylint 2.10.2 introduced checks. Check and remove them gradually
     # too many occurances, requires a lot of mechanical change.
     redundant-u-string-prefix,

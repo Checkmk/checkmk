@@ -21,7 +21,6 @@ from typing import (
     List,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -35,8 +34,10 @@ from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
+    ConfigurationWarnings,
     HostAddress,
     HostName,
+    HostsToUpdate,
     Labels,
     LabelSources,
     ServiceName,
@@ -59,12 +60,10 @@ from cmk.base.config import (
 )
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
-ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
-HostsToUpdate = Optional[Set[HostName]]
 
 
 class MonitoringCore(abc.ABC):

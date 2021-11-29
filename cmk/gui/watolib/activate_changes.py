@@ -26,10 +26,11 @@ import shutil
 import subprocess
 import time
 import traceback
+from dataclasses import asdict
 from itertools import filterfalse
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
@@ -65,8 +66,14 @@ from cmk.gui.globals import timeout_manager, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
-from cmk.gui.plugins.watolib import ABCConfigDomain
-from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.plugins.watolib.utils import (
+    DomainRequest,
+    DomainRequests,
+    get_always_activate_domains,
+    get_config_domain,
+    SerializedSettings,
+    wato_fileheader,
+)
 from cmk.gui.sites import activation_sites, allsites
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import get_site_config, is_single_local_site, site_is_local, SiteStatus
@@ -75,6 +82,7 @@ from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.changes import log_audit, SiteChanges
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath, SnapshotCreator
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -1779,17 +1787,18 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return configuration_warnings
 
     def _call_activate_changes_automation(self) -> ConfigWarnings:
-        domains = self._get_domains_needing_activation()
+        domain_requests = self._get_domains_needing_activation()
 
         if site_is_local(self._site_id):
-            return execute_activate_changes(domains)
+            return execute_activate_changes(domain_requests)
 
+        serialized_requests = list(asdict(x) for x in domain_requests)
         try:
             response = cmk.gui.watolib.automations.do_remote_automation(
                 get_site_config(self._site_id),
                 "activate-changes",
                 [
-                    ("domains", repr(domains)),
+                    ("domains", repr(serialized_requests)),
                     ("site_id", self._site_id),
                 ],
             )
@@ -1800,8 +1809,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
             raise
 
-        if "omd" in domains:
-            response.setdefault("omd", []).extend(self._get_omd_domain_background_job_result())
+        omd_ident = ConfigDomainOMD.ident()
+        if any(request.name == omd_ident for request in domain_requests):
+            response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
 
         return response
 
@@ -1829,12 +1839,24 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 ):
                     return [e.message]
 
-    def _get_domains_needing_activation(self):
-        domains = set([])
+    def _get_domains_needing_activation(self) -> DomainRequests:
+        domain_settings: Dict[ConfigDomainName, List[SerializedSettings]] = {}
         for change in self._site_changes:
             if change["need_restart"]:
-                domains.update(change["domains"])
-        return sorted(list(domains))
+                for domain_name in change["domains"]:
+                    domain_settings.setdefault(domain_name, [])
+                    if (
+                        settings := get_config_domain(domain_name).get_domain_settings(change)
+                    ) is not None:
+                        domain_settings[domain_name].append(settings)
+
+        return sorted(
+            (
+                get_config_domain(domain_name).get_domain_request(settings_list)
+                for (domain_name, settings_list) in domain_settings.items()
+            ),
+            key=lambda x: x.name,
+        )
 
     def _confirm_activated_changes(self):
         site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
@@ -1948,14 +1970,27 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._expected_duration = duration
 
 
-def execute_activate_changes(domains: List[ConfigDomainName]) -> ConfigWarnings:
-    activation_domains = set(domains).union(ABCConfigDomain.get_always_activate_domain_idents())
+def parse_serialized_domain_requests(
+    serialized_requests: Iterable[SerializedSettings],
+) -> DomainRequests:
+    return [DomainRequest(**x) for x in serialized_requests]
+
+
+def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
+    domain_names = [x.name for x in domain_requests]
+
+    all_domain_requests = [
+        domain.get_domain_request([])
+        for domain in get_always_activate_domains()
+        if domain.ident() not in domain_names
+    ]
+    all_domain_requests.extend(domain_requests)
+    all_domain_requests.sort(key=lambda x: x.name)
 
     results: ConfigWarnings = {}
-    for domain in sorted(activation_domains):
-        domain_class = ABCConfigDomain.get_class(domain)
-        warnings = domain_class().activate()
-        results[domain] = warnings or []
+    for domain_request in all_domain_requests:
+        warnings = get_config_domain(domain_request.name)().activate(domain_request.settings)
+        results[domain_request.name] = warnings or []
 
     _add_extensions_for_license_usage()
     _update_links_for_agent_receiver()

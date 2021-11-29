@@ -28,6 +28,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
+    HostsToUpdate,
     InventoryPluginName,
     Item,
     ServicegroupName,
@@ -70,7 +71,7 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        hosts_to_update: core_config.HostsToUpdate = None,
+        hosts_to_update: HostsToUpdate = None,
     ) -> None:
         self._create_core_config()
         self._precompile_hostchecks(config_path)

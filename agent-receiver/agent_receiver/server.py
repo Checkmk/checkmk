@@ -22,7 +22,13 @@ from agent_receiver.checkmk_rest_api import (
 )
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
-from agent_receiver.models import PairingBody, RegistrationWithHNBody, RegistrationWithLabelsBody
+from agent_receiver.models import (
+    PairingBody,
+    RegistrationStatus,
+    RegistrationWithHNBody,
+    RegistrationWithLabelsBody,
+)
+from agent_receiver.utils import get_registration_status_from_file, Host
 from fastapi import APIRouter, Depends, FastAPI, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
@@ -205,6 +211,29 @@ async def agent_data(
         uuid,
     )
     return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+@cert_validation_router.get("/registration_status/{uuid}", response_model=RegistrationStatus)
+async def registration_status(
+    uuid: str,
+    certificate: str = Header(...),
+) -> RegistrationStatus:
+    host = Host(uuid)
+    registration_data = get_registration_status_from_file(uuid)
+
+    if not host.registered:
+        if registration_data:
+            return RegistrationStatus(
+                status=registration_data.status, message=registration_data.message
+            )
+        raise HTTPException(status_code=404, detail="Host is not registered")
+
+    return RegistrationStatus(
+        hostname=host.hostname,
+        status=registration_data.status if registration_data else None,
+        type=host.host_type,
+        message="Host registered",
+    )
 
 
 app.include_router(cert_validation_router)

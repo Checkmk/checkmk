@@ -14,6 +14,7 @@ from unittest import mock
 import pytest
 from agent_receiver import server
 from agent_receiver.checkmk_rest_api import CMKEdition
+from agent_receiver.models import HostTypeEnum
 from agent_receiver.server import app
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -24,6 +25,8 @@ from pytest_mock import MockerFixture
 def mock_paths(tmp_path: Path):
     with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path), mock.patch(
         "agent_receiver.server.REGISTRATION_REQUESTS", tmp_path
+    ), mock.patch("agent_receiver.utils.AGENT_OUTPUT_DIR", tmp_path), mock.patch(
+        "agent_receiver.utils.REGISTRATION_REQUESTS", tmp_path
     ):
         yield
 
@@ -228,3 +231,75 @@ def test_agent_data_move_ready(
 
     registration_request = tmp_path / "DISCOVERABLE" / "1234.json"
     assert registration_request.exists()
+
+
+def test_registration_status_declined(tmp_path: Path, client: TestClient) -> None:
+    os.mkdir(tmp_path / "DECLINED")
+    with open(tmp_path / "DECLINED" / "1234.json", "w") as file:
+        registration_request = {"message": "Registration request declined"}
+        json.dump(registration_request, file)
+
+    response = client.get(
+        "/registration_status/1234",
+        headers={"certificate": "cert", "authentication": "auth"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "hostname": None,
+        "status": "declined",
+        "type": None,
+        "message": "Registration request declined",
+    }
+
+
+def test_registration_status_host_not_registered(client: TestClient) -> None:
+    response = client.get(
+        "/registration_status/1234",
+        headers={"certificate": "cert", "authentication": "auth"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Host is not registered"}
+
+
+def test_registration_status_push_host(tmp_path: Path, client: TestClient) -> None:
+    source = tmp_path / "1234"
+    target_dir = tmp_path / "hostname"
+    os.mkdir(target_dir)
+    source.symlink_to(target_dir)
+
+    os.mkdir(tmp_path / "DISCOVERABLE")
+    Path(tmp_path / "DISCOVERABLE" / "1234.json").touch()
+
+    response = client.get(
+        "/registration_status/1234",
+        headers={"certificate": "cert", "authentication": "auth"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "hostname": "hostname",
+        "status": "discoverable",
+        "type": HostTypeEnum.PUSH.value,
+        "message": "Host registered",
+    }
+
+
+def test_registration_status_pull_host(tmp_path: Path, client: TestClient) -> None:
+    source = tmp_path / "1234"
+    target_dir = tmp_path / "hostname"
+    source.symlink_to(target_dir)
+
+    response = client.get(
+        "/registration_status/1234",
+        headers={"certificate": "cert", "authentication": "auth"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "hostname": "hostname",
+        "status": None,
+        "type": HostTypeEnum.PULL.value,
+        "message": "Host registered",
+    }

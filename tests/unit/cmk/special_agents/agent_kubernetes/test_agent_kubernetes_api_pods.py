@@ -131,6 +131,7 @@ class TestPodWithNoNode(TestCase):
                         name="non_scheduled_container",
                     ),
                 ],
+                restart_policy="Always",
             ),
             status=client.V1PodStatus(
                 host_ip=None,

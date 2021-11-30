@@ -32,8 +32,8 @@ class PerformanceContainer(BaseModel):
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: api.Namespace
-    creation_timestamp: api.CreationTimestamp
+    namespace: Optional[api.Namespace]
+    creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels  # used for host labels
     node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).

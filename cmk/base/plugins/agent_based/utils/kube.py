@@ -9,6 +9,10 @@ import enum
 from pydantic import BaseModel
 
 
+class KubernetesError(Exception):
+    pass
+
+
 class Phase(str, enum.Enum):
     RUNNING = "running"
     PENDING = "pending"

@@ -153,8 +153,8 @@ class KubeletInfo(BaseModel):
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: Namespace
-    creation_timestamp: CreationTimestamp
+    namespace: Optional[Namespace]
+    creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).

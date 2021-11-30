@@ -110,6 +110,7 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
                 "node": pod.spec.node_name,
                 "host_network": pod.spec.host_network,
                 "dns_policy": pod.spec.dns_policy,
+                "restart_policy": pod.spec.restart_policy,
             }
         )
     return api.PodSpec(**info)
@@ -314,7 +315,7 @@ def deployment_conditions(status: client.V1DeploymentStatus) -> Sequence[api.Dep
 
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
-        uid=pod.metadata.uid,
+        uid=api.PodUID(pod.metadata.uid),
         metadata=parse_metadata(pod.metadata),
         status=pod_status(pod),
         spec=pod_spec(pod),

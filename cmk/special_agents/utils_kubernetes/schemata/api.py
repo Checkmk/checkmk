@@ -163,6 +163,7 @@ class PodSpec(BaseModel):
     node: Optional[NodeName] = None
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
+    restart_policy: RestartPolicy
 
 
 class ContainerRunningState(BaseModel):
@@ -234,7 +235,7 @@ class PodStatus(BaseModel):
 
 
 class Pod(BaseModel):
-    uid: str
+    uid: PodUID
     metadata: MetaData
     status: PodStatus
     spec: PodSpec

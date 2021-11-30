@@ -51,7 +51,6 @@ AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agent_kube")
 
 MetricName = NewType("MetricName", str)
 ContainerName = NewType("ContainerName", str)
-PodUID = NewType("PodUID", str)
 SectionName = NewType("SectionName", str)
 
 
@@ -69,13 +68,13 @@ class RateMetric(BaseModel):
 
 class PerformanceContainer(BaseModel):
     name: ContainerName
-    pod_uid: PodUID
+    pod_uid: api.PodUID
     metrics: Mapping[MetricName, PerformanceMetric]
     rate_metrics: Optional[Mapping[MetricName, RateMetric]]
 
 
 class PerformancePod(NamedTuple):
-    uid: PodUID
+    uid: api.PodUID
     containers: List[PerformanceContainer]
 
 
@@ -96,7 +95,7 @@ class ContainersStore(BaseModel):
 
 class ContainerMetadata(BaseModel):
     name: ContainerName
-    pod_uid: PodUID
+    pod_uid: api.PodUID
 
 
 class PathPrefixAction(argparse.Action):
@@ -154,16 +153,16 @@ def setup_logging(verbosity: int) -> None:
 class Pod:
     def __init__(
         self,
-        uid: str,
+        uid: api.PodUID,
         metadata: api.MetaData,
         status: api.PodStatus,
         spec: api.PodSpec,
         resources: api.PodUsageResources,
         containers: Mapping[str, api.ContainerInfo],
     ) -> None:
-        self.uid = PodUID(uid)
+        self.uid = uid
         self.metadata = metadata
-        self.node = spec.node
+        self.spec = spec
         self.status = status
         self.resources = resources
         self.containers = containers
@@ -171,6 +170,10 @@ class Pod:
     @property
     def phase(self):
         return self.status.phase
+
+    @property
+    def node(self) -> Optional[api.NodeName]:
+        return self.spec.node
 
     def lifecycle_phase(self) -> section.PodLifeCycle:
         return section.PodLifeCycle(phase=self.phase)
@@ -180,6 +183,17 @@ class Pod:
             return self.metadata.name
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
+
+    def info(self) -> section.PodInfo:
+        return section.PodInfo(
+            namespace=self.metadata.namespace,
+            creation_timestamp=self.metadata.creation_timestamp,
+            labels=self.metadata.labels if self.metadata.labels else {},
+            node=self.node,
+            restart_policy=self.spec.restart_policy,
+            qos_class=self.status.qos_class,
+            uid=self.uid,
+        )
 
     def cpu_resources(self) -> api.Resources:
         return api.Resources(
@@ -519,13 +533,14 @@ def pod_api_based_checkmk_sections(pod: Pod):
         ("kube_start_time_v1", pod.start_time),
         ("kube_memory_resources_v1", pod.memory_resources),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),
+        ("kube_pod_info_v1", pod.info),
     )
     for section_name, section_call in sections:
         yield section_name, section_call()
 
 
 def filter_outdated_pods(
-    live_pods: Sequence[PerformancePod], uid_piggyback_mappings: Mapping[PodUID, str]
+    live_pods: Sequence[PerformancePod], uid_piggyback_mappings: Mapping[api.PodUID, str]
 ) -> Iterator[PerformancePod]:
     return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
 
@@ -611,7 +626,7 @@ def request_metrics_from_cluster_collector(
     return json.loads(resp_content[0])
 
 
-def map_uid_to_piggyback_host_name(api_pods: Sequence[Pod]) -> Mapping[PodUID, str]:
+def map_uid_to_piggyback_host_name(api_pods: Sequence[Pod]) -> Mapping[api.PodUID, str]:
     return {pod.uid: pod.name(prepend_namespace=True) for pod in api_pods}
 
 
@@ -736,8 +751,8 @@ def group_metrics_by_container(
 
 def group_containers_by_pods(
     performance_containers: Iterator[PerformanceContainer],
-) -> Mapping[PodUID, PerformancePod]:
-    parsed_pods: Dict[PodUID, List[PerformanceContainer]] = {}
+) -> Mapping[api.PodUID, PerformancePod]:
+    parsed_pods: Dict[api.PodUID, List[PerformanceContainer]] = {}
     for container in performance_containers:
         pod_containers = parsed_pods.setdefault(container.pod_uid, [])
         pod_containers.append(container)
@@ -753,7 +768,7 @@ def parse_containers_metadata(metrics) -> Mapping[ContainerName, ContainerMetada
         if (container_name := metric["container_name"]) in containers:
             continue
         containers[ContainerName(container_name)] = ContainerMetadata(
-            name=container_name, pod_uid=metric["pod_uid"]
+            name=container_name, pod_uid=api.PodUID(metric["pod_uid"])
         )
     return containers
 

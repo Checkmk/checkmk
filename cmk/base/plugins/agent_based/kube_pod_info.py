@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import PodInfo
+from cmk.base.plugins.agent_based.utils.kube import KubernetesError
 
 
 def parse_kube_pod_info(string_table: StringTable):
@@ -62,6 +63,13 @@ _DISPLAY_NAME = {
 def check_kube_pod_info(section: PodInfo) -> CheckResult:
     # To get an understanding of API objects this check deals with, one can take a look at
     # PodInfo and the definition of its fields
+
+    if section.namespace is None:
+        raise KubernetesError("Pod has no namespace")
+
+    if section.creation_timestamp is None:
+        raise KubernetesError("Pod has no creation timestamp")
+
     yield Result(state=State.OK, summary=f"{_DISPLAY_NAME['node']}: {section.node}")
     yield Result(state=State.OK, summary=f"{_DISPLAY_NAME['namespace']}: {section.namespace}")
     yield Result(

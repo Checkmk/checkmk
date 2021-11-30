@@ -2,7 +2,7 @@ NAGIOS := nagios
 NAGIOS_VERS := 3.5.1
 NAGIOS_DIR := $(NAGIOS)-$(NAGIOS_VERS)
 # Increase this to enforce a recreation of the build cache
-NAGIOS_BUILD_ID := 3
+NAGIOS_BUILD_ID := 3-$(EDITION_SHORT)
 
 NAGIOS_UNPACK := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-unpack
 NAGIOS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-patching

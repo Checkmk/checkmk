@@ -512,6 +512,7 @@ div#page_menu_popups {
 
     .confirm_content {
       padding: 0;
+      margin: 0 $spacing;
       color: $font-color;
       text-align: left;
     }
@@ -591,17 +592,13 @@ body.dashboard {
     right: 0;
     bottom: 0;
     left: 0;
+    align-content: center;
     // Important needed to override swal2 internal definition
     background-color: rgba($black, 0.2) !important; // sass-lint:disable-line no-important
 
     .confirm_popup {
-      flex: 0 0 auto;
+      width: 400px;
       margin: auto;
-    }
-
-    .confirm_content {
-      width: max-content;
-      min-width: 300px;
     }
   }
 }

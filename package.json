@@ -75,7 +75,7 @@
     "lodash.range": "^3.2.0",
     "select2": "^4.0.13",
     "simplebar": "^5.3.6",
-    "sweetalert2": "^10.14.0",
+    "sweetalert2": "^11.2.1",
     "whatwg-fetch": "^3.6.2"
   },
   "resolutions": {

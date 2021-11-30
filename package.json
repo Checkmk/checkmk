@@ -61,7 +61,7 @@
     "webpack-remove-empty-scripts": "^0.7.1"
   },
   "dependencies": {
-    "@yaireo/tagify": "3.22.1",
+    "@yaireo/tagify": "^4.9.2",
     "canvas-5-polyfill": "^0.1.5",
     "core-js": "^3.19.2",
     "crossfilter2": "^1.5.2",

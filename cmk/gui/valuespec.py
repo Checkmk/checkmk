@@ -56,6 +56,7 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.plugin_registry import Registry
+from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds
 
 import cmk.gui.forms as forms
@@ -392,22 +393,9 @@ class Age(ValueSpec[Seconds]):
         )
 
     def value_to_text(self, value: Seconds) -> str:
-        days, rest = divmod(value, 60 * 60 * 24)
-        hours, rest = divmod(rest, 60 * 60)
-        minutes, seconds = divmod(rest, 60)
-        parts = []
-        for title, count in [
-            (_("days"), days),
-            (_("hours"), hours),
-            (_("minutes"), minutes),
-            (_("seconds"), seconds),
-        ]:
-            if count:
-                parts.append("%d %s" % (count, title))
-
-        if parts:
-            return " ".join(parts)
-        return _("no time")
+        if value == 0:
+            return _("no time")
+        return SecondsRenderer.detailed_str(value)
 
     def value_to_json(self, value: Seconds) -> JSONValue:
         return value

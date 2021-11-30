@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.render
+from cmk.utils.render import SecondsRenderer
 
 import cmk.gui.utils as utils
 from cmk.gui.globals import html
@@ -481,9 +482,8 @@ def perfometer_check_oracle_dataguard_stats(
             color = "#80F000"
 
             perfdata_found = True
-            days, rest = divmod(int(data[1]), 60 * 60 * 24)
-            hours, rest = divmod(rest, 60 * 60)
-            minutes, _seconds = divmod(rest, 60)
+
+            days, hours, minutes, _seconds = SecondsRenderer.get_tuple(int(data[1]))
             perfdata1 = data[1]
 
     if not perfdata_found:

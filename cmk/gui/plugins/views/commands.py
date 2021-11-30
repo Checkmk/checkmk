@@ -5,10 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, List, Literal, Optional, Sequence, Tuple
+from typing import Any, Literal, Optional, Sequence
 
 import livestatus
 from livestatus import SiteId
+
+from cmk.utils.render import SecondsRenderer
 
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
@@ -961,7 +963,7 @@ class CommandScheduleDowntimes(Command):
             cmdtag,
         )
 
-    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:
+    def user_confirm_options(self, len_rows: int, cmdtag: str) -> list[tuple[str, str]]:
         if cmdtag == "SVC" and not request.var("_down_remove"):
             return [
                 (
@@ -1248,7 +1250,7 @@ class CommandScheduleDowntimes(Command):
 
     def _downtime_specs(
         self, cmdtag: str, row: Row, spec: str, title: str
-    ) -> Tuple[str, List[str], str]:
+    ) -> tuple[str, list[str], str]:
         if request.var("_include_childs"):  # only for hosts
             specs = [spec] + self._get_child_hosts(
                 row["site"], [spec], recurse=bool(request.var("_include_childs_recurse"))
@@ -1384,40 +1386,8 @@ def time_interval_to_human_readable(next_time_interval, prefix):
         title = downtime_titles[next_time_interval]
     except KeyError:
         duration = int(next_time_interval)
-        title = _("<b>%%s of %s length</b>") % duration_human_readable(duration)
+        title = _("<b>%%s of %s length</b>") % SecondsRenderer.detailed_str(duration)
     return title % prefix
-
-
-def duration_human_readable(secs):
-    """Convert duration time into a more convenient readable string
-
-    Args:
-        secs:
-            The duration time in seconds
-
-    Examples:
-        >>> duration_human_readable(1)
-        '1 seconds'
-
-    Returns:
-
-    """
-    days, rest = divmod(secs, 86400)
-    hours, rest = divmod(rest, 3600)
-    mins, secs = divmod(rest, 60)
-
-    return ", ".join(
-        [
-            "%d %s" % (val, label)
-            for val, label in [
-                (days, "days"),
-                (hours, "hours"),
-                (mins, "minutes"),
-                (secs, "seconds"),
-            ]
-            if val > 0
-        ]
-    )
 
 
 @command_registry.register

@@ -326,6 +326,11 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
 def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
+
+    # In case the file is not created yet, read should not raise
+    state = mk_logwatch.State(file_path).read()
+    assert state._data == {}
+
     with open(file_path, "wb") as f:
         f.write(state_data.encode("utf-8"))
 

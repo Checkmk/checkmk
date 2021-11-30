@@ -24,6 +24,7 @@ from typing import Any, Dict
 import livestatus
 
 import cmk.utils.paths
+from cmk.utils.i18n import _
 
 
 @lru_cache
@@ -206,6 +207,27 @@ def parse_check_mk_version(v: str) -> int:
         val += num * multiply
 
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
+
+
+def major_version_parts(version: str) -> tuple[int, int, int]:
+    match = re.match(r"(\d+).(\d+).(\d+)", version)
+    if not match or len(match.groups()) != 3:
+        raise ValueError(_("Unable to parse version: %r") % version)
+    groups = match.groups()
+    return int(groups[0]), int(groups[1]), int(groups[2])
+
+
+def is_daily_build_of_master(version: str) -> bool:
+    """
+    >>> f = is_daily_build_of_master
+    >>> f("2021.04.12")
+    True
+    >>> f("2023.04.12")
+    True
+    >>> f("2.1.0")
+    False
+    """
+    return re.match(r"\d{4}.\d{2}.\d{2}$", version) is not None
 
 
 #   .--general infos-------------------------------------------------------.

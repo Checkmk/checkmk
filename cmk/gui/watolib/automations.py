@@ -25,7 +25,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import UserId
-from cmk.utils.version import parse_check_mk_version
+from cmk.utils.version import is_daily_build_of_master, major_version_parts, parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -740,14 +740,11 @@ def compatible_with_central_site(
         return False
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
-    if (
-        re.match(r"\d{4}.\d{2}.\d{2}$", central_version) is not None
-        or re.match(r"\d{4}.\d{2}.\d{2}$", remote_version) is not None
-    ):
+    if is_daily_build_of_master(central_version) or is_daily_build_of_master(remote_version):
         return True
 
-    central_parts = _major_version_parts(central_version)
-    remote_parts = _major_version_parts(remote_version)
+    central_parts = major_version_parts(central_version)
+    remote_parts = major_version_parts(remote_version)
 
     # Same major version is allowed
     if central_parts == remote_parts:
@@ -807,11 +804,3 @@ def compatible_with_central_site(
 
     # Everything else is incompatible
     return False
-
-
-def _major_version_parts(version: str) -> Tuple[int, int, int]:
-    match = re.match(r"(\d+).(\d+).(\d+)", version)
-    if not match or len(match.groups()) != 3:
-        raise ValueError(_("Unable to parse version: %r") % version)
-    groups = match.groups()
-    return int(groups[0]), int(groups[1]), int(groups[2])

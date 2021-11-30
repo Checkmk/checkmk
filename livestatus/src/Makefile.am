@@ -189,6 +189,9 @@ liblivestatus_a_SOURCES = \
         strutil.cc
 $(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 
+# Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets
+all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
+
 $(ASIO_INCLUDE): $(ASIO_VERSION)
 	mkdir -p $(ASIO_INCLUDE)
 	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $(ASIO_VERSION)/asio/include/ $(ASIO_INCLUDE)

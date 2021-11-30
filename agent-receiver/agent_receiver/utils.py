@@ -4,11 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-from pathlib import Path
-from typing import Optional
-
-from agent_receiver.constants import AGENT_OUTPUT_DIR
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 
@@ -22,14 +17,3 @@ def uuid_from_pem_csr(pem_csr: str) -> str:
         )
     except ValueError:
         return "[CSR parsing failed]"
-
-
-def get_hostname_from_link(uuid: str) -> Optional[str]:
-    link_path = AGENT_OUTPUT_DIR / uuid
-
-    try:
-        target_path = os.readlink(link_path)
-    except FileNotFoundError:
-        return None
-
-    return Path(target_path).name

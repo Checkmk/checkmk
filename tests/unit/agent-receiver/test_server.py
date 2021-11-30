@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 def mock_paths(tmp_path: Path):
     with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path), mock.patch(
         "agent_receiver.server.REGISTRATION_REQUESTS", tmp_path
-    ), mock.patch("agent_receiver.utils.AGENT_OUTPUT_DIR", tmp_path):
+    ):
         yield
 
 
@@ -70,7 +70,8 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
 
-    with mock.patch("agent_receiver.server.shutil.move") as move_mock:
+    with mock.patch("agent_receiver.server.Path.rename") as move_mock:
+
         move_mock.side_effect = FileNotFoundError()
 
         client = TestClient(app)
@@ -81,10 +82,7 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
         )
 
     assert response.status_code == 200
-    assert (
-        caplog.records[0].message
-        == "uuid=1234 Could not move registration request from READY to DISCOVERABLE"
-    )
+    assert caplog.records[0].message == "uuid=1234 Agent data saved"
 
 
 def test_agent_data_move_ready(tmp_path: Path) -> None:
@@ -106,5 +104,5 @@ def test_agent_data_move_ready(tmp_path: Path) -> None:
         files={"upload_file": ("filename", mock_file)},
     )
 
-    registration_request = tmp_path / "DISCOVERABLE" / "hostname.json"
+    registration_request = tmp_path / "DISCOVERABLE" / "1234.json"
     assert registration_request.exists()

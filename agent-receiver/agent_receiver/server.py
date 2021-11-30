@@ -7,6 +7,7 @@
 import os
 import shutil
 import tempfile
+from contextlib import suppress
 from pathlib import Path
 from typing import Dict, Mapping
 
@@ -19,7 +20,7 @@ from agent_receiver.checkmk_rest_api import (
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
 from agent_receiver.models import PairingBody, RegistrationWithHNBody
-from agent_receiver.utils import get_hostname_from_link, uuid_from_pem_csr
+from agent_receiver.utils import uuid_from_pem_csr
 from fastapi import FastAPI, File, Form, Header, HTTPException, Response, UploadFile
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
@@ -105,6 +106,14 @@ async def register_with_hostname(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
+def _move_ready_file(uuid: str) -> None:
+    with suppress(FileNotFoundError):
+        # TODO: use RegistrationState.READY.name
+        (REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").rename(
+            REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{uuid}.json"
+        )
+
+
 @app.post("/agent_data")
 async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...)) -> Dict[str, str]:
     target_dir = AGENT_OUTPUT_DIR / uuid
@@ -126,17 +135,7 @@ async def agent_data(uuid: str = Form(...), upload_file: UploadFile = File(...))
     finally:
         Path(temp_file.name).unlink(missing_ok=True)
 
-    ready_file = REGISTRATION_REQUESTS / "READY" / f"{uuid}.json"
-    hostname = get_hostname_from_link(uuid)
-
-    if ready_file.exists() and hostname:
-        try:
-            shutil.move(ready_file, REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{hostname}.json")
-        except FileNotFoundError:
-            logger.warning(
-                "uuid=%s Could not move registration request from READY to DISCOVERABLE",
-                uuid,
-            )
+    _move_ready_file(uuid)
 
     logger.info(
         "uuid=%s Agent data saved",

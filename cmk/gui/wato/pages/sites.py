@@ -1109,6 +1109,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             "edit-configvar",
             msg,
             sites=[self._site_id],
+            domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
 

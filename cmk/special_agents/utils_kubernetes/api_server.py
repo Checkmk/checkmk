@@ -123,8 +123,8 @@ class RawAPI:
     def api_health(self) -> api.APIHealth:
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
-    def get_kubelet_health(self, node_link) -> api.HealthZ:
-        return self._get_healthz(f"{node_link}/proxy/healthz")
+    def get_kubelet_health(self, node_name) -> api.HealthZ:
+        return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
 
 
 class APIServer:
@@ -171,9 +171,7 @@ class APIServer:
         result = []
         for raw_node in self.core_api.nodes():
             result.append(
-                node_from_client(
-                    raw_node, self.raw_api.get_kubelet_health(raw_node.metadata.self_link)
-                )
+                node_from_client(raw_node, self.raw_api.get_kubelet_health(raw_node.metadata.name))
             )
         return result
 

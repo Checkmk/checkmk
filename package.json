@@ -76,7 +76,7 @@
     "select2": "^4.0.13",
     "simplebar": "^5.3.6",
     "sweetalert2": "^10.14.0",
-    "whatwg-fetch": "^3.0.0"
+    "whatwg-fetch": "^3.6.2"
   },
   "resolutions": {
     "//": "COMMENT: Ensure we get the desired version without dependency declaration",

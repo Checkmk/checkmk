@@ -72,6 +72,7 @@ endif
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))
+CACHE_PKG_PROCESS_TARGETS := $(foreach package,$(addsuffix _CACHE_PKG_PROCESS,$(BUILD_TARGET_VARS)),$($(package)))
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 INSTALL := $(BUILD_HELPER_DIR)/install
@@ -132,6 +133,8 @@ install-clean:
 $(BUILD_HELPER_DIR):
 	$(MKDIR) $(BUILD_HELPER_DIR)
 
+$(OPENSSL_CACHE_PKG_PROCESS): $(BUILD_HELPER_DIR)
+
 # Prepare clean install environment
 $(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
@@ -150,7 +153,7 @@ $(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(call log_time,$@,done)
 	touch $@
 
-$(INSTALL_TARGETS): $(PRE_INSTALL)
+$(INSTALL_TARGETS) $(CACHE_PKG_PROCESS_TARGETS): $(PRE_INSTALL)
 
 $(INSTALL_LOG_TARGETS): %-log: %
 	$(call log_time,$@,done)

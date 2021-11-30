@@ -400,6 +400,7 @@ def test_generate_pre_17_site_snapshot(
         "mkeventd_mkp.tar",
         "mkeventd.tar",
         "multisite.tar",
+        "omd.tar",
         "sitespecific.tar",
         "usersettings.tar",
     ]
@@ -429,6 +430,11 @@ def test_generate_pre_17_site_snapshot(
             "gui_logo_facelift.tar",
         ]
 
+    if not is_pre_17_site:
+        expected_subtars += [
+            "omd.tar",
+        ]
+
     assert sorted(f.name for f in unpack_dir.iterdir()) == sorted(expected_subtars)
 
     expected_files: Dict[str, List[str]] = {
@@ -445,6 +451,7 @@ def test_generate_pre_17_site_snapshot(
         "auth.serials.tar": ["auth.serials"],
         "mknotify.tar": [],
         "diskspace.tar": [],
+        "omd.tar": [] if is_pre_17_site else ["sitespecific.mk"],
     }
 
     if config.sites[remote_site].get("replicate_mkps", False):

@@ -226,6 +226,14 @@ def get_replication_paths() -> List[ReplicationPath]:
             os.path.relpath(cmk.utils.paths.omd_root + "/local", cmk.utils.paths.omd_root),
             [],
         ),
+        ReplicationPath(
+            "file",
+            "omd",
+            os.path.relpath(
+                cmk.utils.paths.omd_root + "/etc/omd/sitespecific.mk", cmk.utils.paths.omd_root
+            ),
+            [],
+        ),
     ]
 
     # TODO: Move this to CEE specific code again

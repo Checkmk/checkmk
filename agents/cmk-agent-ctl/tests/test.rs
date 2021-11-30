@@ -4,6 +4,7 @@
 
 // Dummy testcase. Taken as-is from the Rust book.
 #[test]
+#[allow(clippy::eq_op)]
 fn it_works() {
     assert_eq!(2 + 2, 4);
 }

@@ -39,11 +39,11 @@ impl Config {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
 
-        Ok(Config::empty_config()?)
+        Config::empty_config()
     }
 
     pub fn merge_two_configs(loser: Config, winner: Config) -> Config {
-        return Config {
+        Config {
             agent_receiver_address: winner
                 .agent_receiver_address
                 .or(loser.agent_receiver_address),
@@ -51,7 +51,7 @@ impl Config {
             credentials: winner.credentials.or(loser.credentials),
             root_certificate: winner.root_certificate.or(loser.root_certificate),
             host_name: winner.host_name.or(loser.host_name),
-        };
+        }
     }
 
     pub fn from_args(args: Args) -> Config {
@@ -59,7 +59,7 @@ impl Config {
             agent_receiver_address: args.server,
             package_name: args.package_name,
             credentials: if let (Some(u), Some(p)) = (args.user, args.password) {
-                Some(String::from(format!("{} {}", &u, &p)))
+                Some(format!("{} {}", &u, &p))
             } else {
                 None
             },
@@ -93,10 +93,10 @@ impl RegistrationState {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
 
-        Ok(RegistrationState::empty_state()?)
+        RegistrationState::empty_state()
     }
 
-    pub fn to_file(self, path: &Path) -> io::Result<()> {
-        write(path, &serde_json::to_string(&self)?)
+    pub fn to_file(&self, path: &Path) -> io::Result<()> {
+        write(path, &serde_json::to_string(self)?)
     }
 }

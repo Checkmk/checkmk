@@ -5,7 +5,6 @@ use openssl::pkey::PKey;
 use openssl::rsa::Rsa;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{X509Name, X509Req};
-use reqwest;
 use reqwest::blocking::{Client, ClientBuilder};
 use reqwest::Certificate;
 use std::net::TcpStream;

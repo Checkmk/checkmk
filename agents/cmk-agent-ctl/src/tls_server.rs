@@ -36,7 +36,7 @@ fn tls_config(server_specs: Vec<config::ServerSpec>) -> AnyhowResult<Arc<ServerC
     ))
 }
 
-fn root_cert_store(server_specs: &Vec<config::ServerSpec>) -> AnyhowResult<RootCertStore> {
+fn root_cert_store(server_specs: &[config::ServerSpec]) -> AnyhowResult<RootCertStore> {
     let mut cert_store = RootCertStore::empty();
 
     for spec in server_specs {
@@ -47,7 +47,7 @@ fn root_cert_store(server_specs: &Vec<config::ServerSpec>) -> AnyhowResult<RootC
 }
 
 fn sni_resolver(
-    server_specs: &Vec<config::ServerSpec>,
+    server_specs: &[config::ServerSpec],
 ) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 

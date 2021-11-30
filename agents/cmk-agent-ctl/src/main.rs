@@ -55,13 +55,13 @@ fn register(
         Some(cert) => Some(cert.clone()),
         None => {
             let fetched_server_cert = certs::fetch_server_cert(&agent_receiver_address)
-                .context(format!("Error establishing trust with agent_receiver."))?;
+                .context("Error establishing trust with agent_receiver.")?;
             println!("Trusting \n\n{}\nfor pairing", &fetched_server_cert);
             None
         }
     };
 
-    let (csr, private_key) = certs::make_csr(&uuid).context(format!("Error creating CSR."))?;
+    let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
     let pairing_response =
         agent_receiver_api::pairing(&agent_receiver_address, server_cert, csr, &credentials)
             .context(format!("Error pairing with {}", &agent_receiver_address))?;
@@ -103,7 +103,7 @@ fn push(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
             &server_spec.uuid,
             &mon_data,
         )
-        .context(format!("Error pushing monitoring data."))?;
+        .context("Error pushing monitoring data.")?;
         println!("{}", message);
     }
 
@@ -131,7 +131,7 @@ fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
 
     let mut stream = tls_server::IoStream::new();
 
-    stream.write(TLS_ID)?;
+    stream.write_all(TLS_ID)?;
     stream.flush()?;
 
     let mut tls_connection =
@@ -167,14 +167,14 @@ fn disallow_legacy_pull() -> IoResult<()> {
 }
 
 fn get_configuration(path_config: &Path, args: cli::Args) -> AnyhowResult<config::Config> {
-    return Ok(config::Config::merge_two_configs(
+    Ok(config::Config::merge_two_configs(
         config::Config::from_file(path_config)?,
         config::Config::from_args(args),
-    ));
+    ))
 }
 
 fn get_reg_state(path: &Path) -> AnyhowResult<config::RegistrationState> {
-    return Ok(config::RegistrationState::from_file(path)?);
+    config::RegistrationState::from_file(path)
 }
 
 fn init_logging(path: &Path) -> AnyhowResult<()> {
@@ -260,19 +260,19 @@ fn init() -> (cli::Args, PathBuf, PathBuf, PathBuf) {
 fn run_requested_mode(args: cli::Args, config_path: &Path, state_path: &Path) -> AnyhowResult<()> {
     let mode = String::from(&args.mode);
     let config =
-        get_configuration(&config_path, args).context("Error while obtaining configuration.")?;
+        get_configuration(config_path, args).context("Error while obtaining configuration.")?;
     let reg_state =
-        get_reg_state(&state_path).context("Error while obtaining registration state.")?;
+        get_reg_state(state_path).context("Error while obtaining registration state.")?;
 
-    Ok(match mode.as_str() {
+    match mode.as_str() {
         "dump" => dump(config),
-        "register" => register(config, reg_state, &state_path),
+        "register" => register(config, reg_state, state_path),
         "push" => push(config, reg_state),
         "status" => status(config),
         "pull" => pull(config, reg_state),
         _ => Err(anyhow!("Invalid mode: {}", mode)),
     }
-    .context(format!("{} failed", mode))?)
+    .context(format!("{} failed", mode))
 }
 fn main() -> AnyhowResult<()> {
     let (args, state_path, config_path, log_path) = init();

@@ -5,9 +5,7 @@
 use crate::certs;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use http::StatusCode;
-use reqwest;
 use serde::{Deserialize, Serialize};
-use serde_json;
 
 #[derive(Deserialize)]
 struct JSONResponse {
@@ -90,7 +88,7 @@ pub fn agent_data(
     agent_receiver_address: &str,
     root_cert: &str,
     uuid: &str,
-    monitoring_data: &Vec<u8>,
+    monitoring_data: &[u8],
 ) -> AnyhowResult<String> {
     // TODO:
     // - Send client cert in header

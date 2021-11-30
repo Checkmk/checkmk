@@ -7,7 +7,7 @@ use std::os::unix::net::UnixStream;
 
 pub fn collect(package_name: Option<String>) -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    let package_name = package_name.unwrap_or(String::from("check-mk-agent"));
+    let package_name = package_name.unwrap_or_else(|| String::from("check-mk-agent"));
     UnixStream::connect(format!("/run/{}.socket", package_name))?.read_to_end(&mut mondata)?;
-    return Ok(mondata);
+    Ok(mondata)
 }

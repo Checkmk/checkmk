@@ -43,6 +43,7 @@ def test_registered_background_jobs():
         "RenameHostsBackgroundJob",
         "RenameHostBackgroundJob",
         "FetchAgentOutputBackgroundJob",
+        "OMDConfigChangeBackgroundJob",
         "BulkDiscoveryBackgroundJob",
         "UserSyncBackgroundJob",
         "UserProfileCleanupBackgroundJob",

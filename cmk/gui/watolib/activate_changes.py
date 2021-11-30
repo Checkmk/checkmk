@@ -1800,7 +1800,34 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
             raise
 
+        if "omd" in domains:
+            response.setdefault("omd", []).extend(self._get_omd_domain_background_job_result())
+
         return response
+
+    def _get_omd_domain_background_job_result(self) -> List[str]:
+        """
+        OMD domain needs restart of the whole site so the apache connection gets lost.
+        A background job is started and we have to wait for the result
+        """
+        while True:
+            try:
+                raw_omd_response = cmk.gui.watolib.automations.do_remote_automation(
+                    get_site_config(self._site_id),
+                    "checkmk-remote-automation-get-status",
+                    [("request", repr("omd-config-change"))],
+                )
+
+                omd_response = cmk.gui.watolib.automations.CheckmkAutomationGetStatusResponse(
+                    *raw_omd_response
+                )
+                if not omd_response.job_status["is_active"]:
+                    return omd_response.job_status["loginfo"]["JobException"]
+            except MKUserError as e:
+                if not (
+                    e.message == "Site is not running" or e.message.startswith("HTTP Error - 502")
+                ):
+                    return [e.message]
 
     def _get_domains_needing_activation(self):
         domains = set([])

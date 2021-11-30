@@ -12,7 +12,7 @@ import signal
 import subprocess
 import traceback
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -21,10 +21,11 @@ from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.config import get_default_config
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -32,6 +33,7 @@ from cmk.gui.plugins.watolib import ABCConfigDomain, config_domain_registry
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.changes import log_audit
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 @config_domain_registry.register
@@ -350,7 +352,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     def default_globals(self):
         return self._from_omd_config(self._load_site_config())
 
-    def activate(self):
+    def activate(self) -> Optional[str]:
         current_settings = self._load_site_config()
 
         settings = {}
@@ -371,29 +373,19 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         if not config_change_commands:
             self._logger.debug("Got no config change commands...")
-            return
+            return None
 
         self._logger.debug('Executing "omd config change"')
         self._logger.debug("  Commands: %r" % config_change_commands)
-        p = subprocess.Popen(
-            ["omd", "config", "change"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            close_fds=True,
-            encoding="utf-8",
-        )
-        stdout, _stderr = p.communicate(input="\n".join(config_change_commands))
-        self._logger.debug("  Exit code: %d" % p.returncode)
-        self._logger.debug("  Output: %r" % stdout)
-        if p.returncode != 0:
-            raise MKGeneralException(
-                _(
-                    "Failed to activate changed site "
-                    "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
-                )
-                % (p.returncode, config_change_commands, stdout)
-            )
+
+        job = OMDConfigChangeBackgroundJob()
+        if job.is_active():
+            raise MKUserError(None, _("Another omd config change job is already running."))
+
+        job.set_function(job.do_execute, config_change_commands)
+        job.start()
+
+        return None
 
     def _load_site_config(self):
         return self._load_omd_config("%s/site.conf" % self.omd_config_dir)
@@ -534,3 +526,45 @@ class ConfigDomainOMD(ABCConfigDomain):
                 omd_config[key] = "%s" % value
 
         return omd_config
+
+
+@gui_background_job.job_registry.register
+class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
+    job_prefix = "omd-config-change"
+
+    @classmethod
+    def gui_title(cls):
+        return _("Apply OMD config changes")
+
+    def __init__(self):
+        super().__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+        )
+
+    def do_execute(self, config_change_commands, job_interface):
+        self._do_config_change(config_change_commands)
+        job_interface.send_result_message(_("OMD config changes have been applied."))
+
+    def _do_config_change(self, config_change_commands) -> None:
+        p = subprocess.Popen(
+            ["omd", "config", "change"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.PIPE,
+            close_fds=True,
+            encoding="utf-8",
+        )
+        stdout, _stderr = p.communicate(input="\n".join(config_change_commands))
+        self._logger.debug("  Exit code: %d" % p.returncode)
+        self._logger.debug("  Output: %r" % stdout)
+        if p.returncode != 0:
+            raise MKGeneralException(
+                _(
+                    "Failed to activate changed site "
+                    "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
+                )
+                % (p.returncode, config_change_commands, stdout)
+            )

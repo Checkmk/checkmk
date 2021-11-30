@@ -429,6 +429,9 @@ class State(object):  # pylint: disable=useless-object-inheritance
         """
         LOGGER.debug("Reading state file: %r", self.filename)
 
+        if not os.path.exists(self.filename):
+            return self
+
         with open(self.filename) as stat_fh:
             for line in stat_fh:
                 line_data = self._load_line(line)

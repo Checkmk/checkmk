@@ -46,6 +46,12 @@ class PodResourcesWithCapacity(PodResources):
     allocatable: int
 
 
+class PodLifeCycle(BaseModel):
+    """section: kube_pod_lifecycle_v1"""
+
+    phase: api.Phase
+
+
 class PodCondition(BaseModel):
     status: bool
     reason: Optional[str]

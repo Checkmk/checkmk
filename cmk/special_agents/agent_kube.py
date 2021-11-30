@@ -135,6 +135,9 @@ class Pod:
     def phase(self):
         return self.status.phase
 
+    def lifecycle_phase(self) -> section.PodLifeCycle:
+        return section.PodLifeCycle(phase=self.phase)
+
     def name(self, prepend_namespace=False) -> str:
         if not prepend_namespace:
             return self.metadata.name
@@ -423,6 +426,7 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
             "k8s_pod_containers_v1": cluster_pod.containers_infos,
             "k8s_start_time_v1": cluster_pod.start_time,
             "kube_memory_resources_v1": cluster_pod.memory_resources,
+            "kube_pod_lifecycle_v1": cluster_pod.lifecycle_phase,
         }
         _write_sections(sections)
 

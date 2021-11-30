@@ -71,10 +71,10 @@
     "d3-sankey": "^0.12.3",
     "dc": "^3.2.1",
     "element-closest-polyfill": "^1.0.0",
-    "jquery": "^3.5.0",
+    "jquery": "^3.6.0",
     "lodash.range": "^3.2.0",
     "select2": "^4.0.13",
-    "simplebar": "^5.2.0",
+    "simplebar": "^5.3.6",
     "sweetalert2": "^10.14.0",
     "whatwg-fetch": "^3.0.0"
   },

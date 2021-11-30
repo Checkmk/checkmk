@@ -452,10 +452,10 @@ export function resize_mega_menu_popup(menu_popup) {
         // If we have only a single column, we need a bigger menu width, as the search field and
         // the more button needs to have enough space
         if (ncol === 1) {
-            topics.forEach(topic => utils.add_class(topic, "single_column"));
+            Array.from(topics).forEach(topic => utils.add_class(topic, "single_column"));
             utils.add_class(menu_popup, "single_column");
         } else if (utils.has_class(menu_popup, "single_column")) {
-            topics.forEach(topic => utils.remove_class(topic, "single_column"));
+            Array.from(topics).forEach(topic => utils.remove_class(topic, "single_column"));
             utils.remove_class(menu_popup, "single_column");
             resize_mega_menu_popup(menu_popup);
             return;
@@ -489,7 +489,7 @@ function mega_menu_last_topic_grow(topics) {
 
     let ncol = 1;
     let previous_node = null;
-    topics.forEach(function (node) {
+    Array.from(topics).forEach(function (node) {
         if (utils.get_computed_style(node, "display") == "none") {
             utils.remove_class(node, "grow");
             return;
@@ -535,7 +535,7 @@ export function mega_menu_hide_entries(menu_id) {
     let menu = document.getElementById(menu_id);
     let more_is_active = menu.classList.contains("more");
     let topics = menu.getElementsByClassName("topic");
-    topics.forEach(topic => {
+    Array.from(topics).forEach(topic => {
         if (topic.classList.contains("extended")) return;
         let max_entry_number = Number(topic.getAttribute("data-max-entries"));
         if (!max_entry_number) {
@@ -546,7 +546,7 @@ export function mega_menu_hide_entries(menu_id) {
         if (entries.length > max_entry_number + 1) {
             // + 1 is needed for the show_all_items entry
             let counter = 0;
-            entries.forEach(entry => {
+            Array.from(entries).forEach(entry => {
                 if (
                     (!more_is_active && entry.classList.contains("show_more_mode")) ||
                     entry == show_all_items_entry

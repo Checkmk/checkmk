@@ -55,7 +55,7 @@
   "dependencies": {
     "@yaireo/tagify": "3.22.1",
     "canvas-5-polyfill": "^0.1.5",
-    "core-js": "^3.8.3",
+    "core-js": "^3.19.2",
     "crossfilter2": "^1.5.2",
     "d3": "^6.5.0",
     "d3-flextree": "^2.1.1",

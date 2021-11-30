@@ -40,7 +40,12 @@ Error Message:
 }
 
 def notify_error(error) {
-    if(AUTHOR_MAIL != "weblate@checkmk.com" ) {
+    // It seems the option "Allowed domains" is not working properly.
+    // See: https://ci.lan.tribe29.com/configure
+    // So ensure here we only notify internal addresses.
+    is_internal_author = AUTHOR_MAIL.endsWith("@tribe29.com") || AUTHOR_MAIL.endsWith("@mathias-kettner.de")
+
+    if(AUTHOR_MAIL != "weblate@checkmk.com" && is_internal_author) {
         mail_build_failed(error)
     }
     // Disabled for the moment. It currently does not work because of some

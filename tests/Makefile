@@ -43,7 +43,8 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 	test-unit-sh test-unit-sh-docker test-shellcheck \
 	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker \
-	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker
+	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker \
+	test-cargo-fmt test-cargo-fmt-docker test-cargo-clippy test-cargo-clippy-docker
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -100,6 +101,10 @@ help:
 	@echo "test-cargo-check-docker             - Run 'cargo check' for all cargo projects in docker"
 	@echo "test-cargo-test                     - Run test cases of all cargo projects"
 	@echo "test-cargo-test-docker              - Run test cases of all cargo projects in docker"
+	@echo "test-cargo-fmt                      - Run rustfmt --check in all cargo projects"
+	@echo "test-cargo-fmt-docker               - Run rustfmt --check in all cargo projects in docker"
+	@echo "test-cargo-clippy                   - Run clippy in all cargo projects"
+	@echo "test-cargo-clippy-docker            - Run clippy in all cargo projects in docker"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -358,13 +363,25 @@ test-cargo-check:
 	$(SCRIPTS)/run-cargo-command-in-projects check
 
 test-cargo-check-docker:
-	../scripts/run-in-docker.sh make test-cargo-check
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-check
 
 test-cargo-test:
 	$(SCRIPTS)/run-cargo-command-in-projects test
 
 test-cargo-test-docker:
-	../scripts/run-in-docker.sh make test-cargo-test
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-test
+
+test-cargo-fmt:
+	$(SCRIPTS)/run-cargo-command-in-projects fmt -- --check
+
+test-cargo-fmt-docker:
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-fmt
+
+test-cargo-clippy:
+	$(SCRIPTS)/run-cargo-command-in-projects clippy
+
+test-cargo-clippy-docker:
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy
 
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running

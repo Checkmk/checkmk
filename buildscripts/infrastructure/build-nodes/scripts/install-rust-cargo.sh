@@ -50,4 +50,3 @@ build_package() {
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/
-ln -sf "${RUSTUP_HOME}" "${HOME}/.rustup"

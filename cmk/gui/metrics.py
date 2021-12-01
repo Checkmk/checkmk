@@ -442,7 +442,7 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_sort_number(self) -> int:
+    def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         raise NotImplementedError()
@@ -488,11 +488,11 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return unit["render"](value)
 
-    def get_sort_number(self) -> int:
+    def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         value, _unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return int(value)
+        return value
 
     @staticmethod
     def get_stack_from_values(
@@ -550,10 +550,10 @@ class MetricometerRendererLinear(MetricometerRenderer):
         _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
         return unit["render"](self._get_summed_values())
 
-    def get_sort_number(self) -> int:
+    def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
         value, _unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return int(value)
+        return value
 
     def _get_summed_values(self):
         summed = 0.0
@@ -593,11 +593,11 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
         return " / ".join(sub_labels)
 
-    def get_sort_number(self) -> int:
+    def get_sort_value(self) -> float:
         """Use the number of the first stack element."""
         sub_perfometer = self._perfometer["perfometers"][0]
         renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
-        return renderer.get_sort_number()
+        return renderer.get_sort_value()
 
 
 @renderer_registry.register
@@ -647,18 +647,18 @@ class MetricometerRendererDual(MetricometerRenderer):
 
         return " / ".join(sub_labels)
 
-    def get_sort_number(self) -> int:
+    def get_sort_value(self) -> float:
         """Sort by max(left, right)
 
         E.g. for traffic graphs it seems to be useful to
         make it sort by the maximum traffic independent of the direction.
         """
-        sub_sort_numbers = []
+        sub_sort_values = []
         for sub_perfometer in self._perfometer["perfometers"]:
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
-            sub_sort_numbers.append(renderer.get_sort_number())
+            sub_sort_values.append(renderer.get_sort_value())
 
-        return max(*sub_sort_numbers)
+        return max(*sub_sort_values)
 
 
 # .

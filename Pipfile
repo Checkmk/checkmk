@@ -21,6 +21,7 @@ lxml-stubs = "*"  # used for type checking
 mock = "*"  # used in checktestlib in unit tests
 mocket = "*"    # used for mocking kubernetes python client
 pylint = "2.21.1"  # used by test/Makefile's test-pylint target, we currently need to pin it, otherwise we get the alpha 3.0.0a4 version which causes issues (because of --pre due to black...)
+hypothesis = "*"    # used by unit tests
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 types-six = "*"  # used for type checking
 types-requests = "*"  # used for type checking

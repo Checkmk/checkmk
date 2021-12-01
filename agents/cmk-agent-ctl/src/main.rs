@@ -275,7 +275,7 @@ fn run_requested_mode(args: cli::Args, config_path: &Path, state_path: &Path) ->
     .context(format!("{} failed", mode))
 }
 fn main() -> AnyhowResult<()> {
-    let (args, state_path, config_path, log_path) = init();
+    let (args, config_path, state_path, log_path) = init();
 
     let result = run_requested_mode(args, &config_path, &state_path);
 

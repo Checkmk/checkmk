@@ -11,6 +11,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Mapping
 
+from agent_receiver.certificates import uuid_from_pem_csr
 from agent_receiver.checkmk_rest_api import (
     get_root_cert,
     host_exists,
@@ -20,7 +21,6 @@ from agent_receiver.checkmk_rest_api import (
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
 from agent_receiver.models import PairingBody, RegistrationWithHNBody
-from agent_receiver.utils import uuid_from_pem_csr
 from fastapi import FastAPI, File, Header, HTTPException, Response, UploadFile
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 

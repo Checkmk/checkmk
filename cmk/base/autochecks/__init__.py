@@ -7,7 +7,7 @@
 
 import logging
 from contextlib import suppress
-from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence, Union
+from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
@@ -19,7 +19,7 @@ from .utils import AutocheckEntry, AutochecksStore
 
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters],
-    Union[LegacyCheckParameters, TimespecificParameters],
+    TimespecificParameters,
 ]
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
@@ -56,7 +56,7 @@ class AutochecksManager:
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
         get_effective_hostname: HostOfClusteredService,
-    ) -> Sequence[Service]:
+    ) -> Sequence[Service[TimespecificParameters]]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = list(
                 self._get_autochecks_of_uncached(

@@ -699,10 +699,9 @@ class AutomationAnalyseServices(Automation):
     # Determine the type of the check, and how the parameters are being
     # constructed
     # TODO: Refactor this huge function
-    # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(
         self, config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
-    ) -> Mapping[str, object]:
+    ) -> Mapping[str, Union[None, str, LegacyCheckParameters]]:
         hostname = host_config.hostname
 
         # We just consider types of checks that are managed via WATO.
@@ -725,7 +724,9 @@ class AutomationAnalyseServices(Automation):
                     "checkgroup": checkgroup_name,
                     "checktype": checktype,
                     "item": item,
-                    "parameters": params,
+                    "parameters": TimespecificParameters((params,)).preview(
+                        cmk.base.core.timeperiod_active
+                    ),
                 }
 
         # 2. Load all autochecks of the host in question and try to find
@@ -767,7 +768,7 @@ class AutomationAnalyseServices(Automation):
     @staticmethod
     def _get_service_info_from_autochecks(
         config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
-    ) -> Optional[Mapping[str, object]]:
+    ) -> Optional[Mapping[str, Union[None, str, LegacyCheckParameters]]]:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
@@ -799,12 +800,6 @@ class AutomationAnalyseServices(Automation):
                 # In this case we can run into the 'not found' case below.
                 continue
 
-            effective_parameters: LegacyCheckParameters = (
-                dict(service.parameters.preview(cmk.base.core.timeperiod_active))
-                if isinstance(service.parameters, TimespecificParameters)
-                else service.parameters
-            )
-
             return {
                 "origin": "auto",
                 "checktype": str(plugin.name),
@@ -817,7 +812,8 @@ class AutomationAnalyseServices(Automation):
                 # *Autocheck*Service (not a general Service) instance.
                 "inv_parameters": "not available in this view",
                 "factory_settings": plugin.check_default_parameters,
-                "parameters": effective_parameters,
+                # effective parameters:
+                "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),
             }
 
         return None

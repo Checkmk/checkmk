@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Dict, Final, Iterable, Optional, Sequence, Tuple, TypedDict
+from typing import Any, Callable, Dict, Final, Iterable, Optional, Sequence, Tuple, TypedDict, Union
 
 import cmk.utils.debug
 from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
@@ -52,7 +52,15 @@ class TimespecificParameters:
             {},
         )
 
-    def preview(self, is_active: _IsTimeperiodActiveCallback) -> TimespecificParametersPreview:
+    def _is_constant(self) -> bool:
+        return not any(p.timeperiod_values for p in self.entries)
+
+    def preview(
+        self, is_active: _IsTimeperiodActiveCallback
+    ) -> Union[TimespecificParametersPreview, LegacyCheckParameters]:
+        """Create a serializeable version for preview via automation call"""
+        if self._is_constant():
+            return self.evaluate(is_active)
         return {
             "tp_computed_params": {
                 "params": self.evaluate(is_active),

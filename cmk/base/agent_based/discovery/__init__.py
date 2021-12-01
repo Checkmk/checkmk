@@ -1430,7 +1430,7 @@ def _wrap_timespecific_for_preview(
     params: Union[LegacyCheckParameters, TimespecificParameters]
 ) -> LegacyCheckParameters:
     return (
-        dict(params.preview(cmk.base.core.timeperiod_active))
+        params.preview(cmk.base.core.timeperiod_active)
         if isinstance(params, TimespecificParameters)
         else params
     )

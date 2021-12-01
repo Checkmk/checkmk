@@ -3816,7 +3816,9 @@ class ConfigCache:
         self._cache_match_object_host[hostname] = match_object
         return match_object
 
-    def get_autochecks_of(self, hostname: HostName) -> Sequence[cmk.base.check_utils.Service]:
+    def get_autochecks_of(
+        self, hostname: HostName
+    ) -> Sequence[cmk.base.check_utils.Service[TimespecificParameters]]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,

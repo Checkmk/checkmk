@@ -220,6 +220,8 @@ def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_
                 "org.tribe29.cmk_edition_short": version.edition_short,
                 "org.tribe29.cmk_version": version.version,
                 "org.tribe29.cmk_branch": version.branch(),
+                # override the base image label
+                "com.tribe29.image_type": "cmk-image",
             },
             command=["tail", "-f", "/dev/null"],  # keep running
             volumes=list(_image_build_volumes().keys()),

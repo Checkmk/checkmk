@@ -455,11 +455,9 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
 
     agent_links = []
     if not cmk_version.is_raw_edition():
-        from cmk.gui.cee.agent_bakery import (
-            agent_package_types,  # pylint: disable=no-name-in-module
-        )
+        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
 
-        for agent_type in sorted(agent_package_types().keys()):
+        for agent_type in sorted(agent_bakery.agent_package_types().keys()):
             agent_links.append(
                 constructors.link_rel(
                     rel="cmk/download",

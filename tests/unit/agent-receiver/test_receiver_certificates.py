@@ -11,12 +11,17 @@ from time import time
 import pytest
 from agent_receiver.certificates import (
     _decode_base64_cert,
+    _invalid_certificate_response,
     _validate_certificate,
     CertificateValidationError,
+    CertValidationRoute,
 )
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate
+from fastapi import APIRouter, FastAPI
+from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
+from starlette.requests import Headers
 
 from tests.testlib import on_time
 
@@ -115,3 +120,57 @@ def test_validate_certificate_not_yet_valid(ca: CertificateAuthority) -> None:
 
 def test_validate_certificate_ok(trusted_cert: Certificate) -> None:
     _validate_certificate(trusted_cert)
+
+
+def test_invalid_certificate_response_missing() -> None:
+    resp = _invalid_certificate_response(Headers(headers={}))
+    assert resp
+    assert resp.status_code == 400
+    assert resp.body == b'{"detail":"Client certificate missing in header"}'
+
+
+def test_invalid_certificate_response_malformed() -> None:
+    resp = _invalid_certificate_response(Headers(headers={"certificate": "let me in!"}))
+    assert resp
+    assert resp.status_code == 400
+    assert resp.body == b'{"detail":"Client certificate deserialization: base64 decoding failed"}'
+
+
+@pytest.mark.usefixtures("ca")
+def test_invalid_certificate_response_untrusted(untrusted_cert_b64: str) -> None:
+    resp = _invalid_certificate_response(Headers(headers={"certificate": untrusted_cert_b64}))
+    assert resp
+    assert resp.status_code == 401
+    assert resp.body == b'{"detail":"Client certificate not trusted"}'
+
+
+def test_invalid_certificate_response_ok(trusted_cert_b64: str) -> None:
+    assert _invalid_certificate_response(Headers(headers={"certificate": trusted_cert_b64})) is None
+
+
+def test_cert_validation_route(mocker: MockerFixture) -> None:
+    app = FastAPI()
+    cert_validation_router = APIRouter(route_class=CertValidationRoute)
+
+    @cert_validation_router.get("/endpoint")
+    def endpoint():
+        return {"Hello": "World"}
+
+    app.include_router(cert_validation_router)
+
+    client = TestClient(app)
+    response = client.get(
+        "/endpoint",
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Client certificate missing in header"}
+
+    mocker.patch(
+        "agent_receiver.certificates._invalid_certificate_response",
+        lambda _h: None,
+    )
+    response = client.get(
+        "/endpoint",
+    )
+    assert response.status_code == 200
+    assert response.json() == {"Hello": "World"}

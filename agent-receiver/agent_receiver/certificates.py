@@ -7,6 +7,7 @@
 from base64 import urlsafe_b64decode
 from binascii import Error
 from datetime import datetime
+from typing import Any, Callable, Coroutine, Optional
 
 from agent_receiver.constants import ROOT_CERT
 from cryptography.exceptions import InvalidSignature
@@ -19,6 +20,11 @@ from cryptography.x509 import (
     load_pem_x509_csr,
 )
 from cryptography.x509.oid import NameOID
+from fastapi import Request, Response
+from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
+from starlette.requests import Headers
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 
 
 def uuid_from_pem_csr(pem_csr: str) -> str:
@@ -76,3 +82,41 @@ def _check_signature(certificate: Certificate) -> None:
 def _validate_certificate(certificate: Certificate) -> None:
     _check_validity_period(certificate)
     _check_signature(certificate)
+
+
+def _invalid_certificate_response(headers: Headers) -> Optional[JSONResponse]:
+    try:
+        cert_b64 = headers["certificate"]
+    except KeyError:
+        return JSONResponse(
+            status_code=HTTP_400_BAD_REQUEST,
+            content={"detail": "Client certificate missing in header"},
+        )
+    try:
+        cert = _decode_base64_cert(cert_b64)
+    except ValueError as excpt:
+        return JSONResponse(
+            status_code=HTTP_400_BAD_REQUEST,
+            content={"detail": str(excpt)},
+        )
+    try:
+        _validate_certificate(cert)
+    except CertificateValidationError as excpt:
+        return JSONResponse(
+            status_code=HTTP_401_UNAUTHORIZED,
+            content={"detail": str(excpt)},
+        )
+    return None
+
+
+class CertValidationRoute(APIRoute):
+    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
+        original_route_handler = super().get_route_handler()
+
+        async def custom_route_handler(request: Request) -> Response:
+            if invalid_cert_response := _invalid_certificate_response(request.headers):
+                return invalid_cert_response
+            response: Response = await original_route_handler(request)
+            return response
+
+        return custom_route_handler

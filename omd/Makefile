@@ -133,8 +133,6 @@ install-clean:
 $(BUILD_HELPER_DIR):
 	$(MKDIR) $(BUILD_HELPER_DIR)
 
-$(OPENSSL_CACHE_PKG_PROCESS): $(BUILD_HELPER_DIR)
-
 # Prepare clean install environment
 $(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)

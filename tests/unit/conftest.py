@@ -26,11 +26,17 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
+import cmk.gui.dashboard
+
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
+import cmk.gui.permissions
+import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
+
+import cmk.cee.dcd.plugins.connectors.connectors_api.v1
 
 logger = logging.getLogger(__name__)
 
@@ -309,31 +315,22 @@ def initialised_item_state():
         yield
 
 
-@pytest.fixture
-def registry_reset(request):
-    """Fixture to reset a Registry to its default entries.
-
-    Tests using this fixture need a `registry_reset` marker with the registry to reset as argument.
-
-    >>> import pytest
-    >>> import cmk.gui.dashboard
-    >>> @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-    ... def test_foo(reset_registry):
-    ...     pass
-
-    """
-    marker = request.node.get_closest_marker("registry_reset")
-    if marker is None:
-        raise TypeError("registry_reset fixture needs reset_registry maker")
-
-    registries = marker.args
-
-    default_entries = [(registry, list(registry)) for registry in registries]
-
+@pytest.fixture(autouse=True)
+def registry_reset():
+    """Fixture to reset registries to its default entries."""
+    registries = [
+        cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry,
+        cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry,
+        cmk.gui.dashboard.dashlet_registry,
+        cmk.gui.views.icon_and_action_registry,
+        cmk.gui.permissions.permission_registry,
+        cmk.gui.permissions.permission_section_registry,
+    ]
+    defaults_per_registry = [(registry, list(registry)) for registry in registries]  # type: ignore[call-overload]
     try:
-        yield registries
+        yield
     finally:
-        for registry, defaults in default_entries:
-            for entry in list(registry):
+        for registry, defaults in defaults_per_registry:
+            for entry in list(registry):  # type: ignore[call-overload]
                 if entry not in defaults:
-                    registry.unregister(entry)
+                    registry.unregister(entry)  # type: ignore[attr-defined]

@@ -8,7 +8,6 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.dashboard
 import cmk.gui.dashboard as dashboard  # pylint: disable=reimported
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.globals import html
@@ -159,8 +158,7 @@ def _legacy_dashlet_type(attrs=None):
     return dashboard.dashlet_registry["test123"]
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_registry_of_old_dashlet_plugins(registry_reset, reset_dashlet_types):
+def test_registry_of_old_dashlet_plugins(reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type()
     assert dashlet_type.title() == "Test dashlet"
     assert dashlet_type.description() == "Descr"
@@ -185,16 +183,14 @@ _attr_map = [
 ]
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_defaults(registry_reset, reset_dashlet_types):
+def test_old_dashlet_defaults(reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type()
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     for _attr, new_method, deflt in _attr_map:
         assert getattr(dashlet, new_method)() == deflt
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_title_func(registry_reset, reset_dashlet_types):
+def test_old_dashlet_title_func(reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type(
         {
             "title_func": lambda d: "xyz",
@@ -206,8 +202,7 @@ def test_old_dashlet_title_func(registry_reset, reset_dashlet_types):
     assert dashlet.display_title() == "xyz"
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_on_resize(registry_reset, reset_dashlet_types):
+def test_old_dashlet_on_resize(reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type(
         {
             "on_resize": lambda x, y: "xyz",
@@ -218,8 +213,7 @@ def test_old_dashlet_on_resize(registry_reset, reset_dashlet_types):
     assert dashlet.on_resize() == "xyz"
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_on_refresh(registry_reset, reset_dashlet_types):
+def test_old_dashlet_on_refresh(reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type(
         {
             "on_refresh": lambda nr, the_dashlet: "xyz",
@@ -230,8 +224,7 @@ def test_old_dashlet_on_refresh(registry_reset, reset_dashlet_types):
     assert dashlet.on_refresh() == "xyz"
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types, registry_reset):
+def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types):
     iframe_render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -253,8 +246,7 @@ def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types,
     assert dashlet._get_iframe_url() == "dashboard_dashlet.py?id=1&mtime=123&name=main"
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_iframe_urlfunc(mocker, request_context, registry_reset, reset_dashlet_types):
+def test_old_dashlet_iframe_urlfunc(mocker, request_context, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type(
         {
             "iframe_urlfunc": lambda x: "blaurl",
@@ -265,8 +257,7 @@ def test_old_dashlet_iframe_urlfunc(mocker, request_context, registry_reset, res
     assert dashlet._get_iframe_url() == "blaurl"
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_render(mocker, request_context, registry_reset, reset_dashlet_types):
+def test_old_dashlet_render(mocker, request_context, reset_dashlet_types):
     render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -283,15 +274,13 @@ def test_old_dashlet_render(mocker, request_context, registry_reset, reset_dashl
     assert render_mock.called_once()
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_add_urlfunc(mocker, registry_reset, reset_dashlet_types):
+def test_old_dashlet_add_urlfunc(mocker, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({"add_urlfunc": lambda: "xyz"})
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     assert dashlet.add_url() == "xyz"
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_position(mocker, registry_reset, reset_dashlet_types):
+def test_old_dashlet_position(mocker, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_position() == (1, 1)
 
@@ -304,8 +293,7 @@ def test_old_dashlet_position(mocker, registry_reset, reset_dashlet_types):
     assert dashlet.position() == (10, 12)
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_size(mocker, registry_reset, reset_dashlet_types):
+def test_old_dashlet_size(mocker, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_size() == (12, 12)
 
@@ -321,8 +309,7 @@ def test_old_dashlet_size(mocker, registry_reset, reset_dashlet_types):
     assert dashlet.size() == (30, 20)
 
 
-@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-def test_old_dashlet_settings(registry_reset, reset_dashlet_types):
+def test_old_dashlet_settings(reset_dashlet_types):
     dashlet_attrs = {}
     for attr, _new_method, _deflt in _attr_map:
         dashlet_attrs[attr] = attr

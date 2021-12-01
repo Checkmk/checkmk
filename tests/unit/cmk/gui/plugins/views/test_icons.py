@@ -6,8 +6,6 @@
 
 from typing import Any, Dict
 
-import pytest
-
 import cmk.utils.version as cmk_version
 
 import cmk.gui.permissions
@@ -19,8 +17,7 @@ if not cmk_version.is_raw_edition():
 import cmk.gui.plugins.views.icons as icons
 
 
-@pytest.mark.registry_reset(cmk.gui.views.icon_and_action_registry)
-def test_builtin_icons_and_actions(registry_reset):
+def test_builtin_icons_and_actions():
     expected_icons_and_actions = [
         "action_menu",
         "aggregation_checks",
@@ -68,10 +65,7 @@ def test_builtin_icons_and_actions(registry_reset):
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
-@pytest.mark.registry_reset(
-    cmk.gui.views.icon_and_action_registry, cmk.gui.permissions.permission_registry
-)
-def test_legacy_icon_plugin(monkeypatch, registry_reset):
+def test_legacy_icon_plugin(monkeypatch):
     icon: Dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
@@ -92,10 +86,7 @@ def test_legacy_icon_plugin(monkeypatch, registry_reset):
     assert registered_icon.sort_index() == 10
 
 
-@pytest.mark.registry_reset(
-    cmk.gui.views.icon_and_action_registry, cmk.gui.permissions.permission_registry
-)
-def test_legacy_icon_plugin_defaults(monkeypatch, registry_reset):
+def test_legacy_icon_plugin_defaults(monkeypatch):
     icon = {
         "columns": ["column"],
         "host_columns": ["hcol"],

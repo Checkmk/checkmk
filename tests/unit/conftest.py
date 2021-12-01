@@ -36,7 +36,8 @@ import cmk.gui.permissions
 import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 
-import cmk.cee.dcd.plugins.connectors.connectors_api.v1
+if is_enterprise_repo():
+    import cmk.cee.dcd.plugins.connectors.connectors_api.v1
 
 logger = logging.getLogger(__name__)
 
@@ -319,13 +320,17 @@ def initialised_item_state():
 def registry_reset():
     """Fixture to reset registries to its default entries."""
     registries = [
-        cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry,
-        cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry,
         cmk.gui.dashboard.dashlet_registry,
         cmk.gui.views.icon_and_action_registry,
         cmk.gui.permissions.permission_registry,
         cmk.gui.permissions.permission_section_registry,
     ]
+    if is_enterprise_repo():
+        registries.append(
+            cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry
+        )
+        registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
+    
     defaults_per_registry = [(registry, list(registry)) for registry in registries]  # type: ignore[call-overload]
     try:
         yield

@@ -10,7 +10,6 @@ from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-im
 from cmk.utils.type_defs import HostName
 
 import cmk.base.autochecks as autochecks
-import cmk.base.config as config
 
 
 def test_test_check_1_merged_rule(

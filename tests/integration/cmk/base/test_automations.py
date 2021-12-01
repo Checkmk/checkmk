@@ -19,7 +19,6 @@ from cmk.utils.type_defs import DiscoveryResult, HostName, SetAutochecksTable
 from cmk.automations import results
 
 import cmk.base.autochecks as autochecks
-import cmk.base.config as config
 
 
 @pytest.fixture(name="test_cfg", scope="module")

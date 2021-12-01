@@ -198,7 +198,7 @@ def _frozen_state_results(list_vcs_tuples: Sequence[Vcs],
                        summary=s.replace('t', 'temporarily ')) for s in frozen_states)
 
 
-def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> str:
+def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> Optional[str]:
     # get last not None cluster name
     return functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster
 

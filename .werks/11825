@@ -1,0 +1,13 @@
+Title: cisco_ucs_hdd discovery crashed since p16
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638367078
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p17
+
+Due to a regression, the discovery of cisco_ucs_hdd crashed with:
+<tt>ValueError (too many values to unpack (expected 6))</tt>
+This issue should only be visible in 2.0.0p16 and is fixed now.

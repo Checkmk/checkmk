@@ -42,10 +42,8 @@ def parse_cisco_ucs_hdd(string_table) -> Section:
     }
 
 
-def inventory_cisco_ucs_hdd(info):
-    for status, ident, _model, _vendor, _size, _serial in info:
-        if status != '6':  # do not discover removed HDDs
-            yield ident, None
+def inventory_cisco_ucs_hdd(parsed):
+    yield from [(ident, None) for ident, hdd in parsed.items() if hdd.state != 'removed']
 
 
 def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
@@ -65,6 +63,7 @@ def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
 
 check_info["cisco_ucs_hdd"] = {
     "check_function": check_cisco_ucs_hdd,
+    "parse_function": parse_cisco_ucs_hdd,
     "inventory_function": inventory_cisco_ucs_hdd,
     "service_description": "HDD %s",
     "snmp_scan_function": scan_cisco_ucs,

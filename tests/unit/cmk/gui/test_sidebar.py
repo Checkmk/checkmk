@@ -61,20 +61,12 @@ def test_user_config_get_not_existing_snapin():
         (
             "tactical_overview",
             "views",
-            [
-                UserSidebarSnapin.from_snapin_type_id("admin"),
-                UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
-                UserSidebarSnapin.from_snapin_type_id("views"),
-            ],
+            ["admin", "tactical_overview", "views"],
         ),
         (
             "tactical_overview",
             "admin",
-            [
-                UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
-                UserSidebarSnapin.from_snapin_type_id("admin"),
-                UserSidebarSnapin.from_snapin_type_id("views"),
-            ],
+            ["tactical_overview", "admin", "views"],
         ),
         ("not_existing", "admin", None),
         # TODO: Shouldn't this also be handled?
@@ -86,11 +78,7 @@ def test_user_config_get_not_existing_snapin():
         (
             "admin",
             "",
-            [
-                UserSidebarSnapin.from_snapin_type_id("views"),
-                UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
-                UserSidebarSnapin.from_snapin_type_id("admin"),
-            ],
+            ["views", "tactical_overview", "admin"],
         ),
     ],
 )
@@ -119,7 +107,9 @@ def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
         before = None
 
     user_config.move_snapin_before(move, before)
-    assert user_config.snapins == result
+    assert user_config.snapins == [
+        UserSidebarSnapin.from_snapin_type_id(snapin_id) for snapin_id in result
+    ]
 
 
 def test_load_default_config(monkeypatch):

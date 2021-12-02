@@ -9,7 +9,6 @@ from pathlib import Path
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.version as cmk_version
 
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -24,9 +23,6 @@ from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
     register_job,
 )
 from cmk.gui.utils.logged_in import SuperUserContext
-
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
 
 def _lock_file() -> Path:

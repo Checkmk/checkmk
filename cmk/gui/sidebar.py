@@ -13,13 +13,10 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.plugins.sidebar
-import cmk.gui.plugins.sidebar.search
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -38,12 +35,6 @@ from cmk.gui.werks import may_acknowledge
 if TYPE_CHECKING:
     from cmk.gui.utils.html import HTML
 
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
-
-if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.sidebar  # pylint: disable=no-name-in-module
-
 # Helper functions to be used by snapins
 from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer
 
@@ -58,6 +49,7 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     iconlink,
     link,
     render_link,
+    SidebarSnapin,
     simplelink,
     snapin_registry,
     snapin_site_choice,
@@ -91,7 +83,7 @@ def transform_old_dict_based_snapins() -> None:
     for snapin_id, snapin in sidebar_snapins.items():
 
         @snapin_registry.register
-        class LegacySnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
+        class LegacySnapin(SidebarSnapin):
             _type_name = snapin_id
             _spec = snapin
 
@@ -264,7 +256,7 @@ class UserSidebarSnapin:
 
     def __init__(
         self,
-        snapin_type: Type[cmk.gui.plugins.sidebar.SidebarSnapin],
+        snapin_type: Type[SidebarSnapin],
         visibility: SnapinVisibility = SnapinVisibility.OPEN,
     ) -> None:
         super().__init__()
@@ -512,7 +504,7 @@ class SidebarRenderer:
         html.close_div()
         return refresh_url
 
-    def _render_snapin_styles(self, snapin_instance: cmk.gui.plugins.sidebar.SidebarSnapin) -> None:
+    def _render_snapin_styles(self, snapin_instance: SidebarSnapin) -> None:
         styles = snapin_instance.styles()
         if styles:
             html.open_style()

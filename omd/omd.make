@@ -38,8 +38,9 @@ PACKAGE_WORK_DIR := $(BUILD_BASE_DIR)/package_work
 # /opt/omd/versions/[version]/bin/python.
 INTERMEDIATE_INSTALL_BASE := $(BUILD_BASE_DIR)/intermediate_install
 # Results of intermediate install will be stored in package specific archives
-# that are stored in this directory
-PACKAGE_CACHE_BASE := $(BUILD_BASE_DIR)/package_cache
+# that are stored in the global cache directory.
+XDG_CACHE_HOME     ?= $(HOME)/.cache
+PACKAGE_CACHE_BASE := $(XDG_CACHE_HOME)/checkmk/packages
 
 CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38

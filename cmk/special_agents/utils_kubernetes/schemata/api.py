@@ -167,7 +167,7 @@ class PodCondition(BaseModel):
 class PodStatus(BaseModel):
     conditions: List[PodCondition]
     phase: Phase
-    start_time: int
+    start_time: Optional[int]  # None if pod is faulty
 
 
 class Pod(BaseModel):

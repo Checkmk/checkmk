@@ -171,7 +171,9 @@ class Pod:
             return None
         return section.PodContainers(containers=self.containers)
 
-    def start_time(self) -> api.StartTime:
+    def start_time(self) -> Optional[api.StartTime]:
+        if self.status.start_time:
+            return None
         return api.StartTime(start_time=self.status.start_time)
 
 

@@ -21,9 +21,9 @@ def parse_performance_memory(string_table: StringTable) -> Memory:
 
 
 register.agent_section(
-    name="k8s_memory_resources_v1",
+    name="kube_memory_resources_v1",
     parse_function=parse_memory_resources,
-    parsed_section_name="k8s_memory_resources",
+    parsed_section_name="kube_memory_resources",
 )
 
 
@@ -34,8 +34,8 @@ register.agent_section(
 )
 
 
-def discovery(section_k8s_memory_resources, section_k8s_live_memory) -> DiscoveryResult:
-    if section_k8s_memory_resources:
+def discovery(section_kube_memory_resources, section_k8s_live_memory) -> DiscoveryResult:
+    if section_kube_memory_resources:
         yield Service()
 
 
@@ -96,10 +96,10 @@ def _output_memory_usage(total_usage: float, limits: float, levels=Optional[Memo
 
 def check(
     params: Mapping[str, MemoryLevels],
-    section_k8s_memory_resources: Optional[Resources],
+    section_kube_memory_resources: Optional[Resources],
     section_k8s_live_memory: Optional[Memory],
 ) -> CheckResult:
-    if not section_k8s_memory_resources:
+    if not section_kube_memory_resources:
         return
 
     if section_k8s_live_memory:
@@ -108,24 +108,24 @@ def check(
         )
         yield from _output_memory_usage(
             total_usage=total_usage,
-            limits=section_k8s_memory_resources.limit,
+            limits=section_kube_memory_resources.limit,
             levels=params.get("levels_ram"),
         )
         yield from _render_absolute_metrics(
             total_usage,
-            section_k8s_memory_resources.requests,
-            section_k8s_memory_resources.limit,
+            section_kube_memory_resources.requests,
+            section_kube_memory_resources.limit,
         )
 
     yield from _output_config_summaries(
-        section_k8s_memory_resources.requests, section_k8s_memory_resources.limit
+        section_kube_memory_resources.requests, section_kube_memory_resources.limit
     )
 
 
 register.check_plugin(
-    name="k8s_memory",
+    name="kube_memory",
     service_name="Memory",
-    sections=["k8s_memory_resources", "k8s_live_memory"],
+    sections=["kube_memory_resources", "k8s_live_memory"],
     discovery_function=discovery,
     check_function=check,
     check_ruleset_name="k8s_memory",

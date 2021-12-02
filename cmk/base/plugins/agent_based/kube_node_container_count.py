@@ -55,13 +55,13 @@ def check(params: K8sContainersLevelsUpperLower, section: ContainerCount) -> Che
 
 
 register.agent_section(
-    name="k8s_node_container_count_v1",
-    parsed_section_name="k8s_node_container_count",
+    name="kube_node_container_count_v1",
+    parsed_section_name="kube_node_container_count",
     parse_function=parse,
 )
 
 register.check_plugin(
-    name="k8s_node_container_count",
+    name="kube_node_container_count",
     service_name="Container Count",
     discovery_function=discovery,
     check_function=check,

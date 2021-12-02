@@ -6,7 +6,7 @@
 
 from freezegun import freeze_time
 
-from cmk.base.plugins.agent_based.k8s_uptime import parse_k8s_start_time
+from cmk.base.plugins.agent_based.kube_uptime import parse_k8s_start_time
 from cmk.base.plugins.agent_based.utils.uptime import Section
 
 

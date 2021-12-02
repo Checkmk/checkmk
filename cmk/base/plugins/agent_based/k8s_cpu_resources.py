@@ -18,7 +18,7 @@ def parse_k8s(string_table: StringTable):
 
 register.agent_section(
     name="k8s_live_cpu_usage_total",
-    parsed_section_name="k8s_cpu_utilization",
+    parsed_section_name="kube_cpu_utilization",
     parse_function=parse_k8s,
 )
 
@@ -49,7 +49,7 @@ def _determine_pod_cpu_usage(containers: Dict[str, float]):
 
 
 register.check_plugin(
-    name="k8s_cpu_utilization",
+    name="kube_cpu_utilization",
     service_name="CPU Utilization",
     discovery_function=discovery_kubernetes_cpu_utilization,
     check_function=check_kubernetes_cpu_utilization,

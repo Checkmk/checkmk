@@ -31,13 +31,13 @@ def check(section: ClusterInfo) -> CheckResult:
 
 
 register.agent_section(
-    name="k8s_cluster_details_v1",
+    name="kube_cluster_details_v1",
     parse_function=parse,
-    parsed_section_name="k8s_cluster_api_health",
+    parsed_section_name="kube_cluster_api_health",
 )
 
 register.check_plugin(
-    name="k8s_cluster_api_health",
+    name="kube_cluster_api_health",
     service_name="Cluster API",
     discovery_function=discovery,
     check_function=check,

@@ -54,9 +54,9 @@ def check(params: K8sNodeCountVSResult, section: NodeCount) -> CheckResult:
 
 
 register.agent_section(
-    name="k8s_node_count_v1",
+    name="kube_node_count_v1",
     parse_function=parse,
-    parsed_section_name="k8s_node_count",
+    parsed_section_name="kube_node_count",
 )
 
 check_default_parameters: K8sNodeCountVSResult = {
@@ -65,7 +65,7 @@ check_default_parameters: K8sNodeCountVSResult = {
 }
 
 register.check_plugin(
-    name="k8s_node_count",
+    name="kube_node_count",
     service_name="Node Count",
     discovery_function=discovery,
     check_function=check,

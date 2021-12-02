@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.k8s_cluster_api_health import check
+from cmk.base.plugins.agent_based.kube_cluster_api_health import check
 from cmk.base.plugins.agent_based.utils.k8s import APIHealth, ClusterInfo, HealthZ
 
 

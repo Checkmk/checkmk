@@ -60,7 +60,7 @@ class APIHealth(BaseModel):
 
 
 class KubeletInfo(BaseModel):
-    """section: k8s_node_kubelet_v1"""
+    """section: kube_node_kubelet_v1"""
 
     version: str
     health: HealthZ
@@ -136,7 +136,7 @@ class ContainerInfo(BaseModel):
 
 
 class StartTime(BaseModel):
-    """section: k8s_start_time_v1"""
+    """section: kube_start_time_v1"""
 
     start_time: int
 
@@ -180,7 +180,7 @@ class Pod(BaseModel):
 
 
 class ClusterInfo(BaseModel):
-    """section: k8s_cluster_details_v1"""
+    """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
 

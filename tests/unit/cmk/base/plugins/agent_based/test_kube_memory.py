@@ -11,7 +11,7 @@ import json
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import Metric
-from cmk.base.plugins.agent_based import k8s_memory
+from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result
 
 
@@ -67,17 +67,17 @@ def string_table_unset_resources():
 
 @pytest.fixture
 def section_resources(string_table_resources):
-    return k8s_memory.parse_memory_resources(string_table_resources)
+    return kube_memory.parse_memory_resources(string_table_resources)
 
 
 @pytest.fixture
 def section_unset_resources(string_table_unset_resources):
-    return k8s_memory.parse_memory_resources(string_table_unset_resources)
+    return kube_memory.parse_memory_resources(string_table_unset_resources)
 
 
 @pytest.fixture
 def section_performance(string_table_performance):
-    return k8s_memory.parse_performance_memory(string_table_performance)
+    return kube_memory.parse_performance_memory(string_table_performance)
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ def agent_performance_section(fix_register):
 @pytest.fixture
 def agent_resources_section(fix_register):
     for name, section in fix_register.agent_sections.items():
-        if str(name) == "k8s_memory_resources_v1":
+        if str(name) == "kube_memory_resources_v1":
             return section
     assert False, "Should be able to find the section"
 
@@ -99,7 +99,7 @@ def agent_resources_section(fix_register):
 @pytest.fixture
 def check_plugin(fix_register):
     for name, plugin in fix_register.check_plugins.items():
-        if str(name) == "k8s_memory":
+        if str(name) == "kube_memory":
             return plugin
     assert False, "Should be able to find the plugin"
 
@@ -107,43 +107,43 @@ def check_plugin(fix_register):
 def test_register_agent_memory_section_calls(agent_performance_section):
     assert str(agent_performance_section.name) == "k8s_live_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "k8s_live_memory"
-    assert agent_performance_section.parse_function == k8s_memory.parse_performance_memory
+    assert agent_performance_section.parse_function == kube_memory.parse_performance_memory
 
 
 def test_register_agent_memory_resources_section_calls(agent_resources_section):
-    assert str(agent_resources_section.name) == "k8s_memory_resources_v1"
-    assert str(agent_resources_section.parsed_section_name) == "k8s_memory_resources"
-    assert agent_resources_section.parse_function == k8s_memory.parse_memory_resources
+    assert str(agent_resources_section.name) == "kube_memory_resources_v1"
+    assert str(agent_resources_section.parsed_section_name) == "kube_memory_resources"
+    assert agent_resources_section.parse_function == kube_memory.parse_memory_resources
 
 
 def test_register_check_plugin_calls(check_plugin):
-    assert str(check_plugin.name) == "k8s_memory"
+    assert str(check_plugin.name) == "kube_memory"
     assert check_plugin.service_name == "Memory"
-    assert check_plugin.discovery_function.__wrapped__ == k8s_memory.discovery
-    assert check_plugin.check_function.__wrapped__ == k8s_memory.check
+    assert check_plugin.discovery_function.__wrapped__ == kube_memory.discovery
+    assert check_plugin.check_function.__wrapped__ == kube_memory.check
 
 
 def test_parse_resources(string_table_resources, requests, limit):
-    section = k8s_memory.parse_memory_resources(string_table_resources)
+    section = kube_memory.parse_memory_resources(string_table_resources)
     assert section.requests == requests
     assert section.limit == limit
 
 
 def test_parse_performance(string_table_performance, usage):
-    section = k8s_memory.parse_performance_memory(string_table_performance)
+    section = kube_memory.parse_performance_memory(string_table_performance)
     for container in section.containers:
         assert container.memory_usage_bytes.value == usage
 
 
 def test_discovery_returns_an_iterable(string_table_resources, string_table_performance):
-    parsed_resources = k8s_memory.parse_memory_resources(string_table_resources)
-    parse_performance = k8s_memory.parse_performance_memory(string_table_performance)
-    assert list(k8s_memory.discovery(parsed_resources, parse_performance))
+    parsed_resources = kube_memory.parse_memory_resources(string_table_resources)
+    parse_performance = kube_memory.parse_performance_memory(string_table_performance)
+    assert list(kube_memory.discovery(parsed_resources, parse_performance))
 
 
 @pytest.fixture
 def check_result(section_resources, section_performance):
-    return k8s_memory.check({}, section_resources, section_performance)
+    return kube_memory.check({}, section_resources, section_performance)
 
 
 def test_check_yields_results(check_result):
@@ -165,7 +165,7 @@ def test_check_usage_value(check_result, usage, limit, container_count):
 
 
 def test_check_no_limit_usage(section_performance, section_unset_resources, usage, container_count):
-    check_result = list(k8s_memory.check({}, section_unset_resources, section_performance))
+    check_result = list(kube_memory.check({}, section_unset_resources, section_performance))
     usage_result = check_result[0]
     assert isinstance(usage_result, Result)
     assert usage_result.summary == f"Usage: {render.bytes(container_count*usage)}"

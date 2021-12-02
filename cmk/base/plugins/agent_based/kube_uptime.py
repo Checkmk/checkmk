@@ -22,7 +22,7 @@ def parse_k8s_start_time(string_table: StringTable) -> Optional[Section]:
 
 
 register.agent_section(
-    name="k8s_start_time_v1",
+    name="kube_start_time_v1",
     parsed_section_name="uptime",
     parse_function=parse_k8s_start_time,
 )

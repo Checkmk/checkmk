@@ -32,13 +32,13 @@ def check(params: Dict[str, Tuple[int, int]], section: Resources) -> CheckResult
 
 # TODO: suggest a new name for section
 register.agent_section(
-    name="k8s_cpu_resources_v1",
-    parsed_section_name="k8s_cpu_resources",
+    name="kube_cpu_resources_v1",
+    parsed_section_name="kube_cpu_resources",
     parse_function=parse,
 )
 
 register.check_plugin(
-    name="k8s_cpu_resources",
+    name="kube_cpu_resources",
     service_name="CPU Load",
     discovery_function=discovery,
     check_function=check,

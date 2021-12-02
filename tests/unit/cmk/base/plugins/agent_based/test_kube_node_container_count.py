@@ -11,7 +11,7 @@ import json
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import Metric
-from cmk.base.plugins.agent_based import k8s_node_container_count
+from cmk.base.plugins.agent_based import kube_node_container_count
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
 
@@ -37,13 +37,13 @@ def string_table(running, waiting, terminated):
 
 @pytest.fixture
 def section(string_table):
-    return k8s_node_container_count.parse(string_table)
+    return kube_node_container_count.parse(string_table)
 
 
 @pytest.fixture
 def agent_section(fix_register):
     for name, section in fix_register.agent_sections.items():
-        if str(name) == "k8s_node_container_count_v1":
+        if str(name) == "kube_node_container_count_v1":
             return section
     assert False, "Should be able to find the section"
 
@@ -51,36 +51,36 @@ def agent_section(fix_register):
 @pytest.fixture
 def check_plugin(fix_register):
     for name, plugin in fix_register.check_plugins.items():
-        if str(name) == "k8s_node_container_count":
+        if str(name) == "kube_node_container_count":
             return plugin
     assert False, "Should be able to find the plugin"
 
 
 def test_register_agent_section_calls(agent_section):
-    assert str(agent_section.name) == "k8s_node_container_count_v1"
-    assert str(agent_section.parsed_section_name) == "k8s_node_container_count"
-    assert agent_section.parse_function == k8s_node_container_count.parse
+    assert str(agent_section.name) == "kube_node_container_count_v1"
+    assert str(agent_section.parsed_section_name) == "kube_node_container_count"
+    assert agent_section.parse_function == kube_node_container_count.parse
 
 
 def test_register_check_plugin_calls(check_plugin):
-    assert str(check_plugin.name) == "k8s_node_container_count"
+    assert str(check_plugin.name) == "kube_node_container_count"
     assert check_plugin.service_name == "Container Count"
-    assert check_plugin.discovery_function.__wrapped__ == k8s_node_container_count.discovery
-    assert check_plugin.check_function.__wrapped__ == k8s_node_container_count.check
+    assert check_plugin.discovery_function.__wrapped__ == kube_node_container_count.discovery
+    assert check_plugin.check_function.__wrapped__ == kube_node_container_count.check
     assert check_plugin.check_default_parameters == {}
     assert str(check_plugin.check_ruleset_name) == "k8s_node_container_count"
 
 
 def test_parse(string_table, running, waiting, terminated):
-    section = k8s_node_container_count.parse(string_table)
+    section = kube_node_container_count.parse(string_table)
     assert section.running == running
     assert section.waiting == waiting
     assert section.terminated == terminated
 
 
 def test_discovery_returns_an_iterable(string_table):
-    parsed = k8s_node_container_count.parse(string_table)
-    assert list(k8s_node_container_count.discovery(parsed))
+    parsed = kube_node_container_count.parse(string_table)
+    assert list(kube_node_container_count.discovery(parsed))
 
 
 @pytest.fixture
@@ -95,7 +95,7 @@ def params():
 
 @pytest.fixture
 def check_result(section, params):
-    return k8s_node_container_count.check(params, section)
+    return kube_node_container_count.check(params, section)
 
 
 def test_check_yields_check_results(check_result, section):
@@ -123,7 +123,7 @@ def test_check_all_metrics_values(check_result, section):
 
 @pytest.fixture
 def check_levels(mocker, autouse=True):
-    return mocker.spy(k8s_node_container_count, "check_levels")
+    return mocker.spy(kube_node_container_count, "check_levels")
 
 
 def test_check_issues_expected_check_levels_calls(check_levels, check_result, section):

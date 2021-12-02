@@ -73,7 +73,7 @@ def check_terminated(params: Mapping[str, int], state: ContainerTerminatedState)
 
 
 register.agent_section(
-    name="k8s_pod_containers_v1",
+    name="kube_pod_containers_v1",
     parsed_section_name="kube_pod_containers",
     parse_function=parse,
 )

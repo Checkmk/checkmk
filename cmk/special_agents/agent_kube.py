@@ -381,10 +381,10 @@ def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]
 
 def output_cluster_api_sections(cluster: Cluster) -> None:
     sections = {
-        "k8s_pod_resources_with_capacity_v1": cluster.pod_resources,
-        "k8s_node_count_v1": cluster.node_count,
-        "k8s_cluster_details_v1": cluster.cluster_details,
-        "k8s_memory_resources_v1": cluster.memory_resources,
+        "kube_pod_resources_with_capacity_v1": cluster.pod_resources,
+        "kube_node_count_v1": cluster.node_count,
+        "kube_cluster_details_v1": cluster.cluster_details,
+        "kube_memory_resources_v1": cluster.memory_resources,
     }
     _write_sections(sections)
 
@@ -392,9 +392,9 @@ def output_cluster_api_sections(cluster: Cluster) -> None:
 def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
-            "k8s_node_container_count_v1": cluster_node.container_count,
-            "k8s_node_kubelet_v1": cluster_node.kubelet,
-            "k8s_pod_resources_with_capacity_v1": cluster_node.pod_resources,
+            "kube_node_container_count_v1": cluster_node.container_count,
+            "kube_node_kubelet_v1": cluster_node.kubelet,
+            "kube_pod_resources_with_capacity_v1": cluster_node.pod_resources,
         }
         _write_sections(sections)
 
@@ -408,8 +408,8 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
 
     def output_sections(cluster_deployment: Deployment) -> None:
         sections = {
-            "k8s_pod_resources_v1": cluster_deployment.pod_resources,
-            "k8s_memory_resources_v1": cluster_deployment.memory_resources,
+            "kube_pod_resources_v1": cluster_deployment.pod_resources,
+            "kube_memory_resources_v1": cluster_deployment.memory_resources,
         }
         _write_sections(sections)
 
@@ -421,10 +421,10 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
 def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
     def output_sections(cluster_pod: Pod) -> None:
         sections = {
-            "k8s_cpu_resources": cluster_pod.cpu_resources,
+            "kube_cpu_resources_v1": cluster_pod.cpu_resources,
             "k8s_pod_conditions_v1": cluster_pod.conditions,
-            "k8s_pod_containers_v1": cluster_pod.containers_infos,
-            "k8s_start_time_v1": cluster_pod.start_time,
+            "kube_pod_containers_v1": cluster_pod.containers_infos,
+            "kube_start_time_v1": cluster_pod.start_time,
             "kube_memory_resources_v1": cluster_pod.memory_resources,
             "kube_pod_lifecycle_v1": cluster_pod.lifecycle_phase,
         }

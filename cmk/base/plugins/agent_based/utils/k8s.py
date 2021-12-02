@@ -108,7 +108,7 @@ class PerformanceContainer(BaseModel):
 
 
 class NodeCount(BaseModel):
-    """section: k8s_node_count_v1"""
+    """section: kube_node_count_v1"""
 
     worker: int = 0
     control_plane: int = 0
@@ -122,7 +122,7 @@ class HealthZ(BaseModel):
 
 
 class KubeletInfo(BaseModel):
-    """section: k8s_node_kubelet_v1"""
+    """section: kube_node_kubelet_v1"""
 
     version: str
     health: HealthZ
@@ -134,13 +134,13 @@ class APIHealth(BaseModel):
 
 
 class ClusterInfo(BaseModel):
-    """section: k8s_cluster_details_v1"""
+    """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
 
 
 class PodResources(BaseModel):
-    """section: k8s_pod_resources_v1"""
+    """section: kube_pod_resources_v1"""
 
     running: PodSequence = []
     pending: PodSequence = []
@@ -150,14 +150,14 @@ class PodResources(BaseModel):
 
 
 class PodResourcesWithCapacity(PodResources):
-    """section: k8s_pod_resources_with_capacity_v1"""
+    """section: kube_pod_resources_with_capacity_v1"""
 
     capacity: int
     allocatable: int
 
 
 class ContainerCount(BaseModel):
-    """section: k8s_node_container_count_v1"""
+    """section: kube_node_container_count_v1"""
 
     running: int = 0
     waiting: int = 0
@@ -181,7 +181,7 @@ class Resources(BaseModel):
 
 
 class StartTime(BaseModel):
-    """section: k8s_start_time_v1"""
+    """section: kube_start_time_v1"""
 
     start_time: int
 
@@ -231,6 +231,6 @@ class ContainerInfo(BaseModel):
 
 
 class PodContainers(BaseModel):
-    """section: k8s_pod_containers_v1"""
+    """section: kube_pod_containers_v1"""
 
     containers: Mapping[str, ContainerInfo]

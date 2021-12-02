@@ -11,7 +11,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 from .utils.k8s import KubeletInfo
 
 
-def parse_k8s_node_kubelet_v1(string_table: StringTable) -> KubeletInfo:
+def parse_kube_node_kubelet_v1(string_table: StringTable) -> KubeletInfo:
     return KubeletInfo(**json.loads(string_table[0][0]))
 
 
@@ -31,15 +31,15 @@ def discover_k8s_node_kubelet(section: KubeletInfo) -> DiscoveryResult:
 
 
 register.check_plugin(
-    name="k8s_node_kubelet",
-    sections=["k8s_node_kubelet"],
+    name="kube_node_kubelet",
+    sections=["kube_node_kubelet"],
     discovery_function=discover_k8s_node_kubelet,
     check_function=check_k8s_node_kubelet,
     service_name="Kubelet",
 )
 
 register.agent_section(
-    name="k8s_node_kubelet_v1",
-    parsed_section_name="k8s_node_kubelet",
-    parse_function=parse_k8s_node_kubelet_v1,
+    name="kube_node_kubelet_v1",
+    parsed_section_name="kube_node_kubelet",
+    parse_function=parse_kube_node_kubelet_v1,
 )

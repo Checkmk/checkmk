@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.k8s_node_count import check, check_default_parameters, NodeCount
+from cmk.base.plugins.agent_based.kube_node_count import check, check_default_parameters, NodeCount
 
 
 def test_check_k8s_node_count_default_params() -> None:

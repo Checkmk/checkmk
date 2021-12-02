@@ -17,9 +17,9 @@ def parse_k8s_pod_resources(string_table: StringTable):
 
 
 register.agent_section(
-    name="k8s_pod_resources_v1",
+    name="kube_pod_resources_v1",
     parse_function=parse_k8s_pod_resources,
-    parsed_section_name="k8s_pod_resources",
+    parsed_section_name="kube_pod_resources",
 )
 
 
@@ -37,7 +37,7 @@ def check_k8s_pod_resources(section: PodResources) -> CheckResult:
 
 
 register.check_plugin(
-    name="k8s_pod_resources",
+    name="kube_pod_resources",
     service_name="Pod Resources",
     discovery_function=discovery_k8s_pod_resources,
     check_function=check_k8s_pod_resources,

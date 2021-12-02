@@ -271,7 +271,6 @@ def test_registered_painters():
         "inv_software",
         "inv_software_applications",
         "inv_software_applications_check_mk",
-        "inv_software_applications_check_mk_agent_version",
         "inv_software_applications_check_mk_cluster",
         "inv_software_applications_check_mk_cluster_is_cluster",
         "inv_software_applications_check_mk_cluster_nodes",

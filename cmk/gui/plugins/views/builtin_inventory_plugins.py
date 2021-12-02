@@ -437,7 +437,6 @@ inventory_displayhints.update({
     ".software.applications.check_mk.": {"title": _l("Checkmk")},
     ".software.applications.check_mk.num_hosts": {"title": _l("# Hosts"), "short": _l("Hosts"),},
     ".software.applications.check_mk.num_services": {"title": _l("# Services"), "short": _l("Services"),},
-    ".software.applications.check_mk.agent_version": {"title": _l("Checkmk Agent Version")},
     ".software.applications.check_mk.versions:": {
         "title": _l("Versions"),
         "keyorder": ["version", "number", "edition", "demo", "num_sites"],

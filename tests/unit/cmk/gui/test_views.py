@@ -2714,7 +2714,6 @@ def test_registered_display_hints():
     '.software.',
     '.software.applications.',
     '.software.applications.check_mk.',
-    '.software.applications.check_mk.agent_version',
     '.software.applications.check_mk.cluster.',
     '.software.applications.check_mk.cluster.is_cluster',
     '.software.applications.check_mk.cluster.nodes:',

@@ -65,17 +65,17 @@ def _get_error_deployment_globally_disabled_state(params, error_text):
     return default_state
 
 
-def inventory_cmk_agent_update(info):
-    if "AgentUpdate" in info:
+def inventory_cmk_agent_update(section):
+    if section.get("agentupdate") is not None:
         return [(None, {})]
 
 
-def check_cmk_agent_update(_no_item, params, info):
-    if "AgentUpdate" not in info:
+def check_cmk_agent_update(_no_item, params, section):
+    if section.get("agentupdate") is not None:
         return
 
     parsed = {}
-    parts = info["AgentUpdate"].split()
+    parts = section["agentupdate"].split()
     while parts:
         key = parts[0]
         if key == "error":

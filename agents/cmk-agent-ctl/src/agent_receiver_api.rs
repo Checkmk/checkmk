@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::config;
 use crate::{certs, tls_server};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use http::StatusCode;
@@ -28,11 +29,11 @@ pub fn pairing(
     server_address: &str,
     root_cert: Option<String>,
     csr: String,
-    credentials: &str,
+    credentials: &config::Credentials,
 ) -> AnyhowResult<PairingResponse> {
     let response = certs::client(root_cert.map(|cert_str| cert_str.into_bytes()))?
         .post(format!("https://{}/pairing", server_address))
-        .header("authentication", format!("Bearer {}", credentials))
+        .basic_auth(&credentials.username, Some(&credentials.password))
         .json(&PairingBody { csr })
         .send()?;
     let status = response.status();
@@ -63,14 +64,14 @@ fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()>
 pub fn register_with_hostname(
     server_address: &str,
     root_cert: &str,
-    credentials: &str,
+    credentials: &config::Credentials,
     uuid: &str,
     host_name: &str,
 ) -> AnyhowResult<()> {
     check_response_204(
         certs::client(Some(String::from(root_cert).into_bytes()))?
             .post(format!("https://{}/register_with_hostname", server_address))
-            .header("authentication", format!("Bearer {}", credentials))
+            .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&RegistrationWithHNBody {
                 uuid: String::from(uuid),
                 host_name: String::from(host_name),

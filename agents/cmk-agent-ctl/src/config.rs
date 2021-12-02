@@ -12,6 +12,12 @@ use std::io;
 use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
+pub struct Credentials {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Config {
     #[serde(default)]
     pub agent_receiver_address: Option<String>,
@@ -20,7 +26,7 @@ pub struct Config {
     pub package_name: Option<String>,
 
     #[serde(default)]
-    pub credentials: Option<String>,
+    pub credentials: Option<Credentials>,
 
     #[serde(default)]
     pub root_certificate: Option<String>,
@@ -55,17 +61,20 @@ impl Config {
     }
 
     pub fn from_args(args: Args) -> Config {
-        return Config {
+        Config {
             agent_receiver_address: args.server,
             package_name: args.package_name,
             credentials: if let (Some(u), Some(p)) = (args.user, args.password) {
-                Some(format!("{} {}", &u, &p))
+                Some(Credentials {
+                    username: u,
+                    password: p,
+                })
             } else {
                 None
             },
             root_certificate: None,
             host_name: args.host_name,
-        };
+        }
     }
 }
 

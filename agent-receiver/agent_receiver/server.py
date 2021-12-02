@@ -21,22 +21,24 @@ from agent_receiver.checkmk_rest_api import (
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
 from agent_receiver.models import PairingBody, RegistrationWithHNBody
-from fastapi import APIRouter, FastAPI, File, Header, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, FastAPI, File, Header, HTTPException, Response, UploadFile
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 app = FastAPI()
 cert_validation_router = APIRouter(route_class=CertValidationRoute)
+security = HTTPBasic()
 
 
 @app.post("/pairing")
 async def pairing(
     *,
-    authentication: str = Header(...),
+    credentials: HTTPBasicCredentials = Depends(security),
     pairing_body: PairingBody,
 ) -> Mapping[str, str]:
     uuid = uuid_from_pem_csr(pairing_body.csr)
 
-    if not (rest_api_root_cert_resp := get_root_cert(authentication)).ok:
+    if not (rest_api_root_cert_resp := get_root_cert(credentials)).ok:
         logger.error(
             "uuid=%s Getting root cert failed with %s",
             uuid,
@@ -53,7 +55,7 @@ async def pairing(
 
     if not (
         rest_api_csr_resp := post_csr(
-            authentication,
+            credentials,
             pairing_body.csr,
         )
     ).ok:
@@ -83,11 +85,11 @@ async def pairing(
 )
 async def register_with_hostname(
     *,
-    authentication: str = Header(...),
+    credentials: HTTPBasicCredentials = Depends(security),
     registration_body: RegistrationWithHNBody,
 ) -> Response:
     if not host_exists(
-        authentication,
+        credentials,
         registration_body.host_name,
     ):
         raise HTTPException(
@@ -95,7 +97,7 @@ async def register_with_hostname(
             detail=f"Host {registration_body.host_name} does not exist",
         )
     link_host_with_uuid(
-        authentication,
+        credentials,
         registration_body.host_name,
         registration_body.uuid,
     )

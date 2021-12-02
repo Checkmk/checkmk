@@ -35,9 +35,13 @@ def load_plugins_with_exceptions(package_name: str) -> Generator[Tuple[str, Exce
     __import__(package_name)
     package = sys.modules[package_name]
     module_path: List[str] = getattr(package, "__path__", [])
-    for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
+    for _loader, plugin_name, is_pkg in pkgutil.walk_packages(module_path):
         try:
-            importlib.import_module("%s.%s" % (package_name, plugin_name))
+            full_name = "%s.%s" % (package_name, plugin_name)
+            importlib.import_module(full_name)
+
+            if is_pkg:
+                yield from load_plugins_with_exceptions(full_name)
         except Exception as exc:
             yield plugin_name, exc
 

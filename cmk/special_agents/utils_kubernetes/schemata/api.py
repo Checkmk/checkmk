@@ -216,6 +216,7 @@ class PodCondition(BaseModel):
     custom_type: Optional[str]
     reason: Optional[str]
     detail: Optional[str]
+    last_transition_time: Optional[int]
 
     @validator("custom_type")
     @classmethod

@@ -163,6 +163,7 @@ class Pod:
                     status=condition.status,
                     reason=condition.reason,
                     detail=condition.detail,
+                    last_transition_time=condition.last_transition_time,
                 )
                 for condition in self.status.conditions
                 if condition.type is not None

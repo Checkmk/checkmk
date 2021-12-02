@@ -31,6 +31,7 @@ class TestAPIPod:
                                 "status": "False",
                                 "reason": None,
                                 "message": None,
+                                "lastTransitionTime": "2021-10-08T07:39:10Z",
                             },
                         ],
                     },
@@ -154,10 +155,11 @@ class TestPodWithNoNode(TestCase):
         self.assertEqual(container_info_api_list, {})
 
     def test_pod_conditions_pod_without_node(self) -> None:
+        last_transition_time = datetime.datetime(2021, 10, 29, 9, 5, 52, tzinfo=tzutc())
         pod_condition_list = [
             client.V1PodCondition(
                 last_probe_time=None,
-                last_transition_time=datetime.datetime(2021, 10, 29, 9, 5, 52, tzinfo=tzutc()),
+                last_transition_time=last_transition_time,
                 message="0/1 nodes are available: 1 Too many pods.",
                 reason="Unschedulable",
                 status="False",
@@ -173,6 +175,7 @@ class TestPodWithNoNode(TestCase):
                     custom_type=None,
                     reason="Unschedulable",
                     detail="0/1 nodes are available: 1 Too many pods.",
+                    last_transition_time=convert_to_timestamp(last_transition_time)
                 )
             ],
         )

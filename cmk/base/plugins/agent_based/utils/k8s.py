@@ -234,6 +234,7 @@ class PodCondition(BaseModel):
     status: bool
     reason: Optional[str]
     detail: Optional[str]
+    last_transition_time: Optional[int]
 
 
 class PodConditions(BaseModel):

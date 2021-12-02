@@ -10,7 +10,6 @@ from typing import Mapping, Optional, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
-    get_value_store,
     register,
     render,
     Result,
@@ -38,15 +37,11 @@ def check(
     params: Mapping[str, Optional[Tuple[float, float]]], section: PodConditions
 ) -> CheckResult:
     curr_timestamp = int(time())
-    value_store = get_value_store()
     for name, value in section:
-        stored_value = value_store.setdefault(f"k8s_pod_conditions_{name}", {})
         if value.status:
-            stored_value.pop("timestamp", None)
             yield Result(state=State.OK, summary=f"{name.title()} condition passed")
             continue
-        stored_timestamp = stored_value.setdefault("timestamp", curr_timestamp)
-        time_diff = curr_timestamp - stored_timestamp
+        time_diff = curr_timestamp - value.last_transition_time
         summary = f"{name.title()} condition not passed ({value.reason}: {value.detail}) for {{}}"
         for result in check_levels(
             time_diff, levels_upper=params.get(name), render_func=render.timespan

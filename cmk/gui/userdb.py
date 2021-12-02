@@ -29,7 +29,6 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.plugins.userdb
 import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
@@ -50,6 +49,7 @@ from cmk.gui.plugins.userdb.utils import (
     save_cached_profile,
     user_attribute_registry,
     user_sync_config,
+    UserAttribute,
     UserConnector,
     UserSpec,
 )
@@ -586,7 +586,7 @@ def _convert_start_url(value: str) -> str:
 #   +----------------------------------------------------------------------+
 
 
-class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
+class GenericUserAttribute(UserAttribute):
     def __init__(
         self,
         user_editable: bool,

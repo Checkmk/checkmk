@@ -23,7 +23,6 @@ from cmk.utils.site import omd_site, url_prefix
 
 import cmk.gui.i18n
 import cmk.gui.log as log
-import cmk.gui.plugins.config
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.globals import config, local
@@ -214,13 +213,10 @@ def _get_default_config_from_legacy_plugins() -> Dict[str, Any]:
 
 
 def _get_default_config_from_module_plugins() -> Dict[str, Any]:
-    """Plugins from the config plugin module namespace are loaded here
+    """Plugins from the config plugin package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
     `cmk.gui.cme.plugins.config`.
-
-    Please note: Currently they can not be overriden from the sites local hiearchy, because it's
-    no namespace package.
     """
     config_plugin_vars: Dict = {}
     for module in _config_plugin_modules():

@@ -117,12 +117,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.visuals  # pylint: disable=no-name-in-module
-
-if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.visuals  # pylint: disable=no-name-in-module
-
 T = TypeVar("T")
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

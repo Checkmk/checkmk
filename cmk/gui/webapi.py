@@ -13,11 +13,9 @@ from typing import Any, Callable, Dict, Tuple
 import dicttoxml  # type: ignore[import]
 
 import cmk.utils.store as store
-import cmk.utils.version as cmk_version
 
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.plugins.webapi
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib
@@ -29,10 +27,6 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import PermissionSectionWATO
-from cmk.gui.watolib.activate_changes import update_config_generation
-
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.webapi  # pylint: disable=import-error,no-name-in-module
 
 # TODO: Kept for compatibility reasons with legacy plugins
 from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -42,6 +36,7 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     validate_config_hash,
     validate_host_attributes,
 )
+from cmk.gui.watolib.activate_changes import update_config_generation
 
 
 def load_plugins() -> None:

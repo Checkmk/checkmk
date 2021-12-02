@@ -108,20 +108,20 @@ def _import_main_module_plugins() -> None:
         # we can switch over to the new plugin import logic.
         if main_module_name in (
             "wato",
-            "visuals",
+            # "visuals",
             # "sidebar",
             "watolib",
-            "metrics",
+            # "metrics",
             "views",
             # "sla",
             # "cron",
             "openapi",
-            "userdb",
-            "webapi",
+            # "userdb",
+            # "webapi",
             # "bi",
             # "dashboard",
-            "reporting",
-            "config",
+            # "reporting",
+            # "config",
         ):
             continue
 
@@ -182,9 +182,6 @@ def _call_load_plugins_hooks() -> None:
 
     for module in _cmk_gui_top_level_modules() + _local_main_modules:
         name = module.__name__
-
-        if name == "cmk.gui.config":
-            continue  # initial config is already loaded, nothing to do
 
         if name == "cmk.gui.modules":
             continue  # Do not call ourselfs

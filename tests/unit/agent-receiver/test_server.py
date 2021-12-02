@@ -5,12 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import io
+import json
 import os
+import stat
 from pathlib import Path
 from unittest import mock
 
 import pytest
+from agent_receiver import server
+from agent_receiver.checkmk_rest_api import CMKEdition
 from agent_receiver.server import app
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
@@ -34,6 +39,108 @@ def deactivate_certificate_validation(mocker: MockerFixture) -> None:
 @pytest.fixture(name="client")
 def fixture_client() -> TestClient:
     return TestClient(app)
+
+
+def test_register_with_labels_unauthenticated(
+    mocker: MockerFixture,
+    client: TestClient,
+) -> None:
+    mocker.patch(
+        "agent_receiver.server.cmk_edition",
+        side_effect=HTTPException(
+            status_code=401,
+            detail="User authentication failed",
+        ),
+    )
+    response = client.post(
+        "/register_with_labels",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": "1234",
+            "agent_labels": {},
+        },
+    )
+    assert response.status_code == 401
+    assert response.json() == {"detail": "User authentication failed"}
+
+
+def test_register_with_labels_cre(
+    mocker: MockerFixture,
+    client: TestClient,
+) -> None:
+    mocker.patch(
+        "agent_receiver.server.cmk_edition",
+        lambda _c: CMKEdition["cre"],
+    )
+    response = client.post(
+        "/register_with_labels",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": "1234",
+            "agent_labels": {"a": "b"},
+        },
+    )
+    assert response.status_code == 501
+    assert response.json() == {
+        "detail": "The Checkmk Raw edition does not support registration with agent labels"
+    }
+
+
+def _test_register_with_labels(
+    mocker: MockerFixture,
+    client: TestClient,
+) -> None:
+    mocker.patch(
+        "agent_receiver.server.cmk_edition",
+        lambda _c: CMKEdition["cee"],
+    )
+    response = client.post(
+        "/register_with_labels",
+        auth=("monitoring", "supersafe"),
+        json={
+            "uuid": "1234",
+            "agent_labels": {
+                "a": "b",
+                "c": "d",
+            },
+        },
+    )
+    assert response.status_code == 204
+    assert json.loads((server.REGISTRATION_REQUESTS / "NEW" / "1234.json").read_text()) == {
+        "uuid": "1234",
+        "username": "monitoring",
+        "agent_labels": {
+            "a": "b",
+            "c": "d",
+        },
+    }
+    assert (
+        oct(stat.S_IMODE((server.REGISTRATION_REQUESTS / "NEW" / "1234.json").stat().st_mode))
+        == "0o660"
+    )
+
+
+def test_register_with_labels_folder_missing(
+    mocker: MockerFixture,
+    client: TestClient,
+) -> None:
+    assert not (server.REGISTRATION_REQUESTS / "NEW").exists()
+    _test_register_with_labels(
+        mocker,
+        client,
+    )
+    assert oct(stat.S_IMODE((server.REGISTRATION_REQUESTS / "NEW").stat().st_mode)) == "0o770"
+
+
+def test_register_with_labels_folder_exists(
+    mocker: MockerFixture,
+    client: TestClient,
+) -> None:
+    (server.REGISTRATION_REQUESTS / "NEW").mkdir(parents=True)
+    _test_register_with_labels(
+        mocker,
+        client,
+    )
 
 
 def test_agent_data_no_host(client: TestClient) -> None:

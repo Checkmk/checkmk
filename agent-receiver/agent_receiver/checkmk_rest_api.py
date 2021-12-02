@@ -5,12 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from enum import Enum
 from http import HTTPStatus
 from typing import Any
 
 import requests
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
+
+
+class CMKEdition(Enum):
+    cre = "Raw"
+    cfe = "Free"
+    cee = "Enterprise"
+    cme = "Managed Services"
+
+    def supports_registration_with_labels(self) -> bool:
+        """
+        >>> CMKEdition["cre"].supports_registration_with_labels()
+        False
+        >>> CMKEdition["cee"].supports_registration_with_labels()
+        True
+        """
+        # TODO CMK-9171
+        return self is CMKEdition.cee
 
 
 def _local_rest_api_url() -> str:
@@ -104,13 +122,27 @@ def link_host_with_uuid(
     uuid: str,
 ) -> None:
     if (
-        respone := _forward_put(
+        response := _forward_put(
             f"objects/host_config/{host_name}/actions/link_uuid/invoke",
             credentials,
             {"uuid": uuid},
         )
     ).status_code != HTTPStatus.NO_CONTENT:
         raise HTTPException(
-            status_code=respone.status_code,
-            detail=respone.text,
+            status_code=response.status_code,
+            detail=response.text,
         )
+
+
+def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
+    if (
+        response := _forward_get(
+            "version",
+            credentials,
+        )
+    ).status_code == HTTPStatus.OK:
+        return CMKEdition[response.json()["edition"]]
+    raise HTTPException(
+        status_code=response.status_code,
+        detail="User authentication failed",
+    )

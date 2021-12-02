@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import os
 import shutil
 import tempfile
@@ -13,6 +14,7 @@ from typing import Mapping
 
 from agent_receiver.certificates import CertValidationRoute, uuid_from_pem_csr
 from agent_receiver.checkmk_rest_api import (
+    cmk_edition,
     get_root_cert,
     host_exists,
     link_host_with_uuid,
@@ -20,10 +22,10 @@ from agent_receiver.checkmk_rest_api import (
 )
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.log import logger
-from agent_receiver.models import PairingBody, RegistrationWithHNBody
+from agent_receiver.models import PairingBody, RegistrationWithHNBody, RegistrationWithLabelsBody
 from fastapi import APIRouter, Depends, FastAPI, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND, HTTP_501_NOT_IMPLEMENTED
 
 app = FastAPI()
 cert_validation_router = APIRouter(route_class=CertValidationRoute)
@@ -105,6 +107,56 @@ async def register_with_hostname(
         "uuid=%s registered host %s",
         registration_body.uuid,
         registration_body.host_name,
+    )
+    return Response(status_code=HTTP_204_NO_CONTENT)
+
+
+def _write_registration_file(
+    username: str,
+    registration_body: RegistrationWithLabelsBody,
+) -> None:
+    (dir_new_requests := REGISTRATION_REQUESTS / "NEW").mkdir(
+        mode=0o770,
+        parents=True,
+        exist_ok=True,
+    )
+    (new_request := dir_new_requests / f"{registration_body.uuid}.json").write_text(
+        json.dumps(
+            {
+                "uuid": registration_body.uuid,
+                "username": username,
+                "agent_labels": registration_body.agent_labels,
+            }
+        )
+    )
+    new_request.chmod(0o660)
+    logger.info(
+        "uuid=%s Stored new request for registration",
+        registration_body.uuid,
+    )
+
+
+@app.post(
+    "/register_with_labels",
+    status_code=HTTP_204_NO_CONTENT,
+)
+async def register_with_labels(
+    *,
+    credentials: HTTPBasicCredentials = Depends(security),
+    registration_body: RegistrationWithLabelsBody,
+) -> Response:
+    if not (edition := cmk_edition(credentials)).supports_registration_with_labels():
+        logger.error(
+            "uuid=%s Registration with labels not supported",
+            registration_body.uuid,
+        )
+        raise HTTPException(
+            status_code=HTTP_501_NOT_IMPLEMENTED,
+            detail=f"The Checkmk {edition.value} edition does not support registration with agent labels",
+        )
+    _write_registration_file(
+        credentials.username,
+        registration_body,
     )
     return Response(status_code=HTTP_204_NO_CONTENT)
 

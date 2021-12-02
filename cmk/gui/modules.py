@@ -107,7 +107,7 @@ def _import_main_module_plugins() -> None:
         # The main modules need to be migrated step by step, because some need some cleanups before
         # we can switch over to the new plugin import logic.
         if main_module_name in (
-            "wato",
+            # "wato",
             # "visuals",
             # "sidebar",
             # "watolib",

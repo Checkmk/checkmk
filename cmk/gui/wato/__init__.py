@@ -98,7 +98,6 @@ import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
 import cmk.gui.mkeventd
-import cmk.gui.plugins.wato
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.sites as sites
@@ -216,13 +215,8 @@ from cmk.gui.wato.pages.timeperiods import (
 from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
 from cmk.gui.watolib.activate_changes import update_config_generation
 
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.wato  # pylint: disable=no-name-in-module
-
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
-    import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
 

@@ -7,8 +7,6 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
-from cmk.utils.plugin_loader import load_plugins
-
 from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
     ABCEventsMode,
@@ -152,26 +150,3 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-
-# .
-#   .--Plugin API----------------------------------------------------------.
-#   |           ____  _             _            _    ____ ___             |
-#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
-#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
-#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
-#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
-#   |                         |___/                                        |
-#   '----------------------------------------------------------------------'
-
-
-# .
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
-
-load_plugins(__file__, __package__)

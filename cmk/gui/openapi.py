@@ -12,7 +12,6 @@ from typing import Any, Dict, List
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from openapi_spec_validator import validate_spec  # type: ignore[import]
 
-from cmk.utils import version
 from cmk.utils.site import omd_site
 
 from cmk.gui.plugins.openapi.restful_objects import SPEC
@@ -23,9 +22,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 # TODO
 #   Eventually move all of SPEC stuff in here, so we have nothing statically defined.
 #   This removes variation from the code.
-
-if not version.is_raw_edition():
-    import cmk.gui.cee.plugins.openapi  # noqa: F401 # pylint: disable=unused-import,no-name-in-module
 
 
 def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, Any]:

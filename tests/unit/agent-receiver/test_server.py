@@ -31,21 +31,26 @@ def deactivate_certificate_validation(mocker: MockerFixture) -> None:
     )
 
 
-def test_agent_data_no_host() -> None:
+@pytest.fixture(name="client")
+def fixture_client() -> TestClient:
+    return TestClient(app)
 
-    client = TestClient(app)
+
+def test_agent_data_no_host(client: TestClient) -> None:
     mock_file = io.StringIO("mock file")
     response = client.post(
         "/agent_data/1234",
         headers={"certificate": "irrelevant"},
         files={"monitoring_data": ("filename", mock_file)},
     )
-
     assert response.status_code == 403
     assert response.json() == {"detail": "Host is not registered"}
 
 
-def test_agent_data_success(tmp_path: Path) -> None:
+def test_agent_data_success(
+    tmp_path: Path,
+    client: TestClient,
+) -> None:
     mock_file = io.StringIO("mock file")
 
     source = tmp_path / "1234"
@@ -53,7 +58,6 @@ def test_agent_data_success(tmp_path: Path) -> None:
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
 
-    client = TestClient(app)
     response = client.post(
         "/agent_data/1234",
         headers={"certificate": "irrelevant"},
@@ -66,7 +70,11 @@ def test_agent_data_success(tmp_path: Path) -> None:
     assert response.status_code == 204
 
 
-def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
+def test_agent_data_move_error(
+    tmp_path: Path,
+    caplog,
+    client: TestClient,
+) -> None:
     mock_file = io.StringIO("mock file")
 
     os.mkdir(tmp_path / "READY")
@@ -79,10 +87,7 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
     source.symlink_to(target_dir)
 
     with mock.patch("agent_receiver.server.Path.rename") as move_mock:
-
         move_mock.side_effect = FileNotFoundError()
-
-        client = TestClient(app)
         response = client.post(
             "/agent_data/1234",
             headers={"certificate": "irrelevant"},
@@ -93,7 +98,10 @@ def test_agent_data_move_error(tmp_path: Path, caplog) -> None:
     assert caplog.records[0].message == "uuid=1234 Agent data saved"
 
 
-def test_agent_data_move_ready(tmp_path: Path) -> None:
+def test_agent_data_move_ready(
+    tmp_path: Path,
+    client: TestClient,
+) -> None:
     mock_file = io.StringIO("mock file")
 
     os.mkdir(tmp_path / "READY")
@@ -105,7 +113,6 @@ def test_agent_data_move_ready(tmp_path: Path) -> None:
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
 
-    client = TestClient(app)
     client.post(
         "/agent_data/1234",
         headers={"certificate": "irrelevant"},

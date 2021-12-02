@@ -25,11 +25,9 @@
 #              import ...
 #
 
-import errno
-import os
 import sys
 from types import ModuleType
-from typing import Any, Dict, Iterator, List, Set
+from typing import Any, Dict, Iterator, List
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -37,7 +35,6 @@ import cmk.utils.version as cmk_version
 import cmk.gui.pages
 import cmk.gui.plugins.main_modules
 import cmk.gui.utils as utils
-from cmk.gui.hooks import request_memoize
 from cmk.gui.log import logger
 
 if not cmk_version.is_raw_edition():
@@ -53,8 +50,6 @@ pagehandlers: Dict[Any, Any] = {}
 # function load_plugins() is called for all these modules to
 # initialize them.
 _legacy_modules: List[ModuleType] = []
-
-_plugins_loaded_for: Set[str] = set()
 
 
 def register_handlers(handlers: Dict) -> None:
@@ -96,16 +91,12 @@ def call_load_plugins_hooks() -> None:
     processing, which resulted in several problems. Now this is executed during application
     initialization (at import time).
 
-    1. During import of the application (e.g. web/app/index.wsgi) this function is called
-    2. It calls the function `load_plugins` hook of all main modules.
+    1. During import of the application (e.g. web/app/index.wsgi) `init_modules` cares for the
+       import of all main modules
+    2. Then this function calls the function `load_plugins` hook of all main modules.
     3. The main module is doing it's initialization logic.
-    4. It is then remembered which module already has initialized it's initialization
     """
     logger.debug("Executing load_plugin hooks")
-
-    if _local_web_plugins_have_changed():
-        logger.debug("A local GUI plugin has changed. Enforcing execution of all hooks")
-        _plugins_loaded_for.clear()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
         name = module.__name__
@@ -116,15 +107,10 @@ def call_load_plugins_hooks() -> None:
         if not hasattr(module, "load_plugins"):
             continue  # has no load_plugins hook, nothing to do
 
-        if name in _plugins_loaded_for:
-            continue  # already loaded, nothing to do
-
         logger.debug("Executing load_plugins hook for %s", name)
 
         # hasattr above ensures the function is available. Mypy does not understand this.
         module.load_plugins()  # type: ignore[attr-defined]
-
-        _plugins_loaded_for.add(name)
 
     # TODO: Clean this up once we drop support for the legacy plugins
     for path, page_func in pagehandlers.items():
@@ -149,37 +135,3 @@ def _cmk_gui_top_level_modules() -> List[ModuleType]:
             and len(name.split(".")) == 4
         )
     ]
-
-
-def _find_local_web_plugins() -> Iterator[str]:
-    basedir = str(cmk.utils.paths.local_web_dir) + "/plugins/"
-
-    try:
-        plugin_dirs = os.listdir(basedir)
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return
-        raise
-
-    for plugins_dir in plugin_dirs:
-        dir_path = basedir + plugins_dir
-        yield dir_path  # Changes in the directory like deletion of files!
-        if os.path.isdir(dir_path):
-            for file_name in os.listdir(dir_path):
-                if file_name.endswith(".py") or file_name.endswith(".pyc"):
-                    yield dir_path + "/" + file_name
-
-
-_last_web_plugins_update = 0.0
-
-
-@request_memoize()
-def _local_web_plugins_have_changed() -> bool:
-    global _last_web_plugins_update
-
-    this_time = 0.0
-    for path in _find_local_web_plugins():
-        this_time = max(os.stat(path).st_mtime, this_time)
-    last_time = _last_web_plugins_update
-    _last_web_plugins_update = this_time
-    return this_time > last_time

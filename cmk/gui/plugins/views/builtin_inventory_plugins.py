@@ -383,56 +383,6 @@ inventory_displayhints.update({
     ".hardware.nwadapter:*.ipv6_subnet": {"title": _l("IPv6 Subnet")},
     ".hardware.nwadapter:*.gateway": {"title": _l("Gateway")},
     ".software.": {"title": _l("Software"), "icon": "software"},
-    ".software.bios.": {"title": _l("BIOS")},
-    ".software.bios.vendor": {"title": _l("Vendor")},
-    ".software.bios.version": {"title": _l("Version")},
-    ".software.bios.date": {"title": _l("Date"), "paint": "date"},
-    ".software.firmware.": {
-        "title": _l("Firmware"),
-        "keyorder": [
-            "vendor",
-            "version",
-        ],
-    },
-    ".software.firmware.vendor": {"title": _l("Vendor")},
-    ".software.firmware.version": {"title": _l("Version")},
-    ".software.firmware.platform_level": {"title": _l("Platform Firmware level")},
-    ".software.os.": {"title": _l("Operating System")},
-    ".software.os.name": {"title": _l("Name"), "short": _l("Operating System"), "is_show_more": False},
-    ".software.os.version": {"title": _l("Version")},
-    ".software.os.vendor": {"title": _l("Vendor")},
-    ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"
-    ".software.os.install_date": {"title": _l("Install Date"), "paint": "date"},
-    ".software.os.kernel_version": {"title": _l("Kernel Version"), "short": _l("Kernel")},
-    ".software.os.arch": {"title": _l("Kernel Architecture"), "short": _l("Architecture")},
-    ".software.os.service_pack": {"title": _l("Latest Service Pack"), "short": _l("Service Pack")},
-    ".software.os.service_packs:": {"title": _l("Service Packs"), "keyorder": ["name"]},
-    ".software.configuration.": {"title": _l("Configuration")},
-    ".software.configuration.snmp_info.": {"title": _l("SNMP Information")},
-    ".software.configuration.snmp_info.contact": {"title": _l("Contact")},
-    ".software.configuration.snmp_info.location": {"title": _l("Location"), "is_show_more": False},
-    ".software.configuration.snmp_info.name": {"title": _l("System name")},
-    ".software.packages:": {
-        "title": _l("Packages"),
-        "icon": "packages",
-        "keyorder": ["name", "version", "arch", "package_type", "summary"],
-        "view": "invswpac_of_host",
-        "is_show_more": False,
-    },
-    ".software.packages:*.name": {"title": _l("Name")},
-    ".software.packages:*.arch": {"title": _l("Architecture")},
-    ".software.packages:*.package_type": {"title": _l("Type")},
-    ".software.packages:*.summary": {"title": _l("Description")},
-    ".software.packages:*.version": {
-        "title": _l("Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
-    },
-    ".software.packages:*.vendor": {"title": _l("Publisher")},
-    ".software.packages:*.package_version": {
-        "title": _l("Package Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
-    },
-    ".software.packages:*.install_date": {"title": _l("Install Date"), "paint": "date"},
-    ".software.packages:*.size": {"title": _l("Size"), "paint": "count"},
-    ".software.packages:*.path": {"title": _l("Path")},
     ".software.applications.": {"title": _l("Applications")},
     ".software.applications.check_mk.": {"title": _l("Checkmk")},
     ".software.applications.check_mk.num_hosts": {"title": _l("# Hosts"), "short": _l("Hosts"),},
@@ -578,6 +528,12 @@ inventory_displayhints.update({
     },
     ".software.applications.docker.networks.*.containers:*.mac_address": {
         "title": _l("MAC address"),
+    },
+    ".software.applications.fortinet.fortisandbox:": {"title": _l("FortiSandbox Software")},
+    ".software.applications.fortinet.fortisandbox:*.name": {"title": _l("Name")},
+    ".software.applications.fortinet.fortisandbox:*.version": {"title": _l("Version")},
+    ".software.applications.fortinet.fortigate_high_availability.": {
+        "title": _l("FortiGate HighAvailability"),
     },
     ".software.applications.kubernetes.roles:": {
         "title": _l("Roles"),
@@ -901,6 +857,63 @@ inventory_displayhints.update({
     ".software.applications.ibm_mq.queues:*.created": {"title": _l("Created")},
     ".software.applications.ibm_mq.queues:*.altered": {"title": _l("Altered")},
     ".software.applications.ibm_mq.queues:*.monq": {"title": _l("Monitoring")},
+    ".software.bios.": {"title": _l("BIOS")},
+    ".software.bios.vendor": {"title": _l("Vendor")},
+    ".software.bios.version": {"title": _l("Version")},
+    ".software.bios.date": {"title": _l("Date"), "paint": "date"},
+    ".software.configuration.": {"title": _l("Configuration")},
+    ".software.configuration.snmp_info.": {"title": _l("SNMP Information")},
+    ".software.configuration.snmp_info.contact": {"title": _l("Contact")},
+    ".software.configuration.snmp_info.location": {"title": _l("Location"), "is_show_more": False},
+    ".software.configuration.snmp_info.name": {"title": _l("System name")},
+    ".software.firmware.": {
+        "title": _l("Firmware"),
+        "keyorder": [
+            "vendor",
+            "version",
+        ],
+    },
+    ".software.firmware.vendor": {"title": _l("Vendor")},
+    ".software.firmware.version": {"title": _l("Version")},
+    ".software.firmware.platform_level": {"title": _l("Platform Firmware level")},
+    ".software.kernel_config:": {
+        "title": _l("Kernel Configuration (sysctl)"),
+        "keyorder": ["parameter", "value"],
+        "view": "invkernelconfig_of_host",
+    },
+    ".software.kernel_config:*.parameter": {"title": _l("Parameter")},
+    ".software.kernel_config:*.value": {"title": _l("Value")},
+    ".software.os.": {"title": _l("Operating System")},
+    ".software.os.name": {"title": _l("Name"), "short": _l("Operating System"), "is_show_more": False},
+    ".software.os.version": {"title": _l("Version")},
+    ".software.os.vendor": {"title": _l("Vendor")},
+    ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"
+    ".software.os.install_date": {"title": _l("Install Date"), "paint": "date"},
+    ".software.os.kernel_version": {"title": _l("Kernel Version"), "short": _l("Kernel")},
+    ".software.os.arch": {"title": _l("Kernel Architecture"), "short": _l("Architecture")},
+    ".software.os.service_pack": {"title": _l("Latest Service Pack"), "short": _l("Service Pack")},
+    ".software.os.service_packs:": {"title": _l("Service Packs"), "keyorder": ["name"]},
+    ".software.packages:": {
+        "title": _l("Packages"),
+        "icon": "packages",
+        "keyorder": ["name", "version", "arch", "package_type", "summary"],
+        "view": "invswpac_of_host",
+        "is_show_more": False,
+    },
+    ".software.packages:*.name": {"title": _l("Name")},
+    ".software.packages:*.arch": {"title": _l("Architecture")},
+    ".software.packages:*.package_type": {"title": _l("Type")},
+    ".software.packages:*.summary": {"title": _l("Description")},
+    ".software.packages:*.version": {
+        "title": _l("Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
+    },
+    ".software.packages:*.vendor": {"title": _l("Publisher")},
+    ".software.packages:*.package_version": {
+        "title": _l("Package Version"), "sort": cmk.gui.utils.cmp_version, "filter": FilterInvtableVersion
+    },
+    ".software.packages:*.install_date": {"title": _l("Install Date"), "paint": "date"},
+    ".software.packages:*.size": {"title": _l("Size"), "paint": "count"},
+    ".software.packages:*.path": {"title": _l("Path")},
     ".networking.": {"title": _l("Networking"), "icon": "networking"},
     ".networking.total_interfaces": {"title": _l("Interfaces"), "paint": "count"},
     ".networking.total_ethernet_ports": {"title": _l("Ports"), "paint": "count"},
@@ -912,13 +925,6 @@ inventory_displayhints.update({
     ".networking.addresses:*.address": {"title": _l("Address")},
     ".networking.addresses:*.device": {"title": _l("Device")},
     ".networking.addresses:*.type": {"title": _l("Address Type"), "paint": "ip_address_type"},
-    ".networking.routes:": {
-        "title": _l("Routes"), "keyorder": ["target", "device", "type", "gateway"]
-    },
-    ".networking.routes:*.target": {"title": _l("Target"), "paint": "ipv4_network"},
-    ".networking.routes:*.device": {"title": _l("Device")},
-    ".networking.routes:*.type": {"title": _l("Type of route"), "paint": "route_type"},
-    ".networking.routes:*.gateway": {"title": _l("Gateway")},
     ".networking.interfaces:": {
         "title": _l("Interfaces"),
         "keyorder": [
@@ -970,6 +976,13 @@ inventory_displayhints.update({
     },
     ".networking.interfaces:*.vlans": {"title": _l("VLANs")},
     ".networking.interfaces:*.vlantype": {"title": _l("VLAN type")},
+    ".networking.routes:": {
+        "title": _l("Routes"), "keyorder": ["target", "device", "type", "gateway"]
+    },
+    ".networking.routes:*.target": {"title": _l("Target"), "paint": "ipv4_network"},
+    ".networking.routes:*.device": {"title": _l("Device")},
+    ".networking.routes:*.type": {"title": _l("Type of route"), "paint": "route_type"},
+    ".networking.routes:*.gateway": {"title": _l("Gateway")},
     ".networking.wlan.": {"title": _l("WLAN")},
     ".networking.wlan.controller.": {"title": _l("Controller")},
     ".networking.wlan.controller.accesspoints:": {
@@ -992,19 +1005,6 @@ inventory_displayhints.update({
     ".networking.tunnels:*.peername": { "title" : _l("Peer Name")  },
     ".networking.tunnels:*.sourceip": { "title" : _l("Source IP Address") },
     ".networking.tunnels:*.tunnel_interface": { "title" : _l("Tunnel Interface") },
-    ".software.kernel_config:": {
-        "title": _l("Kernel Configuration (sysctl)"),
-        "keyorder": ["parameter", "value"],
-        "view": "invkernelconfig_of_host",
-    },
-    ".software.kernel_config:*.parameter": {"title": _l("Parameter")},
-    ".software.kernel_config:*.value": {"title": _l("Value")},
-    ".software.applications.fortinet.fortisandbox:": {"title": _l("FortiSandbox Software")},
-    ".software.applications.fortinet.fortisandbox:*.name": {"title": _l("Name")},
-    ".software.applications.fortinet.fortisandbox:*.version": {"title": _l("Version")},
-    ".software.applications.fortinet.fortigate_high_availability.": {
-        "title": _l("FortiGate HighAvailability"),
-    },
 }
 )
 

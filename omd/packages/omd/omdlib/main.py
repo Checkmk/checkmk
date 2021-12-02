@@ -2714,7 +2714,7 @@ def main_update(
         bail_out(
             f"ERROR: You are trying to update from {from_version} to {to_version} which is not "
             "supported.\n\n"
-            "* Downgrades are not supported\n"
+            "* Major downgrades are not supported\n"
             "* Major version updates need to be done step by step.\n\n"
             "If you are really sure about what you are doing, you can still do the "
             "update with '-f'.\n"
@@ -2873,9 +2873,6 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     """
 
     from_parts = major_version_parts(from_version)
-
-    if to_version == "2021.11.29":
-        to_version = "2.1.0"
     to_parts = major_version_parts(to_version)
 
     if is_daily_build_of_master(from_version) or is_daily_build_of_master(to_version):

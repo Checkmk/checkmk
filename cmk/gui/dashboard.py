@@ -30,7 +30,6 @@ import cmk.gui.crash_reporting as crash_reporting
 import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.plugins.dashboard
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import (
@@ -51,6 +50,7 @@ from cmk.gui.globals import html, output_funnel, request, response, transactions
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.node_visualization import get_topology_view_and_filters
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_javascript_link,
@@ -72,28 +72,6 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
-from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.utils.html import HTML, HTMLInput
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    DictionaryEntry,
-    DropdownChoice,
-    Transform,
-    ValueSpec,
-    ValueSpecValidateFunc,
-)
-from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
-
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.dashboard  # pylint: disable=no-name-in-module
-
-if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
-
-from cmk.gui.node_visualization import get_topology_view_and_filters
 
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -119,13 +97,28 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     get_all_dashboards,
     get_permitted_dashboards,
     GROW,
+    IFrameDashlet,
     MAX,
     save_all_dashboards,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.views.utils import data_source_registry
+from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
+from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    Transform,
+    ValueSpec,
+    ValueSpecValidateFunc,
+)
+from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -332,7 +325,7 @@ def load_plugins() -> None:
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("dashboards"))
 
 
-class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
+class LegacyDashlet(IFrameDashlet):
     """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
 
     _type_name: DashletTypeName = ""

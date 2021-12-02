@@ -25,12 +25,14 @@
 #              import ...
 #
 
+import importlib
 import sys
 from types import ModuleType
 from typing import Any, Dict, Iterator, List
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 import cmk.gui.pages
 import cmk.gui.plugins.main_modules
@@ -97,8 +99,66 @@ def _import_local_main_modules() -> None:
 
 
 def _import_main_module_plugins() -> None:
-    # TODO: Next commit will start moving the "plugin" imports from the main modules to this place.
-    pass
+    logger.debug("Importing main module plugins")
+
+    for module in _cmk_gui_top_level_modules() + _local_main_modules:
+        main_module_name = module.__name__.split(".")[-1]
+
+        # The main modules need to be migrated step by step, because some need some cleanups before
+        # we can switch over to the new plugin import logic.
+        if main_module_name in (
+            "wato",
+            "visuals",
+            "sidebar",
+            "watolib",
+            "metrics",
+            "views",
+            "sla",
+            "cron",
+            "openapi",
+            "userdb",
+            "webapi",
+            "bi",
+            # "dashboard",
+            "reporting",
+            "config",
+        ):
+            continue
+
+        for plugin_package_name in _plugin_package_names(main_module_name):
+            if not _is_plugin_namespace(plugin_package_name):
+                logger.debug("  Skip loading plugins from %s", plugin_package_name)
+                continue
+
+            logger.debug("  Importing plugins from %s", plugin_package_name)
+            for plugin_name, exc in load_plugins_with_exceptions(plugin_package_name):
+                logger.error(
+                    "  Error in %s plugin '%s'\n", main_module_name, plugin_name, exc_info=exc
+                )
+                utils.add_failed_plugin(main_module_name, plugin_name, exc)
+
+    logger.debug("Main module plugins imported")
+
+
+# Note: One day, when we have migrated all main module plugins to PEP 420 namespaces, we
+# have no cmk.gui.cee and cmk.gui.cme namespaces anymore and can remove them.
+def _plugin_package_names(main_module_name: str) -> Iterator[str]:
+    yield f"cmk.gui.plugins.{main_module_name}"
+
+    if not cmk_version.is_raw_edition():
+        yield f"cmk.gui.cee.plugins.{main_module_name}"
+
+    if cmk_version.is_managed_edition():
+        yield f"cmk.gui.cme.plugins.{main_module_name}"
+
+
+def _is_plugin_namespace(plugin_package_name: str) -> bool:
+    # TODO: We should know this somehow by declarations without need to try this out
+    try:
+        importlib.import_module(plugin_package_name)
+        return True
+    except ModuleNotFoundError:
+        return False
 
 
 def _call_load_plugins_hooks() -> None:

@@ -129,6 +129,7 @@ def gen_id() -> str:
 
 
 # This may not be moved to g, because this needs to be request independent
+# TODO: Move to cmk.gui.modules once load_web_plugins is dropped
 _failed_plugins: Dict[str, List[Tuple[str, Exception]]] = {}
 
 
@@ -136,7 +137,7 @@ _failed_plugins: Dict[str, List[Tuple[str, Exception]]] = {}
 # (global variables). Also honors the local-hierarchy for OMD
 # TODO: This is kept for pre 1.6.0i1 plugins
 def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
-    _failed_plugins[forwhat] = []
+    _failed_plugins.setdefault(forwhat, [])
 
     for plugins_path in [
         Path(cmk.utils.paths.web_dir, "plugins", forwhat),
@@ -160,6 +161,11 @@ def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
                 _failed_plugins[forwhat].append((str(file_path), e))
+
+
+def add_failed_plugin(main_module_name: str, plugin_name: str, e: Exception) -> None:
+    print((main_module_name, plugin_name, e))
+    _failed_plugins.setdefault(main_module_name, []).append((plugin_name, e))
 
 
 def get_failed_plugins() -> List[Tuple[str, Exception]]:

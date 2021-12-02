@@ -203,6 +203,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 if not cmk_version.is_raw_edition():
@@ -1223,6 +1224,8 @@ def load_plugins() -> None:
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:
         register_legacy_command(cmd_spec)
+
+    multisite_builtin_views.update(builtin_views)
 
     cmk.gui.plugins.views.inventory.declare_inventory_columns()
 

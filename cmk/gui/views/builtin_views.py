@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _l
 
-from . import multisite_builtin_views
+builtin_views: Dict[str, Any] = {}
 
 # Painters used in list of services views
 service_view_painters: List[Tuple[Optional[str], ...]] = [
@@ -41,6 +41,10 @@ host_view_painters = [
     ("num_services_crit", "host_crit"),
     ("num_services_pending", "host_pending"),
 ]
+host_view_filters = [
+    "siteopt",
+    "hostregex",
+]
 
 # Standard set of filters for different search views
 host_search_filters = [
@@ -57,7 +61,7 @@ service_search_filters = [
     "service_labels",
 ]
 
-multisite_builtin_views.update(
+builtin_views.update(
     {
         "allhosts": {
             "browser_reload": 30,
@@ -79,10 +83,7 @@ multisite_builtin_views.update(
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
-            "show_filters": [
-                "siteopt",
-                "hostregex",
-            ],
+            "show_filters": host_view_filters,
             "sorters": [
                 ("site", False),
                 ("site_host", False),
@@ -4202,7 +4203,7 @@ def _simple_host_view(custom_attributes, add_context=None):
     return view_spec
 
 
-multisite_builtin_views["docker_nodes"] = _simple_host_view(
+builtin_views["docker_nodes"] = _simple_host_view(
     {
         "title": _l("Docker nodes"),
         "topic": "applications",
@@ -4226,7 +4227,7 @@ multisite_builtin_views["docker_nodes"] = _simple_host_view(
     },
 )
 
-multisite_builtin_views["docker_containers"] = _simple_host_view(
+builtin_views["docker_containers"] = _simple_host_view(
     {
         "title": _l("Docker containers"),
         "topic": "applications",
@@ -4249,7 +4250,7 @@ multisite_builtin_views["docker_containers"] = _simple_host_view(
     },
 )
 
-multisite_builtin_views["vsphere_servers"] = _simple_host_view(
+builtin_views["vsphere_servers"] = _simple_host_view(
     {
         "title": _l("vSphere Servers"),
         "topic": "applications",
@@ -4266,7 +4267,7 @@ multisite_builtin_views["vsphere_servers"] = _simple_host_view(
     },
 )
 
-multisite_builtin_views["vpshere_vms"] = _simple_host_view(
+builtin_views["vpshere_vms"] = _simple_host_view(
     {
         "title": _l("vSphere VMs"),
         "topic": "applications",
@@ -4287,7 +4288,7 @@ multisite_builtin_views["vpshere_vms"] = _simple_host_view(
     },
 )
 
-multisite_builtin_views["crash_reports"] = {
+builtin_views["crash_reports"] = {
     "description": _l("List crash reports of all sites"),
     "title": _l("Crash reports"),
     "browser_reload": 0,
@@ -4322,7 +4323,7 @@ multisite_builtin_views["crash_reports"] = {
     "is_show_more": True,
 }
 
-multisite_builtin_views["cmk_servers"] = {
+builtin_views["cmk_servers"] = {
     "add_context_to_title": False,
     "browser_reload": 0,
     "column_headers": "pergroup",
@@ -4429,7 +4430,7 @@ def cmk_sites_painters():
     ] + service_painters
 
 
-multisite_builtin_views["cmk_sites"] = {
+builtin_views["cmk_sites"] = {
     "add_context_to_title": False,
     "browser_reload": 0,
     "column_headers": "pergroup",
@@ -4458,7 +4459,7 @@ multisite_builtin_views["cmk_sites"] = {
     "sort_index": 7,
 }
 
-multisite_builtin_views["cmk_sites_of_host"] = {
+builtin_views["cmk_sites_of_host"] = {
     "add_context_to_title": True,
     "browser_reload": 0,
     "column_headers": "pergroup",

@@ -70,6 +70,7 @@ from cmk.gui.utils.escaping import escape_html, escape_text
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary
 from cmk.gui.view_utils import CellSpec
+from cmk.gui.views.builtin_views import host_view_filters
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
@@ -1462,8 +1463,6 @@ multisite_builtin_views["inv_host"] = {
     "sorters": [],
 }
 
-generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
-
 # View with table of all hosts, with some basic information
 multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
@@ -1544,7 +1543,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
     "hard_filters": ["has_inv"],
     "hard_filtervars": [("is_has_inv", "1")],
     "hide_filters": [],
-    "show_filters": generic_host_filters + [],
+    "show_filters": host_view_filters + [],
     "sorters": [("inv_networking_available_ethernet_ports", True)],
 }
 

@@ -1505,7 +1505,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value) -> str:
         return ""
 
     def from_html_vars(self, varprefix):
@@ -1523,6 +1523,12 @@ class NodeVisualizationLayoutStyle(ValueSpec):
 
     def default_value(self):
         return {"type": "none", "style_config": {}}
+
+    def value_to_json(self, value):
+        raise NotImplementedError()
+
+    def value_from_json(self, json_value):
+        raise NotImplementedError()
 
 
 # .

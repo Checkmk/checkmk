@@ -1197,7 +1197,7 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"))
         try:
-            value_html = self._valuespec.value_to_text(value)
+            value_html = self._valuespec.value_to_html(value)
         except Exception as e:
             try:
                 reason = str(e)
@@ -1225,7 +1225,7 @@ class ModeEditRuleset(WatoMode):
     def _rule_conditions(self, rule):
         self._predefined_condition_info(rule)
         html.write_text(
-            VSExplicitConditions(rulespec=self._rulespec).value_to_text(rule.get_rule_conditions())
+            VSExplicitConditions(rulespec=self._rulespec).value_to_html(rule.get_rule_conditions())
         )
 
     def _predefined_condition_info(self, rule):
@@ -2247,7 +2247,7 @@ class VSExplicitConditions(Transform):
         if value.startswith("!"):
             raise MKUserError(varprefix, _('It\'s not allowed to use a leading "!" here.'))
 
-    def value_to_text(self, value: RuleConditions) -> HTML:
+    def value_to_html(self, value: RuleConditions) -> HTML:
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()

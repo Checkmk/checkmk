@@ -486,7 +486,7 @@ class ModeUsers(WatoMode):
                     html.i(_("none"))
 
                 # table.cell(_("Sites"))
-                # html.write_text(vs_authorized_sites().value_to_text(user_spec.get("authorized_sites",
+                # html.write_text(vs_authorized_sites().value_to_html(user_spec.get("authorized_sites",
                 #                                                vs_authorized_sites().default_value())))
 
                 # notifications
@@ -523,7 +523,7 @@ class ModeUsers(WatoMode):
                 for name, attr in visible_custom_attrs:
                     vs = attr.valuespec()
                     table.cell(_u(vs.title()))
-                    html.write_text(vs.value_to_text(user_spec.get(name, vs.default_value())))
+                    html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
         html.hidden_fields()
         html.end_form()
@@ -883,7 +883,7 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("authorized_sites"):
             vs_sites.render_input("authorized_sites", authorized_sites)
         else:
-            html.write_text(vs_sites.value_to_text(authorized_sites))
+            html.write_text(vs_sites.value_to_html(authorized_sites))
         html.help(vs_sites.help())
 
         custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
@@ -1265,7 +1265,7 @@ class ModeEditUser(WatoMode):
             if not self._is_locked(name):
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
             else:
-                html.write_text(vs.value_to_text(self._user.get(name, vs.default_value())))
+                html.write_text(vs.value_to_html(self._user.get(name, vs.default_value())))
                 # Render hidden to have the values kept after saving
                 html.open_div(style="display:none")
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))

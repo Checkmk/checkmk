@@ -790,7 +790,7 @@ class ModeDistributedMonitoring(WatoMode):
     def _show_status_connection_config(self, table, site_id, site):
         table.cell(_("Status connection"))
         vs_connection = self._site_mgmt.connection_method_valuespec()
-        html.write_text(vs_connection.value_to_text(site["socket"]))
+        html.write_text(vs_connection.value_to_html(site["socket"]))
 
     def _show_status_connection_status(self, table, site_id, site):
         table.cell("")
@@ -1188,7 +1188,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _show_global_setting(self):
         forms.section(_("Global setting"))
-        html.write_text(self._valuespec.value_to_text(self._global_settings[self._varname]))
+        html.write_text(self._valuespec.value_to_html(self._global_settings[self._varname]))
 
     def _back_url(self) -> str:
         return ModeEditSiteGlobals.mode_url(site=self._site_id)

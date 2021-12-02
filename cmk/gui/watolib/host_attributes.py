@@ -849,7 +849,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().default_value()
 
     def paint(self, value: Any, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
-        return "", self.valuespec().value_to_text(value)
+        return "", self.valuespec().value_to_html(value)
 
     def render_input(self, varprefix: str, value: Any) -> None:
         self.valuespec().render_input(varprefix + self.name(), value)
@@ -1007,7 +1007,7 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
         raise NotImplementedError()
 
     def to_nagios(self, value: str) -> Optional[str]:
-        rendered = self.valuespec().value_to_text(value)
+        rendered = self.valuespec().value_to_html(value)
         if rendered:
             return str(rendered)
         return None

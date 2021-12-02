@@ -133,7 +133,7 @@ class Bounds(Generic[C]):
 _VT = TypeVar("_VT")
 
 
-class ValueSpec(Generic[_VT]):
+class ValueSpec(abc.ABC, Generic[_VT]):
     """Abstract base class of all value declaration classes"""
 
     # TODO: Remove **kwargs once all valuespecs have been changed
@@ -212,22 +212,19 @@ class ValueSpec(Generic[_VT]):
             return self.canonical_value()
         return value
 
-    # TODO: Rename to value_to_html?
-    def value_to_text(self, value: _VT) -> ValueSpecText:
-        """Creates a text-representation of the value that can be
+    def value_to_html(self, value: _VT) -> ValueSpecText:
+        """Creates a HTML-representation of the value that can be
         used in tables and other contextes
 
         It is to be read by the user and need not to be parsable.  The function
-        may assume that the type of the value is valid.
-
-        In the current implementation this function is only used to render the
-        object for html code. So it is allowed to add html code for better
-        layout in the GUI."""
+        may assume that the type of the value is valid."""
         return repr(value)
 
+    @abc.abstractmethod
     def value_to_json(self, value: _VT) -> JSONValue:
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def value_from_json(self, json_value: JSONValue) -> _VT:
         raise NotImplementedError()
 
@@ -305,9 +302,9 @@ class FixedValue(ValueSpec[_VT]):
         return self._value
 
     def render_input(self, varprefix: str, value: _VT) -> None:
-        html.write_text(self.value_to_text(value))
+        html.write_text(self.value_to_html(value))
 
-    def value_to_text(self, value: _VT) -> str:
+    def value_to_html(self, value: _VT) -> ValueSpecText:
         if self._totext is not None:
             return self._totext
         if isinstance(value, str):
@@ -390,7 +387,7 @@ class Age(ValueSpec[Seconds]):
             + request.get_integer_input_mandatory(varprefix + "_seconds", 0)
         )
 
-    def value_to_text(self, value: Seconds) -> str:
+    def value_to_html(self, value: Seconds) -> ValueSpecText:
         if value == 0:
             return _("no time")
         return SecondsRenderer.detailed_str(value)
@@ -506,12 +503,12 @@ class Integer(ValueSpec[int]):
         self._renderer.render_input(varprefix, text)
 
     def _render_value(self, value: int) -> str:
-        return self._display_format % utils.saveint(value)
+        return self._display_format % value
 
     def from_html_vars(self, varprefix: str) -> int:
         return request.get_integer_input_mandatory(varprefix)
 
-    def value_to_text(self, value: int) -> str:
+    def value_to_html(self, value: int) -> ValueSpecText:
         return self._renderer.format_text(self._render_value(value))
 
     def value_to_json(self, value: int) -> JSONValue:
@@ -564,7 +561,7 @@ class Filesize(Integer):
         except Exception:
             raise MKUserError(varprefix + "_size", _("Please enter a valid integer number"))
 
-    def value_to_text(self, value: int) -> str:
+    def value_to_html(self, value: int) -> ValueSpecText:
         exp, count = self.get_exponent(value)
         return "%s %s" % (count, self._names[exp])
 
@@ -652,10 +649,10 @@ class TextInput(ValueSpec[str]):
             placeholder=self._placeholder,
         )
 
-    def value_to_text(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: str) -> ValueSpecText:
         if not value:
             return self._empty_text
-        return str(value)
+        return value
 
     def from_html_vars(self, varprefix: str) -> str:
         value = request.get_str_input_mandatory(varprefix, "")
@@ -986,9 +983,9 @@ class EmailAddress(TextInput):
         )
         self._make_clickable = make_clickable
 
-    def value_to_text(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: str) -> ValueSpecText:
         if not value:
-            return super().value_to_text(value)
+            return super().value_to_html(value)
         if self._make_clickable:
             return html.render_a(value, href="mailto:%s" % value)
         return value
@@ -1331,7 +1328,7 @@ class Url(TextInput):
             value = self._default_scheme + "://" + value
         return value
 
-    def value_to_text(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: str) -> ValueSpecText:
         if not any(value.startswith(scheme + "://") for scheme in self._allowed_schemes):
             value = self._default_scheme + "://" + value
 
@@ -1452,7 +1449,7 @@ class TextAreaUnicode(TextInput):
         self._minrows = minrows  # Minimum number of initial rows when "auto"
         self._monospaced = monospaced  # select TT font
 
-    def value_to_text(self, value: str) -> ValueSpecText:
+    def value_to_html(self, value: str) -> ValueSpecText:
         if self._monospaced:
             return html.render_pre(HTML(value), class_="ve_textarea")
         return value.replace("\n", "<br>")
@@ -1677,17 +1674,14 @@ class ListOfStrings(ValueSpec):
     def canonical_value(self) -> list[_VT]:
         return []
 
-    def value_to_text(self, value: list[_VT]) -> ValueSpecText:
+    def value_to_html(self, value: list[_VT]) -> ValueSpecText:
         if not value:
             return self._empty_text
 
         if self._vertical:
-            s = [
-                html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v))))
-                for v in value
-            ]
+            s = [html.render_tr(html.render_td(self._valuespec.value_to_html(v))) for v in value]
             return html.render_table(HTML().join(s))
-        return HTML(", ").join(self._valuespec.value_to_text(v) for v in value)
+        return HTML(", ").join(self._valuespec.value_to_html(v) for v in value)
 
     def from_html_vars(self, varprefix: str) -> list[_VT]:
         list_prefix = varprefix + "_"
@@ -1984,7 +1978,7 @@ class ListOf(ValueSpec):
     def canonical_value(self) -> list[Any]:
         return []
 
-    def value_to_text(self, value: list[Any]) -> ValueSpecText:
+    def value_to_html(self, value: list[Any]) -> ValueSpecText:
         if self._totext:
             if "%d" in self._totext:
                 return self._totext % len(value)
@@ -1994,7 +1988,7 @@ class ListOf(ValueSpec):
 
         return html.render_table(
             HTML().join(
-                html.render_tr(html.render_td(self._valuespec.value_to_text(v))) for v in value
+                html.render_tr(html.render_td(self._valuespec.value_to_html(v))) for v in value
             )
         )
 
@@ -2198,12 +2192,12 @@ class ListOfMultiple(ValueSpec):
     def canonical_value(self) -> dict[str, Any]:
         return {}
 
-    def value_to_text(self, value: dict[str, Any]) -> HTML:
+    def value_to_html(self, value: dict[str, Any]) -> HTML:
         table_content = HTML()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
             table_content += html.render_tr(
-                html.render_td(vs.title()) + html.render_td(vs.value_to_text(val))
+                html.render_td(vs.title()) + html.render_td(vs.value_to_html(val))
             )
         return html.render_table(table_content)
 
@@ -2311,7 +2305,7 @@ class Float(ValueSpec[float]):
     def from_html_vars(self, varprefix: str) -> float:
         return request.get_float_input_mandatory(varprefix)
 
-    def value_to_text(self, value: float) -> str:
+    def value_to_html(self, value: float) -> ValueSpecText:
         txt = self._renderer.format_text(self._render_value(value))
         return txt.replace(".", self._decimal_separator)
 
@@ -2374,7 +2368,7 @@ class Percentage(Float):
             validate=validate,
         )
 
-    def value_to_text(self, value: float) -> str:
+    def value_to_html(self, value: float) -> ValueSpecText:
         return (self._display_format + "%%") % value
 
     def validate_datatype(self, value: float, varprefix: str) -> None:
@@ -2413,7 +2407,7 @@ class Checkbox(ValueSpec[bool]):
     def render_input(self, varprefix: str, value: bool) -> None:
         html.checkbox(varprefix, value, label=self._label, onclick=self._onclick)
 
-    def value_to_text(self, value: bool) -> str:
+    def value_to_html(self, value: bool) -> ValueSpecText:
         return self._true_label if value else self._false_label
 
     def value_to_json(self, value: bool) -> bool:
@@ -2444,7 +2438,7 @@ class DropdownChoice(ValueSpec):
 
     Parameters:
     help_separator: if you set this to a character, e.g. "-", then
-    value_to_text will omit texts from the character up to the end of
+    value_to_html will omit texts from the character up to the end of
     a choices name.
     choices may also be a function that returns - when called
     without arguments - such a tuple list. That way the choices
@@ -2590,7 +2584,7 @@ class DropdownChoice(ValueSpec):
             return tmpl % (value,)
         return tmpl
 
-    def value_to_text(self, value: DropdownChoiceValue) -> ValueSpecText:
+    def value_to_html(self, value: DropdownChoiceValue) -> ValueSpecText:
         for val, title in self.choices():
             if value == val:
                 if self._help_separator:
@@ -2707,8 +2701,8 @@ class AjaxDropdownChoice(DropdownChoice):
         if value and self._regex and not self._regex.match(value):
             raise MKUserError(varprefix, self._regex_error)
 
-    def value_to_text(self, value) -> ValueSpecText:
-        return super().value_to_text(value) if self.choices() else str(value)
+    def value_to_html(self, value) -> ValueSpecText:
+        return super().value_to_html(value) if self.choices() else str(value)
 
     def render_input(self, varprefix: str, value) -> None:
         if self._label:
@@ -2771,7 +2765,7 @@ class MonitoredHostname(AjaxDropdownChoice):
             **kwargs,
         )
 
-    def value_to_text(self, value: str) -> str:
+    def value_to_html(self, value: str) -> ValueSpecText:
         return value
 
 
@@ -3127,7 +3121,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
     ) -> _Optional[CascadingDropdownCleanChoice]:
         return self._choice_from_ident(self._ident(value))
 
-    def value_to_text(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
+    def value_to_html(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
         choice = self._choice_from_value(value)
         if not choice:
             return _("Could not render: %r") % (value,)
@@ -3138,7 +3132,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
         assert isinstance(value, tuple) and vs is not None
 
-        rendered_value = vs.value_to_text(value[1])
+        rendered_value = vs.value_to_html(value[1])
         if not rendered_value:
             return title
 
@@ -3388,7 +3382,7 @@ class ListChoice(ValueSpec):
         # Make sure that at least one variable with the prefix is present
         html.hidden_field(varprefix, "1", add_var=True)
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         if not value:
             return self._empty_text
 
@@ -3738,11 +3732,11 @@ class OptionalDropdownChoice(DropdownChoice):
         self._explicit.render_input(varprefix + "_ex", input_value)
         html.close_span()
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         for val, title in self.choices():
             if val == value:
                 return title
-        return self._explicit.value_to_text(value)
+        return self._explicit.value_to_html(value)
 
     def from_html_vars(self, varprefix):
         choices = self.choices()
@@ -3820,7 +3814,7 @@ class RelativeDate(OptionalDropdownChoice):
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value) -> ValueSpecText:
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
@@ -3962,7 +3956,7 @@ class AbsoluteDate(ValueSpec):
     def set_focus(self, varprefix):
         html.set_focus(varprefix + "_year")
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value: float) -> ValueSpecText:
         return time.strftime(self._format, time.localtime(value))
 
     def value_to_json(self, value):
@@ -4092,7 +4086,7 @@ class Timeofday(ValueSpec):
         text = ("%02d:%02d" % value) if value else ""
         html.text_input(varprefix, text, size=5)
 
-    def value_to_text(self, value: _Optional[TimeofdayValue]) -> str:
+    def value_to_html(self, value: _Optional[TimeofdayValue]) -> ValueSpecText:
         if value is None:
             return ""
         return "%02d:%02d" % value
@@ -4201,12 +4195,12 @@ class TimeofdayRange(ValueSpec):
         html.nbsp()
         self._bounds[1].render_input(varprefix + "_until", value[1] if value is not None else None)
 
-    def value_to_text(self, value: _Optional[TimeofdayRangeValue]) -> str:
+    def value_to_html(self, value: _Optional[TimeofdayRangeValue]) -> ValueSpecText:
         if value is None:
             return ""
 
         return (
-            self._bounds[0].value_to_text(value[0]) + "-" + self._bounds[1].value_to_text(value[1])
+            self._bounds[0].value_to_html(value[0]) + "-" + self._bounds[1].value_to_html(value[1])
         )
 
     def from_html_vars(self, varprefix: str) -> _Optional[TimeofdayRangeValue]:
@@ -4448,7 +4442,7 @@ class Timerange(CascadingDropdown):
                 ]
             )
 
-    def value_to_text(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
+    def value_to_html(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
         for ident, title, _vs in self._get_graph_timeranges():
             if value == ident:
                 return title
@@ -4456,7 +4450,7 @@ class Timerange(CascadingDropdown):
             if isinstance(value, tuple) and value == ("age", ident):
                 return title
 
-        return super().value_to_text(value)
+        return super().value_to_html(value)
 
     def value_to_json(self, value: CascadingDropdownChoiceValue):
         if isinstance(value, int):  # Handle default graph_timeranges
@@ -4481,11 +4475,11 @@ class Timerange(CascadingDropdown):
     @staticmethod
     def compute_range(rangespec: TimerangeValue) -> ComputedTimerange:
         def _date_span(from_time: float, until_time: float) -> str:
-            start = AbsoluteDate().value_to_text(from_time)
-            end = AbsoluteDate().value_to_text(until_time - 1)
+            start = AbsoluteDate().value_to_html(from_time)
+            end = AbsoluteDate().value_to_html(until_time - 1)
             if start == end:
-                return start
-            return start + " \u2014 " + end
+                return str(start)
+            return str(start) + " \u2014 " + str(end)
 
         def _month_edge_days(now: float, day_id: str) -> ComputedTimerange:
             # base time is current time rounded down to month
@@ -4532,14 +4526,14 @@ class Timerange(CascadingDropdown):
 
         if isinstance(rangespec, tuple):
             if rangespec[0] == "age":
-                title = _("The last ") + Age().value_to_text(rangespec[1])
+                title = _("The last ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now - rangespec[1]), int(now)), title)
             if isinstance(rangespec, tuple) and rangespec[0] == "next":
-                title = _("The next ") + Age().value_to_text(rangespec[1])
+                title = _("The next ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now), int(now + rangespec[1])), title)
             if isinstance(rangespec, tuple) and rangespec[0] == "until":
                 return ComputedTimerange(
-                    (int(now), int(rangespec[1])), AbsoluteDate().value_to_text(rangespec[1])
+                    (int(now), int(rangespec[1])), str(AbsoluteDate().value_to_html(rangespec[1]))
                 )
             if isinstance(rangespec, tuple) and rangespec[0] in ["date", "time"]:
                 return _fixed_dates(rangespec)
@@ -4718,10 +4712,10 @@ class Optional(ValueSpec):
             return _(" Ignore this option")
         return _(" Activate this option")
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         if value == self._none_value:
             return self._none_label
-        return self._valuespec.value_to_text(value)
+        return self._valuespec.value_to_html(value)
 
     def from_html_vars(self, varprefix):
         checkbox_checked = html.get_checkbox(varprefix + "_use") is True  # not None or False
@@ -4876,13 +4870,13 @@ class Alternative(ValueSpec):
             return self._elements[0].default_value()
         return value
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         vs, value = self.matching_alternative(value)
         if vs:
             output = HTML()
             if self._show_alternative_title and vs.title():
                 output = escape_html_permissive(vs.title()) + html.render_br()
-            return output + vs.value_to_text(value)
+            return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
     def value_to_json(self, value: Any) -> Any:
@@ -5021,8 +5015,8 @@ class Tuple(ValueSpec):
         for idx, element in enumerate(self._elements):
             yield idx, element, value[idx]
 
-    def value_to_text(self, value) -> ValueSpecText:
-        return HTML(", ").join(el.value_to_text(val) for _, el, val in self._iter_value(value))
+    def value_to_html(self, value) -> ValueSpecText:
+        return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
 
     def value_to_json(self, value: Any) -> list[Any]:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
@@ -5099,7 +5093,7 @@ class Dictionary(ValueSpec):
             self._elements = lambda: const_elements
         self._empty_text = empty_text if empty_text is not None else _("(no parameters)")
 
-        # Optionally a text can be specified to be shown by value_to_text()
+        # Optionally a text can be specified to be shown by value_to_html()
         # when the value equal the default value of the value spec. Normally
         # the default values are shown.
         self._default_text = default_text
@@ -5313,7 +5307,7 @@ class Dictionary(ValueSpec):
             if name in self._required_keys or not self._optional_keys or name in self._default_keys
         }
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         value = self.migrate(value)
         if not value:
             return self._empty_text
@@ -5322,15 +5316,15 @@ class Dictionary(ValueSpec):
             return self._default_text
 
         elem = self._get_elements()
-        return self._value_to_text_multiline(elem, value)
+        return self._value_to_html_multiline(elem, value)
 
-    def _value_to_text_multiline(self, elem, value) -> HTML:
+    def _value_to_html_multiline(self, elem: DictionaryElements, value: Any) -> HTML:
         s = HTML()
         for param, vs in elem:
             if param in value:
                 s += html.render_tr(
                     html.render_td("%s:&nbsp;" % vs.title(), class_="title")
-                    + html.render_td(vs.value_to_text(value[param]))
+                    + html.render_td(vs.value_to_html(value[param]))
                 )
         return html.render_table(s)
 
@@ -5471,7 +5465,7 @@ class ElementSelection(ValueSpec):
                 html.span(self._label, class_="vs_floating_text")
             html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         self.load_elements()
         return self._elements.get(value, value)
 
@@ -5515,7 +5509,7 @@ class AutoTimestamp(FixedValue[float]):
     def from_html_vars(self, varprefix: str) -> float:
         return time.time()
 
-    def value_to_text(self, value: float) -> str:
+    def value_to_html(self, value: float) -> ValueSpecText:
         return time.strftime("%F %T", time.localtime(value))
 
     def validate_datatype(self, value: float, varprefix: str) -> None:
@@ -5571,8 +5565,8 @@ class Foldable(ValueSpec):
     def default_value(self) -> Any:
         return self._valuespec.default_value()
 
-    def value_to_text(self, value: Any) -> ValueSpecText:
-        return self._valuespec.value_to_text(value)
+    def value_to_html(self, value: Any) -> ValueSpecText:
+        return self._valuespec.value_to_html(value)
 
     def from_html_vars(self, varprefix: str) -> Any:
         return self._valuespec.from_html_vars(varprefix)
@@ -5664,8 +5658,8 @@ class Transform(ValueSpec):
     def default_value(self) -> Any:
         return self.back(self._valuespec.default_value())
 
-    def value_to_text(self, value: Any) -> ValueSpecText:
-        return self._valuespec.value_to_text(self.forth(value))
+    def value_to_html(self, value: Any) -> ValueSpecText:
+        return self._valuespec.value_to_html(self.forth(value))
 
     def from_html_vars(self, varprefix: str) -> Any:
         return self.back(self._valuespec.from_html_vars(varprefix))
@@ -5767,7 +5761,7 @@ class Password(TextInput):
                 )
             )
 
-    def value_to_text(self, value: _Optional[str]) -> str:
+    def value_to_html(self, value: _Optional[str]) -> str:
         if value is None:
             return _("none")
         return "******"
@@ -5922,6 +5916,9 @@ class FileUpload(ValueSpec):
 
     def value_from_json(self, json_value: Any) -> Any:
         return json_value
+
+    def value_to_html(self, value) -> ValueSpecText:
+        raise NotImplementedError()
 
 
 class ImageUpload(FileUpload):
@@ -6127,10 +6124,8 @@ class Labels(ValueSpec):
                     _("The label value %r is of type %s, but should be %s") % (k, type(v), str),
                 )
 
-    def value_to_text(self, value) -> HTML:
-        label_sources = (
-            {k: self._label_source.value for k in value.keys()} if self._label_source else {}
-        )
+    def value_to_html(self, value) -> ValueSpecText:
+        label_sources = {k: self._label_source.value for k in value} if self._label_source else {}
         return render_labels(value, "host", with_links=False, label_sources=label_sources)
 
     def render_input(self, varprefix, value):
@@ -6308,7 +6303,7 @@ class IconSelector(ValueSpec):
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
 
-    def _render_icon(self, icon, onclick="", title="", id_=""):
+    def _render_icon(self, icon, onclick="", title="", id_="") -> HTML:
         if not icon:
             icon = self._empty_img
 
@@ -6351,7 +6346,7 @@ class IconSelector(ValueSpec):
             selection_text = _("Choose another %s") % ("Emblem" if is_emblem else "Icon")
             content = self._render_icon(value, "", selection_text, id_=varprefix + "_img")
         else:
-            content = _("Select an Icon")
+            content = escaping.escape_html_permissive(_("Select an Icon"))
 
         html.popup_trigger(
             content,
@@ -6461,7 +6456,7 @@ class IconSelector(ValueSpec):
             return None
         return icon
 
-    def value_to_text(self, value) -> HTML:
+    def value_to_html(self, value) -> ValueSpecText:
         return self._render_icon(value["icon"] if isinstance(value, dict) else value)
 
     def value_to_json(self, value: Any) -> Any:
@@ -6564,7 +6559,7 @@ class Color(ValueSpec):
             return None
         return color
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value: str) -> ValueSpecText:
         return value
 
     def value_to_json(self, value: Any) -> Any:
@@ -6629,12 +6624,12 @@ SSHKeyPairValue = tuple[str, str]
 class SSHKeyPair(ValueSpec):
     def render_input(self, varprefix: str, value: _Optional[SSHKeyPairValue]):
         if value:
-            html.write_text(_("Fingerprint: %s") % self.value_to_text(value))
+            html.write_text(_("Fingerprint: %s") % self.value_to_html(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
             html.write_text(_("Key pair will be generated when you save."))
 
-    def value_to_text(self, value: SSHKeyPairValue) -> str:
+    def value_to_html(self, value: SSHKeyPairValue) -> ValueSpecText:
         return self._get_key_fingerprint(value)
 
     def value_to_json(self, value: Any) -> list[Any]:
@@ -6741,7 +6736,7 @@ class CAorCAChain(UploadOrPasteTextFile):
                     cert_info[what][titles[key]] = raw_val.decode("utf-8")
         return cert_info
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value) -> ValueSpecText:
         cert_info = self.analyse_cert(value)
 
         rows = []
@@ -6760,8 +6755,7 @@ class CAorCAChain(UploadOrPasteTextFile):
                     )
                 )
             )
-        # TODO: This cast will be removed soon
-        return str(html.render_table(HTML().join(rows)))
+        return html.render_table(HTML().join(rows))
 
 
 # TODO: Cleanup kwargs

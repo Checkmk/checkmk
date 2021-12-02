@@ -106,7 +106,7 @@ def test_timehelper_add(args, result):
 )
 def test_absolutedate_value_to_json_conversion(value, result):
     with on_time("2020-03-02", "UTC"):
-        assert vs.AbsoluteDate().value_to_text(value) == result
+        assert vs.AbsoluteDate().value_to_html(value) == result
         json_value = vs.AbsoluteDate().value_to_json(value)
         assert vs.AbsoluteDate().value_from_json(json_value) == value
 
@@ -120,7 +120,7 @@ def test_absolutedate_value_to_json_conversion(value, result):
 )
 def test_tuple_value_to_json_conversion(value, result):
     with on_time("2020-03-02", "UTC"):
-        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_text(value) == result
+        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_html(value) == result
         json_value = vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_json(value)
         assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_from_json(json_value) == value
 
@@ -135,7 +135,7 @@ def test_tuple_value_to_json_conversion(value, result):
     ],
 )
 def test_age_value_to_json_conversion(value, result):
-    assert vs.Age().value_to_text(value) == result
+    assert vs.Age().value_to_html(value) == result
     json_value = vs.Age().value_to_json(value)
     assert vs.Age().value_from_json(json_value) == value
 
@@ -152,7 +152,7 @@ def test_age_value_to_json_conversion(value, result):
     ],
 )
 def test_dropdownchoice_value_to_json_conversion(choices, value, result):
-    assert vs.DropdownChoice(choices).value_to_text(value) == result
+    assert vs.DropdownChoice(choices).value_to_html(value) == result
     json_value = vs.DropdownChoice(choices).value_to_json(value)
     assert vs.DropdownChoice(choices).value_from_json(json_value) == value
 
@@ -194,7 +194,7 @@ def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is
         (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
     ],
 )
-def test_timerange_value_to_text_conversion(request_context, monkeypatch, value, result_title):
+def test_timerange_value_to_html_conversion(request_context, monkeypatch, value, result_title):
     monkeypatch.setattr(
         config,
         "graph_timeranges",
@@ -205,7 +205,7 @@ def test_timerange_value_to_text_conversion(request_context, monkeypatch, value,
         ],
     )
 
-    assert vs.Timerange().value_to_text(value) == result_title
+    assert vs.Timerange().value_to_html(value) == result_title
 
 
 def test_timerange_value_to_json_conversion(request_context):
@@ -219,7 +219,7 @@ def test_timerange_value_to_json_conversion(request_context):
                 choice_value = ("date", (1582671600.0, 1582844400.0))
                 title = "Date range, 2020-02-25, 2020-02-27"
 
-            assert vs.Timerange().value_to_text(choice_value) == title
+            assert vs.Timerange().value_to_html(choice_value) == title
             json_value = vs.Timerange().value_to_json(choice_value)
             assert vs.Timerange().value_from_json(json_value) == choice_value
 

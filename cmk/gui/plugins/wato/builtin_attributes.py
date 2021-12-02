@@ -1107,10 +1107,10 @@ class LockedByValuespec(Tuple):
             ),
         )
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         if not value or not value[1] or not value[2]:
             return _("Not locked")
-        return super().value_to_text(value)
+        return super().value_to_html(value)
 
 
 @host_attribute_registry.register

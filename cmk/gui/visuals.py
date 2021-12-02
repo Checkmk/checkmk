@@ -1834,6 +1834,15 @@ class VisualFilter(ValueSpec):
     def validate_value(self, value, varprefix):
         self._filter.validate_value(value)
 
+    def value_to_html(self, value):
+        raise NotImplementedError()
+
+    def value_to_json(self, value):
+        raise NotImplementedError()
+
+    def value_from_json(self, json_value):
+        raise NotImplementedError()
+
 
 def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
     if not restrictions:

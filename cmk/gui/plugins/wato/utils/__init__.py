@@ -121,6 +121,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     Url,
     ValueSpec,
     ValueSpecHelp,
+    ValueSpecText,
 )
 from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ABCConfigDomain,
@@ -2353,7 +2354,7 @@ class HostTagCondition(ValueSpec):
     def canonical_value(self):
         return []
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value: list[str]) -> ValueSpecText:
         return "|".join(value)
 
     def validate_datatype(self, value, varprefix):
@@ -2476,6 +2477,12 @@ class HostTagCondition(ValueSpec):
             id_="%stag_sel_%s" % (varprefix, id_),
             style="display: none;" if not div_is_open else None,
         )
+
+    def value_to_json(self, value):
+        raise NotImplementedError()
+
+    def value_from_json(self, json_value):
+        raise NotImplementedError()
 
 
 class LabelCondition(Transform):

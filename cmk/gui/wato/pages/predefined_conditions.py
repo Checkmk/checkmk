@@ -149,7 +149,7 @@ class ModePredefinedConditions(SimpleListMode):
         )
         html.close_li()
         html.close_ul()
-        html.write_text(vs_conditions().value_to_text(entry["conditions"]))
+        html.write_text(vs_conditions().value_to_html(entry["conditions"]))
 
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:

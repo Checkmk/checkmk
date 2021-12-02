@@ -770,7 +770,7 @@ class CommandAcknowledge(Command):
                 commands = [make_command_ack(spec, cmdtag)]
 
             title = _("<b>acknowledge the problems%s</b> of") % (
-                expire_text and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or ""
+                expire_text and (_(" for a period of %s") % Age().value_to_html(expire_secs)) or ""
             )
             return commands, title
 

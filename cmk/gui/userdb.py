@@ -57,7 +57,14 @@ from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import DEF_VALUE, DropdownChoice, TextInput, ValueSpec, ValueSpecHelp
+from cmk.gui.valuespec import (
+    DEF_VALUE,
+    DropdownChoice,
+    TextInput,
+    ValueSpec,
+    ValueSpecHelp,
+    ValueSpecText,
+)
 
 auth_logger = logger.getChild("auth")
 
@@ -302,8 +309,8 @@ class UserSelection(DropdownChoice):
 
         return lambda: get_wato_users(none_value)
 
-    def value_to_text(self, value) -> str:
-        return str(super().value_to_text(value)).rsplit(" - ", 1)[-1]
+    def value_to_html(self, value) -> ValueSpecText:
+        return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
 
 
 def on_succeeded_login(username: UserId) -> str:

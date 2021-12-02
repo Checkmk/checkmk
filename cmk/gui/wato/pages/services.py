@@ -965,7 +965,7 @@ class DiscoveryPageRenderer:
                 params = params["tp_computed_params"]["params"]
             rulespec.valuespec.validate_datatype(params, "")
             rulespec.valuespec.validate_value(params, "")
-            paramtext = rulespec.valuespec.value_to_text(params)
+            paramtext = rulespec.valuespec.value_to_html(params)
             html.write_html(HTML(paramtext))
         except Exception as e:
             if config.debug:

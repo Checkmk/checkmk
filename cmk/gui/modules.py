@@ -92,23 +92,14 @@ def call_load_plugins_hooks() -> None:
     Each main module has the option to declare a `load_plugins` hook function to realize it's own
     logic that should be executed when initializing the main module.
 
-    Up to now this is executed during request processing. Like this:
+    In previous versions this was executed with loaded configuration and localized during request
+    processing, which resulted in several problems. Now this is executed during application
+    initialization (at import time).
 
-    1. During the first request in an just initialized interpreter the `load_plugins()` is
-       called.
-    2. The main module is doing it's initialization logic.
-    3. Some of the main modules then remember that they have loaded all plugins with a
-       `loaded_with_language` variable.
-    4. On subsequent requests the `load_plugins()` is executed and most main modules
-       immaculately return without performing another action.
-    5. Once any "local plugin" file has been modified (changed mtime), the all main modules are
-       called with `load_plugins()` to perform their initialization again.
-
-    This is done to automatically load/reload plugins after e.g. an MKP installation.
-
-    Note: Might be better to trigger our application in case something is changed to do a restart
-          from an external source like the MKP manager. In the moment we move the local plugins
-          to regulary modules this will be required anyways.
+    1. During import of the application (e.g. web/app/index.wsgi) this function is called
+    2. It calls the function `load_plugins` hook of all main modules.
+    3. The main module is doing it's initialization logic.
+    4. It is then remembered which module already has initialized it's initialization
     """
     logger.debug("Executing load_plugin hooks")
 

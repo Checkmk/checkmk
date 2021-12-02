@@ -1,0 +1,12 @@
+Title: Fix simulation mode
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638433198
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p17
+
+If the simulation mode was activated, existing cache files were not used.
+The hosts contacted IP address 127.0.0.1 instead.

@@ -363,7 +363,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             return False
 
         if self.simulation:
-            self._logger.debug("Using cache (simulation)")
+            self._logger.debug("Using cache (Simulation mode)")
             return True
 
         if mode in {

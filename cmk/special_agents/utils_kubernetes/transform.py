@@ -24,8 +24,19 @@ Labels = NewType("Labels", Dict[str, str])
 
 
 def parse_frac_prefix(value: str) -> float:
+    """Parses the string `value` with a suffix of 'm' or 'k' into a float.
+
+    Examples:
+       >>> parse_frac_prefix("359m")
+       0.359
+       >>> parse_frac_prefix("4k")
+       4000.0
+    """
+
     if value.endswith("m"):
         return 0.001 * float(value[:-1])
+    if value.endswith("k"):
+        return 1e3 * float(value[:-1])
     return float(value)
 
 

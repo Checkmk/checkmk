@@ -1,0 +1,13 @@
+Title: fileinfo.groups conjunctions not working properly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638370973
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p17
+
+Conjunctions which included oldest and newest age in the rule "Size, age and count of file groups" did not work as expected.
+The Service did not went {CRIT} when using them in a conjuction.
+This is fixed now.

@@ -27,6 +27,31 @@ from cmk.gui.plugins.wato import (
 )
 
 
+def _transform_level_names(conjunctions):
+    """
+    >>> _transform_level_names([(2, [('count', 3), ('largest_size', 8)])])
+    [(2, [('count', 3), ('size_largest', 8)])]
+    """
+    # TODO: Investigate...
+    # Trying to perform this transform directly on the CascadingDropdown resulted in rules.mk
+    # not beeing update with "cmk-update-config". However after saving the rule in the GUI the
+    # values were transformed...
+    transform_map = {
+        "largest_size": "size_largest",
+        "largest_size_lower": "size_largest_lower",
+        "smallest_size": "size_smallest",
+        "smallest_size_lower": "size_smallest_lower",
+        "oldest_age": "age_oldest",
+        "oldest_age_lower": "age_oldest_lower",
+        "newest_age": "age_newest",
+        "newest_age_lower": "age_newest_lower",
+    }
+    return [(
+        monitoring_state,
+        [(transform_map.get(ident, ident), value) for ident, value in conjunction],
+    ) for monitoring_state, conjunction in conjunctions]
+
+
 def _valuespec_fileinfo_groups():
     return ListOf(
         Tuple(
@@ -203,7 +228,7 @@ def _parameter_valuespec_fileinfo_groups():
                  help=_("Outside these ranges the check will always be OK"),
              )),
             ("conjunctions",
-             ListOf(
+             Transform(ListOf(
                  Tuple(elements=[
                      MonitoringState(title=_("Monitoring state"), default_value=2),
                      ListOf(
@@ -214,14 +239,14 @@ def _parameter_valuespec_fileinfo_groups():
                                  ("count_lower", _("File count below"), Integer()),
                                  ("size", _("File size at"), Filesize()),
                                  ("size_lower", _("File size below"), Filesize()),
-                                 ("largest_size", _("Largest file size at"), Filesize()),
-                                 ("largest_size_lower", _("Largest file size below"), Filesize()),
-                                 ("smallest_size", _("Smallest file size at"), Filesize()),
-                                 ("smallest_size_lower", _("Smallest file size below"), Filesize()),
-                                 ("oldest_age", _("Oldest file age at"), Age()),
-                                 ("oldest_age_lower", _("Oldest file age below"), Age()),
-                                 ("newest_age", _("Newest file age at"), Age()),
-                                 ("newest_age_lower", _("Newest file age below"), Age()),
+                                 ("size_largest", _("Largest file size at"), Filesize()),
+                                 ("size_largest_lower", _("Largest file size below"), Filesize()),
+                                 ("size_smallest", _("Smallest file size at"), Filesize()),
+                                 ("size_smallest_lower", _("Smallest file size below"), Filesize()),
+                                 ("age_oldest", _("Oldest file age at"), Age()),
+                                 ("age_oldest_lower", _("Oldest file age below"), Age()),
+                                 ("age_newest", _("Newest file age at"), Age()),
+                                 ("age_newest_lower", _("Newest file age below"), Age()),
                              ],
                          ),
                          magic="@#@#",
@@ -233,7 +258,8 @@ def _parameter_valuespec_fileinfo_groups():
                    "conjunctions of single levels now. A conjunction consists of a monitoring state "
                    "and any number of upper or lower levels. If all of the configured levels within "
                    "a conjunction are reached then the related state is reported."),
-             )),
+             ),
+                       forth=_transform_level_names)),
         ],
         ignored_keys=["precompiled_patterns", "group_patterns"],
     )

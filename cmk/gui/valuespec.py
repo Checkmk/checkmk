@@ -36,11 +36,9 @@ from collections.abc import MutableMapping
 from collections.abc import Sequence as ABCSequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Final, Generic, Iterable, List, Literal, Mapping, NamedTuple
+from typing import Any, Callable, Final, Generic, Iterable, Literal, Mapping, NamedTuple
 from typing import Optional as _Optional
-from typing import Pattern, Protocol, Sequence, SupportsFloat
-from typing import Tuple as _Tuple
-from typing import Type, TypeVar, Union
+from typing import Pattern, Protocol, Sequence, SupportsFloat, Type, TypeVar, Union
 
 from Cryptodome.Cipher import AES
 from Cryptodome.PublicKey import RSA
@@ -340,7 +338,7 @@ class Age(ValueSpec[Seconds]):
         label: _Optional[str] = None,
         minvalue: _Optional[Seconds] = None,
         maxvalue: _Optional[Seconds] = None,
-        display: _Optional[List[str]] = None,
+        display: _Optional[list[str]] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
@@ -540,7 +538,7 @@ class Filesize(Integer):
 
     _names = ["Byte", "KiB", "MiB", "GiB", "TiB"]
 
-    def get_exponent(self, value: int) -> _Tuple[int, int]:
+    def get_exponent(self, value: int) -> tuple[int, int]:
         for exp, count in ((exp, 1024 ** exp) for exp in reversed(range(len(self._names)))):
             if value == 0:
                 return 0, 0
@@ -817,7 +815,7 @@ class RegExp(TextInput):
         self._maxgroups = maxgroups
 
     def help(self) -> Union[str, HTML, None]:
-        help_text: List[Union[str, HTML]] = []
+        help_text: list[Union[str, HTML]] = []
 
         default_help_text = super().help()
         if default_help_text is not None:
@@ -1217,8 +1215,8 @@ class HostAddress(TextInput):
             return False
         return True
 
-    def _allowed_type_names(self) -> List[str]:
-        allowed: List[str] = []
+    def _allowed_type_names(self) -> list[str]:
+        allowed: list[str] = []
         if self._allow_host_name:
             allowed.append(_("Host- or DNS name"))
 
@@ -1257,7 +1255,7 @@ class Url(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         default_scheme: str,
-        allowed_schemes: List[str],
+        allowed_schemes: list[str],
         show_as_link: bool = False,
         target: _Optional[str] = None,
         # TextInput
@@ -1599,7 +1597,7 @@ class ListOfStrings(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, List] = DEF_VALUE,
+        default_value: Union[_Sentinel, list] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -1636,7 +1634,7 @@ class ListOfStrings(ValueSpec):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def render_input(self, varprefix: str, value: List[str]) -> None:
+    def render_input(self, varprefix: str, value: list[str]) -> None:
         # Form already submitted?
         if request.has_var(varprefix + "_0"):
             value = self.from_html_vars(varprefix)
@@ -1654,7 +1652,7 @@ class ListOfStrings(ValueSpec):
             class_.append("horizontal")
         html.open_div(id_=varprefix, class_=class_)
 
-        elements: List[_Optional[str]] = []
+        elements: list[_Optional[str]] = []
         elements += value
         elements.append(None)
         for nr, s in enumerate(elements):
@@ -1676,10 +1674,10 @@ class ListOfStrings(ValueSpec):
             )
         )
 
-    def canonical_value(self) -> List[_VT]:
+    def canonical_value(self) -> list[_VT]:
         return []
 
-    def value_to_text(self, value: List[_VT]) -> ValueSpecText:
+    def value_to_text(self, value: list[_VT]) -> ValueSpecText:
         if not value:
             return self._empty_text
 
@@ -1691,7 +1689,7 @@ class ListOfStrings(ValueSpec):
             return html.render_table(HTML().join(s))
         return HTML(", ").join(self._valuespec.value_to_text(v) for v in value)
 
-    def from_html_vars(self, varprefix: str) -> List[_VT]:
+    def from_html_vars(self, varprefix: str) -> list[_VT]:
         list_prefix = varprefix + "_"
         return [
             self._valuespec.from_html_vars(varname)
@@ -1702,7 +1700,7 @@ class ListOfStrings(ValueSpec):
             and value.strip()
         ]
 
-    def validate_datatype(self, value: List[_VT], varprefix: str) -> None:
+    def validate_datatype(self, value: list[_VT], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("Expected data type is list, but your type is %s.") % _type_name(value)
@@ -1710,7 +1708,7 @@ class ListOfStrings(ValueSpec):
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
-    def _validate_value(self, value: List[_VT], varprefix: str) -> None:
+    def _validate_value(self, value: list[_VT], varprefix: str) -> None:
         if len(value) == 0 and not self._allow_empty:
             if self._empty_text:
                 msg = self._empty_text
@@ -1731,13 +1729,13 @@ class ListOfStrings(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value: Any) -> List[Any]:
+    def value_to_json(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json(e) for e in value]
 
-    def value_from_json(self, json_value: Any) -> List[Any]:
+    def value_from_json(self, json_value: Any) -> list[Any]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
-    def value_to_json_safe(self, value: Any) -> List[Any]:
+    def value_to_json_safe(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
 
@@ -1757,7 +1755,7 @@ def NetworkPort(  # pylint: disable=redefined-builtin
     )
 
 
-def ListOfNetworkPorts(title: _Optional[str], default_value: List[int]) -> ListOfStrings:
+def ListOfNetworkPorts(title: _Optional[str], default_value: list[int]) -> ListOfStrings:
     return ListOfStrings(
         valuespec=NetworkPort(title=_("Port")),
         title=title,
@@ -1820,7 +1818,7 @@ class ListOf(ValueSpec):
     # of entry, while beginning with 1 (this makes visual
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
-    def render_input(self, varprefix: str, value: List[Any]) -> None:
+    def render_input(self, varprefix: str, value: list[Any]) -> None:
         html.open_div(class_=["valuespec_listof", self._style.value])
 
         # Beware: the 'value' is only the default value in case the form
@@ -1853,7 +1851,7 @@ class ListOf(ValueSpec):
         if count:
             html.javascript("cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix))
 
-    def _show_entries(self, varprefix: str, value: List[Any]) -> None:
+    def _show_entries(self, varprefix: str, value: list[Any]) -> None:
         if self._style == ListOf.Style.REGULAR:
             self._show_current_entries(varprefix, value)
             html.br()
@@ -1983,10 +1981,10 @@ class ListOf(ValueSpec):
         js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
         html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
 
-    def canonical_value(self) -> List[Any]:
+    def canonical_value(self) -> list[Any]:
         return []
 
-    def value_to_text(self, value: List[Any]) -> ValueSpecText:
+    def value_to_text(self, value: list[Any]) -> ValueSpecText:
         if self._totext:
             if "%d" in self._totext:
                 return self._totext % len(value)
@@ -2000,7 +1998,7 @@ class ListOf(ValueSpec):
             )
         )
 
-    def get_indexes(self, varprefix: str) -> Dict[int, int]:
+    def get_indexes(self, varprefix: str) -> dict[int, int]:
         count = request.get_integer_input_mandatory(varprefix + "_count", 0)
         n = 1
         indexes = {}
@@ -2012,7 +2010,7 @@ class ListOf(ValueSpec):
             n += 1
         return indexes
 
-    def from_html_vars(self, varprefix: str) -> List[Any]:
+    def from_html_vars(self, varprefix: str) -> list[Any]:
         indexes = self.get_indexes(varprefix)
         value = []
         k = sorted(indexes.keys())
@@ -2021,13 +2019,13 @@ class ListOf(ValueSpec):
             value.append(val)
         return value
 
-    def validate_datatype(self, value: List[Any], varprefix: str) -> None:
+    def validate_datatype(self, value: list[Any], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(varprefix, _("The type must be list, but is %s") % _type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
-    def _validate_value(self, value: List[Any], varprefix: str) -> None:
+    def _validate_value(self, value: list[Any], varprefix: str) -> None:
         if not self._allow_empty and len(value) == 0:
             raise MKUserError(varprefix, self._empty_text)
         for n, v in enumerate(value):
@@ -2036,17 +2034,17 @@ class ListOf(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value: Any) -> List[Any]:
+    def value_to_json(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json(e) for e in value]
 
-    def value_from_json(self, json_value: Any) -> List[Any]:
+    def value_from_json(self, json_value: Any) -> list[Any]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
-    def value_to_json_safe(self, value: Any) -> List[Any]:
+    def value_to_json_safe(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
 
-ListOfMultipleChoices = Sequence[_Tuple[str, ValueSpec]]
+ListOfMultipleChoices = Sequence[tuple[str, ValueSpec]]
 
 
 class ListOfMultipleChoiceGroup(NamedTuple):
@@ -2054,7 +2052,7 @@ class ListOfMultipleChoiceGroup(NamedTuple):
     choices: ListOfMultipleChoices
 
 
-GroupedListOfMultipleChoices = List[ListOfMultipleChoiceGroup]
+GroupedListOfMultipleChoices = list[ListOfMultipleChoiceGroup]
 
 
 class ListOfMultiple(ValueSpec):
@@ -2066,7 +2064,7 @@ class ListOfMultiple(ValueSpec):
         self,
         choices: Union[GroupedListOfMultipleChoices, ListOfMultipleChoices],
         choice_page_name: str,
-        page_request_vars: _Optional[Dict[str, Any]] = None,
+        page_request_vars: _Optional[dict[str, Any]] = None,
         size: _Optional[int] = None,
         add_label: _Optional[str] = None,
         del_label: _Optional[str] = None,
@@ -2124,7 +2122,7 @@ class ListOfMultiple(ValueSpec):
         if request.var("%s_active" % varprefix):
             value = self.from_html_vars(varprefix)
 
-        sorted_idents: List[str] = []
+        sorted_idents: list[str] = []
         for group in self._grouped_choices:
             for ident, _vs in group.choices:
                 if ident in value and ident in self._choice_dict:
@@ -2197,10 +2195,10 @@ class ListOfMultiple(ValueSpec):
         self.del_button(varprefix, ident)
         html.close_td()
 
-    def canonical_value(self) -> Dict[str, Any]:
+    def canonical_value(self) -> dict[str, Any]:
         return {}
 
-    def value_to_text(self, value: Dict[str, Any]) -> HTML:
+    def value_to_text(self, value: dict[str, Any]) -> HTML:
         table_content = HTML()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
@@ -2209,22 +2207,22 @@ class ListOfMultiple(ValueSpec):
             )
         return html.render_table(table_content)
 
-    def value_to_json(self, value: Dict[str, Any]) -> Dict[str, Any]:
+    def value_to_json(self, value: dict[str, Any]) -> dict[str, Any]:
         return {ident: self._choice_dict[ident].value_to_json(val) for ident, val in value.items()}
 
-    def value_from_json(self, json_value: Dict[str, Any]) -> Dict[str, Any]:
+    def value_from_json(self, json_value: dict[str, Any]) -> dict[str, Any]:
         return {
             ident: self._choice_dict[ident].value_from_json(val)
             for ident, val in json_value.items()
         }
 
-    def value_to_json_safe(self, value: Dict[str, Any]) -> Dict[str, Any]:
+    def value_to_json_safe(self, value: dict[str, Any]) -> dict[str, Any]:
         return {
             ident: self._choice_dict[ident].value_to_json_safe(val) for ident, val in value.items()
         }
 
     def from_html_vars(self, varprefix: str) -> Mapping[str, Any]:
-        value: Dict[str, Any] = {}
+        value: dict[str, Any] = {}
         active = request.get_str_input_mandatory("%s_active" % varprefix, "").strip()
         if not active:
             return value
@@ -2234,13 +2232,13 @@ class ListOfMultiple(ValueSpec):
             value[ident] = vs.from_html_vars(varprefix + "_" + ident)
         return value
 
-    def validate_datatype(self, value: Dict[str, Any], varprefix: str) -> None:
+    def validate_datatype(self, value: dict[str, Any], varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(varprefix, _("The type must be dict, but is %s") % _type_name(value))
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + "_" + ident)
 
-    def _validate_value(self, value: Dict[str, Any], varprefix: str) -> None:
+    def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You must specify at least one element."))
         for ident, val in value.items():
@@ -2249,11 +2247,11 @@ class ListOfMultiple(ValueSpec):
 
 class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
     @abc.abstractmethod
-    def _get_choices(self, api_request: Dict[str, str]) -> List[_Tuple[str, ValueSpec]]:
+    def _get_choices(self, api_request: dict[str, str]) -> list[tuple[str, ValueSpec]]:
         raise NotImplementedError()
 
-    def page(self) -> Dict:
-        # ? get_request() is typed as returning Dict[str,Any], the type of ensure_str argument seems to be Any
+    def page(self) -> dict:
+        # ? get_request() is typed as returning dict[str,Any], the type of ensure_str argument seems to be Any
         api_request = request.get_request()
         vs = ListOfMultiple(self._get_choices(api_request), "unused_dummy_page")
         with output_funnel.plugged():
@@ -2437,8 +2435,8 @@ class Checkbox(ValueSpec[bool]):
 
 
 DropdownChoiceValue = Any  # TODO: Can we be more specific?
-DropdownChoiceEntry = _Tuple[DropdownChoiceValue, str]
-DropdownChoices = Union[List[DropdownChoiceEntry], Callable[[], List[DropdownChoiceEntry]]]
+DropdownChoiceEntry = tuple[DropdownChoiceValue, str]
+DropdownChoices = Union[list[DropdownChoiceEntry], Callable[[], list[DropdownChoiceEntry]]]
 
 
 class DropdownChoice(ValueSpec):
@@ -2517,7 +2515,7 @@ class DropdownChoice(ValueSpec):
     def allow_empty(self) -> bool:
         return self._read_only or not self._no_preselect
 
-    def choices(self) -> List[DropdownChoiceEntry]:
+    def choices(self) -> list[DropdownChoiceEntry]:
         if callable(self._choices):
             result = self._choices()
         else:
@@ -2632,8 +2630,8 @@ class DropdownChoice(ValueSpec):
         return value
 
     def _options_for_html(
-        self, orig_options: List[DropdownChoiceEntry]
-    ) -> List[_Tuple[DropdownChoiceValue, str]]:
+        self, orig_options: list[DropdownChoiceEntry]
+    ) -> list[tuple[DropdownChoiceValue, str]]:
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
@@ -2731,7 +2729,7 @@ class AjaxDropdownChoice(DropdownChoice):
         )
 
 
-AutocompleterFunc = Callable[[str, Dict], Choices]
+AutocompleterFunc = Callable[[str, dict], Choices]
 
 
 class AutocompleterRegistry(Registry[AutocompleterFunc]):
@@ -2789,7 +2787,7 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
     def __init__(
         self,
-        css_spec: List[str],
+        css_spec: list[str],
         hint_label: str,
         **kwargs: Any,
     ):
@@ -2859,10 +2857,10 @@ def HostState(**kwargs):
 
 CascadingDropdownChoiceIdent = Union[None, str, bool, int]
 CascadingDropdownChoiceValue = Union[
-    CascadingDropdownChoiceIdent, _Tuple[CascadingDropdownChoiceIdent, Any]
+    CascadingDropdownChoiceIdent, tuple[CascadingDropdownChoiceIdent, Any]
 ]
-CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceIdent, str, _Optional[ValueSpec]]
-CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceIdent, str]
+CascadingDropdownCleanChoice = tuple[CascadingDropdownChoiceIdent, str, _Optional[ValueSpec]]
+CascadingDropdownShortChoice = tuple[CascadingDropdownChoiceIdent, str]
 CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
 CascadingDropdownChoices = Union[
     Sequence[CascadingDropdownChoice], Callable[[], Sequence[CascadingDropdownChoice]]
@@ -2919,7 +2917,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         no_preselect_title: str = "",
         no_preselect_error: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
-        render_sub_vs_request_vars: _Optional[Dict] = None,
+        render_sub_vs_request_vars: _Optional[dict] = None,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -2986,7 +2984,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
     def _fallback_choice(
         self,
-    ) -> Union[CascadingDropdownChoiceIdent, _Tuple[CascadingDropdownChoiceIdent, ValueSpec]]:
+    ) -> Union[CascadingDropdownChoiceIdent, tuple[CascadingDropdownChoiceIdent, ValueSpec]]:
         choices = self.choices()
         if not choices:
             return None
@@ -3199,7 +3197,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
     def value_to_json_safe(
         self, value: CascadingDropdownChoiceValue
-    ) -> Union[None, CascadingDropdownChoiceValue, List[Any]]:
+    ) -> Union[None, CascadingDropdownChoiceValue, list[Any]]:
         choice = self._choice_from_value(value)
         if not choice:
             return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
@@ -3281,12 +3279,12 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
 
 ListChoiceChoiceValue = Union[str, int]
-ListChoiceChoicePairs = Sequence[_Tuple[ListChoiceChoiceValue, str]]
+ListChoiceChoicePairs = Sequence[tuple[ListChoiceChoiceValue, str]]
 ListChoiceChoices = Union[
     None,
     ListChoiceChoicePairs,
     Callable[[], ListChoiceChoicePairs],
-    Dict[ListChoiceChoiceValue, str],
+    dict[ListChoiceChoiceValue, str],
 ]
 
 
@@ -3472,7 +3470,7 @@ class DualListChoice(ListChoice):
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
-        locked_choices: _Optional[List[ChoiceId]] = None,
+        locked_choices: _Optional[list[ChoiceId]] = None,
         locked_choices_text_singular: _Optional[ChoiceText] = None,
         locked_choices_text_plural: _Optional[ChoiceText] = None,
     ):
@@ -3614,12 +3612,12 @@ class DualListChoice(ListChoice):
         )
 
     def _value_is_invalid(self, value: ListChoiceChoiceValue) -> bool:
-        all_elements: List[ChoiceId] = list(dict(self._elements).keys()) + self._locked_choices
+        all_elements: list[ChoiceId] = list(dict(self._elements).keys()) + self._locked_choices
         return all(value != val for val in all_elements)
 
     def from_html_vars(self, varprefix):
         self.load_elements()
-        value: List = []
+        value: list = []
         selection_str = request.var(varprefix, "")
         if selection_str is None:
             return value
@@ -3707,7 +3705,7 @@ class OptionalDropdownChoice(DropdownChoice):
 
     def render_input(self, varprefix, value):
         defval = "other"
-        options: List[_Tuple[_Optional[str], str]] = []
+        options: list[tuple[_Optional[str], str]] = []
         for n, (val, title) in enumerate(self.choices()):
             options.append((str(n), title))
             if val == value:
@@ -3885,7 +3883,7 @@ class AbsoluteDate(ValueSpec):
 
     def split_date(
         self, value: _Optional[float]
-    ) -> _Tuple[
+    ) -> tuple[
         _Optional[int],
         _Optional[int],
         _Optional[int],
@@ -3903,7 +3901,7 @@ class AbsoluteDate(ValueSpec):
             html.span(self._label, class_="vs_floating_text")
 
         year, month, day, hour, mmin, sec = self.split_date(value)
-        values: List[_Optional[_Tuple[str, _Optional[int], int]]] = [
+        values: list[_Optional[tuple[str, _Optional[int], int]]] = [
             ("_year", year, 4),
             ("_month", month, 2),
             ("_day", day, 2),
@@ -4057,7 +4055,7 @@ class AbsoluteDate(ValueSpec):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
-TimeofdayValue = _Tuple[int, int]
+TimeofdayValue = tuple[int, int]
 
 
 class Timeofday(ValueSpec):
@@ -4159,14 +4157,14 @@ class Timeofday(ValueSpec):
         if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
 
-    def value_to_json(self, value: Any) -> List[Any]:
+    def value_to_json(self, value: Any) -> list[Any]:
         return [value[0], value[1]]
 
-    def value_from_json(self, json_value: Any) -> _Tuple[Any, Any]:
+    def value_from_json(self, json_value: Any) -> tuple[Any, Any]:
         return (json_value[0], json_value[1])
 
 
-TimeofdayRangeValue = _Tuple[_Tuple[int, int], _Tuple[int, int]]
+TimeofdayRangeValue = tuple[tuple[int, int], tuple[int, int]]
 
 
 class TimeofdayRange(ValueSpec):
@@ -4256,13 +4254,13 @@ class TimeofdayRange(ValueSpec):
                 _("The <i>from</i> time must not be later then the <i>until</i> time."),
             )
 
-    def value_to_json(self, value: Any) -> List[Any]:
+    def value_to_json(self, value: Any) -> list[Any]:
         return [
             self._bounds[0].value_to_json(value[0]),
             self._bounds[1].value_to_json(value[1]),
         ]
 
-    def value_from_json(self, json_value: Any) -> _Tuple[Any, Any]:
+    def value_from_json(self, json_value: Any) -> tuple[Any, Any]:
         return (
             self._bounds[0].value_from_json(json_value[0]),
             self._bounds[1].value_from_json(json_value[1]),
@@ -4308,11 +4306,11 @@ class TimeHelper:
         # py3 return lt.timestamp()
 
 
-TimerangeValue = Union[None, int, str, _Tuple[str, Any]]  # TODO: Be more specific
+TimerangeValue = Union[None, int, str, tuple[str, Any]]  # TODO: Be more specific
 
 
 class ComputedTimerange(NamedTuple):
-    range: _Tuple[int, int]
+    range: tuple[int, int]
     title: str
 
 
@@ -4321,7 +4319,7 @@ class Timerange(CascadingDropdown):
         self,
         include_time: bool = False,
         choices: Union[
-            None, List[CascadingDropdownChoice], Callable[[], List[CascadingDropdownChoice]]
+            None, list[CascadingDropdownChoice], Callable[[], list[CascadingDropdownChoice]]
         ] = None,
         # CascadingDropdown
         # TODO: Make this more specific
@@ -4336,7 +4334,7 @@ class Timerange(CascadingDropdown):
         no_preselect_title: str = "",
         no_preselect_error: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
-        render_sub_vs_request_vars: _Optional[Dict] = None,
+        render_sub_vs_request_vars: _Optional[dict] = None,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -4366,10 +4364,10 @@ class Timerange(CascadingDropdown):
         self._include_time = include_time
         self._fixed_choices = choices
 
-    def _prepare_choices(self) -> List[CascadingDropdownChoice]:
+    def _prepare_choices(self) -> list[CascadingDropdownChoice]:
         # TODO: We have dispatching code like this all over place...
         if self._fixed_choices is None:
-            choices: List[CascadingDropdownChoice] = []
+            choices: list[CascadingDropdownChoice] = []
         elif isinstance(self._fixed_choices, list):
             choices = list(self._fixed_choices)
         elif callable(self._fixed_choices):
@@ -4475,7 +4473,7 @@ class Timerange(CascadingDropdown):
 
     def value_to_json_safe(
         self, value: CascadingDropdownChoiceValue
-    ) -> Union[None, CascadingDropdownChoiceValue, List[Any]]:
+    ) -> Union[None, CascadingDropdownChoiceValue, list[Any]]:
         if isinstance(value, int):  # Handle default graph_timeranges
             value = ("age", value)
         return super().value_to_json_safe(value)
@@ -4502,7 +4500,7 @@ class Timerange(CascadingDropdown):
                 time.strftime("%d/%m/%Y", time.localtime(from_time)),
             )
 
-        def _fixed_dates(rangespec: _Tuple[str, _Tuple[float, float]]) -> ComputedTimerange:
+        def _fixed_dates(rangespec: tuple[str, tuple[float, float]]) -> ComputedTimerange:
             from_time, until_time = rangespec[1]
             if from_time > until_time:
                 raise MKUserError(
@@ -4775,7 +4773,7 @@ class Alternative(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: List[ValueSpec],
+        elements: list[ValueSpec],
         match: _Optional[Callable[[Any], int]] = None,
         style: str = "",  # Unused argument left here to remain compatible with user extensions.
         show_alternative_title: bool = False,
@@ -4814,7 +4812,7 @@ class Alternative(ValueSpec):
 
     def render_input(self, varprefix, value):
         mvs, value = self.matching_alternative(value)
-        options: List[_Tuple[_Optional[str], str]] = []
+        options: list[tuple[_Optional[str], str]] = []
         sel_option = request.var(varprefix + "_use")
         for nr, vs in enumerate(self._elements):
             if not sel_option and vs == mvs:
@@ -4931,7 +4929,7 @@ class Tuple(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: List[ValueSpec],
+        elements: list[ValueSpec],
         show_titles: bool = True,
         orientation: str = "vertical",
         separator: str = " ",
@@ -5019,20 +5017,20 @@ class Tuple(ValueSpec):
     def set_focus(self, varprefix):
         self._elements[0].set_focus(varprefix + "_0")
 
-    def _iter_value(self, value: Sequence[Any]) -> Iterable[_Tuple[int, ValueSpec, Any]]:
+    def _iter_value(self, value: Sequence[Any]) -> Iterable[tuple[int, ValueSpec, Any]]:
         for idx, element in enumerate(self._elements):
             yield idx, element, value[idx]
 
     def value_to_text(self, value) -> ValueSpecText:
         return HTML(", ").join(el.value_to_text(val) for _, el, val in self._iter_value(value))
 
-    def value_to_json(self, value: Any) -> List[Any]:
+    def value_to_json(self, value: Any) -> list[Any]:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
-    def value_from_json(self, json_value: Any) -> _Tuple[Any, ...]:
+    def value_from_json(self, json_value: Any) -> tuple[Any, ...]:
         return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))
 
-    def value_to_json_safe(self, value: Any) -> List[Any]:
+    def value_to_json_safe(self, value: Any) -> list[Any]:
         return [el.value_to_json_safe(val) for _, el, val in self._iter_value(value)]
 
     def from_html_vars(self, varprefix):
@@ -5056,12 +5054,12 @@ class Tuple(ValueSpec):
         for idx, el, val in self._iter_value(value):
             el.validate_datatype(val, f"{varprefix}_{idx}")
 
-    def transform_value(self, value: _Tuple[Any, ...]) -> _Tuple[Any, ...]:
+    def transform_value(self, value: tuple[Any, ...]) -> tuple[Any, ...]:
         assert isinstance(value, tuple), "Tuple.transform_value() got a non-tuple: %r" % (value,)
         return tuple(vs.transform_value(value[index]) for index, vs in enumerate(self._elements))
 
 
-DictionaryEntry = _Tuple[str, ValueSpec]
+DictionaryEntry = tuple[str, ValueSpec]
 DictionaryElements = Iterable[DictionaryEntry]
 DictionaryElementsThunk = Callable[[], DictionaryElements]
 DictionaryElementsRaw = Union[DictionaryElements, DictionaryElementsThunk]
@@ -5074,18 +5072,18 @@ class Dictionary(ValueSpec):
         elements: DictionaryElementsRaw,
         empty_text: _Optional[str] = None,
         default_text: _Optional[str] = None,
-        optional_keys: Union[bool, List[str]] = True,
-        required_keys: _Optional[List[str]] = None,
-        show_more_keys: _Optional[List[str]] = None,
-        ignored_keys: _Optional[List[str]] = None,
-        default_keys: _Optional[List[str]] = None,
-        hidden_keys: _Optional[List[str]] = None,
+        optional_keys: Union[bool, list[str]] = True,
+        required_keys: _Optional[list[str]] = None,
+        show_more_keys: _Optional[list[str]] = None,
+        ignored_keys: _Optional[list[str]] = None,
+        default_keys: _Optional[list[str]] = None,
+        hidden_keys: _Optional[list[str]] = None,
         columns: int = 1,
         render: str = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
-        headers: _Optional[List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]] = None,
-        migrate: _Optional[Callable[[_Tuple], Dict]] = None,
+        headers: _Optional[list[Union[tuple[str, list[str]], tuple[str, str, list[str]]]]] = None,
+        migrate: _Optional[Callable[[tuple], dict]] = None,
         indent: bool = True,
         # ValueSpec
         title: _Optional[str] = None,
@@ -5244,7 +5242,7 @@ class Dictionary(ValueSpec):
             raise ValueError("invalid header tuple length")
         raise ValueError("invalid header type")
 
-    def _section_has_show_more(self, section_elements: List[str]) -> bool:
+    def _section_has_show_more(self, section_elements: list[str]) -> bool:
         """Valuespec Dictionary has option "show_more_keys" but can be buried under
         multiple different valuespecs"""
         # visuals deliver no section_elements
@@ -5406,7 +5404,7 @@ class Dictionary(ValueSpec):
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
-    def transform_value(self, value: Dict[str, Any]) -> Dict[str, Any]:
+    def transform_value(self, value: dict[str, Any]) -> dict[str, Any]:
         assert isinstance(value, dict), "Dictionary.transform_value() got a non-dict: %r" % (value,)
         return {
             **{
@@ -5652,7 +5650,7 @@ class Transform(ValueSpec):
     def render_input(self, varprefix: str, value: Any) -> None:
         self._valuespec.render_input(varprefix, self.forth(value))
 
-    def render_input_as_form(self, varprefix: str, value: Dict[str, Any]) -> None:
+    def render_input_as_form(self, varprefix: str, value: dict[str, Any]) -> None:
         if not isinstance(self._valuespec, Dictionary):
             raise NotImplementedError()
         self._valuespec.render_input_as_form(varprefix, self.forth(value))
@@ -5929,7 +5927,7 @@ class FileUpload(ValueSpec):
 class ImageUpload(FileUpload):
     def __init__(
         self,
-        max_size: _Optional[_Tuple[int, int]] = None,
+        max_size: _Optional[tuple[int, int]] = None,
         show_current_image: bool = False,
         **kwargs,
     ) -> None:
@@ -6093,8 +6091,8 @@ class Labels(ValueSpec):
         value = html.request.get_unicode_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
 
-    def _from_html_vars(self, value: str, varprefix) -> Dict[str, Any]:
-        labels: Dict[str, Any] = {}
+    def _from_html_vars(self, value: str, varprefix) -> dict[str, Any]:
+        labels: dict[str, Any] = {}
 
         try:
             decoded_labels = json.loads(value or "[]")
@@ -6168,7 +6166,7 @@ class PageAutocompleteLabels(AjaxPage):
             self._get_labels(Labels.World(api_request["world"]), api_request["search_label"])
         )
 
-    def _get_labels(self, world, search_label: str) -> List[_Tuple[str, str]]:
+    def _get_labels(self, world, search_label: str) -> list[tuple[str, str]]:
         if world is Labels.World.CONFIG:
             return self._get_labels_from_config(search_label)
 
@@ -6177,14 +6175,14 @@ class PageAutocompleteLabels(AjaxPage):
 
         raise NotImplementedError()
 
-    def _get_labels_from_config(self, search_label: str) -> List[_Tuple[str, str]]:
+    def _get_labels_from_config(self, search_label: str) -> list[tuple[str, str]]:
         # TODO: Until we have a config specific implementation we now use the labels known to the
         # core. This is not optimal, but better than doing nothing.
         # To implement a setup specific search, we need to decide which occurrences of labels we
         # want to search: hosts / folders, rules, ...?
         return self._get_labels_from_core(search_label)
 
-    def _get_labels_from_core(self, search_label: str) -> List[_Tuple[str, str]]:
+    def _get_labels_from_core(self, search_label: str) -> list[tuple[str, str]]:
         return list(get_labels_cache().get_labels().items())
 
 
@@ -6222,16 +6220,16 @@ class IconSelector(ValueSpec):
     # All icons within the images/icons directory have the ident of a category
     # witten in the PNG meta data. For the default images we have done this scripted.
     # During upload of user specific icons, the meta data is added to the images.
-    def available_icons(self, only_local: bool = False) -> Dict[str, str]:
+    def available_icons(self, only_local: bool = False) -> dict[str, str]:
         icons = {}
         icons.update(self._available_builtin_icons("icon_", only_local))
         icons.update(self._available_user_icons(only_local))
         return icons
 
-    def available_emblems(self, only_local: bool = False) -> Dict[str, str]:
+    def available_emblems(self, only_local: bool = False) -> dict[str, str]:
         return self._available_builtin_icons("emblem_", only_local)
 
-    def _available_builtin_icons(self, prefix: str, only_local: bool = False) -> Dict[str, str]:
+    def _available_builtin_icons(self, prefix: str, only_local: bool = False) -> dict[str, str]:
         if not self._show_builtin_icons:
             return {}
 
@@ -6248,7 +6246,7 @@ class IconSelector(ValueSpec):
                     icons[file_stem[len(prefix) :]] = category
         return icons
 
-    def _available_user_icons(self, only_local=False) -> Dict[str, str]:
+    def _available_user_icons(self, only_local=False) -> dict[str, str]:
         dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/images/icons"]
         if not only_local:
             dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/images/icons")
@@ -6256,9 +6254,9 @@ class IconSelector(ValueSpec):
         return self._get_icons_from_directories(dirs, default_category="misc")
 
     def _get_icons_from_directories(
-        self, dirs: List[Path], default_category: str
-    ) -> Dict[str, str]:
-        icons: Dict[str, str] = {}
+        self, dirs: list[Path], default_category: str
+    ) -> dict[str, str]:
+        icons: dict[str, str] = {}
         for directory in dirs:
             try:
                 files = [f for f in directory.iterdir() if f.is_file()]
@@ -6295,7 +6293,7 @@ class IconSelector(ValueSpec):
         return category
 
     def _available_icons_by_category(self, icons):
-        by_cat: Dict[str, List[str]] = {}
+        by_cat: dict[str, list[str]] = {}
         for icon_name, category_name in icons.items():
             by_cat.setdefault(category_name, [])
             by_cat[category_name].append(icon_name)
@@ -6625,7 +6623,7 @@ def ColorWithThemeAndMetricDefault(
     )
 
 
-SSHKeyPairValue = _Tuple[str, str]
+SSHKeyPairValue = tuple[str, str]
 
 
 class SSHKeyPair(ValueSpec):
@@ -6639,10 +6637,10 @@ class SSHKeyPair(ValueSpec):
     def value_to_text(self, value: SSHKeyPairValue) -> str:
         return self._get_key_fingerprint(value)
 
-    def value_to_json(self, value: Any) -> List[Any]:
+    def value_to_json(self, value: Any) -> list[Any]:
         return [value[0], value[1]]
 
-    def value_from_json(self, json_value: Any) -> _Tuple[Any, Any]:
+    def value_from_json(self, json_value: Any) -> tuple[Any, Any]:
         return (json_value[0], json_value[1])
 
     def value_to_json_safe(self, value: Any) -> str:
@@ -6683,7 +6681,7 @@ class SSHKeyPair(ValueSpec):
 # TODO: Cleanup kwargs
 def SchedulePeriod(from_end=True, **kwargs):
     if from_end:
-        from_end_choice: List[CascadingDropdownChoice] = [
+        from_end_choice: list[CascadingDropdownChoice] = [
             (
                 "month_end",
                 _("At the end of every month at day"),
@@ -6693,7 +6691,7 @@ def SchedulePeriod(from_end=True, **kwargs):
     else:
         from_end_choice = []
 
-    dwm: List[CascadingDropdownChoice] = [
+    dwm: list[CascadingDropdownChoice] = [
         ("day", _("Every day"), None),
         ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
         (
@@ -6731,7 +6729,7 @@ class CAorCAChain(UploadOrPasteTextFile):
             "O": _("Organization Name"),
             "CN": _("Common Name"),
         }
-        cert_info: Dict[str, Dict[str, str]] = {}
+        cert_info: dict[str, dict[str, str]] = {}
         for what, x509 in [
             ("issuer", cert.get_issuer()),
             ("subject", cert.get_subject()),
@@ -6849,8 +6847,8 @@ def LogLevelChoice(**kwargs):
     )
 
 
-def rule_option_elements(disabling: bool = True) -> List[DictionaryEntry]:
-    elements: List[DictionaryEntry] = [
+def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
+    elements: list[DictionaryEntry] = [
         (
             "description",
             TextInput(

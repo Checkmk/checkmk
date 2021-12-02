@@ -15,7 +15,7 @@ OPENSSL_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(OPENSSL_DIR)
 #OPENSSL_WORK_DIR := $(PACKAGE_WORK_DIR)/$(OPENSSL_DIR)
 
 # Executed from enterprise/core/src/Makefile.am
-$(OPENSSL)-build: $(BUILD_HELPER_DIR) $(OPENSSL_CACHE_PKG_PROCESS)
+$(OPENSSL)-build-library: $(BUILD_HELPER_DIR) $(OPENSSL_CACHE_PKG_PROCESS)
 
 # Used by Python/Python.make
 ifeq ($(DISTRO_CODE),el8)

@@ -7,11 +7,13 @@
 import pytest
 
 from cmk.gui.utils.logged_in import SuperUserContext
-from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment
+from cmk.gui.utils.script_helpers import gui_context
+
+# This GUI specific fixture is also needed in this context
+from tests.unit.cmk.gui.conftest import load_plugins  # pylint: disable=unused-import
 
 
-@pytest.fixture(autouse=True)
-def gui_context():
-    with application_and_request_context(), SuperUserContext():
-        initialize_gui_environment()
+@pytest.fixture(autouse=True, name="gui_context")
+def fixture_gui_context():
+    with gui_context(), SuperUserContext():
         yield

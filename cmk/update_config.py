@@ -76,7 +76,7 @@ from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.logged_in import SuperUserContext
-from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment
+from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
@@ -151,8 +151,12 @@ class UpdateConfig:
     def run(self) -> bool:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
-        with application_and_request_context(), SuperUserContext():
-            self._initialize_gui_environment()
+
+        cmk.gui.modules.init_modules()
+        cmk.gui.modules.call_load_plugins_hooks()
+
+        with gui_context(), SuperUserContext():
+            self._check_failed_gui_plugins()
             self._initialize_base_environment()
 
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")
@@ -639,14 +643,7 @@ class UpdateConfig:
                 num_errors,
             )
 
-    def _initialize_gui_environment(self):
-        self._logger.log(VERBOSE, "Loading GUI plugins...")
-
-        # TODO: We are about to rewrite parts of the config. Would be better to be executable without
-        # loading the configuration first (because the load_config() may miss some conversion logic
-        # which is only known to cmk.update_config in the future).
-        initialize_gui_environment()
-
+    def _check_failed_gui_plugins(self):
         failed_plugins = cmk.gui.utils.get_failed_plugins()
         if failed_plugins:
             self._logger.error("")

@@ -7,10 +7,18 @@
 import json
 import time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    HostLabel,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
+    HostLabelGenerator,
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import PodInfo
@@ -33,10 +41,28 @@ def parse_kube_pod_info(string_table: StringTable):
     return PodInfo(**json.loads(string_table[0][0]))
 
 
+def host_labels(section: PodInfo) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+        cmk/kubernetes/namespace:
+            This label is set to the namespace of the deployment.
+
+        cmk/kubernetes/node:
+            This label is set to the node of the pod.
+    """
+    yield HostLabel("cmk/kubernetes/node", section.node)
+    yield HostLabel("cmk/kubernetes/namespace", section.namespace)
+
+    for label in section.labels.values():
+        yield HostLabel(label.name, label.value)
+
+
 register.agent_section(
     name="kube_pod_info_v1",
     parsed_section_name="kube_pod_info",
     parse_function=parse_kube_pod_info,
+    host_label_function=host_labels,
 )
 
 

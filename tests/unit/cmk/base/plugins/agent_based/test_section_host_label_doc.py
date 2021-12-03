@@ -25,6 +25,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes:yes",
     "cmk/kubernetes/deployment",
     "cmk/kubernetes/namespace",
+    "cmk/kubernetes/node",
     "cmk/os_family",
     "cmk/vsphere_object",
 }

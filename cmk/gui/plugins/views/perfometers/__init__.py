@@ -16,10 +16,7 @@ from typing import Callable
 from typing import Dict as _Dict
 from typing import List, Literal, Optional, Tuple
 
-from cmk.utils.plugin_loader import load_plugins
-
 import cmk.gui.metrics as metrics
-import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -180,16 +177,3 @@ def render_metricometer(stack) -> HTML:
     if len(stack) == 2:
         h = html.render_div(h, class_="stacked")
     return h
-
-
-# .
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
-
-load_plugins(__file__, __package__)

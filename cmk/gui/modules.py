@@ -104,27 +104,6 @@ def _import_main_module_plugins() -> None:
     for module in _cmk_gui_top_level_modules() + _local_main_modules:
         main_module_name = module.__name__.split(".")[-1]
 
-        # The main modules need to be migrated step by step, because some need some cleanups before
-        # we can switch over to the new plugin import logic.
-        if main_module_name in (
-            # "wato",
-            # "visuals",
-            # "sidebar",
-            # "watolib",
-            # "metrics",
-            "views",
-            # "sla",
-            # "cron",
-            # "openapi",
-            # "userdb",
-            # "webapi",
-            # "bi",
-            # "dashboard",
-            # "reporting",
-            # "config",
-        ):
-            continue
-
         for plugin_package_name in _plugin_package_names(main_module_name):
             if not _is_plugin_namespace(plugin_package_name):
                 logger.debug("  Skip loading plugins from %s", plugin_package_name)

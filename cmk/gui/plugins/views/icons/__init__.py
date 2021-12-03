@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterator, List, Literal, Optional, Tuple, Union
 
 import cmk.utils.regex
-from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.type_defs import TagID
 
 from cmk.gui.globals import config, html, user
@@ -233,16 +232,3 @@ def iconpainter_columns(what: IconObjectType, toplevel: Optional[bool]) -> List[
                 cols.update(["service_" + c for c in icon.service_columns()])
 
     return list(cols)
-
-
-# .
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
-
-load_plugins(__file__, __package__)

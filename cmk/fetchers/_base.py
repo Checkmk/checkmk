@@ -117,13 +117,13 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     def _do_cache(self, mode: Mode) -> bool:
-        if self.simulation:
-            self._logger.debug("Using cache (Simulation mode)")
-            return True
-
         if self.disabled:
             self._logger.debug("Not using cache (Cache usage disabled)")
             return False
+
+        if self.simulation:
+            self._logger.debug("Using cache (Simulation mode)")
+            return True
 
         if mode in {
                 Mode.NONE,

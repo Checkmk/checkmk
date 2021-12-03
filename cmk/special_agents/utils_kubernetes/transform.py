@@ -216,13 +216,13 @@ def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
     )
 
 
-def node_conditions(node: client.V1Node) -> Optional[api.NodeStatus]:
+def node_conditions(node: client.V1Node) -> Optional[api.NodeConditions]:
     if not node.status:
         return None
     conditions = node.status.conditions
     if not conditions:
         return None
-    return api.NodeStatus(**{c.type: bool(c.status) for c in conditions})
+    return api.NodeConditions(**{c.type: bool(c.status) for c in conditions})
 
 
 def parse_node_resources(node: client.V1Node) -> Dict[str, api.NodeResources]:

@@ -39,7 +39,7 @@ class MetaData(BaseModel):
     use_namespace = False
 
 
-class NodeStatus(BaseModel):
+class NodeConditions(BaseModel):
     NetworkUnavailable: Optional[bool] = None
     MemoryPressure: bool
     DiskPressure: bool
@@ -74,7 +74,7 @@ class KubeletInfo(BaseModel):
 
 class Node(BaseModel):
     metadata: MetaData
-    conditions: NodeStatus
+    conditions: NodeConditions
     control_plane: bool
     resources: Dict[str, NodeResources]
     kubelet_info: KubeletInfo

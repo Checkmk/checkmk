@@ -81,6 +81,7 @@ stamp-h1
 tags
 tests/web/data/*
 tests/var/*
+tests/.hypothesis/
 web/htdocs/js/*_min.js.map
 /results
 /buildscripts/infrastructure/build-nodes/scripts/defines.make

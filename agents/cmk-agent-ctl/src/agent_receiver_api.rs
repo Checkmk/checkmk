@@ -25,6 +25,12 @@ struct RegistrationWithHNBody {
     host_name: String,
 }
 
+#[derive(Serialize)]
+struct RegistrationWithALBody {
+    uuid: String,
+    agent_labels: config::AgentLabels,
+}
+
 pub fn pairing(
     server_address: &str,
     root_cert: Option<String>,
@@ -75,6 +81,25 @@ pub fn register_with_hostname(
             .json(&RegistrationWithHNBody {
                 uuid: String::from(uuid),
                 host_name: String::from(host_name),
+            })
+            .send()?,
+    )
+}
+
+pub fn register_with_agent_labels(
+    server_address: &str,
+    root_cert: &str,
+    credentials: &config::Credentials,
+    uuid: &str,
+    agent_labels: &config::AgentLabels,
+) -> AnyhowResult<()> {
+    check_response_204(
+        certs::client(Some(String::from(root_cert).into_bytes()))?
+            .post(format!("https://{}/register_with_labels", server_address))
+            .basic_auth(&credentials.username, Some(&credentials.password))
+            .json(&RegistrationWithALBody {
+                uuid: String::from(uuid),
+                agent_labels: agent_labels.clone(),
             })
             .send()?,
     )

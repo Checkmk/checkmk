@@ -45,9 +45,9 @@ fn register(
     let credentials = config
         .credentials
         .context("Missing credentials for registration.")?;
-    let host_name = config
-        .host_name
-        .context("Missing host name for registration")?;
+    let host_reg_data = config
+        .host_reg_data
+        .context("Neither hostname nor agent labels provided, need one of them for registration")?;
 
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let uuid = Uuid::new_v4().to_string();
@@ -66,14 +66,34 @@ fn register(
         agent_receiver_api::pairing(&agent_receiver_address, server_cert, csr, &credentials)
             .context(format!("Error pairing with {}", &agent_receiver_address))?;
 
-    agent_receiver_api::register_with_hostname(
-        &agent_receiver_address,
-        &pairing_response.root_cert,
-        &credentials,
-        &uuid,
-        &host_name,
-    )
-    .context(format!("Error registering {}", &agent_receiver_address))?;
+    match host_reg_data {
+        config::HostRegistrationData::Name(hn) => {
+            agent_receiver_api::register_with_hostname(
+                &agent_receiver_address,
+                &pairing_response.root_cert,
+                &credentials,
+                &uuid,
+                &hn,
+            )
+            .context(format!(
+                "Error registering with hostname at {}",
+                &agent_receiver_address
+            ))?;
+        }
+        config::HostRegistrationData::Labels(al) => {
+            agent_receiver_api::register_with_agent_labels(
+                &agent_receiver_address,
+                &pairing_response.root_cert,
+                &credentials,
+                &uuid,
+                &al,
+            )
+            .context(format!(
+                "Error registering with agent labels at {}",
+                &agent_receiver_address
+            ))?;
+        }
+    }
 
     reg_state.server_specs.insert(
         agent_receiver_address,

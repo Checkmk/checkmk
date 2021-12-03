@@ -11,6 +11,8 @@ use std::fs::{read_to_string, write};
 use std::io;
 use std::path::Path;
 
+pub type AgentLabels = HashMap<String, String>;
+
 #[derive(Deserialize)]
 pub struct Credentials {
     pub username: String,
@@ -30,6 +32,9 @@ pub struct ConfigFromDisk {
 
     #[serde(default)]
     pub host_name: Option<String>,
+
+    #[serde(default)]
+    pub agent_labels: Option<AgentLabels>,
 }
 
 impl ConfigFromDisk {
@@ -46,11 +51,16 @@ impl ConfigFromDisk {
     }
 }
 
+pub enum HostRegistrationData {
+    Name(String),
+    Labels(AgentLabels),
+}
+
 pub struct Config {
     pub agent_receiver_address: Option<String>,
     pub credentials: Option<Credentials>,
     pub root_certificate: Option<String>,
-    pub host_name: Option<String>,
+    pub host_reg_data: Option<HostRegistrationData>,
 }
 
 impl Config {
@@ -66,7 +76,13 @@ impl Config {
                 config_from_disk.credentials
             },
             root_certificate: config_from_disk.root_certificate,
-            host_name: args.host_name.or(config_from_disk.host_name),
+            host_reg_data: if let Some(hn) = args.host_name.or(config_from_disk.host_name) {
+                Some(HostRegistrationData::Name(hn))
+            } else {
+                config_from_disk
+                    .agent_labels
+                    .map(HostRegistrationData::Labels)
+            },
         }
     }
 }

@@ -14,6 +14,13 @@ from livestatus import SiteId
 
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
+# There is an implicit dependency introduced by the collect_attributes call which is evaluated
+# at import time. To make it work as expected we need to import
+# TODO: Clean this dependency on the plugins up by moving the plugins to cmk.gui.watolib
+import cmk.gui.plugins.wato.builtin_attributes  # pylint: disable=unused-import
+import cmk.gui.watolib.groups  # pylint: disable=unused-import
+
+#
 from cmk.gui import fields, sites, watolib
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.utils.escaping import strip_tags

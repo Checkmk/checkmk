@@ -191,8 +191,10 @@ class Deployment:
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
-    def pod_uids(self) -> Sequence[PodUID]:
-        return [pod.uid for pod in self._pods]
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+        if phase is None:
+            return self._pods
+        return [pod for pod in self._pods if pod.phase == phase]
 
     def add_pod(self, pod: Pod) -> None:
         self._pods.append(pod)
@@ -228,8 +230,10 @@ class Node:
     def append(self, pod: Pod) -> None:
         self._pods.append(pod)
 
-    def pod_uids(self) -> Sequence[PodUID]:
-        return [pod.uid for pod in self._pods]
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+        if phase is None:
+            return self._pods
+        return [pod for pod in self._pods if pod.phase == phase]
 
     def pod_resources(self) -> section.PodResourcesWithCapacity:
         resources = {
@@ -326,11 +330,10 @@ class Cluster:
         resources.update(phases_pods)
         return section.PodResourcesWithCapacity(**resources)
 
-    def pod_uids(self) -> Sequence[PodUID]:
-        return [pod.uid for pod in self._pods.values()]
-
-    def pods(self) -> Sequence[Pod]:
-        return list(self._pods.values())
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+        if phase is None:
+            return list(self._pods.values())
+        return [pod for pod in self._pods.values() if pod.phase == phase]
 
     def nodes(self) -> Sequence[Node]:
         return list(self._nodes.values())
@@ -681,7 +684,11 @@ def main(args: Optional[List[str]] = None) -> int:
             for node in cluster.nodes():
                 with ConditionalPiggybackSection(f"node_{node.name}"):
                     node_performance_sections(
-                        [performance_pods[pod_uid] for pod_uid in node.pod_uids()]
+                        [
+                            performance_pods[pod.uid]
+                            for pod in node.pods(phase=api.Phase.RUNNING)
+                            if pod.uid in performance_pods
+                        ]
                     )
 
             for deployment in cluster.deployments():
@@ -689,13 +696,23 @@ def main(args: Optional[List[str]] = None) -> int:
                     f"deployment_{deployment.name(prepend_namespace=True)}"
                 ):
                     deployment_performance_sections(
-                        [performance_pods[pod_uid] for pod_uid in deployment.pod_uids()]
+                        [
+                            performance_pods[pod.uid]
+                            for pod in deployment.pods(phase=api.Phase.RUNNING)
+                            if pod.uid in performance_pods
+                        ]
                     )
 
             with ConditionalPiggybackSection("cluster_kube"):  # TODO: make name configurable
                 cluster_performance_sections(
-                    [performance_pods[pod_uid] for pod_uid in cluster.pod_uids()]
+                    [
+                        performance_pods[pod.uid]
+                        for pod in cluster.pods(phase=api.Phase.RUNNING)
+                        if pod.uid in performance_pods
+                    ]
                 )
+
+            # TODO: handle pods with no performance data (pod.uid not in performance pods)
 
     except urllib3.exceptions.MaxRetryError as e:
         if arguments.debug:

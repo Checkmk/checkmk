@@ -90,29 +90,6 @@ multisite_builtin_views.update(
     }
 )
 
-service_graph_overview_settings = {
-    "painters": [
-        ("service_graphs", None),
-    ],
-    "num_columns": 1,
-    "layout": "boxed_graph",
-}
-
-host_graph_overview_settings = {
-    "painters": [
-        ("host_graphs", None),
-    ],
-    "num_columns": 1,
-    "layout": "boxed_graph",
-}
-
-# Change the hosts graph view to use the normal time graphs
-multisite_builtin_views["hostpnp"].update(host_graph_overview_settings)
-# Change the "graphs of all services with this description" view
-multisite_builtin_views["servicedescpnp"].update(service_graph_overview_settings)
-# Change the "graph search" view
-multisite_builtin_views["searchpnp"].update(service_graph_overview_settings)
-
 
 def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
     graph_identification = (

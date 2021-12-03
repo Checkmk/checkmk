@@ -2102,17 +2102,26 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
         # Gather all group names to search for in LDAP
         from cmk.gui.groups import load_contact_group_information
 
-        cg_names = load_contact_group_information().keys()
+        cgs = load_contact_group_information()
+
+        # To support groups with CNs which are invalid as name of a
+        # contactgroup, we also search for the aliases of contact groups.
+        cg_mapping = {cg["alias"]: key for key, cg in cgs.items()}
+        # However, the name of a contactgroup has a higher priority in matching
+        cg_mapping.update({key: key for key in cgs.keys()})
 
         return {
-            "contactgroups": get_groups_of_user(
-                connection,
-                user_id,
-                ldap_user,
-                cg_names,
-                params.get("nested", False),
-                params.get("other_connections", []),
-            )
+            "contactgroups": [
+                cg_mapping[cn]
+                for cn in get_groups_of_user(
+                    connection,
+                    user_id,
+                    ldap_user,
+                    cg_mapping.keys(),
+                    params.get("nested", False),
+                    params.get("other_connections", []),
+                )
+            ]
         }
 
     def parameters(self, connection):

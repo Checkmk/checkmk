@@ -12,7 +12,17 @@ def build(Map args) {
             upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
             def IMAGE_VERSION = args.VERSION == "git" ? versioning.get_date() : CMK_VERSION
-            upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${WORKSPACE}/packages/${IMAGE_VERSION}")
+
+            sh("rm -rf \"${WORKSPACE}/packages\"")
+            if(args.DISTRO_LIST == ["ubuntu-20.04"]) {
+                upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${WORKSPACE}/packages/${IMAGE_VERSION}", args.EDITION, "focal")
+            }
+            else if(args.DISTRO_LIST.size() == 1) {
+                throw new Exception("Please add a case to download only the needed package for ${args.DISTRO_LIST}")
+            }
+            else {
+                upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR)
+            }
 
             // Cleanup test results directory before starting the test to prevent previous
             // runs somehow affecting the current run.

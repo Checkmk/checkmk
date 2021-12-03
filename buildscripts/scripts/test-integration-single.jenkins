@@ -27,7 +27,7 @@ timeout(time: 12, unit: 'HOURS') {
             integration.build(
                 DOCKER_GROUP_ID: DOCKER_GROUP_ID,
                 DISTRO_LIST: ["ubuntu-20.04"],
-                EDITION: "cee",
+                EDITION: "enterprise",
                 VERSION: "git",
                 DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT),
                 MAKE_TARGET: "test-integration-docker",

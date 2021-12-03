@@ -35,7 +35,7 @@ timeout(time: 12, unit: 'HOURS') {
             }
 
             upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERSION, "${PACKAGE_DIR}/${CMK_VERSION}", EDITION, "buster")
-            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERSION, "${PACKAGE_DIR}/${CMK_VERSION}", EDITION, "buster")
+            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERSION, "${PACKAGE_DIR}/${CMK_VERSION}", EDITION)
 
             stage('test cmk-docker integration') {
                 dir ('tests') {

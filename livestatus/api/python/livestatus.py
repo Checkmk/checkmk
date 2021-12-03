@@ -541,7 +541,7 @@ class SingleSiteConnection(Helpers):
         receive_start = time.time()
         while size > 0:
             readylist = self._socket_poller.poll(1000)
-            if readylist:
+            if readylist or (isinstance(self.socket, ssl.SSLSocket) and self.socket.pending()):
                 packet = self.socket.recv(size)
                 if not packet:
                     raise MKLivestatusSocketClosed(

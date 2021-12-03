@@ -11,19 +11,16 @@ use std::fs::{read_to_string, write};
 use std::io;
 use std::path::Path;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct Credentials {
     pub username: String,
     pub password: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct Config {
+#[derive(Deserialize)]
+pub struct ConfigFromDisk {
     #[serde(default)]
     pub agent_receiver_address: Option<String>,
-
-    #[serde(default)]
-    pub package_name: Option<String>,
 
     #[serde(default)]
     pub credentials: Option<Credentials>,
@@ -35,45 +32,41 @@ pub struct Config {
     pub host_name: Option<String>,
 }
 
-impl Config {
-    fn empty_config() -> AnyhowResult<Config> {
+impl ConfigFromDisk {
+    fn new() -> AnyhowResult<ConfigFromDisk> {
         Ok(serde_json::from_str("{}")?)
     }
 
-    pub fn from_file(path: &Path) -> AnyhowResult<Config> {
+    pub fn load(path: &Path) -> AnyhowResult<ConfigFromDisk> {
         if path.exists() {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
 
-        Config::empty_config()
+        ConfigFromDisk::new()
     }
+}
 
-    pub fn merge_two_configs(loser: Config, winner: Config) -> Config {
-        Config {
-            agent_receiver_address: winner
-                .agent_receiver_address
-                .or(loser.agent_receiver_address),
-            package_name: winner.package_name.or(loser.package_name),
-            credentials: winner.credentials.or(loser.credentials),
-            root_certificate: winner.root_certificate.or(loser.root_certificate),
-            host_name: winner.host_name.or(loser.host_name),
-        }
-    }
+pub struct Config {
+    pub agent_receiver_address: Option<String>,
+    pub credentials: Option<Credentials>,
+    pub root_certificate: Option<String>,
+    pub host_name: Option<String>,
+}
 
-    pub fn from_args(args: Args) -> Config {
+impl Config {
+    pub fn new(config_from_disk: ConfigFromDisk, args: Args) -> Config {
         Config {
-            agent_receiver_address: args.server,
-            package_name: args.package_name,
+            agent_receiver_address: args.server.or(config_from_disk.agent_receiver_address),
             credentials: if let (Some(u), Some(p)) = (args.user, args.password) {
                 Some(Credentials {
                     username: u,
                     password: p,
                 })
             } else {
-                None
+                config_from_disk.credentials
             },
-            root_certificate: None,
-            host_name: args.host_name,
+            root_certificate: config_from_disk.root_certificate,
+            host_name: args.host_name.or(config_from_disk.host_name),
         }
     }
 }
@@ -93,7 +86,7 @@ pub struct ServerSpec {
 }
 
 impl RegistrationState {
-    fn empty_state() -> AnyhowResult<RegistrationState> {
+    fn new() -> AnyhowResult<RegistrationState> {
         Ok(serde_json::from_str("{}")?)
     }
 
@@ -102,7 +95,7 @@ impl RegistrationState {
             return Ok(serde_json::from_str(&read_to_string(path)?)?);
         }
 
-        RegistrationState::empty_state()
+        RegistrationState::new()
     }
 
     pub fn to_file(&self, path: &Path) -> io::Result<()> {

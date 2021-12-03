@@ -92,9 +92,8 @@ fn register(
     Ok(())
 }
 
-fn push(config: config::Config, reg_state: config::RegistrationState) -> AnyhowResult<()> {
-    let mon_data = monitoring_data::collect(config.package_name)
-        .context("Error collecting monitoring data")?;
+fn push(reg_state: config::RegistrationState) -> AnyhowResult<()> {
+    let mon_data = monitoring_data::collect().context("Error collecting monitoring data")?;
 
     for (agent_receiver_address, server_spec) in reg_state.server_specs.iter() {
         agent_receiver_api::agent_data(
@@ -113,9 +112,8 @@ fn push(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
     Ok(())
 }
 
-fn dump(config: config::Config) -> AnyhowResult<()> {
-    let mon_data = monitoring_data::collect(config.package_name)
-        .context("Error collecting monitoring data.")?;
+fn dump() -> AnyhowResult<()> {
+    let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
     io::stdout()
         .write_all(&mon_data)
         .context("Error writing monitoring data to stdout.")?;
@@ -127,9 +125,9 @@ fn status(_config: config::Config) -> AnyhowResult<()> {
     Err(anyhow!("Status mode not yet implemented"))
 }
 
-fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowResult<()> {
+fn pull(reg_state: config::RegistrationState) -> AnyhowResult<()> {
     if is_legacy_pull(&reg_state) {
-        return dump(config);
+        return dump();
     }
 
     let mut stream = tls_server::IoStream::new();
@@ -141,8 +139,7 @@ fn pull(config: config::Config, reg_state: config::RegistrationState) -> AnyhowR
         tls_server::tls_connection(reg_state).context("Could not initialize TLS.")?;
     let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
 
-    let mon_data = monitoring_data::collect(config.package_name)
-        .context("Error collecting monitoring data.")?;
+    let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
     tls_stream.write_all(&mon_data)?;
     tls_stream.flush()?;
 
@@ -170,9 +167,9 @@ fn disallow_legacy_pull() -> IoResult<()> {
 }
 
 fn get_configuration(path_config: &Path, args: cli::Args) -> AnyhowResult<config::Config> {
-    Ok(config::Config::merge_two_configs(
-        config::Config::from_file(path_config)?,
-        config::Config::from_args(args),
+    Ok(config::Config::new(
+        config::ConfigFromDisk::load(path_config)?,
+        args,
     ))
 }
 
@@ -268,11 +265,11 @@ fn run_requested_mode(args: cli::Args, config_path: &Path, state_path: &Path) ->
         get_reg_state(state_path).context("Error while obtaining registration state.")?;
 
     match mode.as_str() {
-        "dump" => dump(config),
+        "dump" => dump(),
         "register" => register(config, reg_state, state_path),
-        "push" => push(config, reg_state),
+        "push" => push(reg_state),
         "status" => status(config),
-        "pull" => pull(config, reg_state),
+        "pull" => pull(reg_state),
         _ => Err(anyhow!("Invalid mode: {}", mode)),
     }
     .context(format!("{} failed", mode))

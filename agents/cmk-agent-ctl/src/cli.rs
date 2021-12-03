@@ -13,9 +13,6 @@ pub struct Args {
     #[structopt(long, short = "s", parse(from_str))]
     pub server: Option<String>,
 
-    #[structopt(long, parse(from_str))]
-    pub package_name: Option<String>,
-
     #[structopt(long, short = "u", requires = "password", parse(from_str))]
     pub user: Option<String>,
 

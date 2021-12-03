@@ -6,7 +6,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, NewType, Optional, Sequence, TypedDict, Union
+from typing import Dict, List, Literal, Mapping, NewType, Optional, Sequence, TypedDict, Union
 
 from pydantic import BaseModel
 from pydantic.fields import Field
@@ -106,6 +106,18 @@ class Label(BaseModel):
 
 
 Labels = Mapping[LabelName, Label]
+CreationTimestamp = NewType("CreationTimestamp", float)
+Namespace = NewType("Namespace", str)
+PodUID = NewType("PodUID", str)
+NodeName = NewType("NodeName", str)
+
+# This information is from the one-page API overview v1.22
+# Restart policy for all containers within the pod. Default to Always. More info:
+RestartPolicy = Literal["Always", "OnFailure", "Never"]
+
+# This information is from the one-page API overview v1.22
+# The Quality of Service (QOS) classification assigned to the pod based on resource requirements.
+QosClass = Literal["burstable", "besteffort", "guaranteed"]
 
 
 class PerformanceMetric(BaseModel):
@@ -136,6 +148,19 @@ class KubeletInfo(BaseModel):
 
     version: str
     health: HealthZ
+
+
+class PodInfo(BaseModel):
+    """section: kube_pod_info_v1"""
+
+    namespace: Namespace
+    creation_timestamp: CreationTimestamp
+    labels: Labels  # used for host labels
+    node: Optional[NodeName]  # this is optional, because there may be pods, which are not
+    # scheduled on any node (e.g., no node with enough capacity is available).
+    qos_class: QosClass
+    restart_policy: RestartPolicy
+    uid: PodUID
 
 
 class APIHealth(BaseModel):
@@ -253,9 +278,9 @@ class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 
     name: str
-    namespace: str
+    namespace: Namespace
     labels: Labels
-    creation_timestamp: float
+    creation_timestamp: CreationTimestamp
     images: Sequence[str]
     containers: Sequence[str]
 

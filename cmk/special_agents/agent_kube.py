@@ -251,8 +251,8 @@ class Node:
         self._pods: List[Pod] = []
 
     @property
-    def name(self) -> str:
-        return self.metadata.name
+    def name(self) -> api.NodeName:
+        return api.NodeName(self.metadata.name)
 
     def append(self, pod: Pod) -> None:
         self._pods.append(pod)
@@ -332,7 +332,7 @@ class Cluster:
         return cluster
 
     def __init__(self, *, cluster_details: Optional[api.ClusterInfo] = None) -> None:
-        self._nodes: Dict[str, Node] = {}
+        self._nodes: Dict[api.NodeName, Node] = {}
         self._deployments: List[Deployment] = []
         self._pods: Dict[str, Pod] = {}
         self._cluster_details: Optional[api.ClusterInfo] = cluster_details

@@ -29,6 +29,19 @@ class PerformanceContainer(BaseModel):
     name: ContainerName
 
 
+class PodInfo(BaseModel):
+    """section: kube_pod_info_v1"""
+
+    namespace: api.Namespace
+    creation_timestamp: api.CreationTimestamp
+    labels: api.Labels  # used for host labels
+    node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
+    # scheduled on any node (e.g., no node with enough capacity is available).
+    qos_class: api.QosClass
+    restart_policy: api.RestartPolicy
+    uid: api.PodUID
+
+
 class PodResources(BaseModel):
     """section: kube_pod_resources_v1"""
 
@@ -90,9 +103,9 @@ class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 
     name: str
-    namespace: str
+    namespace: api.Namespace
     labels: api.Labels
-    creation_timestamp: float
+    creation_timestamp: api.CreationTimestamp
     images: Sequence[str]
     containers: Sequence[str]
 

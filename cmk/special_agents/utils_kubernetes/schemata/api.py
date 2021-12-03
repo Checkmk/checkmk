@@ -33,11 +33,23 @@ class Label(BaseModel):
 Labels = Mapping[LabelName, Label]
 Timestamp = NewType("Timestamp", float)
 
+# This information is from the one-page API overview v1.22
+# Restart policy for all containers within the pod. Default to Always. More info:
+RestartPolicy = Literal["Always", "OnFailure", "Never"]
+
+# This information is from the one-page API overview v1.22
+# The Quality of Service (QOS) classification assigned to the pod based on resource requirements.
+QosClass = Literal["burstable", "besteffort", "guaranteed"]
+
+CreationTimestamp = NewType("CreationTimestamp", float)
+Namespace = NewType("Namespace", str)
+NodeName = NewType("NodeName", str)
+
 
 class MetaData(BaseModel):
     name: str
-    namespace: Optional[str] = None
-    creation_timestamp: Optional[float] = None
+    namespace: Optional[Namespace] = None
+    creation_timestamp: Optional[CreationTimestamp] = None
     labels: Optional[Labels] = None
     prefix = ""
     use_namespace = False
@@ -147,12 +159,12 @@ class PodUsageResources(BaseModel):
 
 
 class PodSpec(BaseModel):
-    node: Optional[str] = None
+    node: Optional[NodeName] = None
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
     host_ip: Optional[str] = None
     pod_ip: Optional[str] = None
-    qos_class: Literal["burstable", "besteffort", "guaranteed"]
+    qos_class: QosClass
 
 
 class ContainerRunningState(BaseModel):

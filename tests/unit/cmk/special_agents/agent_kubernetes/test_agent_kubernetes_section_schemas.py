@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.utils.k8s import NodeInfo as NodeInfoC
 from cmk.base.plugins.agent_based.utils.k8s import PodCondition as PodConditionC
 from cmk.base.plugins.agent_based.utils.k8s import PodConditions as PodConditionsC
 from cmk.base.plugins.agent_based.utils.k8s import PodContainers as PodContainersC
+from cmk.base.plugins.agent_based.utils.k8s import PodInfo as PodInfoC
 from cmk.base.plugins.agent_based.utils.k8s import PodResources as PodResourcesC
 from cmk.base.plugins.agent_based.utils.k8s import (
     PodResourcesWithCapacity as PodResourcesWithCapacityC,
@@ -47,6 +48,7 @@ from cmk.special_agents.utils_kubernetes.schemata.section import NodeInfo as Nod
 from cmk.special_agents.utils_kubernetes.schemata.section import PodCondition as PodConditionA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodConditions as PodConditionsA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodContainers as PodContainersA
+from cmk.special_agents.utils_kubernetes.schemata.section import PodInfo as PodInfoA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodResources as PodResourcesA
 from cmk.special_agents.utils_kubernetes.schemata.section import (
     PodResourcesWithCapacity as PodResourcesWithCapacityA,
@@ -71,3 +73,4 @@ def test_schemata_did_not_diverge() -> None:
     assert PodResourcesWithCapacityA.schema() == PodResourcesWithCapacityC.schema()
     assert ResourcesA.schema() == ResourcesC.schema()
     assert StartTimeA.schema() == StartTimeC.schema()
+    assert PodInfoA.schema() == PodInfoC.schema()

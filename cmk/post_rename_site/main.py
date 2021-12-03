@@ -114,8 +114,7 @@ def run(arguments: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId)
     has_errors = False
     logger.debug("Initializing application...")
 
-    cmk.gui.modules.init_modules()
-    cmk.gui.modules.call_load_plugins_hooks()
+    cmk.gui.modules.load_plugins()
 
     with gui_context(), SuperUserContext():
         logger.debug("Starting actions...")

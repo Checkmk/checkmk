@@ -7,11 +7,10 @@
 """
 # pylint: disable=cmk-module-layer-violation
 from cmk.gui import watolib
-from cmk.gui.modules import call_load_plugins_hooks, init_modules
+from cmk.gui.modules import load_plugins
 from cmk.gui.utils.script_helpers import gui_context
 
 if __name__ == "__main__":
-    init_modules()
-    call_load_plugins_hooks()
+    load_plugins()
     with gui_context():
         watolib.init_wato_datastructures()

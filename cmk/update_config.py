@@ -152,8 +152,7 @@ class UpdateConfig:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
 
-        cmk.gui.modules.init_modules()
-        cmk.gui.modules.call_load_plugins_hooks()
+        cmk.gui.modules.load_plugins()
 
         with gui_context(), SuperUserContext():
             self._check_failed_gui_plugins()

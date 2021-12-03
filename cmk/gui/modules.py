@@ -49,7 +49,7 @@ pagehandlers: Dict[Any, Any] = {}
 # modules are loaded on application initialization. The module
 # function load_plugins() is called for all these modules to
 # initialize them.
-_legacy_modules: List[ModuleType] = []
+_local_main_modules: List[ModuleType] = []
 
 
 def register_handlers(handlers: Dict) -> None:
@@ -63,12 +63,29 @@ def _imports() -> Iterator[str]:
             yield val.__name__
 
 
-def init_modules() -> None:
-    """Loads all modules needed into memory and performs global initializations for
-    each module, when it needs some. These initializations should be fast ones."""
-    global _legacy_modules
+def load_plugins() -> None:
+    """Loads and initializes main modules and plugins into the application
+    Only builtin main modules are already imported."""
+    _import_local_main_modules()
+    _import_main_module_plugins()
+    _call_load_plugins_hooks()
 
-    _legacy_modules = []
+
+def _import_local_main_modules() -> None:
+    """Imports all site local main modules
+
+    We essentially load the site local pages plugins (`local/share/check_mk/web/plugins/pages`)
+    which are expected to contain the actual imports of the main modules.
+
+    Please note that the builtin main modules are already loaded by the imports of
+    `cmk.gui.[|cee.|cme]plugins.main_modules` above.
+
+    Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
+    above. Until then we'll have to live with it.
+    """
+    global _local_main_modules
+
+    _local_main_modules = []
 
     module_names_prev = set(_imports())
 
@@ -76,10 +93,15 @@ def init_modules() -> None:
     utils.load_web_plugins("pages", globals())
 
     # Save the modules loaded during the former steps in the modules list
-    _legacy_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
+    _local_main_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
 
 
-def call_load_plugins_hooks() -> None:
+def _import_main_module_plugins() -> None:
+    # TODO: Next commit will start moving the "plugin" imports from the main modules to this place.
+    pass
+
+
+def _call_load_plugins_hooks() -> None:
     """Call the load_plugins() function in all main modules
 
     Have a look at our Wiki: /books/concepts/page/how-cmkgui-is-organised
@@ -98,11 +120,14 @@ def call_load_plugins_hooks() -> None:
     """
     logger.debug("Executing load_plugin hooks")
 
-    for module in _cmk_gui_top_level_modules() + _legacy_modules:
+    for module in _cmk_gui_top_level_modules() + _local_main_modules:
         name = module.__name__
 
         if name == "cmk.gui.config":
             continue  # initial config is already loaded, nothing to do
+
+        if name == "cmk.gui.modules":
+            continue  # Do not call ourselfs
 
         if not hasattr(module, "load_plugins"):
             continue  # has no load_plugins hook, nothing to do

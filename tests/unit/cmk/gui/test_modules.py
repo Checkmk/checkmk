@@ -52,7 +52,7 @@ def test_load_local_plugin(main_module_name):
     assert "ding" not in main_module.__dict__
 
     try:
-        modules.call_load_plugins_hooks()
+        modules._call_load_plugins_hooks()
         assert main_module.ding == "dong"  # type: ignore[attr-defined]
     finally:
         del main_module.__dict__["ding"]

@@ -31,6 +31,7 @@ import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import modules, watolib
 from cmk.gui.globals import config
+from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
@@ -91,8 +92,9 @@ def load_config(request_context):
 
 @pytest.fixture(scope="session", autouse=True)
 def load_plugins():
-    modules.init_modules()
-    modules.call_load_plugins_hooks()
+    modules.load_plugins()
+    if errors := get_failed_plugins():
+        raise Exception(f"The following errors occured during plugin loading: {errors}")
 
 
 @pytest.fixture(name="patch_json", autouse=True)

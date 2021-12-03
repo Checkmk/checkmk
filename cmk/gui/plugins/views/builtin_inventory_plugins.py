@@ -449,6 +449,14 @@ inventory_displayhints.update({
     ".software.applications.check_mk.host_labels:*.plugin_name": {
         "title": _l("Discovered by plugin"),
     },
+    ".software.applications.checkmk-agent.plugins:": {
+        "title": _l("Agent plugins"),
+        "keyorder": ["name", "version", "cache_interval"],
+    },
+    ".software.applications.checkmk-agent.local_checks:": {
+        "title": _l("Local checks"),
+        "keyorder": ["name", "version", "cache_interval"],
+    },
     ".software.applications.docker.": {
         "icon": "docker", "title": "Docker", "keyorder": [
             "version",

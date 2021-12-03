@@ -279,6 +279,8 @@ def test_registered_painters():
         "inv_software_applications_check_mk_num_services",
         "inv_software_applications_check_mk_sites",
         "inv_software_applications_check_mk_versions",
+        "inv_software_applications_checkmk-agent_local_checks",
+        "inv_software_applications_checkmk-agent_plugins",
         "inv_software_applications_citrix",
         "inv_software_applications_citrix_controller",
         "inv_software_applications_citrix_controller_controller_version",

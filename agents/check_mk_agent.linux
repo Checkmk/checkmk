@@ -377,6 +377,14 @@ HERE
     fi
 }
 
+section_checkmk_agent_plugins() {
+    printf "<<<checkmk_agent_plugins_lnx:sep(0)>>>\n"
+    printf "pluginsdir %s\n" "${PLUGINSDIR}"
+    printf "localdir %s\n" "${LOCALDIR}"
+    grep -r '^__version__' "${LOCALDIR}" "${PLUGINSDIR}"
+    grep -r '^CMK_VERSION' "${LOCALDIR}" "${PLUGINSDIR}"
+}
+
 section_checkmk_failed_plugin() {
     ${MK_RUN_SYNC_PARTS} || return
     echo "<<<check_mk>>>"
@@ -1710,6 +1718,8 @@ export -f run_mrpe
 
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk
+
+    [ -z "$MK_SKIP_LABELS" ] && _log_section_time section_checkmk_agent_plugins
 
     [ -z "$MK_SKIP_LABELS" ] && _log_section_time section_labels
 

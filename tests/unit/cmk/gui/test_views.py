@@ -2746,6 +2746,8 @@ def test_registered_display_hints():
     '.software.applications.check_mk.sites:*.num_hosts',
     '.software.applications.check_mk.sites:*.num_services',
     '.software.applications.check_mk.sites:*.used_version',
+    '.software.applications.checkmk-agent.local_checks:',
+    '.software.applications.checkmk-agent.plugins:',
     '.software.applications.citrix.',
     '.software.applications.citrix.controller.',
     '.software.applications.citrix.controller.controller_version',

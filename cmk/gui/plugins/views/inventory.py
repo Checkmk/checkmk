@@ -1235,175 +1235,177 @@ def _declare_views(
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
 
 
-# Now declare Multisite views for a couple of embedded tables
-declare_invtable_view(
-    "invswpac",
-    ".software.packages:",
-    _("Software package"),
-    _("Software packages"),
-)
-declare_invtable_view(
-    "invinterface",
-    ".networking.interfaces:",
-    _("Network interface"),
-    _("Network interfaces"),
-    "networking",
-)
+def declare_invtable_views() -> None:
+    """Declare views for a couple of embedded tables"""
+    declare_invtable_view(
+        "invswpac",
+        ".software.packages:",
+        _("Software package"),
+        _("Software packages"),
+    )
+    declare_invtable_view(
+        "invinterface",
+        ".networking.interfaces:",
+        _("Network interface"),
+        _("Network interfaces"),
+        "networking",
+    )
 
-declare_invtable_view(
-    "invdockerimages",
-    ".software.applications.docker.images:",
-    _("Docker images"),
-    _("Docker images"),
-)
-declare_invtable_view(
-    "invdockercontainers",
-    ".software.applications.docker.containers:",
-    _("Docker containers"),
-    _("Docker containers"),
-)
+    declare_invtable_view(
+        "invdockerimages",
+        ".software.applications.docker.images:",
+        _("Docker images"),
+        _("Docker images"),
+    )
+    declare_invtable_view(
+        "invdockercontainers",
+        ".software.applications.docker.containers:",
+        _("Docker containers"),
+        _("Docker containers"),
+    )
 
-declare_invtable_view(
-    "invother",
-    ".hardware.components.others:",
-    _("Other entity"),
-    _("Other entities"),
-)
-declare_invtable_view(
-    "invunknown",
-    ".hardware.components.unknowns:",
-    _("Unknown entity"),
-    _("Unknown entities"),
-)
-declare_invtable_view(
-    "invchassis",
-    ".hardware.components.chassis:",
-    _("Chassis"),
-    _("Chassis"),
-)
-declare_invtable_view(
-    "invbackplane",
-    ".hardware.components.backplanes:",
-    _("Backplane"),
-    _("Backplanes"),
-)
-declare_invtable_view(
-    "invcmksites",
-    ".software.applications.check_mk.sites:",
-    _("Checkmk site"),
-    _("Checkmk sites"),
-    "checkmk",
-)
-declare_invtable_view(
-    "invcmkversions",
-    ".software.applications.check_mk.versions:",
-    _("Checkmk version"),
-    _("Checkmk versions"),
-    "checkmk",
-)
-declare_invtable_view(
-    "invcontainer",
-    ".hardware.components.containers:",
-    _("HW container"),
-    _("HW containers"),
-)
-declare_invtable_view(
-    "invpsu",
-    ".hardware.components.psus:",
-    _("Power supply"),
-    _("Power supplies"),
-)
-declare_invtable_view(
-    "invfan",
-    ".hardware.components.fans:",
-    _("Fan"),
-    _("Fans"),
-)
-declare_invtable_view(
-    "invsensor",
-    ".hardware.components.sensors:",
-    _("Sensor"),
-    _("Sensors"),
-)
-declare_invtable_view(
-    "invmodule",
-    ".hardware.components.modules:",
-    _("Module"),
-    _("Modules"),
-)
-declare_invtable_view(
-    "invstack",
-    ".hardware.components.stacks:",
-    _("Stack"),
-    _("Stacks"),
-)
+    declare_invtable_view(
+        "invother",
+        ".hardware.components.others:",
+        _("Other entity"),
+        _("Other entities"),
+    )
+    declare_invtable_view(
+        "invunknown",
+        ".hardware.components.unknowns:",
+        _("Unknown entity"),
+        _("Unknown entities"),
+    )
+    declare_invtable_view(
+        "invchassis",
+        ".hardware.components.chassis:",
+        _("Chassis"),
+        _("Chassis"),
+    )
+    declare_invtable_view(
+        "invbackplane",
+        ".hardware.components.backplanes:",
+        _("Backplane"),
+        _("Backplanes"),
+    )
+    declare_invtable_view(
+        "invcmksites",
+        ".software.applications.check_mk.sites:",
+        _("Checkmk site"),
+        _("Checkmk sites"),
+        "checkmk",
+    )
+    declare_invtable_view(
+        "invcmkversions",
+        ".software.applications.check_mk.versions:",
+        _("Checkmk version"),
+        _("Checkmk versions"),
+        "checkmk",
+    )
+    declare_invtable_view(
+        "invcontainer",
+        ".hardware.components.containers:",
+        _("HW container"),
+        _("HW containers"),
+    )
+    declare_invtable_view(
+        "invpsu",
+        ".hardware.components.psus:",
+        _("Power supply"),
+        _("Power supplies"),
+    )
+    declare_invtable_view(
+        "invfan",
+        ".hardware.components.fans:",
+        _("Fan"),
+        _("Fans"),
+    )
+    declare_invtable_view(
+        "invsensor",
+        ".hardware.components.sensors:",
+        _("Sensor"),
+        _("Sensors"),
+    )
+    declare_invtable_view(
+        "invmodule",
+        ".hardware.components.modules:",
+        _("Module"),
+        _("Modules"),
+    )
+    declare_invtable_view(
+        "invstack",
+        ".hardware.components.stacks:",
+        _("Stack"),
+        _("Stacks"),
+    )
 
-declare_invtable_view(
-    "invorainstance",
-    ".software.applications.oracle.instance:",
-    _("Oracle instance"),
-    _("Oracle instances"),
-)
-declare_invtable_view(
-    "invorarecoveryarea",
-    ".software.applications.oracle.recovery_area:",
-    _("Oracle recovery area"),
-    _("Oracle recovery areas"),
-)
-declare_invtable_view(
-    "invoradataguardstats",
-    ".software.applications.oracle.dataguard_stats:",
-    _("Oracle dataguard statistic"),
-    _("Oracle dataguard statistics"),
-)
-declare_invtable_view(
-    "invoratablespace",
-    ".software.applications.oracle.tablespaces:",
-    _("Oracle tablespace"),
-    _("Oracle tablespaces"),
-)
-declare_invtable_view(
-    "invorasga",
-    ".software.applications.oracle.sga:",
-    _("Oracle SGA performance"),
-    _("Oracle SGA performance"),
-)
-declare_invtable_view(
-    "invorapga",
-    ".software.applications.oracle.pga:",
-    _("Oracle PGA performance"),
-    _("Oracle PGA performance"),
-)
-declare_invtable_view(
-    "invorasystemparameter",
-    ".software.applications.oracle.systemparameter:",
-    _("Oracle system parameter"),
-    _("Oracle system parameters"),
-)
-declare_invtable_view(
-    "invibmmqmanagers",
-    ".software.applications.ibm_mq.managers:",
-    _("Manager"),
-    _("IBM MQ Managers"),
-)
-declare_invtable_view(
-    "invibmmqchannels",
-    ".software.applications.ibm_mq.channels:",
-    _("Channel"),
-    _("IBM MQ Channels"),
-)
-declare_invtable_view(
-    "invibmmqqueues", ".software.applications.ibm_mq.queues:", _("Queue"), _("IBM MQ Queues")
-)
-declare_invtable_view(
-    "invtunnels", ".networking.tunnels:", _("Networking Tunnels"), _("Networking Tunnels")
-)
-declare_invtable_view(
-    "invkernelconfig",
-    ".software.kernel_config:",
-    _("Kernel configuration (sysctl)"),
-    _("Kernel configurations (sysctl)"),
-)
+    declare_invtable_view(
+        "invorainstance",
+        ".software.applications.oracle.instance:",
+        _("Oracle instance"),
+        _("Oracle instances"),
+    )
+    declare_invtable_view(
+        "invorarecoveryarea",
+        ".software.applications.oracle.recovery_area:",
+        _("Oracle recovery area"),
+        _("Oracle recovery areas"),
+    )
+    declare_invtable_view(
+        "invoradataguardstats",
+        ".software.applications.oracle.dataguard_stats:",
+        _("Oracle dataguard statistic"),
+        _("Oracle dataguard statistics"),
+    )
+    declare_invtable_view(
+        "invoratablespace",
+        ".software.applications.oracle.tablespaces:",
+        _("Oracle tablespace"),
+        _("Oracle tablespaces"),
+    )
+    declare_invtable_view(
+        "invorasga",
+        ".software.applications.oracle.sga:",
+        _("Oracle SGA performance"),
+        _("Oracle SGA performance"),
+    )
+    declare_invtable_view(
+        "invorapga",
+        ".software.applications.oracle.pga:",
+        _("Oracle PGA performance"),
+        _("Oracle PGA performance"),
+    )
+    declare_invtable_view(
+        "invorasystemparameter",
+        ".software.applications.oracle.systemparameter:",
+        _("Oracle system parameter"),
+        _("Oracle system parameters"),
+    )
+    declare_invtable_view(
+        "invibmmqmanagers",
+        ".software.applications.ibm_mq.managers:",
+        _("Manager"),
+        _("IBM MQ Managers"),
+    )
+    declare_invtable_view(
+        "invibmmqchannels",
+        ".software.applications.ibm_mq.channels:",
+        _("Channel"),
+        _("IBM MQ Channels"),
+    )
+    declare_invtable_view(
+        "invibmmqqueues", ".software.applications.ibm_mq.queues:", _("Queue"), _("IBM MQ Queues")
+    )
+    declare_invtable_view(
+        "invtunnels", ".networking.tunnels:", _("Networking Tunnels"), _("Networking Tunnels")
+    )
+    declare_invtable_view(
+        "invkernelconfig",
+        ".software.kernel_config:",
+        _("Kernel configuration (sysctl)"),
+        _("Kernel configurations (sysctl)"),
+    )
+
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))

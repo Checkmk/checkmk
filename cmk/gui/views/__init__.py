@@ -1227,7 +1227,9 @@ def load_plugins() -> None:
 
     multisite_builtin_views.update(builtin_views)
 
+    # Needs to be executed after all plugins (builtin and local) are loaded
     cmk.gui.plugins.views.inventory.declare_inventory_columns()
+    cmk.gui.plugins.views.inventory.declare_invtable_views()
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for ident, spec in multisite_painters.items():

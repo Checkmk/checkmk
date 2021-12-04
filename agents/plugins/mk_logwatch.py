@@ -780,7 +780,7 @@ class Options(object):  # pylint: disable=useless-object-inheritance
             elif key in ("maxtime",):
                 self.values[key] = float(value)
             elif key == "overflow":
-                if value not in Options.MAP_OVERFLOW.keys():
+                if value not in Options.MAP_OVERFLOW:
                     raise ValueError(
                         "Invalid overflow: %r (choose from %r)"
                         % (
@@ -793,7 +793,7 @@ class Options(object):  # pylint: disable=useless-object-inheritance
                 flags = (re.IGNORECASE if key.startswith("i") else 0) | re.UNICODE
                 self.values["regex"] = re.compile(value, flags)
             elif key in ("nocontext", "fromstart"):
-                if value.lower() not in Options.MAP_BOOL.keys():
+                if value.lower() not in Options.MAP_BOOL:
                     raise ValueError(
                         "Invalid %s: %r (choose from %r)"
                         % (

@@ -293,7 +293,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
             status["checksums"] = None
             return
 
-        if "checksums" not in status["files"].keys():
+        if "checksums" not in status["files"]:
             status["checksums"] = False
             return
 

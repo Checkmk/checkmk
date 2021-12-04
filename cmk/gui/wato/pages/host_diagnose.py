@@ -414,7 +414,7 @@ class ModeAjaxDiagHost(AjaxPage):
             raise MKGeneralException(_("The test is missing."))
 
         # Execute a specific test
-        if _test not in dict(ModeDiagHost.diag_host_tests()).keys():
+        if _test not in dict(ModeDiagHost.diag_host_tests()):
             raise MKGeneralException(_("Invalid test."))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?

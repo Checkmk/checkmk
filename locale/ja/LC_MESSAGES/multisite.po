@@ -945,9 +945,6 @@ msgstr "200.0 - 500.0ミリ秒"
 msgid "200.000 Services"
 msgstr "200.000サービス"
 
-msgid "25 Hours"
-msgstr "25時間"
-
 msgid "3 months"
 msgstr "3ヶ月"
 
@@ -992,9 +989,6 @@ msgstr "3PARポート"
 
 msgid "3PAR Remote Copy"
 msgstr "3PARリモートコピー"
-
-msgid "4 Hours"
-msgstr "4時間"
 
 msgid "5 Volt Output Lower Levels"
 msgstr "5ボルト出力の下位レベル"
@@ -1101,6 +1095,18 @@ msgid ""
 "order."
 msgstr ""
 "<b>注:</b>表示されている結果は不完全であり、並べ替え順序を反映していません。"
+
+#, fuzzy, python-format
+msgid ""
+"<b>Note</b>: On the agent side, TLS is currently only supported on systemd "
+"based Linux machines. However, when setting the Encryption settings to '%s', "
+"Checkmk will expect encrypted data from all matching hosts. Please keep this "
+"in mind when configuring this ruleset."
+msgstr ""
+"<b>注</b>:エージェント側では、この暗号化はLinuxエージェントとWindowsエージェ"
+"ントでのみサポートされています。ただし、暗号化設定を<i>強制</i>に設定すると、"
+"Checkmkは一致するすべてのホストからの暗号化されたデータを期待します。このルー"
+"ルセットを構成するときは、このことに注意してください。"
 
 msgid ""
 "<b>Note</b>: On the agent side, this encryption is only supported by the "
@@ -4482,6 +4488,10 @@ msgstr ""
 
 msgid "Allow challenge-response authentication"
 msgstr "チャレンジ/レスポンス認証を許可する"
+
+#, fuzzy
+msgid "Allow non-TLS connections"
+msgstr "新しいTLS接続"
 
 msgid "Allow password authentication"
 msgstr "パスワード認証を許可する"
@@ -15960,14 +15970,15 @@ msgstr "暗号化(Linux、Windows)"
 msgid "Encryption for %s is only used if it is enabled on the remote site"
 msgstr ""
 
-msgid "Encryption for Agent"
-msgstr "エージェントの暗号化"
-
 msgid "Encryption for Realtime Updates"
 msgstr "リアルタイム更新の暗号化"
 
 msgid "Encryption secret"
 msgstr "暗号化の秘密"
+
+#, fuzzy
+msgid "Encryption secret for Realtime Updates"
+msgstr "リアルタイム更新の暗号化"
 
 msgid "End"
 msgstr "終わり"
@@ -21024,6 +21035,12 @@ msgstr "リダイレクトの処理方法"
 msgid "How to notify"
 msgstr "通知方法"
 
+msgid ""
+"However, if that is not feasable, you can configure the legacy mode (which "
+"may or <b>may not</b> include encryption) to be OK using this setting. Note "
+"that this option may become ineffective in a future Checkmk version."
+msgstr ""
+
 #, python-format
 msgid ""
 "However, since Microsoft limits API calls to %s per hour (%s per minute), "
@@ -24304,6 +24321,11 @@ msgid ""
 "can get runtime statistics about the last processed page. When enabled by "
 "request the profiling mode is enabled by providing the HTTP variable "
 "<tt>_profile</tt> in the query parameters."
+msgstr ""
+
+msgid ""
+"It is recommended to enable TLS as soon as possible by running the "
+"`register` command of the `cmk-agent-ctl` utility on the monitored host."
 msgstr ""
 
 msgid "It is still in use by"
@@ -28731,6 +28753,11 @@ msgstr "MTreeの状態が '%s'の場合の状態の監視"
 msgid "Monitoring state if VM state is %s"
 msgstr "VMの状態が %s の場合の監視状態"
 
+#, fuzzy
+msgid ""
+"Monitoring state if a container terminates unsuccessfully (exit code 1)."
+msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
+
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
@@ -29577,6 +29604,13 @@ msgstr "新しいパスワードの確認"
 
 msgid "New SLA"
 msgstr "新しいSLA"
+
+msgid ""
+"New agent installations that support TLS will refuse to send any data "
+"without TLS. However, if you upgrade an existing installation, the old "
+"transport mode (with optional encryption) will continue to work, to ease "
+"migration."
+msgstr ""
 
 #, python-format
 msgid "New agent signature key '%s' created"
@@ -31452,17 +31486,8 @@ msgstr ""
 "ますが、これはGUIビューです。この問題を修正するには、ビューを編集し、メトリッ"
 "ク履歴ペインタの別の時間範囲を選択してください。"
 
-msgid "One Month"
-msgstr "一か月"
-
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "ホスト/サービスごとに1つのRRD(CMCでのみディスクIOを節約)"
-
-msgid "One Week"
-msgstr "一週間"
-
-msgid "One Year"
-msgstr "1年"
 
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
@@ -33929,6 +33954,10 @@ msgstr ""
 #, fuzzy
 msgid "Pod conditions"
 msgstr "%d条件"
+
+#, fuzzy
+msgid "Pod containers"
+msgstr "一時停止したコンテナ"
 
 msgid "Pod request"
 msgstr "Podリクエスト"
@@ -41137,6 +41166,10 @@ msgstr "タイムアウトの場合の状態"
 
 msgid "State in case of absent updates"
 msgstr "更新がない場合の状態"
+
+#, fuzzy
+msgid "State in case of available but not enabled TLS"
+msgstr "Archivelogmodeが有効になっている場合の状態: "
 
 msgid "State in case of connection problems"
 msgstr "接続に問題がある場合の状態"
@@ -50410,6 +50443,10 @@ msgstr "最後のバックアップが終了してからの時間"
 msgid "Time since last AD Connect sync"
 msgstr "最後のADConnect同期からの時間"
 
+#, fuzzy
+msgid "Time since last CDP run"
+msgstr "最後のビルドからの時間"
+
 msgid "Time since last UPS selftest"
 msgstr "最後のUPSセルフテストからの時間"
 
@@ -52960,6 +52997,10 @@ msgstr "接続にはSTARTTLSを使用します。"
 msgid "Use STS AssumeRole to assume a different IAM role"
 msgstr "STS AssumeRoleを使用して、別のIAMロールを引き受けます。"
 
+#, fuzzy
+msgid "Use TLS encryption (Linux)"
+msgstr "暗号化を使用しない"
+
 msgid "Use TLS encryption fall back to plain text"
 msgstr ""
 
@@ -53260,6 +53301,10 @@ msgstr "次の資格情報を使用します"
 
 msgid "Use the following levels"
 msgstr "次のレベルを使用します"
+
+#, fuzzy
+msgid "Use the following setting for non-TLS connections"
+msgstr "次のLDAP接続と同期します"
 
 msgid "Use the following status host"
 msgstr "次のステータスホストを使用します"
@@ -54134,6 +54179,10 @@ msgid "Veeam Backup Status (Windows)"
 msgstr "Veeamバックアップステータス(Windows)"
 
 msgid "Veeam: Time since last Backup"
+msgstr "Veeam: 最後のバックアップからの時間"
+
+#, fuzzy
+msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: 最後のバックアップからの時間"
 
 msgid "Venue ID"
@@ -59847,6 +59896,24 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "25 Hours"
+#~ msgstr "25時間"
+
+#~ msgid "4 Hours"
+#~ msgstr "4時間"
+
+#~ msgid "One Month"
+#~ msgstr "一か月"
+
+#~ msgid "One Week"
+#~ msgstr "一週間"
+
+#~ msgid "One Year"
+#~ msgstr "1年"
+
+#~ msgid "Encryption for Agent"
+#~ msgstr "エージェントの暗号化"
+
 #~ msgid ""
 #~ "If you choose \"Regex for host name\" or \"Regex for host alias\", you "
 #~ "need to provide a regex which results in exactly one match group."
@@ -61347,9 +61414,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "New Connections"
 #~ msgstr "新しい接続"
-
-#~ msgid "New TLS Connections"
-#~ msgstr "新しいTLS接続"
 
 #~ msgid "New event created"
 #~ msgstr "新しいイベントが作成されました"

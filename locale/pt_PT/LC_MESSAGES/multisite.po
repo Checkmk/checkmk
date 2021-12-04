@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-11-27 15:34+0000\n"
 "Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
@@ -952,9 +952,6 @@ msgstr "200,0 - 500,0 ms"
 msgid "200.000 Services"
 msgstr "200.000 Serviços"
 
-msgid "25 Hours"
-msgstr "25 Horas"
-
 msgid "3 months"
 msgstr "3 meses"
 
@@ -999,9 +996,6 @@ msgstr "Portos 3PAR"
 
 msgid "3PAR Remote Copy"
 msgstr "3PAR Cópia Remota"
-
-msgid "4 Hours"
-msgstr "4 Horas"
 
 msgid "5 Volt Output Lower Levels"
 msgstr "5 Volts de saída Níveis inferiores"
@@ -1119,6 +1113,19 @@ msgid ""
 msgstr ""
 "<b>Nota:</b> os resultados apresentados são incompletos e não reflectem a "
 "ordem de classificação."
+
+#, fuzzy, python-format
+msgid ""
+"<b>Note</b>: On the agent side, TLS is currently only supported on systemd "
+"based Linux machines. However, when setting the Encryption settings to '%s', "
+"Checkmk will expect encrypted data from all matching hosts. Please keep this "
+"in mind when configuring this ruleset."
+msgstr ""
+"<b>Nota</b>: No lado do agente, esta encriptação só é suportada pelo agente "
+"Linux e pelo agente Windows. Entretanto, ao definir as configurações de "
+"Criptografia para <i>enforce</i>, a Checkmk esperará dados criptografados de "
+"todos os hosts correspondentes. Por favor, tenha isto em mente ao configurar "
+"este conjunto de regras."
 
 msgid ""
 "<b>Note</b>: On the agent side, this encryption is only supported by the "
@@ -4649,6 +4656,10 @@ msgstr ""
 
 msgid "Allow challenge-response authentication"
 msgstr "Permitir a autenticação desafio-resposta"
+
+#, fuzzy
+msgid "Allow non-TLS connections"
+msgstr "Novas ligações TLS"
 
 msgid "Allow password authentication"
 msgstr "Permitir a autenticação de senha"
@@ -16486,14 +16497,15 @@ msgstr "Criptografia (Linux, Windows)"
 msgid "Encryption for %s is only used if it is enabled on the remote site"
 msgstr ""
 
-msgid "Encryption for Agent"
-msgstr "Criptografia para Agente"
-
 msgid "Encryption for Realtime Updates"
 msgstr "Criptografia para Atualizações em Tempo Real"
 
 msgid "Encryption secret"
 msgstr "Segredo da encriptação"
+
+#, fuzzy
+msgid "Encryption secret for Realtime Updates"
+msgstr "Criptografia para Atualizações em Tempo Real"
 
 msgid "End"
 msgstr "Fim"
@@ -21747,6 +21759,12 @@ msgstr "Como lidar com o redirecionamento"
 msgid "How to notify"
 msgstr "Como notificar"
 
+msgid ""
+"However, if that is not feasable, you can configure the legacy mode (which "
+"may or <b>may not</b> include encryption) to be OK using this setting. Note "
+"that this option may become ineffective in a future Checkmk version."
+msgstr ""
+
 #, python-format
 msgid ""
 "However, since Microsoft limits API calls to %s per hour (%s per minute), "
@@ -25269,6 +25287,11 @@ msgstr ""
 "arquivo mais recente você pode obter estatísticas de tempo de execução sobre "
 "a última página processada. Quando ativado por requisição o modo de criação "
 "de perfil é ativado fornecendo a variável HTTP <tt>_profile</tt>."
+
+msgid ""
+"It is recommended to enable TLS as soon as possible by running the "
+"`register` command of the `cmk-agent-ctl` utility on the monitored host."
+msgstr ""
 
 msgid "It is still in use by"
 msgstr "Ainda está em uso por"
@@ -29783,6 +29806,11 @@ msgstr "Estado de monitorização se o estado MTree for \"%s\"."
 msgid "Monitoring state if VM state is %s"
 msgstr "Estado de monitoramento se o estado VM for %s"
 
+#, fuzzy
+msgid ""
+"Monitoring state if a container terminates unsuccessfully (exit code 1)."
+msgstr "Estado de monitoramento se um serviço monitorado não for encontrado."
+
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "Estado de monitoramento se um serviço monitorado não for encontrado."
 
@@ -30633,6 +30661,13 @@ msgstr "Nova confirmação de senha"
 
 msgid "New SLA"
 msgstr "Novo SLA"
+
+msgid ""
+"New agent installations that support TLS will refuse to send any data "
+"without TLS. However, if you upgrade an existing installation, the old "
+"transport mode (with optional encryption) will continue to work, to ease "
+"migration."
+msgstr ""
 
 #, python-format
 msgid "New agent signature key '%s' created"
@@ -32561,17 +32596,8 @@ msgstr ""
 "escolha outro intervalo de tempo para o seu pintor do histórico métrico para "
 "corrigir este problema."
 
-msgid "One Month"
-msgstr "Um Mês"
-
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Um RRD por host/serviço (salva IO de disco, somente com CMC)"
-
-msgid "One Week"
-msgstr "Uma Semana"
-
-msgid "One Year"
-msgstr "Um Ano"
 
 msgid "One heartbeat every"
 msgstr "Um batimento cardíaco a cada"
@@ -35156,6 +35182,10 @@ msgstr "Pod - Mostrar a informação para o nível do pod"
 #, fuzzy
 msgid "Pod conditions"
 msgstr "%d condições"
+
+#, fuzzy
+msgid "Pod containers"
+msgstr "Contentores em pausa"
 
 msgid "Pod request"
 msgstr "Solicitação de Pod"
@@ -42604,6 +42634,10 @@ msgstr "Estado no caso de um timeout"
 
 msgid "State in case of absent updates"
 msgstr "Estado em caso de atualizações ausentes"
+
+#, fuzzy
+msgid "State in case of available but not enabled TLS"
+msgstr "Estado no caso do Archivelogmode está habilitado: "
 
 msgid "State in case of connection problems"
 msgstr "Estado em caso de problemas de conexão"
@@ -52739,6 +52773,10 @@ msgstr "Tempo desde o final do último backup"
 msgid "Time since last AD Connect sync"
 msgstr "Tempo desde o último AD Connect sync"
 
+#, fuzzy
+msgid "Time since last CDP run"
+msgstr "Tempo desde a última construção"
+
 msgid "Time since last UPS selftest"
 msgstr "Tempo desde a última UPS selftest"
 
@@ -55343,6 +55381,10 @@ msgstr "Use STARTTLS para a conexão."
 msgid "Use STS AssumeRole to assume a different IAM role"
 msgstr "Use STS AssumeRole para assumir um papel diferente no IAM"
 
+#, fuzzy
+msgid "Use TLS encryption (Linux)"
+msgstr "Não usar criptografia"
+
 msgid "Use TLS encryption fall back to plain text"
 msgstr ""
 
@@ -55642,6 +55684,10 @@ msgstr "Use as seguintes credenciais"
 
 msgid "Use the following levels"
 msgstr "Use os seguintes níveis"
+
+#, fuzzy
+msgid "Use the following setting for non-TLS connections"
+msgstr "Sincronize com as seguintes conexões LDAP"
 
 msgid "Use the following status host"
 msgstr "Use o seguinte status host"
@@ -56580,6 +56626,10 @@ msgid "Veeam Backup Status (Windows)"
 msgstr "Estado do Veeam Backup (Windows)"
 
 msgid "Veeam: Time since last Backup"
+msgstr "Veeam: Tempo desde o último Backup"
+
+#, fuzzy
+msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Tempo desde o último Backup"
 
 msgid "Venue ID"
@@ -62671,6 +62721,24 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
+#~ msgid "25 Hours"
+#~ msgstr "25 Horas"
+
+#~ msgid "4 Hours"
+#~ msgstr "4 Horas"
+
+#~ msgid "One Month"
+#~ msgstr "Um Mês"
+
+#~ msgid "One Week"
+#~ msgstr "Uma Semana"
+
+#~ msgid "One Year"
+#~ msgstr "Um Ano"
+
+#~ msgid "Encryption for Agent"
+#~ msgstr "Criptografia para Agente"
+
 #~ msgid ""
 #~ "If you choose \"Regex for host name\" or \"Regex for host alias\", you "
 #~ "need to provide a regex which results in exactly one match group."
@@ -64282,9 +64350,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "New Connections"
 #~ msgstr "Novas ligações"
-
-#~ msgid "New TLS Connections"
-#~ msgstr "Novas ligações TLS"
 
 #~ msgid "New event created"
 #~ msgstr "Novo evento criado"

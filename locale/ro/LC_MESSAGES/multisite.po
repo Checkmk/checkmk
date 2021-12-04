@@ -959,9 +959,6 @@ msgstr ""
 msgid "200.000 Services"
 msgstr "servicii"
 
-msgid "25 Hours"
-msgstr "25 de ore"
-
 #, fuzzy
 msgid "3 months"
 msgstr "2 ore"
@@ -1015,9 +1012,6 @@ msgstr "rapoarte"
 
 msgid "3PAR Remote Copy"
 msgstr ""
-
-msgid "4 Hours"
-msgstr "4 ore"
 
 msgid "5 Volt Output Lower Levels"
 msgstr ""
@@ -1129,6 +1123,14 @@ msgstr ""
 msgid ""
 "<b>Note:</b> the shown results are incomplete and do not reflect the sort "
 "order."
+msgstr ""
+
+#, python-format
+msgid ""
+"<b>Note</b>: On the agent side, TLS is currently only supported on systemd "
+"based Linux machines. However, when setting the Encryption settings to '%s', "
+"Checkmk will expect encrypted data from all matching hosts. Please keep this "
+"in mind when configuring this ruleset."
 msgstr ""
 
 msgid ""
@@ -4404,6 +4406,10 @@ msgstr ""
 
 msgid "Allow challenge-response authentication"
 msgstr ""
+
+#, fuzzy
+msgid "Allow non-TLS connections"
+msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "Allow password authentication"
@@ -15901,13 +15907,13 @@ msgstr ""
 msgid "Encryption for %s is only used if it is enabled on the remote site"
 msgstr ""
 
-msgid "Encryption for Agent"
-msgstr ""
-
 msgid "Encryption for Realtime Updates"
 msgstr ""
 
 msgid "Encryption secret"
+msgstr ""
+
+msgid "Encryption secret for Realtime Updates"
 msgstr ""
 
 msgid "End"
@@ -20881,6 +20887,12 @@ msgstr ""
 msgid "How to notify"
 msgstr ""
 
+msgid ""
+"However, if that is not feasable, you can configure the legacy mode (which "
+"may or <b>may not</b> include encryption) to be OK using this setting. Note "
+"that this option may become ineffective in a future Checkmk version."
+msgstr ""
+
 #, python-format
 msgid ""
 "However, since Microsoft limits API calls to %s per hour (%s per minute), "
@@ -23727,6 +23739,11 @@ msgid ""
 "can get runtime statistics about the last processed page. When enabled by "
 "request the profiling mode is enabled by providing the HTTP variable "
 "<tt>_profile</tt> in the query parameters."
+msgstr ""
+
+msgid ""
+"It is recommended to enable TLS as soon as possible by running the "
+"`register` command of the `cmk-agent-ctl` utility on the monitored host."
 msgstr ""
 
 msgid "It is still in use by"
@@ -28441,6 +28458,10 @@ msgstr ""
 msgid "Monitoring state if VM state is %s"
 msgstr ""
 
+msgid ""
+"Monitoring state if a container terminates unsuccessfully (exit code 1)."
+msgstr ""
+
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr ""
 
@@ -29335,6 +29356,13 @@ msgid "New Password Confirmation"
 msgstr "Confirma Parola"
 
 msgid "New SLA"
+msgstr ""
+
+msgid ""
+"New agent installations that support TLS will refuse to send any data "
+"without TLS. However, if you upgrade an existing installation, the old "
+"transport mode (with optional encryption) will continue to work, to ease "
+"migration."
 msgstr ""
 
 #, python-format
@@ -31275,18 +31303,8 @@ msgid ""
 "your metric history painter to fix this issue."
 msgstr ""
 
-msgid "One Month"
-msgstr ""
-
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr ""
-
-msgid "One Week"
-msgstr ""
-
-#, fuzzy
-msgid "One Year"
-msgstr "2 ore"
 
 msgid "One heartbeat every"
 msgstr ""
@@ -33726,6 +33744,10 @@ msgstr ""
 #, fuzzy
 msgid "Pod conditions"
 msgstr "%d condiții"
+
+#, fuzzy
+msgid "Pod containers"
+msgstr "doua nivele"
 
 #, fuzzy
 msgid "Pod request"
@@ -41031,6 +41053,9 @@ msgid "State in case of a timeout"
 msgstr ""
 
 msgid "State in case of absent updates"
+msgstr ""
+
+msgid "State in case of available but not enabled TLS"
 msgstr ""
 
 msgid "State in case of connection problems"
@@ -49018,6 +49043,9 @@ msgstr ""
 msgid "Time since last AD Connect sync"
 msgstr ""
 
+msgid "Time since last CDP run"
+msgstr ""
+
 msgid "Time since last UPS selftest"
 msgstr ""
 
@@ -51686,6 +51714,10 @@ msgstr ""
 msgid "Use STS AssumeRole to assume a different IAM role"
 msgstr ""
 
+#, fuzzy
+msgid "Use TLS encryption (Linux)"
+msgstr "Salveaza configuratia manuala a verificarilor"
+
 msgid "Use TLS encryption fall back to plain text"
 msgstr ""
 
@@ -51999,6 +52031,9 @@ msgid "Use the following credentials"
 msgstr ""
 
 msgid "Use the following levels"
+msgstr ""
+
+msgid "Use the following setting for non-TLS connections"
 msgstr ""
 
 msgid "Use the following status host"
@@ -52821,6 +52856,9 @@ msgid "Veeam Backup Status (Windows)"
 msgstr ""
 
 msgid "Veeam: Time since last Backup"
+msgstr ""
+
+msgid "Veeam: Time since last CDP run"
 msgstr ""
 
 msgid "Venue ID"
@@ -58067,6 +58105,16 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
+#~ msgid "25 Hours"
+#~ msgstr "25 de ore"
+
+#~ msgid "4 Hours"
+#~ msgstr "4 ore"
+
+#, fuzzy
+#~ msgid "One Year"
+#~ msgstr "2 ore"
+
 #, fuzzy, python-format
 #~ msgid "Metric: %s"
 #~ msgstr "serviciu"
@@ -58740,10 +58788,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "New Connections"
-#~ msgstr "Conexiune Noua"
-
-#, fuzzy
-#~ msgid "New TLS Connections"
 #~ msgstr "Conexiune Noua"
 
 #, fuzzy

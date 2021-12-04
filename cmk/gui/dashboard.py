@@ -290,6 +290,8 @@ class PermissionSectionDashboard(PermissionSection):
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    _register_pre_21_plugin_api()
+
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     utils.load_web_plugins("dashboard", globals())
@@ -323,6 +325,34 @@ def load_plugins() -> None:
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("dashboards"))
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.dashboard as api_module
+    import cmk.gui.plugins.dashboard.utils as plugin_utils
+
+    for name in (
+        "ABCFigureDashlet",
+        "builtin_dashboards",
+        "Dashlet",
+        "dashlet_registry",
+        "dashlet_types",
+        "GROW",
+        "IFrameDashlet",
+        "MAX",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
 class LegacyDashlet(IFrameDashlet):

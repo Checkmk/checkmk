@@ -86,7 +86,8 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
     	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
     	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/__init__.py
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/dashboard/__init__.py
 	$(PACKAGE_PYTHON_COMMAND) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins

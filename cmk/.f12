@@ -60,7 +60,8 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/post_rename_site/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/__init__.py"
+    "$ROOT/lib/python3/cmk/gui/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/dashboard/__init__.py"
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/utils/version.py

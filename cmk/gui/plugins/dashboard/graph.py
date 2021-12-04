@@ -17,10 +17,11 @@ from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserErr
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.metrics import graph_info, metric_info
-from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
     DashboardName,
+    Dashlet,
+    dashlet_registry,
     DashletConfig,
     DashletId,
     macro_mapping_from_context,

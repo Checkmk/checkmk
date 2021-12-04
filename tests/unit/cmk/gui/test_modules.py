@@ -112,20 +112,3 @@ def test_plugins_loaded(plugin_module_dir):
             or n.startswith("cmk.gui.cme.plugins." + plugin_module_name)  #
         )
     ]
-
-
-# Needed later for local module import tests
-# @pytest.fixture()
-# def simple_plugin(plugin_module_dir):
-#    plugin_file = cmk.utils.paths.local_gui_plugins_dir / plugin_module_dir / "test_plugin.py"
-#    plugin_file.parent.mkdir(parents=True, exist_ok=True)
-#    with plugin_file.open("w") as f:
-#        f.write("ding = \"dong\"\n")
-#
-#
-# @pytest.mark.usefixtures("simple_plugin")
-# def test_load_gui_plugin(plugin_module_dir):
-#    main_module = importlib.import_module(f"cmk.gui.{plugin_module_dir.replace('/', '.')}")
-#    assert "ding" not in main_module.__dict__
-#    modules.call_load_plugins_hooks()
-#    assert main_module.ding == "dong"  # type: ignore[attr-defined]

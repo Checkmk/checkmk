@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
 from cmk.gui.user_notify import render_user_notification_table
 
 

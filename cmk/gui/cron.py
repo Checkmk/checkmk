@@ -16,13 +16,13 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import response
 from cmk.gui.log import logger
-
-# Things imported here are used by pre legacy (pre 1.6) cron plugins
-from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
-    multisite_cronjobs,
-    register_job,
-)
 from cmk.gui.utils.logged_in import SuperUserContext
+
+multisite_cronjobs = []
+
+
+def register_job(cron_job):
+    multisite_cronjobs.append(cron_job)
 
 
 def _lock_file() -> Path:
@@ -31,7 +31,30 @@ def _lock_file() -> Path:
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("cron", globals())
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from main module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.cron as api_module
+
+    api_module.__dict__.update(
+        {
+            "multisite_cronjobs": multisite_cronjobs,
+            "register_job": register_job,
+        }
+    )
 
 
 # Page called by some external trigger (usually cron job in OMD site)

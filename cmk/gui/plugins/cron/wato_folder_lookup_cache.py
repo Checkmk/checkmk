@@ -7,7 +7,7 @@
 import time
 from pathlib import Path
 
-from cmk.gui.plugins.cron import register_job
+from cmk.gui.cron import register_job
 from cmk.gui.watolib.hosts_and_folders import Folder
 
 

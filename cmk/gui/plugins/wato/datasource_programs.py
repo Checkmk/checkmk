@@ -5662,3 +5662,65 @@ rulespec_registry.register(
         valuespec=_valuespec_special_agents_smb_share,
     )
 )
+
+
+def _valuespec_special_agents_mobileiron():
+    return Dictionary(
+        elements=[
+            ("username", TextInput(title=_("Username"), allow_empty=False)),
+            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
+            (
+                "port",
+                NetworkPort(
+                    title=_("Port"),
+                    default_value=443,
+                    help=_("The port that is used for the API call."),
+                ),
+            ),
+            (
+                "no-cert-check",
+                FixedValue(
+                    True,
+                    title=_("Disable SSL certificate validation"),
+                    totext=_("SSL certificate validation is disabled"),
+                ),
+            ),
+            (
+                "partition",
+                ListOfStrings(
+                    allow_empty=False,
+                    title=_("Retrieve information about the following partitions"),
+                ),
+            ),
+            (
+                "proxy_details",
+                Dictionary(
+                    title=_("Use proxy for MobileIron API connection"),
+                    elements=[
+                        ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=True)),
+                        ("proxy_port", Integer(title=_("Port"))),
+                        (
+                            "proxy_user",
+                            TextInput(
+                                title=_("Username"),
+                                size=32,
+                            ),
+                        ),
+                        ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
+                    ],
+                    optional_keys=["proxy_port", "proxy_user", "proxy_password"],
+                ),
+            ),
+        ],
+        optional_keys=["no-cert-check"],
+        title=_("MobileIron API"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourceProgramsApps,
+        name="special_agents:mobileiron",
+        valuespec=_valuespec_special_agents_mobileiron,
+    )
+)

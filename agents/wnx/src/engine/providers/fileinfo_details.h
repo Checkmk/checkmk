@@ -19,7 +19,7 @@
 
 namespace cma::provider::details {
 
-bool ValidFileInfoPathEntry(std::string_view entry) noexcept;
+bool ValidFileInfoPathEntry(std::string_view entry);
 std::string ProcessFileInfoPathEntry(std::string_view entry,
                                      FileInfo::Mode mode);
 }  // namespace cma::provider::details
@@ -59,8 +59,14 @@ std::string MakeFileInfoString(const std::filesystem::path &file_path,
                                FileInfo::Mode mode);
 std::string MakeFileInfoStringMissing(const std::filesystem::path &file_name,
                                       FileInfo::Mode mode);
+enum class FileInfoMethod {
+    standard,
+    directory  // fallback for file in use
+};
+
 std::string MakeFileInfoStringPresented(const std::filesystem::path &file_name,
-                                        FileInfo::Mode mode);
+                                        FileInfo::Mode mode,
+                                        FileInfoMethod method);
 
 // ------------------------------------------------------
 // Specials:

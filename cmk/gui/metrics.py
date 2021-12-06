@@ -97,11 +97,62 @@ RequiredMetricNames = Set[str]
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
 
     fixup_graph_info()
     fixup_unit_info()
     fixup_perfometer_info()
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.metrics as api_module
+    import cmk.gui.plugins.metrics.utils as plugin_utils
+
+    for name in (
+        "check_metrics",
+        "darken_color",
+        "G",
+        "GB",
+        "graph_info",
+        "GraphTemplate",
+        "indexed_color",
+        "K",
+        "KB",
+        "lighten_color",
+        "m",
+        "M",
+        "MAX_CORES",
+        "MAX_NUMBER_HOPS",
+        "MB",
+        "metric_info",
+        "MONITORING_STATUS_COLORS",
+        "P",
+        "parse_color",
+        "parse_color_into_hexrgb",
+        "PB",
+        "perfometer_info",
+        "render_color",
+        "scalar_colors",
+        "scale_symbols",
+        "skype_mobile_devices",
+        "T",
+        "TB",
+        "time_series_expression_registry",
+        "unit_info",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
 def fixup_graph_info() -> None:

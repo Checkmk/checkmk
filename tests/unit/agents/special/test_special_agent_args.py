@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -8,7 +7,6 @@ import os
 from argparse import Namespace
 from glob import glob
 from importlib import import_module
-from typing import Dict, List
 
 import pytest
 
@@ -45,7 +43,7 @@ AGENTS_WITHOUT_PARSE_ARGUMENTS = {
     "agent_ibmsvc",
 }
 
-REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
+REQUIRED_ARGUMENTS: dict[str, list[str]] = {
     "agent_alertmanager": [],
     "agent_allnet_ip_sensoric": ["HOSTNAME"],
     "agent_aws": [
@@ -116,6 +114,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     "agent_splunk": ["HOSTNAME"],
     "agent_vsphere": ["HOSTNAME"],
     "agent_proxmox_ve": ["HOSTNAME"],
+    "agent_mobileiron": ["--hostname", "HOSTNAME"],
     "agent_storeonce4x": ["USER", "PASSWORD", "HOST"],
     "agent_cisco_prime": ["--hostname", "HOSTNAME"],
     "agent_innovaphone": [

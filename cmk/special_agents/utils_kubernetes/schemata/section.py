@@ -80,6 +80,12 @@ class NodeCount(BaseModel):
     control_plane: int = 0
 
 
+class NodeInfo(api.NodeInfo):
+    """section: kube_node_info_v1"""
+
+    labels: api.Labels
+
+
 class ContainerCount(BaseModel):
     """section: kube_node_container_count_v1"""
 

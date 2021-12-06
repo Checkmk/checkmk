@@ -5,7 +5,12 @@ from kubernetes import client  # type: ignore[import] # pylint: disable=import-e
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
-from cmk.special_agents.utils_kubernetes.transform import node_conditions, parse_metadata
+from cmk.special_agents.utils_kubernetes.schemata import api
+from cmk.special_agents.utils_kubernetes.transform import (
+    node_conditions,
+    node_info,
+    parse_metadata,
+)
 
 
 class TestAPINode:
@@ -42,6 +47,40 @@ class TestAPINode:
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
         metadata = parse_metadata(metadata_obj)
         assert metadata.creation_timestamp == now.timestamp()
+
+    def test_parse_node_info(self, dummy_host, core_client):
+        node_list_with_info = {
+            "items": [
+                {
+                    "status": {
+                        "nodeInfo": {
+                            "machineID": "abd0bd9c2f234af099e849787da63620",
+                            "systemUUID": "e2902c84-10c9-4d81-b52b-85a27d62b7ca",
+                            "bootID": "04bae495-8ea7-4230-9bf0-9ce841201c0c",
+                            "kernelVersion": "5.4.0-88-generic",
+                            "osImage": "Ubuntu 20.04.3 LTS",
+                            "containerRuntimeVersion": "docker://20.10.7",
+                            "kubeletVersion": "v1.21.7",
+                            "kubeProxyVersion": "v1.21.7",
+                            "operatingSystem": "linux",
+                            "architecture": "amd64",
+                        },
+                    },
+                }
+            ]
+        }
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/nodes",
+            body=json.dumps(node_list_with_info),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            node = list(core_client.list_node().items)[0]
+        parsed_node_info = node_info(node)
+        assert isinstance(parsed_node_info, api.NodeInfo)
+        assert parsed_node_info.kernel_version == "5.4.0-88-generic"
+        assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
 
     def test_parse_conditions(self, core_client, dummy_host):
         node_with_conditions = {

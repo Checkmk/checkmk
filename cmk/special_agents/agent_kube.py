@@ -213,11 +213,13 @@ class Node:
     def __init__(
         self,
         metadata: api.MetaData,
+        status: api.NodeStatus,
         resources: Dict[str, api.NodeResources],
         control_plane: bool,
         kubelet_info: api.KubeletInfo,
     ) -> None:
         self.metadata = metadata
+        self.status = status
         self.resources = resources
         self.control_plane = control_plane
         self.kubelet_info = kubelet_info
@@ -249,6 +251,9 @@ class Node:
     def kubelet(self) -> api.KubeletInfo:
         return self.kubelet_info
 
+    def info(self) -> section.NodeInfo:
+        return section.NodeInfo(labels=self.metadata.labels, **dict(self.status.node_info))
+
     def container_count(self) -> section.ContainerCount:
         result = section.ContainerCount()
         for pod in self._pods:
@@ -274,7 +279,11 @@ class Cluster:
         cluster = cls(cluster_details=cluster_details)
         for node_api in api_server.nodes():
             node = Node(
-                node_api.metadata, node_api.resources, node_api.control_plane, node_api.kubelet_info
+                node_api.metadata,
+                node_api.status,
+                node_api.resources,
+                node_api.control_plane,
+                node_api.kubelet_info,
             )
             cluster.add_node(node)
 
@@ -398,6 +407,7 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
             "kube_node_container_count_v1": cluster_node.container_count,
             "kube_node_kubelet_v1": cluster_node.kubelet,
             "kube_pod_resources_with_capacity_v1": cluster_node.pod_resources,
+            "kube_node_info_v1": cluster_node.info,
         }
         _write_sections(sections)
 

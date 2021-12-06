@@ -225,6 +225,14 @@ def node_conditions(node: client.V1Node) -> Optional[api.NodeConditions]:
     return api.NodeConditions(**{c.type: bool(c.status) for c in conditions})
 
 
+def node_info(node: client.V1Node) -> api.NodeInfo:
+    return api.NodeInfo(
+        architecture=node.status.node_info.architecture,
+        kernel_version=node.status.node_info.kernel_version,
+        os_image=node.status.node_info.os_image,
+    )
+
+
 def parse_node_resources(node: client.V1Node) -> Dict[str, api.NodeResources]:
     if node.status:
         capacity = node.status.capacity
@@ -281,6 +289,10 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
     return api.Node(
         metadata=metadata,
         conditions=node_conditions(node),
+        status=api.NodeStatus(
+            conditions=node_conditions(node),
+            node_info=node_info(node),
+        ),
         resources=parse_node_resources(node),
         control_plane=is_control_plane(metadata.labels),
         kubelet_info=api.KubeletInfo(

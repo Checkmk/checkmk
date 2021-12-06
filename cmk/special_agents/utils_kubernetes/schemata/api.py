@@ -30,11 +30,14 @@ class Label(BaseModel):
     value: LabelValue
 
 
+Labels = Mapping[LabelName, Label]
+
+
 class MetaData(BaseModel):
     name: str
     namespace: Optional[str] = None
     creation_timestamp: Optional[float] = None
-    labels: Optional[Mapping[LabelName, Label]] = None
+    labels: Optional[Labels] = None
     prefix = ""
     use_namespace = False
 
@@ -72,9 +75,20 @@ class KubeletInfo(BaseModel):
     health: HealthZ
 
 
+class NodeInfo(BaseModel):
+    architecture: str
+    kernel_version: str
+    os_image: str
+
+
+class NodeStatus(BaseModel):
+    conditions: NodeConditions
+    node_info: NodeInfo
+
+
 class Node(BaseModel):
     metadata: MetaData
-    conditions: NodeConditions
+    status: NodeStatus
     control_plane: bool
     resources: Dict[str, NodeResources]
     kubelet_info: KubeletInfo

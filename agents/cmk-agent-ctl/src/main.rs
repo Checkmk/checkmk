@@ -35,26 +35,16 @@ const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 const TLS_ID: &[u8] = b"16";
 
 fn register(
-    config: config::Config,
+    config: config::RegistrationConfig,
     mut reg_state: RegistrationState,
     path_state_out: &Path,
 ) -> AnyhowResult<()> {
-    let agent_receiver_address = config
-        .agent_receiver_address
-        .context("Server addresses not specified.")?;
-    let credentials = config
-        .credentials
-        .context("Missing credentials for registration.")?;
-    let host_reg_data = config
-        .host_reg_data
-        .context("Neither hostname nor agent labels provided, need one of them for registration")?;
-
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let uuid = Uuid::new_v4().to_string();
     let server_cert = match &config.root_certificate {
         Some(cert) => Some(cert.clone()),
         None => {
-            let fetched_server_cert = certs::fetch_server_cert(&agent_receiver_address)
+            let fetched_server_cert = certs::fetch_server_cert(&config.agent_receiver_address)
                 .context("Error establishing trust with agent_receiver.")?;
             println!("Trusting \n\n{}\nfor pairing", &fetched_server_cert);
             None
@@ -62,41 +52,48 @@ fn register(
     };
 
     let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
-    let pairing_response =
-        agent_receiver_api::pairing(&agent_receiver_address, server_cert, csr, &credentials)
-            .context(format!("Error pairing with {}", &agent_receiver_address))?;
+    let pairing_response = agent_receiver_api::pairing(
+        &config.agent_receiver_address,
+        server_cert,
+        csr,
+        &config.credentials,
+    )
+    .context(format!(
+        "Error pairing with {}",
+        &config.agent_receiver_address
+    ))?;
 
-    match host_reg_data {
+    match config.host_reg_data {
         config::HostRegistrationData::Name(hn) => {
             agent_receiver_api::register_with_hostname(
-                &agent_receiver_address,
+                &config.agent_receiver_address,
                 &pairing_response.root_cert,
-                &credentials,
+                &config.credentials,
                 &uuid,
                 &hn,
             )
             .context(format!(
                 "Error registering with hostname at {}",
-                &agent_receiver_address
+                &config.agent_receiver_address
             ))?;
         }
         config::HostRegistrationData::Labels(al) => {
             agent_receiver_api::register_with_agent_labels(
-                &agent_receiver_address,
+                &config.agent_receiver_address,
                 &pairing_response.root_cert,
-                &credentials,
+                &config.credentials,
                 &uuid,
                 &al,
             )
             .context(format!(
                 "Error registering with agent labels at {}",
-                &agent_receiver_address
+                &config.agent_receiver_address
             ))?;
         }
     }
 
     reg_state.server_specs.insert(
-        agent_receiver_address,
+        config.agent_receiver_address,
         config::ServerSpec {
             uuid,
             private_key,
@@ -141,7 +138,7 @@ fn dump() -> AnyhowResult<()> {
     Ok(())
 }
 
-fn status(_config: config::Config) -> AnyhowResult<()> {
+fn status(_reg_state: config::RegistrationState) -> AnyhowResult<()> {
     Err(anyhow!("Status mode not yet implemented"))
 }
 
@@ -184,13 +181,6 @@ fn disallow_legacy_pull() -> IoResult<()> {
     }
 
     fs::remove_file(legacy_pull_marker)
-}
-
-fn get_configuration(path_config: &Path, args: cli::Args) -> AnyhowResult<config::Config> {
-    Ok(config::Config::new(
-        config::ConfigFromDisk::load(path_config)?,
-        args,
-    ))
 }
 
 fn get_reg_state(path: &Path) -> AnyhowResult<config::RegistrationState> {
@@ -278,22 +268,22 @@ fn init() -> (cli::Args, PathBuf, PathBuf, PathBuf) {
 }
 
 fn run_requested_mode(args: cli::Args, config_path: &Path, state_path: &Path) -> AnyhowResult<()> {
-    let mode = String::from(&args.mode);
-    let config =
-        get_configuration(config_path, args).context("Error while obtaining configuration.")?;
+    let stored_config = config::ConfigFromDisk::load(config_path)?;
     let reg_state =
         get_reg_state(state_path).context("Error while obtaining registration state.")?;
-
-    match mode.as_str() {
-        "dump" => dump(),
-        "register" => register(config, reg_state, state_path),
-        "push" => push(reg_state),
-        "status" => status(config),
-        "pull" => pull(reg_state),
-        _ => Err(anyhow!("Invalid mode: {}", mode)),
+    match args {
+        cli::Args::Register(reg_args) => register(
+            config::RegistrationConfig::new(stored_config, reg_args)?,
+            reg_state,
+            state_path,
+        ),
+        cli::Args::Push { .. } => push(reg_state),
+        cli::Args::Pull { .. } => pull(reg_state),
+        cli::Args::Dump { .. } => dump(),
+        cli::Args::Status { .. } => status(reg_state),
     }
-    .context(format!("{} failed", mode))
 }
+
 fn main() -> AnyhowResult<()> {
     let (args, config_path, state_path, log_path) = init();
 

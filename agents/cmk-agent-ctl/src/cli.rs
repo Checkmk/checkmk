@@ -5,11 +5,7 @@
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
-#[structopt(name = "cmk-agent-ctl", about = "Checkmk agent controller.")]
-pub struct Args {
-    #[structopt(help = "Execution mode, should be one of 'register', 'push', 'dump', 'status'")]
-    pub mode: String,
-
+pub struct RegistrationArgs {
     #[structopt(long, short = "s", parse(from_str))]
     pub server: Option<String>,
 
@@ -21,4 +17,23 @@ pub struct Args {
 
     #[structopt(long, short = "H", parse(from_str))]
     pub host_name: Option<String>,
+}
+
+#[derive(StructOpt)]
+#[structopt(name = "cmk-agent-ctl", about = "Checkmk agent controller.")]
+pub enum Args {
+    #[structopt(about = "Register with a Checkmk instance for monitoring")]
+    Register(RegistrationArgs),
+    #[structopt(
+        about = "Push monitoring data to all Checkmk instances where this host is registered"
+    )]
+    Push {},
+    #[structopt(
+        about = "Handle an incoming connection from a Checkmk instance for collecting monitoring data"
+    )]
+    Pull {},
+    #[structopt(about = "Collects monitoring data and prints it to stdout")]
+    Dump {},
+    #[structopt(about = "Query the registration status of this host")]
+    Status {},
 }

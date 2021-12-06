@@ -2,8 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::cli::Args;
-use anyhow::Result as AnyhowResult;
+use super::cli;
+use anyhow::{Context, Result as AnyhowResult};
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -56,34 +56,45 @@ pub enum HostRegistrationData {
     Labels(AgentLabels),
 }
 
-pub struct Config {
-    pub agent_receiver_address: Option<String>,
-    pub credentials: Option<Credentials>,
+pub struct RegistrationConfig {
+    pub agent_receiver_address: String,
+    pub credentials: Credentials,
     pub root_certificate: Option<String>,
-    pub host_reg_data: Option<HostRegistrationData>,
+    pub host_reg_data: HostRegistrationData,
 }
 
-impl Config {
-    pub fn new(config_from_disk: ConfigFromDisk, args: Args) -> Config {
-        Config {
-            agent_receiver_address: args.server.or(config_from_disk.agent_receiver_address),
-            credentials: if let (Some(u), Some(p)) = (args.user, args.password) {
-                Some(Credentials {
-                    username: u,
-                    password: p,
-                })
-            } else {
-                config_from_disk.credentials
-            },
-            root_certificate: config_from_disk.root_certificate,
-            host_reg_data: if let Some(hn) = args.host_name.or(config_from_disk.host_name) {
-                Some(HostRegistrationData::Name(hn))
+impl RegistrationConfig {
+    pub fn new(
+        config_from_disk: ConfigFromDisk,
+        reg_args: cli::RegistrationArgs,
+    ) -> AnyhowResult<RegistrationConfig> {
+        let agent_receiver_address = reg_args
+            .server
+            .or(config_from_disk.agent_receiver_address)
+            .context("Missing server address")?;
+        let credentials =
+            if let (Some(username), Some(password)) = (reg_args.user, reg_args.password) {
+                Credentials { username, password }
             } else {
                 config_from_disk
-                    .agent_labels
-                    .map(HostRegistrationData::Labels)
-            },
-        }
+                    .credentials
+                    .context("Missing credentials")?
+            };
+        let root_certificate = config_from_disk.root_certificate;
+        let stored_host_name = config_from_disk.host_name;
+        let stored_agent_labels = config_from_disk.agent_labels;
+        let host_reg_data = reg_args
+            .host_name
+            .map(HostRegistrationData::Name)
+            .or_else(|| stored_host_name.map(HostRegistrationData::Name))
+            .or_else(|| stored_agent_labels.map(HostRegistrationData::Labels))
+            .context("Neither hostname nor agent labels found")?;
+        Ok(RegistrationConfig {
+            agent_receiver_address,
+            credentials,
+            root_certificate,
+            host_reg_data,
+        })
     }
 }
 

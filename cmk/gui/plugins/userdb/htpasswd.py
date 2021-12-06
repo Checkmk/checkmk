@@ -19,7 +19,11 @@ import cmk.utils.store as store
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb import CheckCredentialsResult, user_connector_registry, UserConnector
+from cmk.gui.plugins.userdb.utils import (
+    CheckCredentialsResult,
+    user_connector_registry,
+    UserConnector,
+)
 
 crypt_context = CryptContext(
     schemes=[

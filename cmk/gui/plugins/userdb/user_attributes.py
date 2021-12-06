@@ -5,8 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb import user_attribute_registry, UserAttribute
-from cmk.gui.plugins.userdb.utils import show_mode_choices, validate_start_url
+from cmk.gui.plugins.userdb.utils import (
+    show_mode_choices,
+    user_attribute_registry,
+    UserAttribute,
+    validate_start_url,
+)
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import (
     AbsoluteDate,

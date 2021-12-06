@@ -6,14 +6,11 @@
 
 
 def check_mailboxes_arguments(params):
-    args = []
-
-    fetch_params = params["imap_parameters"]
-
-    if "server" in fetch_params:
-        args.append("--fetch-server=%s" % fetch_params["server"])
-    else:
-        args.append("--fetch-server=$HOSTADDRESS$")
+    fetch_protocol, fetch_params = params["fetch"]
+    args = [
+        f"--fetch-protocol={fetch_protocol}",
+        f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
+    ]
 
     fetch_use_ssl, fetch_port = fetch_params["ssl"]
     if fetch_use_ssl:

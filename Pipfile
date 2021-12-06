@@ -166,6 +166,7 @@ semver = "==2.13.0"
 uvicorn = "==0.15"  # used for running agent-receiver server
 gunicorn= "==19.10" # used for running agent-receiver server
 agent-receiver = {editable = true, path = "./agent-receiver"}
+exchangelib = "3.6.1"  # used for mail related active checks
 
 [requires]
 python_version = "3.9"

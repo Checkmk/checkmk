@@ -16,13 +16,17 @@ pytestmark = pytest.mark.checks
     [
         (
             {
-                "imap_parameters": {
-                    "server": "foo",
-                    "ssl": (False, 143),
-                    "auth": ("hans", "wurst"),
-                }
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "foo",
+                        "ssl": (False, 143),
+                        "auth": ("hans", "wurst"),
+                    },
+                )
             },
             [
+                "--fetch-protocol=IMAP",
                 "--fetch-server=foo",
                 "--fetch-port=143",
                 "--fetch-username=hans",

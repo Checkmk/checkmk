@@ -528,13 +528,13 @@ int64_t SecondsSinceEpoch(const std::string& name) {
 }
 }  // namespace
 
-TEST(FileInfoTest, MakeFileInfoString) {
+TEST(FileInfoTest, MakeFileInfoNotepad) {
     // EXPECTED strings
     // "fname|ok|500|153334455\n"
     // "fname|500|153334455\n"
 
     const std::string fname{"c:\\Windows\\noTepad.exE"};
-    auto age_since_epoch = SecondsSinceEpoch(fname);
+    auto expected_time = SecondsSinceEpoch(fname);
 
     for (auto mode : {FileInfo::Mode::legacy, FileInfo::Mode::modern}) {
         SCOPED_TRACE(fmt::format("Mode is {}", static_cast<int>(mode)));
@@ -542,13 +542,28 @@ TEST(FileInfoTest, MakeFileInfoString) {
         auto x = details::MakeFileInfoString(name, mode);
         CheckString(x);
 
-        auto table = tools::SplitString(x, "|");
+        auto table = cma::tools::SplitString(x, "|");
         CheckTablePresent(table, name, mode);
-        auto tt = std::atoll(table[table.size() - 1].c_str());
-        const auto now = std::chrono::system_clock::now();
-        auto obtained_time = std::chrono::system_clock::to_time_t(now);
-        EXPECT_GT(obtained_time, tt);
-        EXPECT_EQ(age_since_epoch, tt);
+        auto ftime = std::atoll(table[table.size() - 1].c_str());
+        auto cur_time = std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::now());
+        EXPECT_GT(cur_time, ftime);
+        EXPECT_EQ(expected_time, ftime);
+    }
+}
+
+TEST(FileInfoTest, MakeFileInfoPagefile) {
+    for (auto mode : {FileInfo::Mode::legacy, FileInfo::Mode::modern}) {
+        static const std::string name{"c:\\pagefile.sys"};
+        auto x = details::MakeFileInfoString(name, mode);
+        x.pop_back();
+        auto table = tools::SplitString(x, "|");
+        auto ftime = std::atoll(table[table.size() - 1].c_str());
+        auto cur_time = std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::now());
+        EXPECT_GT(cur_time, ftime);
+        auto sz = std::atoll(table[table.size() - 2].c_str());
+        EXPECT_GT(sz, 0);
     }
 }
 

@@ -44,7 +44,26 @@ def test_uuid_link_manager_create_link():
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
+
+    assert len(list(received_outputs_dir.iterdir())) == 1
+    assert not data_source_push_agent_dir.exists()
+
+    link = next(iter(uuid_link_manager))
+
+    assert link.source == received_outputs_dir.joinpath(raw_uuid)
+    assert link.target == data_source_push_agent_dir.joinpath(hostname)
+
+
+def test_uuid_link_manager_create_link_and_target_dir():
+    hostname = "my-hostname"
+    raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
+
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+    )
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=True)
 
     assert len(list(received_outputs_dir.iterdir())) == 1
     assert len(list(data_source_push_agent_dir.iterdir())) == 1
@@ -63,9 +82,9 @@ def test_uuid_link_manager_create_existing_link():
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     # second time should be no-op, at least not fail
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
 
 
 def test_uuid_link_manager_create_link_to_different_uuid():
@@ -77,11 +96,11 @@ def test_uuid_link_manager_create_link_to_different_uuid():
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid_old))
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid_new))
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid_old), create_target_dir=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid_new), create_target_dir=False)
 
     assert len(list(received_outputs_dir.iterdir())) == 1
-    assert len(list(data_source_push_agent_dir.iterdir())) == 1
+    assert not data_source_push_agent_dir.exists()
 
     link = next(iter(uuid_link_manager))
 
@@ -97,7 +116,7 @@ def test_uuid_link_manager_update_links():
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     uuid_link_manager.update_links({hostname: {"cmk_agent_connection": "push-agent"}})
 
     assert len(list(received_outputs_dir.iterdir())) == 1
@@ -128,11 +147,11 @@ def test_uuid_link_manager_update_links_no_host():
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     uuid_link_manager.update_links({})
 
     assert list(received_outputs_dir.iterdir()) == []
-    assert list(data_source_push_agent_dir.iterdir()) == []
+    assert not data_source_push_agent_dir.exists()
 
 
 def test_uuid_link_manager_update_links_no_push_host():
@@ -143,11 +162,11 @@ def test_uuid_link_manager_update_links_no_push_host():
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid))
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     uuid_link_manager.update_links({hostname: {}})
 
     assert len(list(received_outputs_dir.iterdir())) == 1
-    assert list(data_source_push_agent_dir.iterdir()) == []
+    assert not data_source_push_agent_dir.exists()
 
     link = next(iter(uuid_link_manager))
 

@@ -57,11 +57,13 @@ class UUIDLinkManager:
                 return link.uuid
         return None
 
-    def create_link(self, hostname: HostName, uuid: UUID) -> None:
+    def create_link(self, hostname: HostName, uuid: UUID, *, create_target_dir: bool) -> None:
         """Create a link for encryption or push agent
 
         Make '<self._received_outputs_dir>/<uuid>' the only (!) symlink pointing to the folder
         '<self._data_source_dir>/<hostname>'.
+
+        For push agents we need to create the target dir; otherwise not.
         """
         if self._find_and_cleanup_existing_links(hostname, uuid):
             return
@@ -70,7 +72,8 @@ class UUIDLinkManager:
         self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
 
         target_dir = self._data_source_dir / f"{hostname}"
-        target_dir.mkdir(parents=True, exist_ok=True)
+        if create_target_dir:
+            target_dir.mkdir(parents=True, exist_ok=True)
 
         source.symlink_to(target_dir)
 
@@ -89,6 +92,10 @@ class UUIDLinkManager:
             if host_config is None:
                 link.unlink()
 
-            elif host_config.get("cmk_agent_connection", "") != "push-agent":
+            elif host_config.get("cmk_agent_connection", "") == "push-agent":
+                target_dir = self._data_source_dir / link.hostname
+                target_dir.mkdir(parents=True, exist_ok=True)
+
+            else:
                 # Symlink must be kept for the pull case: we need the uuid<->hostname mapping.
                 link.unlink_target()

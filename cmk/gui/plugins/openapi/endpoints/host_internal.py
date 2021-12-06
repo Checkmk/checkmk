@@ -19,15 +19,18 @@ from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, request_schemas
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 
 
-def _check_host_editing_permissions(host_name: HostName) -> None:
-    Host.load_host(host_name).need_permission("write")
+def _check_host_editing_permissions(host_name: HostName) -> CREHost:
+    host = Host.load_host(host_name)
+    host.need_permission("write")
+    return host
 
 
 def _link_with_uuid(
     host_name: HostName,
+    host: CREHost,
     uuid: UUID,
 ) -> None:
     UUIDLinkManager(
@@ -36,6 +39,7 @@ def _link_with_uuid(
     ).create_link(
         host_name,
         uuid,
+        create_target_dir=host.effective_attributes().get("cmk_agent_connection") == "push-agent",
     )
 
 
@@ -59,9 +63,10 @@ def _link_with_uuid(
 def link_with_uuid(params) -> Response:
     """Link a host to a UUID"""
     with may_fail(MKAuthException):
-        _check_host_editing_permissions(host_name := params["host_name"])
+        host = _check_host_editing_permissions(host_name := params["host_name"])
     _link_with_uuid(
         host_name,
+        host,
         params["body"]["uuid"],
     )
     return Response(status=204)

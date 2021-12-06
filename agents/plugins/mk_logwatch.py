@@ -1066,7 +1066,7 @@ def _filter_maxoutputsize(lines, maxoutputsize):
         bytecount += len(line.encode('utf-8'))
         if bytecount > maxoutputsize:
             break
-        yield line
+        yield ensure_str(line)
 
 
 def _filter_maxcontextlines(lines_list, before, after):

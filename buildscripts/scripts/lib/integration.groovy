@@ -21,7 +21,7 @@ def build(Map args) {
                 throw new Exception("Please add a case to download only the needed package for ${args.DISTRO_LIST}")
             }
             else {
-                upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR)
+                upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${WORKSPACE}/packages/${IMAGE_VERSION}")
             }
 
             // Cleanup test results directory before starting the test to prevent previous

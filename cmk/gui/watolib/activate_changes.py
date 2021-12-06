@@ -1237,15 +1237,28 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                 if not delete:
                     continue
 
+                # Because the heuristic to detect if an activation is or isn't running is not
+                # very reliable (stated politely) we need to make sure that we don't accidentally
+                # delete activations WHICH HAVE NOT BEEN STARTED YET. To make sure this is not the
+                # case we wait for a very long time and only delete very old activations.
+                # As there is no way to determine how long an activation will actually take,
+                # because the load on the server and the size of the activations vary by a huge
+                # margin, we make the definition of "very old" configurable.
                 for base_dir in (
                     str(cmk.utils.paths.site_config_dir),
                     ActivateChangesManager.activation_tmp_base_dir,
                 ):
                     activation_dir = os.path.join(base_dir, activation_id)
+                    if not os.path.isdir(activation_dir):
+                        continue
+
+                    # Hardcoded to 1h for now. Seems reasonable.
+                    dir_stat = os.stat(activation_dir)
+                    if time.time() - dir_stat.st_mtime < 3600:
+                        continue
+
                     try:
                         shutil.rmtree(activation_dir)
-                    except FileNotFoundError:
-                        pass
                     except Exception:
                         self._logger.error(
                             "  Failed to delete the activation directory '%s'" % activation_dir,

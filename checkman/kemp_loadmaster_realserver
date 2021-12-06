@@ -9,8 +9,8 @@ description:
  is 'out of service' or 'failed' the check's result will be CRIT.
 
 item:
- IP address of the realserver
+ Name of the virtual service and IP address of the realserver
 
 discovery:
  One service is created for each backend server if it is not disabled.
- Each one is defined by its ID.
+ Each one is defined by the name of its virtual service and IP address.

@@ -95,7 +95,8 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/webapi/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/watolib/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/openapi/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/sidebar/__init__.py
 	$(PACKAGE_PYTHON_COMMAND) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins

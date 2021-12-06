@@ -4,23 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import
-    begin_footnote_links,
-    bulletlink,
-    CustomizableSidebarSnapin,
-    end_footnote_links,
-    footnotelinks,
-    heading,
-    iconlink,
-    link,
-    make_topic_menu,
-    PageHandlers,
-    render_link,
-    show_topic_menu,
-    SidebarSnapin,
-    simplelink,
-    snapin_registry,
-    snapin_site_choice,
-    snapin_width,
-    write_snapin_exception,
-)
+#
+#    This file (cmk.gui.plugins.sidebar.__init__.py) is only kept to make
+#    our dev tools (pylint & co) happy.
+#    It will not be deployed, as cmk.gui.plugins.sidebar is supposed to be a
+#    namespace that can be shadowed/extended using the local/
+#    hierarchy.
+#
+#    This file must not contain any code.
+#

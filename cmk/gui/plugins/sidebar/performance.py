@@ -7,7 +7,7 @@
 import cmk.gui.sites as sites
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, snapin_site_choice
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
 
 
 @snapin_registry.register

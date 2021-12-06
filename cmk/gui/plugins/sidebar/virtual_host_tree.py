@@ -13,10 +13,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request, response, user
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 from cmk.gui.utils.urls import makeuri_contextless
-
-from . import SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register

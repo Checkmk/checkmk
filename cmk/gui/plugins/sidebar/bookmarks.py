@@ -14,7 +14,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import request, user
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import (
+from cmk.gui.plugins.sidebar.utils import (
     begin_footnote_links,
     end_footnote_links,
     iconlink,

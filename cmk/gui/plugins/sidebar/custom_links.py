@@ -9,7 +9,7 @@ import cmk.utils.paths
 from cmk.gui.globals import config, html, user
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import SidebarSnapin, simplelink, snapin_registry
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin, simplelink, snapin_registry
 from cmk.gui.utils.escaping import escape_html
 from cmk.gui.utils.html import HTML
 

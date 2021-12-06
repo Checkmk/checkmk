@@ -69,7 +69,8 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/gui/plugins/webapi/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/plugins/watolib/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/plugins/openapi/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py"
+    "$ROOT/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/sidebar/__init__.py"
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/utils/version.py

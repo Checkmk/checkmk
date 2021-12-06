@@ -9,7 +9,7 @@ from typing import List
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import (
+from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,

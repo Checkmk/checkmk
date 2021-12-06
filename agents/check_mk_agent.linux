@@ -95,12 +95,14 @@ preamble_1() { # TODO: split these up more meaningful
     export MK_VARDIR
     export MK_LOGDIR
 
+    # TODO: CMK-8339 (proper configuration)
+
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
 
-    # The package name gets patched for baked agents to either
-    # "check-mk-agent" or the name set by the "name of agent packages" rule
-    # TODO: rename (used for systemd as well), deal with when fixing CMK-8339
+    # The service name gets patched for baked agents to "check-mk-agent"
+    # TODO: Once the the RAW edition agent package is adjusted to the
+    # baked one, we can drop this variable and hardcode "check-mk-agent" instead.
     XINETD_SERVICE_NAME=check_mk
 
     # All executables in PLUGINSDIR will simply be executed and their

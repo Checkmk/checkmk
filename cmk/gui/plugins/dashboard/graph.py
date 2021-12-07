@@ -219,6 +219,8 @@ class GraphDashlet(Dashlet):
             service = "_HOST_"
 
         site = get_only_sites_from_context(context) or self._resolve_site(host)
+        if isinstance(site, list):
+            site = "".join(site)
 
         # source changed from int (n'th graph) to the graph id in 2.0.0b6, but we cannot transform this, so we have to
         # handle this here

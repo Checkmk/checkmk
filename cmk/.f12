@@ -43,10 +43,18 @@ sudo rsync \
     "${PYTHON3_PATHS[@]}" \
     $ROOT/lib/python3/cmk/
 
-# Ensure cmk is a namespace package
+# Transform required packages to namespace package
 sudo rm -f \
     "$ROOT/lib/python3/cmk/__init__.py" \
-    "$ROOT/lib/python3/cmk/special_agents/__init__.py"
+    "$ROOT/lib/python3/cmk/special_agents/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.pyc" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.pyc"
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/utils/version.py

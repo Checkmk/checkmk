@@ -384,7 +384,7 @@ def HostnameTranslation(**kwargs):
              FixedValue(
                  True,
                  title=_("Convert FQHN"),
-                 totext=_("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
+                 totext=_("Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"),
              )),
         ] + _translation_elements("host"))
 

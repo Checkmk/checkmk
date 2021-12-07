@@ -21,8 +21,8 @@ from cmk.base.plugins.agent_based.utils.k8s import APIHealth, ClusterInfo, Healt
                 )
             ),
             [
-                Result(state=State.OK, summary="Readiness probe ok"),
-                Result(state=State.OK, summary="Liveness probe ok"),
+                Result(state=State.OK, summary="Live"),
+                Result(state=State.OK, summary="Ready"),
             ],
             id="everything_ok",
         ),
@@ -36,9 +36,10 @@ from cmk.base.plugins.agent_based.utils.k8s import APIHealth, ClusterInfo, Healt
                 )
             ),
             [
-                Result(state=State.OK, notice="some\nvery\nlong\noutput"),
-                Result(state=State.CRIT, summary="Readiness probe nok"),
-                Result(state=State.OK, summary="Liveness probe ok"),
+                Result(state=State.OK, summary="Live"),
+                Result(state=State.CRIT, summary="Not ready"),
+                Result(state=State.OK, notice="Ready verbose response:\nsome\nvery\nlong\noutput"),
+                Result(state=State.OK, summary="See service details for more information"),
             ],
             id="not_ready",
         ),

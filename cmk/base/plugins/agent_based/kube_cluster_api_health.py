@@ -20,14 +20,20 @@ def discovery(section: ClusterInfo) -> DiscoveryResult:
 
 def check(section: ClusterInfo) -> CheckResult:
     api_health = section.api_health
-    for name, health in [("Readiness", api_health.ready), ("Liveness", api_health.live)]:
-        state = State.OK
-        message = f"{name} probe {health.response}"
-        if health.status_code != 200:
-            state = State.CRIT
-            if health.verbose_response:
-                yield Result(state=State.OK, notice=health.verbose_response)
-        yield Result(state=state, summary=message)
+    name_and_health = [("live", api_health.live), ("ready", api_health.ready)]
+    for name, health in name_and_health:
+        if health.status_code == 200:
+            yield Result(state=State.OK, summary=name.title())
+            continue
+        yield Result(state=State.CRIT, summary=f"Not {name}")
+        if health.verbose_response:
+            yield Result(
+                state=State.OK,
+                notice=f"{name.title()} verbose response:\n{health.verbose_response}",
+            )
+
+    if not all(h.status_code == 200 for _, h in name_and_health):
+        yield Result(state=State.OK, summary="See service details for more information")
 
 
 register.agent_section(
@@ -38,7 +44,7 @@ register.agent_section(
 
 register.check_plugin(
     name="kube_cluster_api_health",
-    service_name="Cluster API",
+    service_name="Kubernetes API",
     discovery_function=discovery,
     check_function=check,
 )

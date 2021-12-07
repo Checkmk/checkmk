@@ -437,25 +437,6 @@ std::string MakeFileInfoStringMissing(const fs::path &file_name,
     return out;
 }
 
-std::string MakeFileInfoStringPresented(const fs::path &file_name,
-                                        FileInfo::Mode mode,
-                                        FileInfoMethod method) {
-    auto [file_size, seconds, stat_failed] =
-        method == FileInfoMethod::standard ? GetFileStats(file_name)
-                                           : GetFileStatsCreative(file_name);
-
-    switch (mode) {
-        case FileInfo::Mode::legacy:
-            return MakeFileInfoEntryLegacy(file_name, stat_failed, file_size,
-                                           seconds);
-        case FileInfo::Mode::modern:
-            return MakeFileInfoEntryModern(file_name, stat_failed, file_size,
-                                           seconds);
-    }
-    // unreachable
-    return {};
-}
-
 std::string MakeFileInfoString(const fs::path &file_path, FileInfo::Mode mode) {
     std::error_code ec;
     auto presented = fs::exists(file_path, ec);

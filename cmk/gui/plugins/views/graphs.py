@@ -11,7 +11,7 @@ from cmk.gui.globals import config, request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     get_graph_timerange_from_painter_options,
     multisite_builtin_views,
     Painter,

@@ -97,17 +97,18 @@ from cmk.gui.permissions import (
 )
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
+from cmk.gui.plugins.views.icons.utils import (  # noqa: F401  # pylint: disable=unused-import
     get_icons,
     get_multisite_icons,
+    Icon,
+    icon_and_action_registry,
     IconEntry,
     IconObjectType,
     iconpainter_columns,
     LegacyIconEntry,
     multisite_icons_and_actions,
 )
-from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
-from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.views.perfometers.utils import (  # noqa: F401 # pylint: disable=unused-import
     perfometers,
 )
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -203,6 +204,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
@@ -215,8 +217,11 @@ from cmk.gui.type_defs import (
     HTTPVariables,
     InfoName,
     PainterSpec,
+    Perfdata,
+    PerfometerSpec,
     Row,
     Rows,
+    TranslatedMetrics,
     ViewName,
     ViewProcessTracking,
     ViewSpec,
@@ -1192,6 +1197,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
@@ -1247,6 +1253,105 @@ def load_plugins() -> None:
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("views"))
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.views as api_module
+    import cmk.gui.plugins.views.utils as plugin_utils
+
+    for name in (
+        "ABCDataSource",
+        "Cell",
+        "CellSpec",
+        "cmp_custom_variable",
+        "cmp_ip_address",
+        "cmp_num_split",
+        "cmp_service_name_equiv",
+        "cmp_simple_number",
+        "cmp_simple_string",
+        "cmp_string_list",
+        "Command",
+        "command_group_registry",
+        "command_registry",
+        "CommandActionResult",
+        "CommandGroup",
+        "CommandSpec",
+        "compare_ips",
+        "data_source_registry",
+        "DataSourceLivestatus",
+        "declare_1to1_sorter",
+        "declare_simple_sorter",
+        "DerivedColumnsSorter",
+        "display_options",
+        "EmptyCell",
+        "ExportCellContent",
+        "Exporter",
+        "exporter_registry",
+        "format_plugin_output",
+        "get_graph_timerange_from_painter_options",
+        "get_label_sources",
+        "get_perfdata_nth_value",
+        "get_permitted_views",
+        "get_tag_groups",
+        "group_value",
+        "inventory_displayhints",
+        "InventoryHintSpec",
+        "is_stale",
+        "join_row",
+        "Layout",
+        "layout_registry",
+        "multisite_builtin_views",
+        "output_csv_headers",
+        "paint_age",
+        "paint_host_list",
+        "paint_nagiosflag",
+        "paint_stalified",
+        "Painter",
+        "painter_option_registry",
+        "painter_registry",
+        "PainterOption",
+        "PainterOptions",
+        "query_livestatus",
+        "register_painter",
+        "register_sorter",
+        "render_cache_info",
+        "render_link_to_view",
+        "replace_action_url_macros",
+        "Row",
+        "row_id",
+        "RowTable",
+        "RowTableLivestatus",
+        "Sorter",
+        "sorter_registry",
+        "transform_action_url",
+        "url_to_visual",
+        "view_is_enabled",
+        "view_title",
+        "VisualLinkSpec",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
+
+    api_module.__dict__.update(
+        {
+            "Perfdata": Perfdata,
+            "PerfometerSpec": PerfometerSpec,
+            "TranslatedMetrics": TranslatedMetrics,
+            "get_labels": get_labels,
+            "render_labels": render_labels,
+            "render_tag_groups": render_tag_groups,
+        }
+    )
 
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.

@@ -19,7 +19,7 @@ from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     cmp_num_split,
     cmp_simple_number,

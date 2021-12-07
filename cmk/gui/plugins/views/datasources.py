@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     data_source_registry,
     DataSourceLivestatus,

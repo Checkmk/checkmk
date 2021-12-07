@@ -6,7 +6,7 @@
 
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.utils.urls import makeuri_contextless
 
 

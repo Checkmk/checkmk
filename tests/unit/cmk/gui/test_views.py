@@ -46,10 +46,10 @@ def test_registered_painter_options():
         "num_columns",
     ]
 
-    names = cmk.gui.plugins.views.painter_option_registry.keys()
+    names = cmk.gui.plugins.views.utils.painter_option_registry.keys()
     assert sorted(expected) == sorted(names)
 
-    for cls in cmk.gui.plugins.views.painter_option_registry.values():
+    for cls in cmk.gui.plugins.views.utils.painter_option_registry.values():
         vs = cls().valuespec
         assert isinstance(vs, ValueSpec)
 
@@ -67,7 +67,7 @@ def test_registered_layouts():
         'tiled',
     ]
 
-    names = cmk.gui.plugins.views.layout_registry.keys()
+    names = cmk.gui.plugins.views.utils.layout_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
@@ -114,7 +114,7 @@ def test_layout_properties():
     }
 
     for ident, spec in expected.items():
-        plugin = cmk.gui.plugins.views.layout_registry[ident]()
+        plugin = cmk.gui.plugins.views.utils.layout_registry[ident]()
         assert isinstance(plugin.title, str)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
@@ -122,7 +122,7 @@ def test_layout_properties():
 
 
 def test_get_layout_choices():
-    choices = cmk.gui.plugins.views.layout_registry.get_choices()
+    choices = cmk.gui.plugins.views.utils.layout_registry.get_choices()
     assert sorted(choices) == sorted([
         ('matrix', u'Matrix'),
         ('boxed_graph', u'Balanced graph boxes'),
@@ -146,7 +146,7 @@ def test_registered_exporters():
         'python',
         'python-raw',
     ]
-    names = cmk.gui.plugins.views.exporter_registry.keys()
+    names = cmk.gui.plugins.views.utils.exporter_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
@@ -284,7 +284,7 @@ def test_registered_commands():
         },
         })
 
-    names = cmk.gui.plugins.views.command_registry.keys()
+    names = cmk.gui.plugins.views.utils.command_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
     for cmd_class in cmk.gui.plugins.views.utils.command_registry.values():
@@ -652,7 +652,7 @@ def test_registered_datasources():
         },
     }
 
-    names = cmk.gui.plugins.views.data_source_registry.keys()
+    names = cmk.gui.plugins.views.utils.data_source_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
     for ds_class in cmk.gui.plugins.views.utils.data_source_registry.values():
@@ -2313,7 +2313,7 @@ def test_registered_sorters():
         },
     }
 
-    for sorter_class in cmk.gui.plugins.views.sorter_registry.values():
+    for sorter_class in cmk.gui.plugins.views.utils.sorter_registry.values():
         sorter = sorter_class()
         spec = expected[sorter.ident]
 
@@ -2970,11 +2970,11 @@ def test_registered_display_hints():
     '.software.packages:*.vendor',
     '.software.packages:*.version',]
 
-    assert sorted(expected) == sorted(cmk.gui.plugins.views.inventory_displayhints.keys())
+    assert sorted(expected) == sorted(cmk.gui.plugins.views.utils.inventory_displayhints.keys())
 
 
 def test_get_inventory_display_hint():
-    hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")
+    hint = cmk.gui.plugins.views.utils.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
 
 

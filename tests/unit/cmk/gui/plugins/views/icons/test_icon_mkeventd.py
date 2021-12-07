@@ -8,8 +8,8 @@ from typing import Dict, List, NamedTuple
 
 import pytest
 
-import cmk.gui.plugins.views.icons as icons
 import cmk.gui.plugins.views.icons.mkeventd as mkeventd_icon
+from cmk.gui.plugins.views.icons.utils import get_multisite_icons
 
 
 class IconRenderArgs(NamedTuple):
@@ -162,7 +162,7 @@ class IconRenderResult(NamedTuple):
 )
 def test_icon_options(args, result, request_context, monkeypatch):
     """Creation of title and url for links to event console entries of host"""
-    icon = icons.get_multisite_icons()["mkeventd"]
+    icon = get_multisite_icons()["mkeventd"]
 
     def _get_dummy_hostname(args, row):
         args_splitted = args[0].split("/")

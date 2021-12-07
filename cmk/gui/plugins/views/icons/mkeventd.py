@@ -9,7 +9,7 @@ import shlex
 
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.sites import get_alias_of_host, get_site_config
 from cmk.gui.utils.urls import urlencode_vars
 

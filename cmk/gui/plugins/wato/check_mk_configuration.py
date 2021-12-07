@@ -20,7 +20,7 @@ import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons import icon_and_action_registry
+from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato import (
     BinaryHostRulespec,
     BinaryServiceRulespec,

@@ -25,7 +25,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     Command,
     command_group_registry,
     command_registry,

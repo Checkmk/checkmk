@@ -12,7 +12,7 @@
 
 import cmk.gui.utils
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.views import inventory_displayhints
+from cmk.gui.plugins.views.utils import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,

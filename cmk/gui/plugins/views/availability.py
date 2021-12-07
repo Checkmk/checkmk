@@ -48,7 +48,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.views import display_options, format_plugin_output, view_title
+from cmk.gui.plugins.views.utils import display_options, format_plugin_output, view_title
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, urlencode_vars

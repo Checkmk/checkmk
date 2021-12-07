@@ -2677,11 +2677,11 @@ def key_av_entry(
     _Tuple[Union[int, str], ...], int, _Tuple[Union[int, str], ...], _Tuple[Union[int, str], ...]
 ]:
     # This local import currently needed
-    import cmk.gui.plugins.views as views
+    from cmk.gui.plugins.views.utils import cmp_service_name_equiv
 
     return (
         utils.key_num_split(a["service"]),
-        views.cmp_service_name_equiv(a["service"]),
+        cmp_service_name_equiv(a["service"]),
         utils.key_num_split(a["host"]),
         utils.key_num_split(a["site"]),
     )

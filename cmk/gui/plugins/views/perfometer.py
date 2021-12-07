@@ -100,7 +100,7 @@ class Perfometer:
         - Second by the sort value calculated based on the perfometer type and
           the actual data
         """
-        return self._get_sort_group(), self._get_sort_number()
+        return self._get_sort_group(), self._get_sort_value()
 
     def _get_sort_group(self):
         """First sort by the optional performeter group or the perfometer id. The perfometer
@@ -130,7 +130,7 @@ class Perfometer:
         # can use the id() of the perfometer_definition here.
         return perfometer_definition.get("sort_group", id(perfometer_definition))
 
-    def _get_sort_number(self):
+    def _get_sort_value(self):
         """Calculate the sort value for this perfometer
         - The second sort criteria is a number that is calculated for each perfometer. The
           calculation of this number depends on the perfometer type:
@@ -140,10 +140,10 @@ class Perfometer:
           - TODO: Make it possible to define a custom "sort_by" formula like it's done in other
             places of the metric system. Something like this: "sort_by": "user,system,+,idle,+,nice,+"
         """
-        sort_number = self._get_metrics_sort_number()
+        sort_value = self._get_metrics_sort_value()
 
-        if sort_number is not None:
-            return sort_number
+        if sort_value is not None:
+            return sort_value
 
         # TODO: Remove this legacy handling one day
         if not self._has_legacy_perfometer():
@@ -152,14 +152,14 @@ class Perfometer:
         # TODO: Fallback to legacy perfometer number calculation
         return None
 
-    def _get_metrics_sort_number(self):
+    def _get_metrics_sort_value(self):
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
 
         renderer = metrics.renderer_registry.get_renderer(perfometer_definition,
                                                           self._translated_metrics)
-        return renderer.get_sort_number()
+        return renderer.get_sort_value()
 
     def _get_perfometer_definition(self, translated_metrics):
         """Returns the matching perfometer definition

@@ -71,7 +71,7 @@ def inventory_cmk_agent_update(section):
 
 
 def check_cmk_agent_update(_no_item, params, section):
-    if section.get("agentupdate") is not None:
+    if section.get("agentupdate") is None:
         return
 
     parsed = {}

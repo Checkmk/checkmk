@@ -36,9 +36,10 @@ def foldable_container(
     title_url: Optional[str] = None,
     title_target: Optional[str] = None,
     padding: int = 15,
+    save_state: bool = True,
 ) -> Iterator[bool]:
     isopen = user.get_tree_state(treename, id_, isopen)
-    onclick = foldable_container_onclick(treename, id_, fetch_url)
+    onclick = foldable_container_onclick(treename, id_, fetch_url, save_state)
     img_id = foldable_container_img_id(treename, id_)
     container_id = foldable_container_id(treename, id_)
 
@@ -97,11 +98,17 @@ def foldable_container(
     html.close_div()
 
 
-def foldable_container_onclick(treename: str, id_: str, fetch_url: Optional[str]) -> str:
-    return "cmk.foldable_container.toggle(%s, %s, %s)" % (
+def foldable_container_onclick(
+    treename: str,
+    id_: str,
+    fetch_url: Optional[str],
+    save_state: bool = True,
+) -> str:
+    return "cmk.foldable_container.toggle(%s, %s, %s, %s)" % (
         json.dumps(treename),
         json.dumps(id_),
         json.dumps(fetch_url if fetch_url else ""),
+        json.dumps(save_state),
     )
 
 

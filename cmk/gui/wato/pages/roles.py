@@ -59,7 +59,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.sites import get_login_sites
-from cmk.gui.table import table_element
+from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices
 
 
@@ -475,7 +475,7 @@ class ModeRoleMatrix(WatoMode):
             with table_element(
                 section.name,
                 section.title,
-                foldable=True,
+                foldable=Foldable.FOLDABLE_SAVE_STATE,
             ) as table:
 
                 permission_list = permission_registry.get_sorted_permissions(section)

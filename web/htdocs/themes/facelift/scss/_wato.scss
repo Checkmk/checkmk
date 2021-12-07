@@ -220,12 +220,11 @@ div#fixall_container {
   overflow: hidden;
 
   img {
-    float: left;
-    margin: $spacing 0 0 $spacing;
+    margin-left: $spacing;
   }
 
   ul {
-    float: left;
+    display: inline-block;
     list-style: none;
     margin: 15px 0 15px 0;
     padding-left: $spacing;

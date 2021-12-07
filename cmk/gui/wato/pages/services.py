@@ -54,7 +54,7 @@ from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.sites import sitenames
-from cmk.gui.table import table_element
+from cmk.gui.table import Foldable, table_element
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
@@ -555,7 +555,7 @@ class DiscoveryPageRenderer:
             searchable=False,
             limit=False,
             sortable=False,
-            foldable=True,
+            foldable=Foldable.FOLDABLE_STATELESS,
             omit_update_header=False,
         ) as table:
             return self._render_host_labels(
@@ -690,7 +690,7 @@ class DiscoveryPageRenderer:
                 searchable=False,
                 limit=False,
                 sortable=False,
-                foldable=True,
+                foldable=Foldable.FOLDABLE_STATELESS,
                 omit_update_header=False,
                 help=entry.help_text,
             ) as table:
@@ -1674,7 +1674,7 @@ def _page_menu_service_configuration_entries(
     host: watolib.CREHost, options: DiscoveryOptions
 ) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
-        title=_("Apply changes"),
+        title=_("Accept all"),
         icon_name="accept",
         item=make_javascript_link(
             _start_js_call(
@@ -1689,7 +1689,7 @@ def _page_menu_service_configuration_entries(
     )
 
     yield PageMenuEntry(
-        title=_("Refresh"),
+        title=_("Rescan"),
         icon_name="services_refresh",
         item=make_javascript_link(
             _start_js_call(host, options._replace(action=DiscoveryAction.REFRESH))

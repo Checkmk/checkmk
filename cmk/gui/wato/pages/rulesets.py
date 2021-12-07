@@ -69,7 +69,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.sites import wato_slave_sites
-from cmk.gui.table import table_element
+from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables
 from cmk.gui.utils.escaping import escape_html_permissive, strip_tags
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -1006,7 +1006,7 @@ class ModeEditRuleset(WatoMode):
                 searchable=False,
                 sortable=False,
                 limit=None,
-                foldable=True,
+                foldable=Foldable.FOLDABLE_SAVE_STATE,
                 omit_update_header=True,
             ) as table:
                 for _folder, rulenr, rule in folder_rules:

@@ -94,9 +94,22 @@ class Node(BaseModel):
     kubelet_info: KubeletInfo
 
 
+class DeploymentReplicas(BaseModel):
+    updated: int
+    available: int
+    ready: int
+    unavailable: int
+
+
+class DeploymentStatus(BaseModel):
+    # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
+    replicas: DeploymentReplicas
+
+
 class Deployment(BaseModel):
     metadata: MetaData
     pods: Sequence[PodUID]
+    status: DeploymentStatus
 
 
 class Resources(BaseModel):

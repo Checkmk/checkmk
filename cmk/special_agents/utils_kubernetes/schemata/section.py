@@ -86,6 +86,17 @@ class NodeInfo(api.NodeInfo):
     labels: api.Labels
 
 
+class DeploymentInfo(BaseModel):
+    """section: kube_deployment_info_v1"""
+
+    name: str
+    namespace: str
+    labels: api.Labels
+    creation_timestamp: float
+    images: Sequence[str]
+    containers: Sequence[str]
+
+
 class ContainerCount(BaseModel):
     """section: kube_node_container_count_v1"""
 

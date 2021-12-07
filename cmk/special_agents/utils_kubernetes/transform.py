@@ -267,6 +267,20 @@ def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
     return resources
 
 
+def deployment_replicas(status: client.V1DeploymentStatus) -> api.DeploymentReplicas:
+    def replica_count(count: Optional[int]) -> int:
+        if count is None:
+            return 0
+        return count
+
+    return api.DeploymentReplicas(
+        available=replica_count(status.available_replicas),
+        unavailable=replica_count(status.unavailable_replicas),
+        updated=replica_count(status.updated_replicas),
+        ready=replica_count(status.ready_replicas),
+    )
+
+
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=pod.metadata.uid,
@@ -308,4 +322,7 @@ def deployment_from_client(
     return api.Deployment(
         metadata=parse_metadata(deployment.metadata),
         pods=pod_uids,
+        status=api.DeploymentStatus(
+            replicas=deployment_replicas(deployment.status),
+        ),
     )

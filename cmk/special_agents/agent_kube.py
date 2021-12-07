@@ -196,6 +196,27 @@ class Deployment:
             return self._pods
         return [pod for pod in self._pods if pod.phase == phase]
 
+    def info(self) -> section.DeploymentInfo:
+        container_images = set()
+        container_names = []
+        for pod in self._pods:
+            if containers := pod.containers_infos():
+                container_images.update(
+                    {container.image for container in containers.containers.values()}
+                )
+                container_names.extend(
+                    [container.name for container in containers.containers.values()]
+                )
+
+        return section.DeploymentInfo(
+            name=self.name(),
+            namespace=self.metadata.namespace,
+            creation_timestamp=self.metadata.creation_timestamp,
+            labels=self.metadata.labels if self.metadata.labels else {},
+            images=list(container_images),
+            containers=container_names,
+        )
+
     def add_pod(self, pod: Pod) -> None:
         self._pods.append(pod)
 
@@ -423,6 +444,7 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
         sections = {
             "kube_pod_resources_v1": cluster_deployment.pod_resources,
             "kube_memory_resources_v1": cluster_deployment.memory_resources,
+            "kube_deployment_info_v1": cluster_deployment.info,
         }
         _write_sections(sections)
 

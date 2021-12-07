@@ -249,6 +249,17 @@ class ContainerInfo(BaseModel):
     restart_count: int
 
 
+class DeploymentInfo(BaseModel):
+    """section: kube_deployment_info_v1"""
+
+    name: str
+    namespace: str
+    labels: Labels
+    creation_timestamp: float
+    images: Sequence[str]
+    containers: Sequence[str]
+
+
 class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 

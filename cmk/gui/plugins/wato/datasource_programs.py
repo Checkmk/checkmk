@@ -4876,7 +4876,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         (
                             "max_age",
                             Age(
-                                title=_("Maximum age of fetched events"),
+                                title=_("Maximum age of fetched events (10 hours max.)"),
                                 help=_(
                                     "During each run, the agent will fetch events which are at "
                                     "maximum this old. The agent memorizes events already fetched "
@@ -4888,8 +4888,9 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                                     "agent if their age exceeds the value specified here."
                                 ),
                                 minvalue=10,
-                                maxvalue=5 * 3600,
+                                maxvalue=10 * 3600,
                                 default_value=600,
+                                display=["hours", "minutes", "seconds"],
                             ),
                         ),
                         (

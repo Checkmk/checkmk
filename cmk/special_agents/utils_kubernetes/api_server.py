@@ -93,8 +93,14 @@ class RawAPI:
         response_type: Type[T],
         query_params: Optional[Dict[str, str]] = None,
     ) -> RawAPIResponse[T]:
+        # Found the auth_settings here:
+        # https://github.com/kubernetes-client/python/issues/528
         response, status_code, headers = self._api_client.call_api(
-            resource_path, method, response_type=str, query_params=query_params
+            resource_path,
+            method,
+            response_type=str,
+            query_params=query_params,
+            auth_settings=["BearerToken"],
         )
         return RawAPIResponse(response=response, status_code=status_code, headers=headers)
 

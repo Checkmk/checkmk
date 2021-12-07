@@ -15,68 +15,92 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 NOW_SIMULATED = 581792400, "UTC"
 
 ITEM = "DISK_GROUP"
-SECTION_OLD_MOUNTED = {
-    ITEM: asm.Diskgroup(
-        dgstate="MOUNTED",
-        dgtype="NORMAL",
-        free_mb=4610314,
-        offline_disks=0,
-        req_mir_free_mb=63320,
-        total_mb=5242880,
-        voting_files="N",
-        fail_groups=[],
-    )
-}
-SECTION_UNKNOWN_ITEM = {"UNKNOWN": SECTION_OLD_MOUNTED[ITEM]}
+SECTION_OLD_MOUNTED = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="MOUNTED",
+            dgtype="NORMAL",
+            free_mb=4610314,
+            offline_disks=0,
+            req_mir_free_mb=63320,
+            total_mb=5242880,
+            voting_files="N",
+            fail_groups=[],
+        )
+    }
+)
+SECTION_UNKNOWN_ITEM = asm.Section(diskgroups={"UNKNOWN": SECTION_OLD_MOUNTED.diskgroups[ITEM]})
 
-SECTION_OLD_DISMOUNTED = {
-    ITEM: asm.Diskgroup(
-        dgstate="DISMOUNTED",
-        dgtype=None,
-        free_mb=0,
-        offline_disks=0,
-        req_mir_free_mb=0,
-        total_mb=0,
-        voting_files="N",
-        fail_groups=[],
-    )
-}
+SECTION_OLD_DISMOUNTED = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="DISMOUNTED",
+            dgtype=None,
+            free_mb=0,
+            offline_disks=0,
+            req_mir_free_mb=0,
+            total_mb=0,
+            voting_files="N",
+            fail_groups=[],
+        )
+    }
+)
 
-SECTION_DISMOUNTED = {
-    ITEM: asm.Diskgroup(
-        dgstate="DISMOUNTED",
-        dgtype=None,
-        total_mb=None,
-        free_mb=None,
-        req_mir_free_mb=0,
-        offline_disks=0,
-        voting_files="",
-        fail_groups=[],
-    )
-}
+SECTION_DISMOUNTED = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="DISMOUNTED",
+            dgtype=None,
+            total_mb=None,
+            free_mb=None,
+            req_mir_free_mb=0,
+            offline_disks=0,
+            voting_files="",
+            fail_groups=[],
+        )
+    }
+)
 
-SECTION_WITH_FG = {
-    ITEM: asm.Diskgroup(
-        dgstate="MOUNTED",
-        dgtype="EXTERN",
-        fail_groups=[
-            asm.Failgroup(
-                fg_disks=1,
-                fg_free_mb=489148,
-                fg_min_repair_time=8640000,
-                fg_name="DATA_0000",
-                fg_total_mb=614400,
-                fg_type="REGULAR",
-                fg_voting_files="N",
-            )
-        ],
-        free_mb=489148,
-        offline_disks=0,
-        req_mir_free_mb=0,
-        total_mb=614400,
-        voting_files="N",
-    )
-}
+SECTION_CLUTTERED_WITH_DEPREACTED_AGENT_OUTPUT = asm.Section(
+    found_deprecated_agent_output=True,
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="DISMOUNTED",
+            dgtype=None,
+            free_mb=0,
+            offline_disks=0,
+            req_mir_free_mb=0,
+            total_mb=0,
+            voting_files="N",
+            fail_groups=[],
+        )
+    },
+)
+
+SECTION_WITH_FG = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="MOUNTED",
+            dgtype="EXTERN",
+            fail_groups=[
+                asm.Failgroup(
+                    fg_disks=1,
+                    fg_free_mb=489148,
+                    fg_min_repair_time=8640000,
+                    fg_name="DATA_0000",
+                    fg_total_mb=614400,
+                    fg_type="REGULAR",
+                    fg_voting_files="N",
+                )
+            ],
+            free_mb=489148,
+            offline_disks=0,
+            req_mir_free_mb=0,
+            total_mb=614400,
+            voting_files="N",
+        )
+    }
+)
 
 
 @pytest.fixture(name="value_store_patch")
@@ -91,7 +115,7 @@ def value_store_fixture(monkeypatch):
 @pytest.mark.parametrize(
     "string_table, expected",
     [
-        ([[]], {}),
+        ([[]], asm.Section({})),
         (
             [
                 [
@@ -110,7 +134,7 @@ def value_store_fixture(monkeypatch):
                     "%s/" % ITEM,
                 ]
             ],
-            {},
+            asm.Section(diskgroups={}),
         ),
         (
             [
@@ -137,10 +161,6 @@ def value_store_fixture(monkeypatch):
             SECTION_OLD_DISMOUNTED,
         ),
         (
-            [["DISMOUNTED", "", "%s/" % ITEM, "0", "0", "0", "", "", "", "", "", "0", "", "1"]],
-            SECTION_DISMOUNTED,
-        ),
-        (
             [
                 [
                     "MOUNTED",
@@ -161,6 +181,31 @@ def value_store_fixture(monkeypatch):
             ],
             SECTION_WITH_FG,
         ),
+        (
+            [["DISMOUNTED", "", "%s/" % ITEM, "0", "0", "0", "", "", "", "", "", "0", "", "1"]],
+            SECTION_DISMOUNTED,
+        ),
+        (
+            [
+                [
+                    "MOUNTED",
+                    "NORMAL",
+                    "N",
+                    "512",
+                    "512",
+                    "4096",
+                    "4194304",
+                    "5734400",
+                    "693184",
+                    "409600",
+                    "141792",
+                    "0",
+                    "N",
+                    "DATAC1/",
+                ]
+            ],
+            asm.Section({}, found_deprecated_agent_output=True),
+        ),
     ],
 )
 def test_parse(string_table, expected):
@@ -171,20 +216,22 @@ def test_parse(string_table, expected):
 @pytest.mark.parametrize(
     "section, expected",
     [
-        ({}, []),
+        (asm.Section({}), []),
         (
-            {
-                ITEM: asm.Diskgroup(
-                    dgstate="UNKNOWN-DG-STATE",
-                    dgtype=None,
-                    total_mb=0,
-                    free_mb=0,
-                    req_mir_free_mb=0,
-                    offline_disks=0,
-                    voting_files="foo",
-                    fail_groups=[],
-                )
-            },
+            asm.Section(
+                {
+                    ITEM: asm.Diskgroup(
+                        dgstate="UNKNOWN-DG-STATE",
+                        dgtype=None,
+                        total_mb=0,
+                        free_mb=0,
+                        req_mir_free_mb=0,
+                        offline_disks=0,
+                        voting_files="foo",
+                        fail_groups=[],
+                    )
+                }
+            ),
             [],
         ),
         (SECTION_OLD_MOUNTED, [Service(item=ITEM)]),
@@ -208,6 +255,22 @@ def test_discovery(section, expected):
             SECTION_OLD_DISMOUNTED,
             asm.ASM_DISKGROUP_DEFAULT_LEVELS,
             [Result(state=state.CRIT, summary="Diskgroup dismounted")],
+        ),
+        (
+            SECTION_CLUTTERED_WITH_DEPREACTED_AGENT_OUTPUT,
+            asm.ASM_DISKGROUP_DEFAULT_LEVELS,
+            [
+                Result(
+                    state=state.WARN,
+                    summary="The deprecated Oracle Agent Plugin "
+                    "'mk_oracle_asm' from Checkmk Version 1.2.6 is "
+                    "still executed on this host. "
+                    "The section 'oracle_asm_diskgroup' is now "
+                    "generated by the plugin 'mk_oracle'. "
+                    "Please remove the deprecated Plugin",
+                ),
+                Result(state=state.CRIT, summary="Diskgroup dismounted"),
+            ],
         ),
         (
             SECTION_OLD_MOUNTED,

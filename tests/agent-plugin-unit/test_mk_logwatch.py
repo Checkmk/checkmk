@@ -113,10 +113,18 @@ def test_iter_config_lines(mk_logwatch, tmpdir):
     os.mkdir(fake_config_path)
 
     fake_config_file = os.path.join(fake_config_path, "logwatch.cfg")
+    files = [fake_config_file]
+
+    # No config file at all available, raise in debug mode!
+    with pytest.raises(IOError):
+        list(mk_logwatch.iter_config_lines(files, debug=True))
+
+    # But it's ok without debug
+    list(mk_logwatch.iter_config_lines(files))
+
     with open(fake_config_file, "wb") as f:
         f.write(u"# this is a comment\nthis is a line   ".encode("utf-8"))
 
-    files = [fake_config_file]
     read = list(mk_logwatch.iter_config_lines(files))
 
     assert read == ['this is a line']

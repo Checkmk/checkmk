@@ -305,6 +305,7 @@ def get_config_files(directory, config_file_arg=None):
 
 
 def iter_config_lines(files, debug=False):
+    no_cfg_content_yielded = True
     for file_ in files:
         try:
             with open(file_, 'rb') as fid:
@@ -313,12 +314,17 @@ def iter_config_lines(files, debug=False):
                     for line in decoded:
                         if not is_comment(line) and not is_empty(line):
                             yield line.rstrip()
+                            no_cfg_content_yielded = False
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
                     sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
         except IOError:
-            if debug:
-                raise
+            pass
+
+    if debug and no_cfg_content_yielded:
+        # We need at least one config file *with* content in one of the places:
+        # logwatch.d or MK_CONFDIR
+        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
 
 
 def consume_cluster_definition(config_lines):

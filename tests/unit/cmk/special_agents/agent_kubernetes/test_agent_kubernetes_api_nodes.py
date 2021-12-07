@@ -5,7 +5,7 @@ from kubernetes import client  # type: ignore[import] # pylint: disable=import-e
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
-from cmk.special_agents.utils_kubernetes.transform import Labels, node_conditions, parse_metadata
+from cmk.special_agents.utils_kubernetes.transform import node_conditions, parse_metadata
 
 
 class TestAPINode:
@@ -25,9 +25,9 @@ class TestAPINode:
                 "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
             ),
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
+            "labels": labels,
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        labels = Labels(labels)
         metadata = parse_metadata(metadata_obj)
         assert metadata.name == "k8"
         assert metadata.namespace is None

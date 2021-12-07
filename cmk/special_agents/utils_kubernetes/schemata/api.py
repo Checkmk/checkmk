@@ -20,15 +20,21 @@ from pydantic import BaseModel
 from pydantic.class_validators import validator
 from pydantic.fields import Field
 
-Labels = NewType("Labels", Dict[str, str])
 PodUID = NewType("PodUID", str)
+LabelName = NewType("LabelName", str)
+LabelValue = NewType("LabelValue", str)
+
+
+class Label(BaseModel):
+    name: LabelName
+    value: LabelValue
 
 
 class MetaData(BaseModel):
     name: str
     namespace: Optional[str] = None
     creation_timestamp: Optional[float] = None
-    labels: Optional[Labels] = None
+    labels: Optional[Mapping[LabelName, Label]] = None
     prefix = ""
     use_namespace = False
 

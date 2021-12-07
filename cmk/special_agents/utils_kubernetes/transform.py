@@ -14,13 +14,12 @@ from __future__ import annotations
 import datetime
 import time
 from collections import defaultdict
-from typing import Dict, List, NewType, Optional, Sequence, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
 from .schemata import api
-
-Labels = NewType("Labels", Dict[str, str])
+from .schemata.api import Label, LabelName, LabelValue
 
 
 def parse_frac_prefix(value: str) -> float:
@@ -87,15 +86,18 @@ def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
     return time.mktime(date_time.timetuple())
 
 
-def parse_metadata(metadata: client.V1ObjectMeta, labels=None) -> api.MetaData:
-    if not labels:
-        labels = metadata.labels if metadata.labels else {}
+def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label]]:
+    if labels is None:
+        return None
+    return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
 
+
+def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
     return api.MetaData(
         name=metadata.name,
         namespace=metadata.namespace,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
-        labels=labels,
+        labels=parse_labels(metadata.labels),
     )
 
 
@@ -206,7 +208,7 @@ def pod_conditions(
     return result
 
 
-def is_control_plane(labels: Optional[Labels]) -> bool:
+def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
     return labels is not None and (
         # 1.18 returns an empty string, 1.20 returns 'true'
         "node-role.kubernetes.io/master" in labels
@@ -275,11 +277,12 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
 
 
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
+    metadata = parse_metadata(node.metadata)
     return api.Node(
-        metadata=parse_metadata(node.metadata),
+        metadata=metadata,
         conditions=node_conditions(node),
         resources=parse_node_resources(node),
-        control_plane=is_control_plane(node.metadata.labels),
+        control_plane=is_control_plane(metadata.labels),
         kubelet_info=api.KubeletInfo(
             version=node.status.node_info.kubelet_version,
             health=kubelet_health,

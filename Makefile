@@ -467,10 +467,10 @@ setup:
 	    shellcheck \
 	    direnv \
 	    python3-pip \
-	    python3.8-dev \
+	    python3.9-dev \
 	    python-setuptools \
 	    chrpath \
-	    enchant \
+	    enchant-2 \
 	    ksh \
 	    p7zip-full \
 	    zlib1g-dev

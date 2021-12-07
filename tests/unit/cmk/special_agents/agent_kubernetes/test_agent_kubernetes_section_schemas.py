@@ -26,6 +26,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 )
 from cmk.base.plugins.agent_based.utils.k8s import Resources as ResourcesC
 from cmk.base.plugins.agent_based.utils.k8s import StartTime as StartTimeC
+from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle as PodLifeCycleC
 
 from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import ContainerInfo as ContainerInfoA
@@ -49,6 +50,7 @@ from cmk.special_agents.utils_kubernetes.schemata.section import PodCondition as
 from cmk.special_agents.utils_kubernetes.schemata.section import PodConditions as PodConditionsA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodContainers as PodContainersA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodInfo as PodInfoA
+from cmk.special_agents.utils_kubernetes.schemata.section import PodLifeCycle as PodLifeCycleA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodResources as PodResourcesA
 from cmk.special_agents.utils_kubernetes.schemata.section import (
     PodResourcesWithCapacity as PodResourcesWithCapacityA,
@@ -70,6 +72,7 @@ def test_schemata_did_not_diverge() -> None:
     assert PodConditionsA.schema() == PodConditionsC.schema()
     assert PodContainersA.schema() == PodContainersC.schema()
     assert PodResourcesA.schema() == PodResourcesC.schema()
+    assert PodLifeCycleA.schema() == PodLifeCycleC.schema()
     assert PodResourcesWithCapacityA.schema() == PodResourcesWithCapacityC.schema()
     assert ResourcesA.schema() == ResourcesC.schema()
     assert StartTimeA.schema() == StartTimeC.schema()

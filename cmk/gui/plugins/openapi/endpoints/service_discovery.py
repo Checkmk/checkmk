@@ -12,7 +12,9 @@ You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
-from typing import List, Optional
+from typing import List, Optional, Sequence
+
+from cmk.utils.type_defs import CheckPreviewEntry
 
 from cmk.gui import fields, watolib
 from cmk.gui.fields.utils import BaseSchema
@@ -27,7 +29,6 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.watolib.services import (
     checkbox_id,
-    CheckTable,
     Discovery,
     DiscoveryAction,
     DiscoveryOptions,
@@ -247,7 +248,7 @@ def execute(params):
 
 def _serve_services(
     host: watolib.CREHost,
-    discovered_services: CheckTable,
+    discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ):
     response = Response()
@@ -275,7 +276,7 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
 
 def serialize_service_discovery(
     host: watolib.CREHost,
-    discovered_services: CheckTable,
+    discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ):
 

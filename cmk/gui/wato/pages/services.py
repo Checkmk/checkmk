@@ -9,12 +9,24 @@ import ast
 import json
 import pprint
 import traceback
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Type
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Type,
+)
 
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import CheckPreviewEntry
 
 import cmk.gui.watolib as watolib
 from cmk.gui.background_job import JobStatusStates
@@ -50,8 +62,6 @@ from cmk.gui.watolib.check_mk_automations import active_check, update_host_label
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
-    CheckTable,
-    CheckTableEntry,
     Discovery,
     DiscoveryAction,
     DiscoveryOptions,
@@ -692,9 +702,9 @@ class DiscoveryPageRenderer:
         return discovery_result.job_status["is_active"]
 
     def _group_check_table_by_state(
-        self, check_table: CheckTable
-    ) -> Dict[str, List[CheckTableEntry]]:
-        by_group: Dict[str, List[CheckTableEntry]] = {}
+        self, check_table: Iterable[CheckPreviewEntry]
+    ) -> Mapping[str, Sequence[CheckPreviewEntry]]:
+        by_group: Dict[str, List[CheckPreviewEntry]] = {}
         for entry in check_table:
             by_group.setdefault(entry[0], []).append(entry)
         return by_group
@@ -845,7 +855,9 @@ class DiscoveryPageRenderer:
     def _enable_bulk_button(self, source, target):
         enable_page_menu_entry("bulk_%s_%s" % (source, target))
 
-    def _show_check_row(self, table, discovery_result, api_request, check, show_bulk_actions):
+    def _show_check_row(
+        self, table, discovery_result, api_request, check: CheckPreviewEntry, show_bulk_actions
+    ) -> None:
         (
             table_source,
             check_type,
@@ -861,7 +873,7 @@ class DiscoveryPageRenderer:
             _found_on_nodes,
         ) = check
 
-        statename = short_service_state_name(state, "")
+        statename = "" if state is None else short_service_state_name(state, "")
         if statename == "":
             statename = short_service_state_name(-1)
             stateclass = "state svcstate statep"

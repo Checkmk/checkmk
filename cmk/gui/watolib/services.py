@@ -13,7 +13,7 @@ from hashlib import sha256
 from typing import Any, Iterable, List, NamedTuple, Sequence, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import HostOrServiceConditions, SetAutochecksTable
+from cmk.utils.type_defs import CheckPreviewEntry, HostOrServiceConditions, SetAutochecksTable
 
 from cmk.automations.results import TryDiscoveryResult
 
@@ -86,14 +86,10 @@ class DiscoveryAction:
     UPDATE_SERVICES = "update_services"
 
 
-CheckTableEntry = Tuple  # TODO: Improve this type
-CheckTable = Sequence[CheckTableEntry]  # TODO: Improve this type
-
-
 class DiscoveryResult(NamedTuple):
     job_status: dict
     check_table_created: int
-    check_table: CheckTable
+    check_table: Sequence[CheckPreviewEntry]
     host_labels: dict
     new_labels: dict
     vanished_labels: dict

@@ -91,7 +91,7 @@ def link_rel(
     profile: Optional[str] = None,
     title: Optional[str] = None,
     parameters: Optional[Dict[str, str]] = None,
-    body_params: Optional[Dict[str, str]] = None,
+    body_params: Optional[Dict[str, Optional[str]]] = None,
 ) -> LinkType:
     """Link to a separate entity
 

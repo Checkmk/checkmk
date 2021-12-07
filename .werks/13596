@@ -1,0 +1,16 @@
+Title: Windows agent fileinfo section supports also files with limited access rights
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1638883129
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p17
+
+Previously, files like pagefile.sys could not be monitored by Checkmk, because 
+normal Win32 API can't get information about them. As result user see such files 
+as missing.
+
+With this release Windows agent uses different method to get information about 
+such and similar files, thus the problem has been eliminated.

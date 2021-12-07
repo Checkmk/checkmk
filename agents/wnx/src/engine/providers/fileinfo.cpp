@@ -21,6 +21,8 @@
 #include "tools/_win.h"
 #include "tools/_xlog.h"
 
+namespace fs = std::filesystem;
+
 namespace cma::provider::details {
 
 auto GetFileTimeSinceEpoch(const std::filesystem::path &file) noexcept {
@@ -424,6 +426,29 @@ std::tuple<uint64_t, int64_t, bool> GetFileStats(
     return {file_size, seconds, stat_failed};
 }
 
+std::tuple<uint64_t, int64_t, bool> GetFileStatsCreative(
+    const fs::path &file_path) {
+    std::error_code ec;
+    uint64_t file_size{0U};
+    int64_t seconds{0};
+    bool stat_failed = true;
+    for (auto const &dir_entry :
+         fs::directory_iterator{file_path.parent_path()}) {
+        if (tools::IsEqual(dir_entry.path().wstring(), file_path.wstring())) {
+            file_size = dir_entry.file_size(ec);
+            auto stamp = dir_entry.last_write_time().time_since_epoch();
+            auto duration =
+                std::chrono::duration_cast<std::chrono::seconds>(stamp);
+            seconds = duration.count();
+            CorrectSeconds(seconds);
+            stat_failed = false;
+            break;
+        }
+    }
+
+    return {file_size, seconds, stat_failed};
+}
+
 std::string MakeFileInfoStringMissing(const std::filesystem::path &file_name,
                                       FileInfo::Mode mode) {
     std::string out =
@@ -439,9 +464,15 @@ std::string MakeFileInfoStringMissing(const std::filesystem::path &file_name,
     return out;
 }
 
-std::string MakeFileInfoStringPresented(const std::filesystem::path &file_name,
-                                        FileInfo::Mode mode) {
-    auto [file_size, seconds, stat_failed] = GetFileStats(file_name);
+std::string MakeFileInfoString(const fs::path &file_path, FileInfo::Mode mode) {
+    std::error_code ec;
+    auto presented = fs::exists(file_path, ec);
+    auto file_name = GetOsPathWithCase(file_path);  // correct cases
+    if (!presented && ec.value() != 32) {
+        return MakeFileInfoStringMissing(file_name, mode);
+    }
+    auto [file_size, seconds, stat_failed] =
+        presented ? GetFileStats(file_name) : GetFileStatsCreative(file_name);
 
     switch (mode) {
         case FileInfo::Mode::legacy:
@@ -454,17 +485,6 @@ std::string MakeFileInfoStringPresented(const std::filesystem::path &file_name,
     // unreachable
     return {};
 }
-
-std::string MakeFileInfoString(const std::filesystem::path &file_path,
-                               FileInfo::Mode mode) {
-    std::error_code ec;
-    auto presented = std::filesystem::exists(file_path, ec);
-    auto file_name = GetOsPathWithCase(file_path);  // correct cases
-    if (!presented) return MakeFileInfoStringMissing(file_name, mode);
-
-    return MakeFileInfoStringPresented(file_name, mode);
-}
-
 namespace {
 bool IsDriveLetterAtTheStart(std::string_view text) noexcept {
     return text.size() > 2 && text[1] == ':' && std::isalpha(text[0]) != 0;

@@ -59,8 +59,6 @@ std::string MakeFileInfoString(const std::filesystem::path &file_path,
                                FileInfo::Mode mode);
 std::string MakeFileInfoStringMissing(const std::filesystem::path &file_name,
                                       FileInfo::Mode mode);
-std::string MakeFileInfoStringPresented(const std::filesystem::path &file_name,
-                                        FileInfo::Mode mode);
 
 // ------------------------------------------------------
 // Specials:

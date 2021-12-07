@@ -42,7 +42,8 @@ static void CheckTablePresent(std::vector<std::string>& table,
         mode == FileInfo::Mode::modern ? 1 : 0;  // modern: we have OK column
 
     ASSERT_EQ(table.size(), 3 + shift);
-    EXPECT_EQ(table[0], name);
+    EXPECT_NE(table[0], name);
+    EXPECT_TRUE(tools::IsEqual(table[0], name));
     if (shift) EXPECT_EQ(table[1], FileInfo::kOk);
 
     EXPECT_TRUE(std::stoll(table[1 + shift]) > 0);
@@ -615,21 +616,21 @@ int64_t SecondsSinceEpoch(const std::string& name) {
         write_time.time_since_epoch());
     return time_since_epoch.count();
 }
+FileInfo::Mode modes[] = {FileInfo::Mode::legacy, FileInfo::Mode::modern};
 }  // namespace
 
-TEST(FileInfoTest, MakeFileInfoPresented) {
+TEST(FileInfoTest, MakeFileInfoString) {
     // EXPECTED strings
     // "fname|ok|500|153334455\n"
     // "fname|500|153334455\n"
 
     const std::string fname{"c:\\Windows\\noTepad.exE"};
     auto age_since_epoch = SecondsSinceEpoch(fname);
-    FileInfo::Mode modes[] = {FileInfo::Mode::legacy, FileInfo::Mode::modern};
 
     for (auto mode : modes) {
         SCOPED_TRACE(fmt::format("Mode is {}", static_cast<int>(mode)));
         static const std::string name = "c:\\Windows\\notepad.EXE";
-        auto x = details::MakeFileInfoStringPresented(name, mode);
+        auto x = details::MakeFileInfoString(name, mode);
         CheckString(x);
 
         auto table = cma::tools::SplitString(x, "|");
@@ -639,6 +640,23 @@ TEST(FileInfoTest, MakeFileInfoPresented) {
         auto obtained_time = std::chrono::system_clock::to_time_t(now);
         EXPECT_GT(obtained_time, tt);
         EXPECT_EQ(age_since_epoch, tt);
+    }
+}
+
+TEST(FileInfoTest, MakeFileInfoStringPageFile) {
+    const std::string fname{"c:\\Windows\\pagefile.SyS"};
+    for (auto mode : modes) {
+        SCOPED_TRACE(fmt::format("Mode is {}", static_cast<int>(mode)));
+        static const std::string name = "c:\\Windows\\notepad.EXE";
+        auto x = details::MakeFileInfoString(name, mode);
+        CheckString(x);
+
+        auto table = cma::tools::SplitString(x, "|");
+        CheckTablePresent(table, name, mode);
+        auto tt = std::atoll(table[table.size() - 1].c_str());
+        const auto now = std::chrono::system_clock::now();
+        auto obtained_time = std::chrono::system_clock::to_time_t(now);
+        EXPECT_GT(obtained_time, tt);
     }
 }
 
@@ -672,7 +690,7 @@ TEST(FileInfoTest, MakeFileInfo) {
         }
     }
 
-    static constexpr std::string_view names_2[] = {"C:\\Windows\\notepad.exe"};
+    static constexpr std::string_view names_2[] = {"C:\\Windows\\NotepaD.exe"};
     for (auto& n : names_2) {
         for (auto m : modes) {
             SCOPED_TRACE(

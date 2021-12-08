@@ -9,7 +9,7 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 """
 from typing import List, NamedTuple, Optional, Union
 
-import cmk.gui.notify as notify
+import cmk.gui.message as message
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config, html, output_funnel, request, response, user
 from cmk.gui.htmllib import HTML
@@ -108,7 +108,7 @@ class MainMenuRenderer:
 def ajax_message_read():
     response.set_content_type("application/json")
     try:
-        notify.delete_gui_message(request.var("id"))
+        message.delete_gui_message(request.var("id"))
         html.write_text("OK")
     except Exception:
         if config.debug:
@@ -122,7 +122,7 @@ class ModeAjaxSidebarGetMessages(AjaxPage):
         popup_msg: List = []
         hint_msg: int = 0
 
-        for msg in notify.get_gui_messages():
+        for msg in message.get_gui_messages():
             if "gui_hint" in msg["methods"]:
                 hint_msg += 1
             if "gui_popup" in msg["methods"]:

@@ -85,23 +85,23 @@ def save_gui_messages(messages, user_id=None):
     store.save_object_to_file(path, messages)
 
 
-def _notify_methods() -> Dict[str, Dict[str, Any]]:
+def _messaging_methods() -> Dict[str, Dict[str, Any]]:
     return {
         "gui_popup": {
             "title": _("Open window in the user interface"),
-            "handler": notify_gui_msg,
+            "handler": message_gui,
         },
         "gui_hint": {
             "title": _("Show hint in the 'User' menu"),
-            "handler": notify_gui_msg,
+            "handler": message_gui,
         },
         "mail": {
             "title": _("Send an E-Mail"),
-            "handler": notify_mail,
+            "handler": message_mail,
         },
         "dashlet": {
-            "title": _("Show notification in dashboard element 'User notifications'"),
-            "handler": notify_gui_msg,
+            "title": _("Show message in dashboard element 'User messages'"),
+            "handler": message_gui,
         },
     }
 
@@ -109,10 +109,10 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
 permission_registry.register(
     Permission(
         section=PermissionSectionGeneral,
-        name="notify",
-        title=_l("Notify Users"),
+        name="message",
+        title=_l("Message users"),
         description=_l(
-            "This permissions allows users to send notifications to the users of "
+            "This permission allows users to send messages to the users of "
             "the monitoring system using the web interface."
         ),
         defaults=["admin"],
@@ -120,28 +120,28 @@ permission_registry.register(
 )
 
 
-@cmk.gui.pages.register("notify")
-def page_notify():
-    if not user.may("general.notify"):
-        raise MKAuthException(_("You are not allowed to use the notification module."))
+@cmk.gui.pages.register("message")
+def page_message():
+    if not user.may("general.message"):
+        raise MKAuthException(_("You are not allowed to use the message module."))
 
-    title = _("Notify users")
+    title = _("Message users")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
     menu = _page_menu(breadcrumb)
     html.header(title, breadcrumb, menu)
 
-    vs_notify = _vs_notify()
+    vs_message = _vs_message()
 
     if transactions.check_transaction():
         try:
-            msg = vs_notify.from_html_vars("_notify")
-            vs_notify.validate_value(msg, "_notify")
-            _process_notify_message(msg)
+            msg = vs_message.from_html_vars("_message")
+            vs_message.validate_value(msg, "_message")
+            _process_message_message(msg)
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("notify", method="POST")
-    vs_notify.render_input_as_form("_notify", {})
+    html.begin_form("message", method="POST")
+    vs_message.render_input_as_form("_message", {})
 
     html.hidden_fields()
     html.end_form()
@@ -152,9 +152,9 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     menu = make_simple_form_page_menu(
         _("Users"),
         breadcrumb,
-        form_name="notify",
+        form_name="message",
         button_name="_save",
-        save_title=_("Send notification"),
+        save_title=_("Send message"),
     )
 
     menu.dropdowns.insert(
@@ -180,7 +180,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return menu
 
 
-def _vs_notify():
+def _vs_message():
     dest_choices: List[CascadingDropdownChoice] = [
         ("broadcast", _("Everybody (Broadcast)")),
         (
@@ -214,10 +214,10 @@ def _vs_notify():
             (
                 "dest",
                 CascadingDropdown(
-                    title=_("Send notification to"),
+                    title=_("Send message to"),
                     help=_(
-                        "You can send the notification to a list of multiple users, which "
-                        "can be choosen out of these predefined filters."
+                        "You can send the message to a list of multiple users, which "
+                        "can be chosen out of these predefined filters."
                     ),
                     choices=dest_choices,
                 ),
@@ -225,9 +225,9 @@ def _vs_notify():
             (
                 "methods",
                 ListChoice(
-                    title=_("How to notify"),
+                    title=_("How to message"),
                     allow_empty=False,
-                    choices=[(k, v["title"]) for k, v in _notify_methods().items()],
+                    choices=[(k, v["title"]) for k, v in _messaging_methods().items()],
                     default_value=["popup"],
                 ),
             ),
@@ -237,12 +237,12 @@ def _vs_notify():
                     AbsoluteDate(
                         include_time=True,
                     ),
-                    title=_("Automatically invalidate notification"),
+                    title=_("Automatically invalidate message"),
                     label=_("Enable automatic invalidation at"),
                     help=_(
                         "It is possible to automatically delete messages when the "
                         "configured time is reached. This makes it possible to inform "
-                        "users about a scheduled event but suppress the notification "
+                        "users about a scheduled event but suppress the message "
                         "after the event has happened."
                     ),
                 ),
@@ -255,12 +255,12 @@ def _vs_notify():
 
 def _validate_msg(msg, varprefix):
     if not msg.get("methods"):
-        raise MKUserError("methods", _("Please select at least one notification method."))
+        raise MKUserError("methods", _("Please select at least one messaging method."))
 
-    valid_methods = set(_notify_methods().keys())
+    valid_methods = set(_messaging_methods().keys())
     for method in msg["methods"]:
         if method not in valid_methods:
-            raise MKUserError("methods", _("Invalid notitification method selected."))
+            raise MKUserError("methods", _("Invalid messaging method selected."))
 
     # On manually entered list of users validate the names
     if isinstance(msg["dest"], tuple) and msg["dest"][0] == "list":
@@ -270,7 +270,7 @@ def _validate_msg(msg, varprefix):
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_notify_message(msg):
+def _process_message_message(msg):
     msg["id"] = utils.gen_id()
     msg["time"] = time.time()
 
@@ -294,25 +294,25 @@ def _process_notify_message(msg):
     for method in msg["methods"]:
         num_success[method] = 0
 
-    # Now loop all notitification methods to send the notifications
+    # Now loop all messaging methods to send the messages
     errors: Dict[str, List[Tuple]] = {}
     for user_id in recipients:
         for method in msg["methods"]:
             try:
-                handler = _notify_methods()[method]["handler"]
+                handler = _messaging_methods()[method]["handler"]
                 handler(user_id, msg)
                 num_success[method] = num_success[method] + 1
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
-    message = escape_html_permissive(_("The notification has been sent via"))
+    message = escape_html_permissive(_("The message has been sent via"))
     message += html.render_br()
 
     parts = []
     for method in msg["methods"]:
         parts.append(
             html.render_tr(
-                html.render_td(_notify_methods()[method]["title"])
+                html.render_td(_messaging_methods()[method]["title"])
                 + html.render_td(
                     _("to %d of %d recipients") % (num_success[method], num_recipients)
                 )
@@ -320,14 +320,14 @@ def _process_notify_message(msg):
         )
     message += html.render_table(HTML().join(parts))
 
-    message += html.render_p(_("Sent notification to: %s") % ", ".join(recipients))
+    message += html.render_p(_("Sent message to: %s") % ", ".join(recipients))
     message += html.render_a(_("Back to previous page"), href=makeuri(request, []))
     html.show_message(message)
 
     if errors:
         error_message = HTML()
         for method, method_errors in errors.items():
-            error_message += _("Failed to send %s notifications to the following users:") % method
+            error_message += _("Failed to send %s messages to the following users:") % method
             table_rows = HTML()
             for user_id, exception in method_errors:
                 table_rows += html.render_tr(
@@ -337,17 +337,10 @@ def _process_notify_message(msg):
         html.show_error(error_message)
 
 
-#   .--Notify Plugins------------------------------------------------------.
-#   |    _   _       _   _  __         ____  _             _               |
-#   |   | \ | | ___ | |_(_)/ _|_   _  |  _ \| |_   _  __ _(_)_ __  ___     |
-#   |   |  \| |/ _ \| __| | |_| | | | | |_) | | | | |/ _` | | '_ \/ __|    |
-#   |   | |\  | (_) | |_| |  _| |_| | |  __/| | |_| | (_| | | | | \__ \    |
-#   |   |_| \_|\___/ \__|_|_|  \__, | |_|   |_|\__,_|\__, |_|_| |_|___/    |
-#   |                          |___/                 |___/                 |
-#   +----------------------------------------------------------------------+
+#   ---Message Plugins-------------------------------------------------------
 
 
-def notify_gui_msg(user_id, msg):
+def message_gui(user_id, msg):
     messages = get_gui_messages(user_id)
     if msg not in messages:
         messages.append(msg)
@@ -355,7 +348,7 @@ def notify_gui_msg(user_id, msg):
     return True
 
 
-def notify_mail(user_id, msg):
+def message_mail(user_id, msg):
     users = userdb.load_users(lock=False)
     user_spec = users.get(user_id)
 
@@ -375,13 +368,13 @@ def notify_mail(user_id, msg):
     if not sender_name:
         sender_name = user_id
 
-    # Code mostly taken from notify_via_email() from notify.py module
-    subject = _("Checkmk: Notification")
+    # Code mostly taken from message_via_email() from message.py module
+    subject = _("Checkmk: Message")
     body = (
         _(
             """Greetings %s,
 
-%s sent you a notification:
+%s sent you a message:
 
 ---
 %s
@@ -393,12 +386,12 @@ def notify_mail(user_id, msg):
     )
 
     if msg["valid_till"]:
-        body += _("This notification has been created at %s and is valid till %s.") % (
+        body += _("This message has been created at %s and is valid till %s.") % (
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg["time"])),
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg["valid_till"])),
         )
 
-    # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
+    # FIXME: Maybe use the configured mail command for Check_MK-Message one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
     # ? type of user_spec seems to be Dict[str,Any]
@@ -409,7 +402,7 @@ def notify_mail(user_id, msg):
         ensure_str(user_spec["email"]),  # pylint: disable= six-ensure-str-bin-call
     ]
 
-    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
+    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send messages
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
     # available. If e.g. nail detects a non-Ascii character in the mail body and
     # the specified encoding is not available, it will silently not send the mail!

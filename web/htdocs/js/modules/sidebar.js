@@ -1014,7 +1014,7 @@ var g_may_ack = false;
 
 export function init_messages_and_werks(interval, may_ack) {
     g_sidebar_notify_interval = interval;
-    create_initial_ids("user", "messages", "user_notify.py");
+    create_initial_ids("user", "messages", "user_message.py");
     // Are there pending messages? Render the initial state of
     // trigger button
     update_messages();

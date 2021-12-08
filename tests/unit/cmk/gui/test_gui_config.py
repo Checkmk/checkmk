@@ -337,7 +337,7 @@ def test_registered_permissions():
         "general.ignore_hard_limit",
         "general.ignore_soft_limit",
         "general.logout",
-        "general.notify",
+        "general.message",
         "general.painter_options",
         "general.parent_child_topology",
         "general.publish_bookmark_list",

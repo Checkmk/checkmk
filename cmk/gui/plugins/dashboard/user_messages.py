@@ -6,36 +6,28 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
-from cmk.gui.user_notify import render_user_notification_table
+from cmk.gui.user_message import render_user_message_table
 
 
 @dashlet_registry.register
-class NotifyUsersDashlet(Dashlet):
-    """Dashlet that displays GUI notifications for users"""
+class MessageUsersDashlet(Dashlet):
+    """Dashlet that displays GUI messages for users"""
 
     @classmethod
     def type_name(cls):
-        return "notify_users"
+        return "user_messages"
 
     @classmethod
     def title(cls):
-        return _("User notifications")
+        return _("User messages")
 
     @classmethod
     def description(cls):
-        return _("Display GUI notifications sent to users.")
+        return _("Display GUI messages sent to users.")
 
     @classmethod
     def sort_index(cls):
         return 75
 
-    @classmethod
-    def styles(cls):
-        return """
-.notify_users {
-    width: 100%;
-    height: 100%;
-}"""
-
     def show(self):
-        render_user_notification_table("dashlet")
+        render_user_message_table("dashlet")

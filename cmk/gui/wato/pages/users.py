@@ -87,6 +87,8 @@ class ModeUsers(WatoMode):
         return _("Users")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
+        del breadcrumb[-1]
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -131,8 +133,8 @@ class ModeUsers(WatoMode):
                             entries=list(self._page_menu_entries_synchronized_users()),
                         ),
                         PageMenuTopic(
-                            title=_("Notify users"),
-                            entries=list(self._page_menu_entries_notify_users()),
+                            title=_("Message users"),
+                            entries=list(self._page_menu_entries_message_users()),
                         ),
                         make_checkbox_selection_topic(self.name()),
                     ],
@@ -167,12 +169,12 @@ class ModeUsers(WatoMode):
                     item=make_simple_link(self._job.detail_url()),
                 )
 
-    def _page_menu_entries_notify_users(self) -> Iterator[PageMenuEntry]:
-        if user.may("general.notify"):
+    def _page_menu_entries_message_users(self) -> Iterator[PageMenuEntry]:
+        if user.may("general.message"):
             yield PageMenuEntry(
-                title=_("Notify users"),
-                icon_name="notifications",
-                item=make_simple_link("notify.py"),
+                title=_("Message users"),
+                icon_name="message",
+                item=make_simple_link("message.py"),
             )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
@@ -363,10 +365,10 @@ class ModeUsers(WatoMode):
                 )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
-                notifications_url = watolib.folder_preserving_link(
-                    [("mode", "user_notifications"), ("user", uid)]
-                )
                 if rulebased_notifications_enabled():
+                    notifications_url = watolib.folder_preserving_link(
+                        [("mode", "user_notifications"), ("user", uid)]
+                    )
                     html.icon_button(
                         notifications_url,
                         _("Custom notification table of this user"),

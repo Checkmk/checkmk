@@ -74,16 +74,6 @@ def edition_title():
     return "Checkmk Raw Edition"
 
 
-def edition_title_acronym():
-    if is_enterprise_edition():
-        return "CEE"
-    if is_managed_edition():
-        return "CME"
-    if is_free_edition():
-        return "CFE"
-    return "CRE"
-
-
 class TrialState(enum.Enum):
     """All possible states of the free version"""
 

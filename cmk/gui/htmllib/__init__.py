@@ -995,6 +995,9 @@ class html(ABCHTMLGenerator):
         return self.render_div(HTML(help_text), class_="help", style=style)
 
     def resolve_help_text_macros(self, text: str) -> str:
+        # text = ".*[<page_name>#<anchor_name>|<link_title>].*"
+        # e.g. text = "[intro_setup#install|Welcome]" returns
+        #      <a href="https://docs.checkmk.com/master/en/intro_setup.html#install">Welcome</a>
         return re.sub(
             r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
             '<a href="%s/\\1.html\\2" target="_blank">\\3</a>' % user.get_docs_base_url(),

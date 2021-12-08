@@ -119,8 +119,15 @@ local_gui_plugins_dir = _local_path(gui_plugins_dir)
 
 license_usage_dir = Path(var_dir, "license_usage")
 
+# Agent registration paths
 received_outputs_dir = Path(omd_root, "var/agent-receiver/received-outputs")
 data_source_push_agent_dir = Path(data_source_cache_dir, "push-agent")
+_r4r_base_dir = Path(var_dir, "wato/requests-for-registration")
+r4r_new_dir = _r4r_base_dir.joinpath("NEW")
+r4r_pending_dir = _r4r_base_dir.joinpath("PENDING")
+r4r_declined_dir = _r4r_base_dir.joinpath("DECLINED")
+r4r_ready_dir = _r4r_base_dir.joinpath("READY")
+r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
 
 def make_experimental_config_file() -> Path:

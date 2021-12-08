@@ -50,6 +50,12 @@ pathlib_paths = [
     "profile_dir",
     "received_outputs_dir",
     "data_source_push_agent_dir",
+    "_r4r_base_dir",
+    "r4r_new_dir",
+    "r4r_pending_dir",
+    "r4r_declined_dir",
+    "r4r_ready_dir",
+    "r4r_discoverable_dir",
 ]
 
 

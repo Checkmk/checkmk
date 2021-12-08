@@ -9,8 +9,16 @@ from uuid import UUID
 
 import pytest
 
-from cmk.utils.agent_registration import UUIDLink, UUIDLinkManager
-from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
+from cmk.utils.agent_registration import get_r4r_filepath, UUIDLink, UUIDLinkManager
+from cmk.utils.paths import (
+    data_source_push_agent_dir,
+    r4r_declined_dir,
+    r4r_discoverable_dir,
+    r4r_new_dir,
+    r4r_pending_dir,
+    r4r_ready_dir,
+    received_outputs_dir,
+)
 from cmk.utils.type_defs import HostName
 
 
@@ -108,7 +116,8 @@ def test_uuid_link_manager_create_link_to_different_uuid():
     assert link.target == data_source_push_agent_dir.joinpath(hostname)
 
 
-def test_uuid_link_manager_update_links():
+@pytest.mark.parametrize("create_target_dir", [True, False])
+def test_uuid_link_manager_update_links_host_push(create_target_dir: bool) -> None:
     hostname = "my-hostname"
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
@@ -116,7 +125,10 @@ def test_uuid_link_manager_update_links():
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
+    # During link creation the cmk_agent_connection could possibly not be calculated yet,
+    # ie. push-agent or other.
+    # During links update the target dirs are created for push hosts.
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=create_target_dir)
     uuid_link_manager.update_links({hostname: {"cmk_agent_connection": "push-agent"}})
 
     assert len(list(received_outputs_dir.iterdir())) == 1
@@ -154,7 +166,7 @@ def test_uuid_link_manager_update_links_no_host():
     assert not data_source_push_agent_dir.exists()
 
 
-def test_uuid_link_manager_update_links_no_push_host():
+def test_uuid_link_manager_update_links_host_no_push():
     hostname = "my-hostname"
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
@@ -172,3 +184,39 @@ def test_uuid_link_manager_update_links_no_push_host():
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
     assert link.target == data_source_push_agent_dir.joinpath(hostname)
+
+
+@pytest.mark.parametrize(
+    "folder, has_link",
+    [
+        (r4r_new_dir, False),
+        (r4r_pending_dir, False),
+        (r4r_declined_dir, False),
+        (r4r_ready_dir, True),
+        (r4r_discoverable_dir, True),
+    ],
+)
+def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
+    folder: Path,
+    has_link: bool,
+) -> None:
+    hostname = "my-hostname"
+    raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
+
+    folder.mkdir(parents=True, exist_ok=True)
+    with get_r4r_filepath(folder, UUID(raw_uuid)).open("w") as f:
+        f.write("")
+
+    uuid_link_manager = UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+    )
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
+    uuid_link_manager.update_links({})
+
+    if has_link:
+        assert len(list(received_outputs_dir.iterdir())) == 1
+    else:
+        assert list(received_outputs_dir.iterdir()) == []
+
+    assert not data_source_push_agent_dir.exists()

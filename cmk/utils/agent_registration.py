@@ -8,7 +8,12 @@ from pathlib import Path
 from typing import Any, Iterator, Mapping, NamedTuple, Optional
 from uuid import UUID
 
+import cmk.utils.paths
 from cmk.utils.type_defs import HostName
+
+
+def get_r4r_filepath(folder: Path, uuid: UUID) -> Path:
+    return folder.joinpath(f"{uuid}.json")
 
 
 class UUIDLink(NamedTuple):
@@ -68,8 +73,8 @@ class UUIDLinkManager:
         if self._find_and_cleanup_existing_links(hostname, uuid):
             return
 
-        source = self._received_outputs_dir / f"{uuid}"
         self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
+        source = self._received_outputs_dir / f"{uuid}"
 
         target_dir = self._data_source_dir / f"{hostname}"
         if create_target_dir:
@@ -88,14 +93,23 @@ class UUIDLinkManager:
 
     def update_links(self, host_configs: Mapping[HostName, Mapping[str, Any]]) -> None:
         for link in self:
-            host_config = host_configs.get(link.hostname)
-            if host_config is None:
+            if (host_config := host_configs.get(link.hostname)) is None:
+                if self._is_ready_or_discoverable(link.uuid):
+                    # Host may not be synced yet, thus we check if UUID is in READY or DISCOVERABLE
+                    # folder.
+                    continue
                 link.unlink()
-
-            elif host_config.get("cmk_agent_connection", "") == "push-agent":
-                target_dir = self._data_source_dir / link.hostname
-                target_dir.mkdir(parents=True, exist_ok=True)
-
             else:
-                # Symlink must be kept for the pull case: we need the uuid<->hostname mapping.
-                link.unlink_target()
+                if host_config.get("cmk_agent_connection", "") == "push-agent":
+                    target_dir = self._data_source_dir / link.hostname
+                    target_dir.mkdir(parents=True, exist_ok=True)
+                else:
+                    # Symlink must be kept for the pull case: we need the uuid<->hostname mapping.
+                    link.unlink_target()
+
+    @staticmethod
+    def _is_ready_or_discoverable(uuid: UUID) -> bool:
+        return any(
+            get_r4r_filepath(folder, uuid).exists()
+            for folder in [cmk.utils.paths.r4r_ready_dir, cmk.utils.paths.r4r_discoverable_dir]
+        )

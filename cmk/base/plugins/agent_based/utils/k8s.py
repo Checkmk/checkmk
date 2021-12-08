@@ -96,6 +96,16 @@ class Subset:
 
 ContainerName = NewType("ContainerName", str)
 PodSequence = Sequence[str]
+LabelName = NewType("LabelName", str)
+LabelValue = NewType("LabelValue", str)
+
+
+class Label(BaseModel):
+    name: LabelName
+    value: LabelValue
+
+
+Labels = Mapping[LabelName, Label]
 
 
 class PerformanceMetric(BaseModel):
@@ -173,6 +183,15 @@ class Memory(BaseModel):
     """section: k8s_live_memory_v1"""
 
     containers: Sequence[ContainerMemory]
+
+
+class NodeInfo(BaseModel):
+    """section: kube_node_info_v1"""
+
+    architecture: str
+    kernel_version: str
+    os_image: str
+    labels: Labels
 
 
 class Resources(BaseModel):

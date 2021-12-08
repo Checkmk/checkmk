@@ -9,7 +9,7 @@ mod config;
 mod monitoring_data;
 mod tls_server;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use config::RegistrationState;
+use config::{JSONLoader, RegistrationState};
 use nix::unistd;
 use std::fs;
 use std::io::Result as IoResult;
@@ -184,7 +184,7 @@ fn disallow_legacy_pull() -> IoResult<()> {
 }
 
 fn get_reg_state(path: &Path) -> AnyhowResult<config::RegistrationState> {
-    config::RegistrationState::from_file(path)
+    config::RegistrationState::load(path)
 }
 
 fn init_logging(path: &Path) -> AnyhowResult<()> {

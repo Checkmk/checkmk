@@ -4,12 +4,26 @@
 
 use super::cli;
 use anyhow::{Context, Result as AnyhowResult};
+use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fs::{read_to_string, write};
 use std::io;
 use std::path::Path;
+
+pub trait JSONLoader: DeserializeOwned {
+    fn new() -> AnyhowResult<Self> {
+        Ok(serde_json::from_str("{}")?)
+    }
+
+    fn load(path: &Path) -> AnyhowResult<Self> {
+        if !path.exists() {
+            return Self::new();
+        }
+        Ok(serde_json::from_str(&read_to_string(path)?)?)
+    }
+}
 
 pub type AgentLabels = HashMap<String, String>;
 
@@ -37,19 +51,7 @@ pub struct ConfigFromDisk {
     pub agent_labels: Option<AgentLabels>,
 }
 
-impl ConfigFromDisk {
-    fn new() -> AnyhowResult<ConfigFromDisk> {
-        Ok(serde_json::from_str("{}")?)
-    }
-
-    pub fn load(path: &Path) -> AnyhowResult<ConfigFromDisk> {
-        if path.exists() {
-            return Ok(serde_json::from_str(&read_to_string(path)?)?);
-        }
-
-        ConfigFromDisk::new()
-    }
-}
+impl JSONLoader for ConfigFromDisk {}
 
 pub enum HostRegistrationData {
     Name(String),
@@ -112,19 +114,9 @@ pub struct ServerSpec {
     pub root_cert: String,
 }
 
+impl JSONLoader for RegistrationState {}
+
 impl RegistrationState {
-    fn new() -> AnyhowResult<RegistrationState> {
-        Ok(serde_json::from_str("{}")?)
-    }
-
-    pub fn from_file(path: &Path) -> AnyhowResult<RegistrationState> {
-        if path.exists() {
-            return Ok(serde_json::from_str(&read_to_string(path)?)?);
-        }
-
-        RegistrationState::new()
-    }
-
     pub fn to_file(&self, path: &Path) -> io::Result<()> {
         write(path, &serde_json::to_string(self)?)
     }

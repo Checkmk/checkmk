@@ -5072,6 +5072,10 @@ msgstr ""
 msgid "Another host renaming job is already running: %s"
 msgstr "Ya se está ejecutando otro trabajo de renombramiento de host: %s"
 
+#, fuzzy
+msgid "Another omd config change job is already running."
+msgstr "Ya se está ejecutando otro trabajo de renombramiento de host: %s"
+
 msgid "Another renaming operation is currently in progress"
 msgstr "Se está llevando a cabo otra operación de cambio de nombre"
 
@@ -5228,6 +5232,10 @@ msgstr "Aplicar el tiempo máximo de retardo"
 
 msgid "Apply Lag Minimum Time"
 msgstr "Aplicar el tiempo mínimo de retraso"
+
+#, fuzzy
+msgid "Apply OMD config changes"
+msgstr "Aplicar Lag"
 
 #, fuzzy
 msgid "Apply changes"
@@ -28850,7 +28858,7 @@ msgid "Maximum age of backups"
 msgstr "Antigüedad máxima de las copias de seguridad"
 
 #, fuzzy
-msgid "Maximum age of fetched events"
+msgid "Maximum age of fetched events (10 hours max.)"
 msgstr "Tasa máxima de paquetes aceptados"
 
 msgid "Maximum age of latest timemachine backup"
@@ -32575,6 +32583,10 @@ msgstr "Configuración OMD"
 
 msgid "OMD Site"
 msgstr "Sitio de la OMD"
+
+#, fuzzy
+msgid "OMD config changes have been applied."
+msgstr "Tus cambios se han guardado."
 
 msgid "OMD monitoring cores"
 msgstr "Núcleos de control de la OMD"

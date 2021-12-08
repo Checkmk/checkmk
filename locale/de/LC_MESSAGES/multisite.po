@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-11-19 07:22+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2021-12-07 07:00+0000\n"
+"Last-Translator: Sebastian Kirchmeyer <sebastian.kirchmeyer@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -5044,6 +5044,10 @@ msgstr ""
 msgid "Another host renaming job is already running: %s"
 msgstr "Ein weiterer Host-Umbenennungsauftrag läuft bereits: %s"
 
+#, fuzzy
+msgid "Another omd config change job is already running."
+msgstr "Ein weiterer Host-Umbenennungsauftrag läuft bereits: %s"
+
 msgid "Another renaming operation is currently in progress"
 msgstr "Eine andere Umbenennung wird gerade durchgeführt"
 
@@ -5202,6 +5206,10 @@ msgstr "Maximale Zeit für das Apply-Lag"
 
 msgid "Apply Lag Minimum Time"
 msgstr "Minimale Zeit für das Apply-Lag"
+
+#, fuzzy
+msgid "Apply OMD config changes"
+msgstr "Verzögerung des Anwendens"
 
 #, fuzzy
 msgid "Apply changes"
@@ -8242,7 +8250,7 @@ msgid "Changed notification rule %d of user %s"
 msgstr "Alarmierungsregel %d von Benutzer %s geändert"
 
 msgid "Changed order of tag groups"
-msgstr "Reihenfolge der Tag-Gruppen geändert"
+msgstr "Reihenfolge der Merkmalsgruppen geändert"
 
 #, python-format
 msgid "Changed position of %s %d"
@@ -28660,7 +28668,7 @@ msgid "Maximum age of backups"
 msgstr "Maximales Alter für Backups"
 
 #, fuzzy
-msgid "Maximum age of fetched events"
+msgid "Maximum age of fetched events (10 hours max.)"
 msgstr "Maximale Rate für akzeptierte Pakete"
 
 msgid "Maximum age of latest timemachine backup"
@@ -32371,6 +32379,10 @@ msgstr "OMD Konfiguration"
 
 msgid "OMD Site"
 msgstr "OMD Instanz"
+
+#, fuzzy
+msgid "OMD config changes have been applied."
+msgstr "Ihre Änderungen wurden gespeichert."
 
 msgid "OMD monitoring cores"
 msgstr "OMD-Überwachungskerne"
@@ -44073,13 +44085,13 @@ msgid "Tag choices"
 msgstr "Tag-Auswahl"
 
 msgid "Tag group"
-msgstr "Merkmalgruppe"
+msgstr "Merkmalsgruppe"
 
 msgid "Tag group ID"
-msgstr "Tag-Gruppen-ID"
+msgstr "Merkmalsgruppen-ID"
 
 msgid "Tag groups"
-msgstr "Tag-Gruppen"
+msgstr "Merkmalsgruppen"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "ag-Gruppen mit nur einer Auswahl müssen eine Tag-ID haben."
@@ -44099,7 +44111,7 @@ msgstr "Merkmale"
 
 #, python-format
 msgid "Tags IDs must be unique. You've used \"%s\" twice."
-msgstr "Tags IDs müssen eindeutig sein. Sie haben \"%s\" zweimal benutzt."
+msgstr "Merkmal-IDs müssen eindeutig sein. Sie haben \"%s\" zweimal benutzt."
 
 msgid ""
 "Tags are the basis of Check_MK's rule based configuration. If the first step "
@@ -44108,7 +44120,7 @@ msgid ""
 "and services, such as <i>disable notifications for all hosts with the tags "
 "<b>Network device</b> and <b>Test</b></i>."
 msgstr ""
-"Tags sind die Grundlage der regelbasierten Konfiguration von Check_MK. Im "
+"Merkmale sind die Grundlage der regelbasierten Konfiguration von Checkmk. Im "
 "ersten Schritt definieren Sie beliebige Tag-Gruppen. Ein Host hat genau ein "
 "Tag aus jeder Gruppe zugewiesen. Diese Tags können später zur Definition von "
 "Parametern für Hosts und Dienste verwendet werden, wie z.B. <i>Deaktivieren "
@@ -44120,10 +44132,10 @@ msgstr ""
 "Mit Hilfe von Tags können Hosts und Services flexibel klassifiziert werden."
 
 msgid "Tags of the Host"
-msgstr "Tags des Hosts"
+msgstr "Merkmale des Hosts"
 
 msgid "Tags of the alert."
-msgstr "Tags des Alerts"
+msgstr "Merkmale des Alerts."
 
 #, fuzzy
 msgid "Tags shown in Event Console"
@@ -54260,8 +54272,8 @@ msgstr ""
 "zurück auf Standardwerte. Wenn Sie diese Regel jetzt speichern, werden Ihre "
 "bisherigen Einstellungen überschrieben. Das Problem war: %s, Vorherige "
 "Bedingungen: <pre>%s</pre> So ein Problem kann durch eine inkonsistente "
-"Konfiguration verursacht werden, z.B. wenn sich Regeln auf Tag-Gruppen oder "
-"Tags beziehen, die nicht mehr existieren."
+"Konfiguration verursacht werden, z.B. wenn sich Regeln auf Merkmalsgruppen "
+"oder Merkmale beziehen, die nicht mehr existieren."
 
 #, python-format
 msgid ""
@@ -60303,11 +60315,11 @@ msgid ""
 "not be customized anymore. Your customized tag group will work for the "
 "moment, but needs to be migrated until 1.7. With 1.7 it won't work anymore."
 msgstr ""
-"Sie haben die Tag-Gruppe(n) <tt>%s</tt> in Ihrer Tag-Konfiguration "
-"angepasst. In aktuellen Checkmk-Versionen sind dies <i>vordefinierte</i> Tag-"
-"Gruppen, die nicht mehr angepasst werden können. Die angepasste Tag-Gruppe "
-"funktioniert im Moment, muss aber bis 1.7 migriert werden. Mit 1.7 wird es "
-"nicht mehr funktionieren."
+"Sie haben die Merkmalsgruppe(n) <tt>%s</tt> in Ihrer Merkmalskonfiguration "
+"angepasst. In aktuellen Checkmk-Versionen sind dies <i>vordefinierte</i> "
+"Merkmalsgruppen, die nicht mehr angepasst werden können. Die angepasste "
+"Merkmalsgruppe funktioniert im Moment, muss aber bis 1.7 migriert werden. "
+"Mit 1.7 wird es nicht mehr funktionieren."
 
 msgid ""
 "You have enabled the fallback notifications but missed to configure an email "

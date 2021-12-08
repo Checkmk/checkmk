@@ -5044,6 +5044,10 @@ msgstr ""
 msgid "Another host renaming job is already running: %s"
 msgstr "Een andere host hernoemingsopdracht is al bezig: %s"
 
+#, fuzzy
+msgid "Another omd config change job is already running."
+msgstr "Een andere host hernoemingsopdracht is al bezig: %s"
+
 msgid "Another renaming operation is currently in progress"
 msgstr "Een andere hernoemingsoperatie is momenteel aan de gang"
 
@@ -5201,6 +5205,10 @@ msgstr "Breng vertraging aan Maximale tijd"
 
 msgid "Apply Lag Minimum Time"
 msgstr "Breng vertraging aan Minimum tijd"
+
+#, fuzzy
+msgid "Apply OMD config changes"
+msgstr "Solliciteer Lag"
 
 #, fuzzy
 msgid "Apply changes"
@@ -28618,7 +28626,7 @@ msgid "Maximum age of backups"
 msgstr "Maximale leeftijd van back-ups"
 
 #, fuzzy
-msgid "Maximum age of fetched events"
+msgid "Maximum age of fetched events (10 hours max.)"
 msgstr "Maximale snelheid van geaccepteerde pakketten"
 
 msgid "Maximum age of latest timemachine backup"
@@ -32312,6 +32320,10 @@ msgstr "OMD Config"
 
 msgid "OMD Site"
 msgstr "OMD-site"
+
+#, fuzzy
+msgid "OMD config changes have been applied."
+msgstr "Uw wijzigingen zijn opgeslagen."
 
 msgid "OMD monitoring cores"
 msgstr "OMD bewakingskernen"

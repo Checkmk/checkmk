@@ -4858,6 +4858,10 @@ msgstr ""
 msgid "Another host renaming job is already running: %s"
 msgstr "別のホスト名変更ジョブがすでに実行されています: %s"
 
+#, fuzzy
+msgid "Another omd config change job is already running."
+msgstr "別のホスト名変更ジョブがすでに実行されています: %s"
+
 msgid "Another renaming operation is currently in progress"
 msgstr ""
 
@@ -5015,6 +5019,10 @@ msgstr "ラグ最大時間を適用する"
 
 msgid "Apply Lag Minimum Time"
 msgstr "ラグ最小時間を適用する"
+
+#, fuzzy
+msgid "Apply OMD config changes"
+msgstr "ラグを適用する"
 
 #, fuzzy
 msgid "Apply changes"
@@ -27582,7 +27590,7 @@ msgid "Maximum age of backups"
 msgstr "バックアップの最大経過時間"
 
 #, fuzzy
-msgid "Maximum age of fetched events"
+msgid "Maximum age of fetched events (10 hours max.)"
 msgstr "受け入れられたパケットの最大レート"
 
 msgid "Maximum age of latest timemachine backup"
@@ -31213,6 +31221,10 @@ msgstr "OMD設定"
 
 msgid "OMD Site"
 msgstr "OMDサイト"
+
+#, fuzzy
+msgid "OMD config changes have been applied."
+msgstr "変更は保存されていません。"
 
 msgid "OMD monitoring cores"
 msgstr "OMDモニタリングコア"

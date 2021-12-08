@@ -4758,6 +4758,9 @@ msgstr ""
 msgid "Another host renaming job is already running: %s"
 msgstr ""
 
+msgid "Another omd config change job is already running."
+msgstr ""
+
 msgid "Another renaming operation is currently in progress"
 msgstr ""
 
@@ -4919,6 +4922,10 @@ msgstr ""
 
 msgid "Apply Lag Minimum Time"
 msgstr ""
+
+#, fuzzy
+msgid "Apply OMD config changes"
+msgstr "%d schimbări"
 
 #, fuzzy
 msgid "Apply changes"
@@ -27205,7 +27212,7 @@ msgid "Maximum age of backups"
 msgstr "Vechimea maxima a backup-urilor"
 
 #, fuzzy
-msgid "Maximum age of fetched events"
+msgid "Maximum age of fetched events (10 hours max.)"
 msgstr "Vechimea maxima a backup-urilor"
 
 msgid "Maximum age of latest timemachine backup"
@@ -31025,6 +31032,9 @@ msgid "OMD Config"
 msgstr "foloseste numele portului"
 
 msgid "OMD Site"
+msgstr ""
+
+msgid "OMD config changes have been applied."
 msgstr ""
 
 #, fuzzy

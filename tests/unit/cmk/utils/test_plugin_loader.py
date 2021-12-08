@@ -121,25 +121,25 @@ def fixture_import_error_package(tmp_path: Path, package_type: str) -> str:
         f.write("import dingeliding")
     with level0.joinpath("dong.py").open("w") as f:
         f.write("x = 1")
+
     return package_name
 
 
-# This does currently not work (Because we don't call `pkgutil.walk_packages` with onerror)
 # def test_load_plugins_with_exceptions_handle_import_error(import_error_package: str) -> None:
-#     package_name = import_error_package
-#     errors = list(load_plugins_with_exceptions(package_name))
-#     assert len(errors) == 1
-#     assert errors[0][0] == "level0.ding"
-#     assert isinstance(errors[0][1], ModuleNotFoundError)
+#    package_name = import_error_package
+#    errors = list(load_plugins_with_exceptions(package_name))
+#    assert len(errors) == 1
+#    assert errors[0][0] == "level0.ding"
+#    assert isinstance(errors[0][1], ModuleNotFoundError)
 #
-#     imported = [n for n in sys.modules if n.startswith(package_name)]
-#     assert sorted(imported) == sorted(
-#         [
-#             package_name,
-#             f"{package_name}.level0",
-#             f"{package_name}.level0.dong",
-#         ]
-#     )
+#    imported = [n for n in sys.modules if n.startswith(package_name)]
+#    assert sorted(imported) == sorted(
+#        [
+#            package_name,
+#            f"{package_name}.level0",
+#            f"{package_name}.level0.dong",
+#        ]
+#    )
 #
-#     for name in imported:
-#         del sys.modules[name]
+#    for name in imported:
+#        del sys.modules[name]

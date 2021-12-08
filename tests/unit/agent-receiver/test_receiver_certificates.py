@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from base64 import urlsafe_b64encode
-from pathlib import Path
 from time import time
 
 import pytest
@@ -26,44 +24,6 @@ from starlette.requests import Headers
 from tests.testlib import on_time
 
 from omdlib.certs import CertificateAuthority
-
-
-@pytest.fixture(name="ca")
-def fixture_ca(
-    mocker: MockerFixture,
-    tmp_path: Path,
-) -> CertificateAuthority:
-    ca = CertificateAuthority(tmp_path / "ca", "test-ca")
-    ca.initialize()
-    mocker.patch(
-        "agent_receiver.certificates.ROOT_CERT",
-        ca._root_cert_path,
-    )
-    return ca
-
-
-@pytest.fixture(name="trusted_cert")
-def fixture_trusted_cert(ca: CertificateAuthority) -> Certificate:
-    cert, _priv_key = ca._certificate_from_root("abc123")
-    return cert
-
-
-@pytest.fixture(name="trusted_cert_b64")
-def fixture_trusted_cert_b64(trusted_cert: Certificate) -> str:
-    return urlsafe_b64encode(trusted_cert.public_bytes(Encoding.DER)).decode()
-
-
-@pytest.fixture(name="untrusted_cert")
-def fixture_untrusted_cert(tmp_path: Path) -> Certificate:
-    ca2 = CertificateAuthority(tmp_path / "ca-2", "test-ca-2")
-    ca2.initialize()
-    cert, _priv_key = ca2._certificate_from_root("abc123")
-    return cert
-
-
-@pytest.fixture(name="untrusted_cert_b64")
-def fixture_untrusted_cert_b64(untrusted_cert: Certificate) -> str:
-    return urlsafe_b64encode(untrusted_cert.public_bytes(Encoding.DER)).decode()
 
 
 def test_decode_base64_cert_b64_invalid() -> None:

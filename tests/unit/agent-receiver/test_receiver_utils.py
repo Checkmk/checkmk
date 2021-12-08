@@ -6,28 +6,13 @@
 
 import time
 from pathlib import Path
-from unittest import mock
 
-import pytest
+from agent_receiver import constants
 from agent_receiver.models import HostTypeEnum
 from agent_receiver.utils import Host, update_file_access_time
 
-from omdlib.certs import CertificateAuthority
 
-
-@pytest.fixture(autouse=True)
-def mock_paths(tmp_path: Path):
-    with mock.patch("agent_receiver.utils.AGENT_OUTPUT_DIR", tmp_path):
-        with mock.patch("agent_receiver.utils.REGISTRATION_REQUESTS", tmp_path):
-            yield
-
-
-@pytest.fixture
-def ca(tmp_path: Path) -> CertificateAuthority:
-    return CertificateAuthority(tmp_path / "ca", "test-ca")
-
-
-def test_host_not_registered(tmp_path: Path) -> None:
+def test_host_not_registered() -> None:
     host = Host("1234")
 
     assert host.registered is False
@@ -36,7 +21,7 @@ def test_host_not_registered(tmp_path: Path) -> None:
 
 
 def test_pull_host_registered(tmp_path: Path) -> None:
-    source = tmp_path / "1234"
+    source = constants.AGENT_OUTPUT_DIR / "1234"
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
@@ -48,7 +33,7 @@ def test_pull_host_registered(tmp_path: Path) -> None:
 
 
 def test_push_host_registered(tmp_path: Path) -> None:
-    source = tmp_path / "1234"
+    source = constants.AGENT_OUTPUT_DIR / "1234"
     target_dir = tmp_path / "hostname"
     target_dir.touch()
     source.symlink_to(target_dir)

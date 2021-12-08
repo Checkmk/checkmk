@@ -12,23 +12,12 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from agent_receiver import server
+from agent_receiver import constants
 from agent_receiver.checkmk_rest_api import CMKEdition
 from agent_receiver.models import HostTypeEnum
-from agent_receiver.server import app
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
-
-
-@pytest.fixture(autouse=True)
-def mock_paths(tmp_path: Path):
-    with mock.patch("agent_receiver.server.AGENT_OUTPUT_DIR", tmp_path), mock.patch(
-        "agent_receiver.server.REGISTRATION_REQUESTS", tmp_path
-    ), mock.patch("agent_receiver.utils.AGENT_OUTPUT_DIR", tmp_path), mock.patch(
-        "agent_receiver.utils.REGISTRATION_REQUESTS", tmp_path
-    ):
-        yield
 
 
 @pytest.fixture(autouse=True)
@@ -37,11 +26,6 @@ def deactivate_certificate_validation(mocker: MockerFixture) -> None:
         "agent_receiver.certificates._invalid_certificate_response",
         lambda _h: None,
     )
-
-
-@pytest.fixture(name="client")
-def fixture_client() -> TestClient:
-    return TestClient(app)
 
 
 def test_register_with_labels_unauthenticated(
@@ -109,7 +93,7 @@ def _test_register_with_labels(
         },
     )
     assert response.status_code == 204
-    assert json.loads((server.REGISTRATION_REQUESTS / "NEW" / "1234.json").read_text()) == {
+    assert json.loads((constants.REGISTRATION_REQUESTS / "NEW" / "1234.json").read_text()) == {
         "uuid": "1234",
         "username": "monitoring",
         "agent_labels": {
@@ -118,7 +102,7 @@ def _test_register_with_labels(
         },
     }
     assert (
-        oct(stat.S_IMODE((server.REGISTRATION_REQUESTS / "NEW" / "1234.json").stat().st_mode))
+        oct(stat.S_IMODE((constants.REGISTRATION_REQUESTS / "NEW" / "1234.json").stat().st_mode))
         == "0o660"
     )
 
@@ -127,19 +111,19 @@ def test_register_with_labels_folder_missing(
     mocker: MockerFixture,
     client: TestClient,
 ) -> None:
-    assert not (server.REGISTRATION_REQUESTS / "NEW").exists()
+    assert not (constants.REGISTRATION_REQUESTS / "NEW").exists()
     _test_register_with_labels(
         mocker,
         client,
     )
-    assert oct(stat.S_IMODE((server.REGISTRATION_REQUESTS / "NEW").stat().st_mode)) == "0o770"
+    assert oct(stat.S_IMODE((constants.REGISTRATION_REQUESTS / "NEW").stat().st_mode)) == "0o770"
 
 
 def test_register_with_labels_folder_exists(
     mocker: MockerFixture,
     client: TestClient,
 ) -> None:
-    (server.REGISTRATION_REQUESTS / "NEW").mkdir(parents=True)
+    (constants.REGISTRATION_REQUESTS / "NEW").mkdir(parents=True)
     _test_register_with_labels(
         mocker,
         client,
@@ -163,7 +147,7 @@ def test_agent_data_success(
 ) -> None:
     mock_file = io.StringIO("mock file")
 
-    source = tmp_path / "1234"
+    source = constants.AGENT_OUTPUT_DIR / "1234"
     target_dir = tmp_path / "hostname"
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
@@ -187,11 +171,11 @@ def test_agent_data_move_error(
 ) -> None:
     mock_file = io.StringIO("mock file")
 
-    os.mkdir(tmp_path / "READY")
-    Path(tmp_path / "READY" / "1234.json").touch()
-    os.mkdir(tmp_path / "DISCOVERABLE")
+    os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
+    Path(constants.REGISTRATION_REQUESTS / "READY" / "1234.json").touch()
+    os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
 
-    source = tmp_path / "1234"
+    source = constants.AGENT_OUTPUT_DIR / "1234"
     target_dir = tmp_path / "hostname"
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
@@ -214,11 +198,11 @@ def test_agent_data_move_ready(
 ) -> None:
     mock_file = io.StringIO("mock file")
 
-    os.mkdir(tmp_path / "READY")
-    Path(tmp_path / "READY" / "1234.json").touch()
-    os.mkdir(tmp_path / "DISCOVERABLE")
+    os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
+    Path(constants.REGISTRATION_REQUESTS / "READY" / "1234.json").touch()
+    os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
 
-    source = tmp_path / "1234"
+    source = constants.AGENT_OUTPUT_DIR / "1234"
     target_dir = tmp_path / "hostname"
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
@@ -229,13 +213,13 @@ def test_agent_data_move_ready(
         files={"monitoring_data": ("filename", mock_file)},
     )
 
-    registration_request = tmp_path / "DISCOVERABLE" / "1234.json"
+    registration_request = constants.REGISTRATION_REQUESTS / "DISCOVERABLE" / "1234.json"
     assert registration_request.exists()
 
 
 def test_registration_status_declined(tmp_path: Path, client: TestClient) -> None:
-    os.mkdir(tmp_path / "DECLINED")
-    with open(tmp_path / "DECLINED" / "1234.json", "w") as file:
+    os.mkdir(constants.REGISTRATION_REQUESTS / "DECLINED")
+    with open(constants.REGISTRATION_REQUESTS / "DECLINED" / "1234.json", "w") as file:
         registration_request = {"message": "Registration request declined"}
         json.dump(registration_request, file)
 
@@ -264,13 +248,13 @@ def test_registration_status_host_not_registered(client: TestClient) -> None:
 
 
 def test_registration_status_push_host(tmp_path: Path, client: TestClient) -> None:
-    source = tmp_path / "1234"
+    source = constants.AGENT_OUTPUT_DIR / "1234"
     target_dir = tmp_path / "hostname"
     os.mkdir(target_dir)
     source.symlink_to(target_dir)
 
-    os.mkdir(tmp_path / "DISCOVERABLE")
-    Path(tmp_path / "DISCOVERABLE" / "1234.json").touch()
+    os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
+    Path(constants.REGISTRATION_REQUESTS / "DISCOVERABLE" / "1234.json").touch()
 
     response = client.get(
         "/registration_status/1234",
@@ -287,7 +271,7 @@ def test_registration_status_push_host(tmp_path: Path, client: TestClient) -> No
 
 
 def test_registration_status_pull_host(tmp_path: Path, client: TestClient) -> None:
-    source = tmp_path / "1234"
+    source = constants.AGENT_OUTPUT_DIR / "1234"
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 

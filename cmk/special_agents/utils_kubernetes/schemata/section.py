@@ -97,6 +97,12 @@ class DeploymentInfo(BaseModel):
     containers: Sequence[str]
 
 
+class DeploymentConditions(BaseModel):
+    """section: kube_deployment_conditions_v1"""
+
+    conditions: Sequence[api.DeploymentCondition]
+
+
 class ContainerCount(BaseModel):
     """section: kube_node_container_count_v1"""
 

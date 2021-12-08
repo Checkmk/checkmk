@@ -74,6 +74,7 @@ def parse_memory(value: str) -> float:
     return float(value)
 
 
+# TODO: change to Timestamp type
 def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
     if isinstance(k8s_date_time, str):
         date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ")
@@ -281,6 +282,21 @@ def deployment_replicas(status: client.V1DeploymentStatus) -> api.DeploymentRepl
     )
 
 
+def deployment_conditions(status: client.V1DeploymentStatus) -> Sequence[api.DeploymentCondition]:
+    conditions = []
+    for condition in status.conditions:
+        conditions.append(
+            api.DeploymentCondition(
+                type_=condition.type,
+                status=condition.status,
+                last_transition_time=convert_to_timestamp(condition.last_transition_time),
+                reason=condition.reason,
+                message=condition.message,
+            )
+        )
+    return conditions
+
+
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=pod.metadata.uid,
@@ -321,8 +337,9 @@ def deployment_from_client(
 ) -> api.Deployment:
     return api.Deployment(
         metadata=parse_metadata(deployment.metadata),
-        pods=pod_uids,
         status=api.DeploymentStatus(
+            conditions=deployment_conditions(deployment.status),
             replicas=deployment_replicas(deployment.status),
         ),
+        pods=pod_uids,
     )

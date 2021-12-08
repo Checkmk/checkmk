@@ -19,5 +19,10 @@ def core_client():
 
 
 @pytest.fixture
+def apps_client():
+    return client.AppsV1Api(kubernetes_api_client())
+
+
+@pytest.fixture
 def dummy_host():
     return kubernetes_api_client().configuration.host

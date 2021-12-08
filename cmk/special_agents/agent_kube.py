@@ -181,8 +181,9 @@ class Pod:
 
 
 class Deployment:
-    def __init__(self, metadata: api.MetaData) -> None:
+    def __init__(self, metadata: api.MetaData, status: api.DeploymentStatus) -> None:
         self.metadata = metadata
+        self.status = status
         self._pods: List[Pod] = []
 
     def name(self, prepend_namespace: bool = False) -> str:
@@ -225,6 +226,9 @@ class Deployment:
         for pod in self._pods:
             resources[pod.phase].append(pod.name())
         return section.PodResources(**resources)
+
+    def conditions(self) -> section.DeploymentConditions:
+        return section.DeploymentConditions(conditions=self.status.conditions)
 
     def memory_resources(self) -> api.Resources:
         return _collect_memory_resources(self._pods)
@@ -321,7 +325,9 @@ class Cluster:
             )
 
         for deployment in api_server.deployments():
-            cluster.add_deployment(Deployment(deployment.metadata), deployment.pods)
+            cluster.add_deployment(
+                Deployment(deployment.metadata, deployment.status), deployment.pods
+            )
 
         return cluster
 
@@ -445,6 +451,7 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
             "kube_pod_resources_v1": cluster_deployment.pod_resources,
             "kube_memory_resources_v1": cluster_deployment.memory_resources,
             "kube_deployment_info_v1": cluster_deployment.info,
+            "kube_deployment_conditions_v1": cluster_deployment.conditions,
         }
         _write_sections(sections)
 

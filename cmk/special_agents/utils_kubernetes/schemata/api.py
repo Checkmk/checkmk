@@ -31,6 +31,7 @@ class Label(BaseModel):
 
 
 Labels = Mapping[LabelName, Label]
+Timestamp = NewType("Timestamp", float)
 
 
 class MetaData(BaseModel):
@@ -101,15 +102,30 @@ class DeploymentReplicas(BaseModel):
     unavailable: int
 
 
+class ConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNOWN = "Unknown"
+
+
+class DeploymentCondition(BaseModel):
+    type_: str
+    status: ConditionStatus
+    last_transition_time: float
+    reason: str
+    message: str
+
+
 class DeploymentStatus(BaseModel):
     # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
     replicas: DeploymentReplicas
+    conditions: Sequence[DeploymentCondition]
 
 
 class Deployment(BaseModel):
     metadata: MetaData
-    pods: Sequence[PodUID]
     status: DeploymentStatus
+    pods: Sequence[PodUID]
 
 
 class Resources(BaseModel):

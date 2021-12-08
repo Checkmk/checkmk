@@ -240,6 +240,14 @@ div#fixall_container {
     border-right: none;
   }
 
+  a {
+    text-decoration: none;
+
+    &:hover {
+      opacity: 0.5;
+    }
+  }
+
   span {
     padding: 2px;
   }

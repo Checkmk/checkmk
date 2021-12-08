@@ -340,9 +340,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     def _get_status_message(
         self, discovery_result: DiscoveryResult, performed_action: str
     ) -> Optional[str]:
-        if discovery_result.job_status["state"] == JobStatusStates.FINISHED:
-            return None
-
         if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
@@ -398,13 +395,17 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         progress_update_log = discovery_result.job_status["loginfo"]["JobProgressUpdate"]
         warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
+
+        if discovery_result.job_status["state"] == JobStatusStates.FINISHED and not warnings:
+            return None
+
         messages.extend(warnings)
 
         with output_funnel.plugged():
             with foldable_container(
                 treename="service_discovery",
                 id_="options",
-                isopen=bool(warnings),
+                isopen=False,
                 title=_("Job details"),
                 indent=False,
             ):
@@ -535,8 +536,8 @@ class DiscoveryPageRenderer:
         with output_funnel.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry("inline_help")
-            self._show_discovery_details(discovery_result, api_request)
             self._show_discovered_host_labels(discovery_result)
+            self._show_discovery_details(discovery_result, api_request)
             return output_funnel.drain()
 
     def render_fix_all(self, discovery_result: DiscoveryResult) -> str:
@@ -715,6 +716,14 @@ class DiscoveryPageRenderer:
             by_group.setdefault(entry.check_source, []).append(entry)
         return by_group
 
+    def _render_fix_all_element(self, title: str, count: int, href: str) -> None:
+        html.open_li()
+        html.open_a(href=href)
+        html.span(title)
+        html.span(str(count), class_="changed" if count else "")
+        html.close_a()
+        html.close_li()
+
     def _show_fix_all(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result:
             return
@@ -749,28 +758,31 @@ class DiscoveryPageRenderer:
         html.icon("fixall", _("Services/Host labels to fix"))
 
         html.open_ul()
-        html.open_li()
-        html.span(ungettext("Undecided service: ", "Undecided services: ", undecided_services))
-        html.span(str(undecided_services), class_="changed" if undecided_services else "")
-        html.close_li()
-        html.open_li()
-        html.span(ungettext("Vanished service: ", "Vanished services: ", vanished_services))
-        html.span(str(vanished_services), class_="changed" if vanished_services else "")
-        html.close_li()
-        html.open_li()
-        html.span(ungettext("New host label: ", "New host labels: ", new_host_labels))
-        html.span(str(new_host_labels), class_="changed" if new_host_labels else "")
-        html.close_li()
-        html.open_li()
-        html.span(
-            ungettext("Vanished host label: ", "Vanished host labels: ", vanished_host_labels)
+        self._render_fix_all_element(
+            ungettext("Undecided service: ", "Undecided services: ", undecided_services),
+            undecided_services,
+            "#tree.table.checks_new",
         )
-        html.span(str(vanished_host_labels), class_="changed" if vanished_host_labels else "")
-        html.close_li()
-        html.open_li()
-        html.span(ungettext("Changed host label: ", "Changed host labels: ", changed_host_labels))
-        html.span(str(changed_host_labels), class_="changed" if changed_host_labels else "")
-        html.close_li()
+        self._render_fix_all_element(
+            ungettext("Vanished service: ", "Vanished services: ", vanished_services),
+            vanished_services,
+            "#tree.table.checks_vanished",
+        )
+        self._render_fix_all_element(
+            ungettext("New host label: ", "New host labels: ", new_host_labels),
+            new_host_labels,
+            "#tree.table.host_labels",
+        )
+        self._render_fix_all_element(
+            ungettext("Vanished host label: ", "Vanished host labels: ", new_host_labels),
+            vanished_host_labels,
+            "#tree.table.host_labels",
+        )
+        self._render_fix_all_element(
+            ungettext("Changed host label: ", "Changed host labels: ", new_host_labels),
+            changed_host_labels,
+            "#tree.table.host_labels",
+        )
         html.close_ul()
 
         if any(
@@ -1029,86 +1041,80 @@ class DiscoveryPageRenderer:
         num_buttons = 0
         if entry.check_source == DiscoveryState.MONITORED:
             if user.may("wato.service_discovery_to_undecided"):
-                self._icon_button(
+                num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
                     DiscoveryState.UNDECIDED,
                     "undecided",
                     button_classes,
                 )
-                num_buttons += 1
             if may_edit_ruleset("ignored_services") and user.may(
                 "wato.service_discovery_to_ignored"
             ):
-                self._icon_button(
+                num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
                     button_classes,
                 )
-                num_buttons += 1
 
         elif entry.check_source == DiscoveryState.IGNORED:
             if may_edit_ruleset("ignored_services"):
                 if user.may("wato.service_discovery_to_monitored"):
-                    self._icon_button(
+                    num_buttons += self._icon_button(
                         entry.check_source,
                         checkbox_name,
                         DiscoveryState.MONITORED,
                         "monitored",
                         button_classes,
                     )
-                    num_buttons += 1
                 if user.may("wato.service_discovery_to_ignored"):
-                    self._icon_button(
+                    num_buttons += self._icon_button(
                         entry.check_source,
                         checkbox_name,
                         DiscoveryState.UNDECIDED,
                         "undecided",
                         button_classes,
                     )
-                    num_buttons += 1
-                self._disabled_services_button(entry.description)
-                num_buttons += 1
+                num_buttons += self._disabled_services_button(entry.description)
 
         elif entry.check_source == DiscoveryState.VANISHED:
             if user.may("wato.service_discovery_to_removed"):
-                self._icon_button_removed(entry.check_source, checkbox_name, button_classes)
-                num_buttons += 1
+                num_buttons += self._icon_button_removed(
+                    entry.check_source, checkbox_name, button_classes
+                )
+
             if may_edit_ruleset("ignored_services") and user.may(
                 "wato.service_discovery_to_ignored"
             ):
-                self._icon_button(
+                num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
                     button_classes,
                 )
-                num_buttons += 1
 
         elif entry.check_source == DiscoveryState.UNDECIDED:
             if user.may("wato.service_discovery_to_monitored"):
-                self._icon_button(
+                num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
                     DiscoveryState.MONITORED,
                     "monitored",
                     button_classes,
                 )
-                num_buttons += 1
             if may_edit_ruleset("ignored_services") and user.may(
                 "wato.service_discovery_to_ignored"
             ):
-                self._icon_button(
+                num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
                     button_classes,
                 )
-                num_buttons += 1
 
         while num_buttons < 2:
             html.empty_icon()
@@ -1122,9 +1128,8 @@ class DiscoveryPageRenderer:
             ]
             and user.may("wato.rulesets")
         ):
-            self._rulesets_button(entry.description)
-            self._check_parameters_button(entry)
-            num_buttons += 2
+            num_buttons += self._rulesets_button(entry.description)
+            num_buttons += self._check_parameters_button(entry)
 
         while num_buttons < 4:
             html.empty_icon()
@@ -1147,6 +1152,7 @@ class DiscoveryPageRenderer:
                 },
             ),
         )
+        return 1
 
     def _icon_button_removed(self, table_source, checkbox_name, button_classes):
         options = self._options._replace(action=DiscoveryAction.SINGLE_UPDATE)
@@ -1165,6 +1171,7 @@ class DiscoveryPageRenderer:
                 },
             ),
         )
+        return 1
 
     def _rulesets_button(self, descr):
         # Link to list of all rulesets affecting this service
@@ -1179,10 +1186,11 @@ class DiscoveryPageRenderer:
             _("View and edit the parameters for this service"),
             "rulesets",
         )
+        return 1
 
     def _check_parameters_button(self, entry: CheckPreviewEntry):
         if not entry.ruleset_name:
-            return
+            return 0
 
         if entry.check_source == DiscoveryState.MANUAL:
             url = watolib.folder_preserving_link(
@@ -1195,7 +1203,7 @@ class DiscoveryPageRenderer:
         else:
             ruleset_name = self._get_ruleset_name(entry)
             if ruleset_name is None:
-                return
+                return 0
 
             url = watolib.folder_preserving_link(
                 [
@@ -1216,6 +1224,7 @@ class DiscoveryPageRenderer:
         html.icon_button(
             url, _("Edit and analyze the check parameters of this service"), "check_parameters"
         )
+        return 1
 
     def _disabled_services_button(self, descr):
         html.icon_button(
@@ -1233,6 +1242,7 @@ class DiscoveryPageRenderer:
             _("Edit and analyze the disabled services rules"),
             "rulesets",
         )
+        return 1
 
     def _get_ruleset_name(self, entry: CheckPreviewEntry) -> Optional[str]:
         if entry.ruleset_name == "logwatch":

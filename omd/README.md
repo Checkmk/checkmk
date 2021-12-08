@@ -63,7 +63,7 @@ the master branch.
 
 Clone from the Checkmk Git, then execute the following commands:
 
-```
+```bash
 cd omd
 make setup
 ../scripts/fake-windows-artifacts
@@ -123,7 +123,7 @@ parts from the build cache.
 
 ```
 cd omd
-make $PWD/build/stamps/protobuf-3.17.3-cache-pkg-process
+make $PWD/build/stamps/protobuf-3.18.1-cache-pkg-process
 ```
 
 ## Incremental package building

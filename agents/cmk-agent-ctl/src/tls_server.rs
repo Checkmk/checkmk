@@ -11,11 +11,13 @@ use std::fs::File;
 use std::io::{self, Result as IoResult};
 use std::io::{Read, Write};
 use std::os::unix::prelude::FromRawFd;
+use std::slice::Iter;
 use std::sync::Arc;
 
-pub fn tls_connection(reg_state: config::RegistrationState) -> AnyhowResult<ServerConnection> {
-    let server_specs = reg_state.server_specs.into_values().collect();
-    Ok(ServerConnection::new(tls_config(server_specs)?)?)
+pub fn tls_connection(
+    reg_conns: Vec<config::RegisteredConnection>,
+) -> AnyhowResult<ServerConnection> {
+    Ok(ServerConnection::new(tls_config(reg_conns)?)?)
 }
 
 pub fn tls_stream<'a>(
@@ -25,33 +27,33 @@ pub fn tls_stream<'a>(
     RustlsStream::new(server_connection, stream)
 }
 
-fn tls_config(server_specs: Vec<config::ServerSpec>) -> AnyhowResult<Arc<ServerConfig>> {
+fn tls_config(reg_conns: Vec<config::RegisteredConnection>) -> AnyhowResult<Arc<ServerConfig>> {
     Ok(Arc::new(
         ServerConfig::builder()
             .with_safe_defaults()
             .with_client_cert_verifier(AllowAnyAuthenticatedClient::new(root_cert_store(
-                &server_specs,
+                reg_conns.iter(),
             )?))
-            .with_cert_resolver(sni_resolver(&server_specs)?),
+            .with_cert_resolver(sni_resolver(reg_conns.iter())?),
     ))
 }
 
-fn root_cert_store(server_specs: &[config::ServerSpec]) -> AnyhowResult<RootCertStore> {
+fn root_cert_store(reg_conns: Iter<config::RegisteredConnection>) -> AnyhowResult<RootCertStore> {
     let mut cert_store = RootCertStore::empty();
 
-    for spec in server_specs {
-        cert_store.add(&certificate(&mut spec.root_cert.as_bytes())?)?;
+    for conn in reg_conns {
+        cert_store.add(&certificate(&mut conn.root_cert.as_bytes())?)?;
     }
 
     Ok(cert_store)
 }
 
 fn sni_resolver(
-    server_specs: &[config::ServerSpec],
+    reg_conns: Iter<config::RegisteredConnection>,
 ) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 
-    for spec in server_specs {
+    for spec in reg_conns {
         let key = private_key(&mut spec.private_key.as_bytes())?;
         let cert = certificate(&mut spec.certificate.as_bytes())?;
 

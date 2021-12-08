@@ -9,7 +9,7 @@ mod config;
 mod monitoring_data;
 mod tls_server;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use config::{JSONLoader, RegistrationState};
+use config::JSONLoader;
 use nix::unistd;
 use std::fs;
 use std::io::Result as IoResult;
@@ -29,14 +29,14 @@ const HOME_DIR: &str = "/var/lib/cmk-agent";
 // need to read it as cmk-agent user, so we use its home directory.
 const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
 
-const STATE_FILE: &str = "cmk-agent-ctl-state.json";
+const CONN_FILE: &str = "registered_connections.json";
 const LOG_FILE: &str = "cmk-agent-ctl.log";
 const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 const TLS_ID: &[u8] = b"16";
 
 fn register(
     config: config::RegistrationConfig,
-    mut reg_state: RegistrationState,
+    mut reg_conns: config::RegisteredConnections,
     path_state_out: &Path,
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
@@ -92,9 +92,16 @@ fn register(
         }
     }
 
-    reg_state.server_specs.insert(
+    // TODO: obtain actual connection mode from status endpoint
+    let connection_type = "pull";
+
+    (match connection_type {
+        "push" => &mut reg_conns.push,
+        _ => &mut reg_conns.pull,
+    })
+    .insert(
         config.agent_receiver_address,
-        config::ServerSpec {
+        config::RegisteredConnection {
             uuid,
             private_key,
             certificate: pairing_response.client_cert,
@@ -102,17 +109,17 @@ fn register(
         },
     );
 
-    reg_state.to_file(path_state_out)?;
+    reg_conns.to_file(path_state_out)?;
 
     disallow_legacy_pull()
         .context("Registration successful, but could not delete marker for legacy pull mode")?;
     Ok(())
 }
 
-fn push(reg_state: config::RegistrationState) -> AnyhowResult<()> {
+fn push(reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
     let mon_data = monitoring_data::collect().context("Error collecting monitoring data")?;
 
-    for (agent_receiver_address, server_spec) in reg_state.server_specs.iter() {
+    for (agent_receiver_address, server_spec) in reg_conns.push.iter() {
         agent_receiver_api::agent_data(
             agent_receiver_address,
             &server_spec.root_cert,
@@ -138,12 +145,12 @@ fn dump() -> AnyhowResult<()> {
     Ok(())
 }
 
-fn status(_reg_state: config::RegistrationState) -> AnyhowResult<()> {
+fn status(_reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
     Err(anyhow!("Status mode not yet implemented"))
 }
 
-fn pull(reg_state: config::RegistrationState) -> AnyhowResult<()> {
-    if is_legacy_pull(&reg_state) {
+fn pull(mut reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
+    if is_legacy_pull(&reg_conns) {
         return dump();
     }
 
@@ -152,8 +159,10 @@ fn pull(reg_state: config::RegistrationState) -> AnyhowResult<()> {
     stream.write_all(TLS_ID)?;
     stream.flush()?;
 
+    let mut pull_conns: Vec<config::RegisteredConnection> = reg_conns.pull.into_values().collect();
+    pull_conns.append(&mut reg_conns.pull_imported);
     let mut tls_connection =
-        tls_server::tls_connection(reg_state).context("Could not initialize TLS.")?;
+        tls_server::tls_connection(pull_conns).context("Could not initialize TLS.")?;
     let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
 
     let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
@@ -164,11 +173,11 @@ fn pull(reg_state: config::RegistrationState) -> AnyhowResult<()> {
     Ok(())
 }
 
-fn is_legacy_pull(reg_state: &config::RegistrationState) -> bool {
+fn is_legacy_pull(reg_conns: &config::RegisteredConnections) -> bool {
     if !Path::new(HOME_DIR).join(LEGACY_PULL_FILE).exists() {
         return false;
     }
-    if !reg_state.server_specs.is_empty() {
+    if !reg_conns.is_empty() {
         return false;
     }
     true
@@ -181,10 +190,6 @@ fn disallow_legacy_pull() -> IoResult<()> {
     }
 
     fs::remove_file(legacy_pull_marker)
-}
-
-fn get_reg_state(path: &Path) -> AnyhowResult<config::RegistrationState> {
-    config::RegistrationState::load(path)
 }
 
 fn init_logging(path: &Path) -> AnyhowResult<()> {
@@ -243,7 +248,7 @@ fn sanitize_home_dir_ownership(paths: [&Path; 4], user: &str) -> AnyhowResult<()
 }
 
 fn init() -> (cli::Args, PathBuf, PathBuf, PathBuf) {
-    let state_path = Path::new(HOME_DIR).join(STATE_FILE);
+    let conn_path = Path::new(HOME_DIR).join(CONN_FILE);
     let config_path = Path::new(HOME_DIR).join(CONFIG_FILE);
     let log_path = Path::new(HOME_DIR).join(LOG_FILE);
 
@@ -264,30 +269,30 @@ fn init() -> (cli::Args, PathBuf, PathBuf, PathBuf) {
             .unwrap_or(());
     }
 
-    (args, config_path, state_path, log_path)
+    (args, config_path, conn_path, log_path)
 }
 
-fn run_requested_mode(args: cli::Args, config_path: &Path, state_path: &Path) -> AnyhowResult<()> {
+fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> AnyhowResult<()> {
     let stored_config = config::ConfigFromDisk::load(config_path)?;
-    let reg_state =
-        get_reg_state(state_path).context("Error while obtaining registration state.")?;
+    let reg_conns = config::RegisteredConnections::load(conn_path)
+        .context("Error while loading registered connections.")?;
     match args {
         cli::Args::Register(reg_args) => register(
             config::RegistrationConfig::new(stored_config, reg_args)?,
-            reg_state,
-            state_path,
+            reg_conns,
+            conn_path,
         ),
-        cli::Args::Push { .. } => push(reg_state),
-        cli::Args::Pull { .. } => pull(reg_state),
+        cli::Args::Push { .. } => push(reg_conns),
+        cli::Args::Pull { .. } => pull(reg_conns),
         cli::Args::Dump { .. } => dump(),
-        cli::Args::Status { .. } => status(reg_state),
+        cli::Args::Status { .. } => status(reg_conns),
     }
 }
 
 fn main() -> AnyhowResult<()> {
-    let (args, config_path, state_path, log_path) = init();
+    let (args, config_path, conn_path, log_path) = init();
 
-    let result = run_requested_mode(args, &config_path, &state_path);
+    let result = run_requested_mode(args, &config_path, &conn_path);
 
     if let Err(error) = &result {
         info!("{:?}", error)
@@ -295,7 +300,7 @@ fn main() -> AnyhowResult<()> {
 
     try_sanitize_home_dir_ownership(
         Path::new(HOME_DIR),
-        [&state_path, &config_path, &log_path],
+        [&conn_path, &config_path, &log_path],
         CMK_AGENT_USER,
     );
 

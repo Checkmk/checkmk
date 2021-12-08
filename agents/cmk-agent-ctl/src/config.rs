@@ -101,23 +101,40 @@ impl RegistrationConfig {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct RegistrationState {
+pub struct RegisteredConnection {
     #[serde(default)]
-    pub server_specs: HashMap<String, ServerSpec>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct ServerSpec {
     pub uuid: String,
+
+    #[serde(default)]
     pub private_key: String,
+
+    #[serde(default)]
     pub certificate: String,
+
+    #[serde(default)]
     pub root_cert: String,
 }
 
-impl JSONLoader for RegistrationState {}
+#[derive(Serialize, Deserialize)]
+pub struct RegisteredConnections {
+    #[serde(default)]
+    pub push: HashMap<String, RegisteredConnection>,
 
-impl RegistrationState {
+    #[serde(default)]
+    pub pull: HashMap<String, RegisteredConnection>,
+
+    #[serde(default)]
+    pub pull_imported: Vec<RegisteredConnection>,
+}
+
+impl JSONLoader for RegisteredConnections {}
+
+impl RegisteredConnections {
     pub fn to_file(&self, path: &Path) -> io::Result<()> {
-        write(path, &serde_json::to_string(self)?)
+        write(path, &serde_json::to_string_pretty(self)?)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.push.is_empty() & self.pull.is_empty() & self.pull_imported.is_empty()
     }
 }

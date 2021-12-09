@@ -1586,7 +1586,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         yield PageMenuTopic(
             title=_("Setup"),
             entries=[
-                _page_menu_entry_settings(),
+                _page_menu_entry_settings(is_suggested=True),
                 _page_menu_entry_rulesets(),
                 _page_menu_entry_snmp_mibs(),
             ],
@@ -2969,6 +2969,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                             [("mode", "mkeventd_upload_mibs")],
                                         )
                                     ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -3368,7 +3370,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
         yield _page_menu_entry_status()
 
     if mode_name != "mkeventd_config" and user.may("mkeventd.config"):
-        yield _page_menu_entry_settings()
+        yield _page_menu_entry_settings(is_suggested=False)
 
     if mode_name != "mkeventd_mibs":
         yield _page_menu_entry_snmp_mibs()
@@ -3392,12 +3394,12 @@ def _page_menu_entry_status():
     )
 
 
-def _page_menu_entry_settings():
+def _page_menu_entry_settings(is_suggested):
     return PageMenuEntry(
         title=_("Settings"),
         icon_name="configuration",
-        is_shortcut=True,
-        is_suggested=True,
+        is_shortcut=is_suggested,
+        is_suggested=is_suggested,
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_config")])),
     )
 

@@ -42,26 +42,26 @@ def decrypt_by_agent_protocol(
     """
 
     if protocol is TransportProtocol.PBKDF2:
-        return decrypt_aes_256_cbc_pbkdf2(
+        return _decrypt_aes_256_cbc_pbkdf2(
             ciphertext=encrypted_pkg[len(OPENSSL_SALTED_MARKER) :],
             password=password,
         )
 
     if protocol is TransportProtocol.SHA256:
-        return decrypt_aes_256_cbc_legacy(
+        return _decrypt_aes_256_cbc_legacy(
             ciphertext=encrypted_pkg,
             password=password,
             digest=hashlib.sha256,
         )
 
-    return decrypt_aes_256_cbc_legacy(
+    return _decrypt_aes_256_cbc_legacy(
         ciphertext=encrypted_pkg,
         password=password,
         digest=hashlib.md5,
     )
 
 
-def decrypt_aes_256_cbc_pbkdf2(
+def _decrypt_aes_256_cbc_pbkdf2(
     ciphertext: bytes,
     password: str,
 ) -> bytes:
@@ -87,7 +87,7 @@ def decrypt_aes_256_cbc_pbkdf2(
     return _strip_fill_bytes(decrypted_pkg)
 
 
-def decrypt_aes_256_cbc_legacy(
+def _decrypt_aes_256_cbc_legacy(
     ciphertext: bytes,
     password: str,
     digest: Callable[..., "hashlib._Hash"],

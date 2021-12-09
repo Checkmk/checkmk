@@ -13,6 +13,8 @@ from typing import Callable, Tuple
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
 from Cryptodome.Protocol.KDF import PBKDF2
+from cryptography import x509
+from cryptography.x509.oid import ExtensionOID
 
 OPENSSL_SALTED_MARKER = "Salted__"
 
@@ -121,3 +123,21 @@ def _derive_openssl_key_and_iv(
 
 def _strip_fill_bytes(content: bytes) -> bytes:
     return content[0 : -content[-1]]
+
+
+def is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
+    try:
+        key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
+        use_key_for_signing = key_usage.value.key_cert_sign is True
+    except x509.extensions.ExtensionNotFound:
+        use_key_for_signing = False
+
+    try:
+        basic_constraints = crypto_cert.extensions.get_extension_for_oid(
+            ExtensionOID.BASIC_CONSTRAINTS
+        )
+        is_ca = basic_constraints.value.ca is True
+    except x509.extensions.ExtensionNotFound:
+        is_ca = False
+
+    return is_ca and use_key_for_signing

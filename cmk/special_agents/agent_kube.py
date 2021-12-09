@@ -18,11 +18,11 @@ import os
 import sys
 import time
 from collections import defaultdict
+from pathlib import Path
 from typing import (
     Callable,
     DefaultDict,
     Dict,
-    Iterable,
     Iterator,
     List,
     Mapping,
@@ -31,7 +31,7 @@ from typing import (
     Optional,
     Protocol,
     Sequence,
-    Type,
+    Union,
 )
 
 import requests
@@ -40,15 +40,38 @@ from kubernetes import client  # type: ignore[import] # pylint: disable=import-e
 from pydantic import BaseModel
 
 import cmk.utils.password_store
+import cmk.utils.paths
 import cmk.utils.profile
 
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
+AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agent_kube")
+
 MetricName = NewType("MetricName", str)
+ContainerName = NewType("ContainerName", str)
 PodUID = NewType("PodUID", str)
 SectionName = NewType("SectionName", str)
+
+
+class PerformanceMetric(BaseModel):
+    container_name: ContainerName
+    name: MetricName
+    value: float
+    timestamp: float
+
+
+class RateMetric(BaseModel):
+    name: str
+    rate: float
+
+
+class PerformanceContainer(BaseModel):
+    name: ContainerName
+    pod_uid: PodUID
+    metrics: Mapping[MetricName, PerformanceMetric]
+    rate_metrics: Optional[Mapping[MetricName, RateMetric]]
 
 
 class PerformancePod(NamedTuple):
@@ -56,9 +79,23 @@ class PerformancePod(NamedTuple):
     containers: List[PerformanceContainer]
 
 
-class PerformanceContainer(NamedTuple):
-    name: section.ContainerName
-    metrics: Mapping[MetricName, section.PerformanceMetric]
+class CounterMetric(BaseModel):
+    name: MetricName
+    value: float
+    timestamp: float
+
+
+class ContainerMetricsStore(BaseModel):
+    name: ContainerName
+    metrics: Mapping[MetricName, CounterMetric]
+
+
+class ContainersStore(BaseModel):
+    containers: Mapping[ContainerName, ContainerMetricsStore]
+
+
+class ContainerMetadata(BaseModel):
+    name: ContainerName
     pod_uid: PodUID
 
 
@@ -498,93 +535,56 @@ def write_kube_set_performance_sections(pods: List[PerformancePod]) -> None:
     if not pods:
         return
 
-    aggregated_sections = [
-        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
-    ]
-    for section_name, section_model, metrics in aggregated_sections:
-        _write_performance_section(
-            section_name=section_name,
-            section_output=section_model(
-                **metrics_to_aggregate(
-                    metrics, containers=[container for pod in pods for container in pod.containers]
-                )
-            ),
-        )
+    containers = [container for pod in pods for container in pod.containers]
+
+    # Memory section
+    _write_performance_section(
+        section_name=SectionName("memory"),
+        section_output=section.Memory(
+            memory_usage_bytes=_aggregate_metric(containers, MetricName("memory_usage_bytes")),
+            memory_swap=_aggregate_metric(containers, MetricName("memory_swap")),
+        ),
+    )
 
 
 def pod_performance_sections(pod: PerformancePod) -> None:
     """Write pod sections based on collected performance metrics"""
-    sections = [
-        (SectionName("cpu_usage_total"), section.CpuUsage, ("cpu_usage_seconds_total",)),
-    ]
-    for section_name, section_model, metrics in sections:
-        section_containers = _performance_section_containers(
-            container_model=_extract_container_model(section_model),
-            containers=pod.containers,
-            metrics=metrics,
-        )
-        _write_performance_section(section_name, section_model(containers=section_containers))
+    if not pod.containers:
+        return
+
+    # CPU section
+    _write_performance_section(
+        section_name=SectionName("cpu_usage"),
+        section_output=section.CpuUsage(
+            usage=_aggregate_rate_metric(pod.containers, MetricName("cpu_usage_seconds_total")),
+        ),
+    )
 
 
-def pod_aggregated_performance_sections(pod_containers: Sequence[PerformanceContainer]) -> None:
-    """Write pod sections based on aggregated performance metrics"""
-    aggregated_sections = [
-        (SectionName("memory"), section.Memory, ("memory_usage_bytes", "memory_swap")),
-    ]
-    for section_name, section_model, metrics in aggregated_sections:
-        _write_performance_section(
-            section_name, section_model(**metrics_to_aggregate(metrics, pod_containers))
-        )
+def _aggregate_metric(containers: Sequence[PerformanceContainer], metric: MetricName) -> float:
+    """Aggregate a metric across all containers"""
+    return 0.0 + sum(
+        [container.metrics[metric].value for container in containers if metric in container.metrics]
+    )
 
 
-def metrics_to_aggregate(
-    metrics: Sequence[str], containers: Sequence[PerformanceContainer]
-) -> Dict[str, float]:
-    aggregated_metrics: DefaultDict[str, float] = defaultdict(float)
-    for container in containers:
-        for metric in metrics:
-            aggregated_metrics[metric] += container.metrics[MetricName(metric)].value
-    return aggregated_metrics
+def _aggregate_rate_metric(
+    containers: Sequence[PerformanceContainer], rate_metric: MetricName
+) -> float:
+    """Aggregate a rate metric across all containers"""
+    return 0.0 + sum(
+        [
+            container.rate_metrics[rate_metric].rate
+            for container in containers
+            if container.rate_metrics is not None and rate_metric in container.rate_metrics
+        ]
+    )
 
 
 def _write_performance_section(section_name: SectionName, section_output: BaseModel):
     # TODO: change live to performance (including checks)
     with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
         writer.append(section_output.json())
-
-
-def _performance_section_containers(
-    container_model: Type[BaseModel],
-    containers: Sequence[PerformanceContainer],
-    metrics: Iterable[str],
-) -> Sequence[BaseModel]:
-    section_containers = []
-    for container in containers:
-        section_containers.append(
-            container_model(
-                name=section.ContainerName(container.name),
-                **{
-                    metric: container.metrics[MetricName(metric)]
-                    for metric in metrics
-                    if metric in container.metrics
-                },
-            )
-        )
-    return section_containers
-
-
-def _extract_container_model(section_model: Type[BaseModel]) -> Type[BaseModel]:
-    """Retrieve the pydantic BaseModel type of the containers' included in the overall section model
-
-    Examples:
-       >>> _extract_container_model(section.CpuUsage)
-       <class 'cmk.special_agents.utils_kubernetes.schemata.section.ContainerCpuUsage'>
-    """
-
-    section_fields = section_model.__fields__
-    if "containers" not in section_fields:
-        raise DefinitionError("Performance return section should be a sequence of containers")
-    return section_fields["containers"].type_
 
 
 class DefinitionError(Exception):
@@ -595,7 +595,7 @@ class SetupError(Exception):
     pass
 
 
-def collect_metrics_from_cluster_agent(
+def request_metrics_from_cluster_collector(
     cluster_agent_url: str, verify: bool
 ) -> Sequence[Mapping[str, str]]:
     cluster_resp = requests.get(
@@ -609,48 +609,6 @@ def collect_metrics_from_cluster_agent(
 
     resp_content = cluster_resp.content.decode("utf-8").split("\n")
     return json.loads(resp_content[0])
-
-
-def group_metrics_by_containers(
-    performance_metrics: Sequence[Mapping[str, str]]
-) -> Sequence[PerformanceContainer]:
-    containers: Dict[section.ContainerName, Dict[MetricName, section.PerformanceMetric]] = {}
-    container_pod_uid_mappings: Dict[section.ContainerName, PodUID] = {}
-    for performance_metric in performance_metrics:
-        if (name := performance_metric["container_name"]) not in container_pod_uid_mappings:
-            container_pod_uid_mappings[section.ContainerName(name)] = PodUID(
-                performance_metric["pod_uid"]
-            )
-
-        container_metrics = containers.setdefault(section.ContainerName(name), {})
-        try:
-            metric_value, timestamp = performance_metric["metric_value_string"].split(" ")
-            metric_timestamp = int(timestamp)
-        except ValueError:
-            metric_value = performance_metric["metric_value_string"]
-            metric_timestamp = int(time.time())
-        metric_name = performance_metric["metric_name"].replace("container_", "", 1)
-        container_metrics[MetricName(metric_name)] = section.PerformanceMetric(
-            value=float(metric_value), timestamp=metric_timestamp
-        )
-
-    return [
-        PerformanceContainer(name=name, metrics=metrics, pod_uid=container_pod_uid_mappings[name])
-        for name, metrics in containers.items()
-    ]
-
-
-def group_containers_by_pods(
-    performance_containers: Sequence[PerformanceContainer],
-) -> Mapping[PodUID, PerformancePod]:
-    parsed_pods: Dict[PodUID, List[PerformanceContainer]] = {}
-    for container in performance_containers:
-        pod_containers = parsed_pods.setdefault(container.pod_uid, [])
-        pod_containers.append(container)
-    return {
-        pod_uid: PerformancePod(uid=pod_uid, containers=containers)
-        for pod_uid, containers in parsed_pods.items()
-    }
 
 
 def map_uid_to_piggyback_host_name(api_pods: Sequence[Pod]) -> Mapping[PodUID, str]:
@@ -674,6 +632,151 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     return client.ApiClient(config)
 
 
+def parse_performance_metrics(
+    cluster_collector_metrics: Sequence[Mapping[str, str]]
+) -> Sequence[PerformanceMetric]:
+    metrics = []
+    for metric in cluster_collector_metrics:
+        if " " in (metric_value := metric["metric_value_string"]):
+            metric_value, timestamp = metric_value.split(" ")
+            metric_timestamp = float(timestamp) / 1000.0
+        else:
+            metric_timestamp = time.time()
+
+        metric_name = metric["metric_name"].replace("container_", "", 1)
+        metrics.append(
+            PerformanceMetric(
+                container_name=section.ContainerName(metric["container_name"]),
+                name=MetricName(metric_name),
+                value=metric_value,
+                timestamp=metric_timestamp,
+            )
+        )
+    return metrics
+
+
+def filter_specific_metrics(
+    metrics: Sequence[PerformanceMetric], metric_names: Sequence[MetricName]
+) -> Iterator[PerformanceMetric]:
+    for metric in metrics:
+        if metric.name in metric_names:
+            yield metric
+
+
+def determine_rate_metrics(
+    containers_counters: Mapping[ContainerName, ContainerMetricsStore],
+    containers_counters_old: Mapping[ContainerName, ContainerMetricsStore],
+) -> Mapping[ContainerName, Mapping[MetricName, RateMetric]]:
+    """Determine the rate metrics for each container based on the current and previous
+    counter metric values"""
+
+    containers = {}
+    for container in containers_counters.values():
+        if (old_container := containers_counters_old.get(container.name)) is None:
+            continue
+
+        container_rate_metrics = container_available_rate_metrics(
+            container.metrics, old_container.metrics
+        )
+        containers[container.name] = container_rate_metrics
+    return containers
+
+
+def container_available_rate_metrics(
+    counter_metrics, old_counter_metrics
+) -> Mapping[MetricName, RateMetric]:
+    rate_metrics = {}
+    for counter_metric in counter_metrics.values():
+        if counter_metric.name not in old_counter_metrics:
+            continue
+
+        rate_metrics[counter_metric.name] = RateMetric(
+            name=counter_metric.name,
+            rate=calculate_rate(counter_metric, old_counter_metrics[counter_metric.name]),
+        )
+    return rate_metrics
+
+
+def calculate_rate(counter_metric: CounterMetric, old_counter_metric: CounterMetric) -> float:
+    time_delta = counter_metric.timestamp - old_counter_metric.timestamp
+    return (counter_metric.value - old_counter_metric.value) / time_delta
+
+
+def load_containers_store(path: Path, file_name: str) -> ContainersStore:
+    try:
+        with open(f"{path}/{file_name}", "r") as f:
+            return ContainersStore(**json.loads(f.read()))
+    except FileNotFoundError:
+        logging.debug("Could not find metrics file. This is expected if the first run.")
+    except SyntaxError:
+        logging.debug("Found metrics file, but could not parse it.")
+    return ContainersStore(containers={})
+
+
+def persist_containers_store(containers_store: ContainersStore, path: Path, file_name: str) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    with open(f"{path}/{file_name}", "w") as f:
+        f.write(containers_store.json())
+
+
+def group_metrics_by_container(
+    performance_metrics: Union[Iterator[PerformanceMetric], Sequence[PerformanceMetric]],
+    omit_metrics: Optional[Sequence[MetricName]] = None,
+) -> Mapping[ContainerName, Mapping[MetricName, PerformanceMetric]]:
+    if omit_metrics is None:
+        omit_metrics = []
+
+    containers: DefaultDict[ContainerName, Dict[MetricName, PerformanceMetric]] = defaultdict(dict)
+    for performance_metric in performance_metrics:
+        if performance_metric.name in omit_metrics:
+            continue
+        containers[performance_metric.container_name][performance_metric.name] = performance_metric
+    return containers
+
+
+def group_containers_by_pods(
+    performance_containers: Iterator[PerformanceContainer],
+) -> Mapping[PodUID, PerformancePod]:
+    parsed_pods: Dict[PodUID, List[PerformanceContainer]] = {}
+    for container in performance_containers:
+        pod_containers = parsed_pods.setdefault(container.pod_uid, [])
+        pod_containers.append(container)
+    return {
+        pod_uid: PerformancePod(uid=pod_uid, containers=containers)
+        for pod_uid, containers in parsed_pods.items()
+    }
+
+
+def parse_containers_metadata(metrics) -> Mapping[ContainerName, ContainerMetadata]:
+    containers = {}
+    for metric in metrics:
+        if (container_name := metric["container_name"]) in containers:
+            continue
+        containers[ContainerName(container_name)] = ContainerMetadata(
+            name=container_name, pod_uid=metric["pod_uid"]
+        )
+    return containers
+
+
+def group_container_components(
+    containers_metadata: Mapping[ContainerName, ContainerMetadata],
+    containers_metrics: Mapping[ContainerName, Mapping[MetricName, PerformanceMetric]],
+    containers_rate_metrics: Optional[
+        Mapping[ContainerName, Mapping[MetricName, RateMetric]]
+    ] = None,
+) -> Iterator[PerformanceContainer]:
+    if containers_rate_metrics is None:
+        containers_rate_metrics = {}
+
+    for container in containers_metadata.values():
+        yield PerformanceContainer(
+            name=container.name,
+            pod_uid=container.pod_uid,
+            metrics=containers_metrics[container.name],
+            rate_metrics=containers_rate_metrics.get(container.name),
+        )
+
+
 def main(args: Optional[List[str]] = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -692,19 +795,54 @@ def main(args: Optional[List[str]] = None) -> int:
 
             cluster = Cluster.from_api_server(api_server)
 
-            # Sections based on API server
+            # Sections based on API server data
             output_cluster_api_sections(cluster)
             output_nodes_api_sections(cluster.nodes())
             output_deployments_api_sections(cluster.deployments())
             output_pods_api_sections(cluster.pods())  # TODO: make more explicit
 
-            # Sections based on cluster agent live data
-            performance_metrics = collect_metrics_from_cluster_agent(
+            # Sections based on cluster collector performance data
+            collected_metrics = request_metrics_from_cluster_collector(
                 arguments.cluster_agent_endpoint, arguments.verify_cert
             )
+            performance_metrics = parse_performance_metrics(collected_metrics)
 
-            performance_containers = group_metrics_by_containers(performance_metrics)
+            relevant_counter_metrics = [MetricName("cpu_usage_seconds_total")]
+            performance_counter_metrics = filter_specific_metrics(
+                performance_metrics, metric_names=relevant_counter_metrics
+            )
+            containers_counter_metrics = group_metrics_by_container(performance_counter_metrics)
+
+            # We only persist the relevant counter metrics (not all metrics)
+            current_cycle_store = ContainersStore(
+                containers={
+                    container_name: ContainerMetricsStore(name=container_name, metrics=metrics)
+                    for container_name, metrics in containers_counter_metrics.items()
+                }
+            )
+
+            # TODO: file_name must be adjusted when adding multi-cluster/rule support later
+            store_file_name = "containers_counters.json"
+            previous_cycle_store = load_containers_store(
+                path=AGENT_TMP_PATH, file_name=store_file_name
+            )
+            containers_rate_metrics = determine_rate_metrics(
+                current_cycle_store.containers, previous_cycle_store.containers
+            )
+            persist_containers_store(
+                current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name
+            )
+
+            containers_metrics = group_metrics_by_container(
+                performance_metrics, omit_metrics=relevant_counter_metrics
+            )
+            containers_metadata = parse_containers_metadata(collected_metrics)
+            performance_containers = group_container_components(
+                containers_metadata, containers_metrics, containers_rate_metrics
+            )
+
             performance_pods = group_containers_by_pods(performance_containers)
+
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
 
             # Write performance sections

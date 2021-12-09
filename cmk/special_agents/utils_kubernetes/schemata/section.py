@@ -22,7 +22,7 @@ PodSequence = Sequence[str]
 
 class PerformanceMetric(BaseModel):
     value: float
-    timestamp: int
+    timestamp: float
 
 
 class PerformanceContainer(BaseModel):
@@ -132,7 +132,7 @@ class ContainerCpuUsage(PerformanceContainer):
 class CpuUsage(BaseModel):
     """section: k8s_live_cpu_usage_v1"""
 
-    containers: Sequence[ContainerCpuUsage]
+    usage: float
 
 
 class Memory(BaseModel):

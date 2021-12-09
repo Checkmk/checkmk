@@ -1,3 +1,5 @@
+use crate::config::Connection;
+
 use super::config;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use rustls::RootCertStore;
@@ -8,16 +10,15 @@ use rustls::{
 };
 use rustls_pemfile::Item;
 use std::fs::File;
-use std::io::{self, Result as IoResult};
+use std::io::Result as IoResult;
 use std::io::{Read, Write};
 use std::os::unix::prelude::FromRawFd;
-use std::slice::Iter;
 use std::sync::Arc;
 
-pub fn tls_connection(
-    reg_conns: Vec<config::RegisteredConnection>,
+pub fn tls_connection<'a>(
+    connections: impl Iterator<Item = &'a config::Connection>,
 ) -> AnyhowResult<ServerConnection> {
-    Ok(ServerConnection::new(tls_config(reg_conns)?)?)
+    Ok(ServerConnection::new(tls_config(connections)?)?)
 }
 
 pub fn tls_stream<'a>(
@@ -27,47 +28,48 @@ pub fn tls_stream<'a>(
     RustlsStream::new(server_connection, stream)
 }
 
-fn tls_config(reg_conns: Vec<config::RegisteredConnection>) -> AnyhowResult<Arc<ServerConfig>> {
+fn tls_config<'a>(
+    connections: impl Iterator<Item = &'a config::Connection>,
+) -> AnyhowResult<Arc<ServerConfig>> {
+    let connections: Vec<&Connection> = connections.collect();
     Ok(Arc::new(
         ServerConfig::builder()
             .with_safe_defaults()
             .with_client_cert_verifier(AllowAnyAuthenticatedClient::new(root_cert_store(
-                reg_conns.iter(),
+                &connections,
             )?))
-            .with_cert_resolver(sni_resolver(reg_conns.iter())?),
+            .with_cert_resolver(sni_resolver(&connections)?),
     ))
 }
 
-fn root_cert_store(reg_conns: Iter<config::RegisteredConnection>) -> AnyhowResult<RootCertStore> {
+fn root_cert_store(connections: &[&Connection]) -> AnyhowResult<RootCertStore> {
     let mut cert_store = RootCertStore::empty();
 
-    for conn in reg_conns {
-        cert_store.add(&certificate(&mut conn.root_cert.as_bytes())?)?;
+    for conn in connections.iter() {
+        cert_store.add(&certificate(&conn.root_cert)?)?;
     }
 
     Ok(cert_store)
 }
 
-fn sni_resolver(
-    reg_conns: Iter<config::RegisteredConnection>,
-) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
+fn sni_resolver(connections: &[&Connection]) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 
-    for spec in reg_conns {
-        let key = private_key(&mut spec.private_key.as_bytes())?;
-        let cert = certificate(&mut spec.certificate.as_bytes())?;
+    for conn in connections {
+        let key = private_key(&conn.private_key)?;
+        let cert = certificate(&conn.certificate)?;
 
         let certified_key = CertifiedKey::new(vec![cert], Arc::new(RsaSigningKey::new(&key)?));
 
-        resolver.add(&spec.uuid, certified_key)?;
+        resolver.add(&conn.uuid, certified_key)?;
     }
 
     Ok(Arc::new(resolver))
 }
 
-fn private_key(bytes: &mut dyn io::BufRead) -> AnyhowResult<PrivateKey> {
-    if let Item::PKCS8Key(it) =
-        rustls_pemfile::read_one(bytes)?.context("Could not load private key")?
+fn private_key(key_pem: &str) -> AnyhowResult<PrivateKey> {
+    if let Item::PKCS8Key(it) = rustls_pemfile::read_one(&mut key_pem.to_owned().as_bytes())?
+        .context("Could not load private key")?
     {
         Ok(PrivateKey(it))
     } else {
@@ -75,9 +77,10 @@ fn private_key(bytes: &mut dyn io::BufRead) -> AnyhowResult<PrivateKey> {
     }
 }
 
-pub fn certificate(bytes: &mut dyn io::BufRead) -> AnyhowResult<Certificate> {
+pub fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
     if let Item::X509Certificate(it) =
-        rustls_pemfile::read_one(bytes)?.context("Could not load certificate")?
+        rustls_pemfile::read_one(&mut cert_pem.to_owned().as_bytes())?
+            .context("Could not load certificate")?
     {
         Ok(Certificate(it))
     } else {

@@ -108,7 +108,7 @@ pub fn register_with_agent_labels(
 
 fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
     Ok(base64::encode_config(
-        tls_server::certificate(&mut String::from(cert).as_bytes())?.0,
+        tls_server::certificate(cert)?.0,
         base64::URL_SAFE,
     ))
 }
@@ -154,20 +154,12 @@ pub enum HostStatus {
     Discoverable,
 }
 
-#[derive(StringEnum)]
-pub enum ConnectionType {
-    /// `push-agent`
-    Push,
-    /// `pull-agent`
-    Pull,
-}
-
 #[derive(Deserialize)]
 pub struct StatusResponse {
     pub hostname: Option<String>,
     pub status: Option<HostStatus>,
     #[serde(rename = "type")]
-    pub connection_type: Option<ConnectionType>,
+    pub connection_type: Option<config::ConnectionType>,
     pub message: Option<String>,
 }
 

@@ -10,8 +10,16 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::fs::{read_to_string, write};
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use string_enum::StringEnum;
 
+#[derive(StringEnum)]
+pub enum ConnectionType {
+    /// `push-agent`
+    Push,
+    /// `pull-agent`
+    Pull,
+}
 pub trait JSONLoader: DeserializeOwned {
     fn new() -> AnyhowResult<Self> {
         Ok(serde_json::from_str("{}")?)
@@ -101,7 +109,7 @@ impl RegistrationConfig {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct RegisteredConnection {
+pub struct Connection {
     #[serde(default)]
     pub uuid: String,
 
@@ -118,33 +126,65 @@ pub struct RegisteredConnection {
 #[derive(Serialize, Deserialize)]
 pub struct RegisteredConnections {
     #[serde(default)]
-    pub push: HashMap<String, RegisteredConnection>,
+    pub push: HashMap<String, Connection>,
 
     #[serde(default)]
-    pub pull: HashMap<String, RegisteredConnection>,
+    pub pull: HashMap<String, Connection>,
 
     #[serde(default)]
-    pub pull_imported: Vec<RegisteredConnection>,
+    pub pull_imported: Vec<Connection>,
 }
 
 impl JSONLoader for RegisteredConnections {}
+pub struct Registration {
+    pub connections: RegisteredConnections,
+    pub path: PathBuf,
+}
 
-impl RegisteredConnections {
-    pub fn to_file(&self, path: &Path) -> io::Result<()> {
-        write(path, &serde_json::to_string_pretty(self)?)
+impl Registration {
+    pub fn from_file(path: &Path) -> AnyhowResult<Registration> {
+        Ok(Registration {
+            connections: RegisteredConnections::load(path)?,
+            path: PathBuf::from(path),
+        })
+    }
+
+    pub fn save(&self) -> io::Result<()> {
+        write(
+            &self.path,
+            &serde_json::to_string_pretty(&self.connections)?,
+        )
     }
 
     pub fn is_empty(&self) -> bool {
-        self.push.is_empty() & self.pull.is_empty() & self.pull_imported.is_empty()
+        self.connections.push.is_empty()
+            & self.connections.pull.is_empty()
+            & self.connections.pull_imported.is_empty()
     }
 
-    pub fn register_push_host(&mut self, server: String, conn: RegisteredConnection) {
-        self.pull.remove(&server);
-        self.push.insert(server, conn);
+    pub fn pull_connections(&self) -> impl Iterator<Item = &Connection> {
+        self.connections
+            .pull
+            .values()
+            .chain(self.connections.pull_imported.iter())
     }
 
-    pub fn register_pull_host(&mut self, server: String, conn: RegisteredConnection) {
-        self.push.remove(&server);
-        self.pull.insert(server, conn);
+    pub fn push_connections(&self) -> impl Iterator<Item = (&String, &Connection)> {
+        self.connections.push.iter()
+    }
+
+    pub fn register_connection(
+        &mut self,
+        connection_type: ConnectionType,
+        address: String,
+        connection: Connection,
+    ) -> AnyhowResult<()> {
+        let (insert_connections, remove_connections) = match connection_type {
+            ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
+            ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
+        };
+        remove_connections.remove(&address);
+        insert_connections.insert(address, connection);
+        Ok(())
     }
 }

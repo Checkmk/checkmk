@@ -39,7 +39,7 @@ fn post_registration_conn_type(
     root_cert: &str,
     uuid: &str,
     client_cert: &str,
-) -> AnyhowResult<agent_receiver_api::ConnectionType> {
+) -> AnyhowResult<config::ConnectionType> {
     loop {
         let status_resp = agent_receiver_api::status(server, root_cert, uuid, client_cert)?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
@@ -57,8 +57,7 @@ fn post_registration_conn_type(
 
 fn register(
     config: config::RegistrationConfig,
-    mut reg_conns: config::RegisteredConnections,
-    path_state_out: &Path,
+    mut registration: config::Registration,
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let uuid = Uuid::new_v4().to_string();
@@ -113,39 +112,33 @@ fn register(
         }
     }
 
-    let conn_type = post_registration_conn_type(
-        &config.agent_receiver_address,
-        &pairing_response.root_cert,
-        &uuid,
-        &pairing_response.client_cert,
+    registration.register_connection(
+        post_registration_conn_type(
+            &config.agent_receiver_address,
+            &pairing_response.root_cert,
+            &uuid,
+            &pairing_response.client_cert,
+        )?,
+        config.agent_receiver_address,
+        config::Connection {
+            uuid,
+            private_key,
+            certificate: pairing_response.client_cert,
+            root_cert: pairing_response.root_cert,
+        },
     )?;
-    let reg_conn = config::RegisteredConnection {
-        uuid,
-        private_key,
-        certificate: pairing_response.client_cert,
-        root_cert: pairing_response.root_cert,
-    };
 
-    match conn_type {
-        agent_receiver_api::ConnectionType::Push => {
-            reg_conns.register_push_host(config.agent_receiver_address, reg_conn)
-        }
-        agent_receiver_api::ConnectionType::Pull => {
-            reg_conns.register_pull_host(config.agent_receiver_address, reg_conn)
-        }
-    }
-
-    reg_conns.to_file(path_state_out)?;
+    registration.save()?;
 
     disallow_legacy_pull()
         .context("Registration successful, but could not delete marker for legacy pull mode")?;
     Ok(())
 }
 
-fn push(reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
+fn push(registration: config::Registration) -> AnyhowResult<()> {
     let mon_data = monitoring_data::collect().context("Error collecting monitoring data")?;
 
-    for (agent_receiver_address, server_spec) in reg_conns.push.iter() {
+    for (agent_receiver_address, server_spec) in registration.push_connections() {
         agent_receiver_api::agent_data(
             agent_receiver_address,
             &server_spec.root_cert,
@@ -171,12 +164,12 @@ fn dump() -> AnyhowResult<()> {
     Ok(())
 }
 
-fn status(_reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
+fn status(_registration: config::Registration) -> AnyhowResult<()> {
     Err(anyhow!("Status mode not yet implemented"))
 }
 
-fn pull(mut reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
-    if is_legacy_pull(&reg_conns) {
+fn pull(registration: config::Registration) -> AnyhowResult<()> {
+    if is_legacy_pull(&registration) {
         return dump();
     }
 
@@ -185,10 +178,8 @@ fn pull(mut reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
     stream.write_all(TLS_ID)?;
     stream.flush()?;
 
-    let mut pull_conns: Vec<config::RegisteredConnection> = reg_conns.pull.into_values().collect();
-    pull_conns.append(&mut reg_conns.pull_imported);
-    let mut tls_connection =
-        tls_server::tls_connection(pull_conns).context("Could not initialize TLS.")?;
+    let mut tls_connection = tls_server::tls_connection(registration.pull_connections())
+        .context("Could not initialize TLS.")?;
     let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
 
     let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
@@ -199,11 +190,11 @@ fn pull(mut reg_conns: config::RegisteredConnections) -> AnyhowResult<()> {
     Ok(())
 }
 
-fn is_legacy_pull(reg_conns: &config::RegisteredConnections) -> bool {
+fn is_legacy_pull(registration: &config::Registration) -> bool {
     if !Path::new(HOME_DIR).join(LEGACY_PULL_FILE).exists() {
         return false;
     }
-    if !reg_conns.is_empty() {
+    if !registration.is_empty() {
         return false;
     }
     true
@@ -310,18 +301,17 @@ fn init() -> (cli::Args, PathBuf, PathBuf) {
 
 fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> AnyhowResult<()> {
     let stored_config = config::ConfigFromDisk::load(config_path)?;
-    let reg_conns = config::RegisteredConnections::load(conn_path)
+    let registration = config::Registration::from_file(conn_path)
         .context("Error while loading registered connections.")?;
     match args {
         cli::Args::Register(reg_args) => register(
             config::RegistrationConfig::new(stored_config, reg_args)?,
-            reg_conns,
-            conn_path,
+            registration,
         ),
-        cli::Args::Push { .. } => push(reg_conns),
-        cli::Args::Pull { .. } => pull(reg_conns),
+        cli::Args::Push { .. } => push(registration),
+        cli::Args::Pull { .. } => pull(registration),
         cli::Args::Dump { .. } => dump(),
-        cli::Args::Status { .. } => status(reg_conns),
+        cli::Args::Status { .. } => status(registration),
     }
 }
 

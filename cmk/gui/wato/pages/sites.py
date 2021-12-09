@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for managing sites"""
 
-import binascii
 import queue
 import socket
 import time
@@ -15,18 +14,9 @@ from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, overloa
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.x509.oid import NameOID
-
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.encryption import (
-    ChainVerifyResult,
-    fetch_certificate_chain_verify_results,
-    is_ca_certificate,
-)
+from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -1204,18 +1194,6 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
 
-class CertificateDetails(NamedTuple):
-    issued_to: str
-    issued_by: str
-    valid_from: str
-    valid_till: str
-    signature_algorithm: str
-    digest_sha256: str
-    serial_number: int
-    is_ca: bool
-    verify_result: ChainVerifyResult
-
-
 @mode_registry.register
 class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
@@ -1394,36 +1372,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         family_spec, address_spec = self._site["socket"]
         address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
         address = address_spec["address"]
-        return self._fetch_certificate_details_impl(
-            cmk.utils.paths.trusted_ca_file, address_family, address
-        )
-
-    def _fetch_certificate_details_impl(
-        self, trusted_ca_file: str, address_family: socket.AddressFamily, address: _Tuple[str, int]
-    ) -> Iterable[CertificateDetails]:
-        """Creates a list of certificate details for the chain certs"""
-        verify_chain_results = fetch_certificate_chain_verify_results(
-            trusted_ca_file, address_family, address
-        )
-        if not verify_chain_results:
-            raise MKGeneralException(_("Failed to fetch the certificate chain"))
-
-        def get_name(name_obj):
-            return name_obj.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-
-        for result in verify_chain_results:
-            crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
-            yield CertificateDetails(
-                issued_to=get_name(crypto_cert.subject),
-                issued_by=get_name(crypto_cert.issuer),
-                valid_from=str(crypto_cert.not_valid_before),
-                valid_till=str(crypto_cert.not_valid_after),
-                signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
-                serial_number=crypto_cert.serial_number,
-                is_ca=is_ca_certificate(crypto_cert),
-                verify_result=result,
-            )
+        return fetch_certificate_details(cmk.utils.paths.trusted_ca_file, address_family, address)
 
 
 def _page_menu_dropdown_site_details(

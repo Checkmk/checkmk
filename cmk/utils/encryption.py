@@ -6,18 +6,25 @@
 """This module provides commonly used functions for the handling of encrypted
 data within the Checkmk ecosystem."""
 
+from __future__ import annotations
+
+import binascii
 import contextlib
 import enum
 import hashlib
 import socket
-from typing import Callable, List, NamedTuple, Tuple
+from typing import Callable, Iterable, List, NamedTuple, Tuple
 
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
 from Cryptodome.Protocol.KDF import PBKDF2
 from cryptography import x509
-from cryptography.x509.oid import ExtensionOID
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.x509.oid import ExtensionOID, NameOID
 from OpenSSL import crypto, SSL  # type: ignore[import]
+
+from cmk.utils.exceptions import MKGeneralException
 
 OPENSSL_SALTED_MARKER = "Salted__"
 
@@ -128,7 +135,55 @@ def _strip_fill_bytes(content: bytes) -> bytes:
     return content[0 : -content[-1]]
 
 
-def is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
+class CertificateDetails(NamedTuple):
+    issued_to: str
+    issued_by: str
+    valid_from: str
+    valid_till: str
+    signature_algorithm: str
+    digest_sha256: str
+    serial_number: int
+    is_ca: bool
+    verify_result: ChainVerifyResult
+
+
+class ChainVerifyResult(NamedTuple):
+    cert_pem: bytes
+    error_number: int
+    error_depth: int
+    error_message: str
+    is_valid: bool
+
+
+def fetch_certificate_details(
+    trusted_ca_file: str, address_family: socket.AddressFamily, address: Tuple[str, int]
+) -> Iterable[CertificateDetails]:
+    """Creates a list of certificate details for the chain certs"""
+    verify_chain_results = _fetch_certificate_chain_verify_results(
+        trusted_ca_file, address_family, address
+    )
+    if not verify_chain_results:
+        raise MKGeneralException("Failed to fetch the certificate chain")
+
+    def get_name(name_obj):
+        return name_obj.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+
+    for result in verify_chain_results:
+        crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
+        yield CertificateDetails(
+            issued_to=get_name(crypto_cert.subject),
+            issued_by=get_name(crypto_cert.issuer),
+            valid_from=str(crypto_cert.not_valid_before),
+            valid_till=str(crypto_cert.not_valid_after),
+            signature_algorithm=crypto_cert.signature_hash_algorithm.name,
+            digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
+            serial_number=crypto_cert.serial_number,
+            is_ca=_is_ca_certificate(crypto_cert),
+            verify_result=result,
+        )
+
+
+def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
     try:
         key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
         use_key_for_signing = key_usage.value.key_cert_sign is True
@@ -146,15 +201,7 @@ def is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
     return is_ca and use_key_for_signing
 
 
-class ChainVerifyResult(NamedTuple):
-    cert_pem: bytes
-    error_number: int
-    error_depth: int
-    error_message: str
-    is_valid: bool
-
-
-def fetch_certificate_chain_verify_results(
+def _fetch_certificate_chain_verify_results(
     trusted_ca_file: str,
     address_family: socket.AddressFamily,
     address: Tuple[str, int],
@@ -162,10 +209,6 @@ def fetch_certificate_chain_verify_results(
     """Opens a SSL connection and performs a handshake to get the certificate chain"""
 
     ctx = SSL.Context(SSL.SSLv23_METHOD)
-    # On this page we don't want to fail because of invalid certificates,
-    # but SSL.VERIFY_PEER must be set to trigger the verify_cb. This callback
-    # will then accept any certificate offered.
-    # ctx.set_verify(SSL.VERIFY_PEER, verify_cb)
     ctx.load_verify_locations(trusted_ca_file)
 
     with contextlib.closing(

@@ -8,13 +8,14 @@ data within the Checkmk ecosystem."""
 
 import enum
 import hashlib
-from typing import Callable, Tuple
+from typing import Callable, List, NamedTuple, Tuple
 
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
 from Cryptodome.Protocol.KDF import PBKDF2
 from cryptography import x509
 from cryptography.x509.oid import ExtensionOID
+from OpenSSL import crypto, SSL  # type: ignore[import]
 
 OPENSSL_SALTED_MARKER = "Salted__"
 
@@ -141,3 +142,40 @@ def is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
         is_ca = False
 
     return is_ca and use_key_for_signing
+
+
+class ChainVerifyResult(NamedTuple):
+    cert_pem: bytes
+    error_number: int
+    error_depth: int
+    error_message: str
+    is_valid: bool
+
+
+def verify_certificate_chain(
+    connection: SSL.Connection, certificate_chain: List[crypto.X509]
+) -> List[ChainVerifyResult]:
+    verify_chain_results = []
+
+    # Used to record all certificates and verification results for later displaying
+    for cert in certificate_chain:
+        # This is mainly done to get the textual error message without accessing internals of the SSL modules
+        error_number, error_depth, error_message = 0, 0, ""
+        try:
+            x509_store = connection.get_context().get_cert_store()
+            x509_store_context = crypto.X509StoreContext(x509_store, cert)
+            x509_store_context.verify_certificate()
+        except crypto.X509StoreContextError as e:
+            error_number, error_depth, error_message = e.args[0]
+
+        verify_chain_results.append(
+            ChainVerifyResult(
+                cert_pem=crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
+                error_number=error_number,
+                error_depth=error_depth,
+                error_message=error_message,
+                is_valid=error_number == 0,
+            )
+        )
+
+    return verify_chain_results

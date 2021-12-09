@@ -20,11 +20,11 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import NameOID
-from OpenSSL import crypto, SSL  # type: ignore[import]
+from OpenSSL import SSL  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.encryption import is_ca_certificate
+from cmk.utils.encryption import ChainVerifyResult, is_ca_certificate, verify_certificate_chain
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -1202,14 +1202,6 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
 
-class ChainVerifyResult(NamedTuple):
-    cert_pem: bytes
-    error_number: int
-    error_depth: int
-    error_message: str
-    is_valid: bool
-
-
 class CertificateDetails(NamedTuple):
     issued_to: str
     issued_by: str
@@ -1440,35 +1432,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             sock.do_handshake()
             certificate_chain = sock.get_peer_cert_chain()
 
-            return self._verify_certificate_chain(sock, certificate_chain)
-
-    def _verify_certificate_chain(
-        self, connection: SSL.Connection, certificate_chain: List[crypto.X509]
-    ) -> List[ChainVerifyResult]:
-        verify_chain_results = []
-
-        # Used to record all certificates and verification results for later displaying
-        for cert in certificate_chain:
-            # This is mainly done to get the textual error message without accessing internals of the SSL modules
-            error_number, error_depth, error_message = 0, 0, ""
-            try:
-                x509_store = connection.get_context().get_cert_store()
-                x509_store_context = crypto.X509StoreContext(x509_store, cert)
-                x509_store_context.verify_certificate()
-            except crypto.X509StoreContextError as e:
-                error_number, error_depth, error_message = e.args[0]
-
-            verify_chain_results.append(
-                ChainVerifyResult(
-                    cert_pem=crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
-                    error_number=error_number,
-                    error_depth=error_depth,
-                    error_message=error_message,
-                    is_valid=error_number == 0,
-                )
-            )
-
-        return verify_chain_results
+            return verify_certificate_chain(sock, certificate_chain)
 
 
 def _page_menu_dropdown_site_details(

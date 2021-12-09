@@ -213,41 +213,51 @@ fn ensure_home_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn try_sanitize_home_dir_ownership(home_dir: &Path, paths: [&Path; 3], user: &str) {
-    if let Err(error) = sanitize_home_dir_ownership([home_dir, paths[0], paths[1], paths[2]], user)
-        .context(format!(
-            "Failed to set ownership of {} to {}",
-            home_dir.display(),
-            user
-        ))
-    {
+fn try_sanitize_home_dir_ownership(home_dir: &Path, user: &str) {
+    if let Err(error) = sanitize_home_dir_ownership(home_dir, user).context(format!(
+        "Failed to recursively set ownership of {} to {}",
+        home_dir.display(),
+        user
+    )) {
         io::stderr()
             .write_all(format!("{:?}", error).as_bytes())
             .unwrap_or(());
         info!("{:?}", error)
     };
 }
-
-fn sanitize_home_dir_ownership(paths: [&Path; 4], user: &str) -> AnyhowResult<()> {
+fn sanitize_home_dir_ownership(home_dir: &Path, user: &str) -> AnyhowResult<()> {
     if !unistd::Uid::current().is_root() {
         return Ok(());
     }
-
     let cmk_agent_user =
         unistd::User::from_name(user)?.context(format!("Could not find user {}", user))?;
     let cmk_agent_group =
         unistd::Group::from_name(user)?.context(format!("Could not find group {}", user))?;
+    Ok(recursive_chown(
+        home_dir,
+        Some(cmk_agent_user.uid),
+        Some(cmk_agent_group.gid),
+    )?)
+}
 
-    for path in paths {
-        if path.exists() {
-            unistd::chown(path, Some(cmk_agent_user.uid), Some(cmk_agent_group.gid))?;
+fn recursive_chown(
+    dir: &Path,
+    uid: Option<unistd::Uid>,
+    gid: Option<unistd::Gid>,
+) -> io::Result<()> {
+    unistd::chown(dir, uid, gid)?;
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.is_dir() {
+            recursive_chown(&path, uid, gid)?;
+        } else {
+            unistd::chown(&path, uid, gid)?;
         }
     }
-
     Ok(())
 }
 
-fn init() -> (cli::Args, PathBuf, PathBuf, PathBuf) {
+fn init() -> (cli::Args, PathBuf, PathBuf) {
     let conn_path = Path::new(HOME_DIR).join(CONN_FILE);
     let config_path = Path::new(HOME_DIR).join(CONFIG_FILE);
     let log_path = Path::new(HOME_DIR).join(LOG_FILE);
@@ -269,7 +279,7 @@ fn init() -> (cli::Args, PathBuf, PathBuf, PathBuf) {
             .unwrap_or(());
     }
 
-    (args, config_path, conn_path, log_path)
+    (args, config_path, conn_path)
 }
 
 fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> AnyhowResult<()> {
@@ -290,7 +300,7 @@ fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> 
 }
 
 fn main() -> AnyhowResult<()> {
-    let (args, config_path, conn_path, log_path) = init();
+    let (args, config_path, conn_path) = init();
 
     let result = run_requested_mode(args, &config_path, &conn_path);
 
@@ -298,11 +308,7 @@ fn main() -> AnyhowResult<()> {
         info!("{:?}", error)
     }
 
-    try_sanitize_home_dir_ownership(
-        Path::new(HOME_DIR),
-        [&conn_path, &config_path, &log_path],
-        CMK_AGENT_USER,
-    );
+    try_sanitize_home_dir_ownership(Path::new(HOME_DIR), CMK_AGENT_USER);
 
     result
 }

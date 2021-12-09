@@ -10,7 +10,7 @@ from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 
 # This GUI specific fixture is also needed in this context
-from tests.unit.cmk.gui.conftest import load_plugins  # pylint: disable=unused-import
+from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture(autouse=True, name="gui_context")

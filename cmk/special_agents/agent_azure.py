@@ -947,8 +947,8 @@ def main(argv=None):
     # secrets can be passed in as a command line argument for testing,
     # BUT the standard method is to pass them via stdin so that they
     # are not accessible from outside, e.g. visible on the ps output
-    stdin_args = json.loads(sys.stdin.read() or "{}")
-    secret = stdin_args.get("secret") or args.secret
+    if not (secret := args.secret):
+        secret = json.loads(sys.stdin.read()).get("secret")
 
     if not secret:
         raise RuntimeError("secret is not set")

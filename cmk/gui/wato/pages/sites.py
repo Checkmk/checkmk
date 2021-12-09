@@ -1390,7 +1390,13 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:
         """Creates a list of certificate details for the chain certs"""
-        verify_chain_results = self._fetch_certificate_chain_verify_results()
+        family_spec, address_spec = self._site["socket"]
+        address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
+        address = address_spec["address"]
+
+        verify_chain_results = self._fetch_certificate_chain_verify_results(
+            cmk.utils.paths.trusted_ca_file, address_family, address
+        )
         if not verify_chain_results:
             raise MKGeneralException(_("Failed to fetch the certificate chain"))
 
@@ -1411,7 +1417,12 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 verify_result=result,
             )
 
-    def _fetch_certificate_chain_verify_results(self) -> List[ChainVerifyResult]:
+    def _fetch_certificate_chain_verify_results(
+        self,
+        trusted_ca_file: str,
+        address_family: socket.AddressFamily,
+        address: _Tuple[str, int],
+    ) -> List[ChainVerifyResult]:
         """Opens a SSL connection and performs a handshake to get the certificate chain"""
 
         ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -1419,16 +1430,13 @@ class ModeSiteLivestatusEncryption(WatoMode):
         # but SSL.VERIFY_PEER must be set to trigger the verify_cb. This callback
         # will then accept any certificate offered.
         # ctx.set_verify(SSL.VERIFY_PEER, verify_cb)
-        ctx.load_verify_locations(cmk.utils.paths.trusted_ca_file)
+        ctx.load_verify_locations(trusted_ca_file)
 
-        family_spec, address_spec = self._site["socket"]
-        address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
         with contextlib.closing(
             SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))
         ) as sock:
-
             # pylint does not get the object type of sock right
-            sock.connect(address_spec["address"])
+            sock.connect(address)
             sock.do_handshake()
             certificate_chain = sock.get_peer_cert_chain()
 

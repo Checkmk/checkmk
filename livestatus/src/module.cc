@@ -22,6 +22,7 @@
 #include <cerrno>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -539,20 +540,20 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
                     ? nullptr
                     : ::find_service(co->host_name, co->service_description);
             fl_comments[id] = std::make_unique<Comment>(Comment{
+                ._id = co->comment_id,
+                ._author = co->author_name,
+                ._comment = co->comment_data,
+                ._entry_type = static_cast<uint32_t>(co->entry_type),
+                ._entry_time =
+                    std::chrono::system_clock::from_time_t(co->entry_time),
                 ._type = co->comment_type,
                 ._is_service = co->service_description != nullptr,
                 ._host = hst,
                 ._service = svc,
-                ._entry_time =
-                    std::chrono::system_clock::from_time_t(co->entry_time),
-                ._author_name = co->author_name,
-                ._comment = co->comment_data,
-                ._id = co->comment_id,
                 ._expire_time =
                     std::chrono::system_clock::from_time_t(co->expire_time),
                 ._persistent = co->persistent,
                 ._source = co->source,
-                ._entry_type = co->entry_type,
                 ._expires = co->expires});
             break;
         }
@@ -582,21 +583,22 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
                     ? nullptr
                     : ::find_service(dt->host_name, dt->service_description);
             fl_downtimes[id] = std::make_unique<Downtime>(Downtime{
-                ._type = dt->downtime_type,
-                ._is_service = dt->service_description != nullptr,
-                ._host = hst,
-                ._service = svc,
+                ._id = dt->downtime_id,
+                ._author = dt->author_name,
+                ._comment = dt->comment_data,
+                ._origin_is_rule = false,
                 ._entry_time =
                     std::chrono::system_clock::from_time_t(dt->entry_time),
-                ._author_name = dt->author_name,
-                ._comment = dt->comment_data,
-                ._id = dt->downtime_id,
                 ._start_time =
                     std::chrono::system_clock::from_time_t(dt->start_time),
                 ._end_time =
                     std::chrono::system_clock::from_time_t(dt->end_time),
-                ._fixed = dt->fixed,
+                ._fixed = dt->fixed != 0,
                 ._duration = std::chrono::seconds{dt->duration},
+                ._type = dt->downtime_type,
+                ._is_service = dt->service_description != nullptr,
+                ._host = hst,
+                ._service = svc,
                 ._triggered_by = dt->triggered_by});
             break;
         }

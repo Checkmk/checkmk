@@ -5,7 +5,6 @@
 
 #include "NagiosCore.h"
 
-#include <cstdint>
 #include <cstdlib>
 #include <utility>
 
@@ -271,13 +270,13 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
         if (dt->_host == h && dt->_service == s) {
             result.push_back(DowntimeData{
                 ._id = dt->_id,
-                ._author = dt->_author_name,
+                ._author = dt->_author,
                 ._comment = dt->_comment,
                 ._origin_is_rule = false,
                 ._entry_time = dt->_entry_time,
                 ._start_time = dt->_start_time,
                 ._end_time = dt->_end_time,
-                ._fixed = dt->_fixed != 0,
+                ._fixed = dt->_fixed,
                 ._duration = dt->_duration,
                 ._recurring = 0,
                 ._pending = dt->_type != 0,
@@ -292,12 +291,11 @@ std::vector<CommentData> NagiosCore::comments_for_object(
     std::vector<CommentData> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == h && co->_service == s) {
-            result.push_back(CommentData{
-                ._id = co->_id,
-                ._author = co->_author_name,
-                ._comment = co->_comment,
-                ._entry_type = static_cast<uint32_t>(co->_entry_type),
-                ._entry_time = co->_entry_time});
+            result.push_back(CommentData{._id = co->_id,
+                                         ._author = co->_author,
+                                         ._comment = co->_comment,
+                                         ._entry_type = co->_entry_type,
+                                         ._entry_time = co->_entry_time});
         }
     }
     return result;

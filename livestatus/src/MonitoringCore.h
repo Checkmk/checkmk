@@ -48,7 +48,7 @@ struct CommentData {
     unsigned long _id;
     std::string _author;
     std::string _comment;
-    uint32_t _entry_type;  // TODO(sp) Move Comment::Type here
+    uint32_t _entry_type;  // CMC: Comment::Type
     std::chrono::system_clock::time_point _entry_time;
 };
 

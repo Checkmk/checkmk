@@ -31,7 +31,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<Downtime>>(
         "author", "The contact that scheduled the downtime", offsets,
-        [](const Downtime &r) { return r._author_name; }));
+        [](const Downtime &r) { return r._author; }));
     addColumn(std::make_unique<StringColumn<Downtime>>(
         "comment", "A comment text", offsets,
         [](const Downtime &r) { return r._comment; }));
@@ -56,13 +56,9 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<TimeColumn<Downtime>>(
         "end_time", "The end time of the downtime as UNIX timestamp", offsets,
         [](const Downtime &r) { return r._end_time; }));
-    addColumn(std::make_unique<IntColumn<Downtime>>(
+    addColumn(std::make_unique<BoolColumn<Downtime>>(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", offsets,
-        [](const Downtime &r) {
-            // TODO(ml): Ugly cast unsigned long to int because
-            //           the int columns are currently 32-bits signed only.
-            return static_cast<int>(r._fixed);
-        }));
+        [](const Downtime &r) { return r._fixed; }));
     addColumn(std::make_unique<IntColumn<Downtime>>(
         "duration", "The duration of the downtime in seconds", offsets,
         [](const Downtime &r) {

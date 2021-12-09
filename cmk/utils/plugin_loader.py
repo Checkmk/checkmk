@@ -7,10 +7,10 @@
 import importlib
 import pkgutil
 import sys
-from typing import Generator, List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 
-def load_plugins_with_exceptions(package_name: str) -> Generator[Tuple[str, Exception], None, None]:
+def load_plugins_with_exceptions(package_name: str) -> Iterator[Tuple[str, BaseException]]:
     """Load all specified packages
 
     This function accepts a package name in Python's dotted syntax (e.g.
@@ -32,17 +32,25 @@ def load_plugins_with_exceptions(package_name: str) -> Generator[Tuple[str, Exce
         ...     print("Importing %s failed: %s" % (mod_name, exc))
 
     """
+    walk_errors: List[Tuple[str, BaseException]] = []
+
+    def onerror_func(name: str) -> None:
+        if exc := sys.exc_info()[1]:
+            walk_errors.append((name, exc))
+
     __import__(package_name)
     package = sys.modules[package_name]
     module_path: List[str] = getattr(package, "__path__", [])
     for _loader, full_name, _is_pkg in pkgutil.walk_packages(
-        module_path, prefix=f"{package_name}."
+        module_path, prefix=f"{package_name}.", onerror=onerror_func
     ):
         try:
             importlib.import_module(full_name)
 
         except Exception as exc:
             yield full_name.removeprefix(f"{package_name}."), exc
+
+    yield from walk_errors
 
 
 def load_plugins(

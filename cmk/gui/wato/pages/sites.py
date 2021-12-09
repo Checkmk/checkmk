@@ -1391,13 +1391,19 @@ class ModeSiteLivestatusEncryption(WatoMode):
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:
-        """Creates a list of certificate details for the chain certs"""
         family_spec, address_spec = self._site["socket"]
         address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
         address = address_spec["address"]
-
-        verify_chain_results = fetch_certificate_chain_verify_results(
+        return self._fetch_certificate_details_impl(
             cmk.utils.paths.trusted_ca_file, address_family, address
+        )
+
+    def _fetch_certificate_details_impl(
+        self, trusted_ca_file: str, address_family: socket.AddressFamily, address: _Tuple[str, int]
+    ) -> Iterable[CertificateDetails]:
+        """Creates a list of certificate details for the chain certs"""
+        verify_chain_results = fetch_certificate_chain_verify_results(
+            trusted_ca_file, address_family, address
         )
         if not verify_chain_results:
             raise MKGeneralException(_("Failed to fetch the certificate chain"))

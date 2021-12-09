@@ -22,11 +22,13 @@
 enum class Encoding;
 class Logger;
 
+// Livestatus view onto a command definition, regardless of the monitoring core
 struct Command {
     std::string _name;
     std::string _command_line;
 };
 
+// Livestatus view onto a downtime, regardless of the monitoring core
 struct DowntimeData {
     unsigned long _id;
     std::string _author;
@@ -41,6 +43,7 @@ struct DowntimeData {
     bool _pending;
 };
 
+// Livestatus view onto a comment, regardless of the monitoring core
 struct CommentData {
     unsigned long _id;
     std::string _author;

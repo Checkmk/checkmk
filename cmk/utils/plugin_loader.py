@@ -5,9 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import importlib
+import os
 import pkgutil
 import sys
-from typing import Iterator, List, Optional, Tuple
+from itertools import chain
+from pathlib import Path
+from types import ModuleType
+from typing import Callable, Iterator, List, Optional, Tuple
 
 
 def load_plugins_with_exceptions(package_name: str) -> Iterator[Tuple[str, BaseException]]:
@@ -39,18 +43,57 @@ def load_plugins_with_exceptions(package_name: str) -> Iterator[Tuple[str, BaseE
             walk_errors.append((name, exc))
 
     __import__(package_name)
-    package = sys.modules[package_name]
-    module_path: List[str] = getattr(package, "__path__", [])
-    for _loader, full_name, _is_pkg in pkgutil.walk_packages(
-        module_path, prefix=f"{package_name}.", onerror=onerror_func
-    ):
+    for full_name in _find_modules(sys.modules[package_name], onerror=onerror_func):
         try:
             importlib.import_module(full_name)
-
         except Exception as exc:
             yield full_name.removeprefix(f"{package_name}."), exc
 
     yield from walk_errors
+
+
+def _find_modules(pkg: ModuleType, onerror: Callable[[str], None]) -> List[str]:
+    """Replacement for pkgutil.walk_packages
+
+    We used `pkgutil.walk_packages` before, but that was not able to correctly detect and walk into
+    PEP420 implicit namespace packages.
+
+    See also:
+        https://stackoverflow.com/questions/41203765/init-py-required-for-pkgutil-walk-packages-in-python3
+    """
+    return sorted(
+        set(
+            chain.from_iterable(
+                _discover_path_importables(Path(p), pkg.__name__, onerror)
+                for p in getattr(pkg, "__path__", [])
+            ),
+        ),
+    )
+
+
+def _discover_path_importables(
+    pkg_pth: Path, pkg_name: str, onerror: Callable[[str], None]
+) -> Iterator[str]:
+    """Yield all importables under a given path and package."""
+    for dir_path, _d, file_names in os.walk(pkg_pth):
+        pkg_dir_path = Path(dir_path)
+
+        if pkg_dir_path.parts[-1] == "__pycache__":
+            continue
+
+        if all(Path(_).suffix != ".py" for _ in file_names):
+            continue
+
+        rel_pt = pkg_dir_path.relative_to(pkg_pth)
+        pkg_pref = ".".join((pkg_name,) + rel_pt.parts)
+        yield from (
+            pkg_path
+            for _loader, pkg_path, _is_pkg in pkgutil.walk_packages(
+                (str(pkg_dir_path),),
+                prefix=f"{pkg_pref}.",
+                onerror=onerror,
+            )
+        )
 
 
 def load_plugins(

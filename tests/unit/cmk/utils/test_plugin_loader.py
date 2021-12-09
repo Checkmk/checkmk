@@ -22,7 +22,7 @@ def add_tmp_path_to_sys_path(tmp_path: Path) -> Iterator[Path]:
         sys.path.pop(0)
 
 
-@pytest.fixture(name="package_type", params=["package"])
+@pytest.fixture(name="package_type", params=["package", "namespace"])
 def fixture_package_type(request) -> str:
     return request.param
 
@@ -38,7 +38,7 @@ def fixture_tmp_package(tmp_path: Path, package_type: str) -> str:
         base.joinpath("plugins/__init__.py").touch()
         base.joinpath("plugins/abc/__init__.py").touch()
         base.joinpath("plugins/abc/level1/__init__.py").touch()
-    else:
+    elif package_type != "namespace":
         raise ValueError(package_type)
 
     level0 = base.joinpath("plugins/abc")
@@ -75,7 +75,7 @@ def fixture_exc_package(tmp_path: Path, package_type: str) -> str:
 
     if package_type == "package":
         base.joinpath("__init__.py").touch()
-    else:
+    elif package_type != "namespace":
         raise ValueError(package_type)
 
     with base.joinpath("ding.py").open("w") as f:
@@ -114,7 +114,7 @@ def fixture_import_error_package(tmp_path: Path, package_type: str) -> str:
     if package_type == "package":
         base.joinpath("__init__.py").touch()
         level0.joinpath("__init__.py").touch()
-    else:
+    elif package_type != "namespace":
         raise ValueError(package_type)
 
     with level0.joinpath("ding.py").open("w") as f:

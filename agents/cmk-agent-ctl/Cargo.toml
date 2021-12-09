@@ -24,3 +24,4 @@ http = { version = "*" }
 anyhow = { version = "1.0", features = ["backtrace"]}
 nix = { version = "*" }
 base64 = { version = "*" }
+string_enum = { version = "*" }

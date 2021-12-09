@@ -7,6 +7,7 @@ use crate::{certs, tls_server};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
+use string_enum::StringEnum;
 
 #[derive(Serialize)]
 struct PairingBody {
@@ -137,4 +138,67 @@ pub fn agent_data(
             )
             .send()?,
     )
+}
+
+#[derive(StringEnum)]
+pub enum HostStatus {
+    /// `new`
+    New,
+    /// `pending`
+    Pending,
+    /// `declined`
+    Declined,
+    /// `ready`
+    Ready,
+    /// `discoverable`
+    Discoverable,
+}
+
+#[derive(StringEnum)]
+pub enum ConnectionType {
+    /// `push-agent`
+    Push,
+    /// `pull-agent`
+    Pull,
+}
+
+#[derive(Deserialize)]
+pub struct StatusResponse {
+    pub hostname: Option<String>,
+    pub status: Option<HostStatus>,
+    #[serde(rename = "type")]
+    pub connection_type: Option<ConnectionType>,
+    pub message: Option<String>,
+}
+
+// Will be removed in the next commit
+#[allow(dead_code)]
+pub fn status(
+    server_address: &str,
+    root_cert: &str,
+    uuid: &str,
+    certificate: &str,
+) -> AnyhowResult<StatusResponse> {
+    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
+        .get(format!(
+            "https://{}/registration_status/{}",
+            server_address, uuid
+        ))
+        .header("certificate", encode_pem_cert_base64(certificate)?)
+        .send()?;
+
+    match response.status() {
+        StatusCode::OK => {
+            let body = response.text()?;
+            Ok(serde_json::from_str::<StatusResponse>(&body)
+                .context(format!("Error parsing response body: {}", body))?)
+        }
+        _ => {
+            let json: serde_json::Value = response.json()?;
+            match json.get("detail") {
+                Some(value) => Err(anyhow!(format!("{}", value))),
+                None => Err(anyhow!("Unknown failure")),
+            }
+        }
+    }
 }

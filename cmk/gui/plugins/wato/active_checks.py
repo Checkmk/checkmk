@@ -453,7 +453,7 @@ def _valuespec_active_checks_icmp():
             (
                 "min_pings",
                 Integer(
-                    title=_("Number of positve responses required for OK state"),
+                    title=_("Number of positive responses required for OK state"),
                     help=_(
                         "When pinging multiple addresses, failure to ping one of the "
                         "provided addresses will lead to a Crit status of the service. "

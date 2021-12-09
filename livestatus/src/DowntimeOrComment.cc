@@ -23,7 +23,7 @@ Downtime::Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt)
     , _start_time{std::chrono::system_clock::from_time_t(dt->start_time)}
     , _end_time{std::chrono::system_clock::from_time_t(dt->end_time)}
     , _fixed(dt->fixed)
-    , _duration{dt->duration}
+    , _duration{std::chrono::seconds{dt->duration}}
     , _triggered_by{dt->triggered_by} {}
 
 Comment::Comment(host *hst, service *svc, nebstruct_comment_struct *co)

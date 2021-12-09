@@ -85,7 +85,7 @@ public:
     std::chrono::system_clock::time_point _start_time;
     std::chrono::system_clock::time_point _end_time;
     int _fixed;
-    std::chrono::seconds _duration;
+    std::chrono::nanoseconds _duration;
     unsigned long _triggered_by;
     Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt);
 };

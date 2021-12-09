@@ -38,7 +38,7 @@ struct DowntimeData {
     std::chrono::system_clock::time_point _start_time;
     std::chrono::system_clock::time_point _end_time;
     bool _fixed;
-    std::chrono::seconds _duration;
+    std::chrono::nanoseconds _duration;
     int32_t _recurring;
     bool _pending;
 };

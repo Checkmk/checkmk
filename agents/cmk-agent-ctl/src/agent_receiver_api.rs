@@ -171,8 +171,6 @@ pub struct StatusResponse {
     pub message: Option<String>,
 }
 
-// Will be removed in the next commit
-#[allow(dead_code)]
 pub fn status(
     server_address: &str,
     root_cert: &str,

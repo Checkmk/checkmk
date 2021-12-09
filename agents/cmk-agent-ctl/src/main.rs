@@ -34,6 +34,27 @@ const LOG_FILE: &str = "cmk-agent-ctl.log";
 const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 const TLS_ID: &[u8] = b"16";
 
+fn post_registration_conn_type(
+    server: &str,
+    root_cert: &str,
+    uuid: &str,
+    client_cert: &str,
+) -> AnyhowResult<agent_receiver_api::ConnectionType> {
+    loop {
+        let status_resp = agent_receiver_api::status(server, root_cert, uuid, client_cert)?;
+        if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
+            return Err(anyhow!(
+                "Registration declined by Checkmk instance, please check credentials"
+            ));
+        }
+        if let Some(ct) = status_resp.connection_type {
+            return Ok(ct);
+        }
+        println!("Waiting for registration to complete on Checkmk instance, sleeping 20 s");
+        std::thread::sleep(std::time::Duration::from_secs(20));
+    }
+}
+
 fn register(
     config: config::RegistrationConfig,
     mut reg_conns: config::RegisteredConnections,
@@ -92,22 +113,27 @@ fn register(
         }
     }
 
-    // TODO: obtain actual connection mode from status endpoint
-    let connection_type = "pull";
+    let conn_type = post_registration_conn_type(
+        &config.agent_receiver_address,
+        &pairing_response.root_cert,
+        &uuid,
+        &pairing_response.client_cert,
+    )?;
+    let reg_conn = config::RegisteredConnection {
+        uuid,
+        private_key,
+        certificate: pairing_response.client_cert,
+        root_cert: pairing_response.root_cert,
+    };
 
-    (match connection_type {
-        "push" => &mut reg_conns.push,
-        _ => &mut reg_conns.pull,
-    })
-    .insert(
-        config.agent_receiver_address,
-        config::RegisteredConnection {
-            uuid,
-            private_key,
-            certificate: pairing_response.client_cert,
-            root_cert: pairing_response.root_cert,
-        },
-    );
+    match conn_type {
+        agent_receiver_api::ConnectionType::Push => {
+            reg_conns.register_push_host(config.agent_receiver_address, reg_conn)
+        }
+        agent_receiver_api::ConnectionType::Pull => {
+            reg_conns.register_pull_host(config.agent_receiver_address, reg_conn)
+        }
+    }
 
     reg_conns.to_file(path_state_out)?;
 

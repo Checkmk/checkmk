@@ -137,4 +137,14 @@ impl RegisteredConnections {
     pub fn is_empty(&self) -> bool {
         self.push.is_empty() & self.pull.is_empty() & self.pull_imported.is_empty()
     }
+
+    pub fn register_push_host(&mut self, server: String, conn: RegisteredConnection) {
+        self.pull.remove(&server);
+        self.push.insert(server, conn);
+    }
+
+    pub fn register_pull_host(&mut self, server: String, conn: RegisteredConnection) {
+        self.push.remove(&server);
+        self.pull.insert(server, conn);
+    }
 }

@@ -6,8 +6,10 @@
 """This module provides commonly used functions for the handling of encrypted
 data within the Checkmk ecosystem."""
 
+import contextlib
 import enum
 import hashlib
+import socket
 from typing import Callable, List, NamedTuple, Tuple
 
 from Cryptodome.Cipher import AES
@@ -152,7 +154,32 @@ class ChainVerifyResult(NamedTuple):
     is_valid: bool
 
 
-def verify_certificate_chain(
+def fetch_certificate_chain_verify_results(
+    trusted_ca_file: str,
+    address_family: socket.AddressFamily,
+    address: Tuple[str, int],
+) -> List[ChainVerifyResult]:
+    """Opens a SSL connection and performs a handshake to get the certificate chain"""
+
+    ctx = SSL.Context(SSL.SSLv23_METHOD)
+    # On this page we don't want to fail because of invalid certificates,
+    # but SSL.VERIFY_PEER must be set to trigger the verify_cb. This callback
+    # will then accept any certificate offered.
+    # ctx.set_verify(SSL.VERIFY_PEER, verify_cb)
+    ctx.load_verify_locations(trusted_ca_file)
+
+    with contextlib.closing(
+        SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))
+    ) as sock:
+        # pylint does not get the object type of sock right
+        sock.connect(address)
+        sock.do_handshake()
+        certificate_chain = sock.get_peer_cert_chain()
+
+        return _verify_certificate_chain(sock, certificate_chain)
+
+
+def _verify_certificate_chain(
     connection: SSL.Connection, certificate_chain: List[crypto.X509]
 ) -> List[ChainVerifyResult]:
     verify_chain_results = []

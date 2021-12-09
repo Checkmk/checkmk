@@ -6,7 +6,6 @@
 """Mode for managing sites"""
 
 import binascii
-import contextlib
 import queue
 import socket
 import time
@@ -20,11 +19,14 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import NameOID
-from OpenSSL import SSL  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.encryption import ChainVerifyResult, is_ca_certificate, verify_certificate_chain
+from cmk.utils.encryption import (
+    ChainVerifyResult,
+    fetch_certificate_chain_verify_results,
+    is_ca_certificate,
+)
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -1394,7 +1396,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
         address = address_spec["address"]
 
-        verify_chain_results = self._fetch_certificate_chain_verify_results(
+        verify_chain_results = fetch_certificate_chain_verify_results(
             cmk.utils.paths.trusted_ca_file, address_family, address
         )
         if not verify_chain_results:
@@ -1416,31 +1418,6 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 is_ca=is_ca_certificate(crypto_cert),
                 verify_result=result,
             )
-
-    def _fetch_certificate_chain_verify_results(
-        self,
-        trusted_ca_file: str,
-        address_family: socket.AddressFamily,
-        address: _Tuple[str, int],
-    ) -> List[ChainVerifyResult]:
-        """Opens a SSL connection and performs a handshake to get the certificate chain"""
-
-        ctx = SSL.Context(SSL.SSLv23_METHOD)
-        # On this page we don't want to fail because of invalid certificates,
-        # but SSL.VERIFY_PEER must be set to trigger the verify_cb. This callback
-        # will then accept any certificate offered.
-        # ctx.set_verify(SSL.VERIFY_PEER, verify_cb)
-        ctx.load_verify_locations(trusted_ca_file)
-
-        with contextlib.closing(
-            SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))
-        ) as sock:
-            # pylint does not get the object type of sock right
-            sock.connect(address)
-            sock.do_handshake()
-            certificate_chain = sock.get_peer_cert_chain()
-
-            return verify_certificate_chain(sock, certificate_chain)
 
 
 def _page_menu_dropdown_site_details(

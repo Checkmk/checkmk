@@ -532,14 +532,30 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     unsigned long id = co->comment_id;
     switch (co->type) {
         case NEBTYPE_COMMENT_ADD:
-        case NEBTYPE_COMMENT_LOAD:
-            fl_comments[id] = std::make_unique<Comment>(
-                ::find_host(co->host_name),
+        case NEBTYPE_COMMENT_LOAD: {
+            auto *hst = ::find_host(co->host_name);
+            auto *svc =
                 co->service_description == nullptr
                     ? nullptr
-                    : ::find_service(co->host_name, co->service_description),
-                co);
+                    : ::find_service(co->host_name, co->service_description);
+            fl_comments[id] = std::make_unique<Comment>(Comment{
+                ._type = co->comment_type,
+                ._is_service = co->service_description != nullptr,
+                ._host = hst,
+                ._service = svc,
+                ._entry_time =
+                    std::chrono::system_clock::from_time_t(co->entry_time),
+                ._author_name = co->author_name,
+                ._comment = co->comment_data,
+                ._id = co->comment_id,
+                ._expire_time =
+                    std::chrono::system_clock::from_time_t(co->expire_time),
+                ._persistent = co->persistent,
+                ._source = co->source,
+                ._entry_type = co->entry_type,
+                ._expires = co->expires});
             break;
+        }
         case NEBTYPE_COMMENT_DELETE:
             if (fl_comments.erase(id) == 0) {
                 Informational(fl_logger_nagios)
@@ -559,14 +575,31 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     unsigned long id = dt->downtime_id;
     switch (dt->type) {
         case NEBTYPE_DOWNTIME_ADD:
-        case NEBTYPE_DOWNTIME_LOAD:
-            fl_downtimes[id] = std::make_unique<Downtime>(
-                ::find_host(dt->host_name),
+        case NEBTYPE_DOWNTIME_LOAD: {
+            auto *hst = ::find_host(dt->host_name);
+            auto *svc =
                 dt->service_description == nullptr
                     ? nullptr
-                    : ::find_service(dt->host_name, dt->service_description),
-                dt);
+                    : ::find_service(dt->host_name, dt->service_description);
+            fl_downtimes[id] = std::make_unique<Downtime>(Downtime{
+                ._type = dt->downtime_type,
+                ._is_service = dt->service_description != nullptr,
+                ._host = hst,
+                ._service = svc,
+                ._entry_time =
+                    std::chrono::system_clock::from_time_t(dt->entry_time),
+                ._author_name = dt->author_name,
+                ._comment = dt->comment_data,
+                ._id = dt->downtime_id,
+                ._start_time =
+                    std::chrono::system_clock::from_time_t(dt->start_time),
+                ._end_time =
+                    std::chrono::system_clock::from_time_t(dt->end_time),
+                ._fixed = dt->fixed,
+                ._duration = std::chrono::seconds{dt->duration},
+                ._triggered_by = dt->triggered_by});
             break;
+        }
         case NEBTYPE_DOWNTIME_DELETE:
             if (fl_downtimes.erase(id) == 0) {
                 Informational(fl_logger_nagios)

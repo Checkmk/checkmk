@@ -29,7 +29,6 @@ from cmk.gui.valuespec import (
     EmailAddress,
     FixedValue,
     Float,
-    HostAddress,
     Hostname,
     Integer,
     ListOf,
@@ -241,67 +240,6 @@ def _pop3_parameters():
                                 ),
                                 title=_("TCP Port"),
                                 help=_("By default the standard POP3/SSL Port 995 is used."),
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "auth",
-                Tuple(
-                    title=_("Authentication"),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False, size=24),
-                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-def _ews_parameters():
-    return Dictionary(
-        title="Exchange Web Services - EWS",
-        optional_keys=[],
-        elements=[
-            (
-                "server",
-                HostAddress(
-                    title=_("EWS Server"),
-                    allow_empty=False,
-                    help=_(
-                        "You can specify a hostname or IP address different from the IP address "
-                        "of the host this check will be assigned to."
-                    ),
-                ),
-            ),
-            (
-                "ssl",
-                CascadingDropdown(
-                    title=_("TLS/SSL Encryption"),
-                    default_value=(True, None),
-                    choices=[
-                        (
-                            False,
-                            _("Use no encryption"),
-                            Optional(
-                                Integer(
-                                    default_value=80,
-                                ),
-                                title=_("TCP Port"),
-                                help=_("By default the standard HTTPS Port 443 is used."),
-                            ),
-                        ),
-                        (
-                            True,
-                            _("Encrypt HTTP communication using SSL/TLS"),
-                            Optional(
-                                Integer(
-                                    default_value=443,
-                                ),
-                                title=_("TCP Port"),
-                                help=_("By default the standard HTTPS/TLS Port 443 is used."),
                             ),
                         ),
                     ],
@@ -3108,93 +3046,71 @@ rulespec_registry.register(
 
 
 def _valuespec_active_checks_mailboxes():
-    def replace_imap_parameters(params: Mapping[str, Any]) -> Mapping[str, Any]:
-        return (
-            params
-            if "imap_parameters" not in params
-            else dict(
-                ("fetch", ("IMAP", v)) if k == "imap_parameters" else (k, v)
-                for k, v in params.items()
-            )
-        )
-
-    return Transform(
-        Dictionary(
-            title=_("Check IMAP/EWS Mailboxes"),
-            help=_("This check monitors count and age of mails in mailboxes."),
-            elements=[
-                (
-                    "service_description",
-                    TextInput(
-                        title=_("Service description"),
-                        help=_(
-                            "Please make sure that this is unique per host "
-                            "and does not collide with other services."
-                        ),
-                        allow_empty=False,
-                        default_value="Mailboxes",
+    return Dictionary(
+        title=_("Check IMAP Mailboxes"),
+        help=_("This check monitors count and age of mails in mailboxes."),
+        elements=[
+            (
+                "service_description",
+                TextInput(
+                    title=_("Service description"),
+                    help=_(
+                        "Please make sure that this is unique per host "
+                        "and does not collide with other services."
+                    ),
+                    allow_empty=False,
+                    default_value="Mailboxes",
+                ),
+            ),
+            ("imap_parameters", _imap_parameters()),
+            (
+                "connect_timeout",
+                Integer(
+                    title=_("Connect Timeout"),
+                    minvalue=1,
+                    default_value=10,
+                    unit=_("sec"),
+                ),
+            ),
+            (
+                "age",
+                Tuple(
+                    title=_("Message Age of oldest messages"),
+                    elements=[
+                        Age(title=_("Warning if older than")),
+                        Age(title=_("Critical if older than")),
+                    ],
+                ),
+            ),
+            (
+                "age_newest",
+                Tuple(
+                    title=_("Message Age of newest messages"),
+                    elements=[
+                        Age(title=_("Warning if older than")),
+                        Age(title=_("Critical if older than")),
+                    ],
+                ),
+            ),
+            (
+                "count",
+                Tuple(
+                    title=_("Message Count"),
+                    elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
+                ),
+            ),
+            (
+                "mailboxes",
+                ListOfStrings(
+                    title=_("Check only the listed mailboxes"),
+                    help=_(
+                        "By default, all mailboxes are checked with these parameters. "
+                        "If you specify mailboxes here, only those are monitored."
                     ),
                 ),
-                (
-                    "fetch",
-                    CascadingDropdown(
-                        title=_("Mail Receiving"),
-                        choices=[
-                            ("IMAP", _("IMAP"), _imap_parameters()),
-                            ("EWS", _("EWS"), _ews_parameters()),
-                        ],
-                    ),
-                ),
-                (
-                    "connect_timeout",
-                    Integer(
-                        title=_("Connect Timeout"),
-                        minvalue=1,
-                        default_value=10,
-                        unit=_("sec"),
-                    ),
-                ),
-                (
-                    "age",
-                    Tuple(
-                        title=_("Message Age of oldest messages"),
-                        elements=[
-                            Age(title=_("Warning if older than")),
-                            Age(title=_("Critical if older than")),
-                        ],
-                    ),
-                ),
-                (
-                    "age_newest",
-                    Tuple(
-                        title=_("Message Age of newest messages"),
-                        elements=[
-                            Age(title=_("Warning if older than")),
-                            Age(title=_("Critical if older than")),
-                        ],
-                    ),
-                ),
-                (
-                    "count",
-                    Tuple(
-                        title=_("Message Count"),
-                        elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
-                    ),
-                ),
-                (
-                    "mailboxes",
-                    ListOfStrings(
-                        title=_("Check only the listed mailboxes"),
-                        help=_(
-                            "By default, all mailboxes are checked with these parameters. "
-                            "If you specify mailboxes here, only those are monitored."
-                        ),
-                    ),
-                ),
-            ],
-            required_keys=["service_description", "fetch"],
-        ),
-        forth=replace_imap_parameters,
+            ),
+        ],
+        required_keys=["service_description", "imap_parameters"],
     )
 
 

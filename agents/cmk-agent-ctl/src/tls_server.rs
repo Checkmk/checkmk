@@ -36,23 +36,27 @@ fn tls_config<'a>(
         ServerConfig::builder()
             .with_safe_defaults()
             .with_client_cert_verifier(AllowAnyAuthenticatedClient::new(root_cert_store(
-                &connections,
+                connections.iter().map(|it| &it.root_cert),
             )?))
-            .with_cert_resolver(sni_resolver(&connections)?),
+            .with_cert_resolver(sni_resolver(connections.into_iter())?),
     ))
 }
 
-fn root_cert_store(connections: &[&Connection]) -> AnyhowResult<RootCertStore> {
+fn root_cert_store<'a>(
+    root_certs: impl Iterator<Item = &'a String>,
+) -> AnyhowResult<RootCertStore> {
     let mut cert_store = RootCertStore::empty();
 
-    for conn in connections.iter() {
-        cert_store.add(&certificate(&conn.root_cert)?)?;
+    for root_cert in root_certs {
+        cert_store.add(&certificate(root_cert)?)?;
     }
 
     Ok(cert_store)
 }
 
-fn sni_resolver(connections: &[&Connection]) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
+fn sni_resolver<'a>(
+    connections: impl Iterator<Item = &'a Connection>,
+) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 
     for conn in connections {

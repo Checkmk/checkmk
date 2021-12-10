@@ -80,11 +80,7 @@ def test_check_plugin_header(plugin_path: str):
             continue
         with plugin.open() as handle:
             shebang = handle.readline().strip()
-            encoding_header = handle.readline().strip()
 
         assert shebang == "#!/usr/bin/env python3", (
             f"Plugin '{plugin.name}' has wrong shebang '{shebang}'",
         )
-        assert (
-            encoding_header == "# -*- coding: utf-8 -*-"
-        ), f"Plugin '{plugin.name}' has wrong encoding header '{encoding_header}'"

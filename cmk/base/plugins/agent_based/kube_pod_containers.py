@@ -6,7 +6,7 @@
 
 import json
 from time import time
-from typing import Mapping
+from typing import Mapping, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -23,8 +23,10 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 )
 
 
-def parse(string_table: StringTable) -> PodContainers:
+def parse(string_table: StringTable) -> Optional[PodContainers]:
     """Parses `string_table` into a PodContainers instance"""
+    if not string_table:
+        return None
     return PodContainers(**json.loads(string_table[0][0]))
 
 

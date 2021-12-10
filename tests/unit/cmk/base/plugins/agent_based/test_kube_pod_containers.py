@@ -121,6 +121,7 @@ def check_result(container_name, params, section):
 
 def test_parse(container_name, container_state, string_table):
     section = kube_pod_containers.parse(string_table)
+    assert section is not None
     assert container_name in section.containers
     assert section.containers[container_name].state.type == container_state
 

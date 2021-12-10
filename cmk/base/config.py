@@ -2623,9 +2623,12 @@ class HostConfig:
             ),
             bulk_walk_size_of=self._bulk_walk_size(),
             timing=self._snmp_timing(),
-            oid_range_limits=self._config_cache.host_extra_conf(
-                self.hostname, snmp_limit_oid_range
-            ),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(
+                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
+                )
+            },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
@@ -3163,9 +3166,12 @@ class HostConfig:
             ),
             bulk_walk_size_of=self._bulk_walk_size(),
             timing=self._snmp_timing(),
-            oid_range_limits=self._config_cache.host_extra_conf(
-                self.hostname, snmp_limit_oid_range
-            ),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(
+                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
+                )
+            },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,

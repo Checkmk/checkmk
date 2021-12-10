@@ -33,7 +33,7 @@ SNMPConfig = SNMPHostConfig(
     is_snmpv2or3_without_bulkwalk_host=False,
     bulk_walk_size_of=0,
     timing={},
-    oid_range_limits=[],
+    oid_range_limits={},
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
@@ -45,7 +45,7 @@ class SNMPTestBackend(SNMPBackend):
     def get(self, oid, context_name=None):
         pass
 
-    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
+    def walk(self, oid, section_name=None, table_base_oid=None, context_name=None):
         return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
 
 

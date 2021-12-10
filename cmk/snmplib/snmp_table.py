@@ -297,9 +297,7 @@ def _perform_snmpwalk(
     for context_name in backend.config.snmpv3_contexts_of(section_name):
         rows = backend.walk(
             oid=fetchoid,
-            # revert back to legacy "possilbly-empty-string"-Type
-            # TODO: pass Optional[SectionName] along!
-            check_plugin_name=str(section_name) if section_name else "",
+            section_name=section_name,
             table_base_oid=base_oid,
             context_name=context_name,
         )

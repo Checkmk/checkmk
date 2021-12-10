@@ -155,7 +155,7 @@ class SNMPTestBackend(SNMPBackend):
     def get(self, oid, context_name=None):
         raise NotImplementedError("get")
 
-    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
+    def walk(self, oid, section_name=None, table_base_oid=None, context_name=None):
         raise NotImplementedError("walk")
 
 

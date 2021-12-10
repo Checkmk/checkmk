@@ -44,6 +44,7 @@ QosClass = Literal["burstable", "besteffort", "guaranteed"]
 CreationTimestamp = NewType("CreationTimestamp", float)
 Namespace = NewType("Namespace", str)
 NodeName = NewType("NodeName", str)
+IpAddress = NewType("IpAddress", str)
 
 
 class MetaData(BaseModel):
@@ -162,9 +163,6 @@ class PodSpec(BaseModel):
     node: Optional[NodeName] = None
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
-    host_ip: Optional[str] = None
-    pod_ip: Optional[str] = None
-    qos_class: QosClass
 
 
 class ContainerRunningState(BaseModel):
@@ -229,7 +227,10 @@ class PodCondition(BaseModel):
 class PodStatus(BaseModel):
     conditions: List[PodCondition]
     phase: Phase
-    start_time: Optional[int]  # None if pod is faulty
+    start_time: Optional[Timestamp]  # None if pod is faulty
+    host_ip: Optional[IpAddress] = None
+    pod_ip: Optional[IpAddress] = None
+    qos_class: QosClass
 
 
 class Pod(BaseModel):

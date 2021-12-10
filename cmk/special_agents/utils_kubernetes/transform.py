@@ -102,20 +102,34 @@ def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
     )
 
 
-def parse_pod_info(pod: client.V1Pod) -> api.PodSpec:
+def pod_spec(pod: client.V1Pod) -> api.PodSpec:
     info = {}
     if pod.spec:
-        info.update({"node": pod.spec.node_name, "host_network": pod.spec.host_network})
-
-    if pod.status:
         info.update(
             {
-                "host_ip": pod.status.host_ip,
-                "pod_ip": pod.status.pod_ip,
-                "qos_class": pod.status.qos_class.lower(),
+                "node": pod.spec.node_name,
+                "host_network": pod.spec.host_network,
+                "dns_policy": pod.spec.dns_policy,
             }
         )
     return api.PodSpec(**info)
+
+
+def pod_status(pod: client.V1Pod) -> api.PodStatus:
+    start_time: Optional[float]
+    if pod.status.start_time is not None:
+        start_time = convert_to_timestamp(pod.status.start_time)
+    else:
+        start_time = None
+
+    return api.PodStatus(
+        conditions=pod_conditions(pod.status.conditions),
+        phase=api.Phase(pod.status.phase.lower()),
+        start_time=api.Timestamp(start_time) if start_time else None,
+        host_ip=api.IpAddress(pod.status.host_ip) if pod.status.host_ip else None,
+        pod_ip=api.IpAddress(pod.status.pod_ip) if pod.status.pod_ip else None,
+        qos_class=pod.status.qos_class.lower(),
+    )
 
 
 def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
@@ -302,14 +316,8 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=pod.metadata.uid,
         metadata=parse_metadata(pod.metadata),
-        status=api.PodStatus(
-            conditions=pod_conditions(pod.status.conditions),
-            phase=api.Phase(pod.status.phase.lower()),
-            start_time=int(convert_to_timestamp(pod.status.start_time))
-            if pod.status.start_time
-            else None,
-        ),
-        spec=parse_pod_info(pod),
+        status=pod_status(pod),
+        spec=pod_spec(pod),
         resources=pod_resources(pod),
         containers=pod_containers(pod),
     )

@@ -155,7 +155,10 @@ class Pod:
             limit=self.resources.memory.limit, requests=self.resources.memory.requests
         )
 
-    def conditions(self) -> section.PodConditions:
+    def conditions(self) -> Optional[section.PodConditions]:
+        if not self.status.conditions:
+            return None
+
         # TODO: separate section for custom conditions
         return section.PodConditions(
             **{
@@ -462,20 +465,26 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
 
 
 def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
-    def output_sections(cluster_pod: Pod) -> None:
-        sections = {
-            "kube_cpu_resources_v1": cluster_pod.cpu_resources,
-            "k8s_pod_conditions_v1": cluster_pod.conditions,
-            "kube_pod_containers_v1": cluster_pod.containers_infos,
-            "kube_start_time_v1": cluster_pod.start_time,
-            "kube_memory_resources_v1": cluster_pod.memory_resources,
-            "kube_pod_lifecycle_v1": cluster_pod.lifecycle_phase,
-        }
-        _write_sections(sections)
-
     for pod in api_pods:
         with ConditionalPiggybackSection(f"pod_{pod.name(prepend_namespace=True)}"):
-            output_sections(pod)
+            for section_name, section_content in pod_api_based_checkmk_sections(pod):
+                if section_content is None:
+                    continue
+                with SectionWriter(section_name) as writer:
+                    writer.append(section_content.json())
+
+
+def pod_api_based_checkmk_sections(pod: Pod):
+    sections = (
+        ("kube_cpu_resources_v1", pod.cpu_resources),
+        ("k8s_pod_conditions_v1", pod.conditions),
+        ("kube_pod_containers_v1", pod.containers_infos),
+        ("kube_start_time_v1", pod.start_time),
+        ("kube_memory_resources_v1", pod.memory_resources),
+        ("kube_pod_lifecycle_v1", pod.lifecycle_phase),
+    )
+    for section_name, section_call in sections:
+        yield section_name, section_call()
 
 
 def filter_outdated_pods(

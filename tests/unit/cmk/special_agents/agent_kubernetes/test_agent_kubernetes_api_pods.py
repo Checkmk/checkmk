@@ -12,7 +12,7 @@ from cmk.special_agents.agent_kube import Pod
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
     convert_to_timestamp,
-    parse_pod_info,
+    pod_spec,
     pod_conditions,
     pod_containers,
     pod_resources,
@@ -121,7 +121,7 @@ class TestPodWithNoNode(TestCase):
             ),
         )
 
-    def test_parse_pod_info_pod_without_node(self) -> None:
+    def test_parse_pod_spec_pod_without_node(self) -> None:
         pod = client.V1Pod(
             spec=client.V1PodSpec(
                 host_network=None,
@@ -138,9 +138,8 @@ class TestPodWithNoNode(TestCase):
                 qos_class="BestEffort",
             ),
         )
-        pod_spec_api = parse_pod_info(pod)
+        pod_spec_api = pod_spec(pod)
 
-        assert pod_spec_api.pod_ip is None
         assert pod_spec_api.node is None
 
     def test_pod_containers_pod_without_node(self) -> None:
@@ -267,6 +266,7 @@ class TestPodStartUp(TestCase):
                 ),
             ],
             phase=api.Phase.PENDING,
+            qos_class="burstable",
         )
         pod = Pod(
             uid=Mock(),
@@ -314,6 +314,7 @@ class TestPodStartUp(TestCase):
                     )
                 ],
                 phase=api.Phase.PENDING,
+                qos_class="burstable",
             ),
             metadata=Mock(),
             spec=Mock(),

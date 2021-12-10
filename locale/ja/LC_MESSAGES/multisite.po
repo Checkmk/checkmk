@@ -6974,6 +6974,14 @@ msgstr ""
 "ESXホストを単独で実行するユーザー、または監視にvCenterを含めないユーザーは、"
 "ESXホスト自体にスナップショットの概要を表示することを選択できます。"
 
+#, fuzzy
+msgid "By default the standard HTTPS Port 443 is used."
+msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
+
+#, fuzzy
+msgid "By default the standard HTTPS/TLS Port 443 is used."
+msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
+
 msgid "By default the standard IMAP Port 143 is used."
 msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
 
@@ -7176,8 +7184,19 @@ msgstr "1日あたりのバイト数"
 msgid "Bytes per second"
 msgstr "1秒あたりのバイト数"
 
+#, fuzzy
+msgid "Bytes received"
+msgstr "拒否されたバイト"
+
 msgid "Bytes rejected"
 msgstr "拒否されたバイト"
+
+msgid "Bytes sent"
+msgstr "送信されたバイト数"
+
+#, fuzzy
+msgid "Bytes sent/received"
+msgstr "送信されたバイト数"
 
 msgid "C"
 msgstr "C"
@@ -7468,6 +7487,10 @@ msgstr "単一の選択肢で空のタグIDを使用することはできませ�
 
 msgid "Can still edit"
 msgstr "まだ編集できます"
+
+#, fuzzy, python-format
+msgid "Can't parse version %r"
+msgstr "アイコンをアップロードできません:%s"
 
 msgid "Cancel"
 msgstr "キャンセル"
@@ -8039,7 +8062,8 @@ msgstr ""
 msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr "チェック HTTP:SSL/TLS接続にHTTPの代わりにHTTPSを使用する"
 
-msgid "Check IMAP Mailboxes"
+#, fuzzy
+msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAPメールボックスを確認する"
 
 msgid "Check Item"
@@ -8418,6 +8442,10 @@ msgstr "Checkmkエージェントバージョン"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmkエージェントネットワークサービス(Linux)"
+
+#, fuzzy
+msgid "Checkmk agent plugins"
+msgstr "Checkmkエージェント"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -8983,8 +9011,20 @@ msgstr "Client secret"
 msgid "Clients"
 msgstr "クライアント"
 
+#, fuzzy
+msgid "Clients connected"
+msgstr "クライアントが接続します"
+
+#, fuzzy
+msgid "Clients maximum"
+msgstr "最大経過日数を設定する"
+
 msgid "Clients pending on a blocking call"
 msgstr ""
+
+#, fuzzy
+msgid "Clients total"
+msgstr "クライアント"
 
 msgid "Climb (long)"
 msgstr "登る(長い)"
@@ -9911,6 +9951,16 @@ msgstr "接続します"
 msgid "Connect to ACME SBC"
 msgstr "ACME SBCに接続します"
 
+msgid ""
+"Connect to an MQTT broker to get statistics out of your instance. The "
+"information is fetched from the <tt>$SYS</tt> topic of the broker. The "
+"different brokers implement different topics as they are not standardized, "
+"means that not every service available with every broker. In multi-tentant, "
+"enterprise level cluster this agent may not be useful or probably only when "
+"directly connecting to single nodes, because the <tt>$SYS</tt> topic is node-"
+"specific."
+msgstr ""
+
 msgid "Connect to remote sites"
 msgstr "リモートサイトに接続する"
 
@@ -10045,6 +10095,10 @@ msgstr "接続期間の平均"
 
 msgid "Connections duration min"
 msgstr "接続間隔の分数"
+
+#, fuzzy
+msgid "Connections opened"
+msgstr "接続が切断されました"
 
 msgid "Connections per second"
 msgstr "1秒あたりの接続数"
@@ -11176,6 +11230,10 @@ msgstr "ローカルイベントコンソールの現在のステータス"
 msgid "Current status of synchronization process"
 msgstr "同期プロセスの現在の状態"
 
+#, fuzzy
+msgid "Current subscriptions"
+msgstr "イベントサブスクリプション"
+
 msgid "Current thread count levels"
 msgstr "現在のスレッド数レベル"
 
@@ -11297,6 +11355,10 @@ msgstr "カスタムアクション"
 
 msgid "Custom actions that will be available for the alert."
 msgstr "アラートで使用できるカスタムアクション。"
+
+#, fuzzy
+msgid "Custom address"
+msgstr "カスタム状態"
 
 msgid "Custom attributes"
 msgstr "カスタム属性"
@@ -14860,7 +14922,8 @@ msgstr ""
 msgid "Drop Domain Suffix"
 msgstr "ドメインサフィックスを削除する"
 
-msgid "Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"
+#, fuzzy
+msgid "Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 msgstr ""
 "ドメイン部分を削除します (<tt>host123.foobar.de</tt> &#8594; <tt>host123</"
 "tt>)"
@@ -15058,6 +15121,13 @@ msgstr "ESXホストと仮想マシンの状態"
 
 msgid "ESX hosts: distribution of virtual machines"
 msgstr "ESXホスト:仮想マシンの配布"
+
+msgid "EWS"
+msgstr ""
+
+#, fuzzy
+msgid "EWS Server"
+msgstr "DNSサーバー"
 
 msgid "EXITED"
 msgstr "EXITED"
@@ -15925,6 +15995,10 @@ msgstr "エンクロージャー統計"
 
 msgid "Enclosures"
 msgstr "エンクロージャー"
+
+#, fuzzy
+msgid "Encrypt HTTP communication using SSL/TLS"
+msgstr "TLSを使用してSMTP通信を暗号化する"
 
 msgid "Encrypt IMAP communication using SSL"
 msgstr "SSLを使用してIMAP通信を暗号化する"
@@ -26680,6 +26754,10 @@ msgstr "%s' がありません"
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr "MKリモートプラグインエグゼキュータ(MRPE)"
 
+#, fuzzy
+msgid "MQTT broker statistics"
+msgstr "コア統計"
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr "MS Exchange DAG CopyQueue"
 
@@ -28086,6 +28164,18 @@ msgstr "メッセージはlogwatchによって処理されます"
 
 msgid "Messages in text log files"
 msgstr "テキストログファイルのメッセージ"
+
+#, fuzzy
+msgid "Messages received"
+msgstr "メッセージ処理"
+
+#, fuzzy
+msgid "Messages sent"
+msgstr "メッセージテキスト"
+
+#, fuzzy
+msgid "Messages sent/received"
+msgstr "キューにあるメッセージ"
 
 msgid "Messages that are spooled longer than this time will be thrown away."
 msgstr "この時間より長くスプールされたメッセージは破棄されます。"
@@ -30986,7 +31076,8 @@ msgstr "パケット数"
 msgid "Number of pending tasks"
 msgstr "保留中のタスク数"
 
-msgid "Number of positve responses required for OK state"
+#, fuzzy
+msgid "Number of positive responses required for OK state"
 msgstr "OK状態に必要な肯定的な応答数"
 
 msgid "Number of probes per hop"
@@ -32385,6 +32476,25 @@ msgstr "PSU(シャーシ/ベイ)"
 
 msgid "PSU Capacity Levels"
 msgstr "PSU容量レベル"
+
+msgid "PUBLISH messages received"
+msgstr ""
+
+#, fuzzy
+msgid "PUBLISH messages sent"
+msgstr "ログメッセージ"
+
+msgid "PUBLISH messages sent/received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent/received"
+msgstr ""
 
 msgid "Pa"
 msgstr "Pa"
@@ -33954,6 +34064,11 @@ msgid ""
 msgstr ""
 "オペレーティングシステム用のプラグイン、メモリ、CPU、ファイルシステムなど。"
 
+msgid ""
+"Plugins or local checks matching this pattern will be excluded from the "
+"comparison with the specified required versions."
+msgstr ""
+
 msgid "Plugins that directly check networking protocols like HTTP or IMAP"
 msgstr "HTTPやIMAPなどのネットワークプロトコルを直接チェックするプラグイン"
 
@@ -35483,6 +35598,10 @@ msgstr "ユーザー名に一致する正規表現"
 msgid "Regular expression substitution"
 msgstr "正規表現の置換"
 
+#, fuzzy
+msgid "Regular expression to exclude plugins"
+msgstr "コンテンツに期待される正規表現"
+
 msgid "Regular expression to expect in content"
 msgstr "コンテンツに期待される正規表現"
 
@@ -35546,6 +35665,10 @@ msgstr "アクティブなセッションの相対レベル。"
 
 msgid "Relay Log Size"
 msgstr "ログサイズを伝える"
+
+#, fuzzy, python-format
+msgid "Release Notes - %s %s"
+msgstr "リリースノート"
 
 msgid "Release notes"
 msgstr "リリースノート"
@@ -36147,6 +36270,10 @@ msgstr "必要なコンテキストフィルター"
 msgid "Required match (regular expression)"
 msgstr "必要な一致(正規表現)"
 
+#, fuzzy
+msgid "Required minimal versions"
+msgstr "必要な一致(正規表現)"
+
 msgid "Required number of OK-nodes for a total state of OK:"
 msgstr "OKの合計状態に必要なOKノードの数:"
 
@@ -36466,6 +36593,10 @@ msgstr "結果"
 
 msgid "Resumables"
 msgstr "再開可能"
+
+#, fuzzy
+msgid "Retained messages"
+msgstr "準備完了メッセージ"
 
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
@@ -39759,6 +39890,10 @@ msgstr "キュー内のメールのサイズ"
 msgid "Size of processes"
 msgstr "プロセスのサイズ"
 
+#, fuzzy
+msgid "Size of stored messages"
+msgstr "歴史的なメッセージ"
+
 msgid "Size of the queue"
 msgstr "キューのサイズ"
 
@@ -41835,6 +41970,10 @@ msgstr "出力値をRRDデータベースに保存します"
 msgid "Store size"
 msgstr "サイズ保管する"
 
+#, fuzzy
+msgid "Stored messages"
+msgstr "システムメッセージ"
+
 msgid "Stored report"
 msgstr "保存されたレポート"
 
@@ -42425,6 +42564,10 @@ msgstr "リスナーのTCPポート"
 
 msgid "TIME_WAIT"
 msgstr "TIME_WAIT"
+
+#, fuzzy
+msgid "TLS/SSL Encryption"
+msgstr "SSL暗号化"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Httpsが無効になっています"
@@ -46456,6 +46599,10 @@ msgid ""
 msgstr ""
 "jenkins APIへのアクセスに使用する必要があるユーザー名。少なくとも読み取り権限"
 "が必要です。"
+
+#, fuzzy
+msgid "The username used for broker authentication."
+msgstr "データベースへの接続に使用されるユーザー名"
 
 msgid "The username used to connect to the database"
 msgstr "データベースへの接続に使用されるユーザー名"
@@ -52011,6 +52158,14 @@ msgstr ""
 msgid "Unique ID"
 msgstr "一意のID"
 
+msgid "Unique ID used to identify the instance on the host within Checkmk."
+msgstr ""
+
+msgid ""
+"Unique client ID used for the broker. Will be randomly generated when not "
+"set."
+msgstr ""
+
 msgid "Unit"
 msgstr "単位"
 
@@ -54879,10 +55034,6 @@ msgstr "ウィークリーレポート"
 msgid "Weekly rate"
 msgstr "ウィークリーレート"
 
-#, python-format
-msgid "Welcome to Checkmk %s"
-msgstr "Checkmk %sへようこそ"
-
 msgid "Welcome to Checkmk Mobile."
 msgstr "Checkmk Mobileへようこそ。"
 
@@ -55307,6 +55458,12 @@ msgstr ""
 "ります(特殊文字をアンダースコアに置き換えるだけです)が、元に戻すことはできま"
 "せん。一方、Cスタイルのマングリングは標準の8進エスケープ ('\\ooo')を使用する"
 "ため、さまざまな部分を再構築できます。"
+
+msgid ""
+"When set, this address is used for connecting to the MQTT broker. If not "
+"set, the special agent will use the primary address of the host to connect "
+"to the MQTT broker."
+msgstr ""
 
 msgid ""
 "When switching from the Nagios core to CMC with <tt>omd config</tt> with "
@@ -56661,6 +56818,14 @@ msgid ""
 "You can configure an individual alias here for the tunnel matching the IP-"
 "Address or Name configured in the field above."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed agent plugins and local checks."
+msgstr ""
+"Webサーバーによって処理される現在アクティブな接続の上限しきい値を構成できま"
+"す。"
 
 #, python-format
 msgid ""
@@ -59908,6 +60073,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
+#, python-format
+#~ msgid "Welcome to Checkmk %s"
+#~ msgstr "Checkmk %sへようこそ"
+
 #~ msgid "25 Hours"
 #~ msgstr "25時間"
 
@@ -60358,9 +60527,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Bytes reclaimed by GC rate"
 #~ msgstr "GCレートによって回収されたバイト"
-
-#~ msgid "Bytes sent"
-#~ msgstr "送信されたバイト数"
 
 #~ msgid "CMK helper"
 #~ msgstr "CMKヘルパー"
@@ -61271,9 +61437,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 #~ msgid "Log latency"
 #~ msgstr "ログのレイテンシ"
 
-#~ msgid "Log messages"
-#~ msgstr "ログメッセージ"
-
 #~ msgid "Log mode"
 #~ msgstr "ログモード"
 
@@ -61373,14 +61536,8 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 #~ msgid "Message Rate"
 #~ msgstr "メッセージレート"
 
-#~ msgid "Message processing"
-#~ msgstr "メッセージ処理"
-
 #~ msgid "Messages"
 #~ msgstr "メッセージ"
-
-#~ msgid "Messages in queue"
-#~ msgstr "キューにあるメッセージ"
 
 #~ msgid "Minimum single-request consumption"
 #~ msgstr "単一リクエストの最小消費量"
@@ -61767,9 +61924,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Reading request"
 #~ msgstr "リーディングリクエスト"
-
-#~ msgid "Ready messages"
-#~ msgstr "準備完了メッセージ"
 
 #~ msgid "Ready replicas"
 #~ msgstr "準備ができたレプリカ"

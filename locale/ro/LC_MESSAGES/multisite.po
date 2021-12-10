@@ -6829,6 +6829,12 @@ msgid ""
 "monitoring can choose to display the snapshot summary on the ESX host itself."
 msgstr ""
 
+msgid "By default the standard HTTPS Port 443 is used."
+msgstr ""
+
+msgid "By default the standard HTTPS/TLS Port 443 is used."
+msgstr ""
+
 msgid "By default the standard IMAP Port 143 is used."
 msgstr ""
 
@@ -6988,7 +6994,19 @@ msgid "Bytes per second"
 msgstr ""
 
 #, fuzzy
+msgid "Bytes received"
+msgstr "Sterge Elementul"
+
+#, fuzzy
 msgid "Bytes rejected"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Bytes sent"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Bytes sent/received"
 msgstr "Sterge Elementul"
 
 msgid "C"
@@ -7286,6 +7304,10 @@ msgstr ""
 
 msgid "Can still edit"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Can't parse version %r"
+msgstr "Optiuni tabel"
 
 msgid "Cancel"
 msgstr ""
@@ -7845,7 +7867,7 @@ msgstr ""
 msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr ""
 
-msgid "Check IMAP Mailboxes"
+msgid "Check IMAP/EWS Mailboxes"
 msgstr ""
 
 msgid "Check Item"
@@ -8214,6 +8236,10 @@ msgstr "Perioada de timp Noua"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr ""
+
+#, fuzzy
+msgid "Checkmk agent plugins"
+msgstr "Acces la Agenți"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -8746,8 +8772,20 @@ msgid "Clients"
 msgstr "Adaugă Conținut"
 
 #, fuzzy
+msgid "Clients connected"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Clients maximum"
+msgstr "Vechimea maxima"
+
+#, fuzzy
 msgid "Clients pending on a blocking call"
 msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Clients total"
+msgstr "Adaugă Conținut"
 
 msgid "Climb (long)"
 msgstr ""
@@ -9655,6 +9693,16 @@ msgstr "Conexiuni Active"
 msgid "Connect to ACME SBC"
 msgstr ""
 
+msgid ""
+"Connect to an MQTT broker to get statistics out of your instance. The "
+"information is fetched from the <tt>$SYS</tt> topic of the broker. The "
+"different brokers implement different topics as they are not standardized, "
+"means that not every service available with every broker. In multi-tentant, "
+"enterprise level cluster this agent may not be useful or probably only when "
+"directly connecting to single nodes, because the <tt>$SYS</tt> topic is node-"
+"specific."
+msgstr ""
+
 #, fuzzy
 msgid "Connect to remote sites"
 msgstr "(Nu trimite site-ului de la distanță)"
@@ -9804,6 +9852,10 @@ msgstr "Conexiune Noua"
 #, fuzzy
 msgid "Connections duration min"
 msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Connections opened"
+msgstr "Conexiuni Active"
 
 #, fuzzy
 msgid "Connections per second"
@@ -10999,6 +11051,10 @@ msgstr "Acces la Consola de Evenimente"
 msgid "Current status of synchronization process"
 msgstr ""
 
+#, fuzzy
+msgid "Current subscriptions"
+msgstr "foloseste descrierea"
+
 msgid "Current thread count levels"
 msgstr ""
 
@@ -11128,6 +11184,10 @@ msgstr "Atribute personalizate"
 
 msgid "Custom actions that will be available for the alert."
 msgstr ""
+
+#, fuzzy
+msgid "Custom address"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "Custom attributes"
@@ -14807,7 +14867,7 @@ msgstr ""
 msgid "Drop Domain Suffix"
 msgstr ""
 
-msgid "Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"
+msgid "Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 msgstr ""
 
 msgid "Dropped messages"
@@ -15004,6 +15064,13 @@ msgstr ""
 
 msgid "ESX hosts: distribution of virtual machines"
 msgstr ""
+
+msgid "EWS"
+msgstr ""
+
+#, fuzzy
+msgid "EWS Server"
+msgstr "Nume utilizator vSphere"
 
 msgid "EXITED"
 msgstr ""
@@ -15859,6 +15926,9 @@ msgid "Enclosure Stats"
 msgstr ""
 
 msgid "Enclosures"
+msgstr ""
+
+msgid "Encrypt HTTP communication using SSL/TLS"
 msgstr ""
 
 msgid "Encrypt IMAP communication using SSL"
@@ -26255,6 +26325,10 @@ msgstr ""
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr ""
 
+#, fuzzy
+msgid "MQTT broker statistics"
+msgstr "Conexiuni Active"
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr ""
 
@@ -27758,6 +27832,18 @@ msgstr ""
 
 msgid "Messages in text log files"
 msgstr ""
+
+#, fuzzy
+msgid "Messages received"
+msgstr "Mesajul Text"
+
+#, fuzzy
+msgid "Messages sent"
+msgstr "Mesajul Text"
+
+#, fuzzy
+msgid "Messages sent/received"
+msgstr "Mesajul Text"
 
 msgid "Messages that are spooled longer than this time will be thrown away."
 msgstr ""
@@ -30783,7 +30869,7 @@ msgid "Number of pending tasks"
 msgstr ""
 
 #, fuzzy
-msgid "Number of positve responses required for OK state"
+msgid "Number of positive responses required for OK state"
 msgstr "Numarul maxim de procese cu statusul OK"
 
 msgid "Number of probes per hop"
@@ -32209,6 +32295,24 @@ msgid "PSU (Chassis/Bay)"
 msgstr ""
 
 msgid "PSU Capacity Levels"
+msgstr ""
+
+msgid "PUBLISH messages received"
+msgstr ""
+
+msgid "PUBLISH messages sent"
+msgstr ""
+
+msgid "PUBLISH messages sent/received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent/received"
 msgstr ""
 
 msgid "Pa"
@@ -33740,6 +33844,11 @@ msgstr ""
 
 msgid ""
 "Plugins for operating systems, things like memory, CPU, filesystems, etc."
+msgstr ""
+
+msgid ""
+"Plugins or local checks matching this pattern will be excluded from the "
+"comparison with the specified required versions."
 msgstr ""
 
 msgid "Plugins that directly check networking protocols like HTTP or IMAP"
@@ -35369,6 +35478,9 @@ msgstr ""
 msgid "Regular expression substitution"
 msgstr ""
 
+msgid "Regular expression to exclude plugins"
+msgstr ""
+
 msgid "Regular expression to expect in content"
 msgstr ""
 
@@ -35430,6 +35542,10 @@ msgstr ""
 
 msgid "Relay Log Size"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Release Notes - %s %s"
+msgstr "slot-uri"
 
 #, fuzzy
 msgid "Release notes"
@@ -36041,6 +36157,10 @@ msgstr "Optiuni tabel"
 msgid "Required match (regular expression)"
 msgstr ""
 
+#, fuzzy
+msgid "Required minimal versions"
+msgstr "Numarul maxim de conexiuni"
+
 msgid "Required number of OK-nodes for a total state of OK:"
 msgstr ""
 
@@ -36376,6 +36496,10 @@ msgstr ""
 
 msgid "Resumables"
 msgstr ""
+
+#, fuzzy
+msgid "Retained messages"
+msgstr "Mesajul Text"
 
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
@@ -39786,6 +39910,10 @@ msgstr "Numarul maxim de emailuri in coada"
 msgid "Size of processes"
 msgstr ""
 
+#, fuzzy
+msgid "Size of stored messages"
+msgstr "Nume nou"
+
 msgid "Size of the queue"
 msgstr ""
 
@@ -41751,6 +41879,10 @@ msgid "Store size"
 msgstr "Dimensiunea Maxima"
 
 #, fuzzy
+msgid "Stored messages"
+msgstr "Nume nou"
+
+#, fuzzy
 msgid "Stored report"
 msgstr "(nici un raport)"
 
@@ -42391,6 +42523,10 @@ msgstr "TCP-Port pentru Listener"
 
 msgid "TIME_WAIT"
 msgstr ""
+
+#, fuzzy
+msgid "TLS/SSL Encryption"
+msgstr "Acțiune"
 
 #, fuzzy
 msgid "TLS/SSL/Https disabled"
@@ -45876,6 +46012,10 @@ msgid ""
 "The username that should be used for accessing the jenkins API. Has to have "
 "read permissions at least."
 msgstr ""
+
+#, fuzzy
+msgid "The username used for broker authentication."
+msgstr "trimite notificare"
 
 msgid "The username used to connect to the database"
 msgstr ""
@@ -50631,6 +50771,14 @@ msgstr ""
 msgid "Unique ID"
 msgstr ""
 
+msgid "Unique ID used to identify the instance on the host within Checkmk."
+msgstr ""
+
+msgid ""
+"Unique client ID used for the broker. Will be randomly generated when not "
+"set."
+msgstr ""
+
 msgid "Unit"
 msgstr ""
 
@@ -53562,10 +53710,6 @@ msgstr ""
 msgid "Weekly rate"
 msgstr "saptamanal"
 
-#, python-format
-msgid "Welcome to Checkmk %s"
-msgstr ""
-
 msgid "Welcome to Checkmk Mobile."
 msgstr ""
 
@@ -53871,6 +54015,12 @@ msgid ""
 "simply replaces special characters with an underscore), but it is not "
 "invertible. On the other hand, the C-style mangling uses standard octal "
 "escapes ('\\ooo'), so you can reconstruct the various parts."
+msgstr ""
+
+msgid ""
+"When set, this address is used for connecting to the MQTT broker. If not "
+"set, the special agent will use the primary address of the host to connect "
+"to the MQTT broker."
 msgstr ""
 
 msgid ""
@@ -55013,6 +55163,11 @@ msgstr ""
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP-"
 "Address or Name configured in the field above."
+msgstr ""
+
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed agent plugins and local checks."
 msgstr ""
 
 #, python-format
@@ -58691,10 +58846,6 @@ msgstr ""
 #~ msgstr "Acțiune"
 
 #, fuzzy
-#~ msgid "MAC address"
-#~ msgstr "Adresă"
-
-#, fuzzy
 #~ msgid "Managers"
 #~ msgstr "Statusul Serverului"
 
@@ -58757,15 +58908,7 @@ msgstr ""
 #~ msgstr "Mesajul Text"
 
 #, fuzzy
-#~ msgid "Message processing"
-#~ msgstr "Mesajul Text"
-
-#, fuzzy
 #~ msgid "Messages"
-#~ msgstr "Mesajul Text"
-
-#, fuzzy
-#~ msgid "Messages in queue"
 #~ msgstr "Mesajul Text"
 
 #, fuzzy
@@ -59057,10 +59200,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Reading request"
 #~ msgstr "cereri"
-
-#, fuzzy
-#~ msgid "Ready messages"
-#~ msgstr "Mesajul Text"
 
 #, fuzzy
 #~ msgid "Recovery area"
@@ -59360,10 +59499,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "vBuckets"
 #~ msgstr "foloseste numele portului"
-
-#, fuzzy
-#~ msgid "vSphere Servers"
-#~ msgstr "Nume utilizator vSphere"
 
 #, fuzzy
 #~ msgid "vSphere VMs"

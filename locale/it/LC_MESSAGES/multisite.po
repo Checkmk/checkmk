@@ -7242,6 +7242,16 @@ msgstr ""
 "o che non includono il loro vCenter nel monitoraggio possono scegliere di "
 "visualizzare il riepilogo delle istantanee sull'host ESX stesso."
 
+#, fuzzy
+msgid "By default the standard HTTPS Port 443 is used."
+msgstr ""
+"Per impostazione predefinita viene utilizzata la porta standard IMAP 143."
+
+#, fuzzy
+msgid "By default the standard HTTPS/TLS Port 443 is used."
+msgstr ""
+"Per impostazione predefinita viene utilizzata la porta standard IMAP 143."
+
 msgid "By default the standard IMAP Port 143 is used."
 msgstr ""
 "Per impostazione predefinita viene utilizzata la porta standard IMAP 143."
@@ -7488,8 +7498,19 @@ msgstr "Bytes al giorno"
 msgid "Bytes per second"
 msgstr "Bytes al secondo"
 
+#, fuzzy
+msgid "Bytes received"
+msgstr "Bytes rifiutati"
+
 msgid "Bytes rejected"
 msgstr "Bytes rifiutati"
+
+msgid "Bytes sent"
+msgstr "Bytes inviati"
+
+#, fuzzy
+msgid "Bytes sent/received"
+msgstr "Bytes inviati"
 
 msgid "C"
 msgstr "C"
@@ -7787,6 +7808,10 @@ msgstr "Non si può usare un ID tag vuoto con una sola scelta."
 
 msgid "Can still edit"
 msgstr "Può ancora modificare"
+
+#, fuzzy, python-format
+msgid "Can't parse version %r"
+msgstr "Impossibile caricare l'icona: %s"
 
 msgid "Cancel"
 msgstr "Cancella"
@@ -8380,7 +8405,8 @@ msgstr ""
 msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr "Controlla HTTP: usa HTTPS invece di HTTP per le connessioni SSL/TLS"
 
-msgid "Check IMAP Mailboxes"
+#, fuzzy
+msgid "Check IMAP/EWS Mailboxes"
 msgstr "Controllare le caselle di posta IMAP"
 
 msgid "Check Item"
@@ -8767,6 +8793,10 @@ msgstr "Versione dell'agente Checkmk"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr "Servizio di rete dell'agente Checkmk (Linux)"
+
+#, fuzzy
+msgid "Checkmk agent plugins"
+msgstr "Agente Checkmk"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -9374,8 +9404,20 @@ msgstr "Segreto del cliente"
 msgid "Clients"
 msgstr "Cliente"
 
+#, fuzzy
+msgid "Clients connected"
+msgstr "Il cliente si collega"
+
+#, fuzzy
+msgid "Clients maximum"
+msgstr "Impostare l'età massima"
+
 msgid "Clients pending on a blocking call"
 msgstr "Clienti in attesa di una chiamata di blocco"
+
+#, fuzzy
+msgid "Clients total"
+msgstr "Cliente"
 
 msgid "Climb (long)"
 msgstr "Salita (lunga)"
@@ -10353,6 +10395,16 @@ msgstr "Collegarsi a"
 msgid "Connect to ACME SBC"
 msgstr "Collegarsi a ACME SBC"
 
+msgid ""
+"Connect to an MQTT broker to get statistics out of your instance. The "
+"information is fetched from the <tt>$SYS</tt> topic of the broker. The "
+"different brokers implement different topics as they are not standardized, "
+"means that not every service available with every broker. In multi-tentant, "
+"enterprise level cluster this agent may not be useful or probably only when "
+"directly connecting to single nodes, because the <tt>$SYS</tt> topic is node-"
+"specific."
+msgstr ""
+
 msgid "Connect to remote sites"
 msgstr "Connettersi a siti remoti"
 
@@ -10492,6 +10544,10 @@ msgstr "Durata delle connessioni media"
 
 msgid "Connections duration min"
 msgstr "Durata delle connessioni min"
+
+#, fuzzy
+msgid "Connections opened"
+msgstr "Connessioni abbandonate"
 
 msgid "Connections per second"
 msgstr "Connessioni al secondo"
@@ -11644,6 +11700,10 @@ msgstr "Stato attuale della console eventi locale"
 msgid "Current status of synchronization process"
 msgstr "Stato attuale del processo di sincronizzazione"
 
+#, fuzzy
+msgid "Current subscriptions"
+msgstr "Iscrizioni agli eventi"
+
 msgid "Current thread count levels"
 msgstr "Livelli attuali di numero di fili"
 
@@ -11764,6 +11824,10 @@ msgstr "Azione personalizzata"
 
 msgid "Custom actions that will be available for the alert."
 msgstr "Azioni personalizzate che saranno disponibili per l'avviso."
+
+#, fuzzy
+msgid "Custom address"
+msgstr "Stati personalizzati"
 
 msgid "Custom attributes"
 msgstr "Attributi personalizzati"
@@ -15409,7 +15473,8 @@ msgstr ""
 msgid "Drop Domain Suffix"
 msgstr "Eliminare il suffisso del dominio"
 
-msgid "Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"
+#, fuzzy
+msgid "Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 msgstr ""
 "Eliminare la parte del dominio (<tt>host123.foobar.de</tt> &#8594; "
 "<tt>host123</tt>)"
@@ -15616,6 +15681,13 @@ msgstr "Stati dell'host ESX e della macchina virtuale"
 
 msgid "ESX hosts: distribution of virtual machines"
 msgstr "Host ESX: distribuzione di macchine virtuali"
+
+msgid "EWS"
+msgstr ""
+
+#, fuzzy
+msgid "EWS Server"
+msgstr "Server DNS"
 
 msgid "EXITED"
 msgstr "USCITO"
@@ -16498,6 +16570,10 @@ msgstr "Statistiche di chiusura"
 
 msgid "Enclosures"
 msgstr "Contenitori"
+
+#, fuzzy
+msgid "Encrypt HTTP communication using SSL/TLS"
+msgstr "Crittografare la comunicazione SMTP usando TLS"
 
 msgid "Encrypt IMAP communication using SSL"
 msgstr "Crittografare la comunicazione IMAP usando SSL"
@@ -27750,6 +27826,10 @@ msgstr "MANCANTE '%s'"
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr "Esecutore remoto di plugin MK (MRPE)"
 
+#, fuzzy
+msgid "MQTT broker statistics"
+msgstr "Statistiche di base"
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr "MS Exchange DAG CopyQueue"
 
@@ -29191,6 +29271,18 @@ msgstr "I messaggi sono gestiti da logwatch."
 
 msgid "Messages in text log files"
 msgstr "Messaggi nei file di registro di testo"
+
+#, fuzzy
+msgid "Messages received"
+msgstr "Elaborazione dei messaggi"
+
+#, fuzzy
+msgid "Messages sent"
+msgstr "Testo del messaggio"
+
+#, fuzzy
+msgid "Messages sent/received"
+msgstr "Messaggi in coda"
 
 msgid "Messages that are spooled longer than this time will be thrown away."
 msgstr ""
@@ -32159,7 +32251,8 @@ msgstr "Numero di pacchetti"
 msgid "Number of pending tasks"
 msgstr "Numero di compiti in sospeso"
 
-msgid "Number of positve responses required for OK state"
+#, fuzzy
+msgid "Number of positive responses required for OK state"
 msgstr "Numero di risposte positive richieste per lo stato OK"
 
 msgid "Number of probes per hop"
@@ -33605,6 +33698,25 @@ msgstr "PSU (Chassis/Bay)"
 
 msgid "PSU Capacity Levels"
 msgstr "Livelli di capacità PSU"
+
+msgid "PUBLISH messages received"
+msgstr ""
+
+#, fuzzy
+msgid "PUBLISH messages sent"
+msgstr "Messaggi di log"
+
+msgid "PUBLISH messages sent/received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent/received"
+msgstr ""
 
 msgid "Pa"
 msgstr "Pa"
@@ -35255,6 +35367,11 @@ msgid ""
 "Plugins for operating systems, things like memory, CPU, filesystems, etc."
 msgstr "Plugin per sistemi operativi, cose come memoria, CPU, filesystem, ecc."
 
+msgid ""
+"Plugins or local checks matching this pattern will be excluded from the "
+"comparison with the specified required versions."
+msgstr ""
+
 msgid "Plugins that directly check networking protocols like HTTP or IMAP"
 msgstr ""
 "Plugin che controllano direttamente i protocolli di rete come HTTP o IMAP"
@@ -36822,6 +36939,10 @@ msgstr "Espressione regolare che corrisponde al nome utente"
 msgid "Regular expression substitution"
 msgstr "Sostituzione dell'espressione regolare"
 
+#, fuzzy
+msgid "Regular expression to exclude plugins"
+msgstr "Espressione regolare da aspettarsi nel contenuto"
+
 msgid "Regular expression to expect in content"
 msgstr "Espressione regolare da aspettarsi nel contenuto"
 
@@ -36887,6 +37008,10 @@ msgstr "Livelli relativi di sessioni attive."
 
 msgid "Relay Log Size"
 msgstr "Dimensione del registro del relè"
+
+#, fuzzy, python-format
+msgid "Release Notes - %s %s"
+msgstr "Note di rilascio"
 
 msgid "Release notes"
 msgstr "Note di rilascio"
@@ -37501,6 +37626,10 @@ msgstr "Filtri di contesto richiesti"
 msgid "Required match (regular expression)"
 msgstr "Corrispondenza richiesta (espressione regolare)"
 
+#, fuzzy
+msgid "Required minimal versions"
+msgstr "Corrispondenza richiesta (espressione regolare)"
+
 msgid "Required number of OK-nodes for a total state of OK:"
 msgstr "Numero richiesto di nodi OK per uno stato totale di OK:"
 
@@ -37826,6 +37955,10 @@ msgstr "Risultati"
 
 msgid "Resumables"
 msgstr "Resumables"
+
+#, fuzzy
+msgid "Retained messages"
+msgstr "Messaggi pronti"
 
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
@@ -41237,6 +41370,10 @@ msgstr "Dimensione delle mail in coda"
 msgid "Size of processes"
 msgstr "Dimensione dei processi"
 
+#, fuzzy
+msgid "Size of stored messages"
+msgstr "Messaggi storici"
+
 msgid "Size of the queue"
 msgstr "Dimensione della coda"
 
@@ -43412,6 +43549,10 @@ msgstr "Memorizzare il valore di uscita nel database RRD"
 msgid "Store size"
 msgstr "Dimensione del negozio"
 
+#, fuzzy
+msgid "Stored messages"
+msgstr "Messaggi di sistema"
+
 msgid "Stored report"
 msgstr "Rapporto memorizzato"
 
@@ -44010,6 +44151,10 @@ msgstr "Porta TCP per l'ascoltatore"
 
 msgid "TIME_WAIT"
 msgstr "TEMPO LIBERO"
+
+#, fuzzy
+msgid "TLS/SSL Encryption"
+msgstr "Crittografia SSL"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https disabilitato"
@@ -48453,6 +48598,10 @@ msgid ""
 msgstr ""
 "Il nome utente che dovrebbe essere usato per accedere all'API di Jenkins. "
 "Deve avere almeno i permessi di lettura."
+
+#, fuzzy
+msgid "The username used for broker authentication."
+msgstr "Il nome utente usato per connettersi al database"
 
 msgid "The username used to connect to the database"
 msgstr "Il nome utente usato per connettersi al database"
@@ -54554,6 +54703,14 @@ msgstr ""
 msgid "Unique ID"
 msgstr "ID unico"
 
+msgid "Unique ID used to identify the instance on the host within Checkmk."
+msgstr ""
+
+msgid ""
+"Unique client ID used for the broker. Will be randomly generated when not "
+"set."
+msgstr ""
+
 msgid "Unit"
 msgstr "Unità"
 
@@ -57529,10 +57686,6 @@ msgstr "Rapporto settimanale"
 msgid "Weekly rate"
 msgstr "Tariffa settimanale"
 
-#, python-format
-msgid "Welcome to Checkmk %s"
-msgstr "Benvenuto in Checkmk %s"
-
 msgid "Welcome to Checkmk Mobile."
 msgstr "Benvenuti a Checkmk Mobile."
 
@@ -58011,6 +58164,12 @@ msgstr ""
 "underscore), ma non è invertibile. D'altra parte, il mangling in stile C usa "
 "escape ottali standard ('\\ooo'), quindi è possibile ricostruire le varie "
 "parti."
+
+msgid ""
+"When set, this address is used for connecting to the MQTT broker. If not "
+"set, the special agent will use the primary address of the host to connect "
+"to the MQTT broker."
+msgstr ""
 
 msgid ""
 "When switching from the Nagios core to CMC with <tt>omd config</tt> with "
@@ -59501,6 +59660,14 @@ msgid ""
 msgstr ""
 "È possibile configurare qui un alias individuale per il tunnel che "
 "corrisponde all'indirizzo IP o al nome configurato nel campo precedente."
+
+#, fuzzy
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed agent plugins and local checks."
+msgstr ""
+"È possibile configurare soglie superiori per le connessioni attualmente "
+"attive gestite dal server web."
 
 #, python-format
 msgid ""
@@ -62929,6 +63096,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
+#, python-format
+#~ msgid "Welcome to Checkmk %s"
+#~ msgstr "Benvenuto in Checkmk %s"
+
 #~ msgid "25 Hours"
 #~ msgstr "25 ore"
 
@@ -63430,9 +63601,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Bytes reclaimed by GC rate"
 #~ msgstr "Byte recuperati dal tasso GC"
-
-#~ msgid "Bytes sent"
-#~ msgstr "Bytes inviati"
 
 #~ msgid "CMK helper"
 #~ msgstr "Aiuto CMK"
@@ -64393,9 +64561,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~ msgid "Log latency"
 #~ msgstr "Latenza del registro"
 
-#~ msgid "Log messages"
-#~ msgstr "Messaggi di log"
-
 #~ msgid "Log mode"
 #~ msgstr "Modo log"
 
@@ -64500,14 +64665,8 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~ msgid "Message Rate"
 #~ msgstr "Tasso del messaggio"
 
-#~ msgid "Message processing"
-#~ msgstr "Elaborazione dei messaggi"
-
 #~ msgid "Messages"
 #~ msgstr "Messaggi"
-
-#~ msgid "Messages in queue"
-#~ msgstr "Messaggi in coda"
 
 #~ msgid "Minimum single-request consumption"
 #~ msgstr "Consumo minimo per singola richiesta"
@@ -64914,9 +65073,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Reading request"
 #~ msgstr "Richiesta di lettura"
-
-#~ msgid "Ready messages"
-#~ msgstr "Messaggi pronti"
 
 #~ msgid "Ready replicas"
 #~ msgstr "Repliche pronte"

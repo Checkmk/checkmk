@@ -7229,6 +7229,14 @@ msgstr ""
 "monitoring opnemen, kunnen ervoor kiezen om het snapshotoverzicht op de ESX "
 "host zelf weer te geven."
 
+#, fuzzy
+msgid "By default the standard HTTPS Port 443 is used."
+msgstr "Standaard wordt de standaard IMAP poort 143 gebruikt."
+
+#, fuzzy
+msgid "By default the standard HTTPS/TLS Port 443 is used."
+msgstr "Standaard wordt de standaard IMAP poort 143 gebruikt."
+
 msgid "By default the standard IMAP Port 143 is used."
 msgstr "Standaard wordt de standaard IMAP poort 143 gebruikt."
 
@@ -7474,8 +7482,19 @@ msgstr "Bytes per dag"
 msgid "Bytes per second"
 msgstr "Bytes per seconde"
 
+#, fuzzy
+msgid "Bytes received"
+msgstr "Afgewezen bytes"
+
 msgid "Bytes rejected"
 msgstr "Afgewezen bytes"
+
+msgid "Bytes sent"
+msgstr "Verstuurde bytes"
+
+#, fuzzy
+msgid "Bytes sent/received"
+msgstr "Verstuurde bytes"
 
 msgid "C"
 msgstr "C"
@@ -7774,6 +7793,10 @@ msgstr "Kan geen lege tag ID gebruiken met een enkele keuze."
 
 msgid "Can still edit"
 msgstr "Kan nog steeds bewerken"
+
+#, fuzzy, python-format
+msgid "Can't parse version %r"
+msgstr "Kan pictogram niet uploaden: %s"
 
 msgid "Cancel"
 msgstr "Annuleren"
@@ -8358,7 +8381,8 @@ msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr ""
 "Controleer HTTP: Gebruik HTTPS in plaats van HTTP voor SSL/TLS-verbindingen"
 
-msgid "Check IMAP Mailboxes"
+#, fuzzy
+msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAP Mailboxen controleren"
 
 msgid "Check Item"
@@ -8751,6 +8775,10 @@ msgstr "Checkmk Agent Versie"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmk agent netwerkdienst (Linux)"
+
+#, fuzzy
+msgid "Checkmk agent plugins"
+msgstr "Checkmk agent"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr "Checkmk agent: Voer de Checkmk agent uit binnen draaiende containers"
@@ -9346,8 +9374,20 @@ msgstr "Geheim van de klant"
 msgid "Clients"
 msgstr "Klant"
 
+#, fuzzy
+msgid "Clients connected"
+msgstr "Cliënt verbindt"
+
+#, fuzzy
+msgid "Clients maximum"
+msgstr "Maximumleeftijd instellen"
+
 msgid "Clients pending on a blocking call"
 msgstr "Cliënten in afwachting van een blokkerend gesprek"
+
+#, fuzzy
+msgid "Clients total"
+msgstr "Klant"
 
 msgid "Climb (long)"
 msgstr "Klimmen (lang)"
@@ -10323,6 +10363,16 @@ msgstr "Maak verbinding met"
 msgid "Connect to ACME SBC"
 msgstr "Verbinden met ACME SBC"
 
+msgid ""
+"Connect to an MQTT broker to get statistics out of your instance. The "
+"information is fetched from the <tt>$SYS</tt> topic of the broker. The "
+"different brokers implement different topics as they are not standardized, "
+"means that not every service available with every broker. In multi-tentant, "
+"enterprise level cluster this agent may not be useful or probably only when "
+"directly connecting to single nodes, because the <tt>$SYS</tt> topic is node-"
+"specific."
+msgstr ""
+
 msgid "Connect to remote sites"
 msgstr "Verbinding maken met externe sites"
 
@@ -10462,6 +10512,10 @@ msgstr "Verbindingen duur gemiddelde"
 
 msgid "Connections duration min"
 msgstr "Verbindingsduur min"
+
+#, fuzzy
+msgid "Connections opened"
+msgstr "Verbindingen verbroken"
 
 msgid "Connections per second"
 msgstr "Verbindingen per seconde"
@@ -11614,6 +11668,10 @@ msgstr "Huidige status van lokale gebeurtenissenconsole"
 msgid "Current status of synchronization process"
 msgstr "Huidige status van het synchronisatieproces"
 
+#, fuzzy
+msgid "Current subscriptions"
+msgstr "Abonnementen op evenementen"
+
 msgid "Current thread count levels"
 msgstr "Huidige draadtellingsniveaus"
 
@@ -11735,6 +11793,10 @@ msgstr "Aangepaste actie"
 
 msgid "Custom actions that will be available for the alert."
 msgstr "Aangepaste acties die beschikbaar zullen zijn voor de waarschuwing."
+
+#, fuzzy
+msgid "Custom address"
+msgstr "Aangepaste staten"
 
 msgid "Custom attributes"
 msgstr "Aangepaste attributen"
@@ -15367,7 +15429,8 @@ msgstr ""
 msgid "Drop Domain Suffix"
 msgstr "Domein achtervoegsel laten vallen"
 
-msgid "Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"
+#, fuzzy
+msgid "Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 msgstr ""
 "Domein gedeelte laten vallen (<tt>host123.foobar.de</tt> &#8594; "
 "<tt>host123</tt>)"
@@ -15572,6 +15635,13 @@ msgstr "ESX host en virtuele machine toestanden"
 
 msgid "ESX hosts: distribution of virtual machines"
 msgstr "ESX-hosts: distributie van virtuele machines"
+
+msgid "EWS"
+msgstr ""
+
+#, fuzzy
+msgid "EWS Server"
+msgstr "DNS-server"
 
 msgid "EXITED"
 msgstr "EXITED"
@@ -16452,6 +16522,10 @@ msgstr "Gegevens behuizing"
 
 msgid "Enclosures"
 msgstr "Bijlagen"
+
+#, fuzzy
+msgid "Encrypt HTTP communication using SSL/TLS"
+msgstr "SMTP-communicatie versleutelen met TLS"
 
 msgid "Encrypt IMAP communication using SSL"
 msgstr "Versleutel IMAP communicatie met SSL"
@@ -27699,6 +27773,10 @@ msgstr "MISSING '%s'"
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr "MK Remote Plugin Executor (MRPE)"
 
+#, fuzzy
+msgid "MQTT broker statistics"
+msgstr "Kernstatistieken"
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr "MS Exchange DAG CopyQueue"
 
@@ -29133,6 +29211,18 @@ msgstr "Berichten worden behandeld door logwatch."
 
 msgid "Messages in text log files"
 msgstr "Berichten in tekstlogbestanden"
+
+#, fuzzy
+msgid "Messages received"
+msgstr "Verwerking van berichten"
+
+#, fuzzy
+msgid "Messages sent"
+msgstr "Tekst bericht"
+
+#, fuzzy
+msgid "Messages sent/received"
+msgstr "Berichten in wachtrij"
 
 msgid "Messages that are spooled longer than this time will be thrown away."
 msgstr "Berichten die langer dan deze tijd gespoold zijn, worden weggegooid."
@@ -32085,7 +32175,8 @@ msgstr "Aantal pakketten"
 msgid "Number of pending tasks"
 msgstr "Aantal lopende taken"
 
-msgid "Number of positve responses required for OK state"
+#, fuzzy
+msgid "Number of positive responses required for OK state"
 msgstr "Aantal positieve antwoorden vereist voor OK-status"
 
 msgid "Number of probes per hop"
@@ -33524,6 +33615,25 @@ msgstr "PSU (Chassis/Bay)"
 
 msgid "PSU Capacity Levels"
 msgstr "Niveaus PSU-capaciteit"
+
+msgid "PUBLISH messages received"
+msgstr ""
+
+#, fuzzy
+msgid "PUBLISH messages sent"
+msgstr "Logboek berichten"
+
+msgid "PUBLISH messages sent/received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes received"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent"
+msgstr ""
+
+msgid "PUBLISH messages: Bytes sent/received"
+msgstr ""
 
 msgid "Pa"
 msgstr "Pa"
@@ -35161,6 +35271,11 @@ msgstr ""
 "Plugins voor besturingssystemen, zaken als geheugen, CPU, bestandssystemen, "
 "enz."
 
+msgid ""
+"Plugins or local checks matching this pattern will be excluded from the "
+"comparison with the specified required versions."
+msgstr ""
+
 msgid "Plugins that directly check networking protocols like HTTP or IMAP"
 msgstr ""
 "Plugins die rechtstreeks netwerkprotocollen zoals HTTP of IMAP controleren"
@@ -36719,6 +36834,10 @@ msgstr "Reguliere uitdrukking die overeenkomt met gebruikersnaam"
 msgid "Regular expression substitution"
 msgstr "Reguliere uitdrukking substitutie"
 
+#, fuzzy
+msgid "Regular expression to exclude plugins"
+msgstr "Reguliere uitdrukking te verwachten in de inhoud"
+
 msgid "Regular expression to expect in content"
 msgstr "Reguliere uitdrukking te verwachten in de inhoud"
 
@@ -36784,6 +36903,10 @@ msgstr "Relatieve niveaus van actieve sessies."
 
 msgid "Relay Log Size"
 msgstr "Logboekgrootte relais"
+
+#, fuzzy, python-format
+msgid "Release Notes - %s %s"
+msgstr "Opmerkingen"
 
 msgid "Release notes"
 msgstr "Opmerkingen"
@@ -37394,6 +37517,10 @@ msgstr "Vereiste context filters"
 msgid "Required match (regular expression)"
 msgstr "Vereiste overeenkomst (reguliere expressie)"
 
+#, fuzzy
+msgid "Required minimal versions"
+msgstr "Vereiste overeenkomst (reguliere expressie)"
+
 msgid "Required number of OK-nodes for a total state of OK:"
 msgstr "Vereist aantal OK-knooppunten voor een totale OK-status:"
 
@@ -37716,6 +37843,10 @@ msgstr "Resultaten"
 
 msgid "Resumables"
 msgstr "Resumables"
+
+#, fuzzy
+msgid "Retained messages"
+msgstr "Klaar berichten"
 
 msgid "Retention intervals for HW/SW inventory entities"
 msgstr ""
@@ -41122,6 +41253,10 @@ msgstr "Grootte van mails in wachtrijen"
 msgid "Size of processes"
 msgstr "Omvang van de processen"
 
+#, fuzzy
+msgid "Size of stored messages"
+msgstr "Historische berichten"
+
 msgid "Size of the queue"
 msgstr "Grootte van de wachtrij"
 
@@ -43299,6 +43434,10 @@ msgstr "Outputwaarde opslaan in RRD-databank"
 msgid "Store size"
 msgstr "Winkelgrootte"
 
+#, fuzzy
+msgid "Stored messages"
+msgstr "Systeem berichten"
+
 msgid "Stored report"
 msgstr "Opgeslagen rapport"
 
@@ -43897,6 +44036,10 @@ msgstr "TCP-poort voor luisteraar"
 
 msgid "TIME_WAIT"
 msgstr "TIJD_WACHT"
+
+#, fuzzy
+msgid "TLS/SSL Encryption"
+msgstr "SSL-versleuteling"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https uitgeschakeld"
@@ -48345,6 +48488,11 @@ msgid ""
 msgstr ""
 "De gebruikersnaam die gebruikt moet worden om toegang te krijgen tot de "
 "Jenkins API. Moet minstens leesrechten hebben."
+
+#, fuzzy
+msgid "The username used for broker authentication."
+msgstr ""
+"De gebruikersnaam die wordt gebruikt om verbinding te maken met de database"
 
 msgid "The username used to connect to the database"
 msgstr ""
@@ -54428,6 +54576,14 @@ msgstr ""
 msgid "Unique ID"
 msgstr "Unieke ID"
 
+msgid "Unique ID used to identify the instance on the host within Checkmk."
+msgstr ""
+
+msgid ""
+"Unique client ID used for the broker. Will be randomly generated when not "
+"set."
+msgstr ""
+
 msgid "Unit"
 msgstr "Eenheid"
 
@@ -57403,10 +57559,6 @@ msgstr "Wekelijks verslag"
 msgid "Weekly rate"
 msgstr "Wekelijks tarief"
 
-#, python-format
-msgid "Welcome to Checkmk %s"
-msgstr "Welkom bij Checkmk %s"
-
 msgid "Welcome to Checkmk Mobile."
 msgstr "Welkom bij Checkmk Mobile."
 
@@ -57886,6 +58038,12 @@ msgstr ""
 "maar het is niet inverteerbaar. Aan de andere kant gebruikt de C-stijl "
 "mangling standaard octale escapes ('\\ooo'), zodat je de verschillende delen "
 "kunt reconstrueren."
+
+msgid ""
+"When set, this address is used for connecting to the MQTT broker. If not "
+"set, the special agent will use the primary address of the host to connect "
+"to the MQTT broker."
+msgstr ""
 
 msgid ""
 "When switching from the Nagios core to CMC with <tt>omd config</tt> with "
@@ -59385,6 +59543,14 @@ msgstr ""
 "U kunt hier een individuele alias configureren voor de tunnel die "
 "overeenkomt met het IP-Adres of de Naam die in het bovenstaande veld is "
 "geconfigureerd."
+
+#, fuzzy
+msgid ""
+"You can configure lower thresholds for the versions of the currently "
+"deployed agent plugins and local checks."
+msgstr ""
+"U kunt de hoogste drempels configureren voor de momenteel actieve "
+"verbindingen die door de webserver worden afgehandeld."
 
 #, python-format
 msgid ""
@@ -62803,6 +62969,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
+#, python-format
+#~ msgid "Welcome to Checkmk %s"
+#~ msgstr "Welkom bij Checkmk %s"
+
 #~ msgid "25 Hours"
 #~ msgstr "25 Uur"
 
@@ -63302,9 +63472,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Bytes reclaimed by GC rate"
 #~ msgstr "Bytes teruggevorderd door GC-snelheid"
-
-#~ msgid "Bytes sent"
-#~ msgstr "Verstuurde bytes"
 
 #~ msgid "CMK helper"
 #~ msgstr "CMK helper"
@@ -64260,9 +64427,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Log latency"
 #~ msgstr "Log vertraging"
 
-#~ msgid "Log messages"
-#~ msgstr "Logboek berichten"
-
 #~ msgid "Log mode"
 #~ msgstr "Logboekmodus"
 
@@ -64367,14 +64531,8 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Message Rate"
 #~ msgstr "Berichtensnelheid"
 
-#~ msgid "Message processing"
-#~ msgstr "Verwerking van berichten"
-
 #~ msgid "Messages"
 #~ msgstr "Berichten"
-
-#~ msgid "Messages in queue"
-#~ msgstr "Berichten in wachtrij"
 
 #~ msgid "Minimum single-request consumption"
 #~ msgstr "Minimaal verbruik bij één verzoek"
@@ -64781,9 +64939,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Reading request"
 #~ msgstr "Leesverzoek"
-
-#~ msgid "Ready messages"
-#~ msgstr "Klaar berichten"
 
 #~ msgid "Ready replicas"
 #~ msgstr "Gereed replica's"

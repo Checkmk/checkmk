@@ -22,6 +22,7 @@ sudo rsync -rlpgoD --delete-after ../../checks/ $ROOT/share/check_mk/checks/
 echo "TARGET: $ROOT/share/check_mk/inventory"
 sudo rsync -ar --delete-after ../../inventory/ $ROOT/share/check_mk/inventory/
 
+
 (cd .. ; bash .f12)
 
 # Also deploy all other directories of same type

@@ -217,13 +217,14 @@ def _fetch_certificate_chain_verify_results(
         # pylint does not get the object type of sock right
         sock.connect(address)
         sock.do_handshake()
+        certificate_store = sock.get_context().get_cert_store()
         certificate_chain = sock.get_peer_cert_chain()
 
-        return _verify_certificate_chain(sock, certificate_chain)
+    return _verify_certificate_chain(certificate_store, certificate_chain)
 
 
 def _verify_certificate_chain(
-    connection: SSL.Connection, certificate_chain: List[crypto.X509]
+    x509_store: crypto.X509Store, certificate_chain: List[crypto.X509]
 ) -> List[ChainVerifyResult]:
     verify_chain_results = []
 
@@ -232,9 +233,7 @@ def _verify_certificate_chain(
         # This is mainly done to get the textual error message without accessing internals of the SSL modules
         error_number, error_depth, error_message = 0, 0, ""
         try:
-            x509_store = connection.get_context().get_cert_store()
-            x509_store_context = crypto.X509StoreContext(x509_store, cert)
-            x509_store_context.verify_certificate()
+            crypto.X509StoreContext(x509_store, cert).verify_certificate()
         except crypto.X509StoreContextError as e:
             error_number, error_depth, error_message = e.args[0]
 

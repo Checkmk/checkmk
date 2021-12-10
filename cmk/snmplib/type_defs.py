@@ -52,6 +52,11 @@ OID = str
 OIDFunction = Callable[
     [OID, Optional[SNMPDecodedString], Optional[_SectionName]], Optional[SNMPDecodedString]
 ]
+OIDRange = Tuple[int, int]
+RangeLimit = Union[
+    Tuple[Literal["first", "last"], int],
+    Tuple[Literal["mid"], OIDRange],
+]
 
 SNMPScanFunction = Callable[[OIDFunction], bool]
 SNMPRawValue = bytes
@@ -133,7 +138,7 @@ class SNMPHostConfig(
             ("is_snmpv2or3_without_bulkwalk_host", bool),
             ("bulk_walk_size_of", int),
             ("timing", SNMPTiming),
-            ("oid_range_limits", Mapping[_SectionName, Any]),  # TODO: Sequence[RangeLimit]
+            ("oid_range_limits", Mapping[_SectionName, Sequence[RangeLimit]]),
             ("snmpv3_contexts", list),
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),

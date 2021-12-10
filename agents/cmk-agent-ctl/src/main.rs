@@ -62,7 +62,7 @@ fn register(
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let uuid = Uuid::new_v4().to_string();
     let server_cert = match &config.root_certificate {
-        Some(cert) => Some(cert.clone()),
+        Some(cert) => Some(cert.as_str()),
         None => {
             let fetched_server_cert = certs::fetch_server_cert(&config.agent_receiver_address)
                 .context("Error establishing trust with agent_receiver.")?;

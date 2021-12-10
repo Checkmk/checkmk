@@ -34,11 +34,11 @@ struct RegistrationWithALBody {
 
 pub fn pairing(
     server_address: &str,
-    root_cert: Option<String>,
+    root_cert: Option<&str>,
     csr: String,
     credentials: &config::Credentials,
 ) -> AnyhowResult<PairingResponse> {
-    let response = certs::client(root_cert.map(|cert_str| cert_str.into_bytes()))?
+    let response = certs::client(root_cert)?
         .post(format!("https://{}/pairing", server_address))
         .basic_auth(&credentials.username, Some(&credentials.password))
         .json(&PairingBody { csr })
@@ -76,7 +76,7 @@ pub fn register_with_hostname(
     host_name: &str,
 ) -> AnyhowResult<()> {
     check_response_204(
-        certs::client(Some(String::from(root_cert).into_bytes()))?
+        certs::client(Some(root_cert))?
             .post(format!("https://{}/register_with_hostname", server_address))
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&RegistrationWithHNBody {
@@ -95,7 +95,7 @@ pub fn register_with_agent_labels(
     agent_labels: &config::AgentLabels,
 ) -> AnyhowResult<()> {
     check_response_204(
-        certs::client(Some(String::from(root_cert).into_bytes()))?
+        certs::client(Some(root_cert))?
             .post(format!("https://{}/register_with_labels", server_address))
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&RegistrationWithALBody {
@@ -121,7 +121,7 @@ pub fn agent_data(
     monitoring_data: &[u8],
 ) -> AnyhowResult<()> {
     check_response_204(
-        certs::client(Some(String::from(root_cert).into_bytes()))?
+        certs::client(Some(root_cert))?
             .post(format!(
                 "https://{}/agent_data/{}",
                 agent_receiver_address, uuid,
@@ -169,7 +169,7 @@ pub fn status(
     uuid: &str,
     certificate: &str,
 ) -> AnyhowResult<StatusResponse> {
-    let response = certs::client(Some(String::from(root_cert).into_bytes()))?
+    let response = certs::client(Some(root_cert))?
         .get(format!(
             "https://{}/registration_status/{}",
             server_address, uuid

@@ -229,6 +229,7 @@ CEE_UNUSED_PACKAGES = [
     "chardet",
     "click",
     "defusedxml",
+    "dnspython",
     "docutils",
     "gunicorn",
     "idna",

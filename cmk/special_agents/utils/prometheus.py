@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Common functions used in Promtheus related Special agents
+Common functions used in Prometheus related Special agents
 """
 
 from cmk.special_agents.utils.request_helper import (

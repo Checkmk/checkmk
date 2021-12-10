@@ -17,7 +17,6 @@ from contextlib import contextmanager
 
 import pytest
 
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 
 from cmk.utils.paths import mkbackup_lock_dir
@@ -68,9 +67,7 @@ def backup_lock_dir_fixture(request):
 
 
 @pytest.fixture(name="test_cfg", scope="function")
-def test_cfg_fixture(
-    web, site: Site, backup_path
-):  # noqa:F811  # pylint: disable=redefined-outer-name
+def test_cfg_fixture(web, site: Site, backup_path):
     site.ensure_running()
 
     cfg = {

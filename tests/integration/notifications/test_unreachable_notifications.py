@@ -11,7 +11,7 @@ from typing import Optional
 
 import pytest
 
-from tests.testlib import wait_until, WatchLog, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import wait_until, WatchLog
 from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
@@ -76,14 +76,14 @@ def scenario_fixture(request, web, site: Site):  # noqa: F811 # pylint: disable=
     try:
         print("Applying test config")
 
-        web.add_host(
+        site.openapi.create_host(
             "notify-test-parent",
             attributes={
                 "ipaddress": "127.0.0.1",
             },
         )
 
-        web.add_host(
+        site.openapi.create_host(
             "notify-test-child",
             attributes={
                 "ipaddress": "127.0.0.1",
@@ -96,13 +96,15 @@ def scenario_fixture(request, web, site: Site):  # noqa: F811 # pylint: disable=
         else:
             notification_options = "d,r,f,s"
 
+        # Replace with RestAPI, see CMK-9251
         rule_result = web.get_ruleset("extra_host_conf:notification_options")
         rule_result["ruleset"] = {
             "": [{"condition": {}, "options": {}, "value": notification_options}]
         }
+        # Replace with RestAPI, see CMK-9251
         web.set_ruleset("extra_host_conf:notification_options", rule_result)
 
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
         site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-parent" % time.time())
         site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-parent;PING" % time.time())
@@ -129,10 +131,10 @@ def scenario_fixture(request, web, site: Site):  # noqa: F811 # pylint: disable=
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-parent" % time.time())
 
-        web.delete_host("notify-test-child")
-        web.delete_host("notify-test-parent")
+        site.openapi.delete_host("notify-test-child")
+        site.openapi.delete_host("notify-test-parent")
 
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.fixture(name="initial_state", scope="function")

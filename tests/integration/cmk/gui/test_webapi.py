@@ -17,7 +17,7 @@ from typing import Any, Dict, List
 import pytest
 from PIL import Image  # type: ignore[import]
 
-from tests.testlib import APIError, wait_until, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import APIError, wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
@@ -796,13 +796,13 @@ def test_activate_changes(web, site: Site):  # noqa: F811 # pylint: disable=rede
             },
         )
 
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
         result = site.live.query("GET hosts\nColumns: name\nFilter: name = test-host-activate\n")
         assert result == [["test-host-activate"]]
     finally:
         web.delete_host("test-host-activate")
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.fixture(scope="module")
@@ -832,7 +832,7 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
         )
 
         web.discover_services("test-host-get-graph")
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
         # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
@@ -869,7 +869,7 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
     finally:
         web.delete_host("test-host-get-graph")
         site.delete_file("etc/check_mk/conf.d/test-host-get-graph.mk")
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")

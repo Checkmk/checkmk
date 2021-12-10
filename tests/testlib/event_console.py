@@ -9,7 +9,6 @@ import time
 from typing import Any, Dict
 
 from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
 
 
 class CMKEventConsole:
@@ -17,7 +16,6 @@ class CMKEventConsole:
         super().__init__()
         self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
-        self.web_session = CMKWebSession(site)
 
     def _config(self):
         cfg: Dict[str, Any] = {}
@@ -59,28 +57,6 @@ class CMKEventConsole:
             add_transid=True,
         ).text
         assert "%d, no commands, 127.0.0.1" % self.status_port in html
-
-    def activate_changes(self, web):
-        old_t = web.site.live.query_value(
-            "GET eventconsolestatus\nColumns: status_config_load_time\n"
-        )
-        assert old_t > time.time() - 86400
-
-        self.web_session.activate_changes(allow_foreign_changes=True)
-
-        def config_reloaded():
-            new_t = web.site.live.query_value(
-                "GET eventconsolestatus\nColumns: status_config_load_time\n"
-            )
-            return new_t > old_t
-
-        reload_time, timeout = time.time(), 10
-        while not config_reloaded():
-            if time.time() > reload_time + timeout:
-                raise Exception("Config did not update within %d seconds" % timeout)
-            time.sleep(0.2)
-
-        assert config_reloaded()
 
     @classmethod
     def new_event(cls, attrs):

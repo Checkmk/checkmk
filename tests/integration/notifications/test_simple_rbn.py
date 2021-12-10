@@ -10,7 +10,6 @@ import time
 import pytest
 
 from tests.testlib import WatchLog
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
@@ -38,36 +37,37 @@ def fake_sendmail_fixture(site: Site):
         ),
     ],
 )
-def test_log_fixture(
-    request, web, site: Site, fake_sendmail
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_log_fixture(request, site: Site, fake_sendmail):
     core, log = request.param
     site.set_config("CORE", core, with_restart=True)
 
     users = {
         "hh": {
-            "alias": "Harry Hirsch",
+            "fullname": "Harry Hirsch",
             "password": "1234",
-            "email": "%s@localhost" % web.site.id,
+            "email": f"{site.id}@localhost",
             "contactgroups": ["all"],
         },
     }
 
-    expected_users = set(["cmkadmin", "automation"] + list(users.keys()))
-    web.add_htpasswd_users(users)
-    all_users = web.get_all_users()
-    assert not expected_users - set(all_users.keys())
+    initial_users = site.openapi.get_all_users()
+    assert len(initial_users) == 2  # expect cmkadmin and automation user
+
+    for name, user_dict in users.items():
+        site.openapi.create_user(username=name, **user_dict)  # type: ignore
+    all_users = site.openapi.get_all_users()
+    assert len(all_users) == len(initial_users) + len(users)
 
     site.live.command("[%d] STOP_EXECUTING_HOST_CHECKS" % time.time())
     site.live.command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
 
-    web.add_host(
+    site.openapi.create_host(
         "notify-test",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
 
     with WatchLog(site, log, default_timeout=20) as l:
         yield l
@@ -75,9 +75,10 @@ def test_log_fixture(
     site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
     site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
-    web.delete_host("notify-test")
-    web.delete_htpasswd_users(list(users.keys()))
-    web.activate_changes()
+    site.openapi.delete_host("notify-test")
+    for username in users:
+        site.openapi.delete_user(username)
+    site.activate_changes_and_wait_for_core_reload()
 
 
 def test_simple_rbn_host_notification(test_log, site: Site):

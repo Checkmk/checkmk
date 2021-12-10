@@ -11,7 +11,7 @@ from typing import Dict, List, NamedTuple
 
 import pytest
 
-from tests.testlib import create_linux_test_host, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
@@ -34,16 +34,16 @@ class DefaultConfig(NamedTuple):
         ),
     ],
 )
-def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+def default_cfg_fixture(request, site, web):
     site.ensure_running()
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
     print("Applying default config (%s)" % config.core)
-    create_linux_test_host(request, web, site, "livestatus-test-host")
-    create_linux_test_host(request, web, site, "livestatus-test-host.domain")
-    web.discover_services("livestatus-test-host")
-    web.activate_changes()
+    create_linux_test_host(request, site, "livestatus-test-host")
+    create_linux_test_host(request, site, "livestatus-test-host.domain")
+    web.discover_services("livestatus-test-host")  # Replace with RestAPI call, see CMK-9249
+    site.activate_changes_and_wait_for_core_reload()
     return config
 
 
@@ -153,7 +153,7 @@ def test_usage_counters(default_cfg, site: Site):
 def configure_service_tags_fixture(
     site, web, default_cfg
 ):  # noqa: F811 # pylint: disable=redefined-outer-name
-    web.set_ruleset(
+    web.set_ruleset(  # Replace with RestAPI, see CMK-9251
         "service_tag_rules",
         {
             "ruleset": {
@@ -173,9 +173,9 @@ def configure_service_tags_fixture(
             }
         },
     )
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
     yield
-    web.set_ruleset(
+    web.set_ruleset(  # Replace with RestAPI, see CMK-9251
         "service_tag_rules",
         {
             "ruleset": {
@@ -183,7 +183,7 @@ def configure_service_tags_fixture(
             }
         },
     )
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
 
 
 def test_service_custom_variables(configure_service_tags, default_cfg, site: Site):

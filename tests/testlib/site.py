@@ -20,6 +20,7 @@ from typing import List, Mapping, MutableMapping, Optional
 
 import pytest
 
+from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     cmc_path,
     cme_path,
@@ -47,6 +48,7 @@ class Site:
         branch: str = "master",
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
+        admin_password: str = "cmk",
     ) -> None:
         assert site_id
         self.id = site_id
@@ -63,6 +65,21 @@ class Site:
         self._apache_port: Optional[int] = None  # internal cache for the port
 
         self._livestatus_port: Optional[int] = None
+        self.admin_password = admin_password
+
+        try:
+            user = "automation"
+            password = self.get_automation_secret()
+        except:  # pylint: disable=bare-except
+            user = "cmkadmin"
+            password = self.admin_password
+
+        self.openapi = CMKOpenApiSession(
+            host=self.http_address,
+            user=user,
+            password=password,
+            site=self.id,
+        )
 
     @property
     def apache_port(self) -> int:
@@ -464,7 +481,7 @@ class Site:
                     self.version.version_directory(),
                     "create",
                     "--admin-password",
-                    "cmk",
+                    self.admin_password,
                     "--apache-reload",
                     self.id,
                 ]
@@ -496,6 +513,13 @@ class Site:
         self._update_cmk_core_config()
 
         self.makedirs(self.result_dir())
+
+        self.openapi = CMKOpenApiSession(
+            host=self.http_address,
+            user="automation",
+            password=self.get_automation_secret(),
+            site=self.id,
+        )
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
@@ -952,6 +976,40 @@ class Site:
     def result_dir(self) -> str:
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
 
+    def get_automation_secret(self):
+        secret_path = "var/check_mk/web/automation/automation.secret"
+        secret = self.read_file(secret_path).strip()
+
+        if secret == "":
+            raise Exception("Failed to read secret from %s" % secret_path)
+
+        return secret
+
+    def activate_changes_and_wait_for_core_reload(
+        self, allow_foreign_changes: bool = False, remote_site: Optional["Site"] = None
+    ):
+        self.ensure_running()
+        site = remote_site or self
+
+        logger.debug("Getting old program start")
+        old_t = site.live.query_value("GET status\nColumns: program_start\n")
+
+        logger.debug("Read replication changes of site")
+        base_dir = site.path("var/check_mk/wato")
+        for site_changes_path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication changes of site: %r", site_changes_path)
+            if os.path.exists(site_changes_path):
+                logger.debug(site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
+
+        changed = self.openapi.activate_changes(
+            sites=[site.id], force_foreign_changes=allow_foreign_changes
+        )
+        if changed:
+            logger.info("Waiting for core reloads of: %s", site.id)
+            site.wait_for_core_reloaded(old_t)
+
+        self.ensure_running()
+
 
 def _is_dockerized() -> bool:
     return Path("/.dockerenv").exists()
@@ -1035,7 +1093,7 @@ class SiteFactory:
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
-        CMKWebSession(site).activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
         logger.debug("Created site %s", site.id)
         return site
 

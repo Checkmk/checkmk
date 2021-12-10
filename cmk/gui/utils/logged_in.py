@@ -352,9 +352,9 @@ class LoggedInUser:
     def may(self, pname: str) -> bool:
         if pname in self._permissions:
             return self._permissions[pname]
-        he_may = may_with_roles(self.role_ids, pname)
-        self._permissions[pname] = he_may
-        return he_may
+        they_may = may_with_roles(self.role_ids, pname)
+        self._permissions[pname] = they_may
+        return they_may
 
     def need_permission(self, pname: str) -> None:
         if not self.may(pname):

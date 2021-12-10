@@ -71,6 +71,7 @@ pub struct RegistrationConfig {
     pub credentials: Credentials,
     pub root_certificate: Option<String>,
     pub host_reg_data: HostRegistrationData,
+    pub trust_server_cert: bool,
 }
 
 impl RegistrationConfig {
@@ -104,6 +105,7 @@ impl RegistrationConfig {
             credentials,
             root_certificate,
             host_reg_data,
+            trust_server_cert: reg_args.trust_server_cert,
         })
     }
 }

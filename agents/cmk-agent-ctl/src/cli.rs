@@ -17,6 +17,10 @@ pub struct RegistrationArgs {
 
     #[structopt(long, short = "H", parse(from_str))]
     pub host_name: Option<String>,
+
+    /// Blindly trust the server certificate used by the Checkmk instance contacted for registration
+    #[structopt(long)]
+    pub trust_server_cert: bool,
 }
 
 #[derive(StructOpt)]

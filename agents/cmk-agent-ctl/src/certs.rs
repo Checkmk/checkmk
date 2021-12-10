@@ -44,7 +44,7 @@ pub fn client(root_cert: Option<&str>) -> AnyhowResult<Client> {
         .build()?)
 }
 
-pub fn fetch_server_cert(address: &str) -> AnyhowResult<String> {
+pub fn fetch_server_cert_pem(address: &str) -> AnyhowResult<String> {
     let tcp_stream = TcpStream::connect(address)?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
@@ -62,4 +62,11 @@ pub fn fetch_server_cert(address: &str) -> AnyhowResult<String> {
     ssl_stream.shutdown()?;
 
     Ok(String::from_utf8(server_cert)?)
+}
+
+pub fn parse_pem(cert: &str) -> AnyhowResult<x509_parser::pem::Pem> {
+    x509_parser::pem::Pem::iter_from_buffer(cert.as_bytes())
+        .next()
+        .context("Input data does not contain a PEM block")?
+        .context("PEM data invalid")
 }

@@ -8,6 +8,82 @@ use super::config;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use uuid::Uuid;
 
+fn join_common_names(x509_name: &x509_parser::x509::X509Name) -> String {
+    x509_name
+        .iter_common_name()
+        .map(|cn| cn.as_str().unwrap_or("[unknown]"))
+        .collect::<Vec<&str>>()
+        .join(", ")
+}
+
+fn display_agent_receiver_cert(server: &str) -> AnyhowResult<()> {
+    let pem_str = certs::fetch_server_cert_pem(server)?;
+    let pem = certs::parse_pem(&pem_str)?;
+    let x509 = pem.parse_x509()?;
+    let validity = x509.validity();
+
+    println!(
+        "Attempting to register at {}. Server certificate details:\n",
+        server
+    );
+    println!("PEM-encoded certificate:\n{}", pem_str);
+    println!("Issued by:\n\t{}", join_common_names(x509.issuer()));
+    println!("Issued to:\n\t{}", join_common_names(x509.subject()));
+    println!(
+        "Validity:\n\tFrom {}\n\tTo   {}",
+        validity.not_before.to_rfc2822(),
+        validity.not_after.to_rfc2822(),
+    );
+    Ok(())
+}
+
+fn interactive_trust_agent_receiver(server: &str) -> AnyhowResult<()> {
+    display_agent_receiver_cert(server)?;
+    println!();
+    match requestty::prompt_one(
+        requestty::Question::confirm("trust_server")
+            .message("Do you want to establish this connection?")
+            .build(),
+    ) {
+        Ok(requestty::Answer::Bool(yes_or_no)) => match yes_or_no {
+            true => Ok(()),
+            false => Err(anyhow!(format!(
+                "Cannot continue without trusting {}",
+                server
+            ))),
+        },
+        Ok(answer) => Err(anyhow!(format!(
+            "Asking if {} should be trusted failed, got answer: {:#?}",
+            server, answer,
+        ))),
+        Err(err) => Err(anyhow!(
+            "Asking if {} should be trusted failed: {:#?}",
+            server,
+            err,
+        )),
+    }
+}
+
+fn registration_server_cert(config: &config::RegistrationConfig) -> AnyhowResult<Option<&str>> {
+    match &config.root_certificate {
+        Some(cert) => {
+            if config.trust_server_cert {
+                eprintln!(
+                    "Blind trust of server certificate enabled but a root certificate was \
+                     given in the configuration and will be used to verify the server certificate."
+                );
+            }
+            Ok(Some(cert.as_str()))
+        }
+        None => {
+            if !config.trust_server_cert {
+                interactive_trust_agent_receiver(&config.agent_receiver_address)?;
+            }
+            Ok(None)
+        }
+    }
+}
+
 fn post_registration_conn_type(
     server: &str,
     root_cert: &str,
@@ -35,20 +111,10 @@ pub fn register(
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let uuid = Uuid::new_v4().to_string();
-    let server_cert = match &config.root_certificate {
-        Some(cert) => Some(cert.as_str()),
-        None => {
-            let fetched_server_cert = certs::fetch_server_cert(&config.agent_receiver_address)
-                .context("Error establishing trust with agent_receiver.")?;
-            println!("Trusting \n\n{}\nfor pairing", &fetched_server_cert);
-            None
-        }
-    };
-
     let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
     let pairing_response = agent_receiver_api::pairing(
         &config.agent_receiver_address,
-        server_cert,
+        registration_server_cert(&config)?,
         csr,
         &config.credentials,
     )

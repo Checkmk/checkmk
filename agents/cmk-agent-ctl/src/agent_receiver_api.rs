@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::config;
-use crate::{certs, tls_server};
+use crate::certs;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -108,7 +108,7 @@ pub fn register_with_agent_labels(
 
 fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
     Ok(base64::encode_config(
-        tls_server::certificate(cert)?.0,
+        certs::parse_pem(cert)?.contents,
         base64::URL_SAFE,
     ))
 }

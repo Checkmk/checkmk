@@ -81,7 +81,7 @@ fn private_key(key_pem: &str) -> AnyhowResult<PrivateKey> {
     }
 }
 
-pub fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
+fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
     if let Item::X509Certificate(it) =
         rustls_pemfile::read_one(&mut cert_pem.to_owned().as_bytes())?
             .context("Could not load certificate")?

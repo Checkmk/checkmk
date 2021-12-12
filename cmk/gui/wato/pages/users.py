@@ -40,7 +40,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import cleanup_connection_id, get_connection, UserAttribute
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     flash,
     make_action_link,
     make_confirm_link,

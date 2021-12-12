@@ -49,7 +49,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.plugins.wato import mode_registry, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.sites import sitenames
 from cmk.gui.table import table_element

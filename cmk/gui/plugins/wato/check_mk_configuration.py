@@ -21,7 +21,8 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
     config_variable_group_registry,
@@ -30,9 +31,11 @@ from cmk.gui.plugins.wato import (
     ConfigDomainCore,
     ConfigDomainGUI,
     ConfigDomainOMD,
+    ConfigHostname,
     ConfigVariable,
     ConfigVariableGroup,
     ContactGroupSelection,
+    get_section_information,
     HostGroupSelection,
     HostnameTranslation,
     HostRulespec,
@@ -42,6 +45,8 @@ from cmk.gui.plugins.wato import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
+    RulespecGroupDiscoveryCheckParameters,
+    RulespecGroupMonitoringConfiguration,
     RulespecSubGroup,
     ServiceDescriptionTranslation,
     ServiceGroupSelection,
@@ -51,13 +56,6 @@ from cmk.gui.plugins.wato import (
     TimeperiodSelection,
     UserIconOrAction,
     valuespec_check_plugin_selection,
-)
-from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
-from cmk.gui.plugins.wato.utils import (
-    ConfigHostname,
-    get_section_information,
-    RulespecGroupDiscoveryCheckParameters,
-    RulespecGroupMonitoringConfiguration,
 )
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless

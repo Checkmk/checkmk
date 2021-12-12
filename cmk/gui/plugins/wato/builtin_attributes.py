@@ -17,7 +17,7 @@ from cmk.gui.fields import validators
 from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
     ConfigHostname,

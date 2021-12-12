@@ -49,7 +49,7 @@ from cmk.gui.permissions import (
     permission_registry,
     permission_section_registry,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     get_search_expression,
     make_action_link,
     make_confirm_link,

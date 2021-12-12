@@ -14,16 +14,17 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.plugins.metrics.utils import MetricName
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    HTTPProxyReference,
     IndividualOrStoredPassword,
     monitoring_macro_help,
+    PasswordFromStore,
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
     RulespecSubGroup,
 )
-from cmk.gui.plugins.wato.utils import HTTPProxyReference, PasswordFromStore
 from cmk.gui.valuespec import (
     Age,
     Alternative,

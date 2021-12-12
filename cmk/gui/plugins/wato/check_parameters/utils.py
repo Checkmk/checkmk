@@ -11,7 +11,7 @@ from typing import Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import PredictiveLevels
+from cmk.gui.plugins.wato.utils import PredictiveLevels
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,

@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_database_file
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
 )
-from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
-from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_database_file
 from cmk.gui.valuespec import Checkbox, Dictionary
 
 

@@ -40,7 +40,7 @@ from cmk.gui.plugins.userdb.utils import (
     load_connection_config,
     save_connection_config,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     add_change,
     IndividualOrStoredPassword,
     make_action_link,

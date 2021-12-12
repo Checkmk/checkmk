@@ -14,7 +14,7 @@ from cmk.utils.site import url_prefix
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HTTPProxyReference,
     IndividualOrStoredPassword,
     notification_parameter_registry,

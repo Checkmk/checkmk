@@ -6,7 +6,7 @@
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     HostRulespec,
     rulespec_registry,

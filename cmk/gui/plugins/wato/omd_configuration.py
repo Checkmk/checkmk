@@ -18,7 +18,7 @@ from cmk.utils.type_defs import ConfigurationWarnings
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
     add_replication_paths,
     config_domain_registry,

@@ -276,7 +276,7 @@ def test_load_levels_wato():
     # wato structure of predictive levels here we try to make sure that these
     # asumptions are still correct. if this test fails, fix it and adapt
     # _scale_levels_predictive to handle the changed values
-    from cmk.gui.plugins.wato import PredictiveLevels
+    from cmk.gui.plugins.wato.utils import PredictiveLevels
 
     pl = PredictiveLevels()
     pl.validate_value(LEVELS, "")

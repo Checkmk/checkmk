@@ -19,7 +19,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.plugins.wato import mode_registry, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple

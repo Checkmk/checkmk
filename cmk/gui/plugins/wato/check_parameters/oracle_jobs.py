@@ -5,17 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-)
 from cmk.gui.plugins.wato.check_parameters.db_jobs import (
     ignore_db_status,
     missinglog,
     run_duration,
     status_disabled_jobs,
     status_missing_jobs,
+)
+from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.valuespec import Dictionary, TextInput
 

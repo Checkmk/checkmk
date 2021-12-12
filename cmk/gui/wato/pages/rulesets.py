@@ -51,12 +51,13 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     add_change,
     ConfigHostname,
     DictHostTagCondition,
     flash,
     HostTagCondition,
+    LabelCondition,
     make_action_link,
     make_confirm_link,
     make_diff_text,
@@ -66,7 +67,6 @@ from cmk.gui.plugins.wato import (
     search_form,
     WatoMode,
 )
-from cmk.gui.plugins.wato.utils import LabelCondition
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import table_element

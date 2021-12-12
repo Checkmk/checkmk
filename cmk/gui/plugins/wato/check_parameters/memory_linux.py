@@ -5,17 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersOperatingSystem,
-)
 from cmk.gui.plugins.wato.check_parameters.memory_arbor import (  # PredictiveMemoryChoice, # not yet implemented
     DualMemoryLevels,
     FreePercentage,
     FreeSize,
     UsedPercentage,
     UsedSize,
+)
+from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
 )
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Transform
 

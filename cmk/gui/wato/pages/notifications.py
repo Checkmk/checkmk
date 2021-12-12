@@ -35,9 +35,10 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCEventsMode,
     add_change,
+    ContactGroupSelection,
     flash,
     make_action_link,
     make_confirm_link,
@@ -1234,7 +1235,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_groups",
                     ListOf(
-                        cmk.gui.plugins.wato.ContactGroupSelection(),
+                        ContactGroupSelection(),
                         title=_("Members of contact groups"),
                         movable=False,
                     ),
@@ -1281,7 +1282,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_match_groups",
                     ListOf(
-                        cmk.gui.plugins.wato.ContactGroupSelection(),
+                        ContactGroupSelection(),
                         title=_("Restrict by contact groups"),
                         help=_(
                             "Here you can <i>restrict</i> the list of contacts that has been "

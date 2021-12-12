@@ -17,7 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request, theme, transactions
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     make_action_link,
     make_confirm_link,
     mode_registry,

@@ -61,7 +61,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     add_change,
     ContactGroupSelection,

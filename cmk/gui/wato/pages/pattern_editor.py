@@ -28,7 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import ConfigHostname, mode_registry, WatoMode
+from cmk.gui.plugins.wato.utils import ConfigHostname, mode_registry, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.urls import makeuri_contextless

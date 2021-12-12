@@ -8,7 +8,7 @@ from typing import List, Optional, Type
 
 from cmk.gui.globals import html, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ConfigDomainCore,
     mode_registry,
     SimpleEditMode,

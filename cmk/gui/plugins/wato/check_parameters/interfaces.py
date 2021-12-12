@@ -12,7 +12,8 @@ from typing import Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
+from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     CheckParameterRulespecWithItem,
     HostRulespec,
@@ -20,7 +21,6 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,

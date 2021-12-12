@@ -55,7 +55,6 @@ from cmk.gui.plugins.views.utils import (
     register_sorter,
     RowTable,
 )
-from cmk.gui.plugins.visuals import filter_registry, visual_info_registry, VisualInfo
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
     FilterInvFloat,
@@ -63,7 +62,12 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableText,
     FilterInvText,
 )
-from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
+from cmk.gui.plugins.visuals.utils import (
+    filter_registry,
+    get_livestatus_filter_headers,
+    visual_info_registry,
+    VisualInfo,
+)
 from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows
 from cmk.gui.utils.escaping import escape_html, escape_text
 from cmk.gui.utils.urls import makeuri_contextless

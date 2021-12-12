@@ -11,7 +11,6 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.plugins.visuals
 import cmk.gui.plugins.visuals.filters
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
@@ -21,7 +20,7 @@ from cmk.gui.globals import request
 
 def test_get_filter():
     f = visuals.get_filter("hostregex")
-    assert isinstance(f, cmk.gui.plugins.visuals.Filter)
+    assert isinstance(f, utils.Filter)
 
 
 def test_get_not_existing_filter():

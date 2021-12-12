@@ -7,7 +7,7 @@
 from typing import List, Tuple
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.visuals import visual_info_registry, VisualInfo
+from cmk.gui.plugins.visuals.utils import visual_info_registry, VisualInfo
 from cmk.gui.valuespec import (
     Integer,
     MonitoredHostname,

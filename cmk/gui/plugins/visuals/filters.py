@@ -33,11 +33,14 @@ if cmk_version.is_managed_edition():
     )
 
 import cmk.gui.legacy_filters as legacy_filters
-from cmk.gui.plugins.visuals import Filter, filter_registry, FilterOption, FilterTime
 from cmk.gui.plugins.visuals.utils import (
     display_filter_radiobuttons,
+    Filter,
     filter_cre_choices,
     filter_cre_heading_info,
+    filter_registry,
+    FilterOption,
+    FilterTime,
     get_only_sites_from_context,
 )
 

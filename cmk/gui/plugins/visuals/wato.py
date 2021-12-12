@@ -13,7 +13,7 @@ import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.globals import config, html
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.visuals import Filter, filter_registry
+from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice
 

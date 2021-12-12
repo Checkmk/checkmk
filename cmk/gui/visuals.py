@@ -136,7 +136,37 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     global title_functions
     title_functions = []
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("visuals", globals())
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.visuals as api_module
+    import cmk.gui.plugins.visuals.utils as plugin_utils
+
+    for name in (
+        "Filter",
+        "filter_registry",
+        "FilterOption",
+        "FilterTime",
+        "get_only_sites_from_context",
+        "visual_info_registry",
+        "visual_type_registry",
+        "VisualInfo",
+        "VisualType",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
 # TODO: This has been obsoleted by pagetypes.py

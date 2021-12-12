@@ -57,6 +57,7 @@ def _get_permissions(path: str) -> int:
         (str(cmk.utils.paths.local_agents_dir), 0o755),
         (cmk.utils.paths.web_dir, 0o644),
         (str(cmk.utils.paths.local_web_dir), 0o644),
+        (str(cmk.utils.paths.local_gui_plugins_dir), 0o644),
         (str(cmk.utils.paths.pnp_templates_dir), 0o644),
         (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
         (str(cmk.utils.paths.doc_dir), 0o644),
@@ -137,7 +138,8 @@ def get_package_parts() -> List[PackagePart]:
         PackagePart(
             "notifications", _("Notification scripts"), str(cmk.utils.paths.local_notifications_dir)
         ),
-        PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
+        PackagePart("gui", _("GUI extensions"), str(cmk.utils.paths.local_gui_plugins_dir)),
+        PackagePart("web", _("Legacy GUI extensions"), str(cmk.utils.paths.local_web_dir)),
         PackagePart(
             "pnp-templates",
             _("PNP4Nagios templates (deprecated)"),

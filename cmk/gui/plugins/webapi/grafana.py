@@ -19,7 +19,7 @@ from cmk.gui.plugins.metrics.utils import (
     perfvar_translation,
 )
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.webapi import api_call_collection_registry, APICallCollection
+from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
 from cmk.gui.visuals import cleaup_context_filters, get_filter_headers
 
 

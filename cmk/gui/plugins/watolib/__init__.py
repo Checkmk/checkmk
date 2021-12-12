@@ -4,7 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
-    ABCConfigDomain,
-    config_domain_registry,
-)
+#
+#    This file (cmk.gui.plugins.watolib.__init__.py) is only kept to make
+#    our dev tools (pylint & co) happy.
+#    It will not be deployed, as cmk.gui.plugins.watolib is supposed to be a
+#    namespace that can be shadowed/extended using the local/
+#    hierarchy.
+#
+#    This file must not contain any code.
+#

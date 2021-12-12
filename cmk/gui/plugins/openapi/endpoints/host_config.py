@@ -59,7 +59,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.plugins.webapi import check_hostname
+from cmk.gui.plugins.webapi.utils import check_hostname
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 

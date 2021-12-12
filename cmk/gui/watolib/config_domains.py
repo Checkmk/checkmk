@@ -31,8 +31,12 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib import ABCConfigDomain, config_domain_registry
-from cmk.gui.plugins.watolib.utils import DomainRequest, SerializedSettings
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_domain_registry,
+    DomainRequest,
+    SerializedSettings,
+)
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.changes import log_audit
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir

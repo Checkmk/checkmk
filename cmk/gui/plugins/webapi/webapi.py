@@ -29,7 +29,7 @@ from cmk.gui.globals import config
 from cmk.gui.groups import load_host_group_information, load_service_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.webapi import (
+from cmk.gui.plugins.webapi.utils import (
     add_configuration_hash,
     api_call_collection_registry,
     APICallCollection,

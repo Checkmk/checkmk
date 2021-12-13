@@ -74,7 +74,7 @@ from cmk.gui.plugins.views.utils import get_all_views
 from cmk.gui.plugins.wato.utils import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import is_wato_slave_site
-from cmk.gui.userdb import load_users, save_users
+from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
@@ -192,7 +192,7 @@ class UpdateConfig:
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
-            (self._set_user_scheme_serial, "Set version specific user attributes"),
+            (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
@@ -880,17 +880,20 @@ class UpdateConfig:
         for user_id in modified_user_instances:
             visuals.save("dashboards", dashboards, user_id)
 
-    def _set_user_scheme_serial(self):
-        """Set attribute to detect with what cmk version the user was created.
-        We start that with 2.0"""
-        users = load_users(lock=True)
+    def _adjust_user_attributes(self) -> None:
+        """All users are loaded and attributes can be transformed or set."""
+        users: Users = load_users(lock=True)
+        has_deprecated_ldap_connection: bool = any(
+            connection for connection in load_connection_config() if connection.get("id") == "ldap"
+        )
         for user_id in users:
             # pre 2.0 user
             if users[user_id].get("user_scheme_serial") is None:
-                _set_show_mode(users, user_id)
-            # here you could set attributes based on the current scheme
+                _add_show_mode(users, user_id)
 
-            users[user_id]["user_scheme_serial"] = USER_SCHEME_SERIAL
+            _add_user_scheme_serial(users, user_id)
+            _cleanup_ldap_connector(users, user_id, has_deprecated_ldap_connection)
+
         save_users(users)
 
     def _rewrite_py2_inventory_data(self):
@@ -1305,10 +1308,39 @@ class PasswordSanitizer:
         return hashlib.sha256(password.encode()).hexdigest()[:10]
 
 
-def _set_show_mode(users, user_id):
+def _add_show_mode(users: Users, user_id: UserId):
     """Set show_mode for existing user to 'default to show more' on upgrade to
     2.0"""
     users[user_id]["show_mode"] = "default_show_more"
+    return users
+
+
+def _add_user_scheme_serial(users: Users, user_id: UserId) -> Users:
+    """Set attribute to detect with what cmk version the user was
+    created. We start that with 2.0"""
+    users[user_id]["user_scheme_serial"] = USER_SCHEME_SERIAL
+    return users
+
+
+def _cleanup_ldap_connector(
+    users: Users,
+    user_id: UserId,
+    has_deprecated_ldap_connection: bool,
+) -> Users:
+    """Transform LDAP connector attribute of older versions to new format"""
+    connection_id: Optional[str] = users[user_id].get("connector")
+    if connection_id is None:
+        connection_id = "htpasswd"
+
+    # Old Checkmk used a static "ldap" connector id for all LDAP users.
+    # Since Checkmk now supports multiple LDAP connections, the ID has
+    # been changed to "default". But only transform this when there is
+    # no connection existing with the id LDAP.
+    if connection_id == "ldap" and not has_deprecated_ldap_connection:
+        connection_id = "default"
+
+    users[user_id]["connector"] = connection_id
+
     return users
 
 

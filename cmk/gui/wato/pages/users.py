@@ -39,7 +39,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import cleanup_connection_id, get_connection, UserAttribute
+from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
 from cmk.gui.plugins.wato.utils import (
     flash,
     make_action_link,
@@ -341,7 +341,7 @@ class ModeUsers(WatoMode):
                 if uid != user.id:
                     html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")).decode())
 
-                user_connection_id = cleanup_connection_id(user_spec.get("connector"))
+                user_connection_id = user_spec.get("connector")
                 connection = get_connection(user_connection_id)
 
                 # Buttons

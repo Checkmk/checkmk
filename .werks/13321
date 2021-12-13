@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.0.0p17
+Version: 2.0.0p18
 
 Fix possible deletion of arbitrary files (CVE-2021-33178).
 

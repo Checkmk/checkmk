@@ -56,6 +56,7 @@ pathlib_paths = [
     "r4r_declined_dir",
     "r4r_ready_dir",
     "r4r_discoverable_dir",
+    "protocols_dir",
 ]
 
 

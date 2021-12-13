@@ -94,6 +94,7 @@ lib_dir = _omd_path("lib")
 mib_dir = Path(_omd_path("share/snmp/mibs"))
 optional_packages_dir = Path(_omd_path("share/check_mk/optional_packages"))
 disabled_packages_dir = Path(_omd_path("var/check_mk/disabled_packages"))
+protocols_dir = Path(_omd_path("share/protocols"))
 
 _base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
 agent_based_plugins_dir = _base_plugins_dir / "agent_based"

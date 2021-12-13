@@ -2274,7 +2274,11 @@ class Cell:
 
         painter = self.painter()
         result = painter.render(row, self)
-        if not isinstance(result, tuple) or len(result) != 2:
+        if (
+            not isinstance(result, tuple)
+            or len(result) != 2
+            or not isinstance(result[1], (str, HTML))
+        ):
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 

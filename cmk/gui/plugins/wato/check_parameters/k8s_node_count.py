@@ -10,43 +10,61 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Tuple
 
 
-def __levels(title):
-    return Dictionary(
+def __optional(title, value_spec):
+    return CascadingDropdown(
         title=title,
-        elements=[
-            (
-                "levels_upper",
+        choices=[
+            ("no_levels", _("No Levels")),
+            ("levels", _("Impose levels"), value_spec),
+        ],
+        default_value="no_levels",
+    )
+
+
+def __levels(key, title_upper, title_lower):
+    return [
+        (
+            key + "_levels_upper",
+            __optional(
+                title_upper,
                 Tuple(
-                    title=_("Upper levels"),
                     elements=[
                         Integer(title=_("Warning above")),
                         Integer(title=_("Critical above")),
                     ],
                 ),
             ),
-            (
-                "levels_lower",
+        ),
+        (
+            key + "_levels_lower",
+            __optional(
+                title_lower,
                 Tuple(
-                    title=_("Lower levels"),
                     elements=[
                         Integer(title=_("Warning below")),
                         Integer(title=_("Critical below")),
                     ],
                 ),
             ),
-        ],
-    )
+        ),
+    ]
 
 
 def _parameter_valuespec_k8s_node_count():
     return Dictionary(
-        elements=[
-            ("worker", __levels(_("Number of worker nodes"))),
-            ("control_plane", __levels(_("Number of control plane nodes"))),
-        ],
+        elements=__levels(
+            "worker",
+            _("Set upper levels of worker nodes"),
+            _("Set lower levels of worker nodes"),
+        )
+        + __levels(
+            "control_plane",
+            _("Set upper levels of control plane nodes"),
+            _("Set lower levels of control plane nodes"),
+        ),
     )
 
 

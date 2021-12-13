@@ -3,22 +3,18 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
-from typing import Literal, Tuple, TypedDict
+from typing import Literal, Mapping, Optional, Tuple, Union
 
 from .agent_based_api.v1 import check_levels, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.k8s import NodeCount
 
-
-class K8sNodeCountLevelsVSResult(TypedDict, total=False):
-    levels_upper: Tuple[int, int]
-    levels_lower: Tuple[int, int]
+OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
 
 
-class K8sNodeCountVSResult(TypedDict, total=False):
-    worker: K8sNodeCountLevelsVSResult
-    control_plane: K8sNodeCountLevelsVSResult
+K8sNodeCountVSResult = Mapping[str, OptionalLevels]
 
 
 def parse(string_table: StringTable) -> NodeCount:
@@ -29,14 +25,22 @@ def discovery(section: NodeCount) -> DiscoveryResult:
     yield Service()
 
 
+def _get_levels(
+    params: K8sNodeCountVSResult,
+    name: Literal["worker", "control_plane"],
+    level_name: Literal["levels_lower", "levels_upper"],
+) -> Optional[Tuple[int, int]]:
+    level = params.get(f"{name}_{level_name}", "no_levels")
+    if level == "no_levels":
+        return None
+    return level[1]
+
+
 def _check_levels(
     value: int, name: Literal["worker", "control_plane"], params: K8sNodeCountVSResult
 ) -> CheckResult:
-    levels_upper = None
-    levels_lower = None
-    if name in params:
-        levels_upper = params[name].get("levels_upper")
-        levels_lower = params[name].get("levels_lower")
+    levels_upper = _get_levels(params, name, "levels_upper")
+    levels_lower = _get_levels(params, name, "levels_lower")
     yield from check_levels(
         value,
         metric_name=f"k8s_node_count_{name}",
@@ -59,10 +63,7 @@ register.agent_section(
     parsed_section_name="kube_node_count",
 )
 
-check_default_parameters: K8sNodeCountVSResult = {
-    "worker": {"levels_lower": (3, 1)},
-    "control_plane": {"levels_lower": (3, 1)},
-}
+check_default_parameters: K8sNodeCountVSResult = {}
 
 register.check_plugin(
     name="kube_node_count",

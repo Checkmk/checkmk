@@ -3,7 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# type: ignore[list-item,import,assignment,misc,operator,arg-type]  # TODO: see which are needed in this file
 
 import functools
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
@@ -91,7 +90,8 @@ def _is_valid_aws_limits_perf_data(perfvar):
 def parse_aws_limits_generic(info):
     limits_by_region: AWSLimitsByRegion = {}
     for line in parse_aws(info):
-        limits_by_region.setdefault(line[-1], []).append(line[:-1] + [lambda x: "%s" % x])
+        # FIXME: according to the type hints, "line" is Mapping[str, Any]
+        limits_by_region.setdefault(line[-1], []).append(line[:-1] + [lambda x: "%s" % x])  # type: ignore
     return limits_by_region
 
 
@@ -234,11 +234,11 @@ def check_aws_metrics(
         go_stale = False
 
         yield check_levels(
-            metric_val,
-            metric_info.get("metric_name"),
+            metric_val,  # type: ignore[arg-type]
+            metric_info.get("metric_name"),  # type: ignore[arg-type]
             metric_info.get("levels"),
-            human_readable_func=metric_info.get("human_readable_func"),
-            infoname=metric_info.get("info_name"),
+            human_readable_func=metric_info.get("human_readable_func"),  # type: ignore[arg-type]
+            infoname=metric_info.get("info_name"),  # type: ignore[arg-type]
         )
 
     if go_stale:

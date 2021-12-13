@@ -4,7 +4,7 @@
 
 use super::config;
 use crate::certs;
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use string_enum::StringEnum;
@@ -163,32 +163,49 @@ pub struct StatusResponse {
     pub message: Option<String>,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum StatusError {
+    #[error(transparent)]
+    // Note: we deliberately do not use '#[from] reqwest::Error' here because we do not want to
+    // create this variant from any reqwest::Error (otherwise, we could for example write
+    // 'response.text()?', which would then result in this variant)
+    ConnectionRefused(reqwest::Error),
+
+    #[error("Client certificate invalid")]
+    CertificateInvalid,
+
+    #[error(transparent)]
+    UnspecifiedError(#[from] AnyhowError),
+}
+
 pub fn status(
     server_address: &str,
     root_cert: &str,
     uuid: &str,
     certificate: &str,
-) -> AnyhowResult<StatusResponse> {
+) -> Result<StatusResponse, StatusError> {
     let response = certs::client(Some(root_cert))?
         .get(format!(
             "https://{}/registration_status/{}",
             server_address, uuid
         ))
         .header("certificate", encode_pem_cert_base64(certificate)?)
-        .send()?;
+        .send()
+        .map_err(StatusError::ConnectionRefused)?;
 
     match response.status() {
-        StatusCode::OK => {
-            let body = response.text()?;
-            Ok(serde_json::from_str::<StatusResponse>(&body)
-                .context(format!("Error parsing response body: {}", body))?)
-        }
-        _ => {
-            let json: serde_json::Value = response.json()?;
-            match json.get("detail") {
-                Some(value) => Err(anyhow!(format!("{}", value))),
-                None => Err(anyhow!("Unknown failure")),
-            }
-        }
+        StatusCode::OK => Ok(serde_json::from_str::<StatusResponse>(
+            &response.text().context("Failed to obtain response body")?,
+        )
+        .context("Failed to deserialize response body")?),
+        StatusCode::UNAUTHORIZED => Err(StatusError::CertificateInvalid),
+        _ => Err(StatusError::UnspecifiedError(anyhow!(format!(
+            "{}",
+            response
+                .json::<serde_json::Value>()
+                .context("Failed to deserialize response body to JSON")?
+                .get("detail")
+                .context("Unknown failure")?
+        )))),
     }
 }

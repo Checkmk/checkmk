@@ -27,3 +27,4 @@ base64 = { version = "*" }
 string_enum = { version = "*" }
 requestty = { version = "*" }
 x509-parser = { version = "*" }
+thiserror = { version = "*" }

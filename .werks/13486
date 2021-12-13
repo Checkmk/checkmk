@@ -1,0 +1,16 @@
+Title: <tt>juniper_fru</tt>: Fix documentation for op. status "present"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1636032794
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p18
+
+The documentation of the check plugin <tt>juniper_fru</tt>, which
+monitors the power supplies of Juniper Ethernet Switch Chassis,
+incorrectly stated that an operational status of "present" results
+in the monitoring status OK. However, "present" results in WARN,
+which is correct and has been fixed in the documentation.

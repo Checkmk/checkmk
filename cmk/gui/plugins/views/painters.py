@@ -999,6 +999,7 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
         "at least one parent is up, but no check is recent enough": _(
             "Last service check is not recent enough"
         ),
+        None: "",  # column is not available if the Nagios core is used
     }
 
     return (

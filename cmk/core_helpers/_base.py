@@ -63,7 +63,11 @@ class Fetcher(Generic[TRawData], abc.ABC):
 
     @final
     def __enter__(self) -> "Fetcher":
-        """Prepare the data source."""
+        """Prepare the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return self
+
         try:
             self.open()
         except MKFetcherError:
@@ -81,7 +85,10 @@ class Fetcher(Generic[TRawData], abc.ABC):
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> Literal[False]:
-        """Destroy the data source."""
+        """Destroy the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return False
         self.close()
         return False
 

@@ -382,6 +382,10 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         path = self.make_path(mode)
         if not path.exists():
+            if self.simulation:
+                raise MKFetcherError(
+                    "Got no data (Simulation mode enabled and no cachefile present)"
+                )
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
@@ -396,9 +400,6 @@ class FileCache(Generic[TRawData], abc.ABC):
             return None
 
         raw_data = self._read(path)
-        if raw_data is None and self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
-
         if raw_data is not None:
             self._logger.debug("Got %r bytes data from cache", len(raw_data))
         return raw_data

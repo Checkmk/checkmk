@@ -25,7 +25,7 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
@@ -1280,6 +1280,10 @@ class AutomationDiagHost(Automation):
                 )
 
             if test.startswith("snmp"):
+                if config.simulation_mode:
+                    raise MKSNMPError(
+                        "Simulation mode enabled. Not trying to contact snmp datasource"
+                    )
                 return automation_results.DiagHostResult(
                     *self._execute_snmp(
                         test,

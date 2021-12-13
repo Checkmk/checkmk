@@ -256,6 +256,7 @@ catalog_titles = {
     "mqtt": "MQTT",
     "smb_share": "SMB Share",
     "gcp": "Google Cloud Platform",
+    "mobileiron": "Mobileiron",
 }  # yapf: disable
 
 # TODO: Do we need a more generic place for this?
@@ -271,6 +272,7 @@ check_mk_agents = {
     "nutanix": "Nutanix",
     "emcvnx": "EMC VNX",
     "vnx_quotas": "VNX Quotas",
+    "mobileiron": "Mobileiron",
 }
 
 _manpage_catalog: Dict[ManPageCatalogPath, List[Dict]] = {}

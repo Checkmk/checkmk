@@ -594,6 +594,12 @@ metric_info["gc_bytes_rate"] = {
     "color": "42/a",
 }
 
+metric_info["mobileiron_policyviolationcount"] = {
+    "title": _l("Policy violation count"),
+    "unit": "count",
+    "color": "42/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

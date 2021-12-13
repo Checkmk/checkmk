@@ -1,0 +1,19 @@
+title: Mobileiron compliance
+agents: mobileiron
+catalog: app/mobileiron
+license: GPL
+distribution: check_mk
+description:
+ The special agent mobileiron queries the mobileiron cloud instance
+ through the REST API and then displays the status of each
+ device via the piggyback mechanism.
+
+ This check monitors the compliance state of each device in mobileiron.
+
+ The service state depends on the number of policy violations
+ and the compliance state of the device.
+ You can configure the policy_violation_levels with params.
+ The default parameters are: {WARN} for 2 policy violations and {CRIT} for 3.
+
+discovery:
+ One service is created

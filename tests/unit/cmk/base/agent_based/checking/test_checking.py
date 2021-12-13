@@ -10,6 +10,7 @@ from typing import Iterable
 
 import pytest
 
+from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import LegacyCheckParameters
 
@@ -193,28 +194,28 @@ def test_time_resolved_check_parameters(
 @pytest.mark.parametrize(
     "subresults, aggregated_results",
     [
-        ([], checking.ITEM_NOT_FOUND),
+        ([], ServiceCheckResult.item_not_found()),
         (
             [
                 Result(state=state.OK, notice="details"),
             ],
-            (0, "Everything looks OK - 1 detail available\ndetails", []),
+            ServiceCheckResult(0, "Everything looks OK - 1 detail available\ndetails", []),
         ),
         (
             [
                 Result(state=state.OK, summary="summary1", details="detailed info1"),
                 Result(state=state.WARN, summary="summary2", details="detailed info2"),
             ],
-            (1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []),
+            ServiceCheckResult(1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []),
         ),
         (
             [
                 Result(state=state.OK, summary="summary"),
                 Metric(name="name", value=42),
             ],
-            (0, "summary\nsummary", [("name", 42.0, None, None, None, None)]),
+            ServiceCheckResult(0, "summary\nsummary", [("name", 42.0, None, None, None, None)]),
         ),
     ],
 )
-def test_aggregate_result(subresults, aggregated_results):
+def test_aggregate_result(subresults, aggregated_results: ServiceCheckResult) -> None:
     assert checking._aggregate_results(subresults) == aggregated_results

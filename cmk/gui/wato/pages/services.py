@@ -23,6 +23,7 @@ from typing import (
 )
 
 import cmk.utils.render
+from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
 from cmk.utils.site import omd_site
@@ -384,7 +385,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         if cmk_check_entries:
-            no_data = all(e[7] == 3 and e[8] == "Received no data" for e in cmk_check_entries)
+            no_data_result = ServiceCheckResult.received_no_data()
+            no_data = all(
+                e[7] == no_data_result.state and e[8] == no_data_result.output
+                for e in cmk_check_entries
+            )
             if no_data:
                 messages.append(_("No data for discovery available. Please perform a full scan."))
         else:

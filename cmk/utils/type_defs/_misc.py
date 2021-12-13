@@ -195,8 +195,6 @@ MetricTuple = Tuple[
 
 ClusterMode = Literal["native", "failover", "worst", "best"]
 
-ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
-
 LegacyCheckParameters = Union[None, Mapping, Tuple, List, str]
 
 SetAutochecksTable = Dict[

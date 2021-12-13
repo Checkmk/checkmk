@@ -15,15 +15,10 @@ from typing import IO, Optional, Sequence, Tuple, Union
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    HostName,
-    ServiceCheckResult,
-    ServiceDetails,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
 
 # TODO: make this two arguments!
 import cmk.base.config as config
@@ -50,11 +45,9 @@ def check_result(
     dry_run: bool,
     show_perfdata: bool,
 ) -> None:
-    state, infotext, metric_tuples = result
-
-    perftexts = [_serialize_metric(*mt) for mt in metric_tuples]
+    perftexts = [_serialize_metric(*mt) for mt in result.metrics]
     if perftexts:
-        check_command = _extract_check_command(infotext)
+        check_command = _extract_check_command(result.output)
         if check_command and config.perfdata_format == "pnp":
             perftexts.append("[%s]" % check_command)
         perftext = "|" + (" ".join(perftexts))
@@ -65,10 +58,16 @@ def check_result(
         # make sure that plugin output does not contain a vertical bar. If that is the
         # case then replace it with a Uniocode "Light vertical bar"
         _do_submit_to_core(
-            host_name, service_name, state, infotext.replace("|", "\u2758") + perftext, cache_info
+            host_name,
+            service_name,
+            result.state,
+            result.output.replace("|", "\u2758") + perftext,
+            cache_info,
         )
 
-    _output_check_result(service_name, state, infotext, perftexts, show_perfdata=show_perfdata)
+    _output_check_result(
+        service_name, result.state, result.output, perftexts, show_perfdata=show_perfdata
+    )
 
 
 def finalize() -> None:

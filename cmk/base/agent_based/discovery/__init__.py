@@ -1316,7 +1316,7 @@ def _check_preview_table_row(
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
     ruleset_name = str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
 
-    exitcode, output, _perfdata = checking.get_aggregated_result(
+    result = checking.get_aggregated_result(
         parsed_sections_broker,
         host_config,
         ip_address,
@@ -1336,8 +1336,8 @@ def _check_preview_table_row(
         ruleset_name=ruleset_name,
         parameters=service.parameters,
         preview_params=preview_params,
-        exitcode=exitcode,
-        output=output,
+        exitcode=result.state,
+        output=result.output,
         found_on_nodes=found_on_nodes,
         labels={l.name: l.value for l in service.service_labels.values()},
     )

@@ -57,7 +57,7 @@ def _parameter_valuespec():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="k8s_node_container_count",
+        check_group_name="kube_node_container_count",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,

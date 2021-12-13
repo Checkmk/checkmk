@@ -57,6 +57,30 @@ metric_info["kube_pod_succeeded"] = {
     "color": "46/a",
 }
 
+metric_info["kube_node_container_count_running"] = {
+    "title": _("Running containers"),
+    "unit": "count",
+    "color": "35/a",
+}
+
+metric_info["kube_node_container_count_waiting"] = {
+    "title": _("Waiting containers"),
+    "unit": "count",
+    "color": "22/a",
+}
+
+metric_info["kube_node_container_count_terminated"] = {
+    "title": _("Terminated containers"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["kube_node_container_count_total"] = {
+    "title": _("Total containers"),
+    "unit": "count",
+    "color": "42/a",
+}
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -85,5 +109,19 @@ graph_info["kube_resources_terminated"] = {
     "metrics": [
         ("kube_pod_succeeded", "line"),
         ("kube_pod_failed", "line"),
+    ],
+}
+
+graph_info["kube_node_container_count"] = {
+    "title": _("Containers"),
+    "metrics": [
+        ("kube_node_container_count_running", "stack"),
+        ("kube_node_container_count_waiting", "stack"),
+        ("kube_node_container_count_terminated", "stack"),
+        ("kube_node_container_count_total", "line"),
+    ],
+    "scalars": [
+        "kube_node_container_count_total:warn",
+        "kube_node_container_count_total:crit",
     ],
 }

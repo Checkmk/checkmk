@@ -40,30 +40,6 @@ metric_info["k8s_node_count_control_plane"] = {
     "color": "42/a",
 }
 
-metric_info["k8s_node_container_count_running"] = {
-    "title": _("Running node containers"),
-    "unit": "count",
-    "color": "35/a",
-}
-
-metric_info["k8s_node_container_count_waiting"] = {
-    "title": _("Waiting node containers"),
-    "unit": "count",
-    "color": "22/a",
-}
-
-metric_info["k8s_node_container_count_terminated"] = {
-    "title": _("Terminated node containers"),
-    "unit": "count",
-    "color": "15/a",
-}
-
-metric_info["k8s_node_container_count_total"] = {
-    "title": _("Total node containers"),
-    "unit": "count",
-    "color": "42/a",
-}
-
 metric_info["k8s_pods_request"] = {
     "title": _("Pods"),
     "unit": "count",
@@ -310,19 +286,5 @@ graph_info["k8s_node_count"] = {
     "metrics": [
         ("k8s_node_count_control_plane", "stack"),
         ("k8s_node_count_worker", "stack"),
-    ],
-}
-
-graph_info["k8s_node_container_count"] = {
-    "title": _("Node Containers"),
-    "metrics": [
-        ("k8s_node_container_count_running", "stack"),
-        ("k8s_node_container_count_waiting", "stack"),
-        ("k8s_node_container_count_terminated", "stack"),
-        ("k8s_node_container_count_total", "line"),
-    ],
-    "scalars": [
-        "k8s_node_container_count_total:warn",
-        "k8s_node_container_count_total:crit",
     ],
 }

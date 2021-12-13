@@ -64,11 +64,11 @@ def test_register_agent_section_calls(agent_section):
 
 def test_register_check_plugin_calls(check_plugin):
     assert str(check_plugin.name) == "kube_node_container_count"
-    assert check_plugin.service_name == "Container Count"
+    assert check_plugin.service_name == "Containers"
     assert check_plugin.discovery_function.__wrapped__ == kube_node_container_count.discovery
     assert check_plugin.check_function.__wrapped__ == kube_node_container_count.check
     assert check_plugin.check_default_parameters == {}
-    assert str(check_plugin.check_ruleset_name) == "k8s_node_container_count"
+    assert str(check_plugin.check_ruleset_name) == "kube_node_container_count"
 
 
 def test_parse(string_table, running, waiting, terminated):
@@ -155,14 +155,14 @@ def test_check_calls_check_levels_with_levels_default(check_levels, check_result
 
 
 def test_check_calls_check_levels_with_metric_name(check_levels, check_result, section):
-    expected_metrics = [f"k8s_node_container_count_{name}" for name in [*section.dict(), "total"]]
+    expected_metrics = [f"kube_node_container_count_{name}" for name in [*section.dict(), "total"]]
     list(check_result)
     actual_metrics = [call.kwargs["metric_name"] for call in check_levels.call_args_list]
     assert actual_metrics == expected_metrics
 
 
 def test_check_calls_check_levels_with_labels(check_levels, check_result, section):
-    expected_labels = [f"Number of {name} node containers" for name in [*section.dict(), "total"]]
+    expected_labels = [f"{name.title()}" for name in [*section.dict(), "total"]]
     list(check_result)
     actual_labels = [call.kwargs["label"] for call in check_levels.call_args_list]
     assert actual_labels == expected_labels

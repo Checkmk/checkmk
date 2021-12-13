@@ -1,0 +1,12 @@
+Title: Occasional KeyError in inline SNMP fetcher
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1639428348
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p18
+
+A race condition could lead to an occasional KeyError reported by the inline
+SNMP fetcher.

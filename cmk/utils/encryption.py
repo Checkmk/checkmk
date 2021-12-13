@@ -155,6 +155,7 @@ class ChainVerifyResult(NamedTuple):
     is_valid: bool
 
 
+# NOTE: Use this function only in conjunction with the permission server_side_requests
 def fetch_certificate_details(
     trusted_ca_file: str, address_family: socket.AddressFamily, address: Tuple[str, int]
 ) -> Iterable[CertificateDetails]:

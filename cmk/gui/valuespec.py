@@ -53,6 +53,7 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
+from cmk.utils.encryption import fetch_certificate_details
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds
@@ -66,7 +67,7 @@ from cmk.gui.globals import config, html, output_funnel, request, theme, user
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.html import HTML
@@ -5986,13 +5987,18 @@ class UploadOrPasteTextFile(Alternative):
     def __init__(self, **kwargs):
         file_title = kwargs.pop("file_title", _("File"))
         allow_empty = kwargs.pop("allow_empty", False)
-        kwargs["elements"] = [
-            FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
-            TextAreaUnicode(
-                title=_("Content of %s") % file_title, allow_empty=allow_empty, cols=80, rows="auto"
-            ),
-        ]
-        kwargs["match"] = lambda val: 0 if isinstance(val, tuple) else 1
+        kwargs.setdefault("elements", []).extend(
+            [
+                FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
+                TextAreaUnicode(
+                    title=_("Content of %s") % file_title,
+                    allow_empty=allow_empty,
+                    cols=80,
+                    rows="auto",
+                ),
+            ]
+        )
+        kwargs.setdefault("match", lambda val: 0 if isinstance(val, tuple) else 1)
 
         super().__init__(**kwargs)
 
@@ -6006,7 +6012,7 @@ class UploadOrPasteTextFile(Alternative):
         if isinstance(value, tuple):
             try:
                 # We are only interested in the file content here. Get it from FileUpload value.
-                return value[2].decode("utf-8")
+                return value[-1].decode("utf-8")
             except UnicodeDecodeError as exc:
                 raise MKUserError(varprefix, _("Please choose a file to upload.")) from exc
         return value
@@ -6705,10 +6711,99 @@ def SchedulePeriod(from_end=True, **kwargs):
     )
 
 
+class _CAInput(ValueSpec[tuple[str, int, bytes]]):
+    """Allows users to fetch CAs interactively so that they don't have to upload files or
+    paste text manually."""
+
+    def __init__(self) -> None:
+        super().__init__(title=_("Fetch certificate from server"))
+        self.address = HostAddress()
+        self.port = NetworkPort(title=None)
+
+    def render_input(self, varprefix: str, value: _Optional[tuple[str, int, bytes]]) -> None:
+        address, port, content = value or ("", 443, b"")
+
+        self.address.render_input(varprefix + "_address", address)
+        self.port.render_input(varprefix + "_port", port)
+        html.icon_button(
+            url=None,
+            title=_("Fetch certificate from server"),
+            icon="host",
+            onclick="cmk.valuespecs.fetch_ca_from_server(%s)" % json.dumps(varprefix),
+        )
+        html.div(None, id_=varprefix + "_status")
+        html.text_area(varprefix, content.decode("ascii"), cols=80, readonly="")
+
+    def value_to_json(self, value: tuple[str, int, bytes]) -> JSONValue:
+        return [value[0], value[1], value[2].decode("ascii")]
+
+    def value_from_json(self, json_value: JSONValue) -> tuple[str, int, bytes]:
+        return (json_value[0], json_value[1], json_value[2].encode("ascii"))
+
+    def from_html_vars(self, varprefix: str) -> tuple[str, int, bytes]:
+        address = self.address.from_html_vars(varprefix + "_address")
+        port = self.port.from_html_vars(varprefix + "_port")
+        content = html.request.get_binary_input_mandatory(varprefix)
+        return (address, port, content)
+
+
+@page_registry.register_page("ajax_fetch_ca")
+class AjaxFetchCA(AjaxPage):
+    def page(self) -> AjaxPageResult:
+        user.need_permission("general.server_side_requests")
+
+        try:
+            vs_address = HostAddress()
+            address = vs_address.from_html_vars("address")
+            vs_address.validate_value(address, "address")
+
+            vs_port = NetworkPort(title=None)
+            port = vs_port.from_html_vars("port")
+            vs_port.validate_value(port, "port")
+        except Exception:
+            raise MKUserError(None, _("Please provide a valid host and port"))
+
+        try:
+            certs = fetch_certificate_details(
+                cmk.utils.paths.trusted_ca_file, socket.AF_INET, (address, port)
+            )
+        except Exception as e:
+            raise MKUserError(None, _("Error fetching data: %s") % e)
+
+        for cert in certs:
+            if not cert.is_ca:
+                continue
+
+            try:
+                cert_pem = cert.verify_result.cert_pem.decode("ascii")
+            except Exception:
+                raise MKUserError(None, _("Failed to decode certificate data"))
+
+            def row(key: str, value: str) -> HTML:
+                return html.render_tr(html.render_td(key) + html.render_td(value), class_="data")
+
+            summary = html.render_table(
+                row(_("Issued to"), cert.issued_to)
+                + row(_("Issued by"), cert.issued_by)
+                + row(_("Valid from"), cert.valid_from)
+                + row(_("Valid until"), cert.valid_till)
+                + row(_("Fingerprint"), cert.digest_sha256),
+                class_="data",
+            )
+
+            return {"summary": summary, "cert_pem": cert_pem}
+
+        raise MKUserError(None, _("Found no CA"))
+
+
 class CAorCAChain(UploadOrPasteTextFile):
     def __init__(self, **args):
         args.setdefault("title", _("Certificate Chain (Root / Intermediate Certificate)"))
         args.setdefault("file_title", _("CRT/PEM File"))
+        args["elements"] = [_CAInput()]
+        args["match"] = (
+            lambda val: 2 if not isinstance(val, tuple) else (0 if isinstance(val[1], int) else 1)
+        )
         super().__init__(**args)
 
     def _validate_value(self, value, varprefix):
@@ -6771,7 +6866,7 @@ def ListOfCAs(**args):
         _(
             "Only accepting HTTPS connections with a server which certificate "
             "is signed with one of the CAs that are listed here. That way it is guaranteed "
-            "that it is communicating only with the authentic update server. "
+            "that it is communicating only with the authentic server. "
             "If you use self signed certificates for you server then enter that certificate "
             "here."
         ),

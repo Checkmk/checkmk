@@ -26,6 +26,7 @@ def test_registered_pages():
         "ajax_dashlet_pos",
         "ajax_delete_user_notification",
         "ajax_dict_host_tag_condition_get_choice",
+        "ajax_fetch_ca",
         "ajax_inv_render_tree",
         "ajax_nagvis_maps_snapin",
         "ajax_popup_action_menu",

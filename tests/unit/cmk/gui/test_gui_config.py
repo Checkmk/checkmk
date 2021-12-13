@@ -363,6 +363,7 @@ def test_registered_permissions():
         "general.see_user_custom_snapin",
         "general.see_user_dashboards",
         "general.see_user_views",
+        "general.server_side_requests",
         "general.use",
         "general.view_option_columns",
         "general.view_option_refresh",

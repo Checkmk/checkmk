@@ -934,3 +934,26 @@ export function update_unit_selector(selectbox, metric_prefix) {
     change_unit_to_match_metric(metric_selector.val());
     metric_selector.on("change", event => change_unit_to_match_metric(event.target.value));
 }
+
+export function fetch_ca_from_server(varprefix) {
+    const address = document.querySelector(`input[name='${varprefix + "_address"}']`).value;
+    const port = document.querySelector(`input[name='${varprefix + "_port"}']`).value;
+
+    ajax.post_url(
+        "ajax_fetch_ca.py",
+        "address=" + encodeURIComponent(address) + "&port=" + encodeURIComponent(port),
+        (_data, ajax_response) => {
+            const response = JSON.parse(ajax_response);
+
+            const status = document.getElementById(varprefix + "_status");
+            const content = document.querySelector(`textarea[name='${varprefix}']`);
+            if (response.result_code !== 0) {
+                status.innerText = response.result;
+                content.value = "";
+            } else {
+                status.innerHTML = response.result.summary;
+                content.value = response.result.cert_pem;
+            }
+        }
+    );
+}

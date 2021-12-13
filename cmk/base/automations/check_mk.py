@@ -25,7 +25,7 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKGeneralException, MKBailOut
+from cmk.utils.exceptions import MKGeneralException, MKBailOut, MKSNMPError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
@@ -1158,6 +1158,9 @@ class AutomationDiagHost(Automation):
                 return self._execute_traceroute(host_config, ipaddress)
 
             if test.startswith('snmp'):
+                if config.simulation_mode:
+                    raise MKSNMPError(
+                        "Simulation mode enabled. Not trying to contact snmp datasource")
                 return self._execute_snmp(
                     test,
                     host_config,

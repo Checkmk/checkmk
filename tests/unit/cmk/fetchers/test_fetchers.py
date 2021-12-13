@@ -193,7 +193,7 @@ class TestIPMIFetcher:
             max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
-            simulation=True,
+            simulation=False,
         )
 
     @pytest.fixture

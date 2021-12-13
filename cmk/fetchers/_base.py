@@ -141,6 +141,10 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
 
         path = self.make_path(mode)
         if not path.exists():
+            if self.simulation:
+                raise MKFetcherError(
+                    "Got no data (Simulation mode enabled and no cachefile present)")
+
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
@@ -155,9 +159,6 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
             return None
 
         raw_data = self._read(path)
-        if raw_data is None and self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
-
         if raw_data is not None:
             self._logger.debug("Got %r bytes data from cache", len(raw_data))
 
@@ -222,7 +223,11 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
 
     @final
     def __enter__(self) -> 'ABCFetcher':
-        """Prepare the data source."""
+        """Prepare the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return self
+
         try:
             self.open()
         except MKFetcherError:
@@ -240,7 +245,11 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> Literal[False]:
-        """Destroy the data source."""
+        """Destroy the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return False
+
         self.close()
         return False
 

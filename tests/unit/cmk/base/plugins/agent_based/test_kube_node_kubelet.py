@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kube_node_kubelet import check_k8s_node_kubelet
+from cmk.base.plugins.agent_based.kube_node_kubelet import check_kube_node_kubelet
 from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo
 
 
@@ -19,8 +19,8 @@ from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo
                 health=HealthZ(status_code=200, response="ok", verbose_response=None),
             ),
             [
+                Result(state=State.OK, summary="Healthy"),
                 Result(state=State.OK, summary="Version 1.2.3"),
-                Result(state=State.OK, summary="Health check response is ok"),
             ],
             id="status_code_ok",
         ),
@@ -32,17 +32,17 @@ from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo
                 ),
             ),
             [
-                Result(state=State.OK, summary="Version 1.2.3"),
+                Result(state=State.CRIT, summary="Not healthy"),
                 Result(
-                    state=State.CRIT,
-                    summary="Health check response is bad",
-                    details="some\nlong\noutput\n",
+                    state=State.OK,
+                    notice="Verbose response:\nsome\nlong\noutput\n",
                 ),
+                Result(state=State.OK, summary="Version 1.2.3"),
             ],
             id="status_code_critical",
         ),
     ],
 )
-def test_check_k8s_node_kubelet(section: KubeletInfo, expected_result) -> None:
-    result = list(check_k8s_node_kubelet(section))
+def test_check_kube_node_kubelet(section: KubeletInfo, expected_result) -> None:
+    result = list(check_kube_node_kubelet(section))
     assert result == expected_result

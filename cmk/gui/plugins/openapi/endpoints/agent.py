@@ -43,7 +43,7 @@ OS_TYPE_RAW = {
     query_params=[OS_TYPE_RAW],
 )
 def download_agent(params):
-    """Download agents shipped with Checkmk."""
+    """Download agents shipped with Checkmk"""
     os_type: str = params.get("os_type")
 
     if os_type == "windows_msi":
@@ -53,6 +53,8 @@ def download_agent(params):
     elif os_type == "linux_deb":
         agent_path = agent.packed_agent_path_linux_deb()
     else:
+        # This should never happen. Due to validation `os_type` can only be one
+        # of the three elements above.
         raise AssertionError(f"Agent: os_type '{os_type}' not known in raw edition.")
 
     response = Response()

@@ -30,6 +30,7 @@ def test_pull_host_registered(tmp_path: Path) -> None:
     assert host.registered is True
     assert host.hostname == "hostname"
     assert host.host_type is HostTypeEnum.PULL
+    assert host.source_path == source
 
 
 def test_push_host_registered(tmp_path: Path) -> None:
@@ -43,6 +44,7 @@ def test_push_host_registered(tmp_path: Path) -> None:
     assert host.registered is True
     assert host.hostname == "hostname"
     assert host.host_type is HostTypeEnum.PUSH
+    assert host.source_path == source
 
 
 def test_update_file_access_time_success(tmp_path: Path) -> None:

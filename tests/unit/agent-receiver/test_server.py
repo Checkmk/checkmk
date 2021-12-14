@@ -141,6 +141,27 @@ def test_agent_data_no_host(client: TestClient) -> None:
     assert response.json() == {"detail": "Host is not registered"}
 
 
+def test_agent_data_pull_host(
+    tmp_path: Path,
+    client: TestClient,
+) -> None:
+    source = constants.AGENT_OUTPUT_DIR / "1234"
+    source.symlink_to(tmp_path / "hostname")
+
+    response = client.post(
+        "/agent_data/1234",
+        headers={"certificate": "irrelevant"},
+        files={
+            "monitoring_data": (
+                "filename",
+                io.StringIO("mock file"),
+            )
+        },
+    )
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Host is not a push host"}
+
+
 def test_agent_data_success(
     tmp_path: Path,
     client: TestClient,

@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final
+from typing import Final, Optional
 
-from cmk.utils.type_defs import HostName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, PushAgentFetcher
 from cmk.core_helpers.agent import AgentSummarizerDefault
@@ -25,10 +25,11 @@ class PushAgentSource(AgentSource):
     def __init__(
         self,
         hostname: HostName,
+        ipaddress: Optional[HostAddress],
     ) -> None:
         super().__init__(
             hostname,
-            None,  # ipaddress,
+            ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PUSH_AGENT,
             description="Checkmk push agent",

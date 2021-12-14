@@ -185,7 +185,10 @@ class _Builder:
 
         connection_mode = self.host_config.agent_connection_mode()
         if connection_mode == "push-agent":
-            return PushAgentSource(self.hostname)
+            return PushAgentSource(
+                self.hostname,
+                self.ipaddress,
+            )
         if connection_mode == "pull-agent":
             return TCPSource(
                 self.hostname,

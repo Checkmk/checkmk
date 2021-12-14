@@ -230,7 +230,7 @@ async def agent_data(
 
     shutil.copyfileobj(monitoring_data.file, temp_file)
     try:
-        os.rename(temp_file.name, host.source_path / "received-output")
+        os.rename(temp_file.name, host.source_path / "agent_output")
     finally:
         Path(temp_file.name).unlink(missing_ok=True)
 

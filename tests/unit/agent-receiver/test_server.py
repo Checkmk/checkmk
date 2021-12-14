@@ -179,7 +179,7 @@ def test_agent_data_success(
         files={"monitoring_data": ("filename", mock_file)},
     )
 
-    file_path = tmp_path / "hostname" / "received-output"
+    file_path = tmp_path / "hostname" / "agent_output"
     assert file_path.exists()
 
     assert response.status_code == 204

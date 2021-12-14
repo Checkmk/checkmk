@@ -574,10 +574,10 @@ void ServiceController::Stop() {
 //   will be stopped.
 //
 //   PARAMETERS:
-//   * Argc   - number of command line arguments
-//   * Argv - array of command line arguments
+//   * argc   - number of command line arguments
+//   * argv - array of command line arguments
 //
-void ServiceController::Start(DWORD /*Argc*/, wchar_t** /*Argv*/) {
+void ServiceController::Start(DWORD /*agc*/, wchar_t** /*argv*/) {
     if (!processor_) {
         XLOG::l.crit("Unbelievable, but process_ is nullptr");
         return;

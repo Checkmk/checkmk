@@ -411,24 +411,17 @@ private:
 
 class ServiceController {
 private:
-    // we have to have data global
     static std::mutex s_lock_;
     static ServiceController* s_controller_;  // probably we need her shared
                                               // ptr, but this is clear overkill
-
 public:
-    // normal API, used in production
     ServiceController(std::unique_ptr<wtools::BaseServiceProcessor> Processor);
 
-    // no copy!
     ServiceController(const ServiceController& Rhs) = delete;
     ServiceController& operator=(const ServiceController& Rhs) = delete;
-
-    // TODO: we may change it in the future
     ServiceController(ServiceController&& Rhs) = delete;
     ServiceController& operator=(ServiceController&& Rhs) = delete;
 
-    // Service object destructor.
     ~ServiceController() {
         std::lock_guard lk(s_lock_);
         if (s_controller_ && s_controller_ == this) s_controller_ = nullptr;
@@ -436,8 +429,8 @@ public:
 
     // no return from here till service ends
     enum class StopType { normal, no_connect, fail };
-    StopType registerAndRun(const wchar_t* ServiceName,  //
-                            bool CanStop = true, bool CanShutdown = true,
+    StopType registerAndRun(const wchar_t* ServiceName, bool CanStop = true,
+                            bool CanShutdown = true,
                             bool CanPauseContinue = true);
 
 protected:
@@ -480,9 +473,9 @@ private:
     // Entry point for the service. It registers the handler function for
     // the service and starts the service. NO RETURN FROM HERE when service
     // running.
-    static void WINAPI ServiceMain(DWORD Argc, wchar_t** Argv);
+    static void WINAPI ServiceMain(DWORD argc, wchar_t** argv);
 
-    void Start(DWORD Argc, wchar_t** Argv);
+    void Start(DWORD argc, wchar_t** argv);
     void Stop();
     void Shutdown();
     void Pause();
@@ -522,54 +515,18 @@ private:
     std::unique_ptr<BaseServiceProcessor> processor_;
     const wchar_t* log_name_ = wtools::kWToolsLogName;
 
-    // The name of the service
     std::unique_ptr<wchar_t[]> name_;
     bool can_stop_;
     bool can_shutdown_;
     bool can_pause_continue_;
 
-    // The status of the service
     SERVICE_STATUS status_;
-
-    // The service status handle
     SERVICE_STATUS_HANDLE status_handle_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceControllerTest;
     FRIEND_TEST(ServiceControllerTest, CreateDelete);
     FRIEND_TEST(ServiceControllerTest, StartStop);
 #endif
-
-    std::vector<uint32_t> GetProcessListByParent(uint32_t ParentId) {
-        PROCESSENTRY32 pe32;
-
-        // Take a snapshot of all processes in the system.
-        auto hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (wtools::IsInvalidHandle(hProcessSnap)) {
-            return {};
-        };
-
-        // Set the size of the structure before using it.
-        pe32.dwSize = sizeof(PROCESSENTRY32);
-
-        // Retrieve information about the first process,
-        // and exit if unsuccessful
-        if (!Process32First(hProcessSnap, &pe32)) {
-            CloseHandle(hProcessSnap);  // clean the snapshot object
-            return {};
-        }
-        ON_OUT_OF_SCOPE(CloseHandle(hProcessSnap));
-
-        std::vector<uint32_t> processes;
-        // Now walk the snapshot of processes
-        do {
-            std::wstring str(pe32.szExeFile);
-
-            if (pe32.th32ParentProcessID == ParentId)
-                processes.push_back(pe32.th32ProcessID);
-        } while (Process32Next(hProcessSnap, &pe32));
-
-        return processes;
-    }
 };
 
 // Standard converter, generates no exception in Windows
@@ -641,25 +598,11 @@ namespace perf {
 
 using NameMap = std::unordered_map<unsigned long, std::wstring>;
 
-// Internal description of assorted counter params.
-// Should be valid for all windows versions
-struct CounterParam {
-    const wchar_t* const description_;  // human form
-    const wchar_t* const name_;         // usually number
-    const uint32_t index_;              // the same as name
-    const uint32_t counters_count;
-    const uint32_t instances_min_;
-    const uint32_t instances_max_;
-};
-
 // read MULTI_SZ string from the registry
 enum class PerfCounterReg { national, english };
 std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type);
 std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key);
 NameMap GenerateNameMap();
-
-const CounterParam kCpuCounter = {L"Processor", L"238", 238, 15, 1, 33};
-const CounterParam kDiskCounter = {L"Disk", L"234", 234, 31, 1, 16};
 
 // ************************
 // #TODO probably we need a class wrapper here

@@ -1157,17 +1157,22 @@ class HostAddress(TextInput):
 
     def _validate_value(self, value: str, varprefix: str) -> None:
         if value and self._allow_host_name and self._is_valid_host_name(value):
-            pass
-        elif value and self._allow_ipv4_address and self._is_valid_ipv4_address(value):
-            pass
-        elif value and self._allow_ipv6_address and self._is_valid_ipv6_address(value):
-            pass
-        elif not self._allow_empty:
-            raise MKUserError(
-                varprefix,
-                _("Invalid host address. You need to specify the address " "either as %s.")
-                % ", ".join(self._allowed_type_names()),
-            )
+            return
+
+        if value and self._allow_ipv4_address and self._is_valid_ipv4_address(value):
+            return
+
+        if value and self._allow_ipv6_address and self._is_valid_ipv6_address(value):
+            return
+
+        if value == "" and self._allow_empty:
+            return
+
+        raise MKUserError(
+            varprefix,
+            _("Invalid host address. You need to specify the address either as %s.")
+            % ", ".join(self._allowed_type_names()),
+        )
 
     def _is_valid_host_name(self, hostname: str) -> bool:
         # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344

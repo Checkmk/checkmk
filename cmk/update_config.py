@@ -43,6 +43,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
@@ -232,6 +233,7 @@ class UpdateConfig:
                 self._rewrite_servicenow_notification_config,
                 "Rewriting notification configuration for ServiceNow",
             ),
+            (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1342,6 +1344,30 @@ class UpdateConfig:
             notification_rules[index]["notify_plugin"] = (plugin_name, params)
 
         save_notification_rules(notification_rules)
+
+    def _add_site_ca_to_trusted_cas(self) -> None:
+        site_ca = (
+            site_cas[-1]
+            if (site_cas := raw_certificates_from_file(cmk.utils.paths.site_cert_file))
+            else None
+        )
+
+        if not site_ca:
+            return
+
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True
+        )
+        cert_settings = global_config.setdefault(
+            "trusted_certificate_authorities", {"use_system_wide_cas": False, "trusted_cas": []}
+        )
+        # For remotes with config sync the settings would be overwritten by activate changes. To keep the config
+        # consistent exclude remotes during the update.
+        if is_wato_slave_site() or site_ca in cert_settings["trusted_cas"]:
+            return
+
+        cert_settings["trusted_cas"].append(site_ca)
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
 
 
 class PasswordSanitizer:

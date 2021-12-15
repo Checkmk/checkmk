@@ -133,7 +133,7 @@ title_functions: List[Callable] = []
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     global title_functions
     title_functions = []
     _register_pre_21_plugin_api()

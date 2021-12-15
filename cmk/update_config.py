@@ -49,7 +49,6 @@ from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 
 import cmk.gui.config
 import cmk.gui.groups
-import cmk.gui.modules
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.utils
 import cmk.gui.visuals as visuals
@@ -57,6 +56,7 @@ import cmk.gui.watolib.groups
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
+from cmk.gui import main_modules
 from cmk.gui.bi import BIManager
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
@@ -153,7 +153,7 @@ class UpdateConfig:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
 
-        cmk.gui.modules.load_plugins()
+        main_modules.load_plugins()
 
         with gui_context(), SuperUserContext():
             self._check_failed_gui_plugins()

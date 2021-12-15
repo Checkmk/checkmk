@@ -30,7 +30,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import modules, watolib
+from cmk.gui import main_modules, watolib
 from cmk.gui.globals import config
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
@@ -93,7 +93,7 @@ def load_config(request_context: None) -> Iterator[None]:
 
 @pytest.fixture(scope="session", autouse=True)
 def load_plugins():
-    modules.load_plugins()
+    main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plugin loading: {errors}")
 

@@ -289,7 +289,7 @@ class PermissionSectionDashboard(PermissionSection):
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
 
     # Load plugins for dashboards. Currently these files

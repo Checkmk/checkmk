@@ -12,7 +12,7 @@ import pytest
 
 import cmk.utils.paths
 
-from cmk.gui import modules
+from cmk.gui import main_modules
 
 
 def _plugin_path(main_module_name: str) -> Path:
@@ -53,7 +53,7 @@ def test_load_local_plugin(main_module_name) -> None:
 
     try:
         # Special case: watolib plugin loading is triggered by wato main module
-        modules._call_load_plugins_hooks(
+        main_modules._call_load_plugins_hooks(
             [
                 main_module
                 if main_module_name != "watolib"

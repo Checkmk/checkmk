@@ -72,7 +72,7 @@ Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     utils.load_web_plugins("userdb", globals())
 
 

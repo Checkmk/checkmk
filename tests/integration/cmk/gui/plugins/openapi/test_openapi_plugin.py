@@ -31,8 +31,8 @@ def fixture_test_script(site: Site) -> Iterator[str]:
     site.write_text_file(
         path,
         """
-import cmk.gui.modules
-cmk.gui.modules.load_plugins()
+from cmk.gui import main_modules
+main_modules.load_plugins()
 import cmk.gui.openapi
 print(cmk.gui.openapi.x)
     """,

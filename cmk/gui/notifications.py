@@ -69,7 +69,7 @@ class PermissionSectionNotificationPlugins(PermissionSection):
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     declare_dynamic_permissions(declare_notification_plugin_permissions)
 
 

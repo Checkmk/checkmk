@@ -127,7 +127,7 @@ def _call_load_plugins_hooks(main_modules: List[ModuleType]) -> None:
     for module in main_modules:
         name = module.__name__
 
-        if name == "cmk.gui.modules":
+        if name == "cmk.gui.main_modules":
             continue  # Do not call ourselfs
 
         if not hasattr(module, "load_plugins"):

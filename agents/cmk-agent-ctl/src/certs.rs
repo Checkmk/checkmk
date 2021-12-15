@@ -70,3 +70,11 @@ pub fn parse_pem(cert: &str) -> AnyhowResult<x509_parser::pem::Pem> {
         .context("Input data does not contain a PEM block")?
         .context("PEM data invalid")
 }
+
+pub fn join_common_names(x509_name: &x509_parser::x509::X509Name) -> String {
+    x509_name
+        .iter_common_name()
+        .map(|cn| cn.as_str().unwrap_or("[unknown]"))
+        .collect::<Vec<&str>>()
+        .join(", ")
+}

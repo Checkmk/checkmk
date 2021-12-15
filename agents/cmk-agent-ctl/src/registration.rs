@@ -2,19 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::agent_receiver_api;
-use super::certs;
-use super::config;
+use super::{agent_receiver_api, certs, config};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use uuid::Uuid;
-
-fn join_common_names(x509_name: &x509_parser::x509::X509Name) -> String {
-    x509_name
-        .iter_common_name()
-        .map(|cn| cn.as_str().unwrap_or("[unknown]"))
-        .collect::<Vec<&str>>()
-        .join(", ")
-}
 
 fn display_agent_receiver_cert(server: &str) -> AnyhowResult<()> {
     let pem_str = certs::fetch_server_cert_pem(server)?;
@@ -27,8 +17,8 @@ fn display_agent_receiver_cert(server: &str) -> AnyhowResult<()> {
         server
     );
     println!("PEM-encoded certificate:\n{}", pem_str);
-    println!("Issued by:\n\t{}", join_common_names(x509.issuer()));
-    println!("Issued to:\n\t{}", join_common_names(x509.subject()));
+    println!("Issued by:\n\t{}", certs::join_common_names(x509.issuer()));
+    println!("Issued to:\n\t{}", certs::join_common_names(x509.subject()));
     println!(
         "Validity:\n\tFrom {}\n\tTo   {}",
         validity.not_before.to_rfc2822(),

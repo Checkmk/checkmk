@@ -2632,6 +2632,34 @@ msgstr "TCP経由のアクセス"
 msgid "Access via UNIX socket"
 msgstr "UNIXソケットを介したアクセス"
 
+msgid ""
+"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
+"summary of where the Pod is in its lifecycle. The phase is not intended to "
+"be a comprehensive rollup of observations of container or Pod state, nor is "
+"it intended to be a comprehensive state machine. For the pending pods, the "
+"check keeps track for how long they have been pending. If a tolerating time "
+"period is set, the service goes WARN/CRIT after any of the pods has been "
+"pending for longer than the set duration. If there is at least one unknown "
+"pod, the service goes UNKNOWN by default. The state the service goes can be "
+"configured. This rule affects any Pod Resources service, except for those on "
+"the Nodes and the Clusters. The configuration for Clusters and Nodes can be "
+"done via the rule Kubernetes Pod Resources: Clusters, Nodes."
+msgstr ""
+
+msgid ""
+"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
+"summary of where the Pod is in its lifecycle. The phase is not intended to "
+"be a comprehensive rollup of observations of container or Pod state, nor is "
+"it intended to be a comprehensive state machine. For the pending pods, the "
+"check keeps track for how long they have been pending. If a tolerating time "
+"period is set, the service goes WARN/CRIT after any of the pods has been "
+"pending for longer than the set duration. If there is at least one unknown "
+"pod, the service goes UNKNOWN by default. The state the service goes can be "
+"configured. This rule affects the PodResources services of Kubernetes Nodes "
+"and Kubernetes Clusters. The configuration of other Pod Resources services "
+"can be done via the rule Kubernetes Pod Resources: Deployments."
+msgstr ""
+
 msgid "Ack"
 msgstr "確認"
 
@@ -4473,6 +4501,10 @@ msgstr "ポート制限を超えるリクエストを割り当てる"
 
 msgid "Allocated for document storage"
 msgstr "ドキュメントストレージに割り当てられます"
+
+#, fuzzy
+msgid "Allocated pod resources"
+msgstr "割り当てられたストレージ"
 
 msgid "Allocated space"
 msgstr "割り当てられたスペース"
@@ -6759,16 +6791,6 @@ msgid ""
 "on your target system."
 msgstr ""
 
-#, fuzzy
-msgid ""
-"By activating this option you will deploy the agent plugin <tt>mk_oracle</"
-"tt> on your target system. Currently not all options are available in all "
-"operating systems."
-msgstr ""
-"このオプションをアクティブにすると、エージェントプラグイン<tt>mk_oracle</tt>"
-"がターゲットシステムにデプロイされます。現在、Linuxのみがサポートされています"
-"が、AIXとWindowsがそれに続きます。"
-
 msgid ""
 "By activating this options you can set levels on the total CPU utilization "
 "of all included processes."
@@ -6973,14 +6995,6 @@ msgstr ""
 "デフォルトでは、スナップショット サマリー サービスはvCenterに表示されます。"
 "ESXホストを単独で実行するユーザー、または監視にvCenterを含めないユーザーは、"
 "ESXホスト自体にスナップショットの概要を表示することを選択できます。"
-
-#, fuzzy
-msgid "By default the standard HTTPS Port 443 is used."
-msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
-
-#, fuzzy
-msgid "By default the standard HTTPS/TLS Port 443 is used."
-msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
 
 msgid "By default the standard IMAP Port 143 is used."
 msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
@@ -8063,7 +8077,7 @@ msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr "チェック HTTP:SSL/TLS接続にHTTPの代わりにHTTPSを使用する"
 
 #, fuzzy
-msgid "Check IMAP/EWS Mailboxes"
+msgid "Check IMAP Mailboxes"
 msgstr "IMAPメールボックスを確認する"
 
 msgid "Check Item"
@@ -11039,6 +11053,10 @@ msgstr "最後のセルフテストからの時間のクリティカルレベル
 msgid "Critical above"
 msgstr "上記のクリティカル"
 
+#, fuzzy
+msgid "Critical after"
+msgstr "後にクリティカル "
+
 msgid "Critical after "
 msgstr "後にクリティカル "
 
@@ -12386,6 +12404,10 @@ msgstr ""
 "MTreeの可能な状態から監視状態、つまりチェックの結果への変換を定義します。これ"
 "により、チェックで使用されるデフォルトのマッピングが上書きされます。"
 
+#, fuzzy
+msgid "Define levels for pending pods"
+msgstr "保留中のタスクの上位レベル"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr ""
@@ -12864,6 +12886,10 @@ msgstr "MegaRAIDプラグインをデプロイする"
 msgid "Deploy NFS4 exports plugin"
 msgstr "NFS4エクスポートプラグインをデプロイする"
 
+#, fuzzy
+msgid "Deploy ORACLE databases plugin"
+msgstr "ORACLEデータベースプラグインをデプロイします"
+
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitorのデプロイ(ヘッドレス)"
 
@@ -13017,9 +13043,6 @@ msgstr "Jolokiaプラグインをデプロイします"
 
 msgid "Deploy the MySQL plugin"
 msgstr "MySQLプラグインをデプロイします"
-
-msgid "Deploy the ORACLE Database plugin"
-msgstr "ORACLEデータベースプラグインをデプロイします"
 
 msgid "Deploy the PostgreSQL plugin"
 msgstr "PostgreSQLプラグインをデプロイします"
@@ -14100,6 +14123,10 @@ msgstr "Mailmanプラグインをデプロイしないでください"
 msgid "Do not deploy NFS4 exports plugin"
 msgstr "NFS4エクスポートプラグインをデプロイしないでください"
 
+#, fuzzy
+msgid "Do not deploy ORACLE databases plugin"
+msgstr "ORACLEデータベースプラグインをデプロイします"
+
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (headless)をデプロイしないでください"
 
@@ -14249,9 +14276,6 @@ msgstr "MySQLプラグインをデプロイしないでください"
 
 msgid "Do not deploy the NGINX Status plugin"
 msgstr "NGINXステータスプラグインをデプロイしないでください"
-
-msgid "Do not deploy the ORACLE plugin"
-msgstr "ORACLEプラグインをデプロイしないでください"
 
 msgid "Do not deploy the PostgreSQL plugin"
 msgstr "PostgreSQLプラグインをデプロイしないでください"
@@ -15122,13 +15146,6 @@ msgstr "ESXホストと仮想マシンの状態"
 msgid "ESX hosts: distribution of virtual machines"
 msgstr "ESXホスト:仮想マシンの配布"
 
-msgid "EWS"
-msgstr ""
-
-#, fuzzy
-msgid "EWS Server"
-msgstr "DNSサーバー"
-
 msgid "EXITED"
 msgstr "EXITED"
 
@@ -15995,10 +16012,6 @@ msgstr "エンクロージャー統計"
 
 msgid "Enclosures"
 msgstr "エンクロージャー"
-
-#, fuzzy
-msgid "Encrypt HTTP communication using SSL/TLS"
-msgstr "TLSを使用してSMTP通信を暗号化する"
 
 msgid "Encrypt IMAP communication using SSL"
 msgstr "SSLを使用してIMAP通信を暗号化する"
@@ -17174,6 +17187,10 @@ msgstr "グラフレシピの計算に失敗しました"
 msgid "Failed to compile your module: %s"
 msgstr "モジュールのコンパイルに失敗しました: %s"
 
+#, fuzzy
+msgid "Failed to compute hostname"
+msgstr "モジュールのコンパイルに失敗しました: %s"
+
 #, python-format
 msgid ""
 "Failed to contact ntop server '%s' with user '%s'. Please check your ntop "
@@ -17231,9 +17248,6 @@ msgstr "%s の抽出に失敗しました"
 #, python-format
 msgid "Failed to fetch peer certificate (%s)"
 msgstr "ピア証明書のフェッチに失敗しました(%s)"
-
-msgid "Failed to fetch the certificate chain"
-msgstr "証明書チェーンのフェッチに失敗しました"
 
 msgid "Failed to find matching certificate in chain"
 msgstr ""
@@ -17982,6 +17996,10 @@ msgid ""
 "Folder attributes are locked (You cannot edit the attributes of this folder)"
 msgstr "フォルダの属性はロックされています(このフォルダの属性は編集できません)"
 
+#, fuzzy
+msgid "Folder does not exist"
+msgstr "フォルダ %sは存在しません"
+
 #, fuzzy, python-format
 msgid "Folder level %d"
 msgstr "WATOフォルダレベル %d"
@@ -18494,6 +18512,10 @@ msgstr "分数"
 
 msgid "Frames"
 msgstr "フレーム"
+
+#, fuzzy
+msgid "Free"
+msgstr "空きRAM"
 
 msgid "Free DHCP leases"
 msgstr "フリーDHCPース"
@@ -20733,6 +20755,10 @@ msgstr "ホストのプロパティ"
 msgid "Host properties of: %s"
 msgstr "ホストプロパティ: %s"
 
+#, fuzzy
+msgid "Host registration"
+msgstr "エージェントバージョン"
+
 msgid "Host renaming"
 msgstr "ホストの名前変更"
 
@@ -20916,6 +20942,10 @@ msgstr "連絡したホスト(クライアントとして)"
 msgid "Hosts Contacts (as Server)"
 msgstr "連絡先をホストします(サーバーとして)"
 
+#, fuzzy
+msgid "Hosts already exist"
+msgstr "ホスト %s はすでにフォルダ %s に存在します"
+
 msgid "Hosts and Folders"
 msgstr "ホストとフォルダー"
 
@@ -20992,6 +21022,10 @@ msgstr "ホスト名/IPアドレス"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Inline-SNMPを使用しないホスト"
+
+#, fuzzy
+msgid "Hosts successfully created"
+msgstr "検索インデックスが正常に更新されました"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "過去24時間に私たちに連絡したホスト"
@@ -22864,6 +22898,10 @@ msgstr ""
 msgid "Imported %d hosts into the current folder."
 msgstr "%d ホストを現在のフォルダーにインポートしました。"
 
+#, fuzzy
+msgid "Impose levels"
+msgstr "レベルを無視する"
+
 msgid "Impose levels on number of processes"
 msgstr "プロセス数にレベルを課す"
 
@@ -23657,7 +23695,7 @@ msgid ""
 "Install only packages from trusted sources. Packages can potentially harm "
 "your Checkmk installation. It is recommended to use only packages from "
 "trusted sources.<br>Visit the <a href=\"https://exchange.checkmk.com/"
-"\">Checkmk Exchange<a>  for packages reviewed by Tribe 29."
+"\">Checkmk Exchange<a>  for packages reviewed by tribe29."
 msgstr ""
 
 msgid "Install this package"
@@ -24748,6 +24786,14 @@ msgstr "Kubernetes名前空間Podのメモリ使用量"
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetesネットワークインターフェース"
 
+#, fuzzy
+msgid "Kubernetes Pod Resources: Clusters, Nodes"
+msgstr "Kubernetesリソース"
+
+#, fuzzy
+msgid "Kubernetes Pod Resources: Deployments"
+msgstr "Kubernetesリソース"
+
 msgid "Kubernetes Port"
 msgstr "Kubernetesポート"
 
@@ -25092,6 +25138,10 @@ msgid ""
 msgstr ""
 "従来のASCIIメールはバルキングをサポートしていません。通知のバルキングを無効に"
 "するか、バルキングを許可する別の通知プラグインを選択できます。"
+
+#, fuzzy
+msgid "Legacy GUI extensions"
+msgstr "GUI拡張機能"
 
 msgid "Legacy SNMP devices using SNMP v2c"
 msgstr "SNMPv2cを使用するレガシーSNMPデバイス"
@@ -26308,6 +26358,11 @@ msgstr "ログルールのヒット"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "過去60分間のログスイッチ"
+
+msgid ""
+"Log the agent registration process of incoming requests by the Checkmk agent "
+"controller registration command."
+msgstr ""
 
 msgid "Log: State information"
 msgstr "ログ:状態情報"
@@ -29860,6 +29915,9 @@ msgstr "実際のSLA計算はありません"
 msgid "No agent labels present."
 msgstr ""
 
+msgid "No agent registration requests processed."
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr "認証なし、プライバシーなし"
 
@@ -30063,6 +30121,10 @@ msgstr "役割は割り当てられていません。"
 
 msgid "No rows selected to perform actions for."
 msgstr "アクションを実行するために選択された行はありません。"
+
+#, fuzzy
+msgid "No rule match"
+msgstr "このルールは一致します"
 
 msgid "No rules found."
 msgstr "ルールが見つかりません。"
@@ -31364,10 +31426,6 @@ msgstr "ORACLE %s 待ち時間クラス(FG)"
 msgid "ORACLE DB time statistics"
 msgstr "ORACLE DBの時間統計"
 
-#, fuzzy
-msgid "ORACLE Databases (Linux, Solaris, AIX, Windows)"
-msgstr "ORACLEデータベース(Linux、Solaris、AIX)"
-
 msgid "ORACLE IOSTAT Bytes"
 msgstr "ORACLEIOSTATバイト"
 
@@ -31427,6 +31485,10 @@ msgstr "ORACLE待機クラス(FG行は欠点です)"
 
 msgid "ORACLE buffer pool statistics"
 msgstr "ORACLEバッファプールの統計"
+
+#, fuzzy
+msgid "ORACLE databases (Linux, Solaris, AIX, Windows)"
+msgstr "ORACLEデータベース(Linux、Solaris、AIX)"
 
 msgid "ORACLE hit ratio"
 msgstr "ORACLEヒット率"
@@ -37416,6 +37478,10 @@ msgstr "Safenet NTLS リンク"
 msgid "Salesforce"
 msgstr "Salesforce"
 
+#, fuzzy
+msgid "Same hostname"
+msgstr "ホスト名を使用する"
+
 msgid "Same times for all weekdays"
 msgstr "平日は同じ時間"
 
@@ -37887,6 +37953,10 @@ msgstr "ユーザー%sを参照してください"
 
 msgid "Select Datasource"
 msgstr "データソースを選択"
+
+msgid ""
+"Select a time period over which the alerts or notifications are added up"
+msgstr ""
 
 msgid "Select a timeperiod"
 msgstr "期間を選択してください"
@@ -38813,6 +38883,10 @@ msgstr ""
 "ここでサービス名または正規表現パターンを設定して、一致する消失したサービスを"
 "自動的に削除します。これと'一致する消失したサービスを削除しない'の両方を設定"
 "した場合、削除するサービスには両方のルールを適用する必要があります。"
+
+#, fuzzy
+msgid "Set state for unknown pods"
+msgstr "サイトの状態は不明です"
 
 msgid "Set state to"
 msgstr "状態をに設定します"
@@ -42565,10 +42639,6 @@ msgstr "リスナーのTCPポート"
 msgid "TIME_WAIT"
 msgstr "TIME_WAIT"
 
-#, fuzzy
-msgid "TLS/SSL Encryption"
-msgstr "SSL暗号化"
-
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Httpsが無効になっています"
 
@@ -42913,6 +42983,10 @@ msgstr "テナントID / ディレクトリID"
 #, fuzzy
 msgid "Terminated node containers"
 msgstr "Dockerノードとコンテナー"
+
+#, fuzzy
+msgid "Terminated pod resources"
+msgstr "Kubernetesリソース"
 
 msgid "Terse"
 msgstr "簡潔"
@@ -50359,6 +50433,15 @@ msgstr ""
 "これにより、エージェントプラグイン<tt> mk_nfsiostat </tt>がデプロイされ、さま"
 "ざまなクライアント側のNFSIO統計がチェックされます。"
 
+#, fuzzy
+msgid ""
+"This will deploy the agent plugin <tt>mk_oracle</tt> on your target system. "
+"Currently not all options are available in all operating systems."
+msgstr ""
+"このオプションをアクティブにすると、エージェントプラグイン<tt>mk_oracle</tt>"
+"がターゲットシステムにデプロイされます。現在、Linuxのみがサポートされています"
+"が、AIXとWindowsがそれに続きます。"
+
 msgid ""
 "This will deploy the agent plugin <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
@@ -54794,6 +54877,10 @@ msgstr "最後のセルフテストからの時間の警告レベル"
 
 msgid "Warning above"
 msgstr "上記の警告"
+
+#, fuzzy
+msgid "Warning after"
+msgstr "後の警告 "
 
 msgid "Warning after "
 msgstr "後の警告 "
@@ -60072,6 +60159,37 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "By default the standard IMAP Port 143 is used."
+#~ msgid "By default the standard HTTPS Port 443 is used."
+#~ msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
+
+#, fuzzy
+#~| msgid "By default the standard IMAP Port 143 is used."
+#~ msgid "By default the standard HTTPS/TLS Port 443 is used."
+#~ msgstr "デフォルトでは、標準のIMAPポート143が使用されます。"
+
+#~ msgid "Do not deploy the ORACLE plugin"
+#~ msgstr "ORACLEプラグインをデプロイしないでください"
+
+#, fuzzy
+#~| msgid "DNS Server"
+#~ msgid "EWS Server"
+#~ msgstr "DNSサーバー"
+
+#, fuzzy
+#~| msgid "Encrypt SMTP communication using TLS"
+#~ msgid "Encrypt HTTP communication using SSL/TLS"
+#~ msgstr "TLSを使用してSMTP通信を暗号化する"
+
+#~ msgid "Failed to fetch the certificate chain"
+#~ msgstr "証明書チェーンのフェッチに失敗しました"
+
+#, fuzzy
+#~| msgid "SSL Encryption"
+#~ msgid "TLS/SSL Encryption"
+#~ msgstr "SSL暗号化"
 
 #, python-format
 #~ msgid "Welcome to Checkmk %s"

@@ -2427,6 +2427,34 @@ msgstr "Acces prin TCP"
 msgid "Access via UNIX socket"
 msgstr "Acces prin socket UNIX"
 
+msgid ""
+"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
+"summary of where the Pod is in its lifecycle. The phase is not intended to "
+"be a comprehensive rollup of observations of container or Pod state, nor is "
+"it intended to be a comprehensive state machine. For the pending pods, the "
+"check keeps track for how long they have been pending. If a tolerating time "
+"period is set, the service goes WARN/CRIT after any of the pods has been "
+"pending for longer than the set duration. If there is at least one unknown "
+"pod, the service goes UNKNOWN by default. The state the service goes can be "
+"configured. This rule affects any Pod Resources service, except for those on "
+"the Nodes and the Clusters. The configuration for Clusters and Nodes can be "
+"done via the rule Kubernetes Pod Resources: Clusters, Nodes."
+msgstr ""
+
+msgid ""
+"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
+"summary of where the Pod is in its lifecycle. The phase is not intended to "
+"be a comprehensive rollup of observations of container or Pod state, nor is "
+"it intended to be a comprehensive state machine. For the pending pods, the "
+"check keeps track for how long they have been pending. If a tolerating time "
+"period is set, the service goes WARN/CRIT after any of the pods has been "
+"pending for longer than the set duration. If there is at least one unknown "
+"pod, the service goes UNKNOWN by default. The state the service goes can be "
+"configured. This rule affects the PodResources services of Kubernetes Nodes "
+"and Kubernetes Clusters. The configuration of other Pod Resources services "
+"can be done via the rule Kubernetes Pod Resources: Deployments."
+msgstr ""
+
 msgid "Ack"
 msgstr ""
 
@@ -4387,6 +4415,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Allocated for document storage"
+msgstr "spatiu utilizat"
+
+#, fuzzy
+msgid "Allocated pod resources"
 msgstr "spatiu utilizat"
 
 #, fuzzy
@@ -6684,12 +6716,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"By activating this option you will deploy the agent plugin <tt>mk_oracle</"
-"tt> on your target system. Currently not all options are available in all "
-"operating systems."
-msgstr ""
-
-msgid ""
 "By activating this options you can set levels on the total CPU utilization "
 "of all included processes."
 msgstr ""
@@ -6827,12 +6853,6 @@ msgid ""
 "By default the snapshot summary service is displayed on the vCenter. Users "
 "who run an ESX host on its own or do not include their vCenter in the "
 "monitoring can choose to display the snapshot summary on the ESX host itself."
-msgstr ""
-
-msgid "By default the standard HTTPS Port 443 is used."
-msgstr ""
-
-msgid "By default the standard HTTPS/TLS Port 443 is used."
 msgstr ""
 
 msgid "By default the standard IMAP Port 143 is used."
@@ -7867,7 +7887,7 @@ msgstr ""
 msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr ""
 
-msgid "Check IMAP/EWS Mailboxes"
+msgid "Check IMAP Mailboxes"
 msgstr ""
 
 msgid "Check Item"
@@ -10847,6 +10867,10 @@ msgstr ""
 msgid "Critical above"
 msgstr ""
 
+#, fuzzy
+msgid "Critical after"
+msgstr "Vechimea maxima"
+
 msgid "Critical after "
 msgstr ""
 
@@ -12259,6 +12283,10 @@ msgid ""
 "used by the check."
 msgstr ""
 
+#, fuzzy
+msgid "Define levels for pending pods"
+msgstr "Nivelurile maxime pentru voltaj"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr ""
@@ -12744,6 +12772,9 @@ msgstr ""
 msgid "Deploy NFS4 exports plugin"
 msgstr ""
 
+msgid "Deploy ORACLE databases plugin"
+msgstr ""
+
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr ""
 
@@ -12898,9 +12929,6 @@ msgid "Deploy the Jolokia plugin"
 msgstr ""
 
 msgid "Deploy the MySQL plugin"
-msgstr ""
-
-msgid "Deploy the ORACLE Database plugin"
 msgstr ""
 
 msgid "Deploy the PostgreSQL plugin"
@@ -14032,6 +14060,10 @@ msgstr ""
 msgid "Do not deploy NFS4 exports plugin"
 msgstr ""
 
+#, fuzzy
+msgid "Do not deploy ORACLE databases plugin"
+msgstr "Numele elementului pentru eveniment"
+
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr ""
 
@@ -14180,9 +14212,6 @@ msgid "Do not deploy the MySQL plugin"
 msgstr ""
 
 msgid "Do not deploy the NGINX Status plugin"
-msgstr ""
-
-msgid "Do not deploy the ORACLE plugin"
 msgstr ""
 
 msgid "Do not deploy the PostgreSQL plugin"
@@ -15065,13 +15094,6 @@ msgstr ""
 msgid "ESX hosts: distribution of virtual machines"
 msgstr ""
 
-msgid "EWS"
-msgstr ""
-
-#, fuzzy
-msgid "EWS Server"
-msgstr "Nume utilizator vSphere"
-
 msgid "EXITED"
 msgstr ""
 
@@ -15926,9 +15948,6 @@ msgid "Enclosure Stats"
 msgstr ""
 
 msgid "Enclosures"
-msgstr ""
-
-msgid "Encrypt HTTP communication using SSL/TLS"
 msgstr ""
 
 msgid "Encrypt IMAP communication using SSL"
@@ -17167,6 +17186,10 @@ msgstr ""
 msgid "Failed to compile your module: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Failed to compute hostname"
+msgstr " pe siteul de monitorizare: "
+
 #, python-format
 msgid ""
 "Failed to contact ntop server '%s' with user '%s'. Please check your ntop "
@@ -17219,9 +17242,6 @@ msgstr ""
 
 #, python-format
 msgid "Failed to fetch peer certificate (%s)"
-msgstr ""
-
-msgid "Failed to fetch the certificate chain"
 msgstr ""
 
 msgid "Failed to find matching certificate in chain"
@@ -17995,6 +18015,10 @@ msgid ""
 "Folder attributes are locked (You cannot edit the attributes of this folder)"
 msgstr ""
 
+#, fuzzy
+msgid "Folder does not exist"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 #, fuzzy, python-format
 msgid "Folder level %d"
 msgstr "trei nivele"
@@ -18456,6 +18480,9 @@ msgid "Fraction"
 msgstr "Acțiune"
 
 msgid "Frames"
+msgstr ""
+
+msgid "Free"
 msgstr ""
 
 msgid "Free DHCP leases"
@@ -20593,6 +20620,10 @@ msgid "Host properties of: %s"
 msgstr ""
 
 #, fuzzy
+msgid "Host registration"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Host renaming"
 msgstr "Numele Elementului"
 
@@ -20781,6 +20812,10 @@ msgid "Hosts Contacts (as Server)"
 msgstr ""
 
 #, fuzzy
+msgid "Hosts already exist"
+msgstr "Un director cu acest nume deja există."
+
+#, fuzzy
 msgid "Hosts and Folders"
 msgstr "Adresă"
 
@@ -20844,6 +20879,10 @@ msgstr ""
 
 msgid "Hosts not using Inline-SNMP"
 msgstr ""
+
+#, fuzzy
+msgid "Hosts successfully created"
+msgstr "Portul TCP pentru conexiune"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr ""
@@ -22375,6 +22414,10 @@ msgstr ""
 msgid "Imported %d hosts into the current folder."
 msgstr ""
 
+#, fuzzy
+msgid "Impose levels"
+msgstr "trei nivele"
+
 msgid "Impose levels on number of processes"
 msgstr ""
 
@@ -23060,7 +23103,7 @@ msgid ""
 "Install only packages from trusted sources. Packages can potentially harm "
 "your Checkmk installation. It is recommended to use only packages from "
 "trusted sources.<br>Visit the <a href=\"https://exchange.checkmk.com/"
-"\">Checkmk Exchange<a>  for packages reviewed by Tribe 29."
+"\">Checkmk Exchange<a>  for packages reviewed by tribe29."
 msgstr ""
 
 #, fuzzy
@@ -24168,6 +24211,13 @@ msgstr ""
 msgid "Kubernetes Network interfaces"
 msgstr ""
 
+msgid "Kubernetes Pod Resources: Clusters, Nodes"
+msgstr ""
+
+#, fuzzy
+msgid "Kubernetes Pod Resources: Deployments"
+msgstr "Adresă"
+
 msgid "Kubernetes Port"
 msgstr ""
 
@@ -24526,6 +24576,10 @@ msgid ""
 "notification bulking or choose another notification plugin which allows "
 "bulking."
 msgstr ""
+
+#, fuzzy
+msgid "Legacy GUI extensions"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Legacy SNMP devices using SNMP v2c"
 msgstr ""
@@ -25829,6 +25883,11 @@ msgid "Log rule hits"
 msgstr ""
 
 msgid "Log switches in the last 60 minutes"
+msgstr ""
+
+msgid ""
+"Log the agent registration process of incoming requests by the Checkmk agent "
+"controller registration command."
 msgstr ""
 
 #, fuzzy
@@ -29625,6 +29684,9 @@ msgstr ""
 msgid "No agent labels present."
 msgstr ""
 
+msgid "No agent registration requests processed."
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr ""
 
@@ -29832,6 +29894,10 @@ msgstr ""
 
 msgid "No rows selected to perform actions for."
 msgstr ""
+
+#, fuzzy
+msgid "No rule match"
+msgstr " pe siteul de monitorizare: "
 
 msgid "No rules found."
 msgstr ""
@@ -31168,9 +31234,6 @@ msgstr ""
 msgid "ORACLE DB time statistics"
 msgstr ""
 
-msgid "ORACLE Databases (Linux, Solaris, AIX, Windows)"
-msgstr ""
-
 msgid "ORACLE IOSTAT Bytes"
 msgstr ""
 
@@ -31231,6 +31294,9 @@ msgid "ORACLE Wait Class (FG lines are downside)"
 msgstr ""
 
 msgid "ORACLE buffer pool statistics"
+msgstr ""
+
+msgid "ORACLE databases (Linux, Solaris, AIX, Windows)"
 msgstr ""
 
 #, fuzzy
@@ -37335,6 +37401,10 @@ msgstr ""
 msgid "Salesforce"
 msgstr " (aplicare forțată)"
 
+#, fuzzy
+msgid "Same hostname"
+msgstr "foloseste numele portului"
+
 msgid "Same times for all weekdays"
 msgstr ""
 
@@ -37824,6 +37894,10 @@ msgid "See user %s"
 msgstr ""
 
 msgid "Select Datasource"
+msgstr ""
+
+msgid ""
+"Select a time period over which the alerts or notifications are added up"
 msgstr ""
 
 #, fuzzy
@@ -38812,6 +38886,9 @@ msgid ""
 "vanished services automatically. If you set both this and 'Don't remove "
 "matching vanished services', both rules have to apply for a service to be "
 "removed."
+msgstr ""
+
+msgid "Set state for unknown pods"
 msgstr ""
 
 msgid "Set state to"
@@ -42525,10 +42602,6 @@ msgid "TIME_WAIT"
 msgstr ""
 
 #, fuzzy
-msgid "TLS/SSL Encryption"
-msgstr "Acțiune"
-
-#, fuzzy
 msgid "TLS/SSL/Https disabled"
 msgstr "Notificari"
 
@@ -42876,6 +42949,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Terminated node containers"
+msgstr "doua nivele"
+
+#, fuzzy
+msgid "Terminated pod resources"
 msgstr "doua nivele"
 
 msgid "Terse"
@@ -48959,6 +49036,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This will deploy the agent plugin <tt>mk_oracle</tt> on your target system. "
+"Currently not all options are available in all operating systems."
+msgstr ""
+
+msgid ""
 "This will deploy the agent plugin <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
 msgstr ""
@@ -53471,6 +53553,10 @@ msgstr ""
 
 msgid "Warning above"
 msgstr ""
+
+#, fuzzy
+msgid "Warning after"
+msgstr "pornit"
 
 msgid "Warning after "
 msgstr ""
@@ -58270,6 +58356,14 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
+#, fuzzy
+#~ msgid "EWS Server"
+#~ msgstr "Nume utilizator vSphere"
+
+#, fuzzy
+#~ msgid "TLS/SSL Encryption"
+#~ msgstr "Acțiune"
+
 #~ msgid "25 Hours"
 #~ msgstr "25 de ore"
 
@@ -61604,10 +61698,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "<li>No successful synchronization so far.</li>"
 #~ msgstr "<li>Nici o sincronizare de succes până acum.</li"
-
-#, fuzzy
-#~ msgid "A host with this name already exists."
-#~ msgstr "Un director cu acest nume deja există."
 
 #, fuzzy
 #~ msgid "Absolute free pagefile"

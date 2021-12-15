@@ -2784,6 +2784,34 @@ msgstr "Accès via TCP"
 msgid "Access via UNIX socket"
 msgstr "Accès par socket UNIX"
 
+msgid ""
+"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
+"summary of where the Pod is in its lifecycle. The phase is not intended to "
+"be a comprehensive rollup of observations of container or Pod state, nor is "
+"it intended to be a comprehensive state machine. For the pending pods, the "
+"check keeps track for how long they have been pending. If a tolerating time "
+"period is set, the service goes WARN/CRIT after any of the pods has been "
+"pending for longer than the set duration. If there is at least one unknown "
+"pod, the service goes UNKNOWN by default. The state the service goes can be "
+"configured. This rule affects any Pod Resources service, except for those on "
+"the Nodes and the Clusters. The configuration for Clusters and Nodes can be "
+"done via the rule Kubernetes Pod Resources: Clusters, Nodes."
+msgstr ""
+
+msgid ""
+"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
+"summary of where the Pod is in its lifecycle. The phase is not intended to "
+"be a comprehensive rollup of observations of container or Pod state, nor is "
+"it intended to be a comprehensive state machine. For the pending pods, the "
+"check keeps track for how long they have been pending. If a tolerating time "
+"period is set, the service goes WARN/CRIT after any of the pods has been "
+"pending for longer than the set duration. If there is at least one unknown "
+"pod, the service goes UNKNOWN by default. The state the service goes can be "
+"configured. This rule affects the PodResources services of Kubernetes Nodes "
+"and Kubernetes Clusters. The configuration of other Pod Resources services "
+"can be done via the rule Kubernetes Pod Resources: Deployments."
+msgstr ""
+
 msgid "Ack"
 msgstr "Ack"
 
@@ -4691,6 +4719,10 @@ msgstr "Allouer les demandes dépassant la limite du port"
 
 msgid "Allocated for document storage"
 msgstr "Alloué pour le stockage des documents"
+
+#, fuzzy
+msgid "Allocated pod resources"
+msgstr "Stockage alloué"
 
 msgid "Allocated space"
 msgstr "Espace alloué"
@@ -7074,16 +7106,6 @@ msgstr ""
 "En activant cette option, vous allez déployer le plugin agent <tt>mk_db2</"
 "tt> sur votre système cible."
 
-#, fuzzy
-msgid ""
-"By activating this option you will deploy the agent plugin <tt>mk_oracle</"
-"tt> on your target system. Currently not all options are available in all "
-"operating systems."
-msgstr ""
-"En activant cette option, vous allez déployer le plugin agent <tt>mk_oracle</"
-"tt> sur votre système cible. Actuellement, seul Linux est supporté, mais AIX "
-"et Windows suivront."
-
 msgid ""
 "By activating this options you can set levels on the total CPU utilization "
 "of all included processes."
@@ -7307,14 +7329,6 @@ msgstr ""
 "Les utilisateurs qui exploitent un hôte ESX de manière autonome ou qui "
 "n'incluent pas leur vCenter dans la surveillance peuvent choisir d'afficher "
 "le résumé des instantanés sur l'hôte ESX lui-même."
-
-#, fuzzy
-msgid "By default the standard HTTPS Port 443 is used."
-msgstr "Par défaut, le port standard IMAP 143 est utilisé."
-
-#, fuzzy
-msgid "By default the standard HTTPS/TLS Port 443 is used."
-msgstr "Par défaut, le port standard IMAP 143 est utilisé."
 
 msgid "By default the standard IMAP Port 143 is used."
 msgstr "Par défaut, le port standard IMAP 143 est utilisé."
@@ -8486,7 +8500,7 @@ msgstr ""
 "Vérifier HTTP : utiliser HTTPS au lieu de HTTP pour les connexions SSL/TLS."
 
 #, fuzzy
-msgid "Check IMAP/EWS Mailboxes"
+msgid "Check IMAP Mailboxes"
 msgstr "Vérifier les boîtes aux lettres IMAP"
 
 msgid "Check Item"
@@ -11632,6 +11646,10 @@ msgstr "Niveau critique pour le temps écoulé depuis le dernier autotest"
 msgid "Critical above"
 msgstr "Critique ci-dessus"
 
+#, fuzzy
+msgid "Critical after"
+msgstr "Critique après "
+
 msgid "Critical after "
 msgstr "Critique après "
 
@@ -13002,6 +13020,10 @@ msgstr ""
 "surveillance, c'est-à-dire en résultat de la vérification. Ceci écrase le "
 "mappage par défaut utilisé par le contrôle."
 
+#, fuzzy
+msgid "Define levels for pending pods"
+msgstr "Niveau supérieur pour les tâches en attente"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "Définir des niveaux sur le taux de détection de %s."
@@ -13499,6 +13521,10 @@ msgstr "Déployer le plugin MegaRAID"
 msgid "Deploy NFS4 exports plugin"
 msgstr "Déployer le plugin d'exportation NFS4"
 
+#, fuzzy
+msgid "Deploy ORACLE databases plugin"
+msgstr "Déployer le plugin ORACLE Database"
+
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "Déployer OpenHardwareMonitor (headless)"
 
@@ -13659,9 +13685,6 @@ msgstr "Déployer le plugin Jolokia"
 
 msgid "Deploy the MySQL plugin"
 msgstr "Déployer le plugin MySQL"
-
-msgid "Deploy the ORACLE Database plugin"
-msgstr "Déployer le plugin ORACLE Database"
 
 msgid "Deploy the PostgreSQL plugin"
 msgstr "Déployer le plugin PostgreSQL"
@@ -14790,6 +14813,10 @@ msgstr "Ne pas déployer le plugin Mailman"
 msgid "Do not deploy NFS4 exports plugin"
 msgstr "Ne pas déployer le plugin d'exportation NFS4"
 
+#, fuzzy
+msgid "Do not deploy ORACLE databases plugin"
+msgstr "Déployer le plugin ORACLE Database"
+
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "Ne pas déployer OpenHardwareMonitor (headless)"
 
@@ -14940,9 +14967,6 @@ msgstr "Ne pas déployer le plugin MySQL"
 
 msgid "Do not deploy the NGINX Status plugin"
 msgstr "Ne pas déployer le plugin NGINX Status"
-
-msgid "Do not deploy the ORACLE plugin"
-msgstr "Ne pas déployer le plugin ORACLE"
 
 msgid "Do not deploy the PostgreSQL plugin"
 msgstr "Ne pas déployer le plugin PostgreSQL"
@@ -15841,14 +15865,6 @@ msgstr "États de l'hôte ESX et de la machine virtuelle"
 msgid "ESX hosts: distribution of virtual machines"
 msgstr "Hôtes ESX : distribution des machines virtuelles"
 
-#, fuzzy
-msgid "EWS"
-msgstr "AES"
-
-#, fuzzy
-msgid "EWS Server"
-msgstr "Serveur DNS"
-
 msgid "EXITED"
 msgstr "EXITED"
 
@@ -16740,10 +16756,6 @@ msgstr "Statistiques sur les boîtiers"
 
 msgid "Enclosures"
 msgstr "Enceintes"
-
-#, fuzzy
-msgid "Encrypt HTTP communication using SSL/TLS"
-msgstr "Crypter la communication SMTP en utilisant TLS"
 
 msgid "Encrypt IMAP communication using SSL"
 msgstr "Crypter la communication IMAP en utilisant SSL"
@@ -17945,6 +17957,10 @@ msgstr "Échec du calcul d'une recette graphique."
 msgid "Failed to compile your module: %s"
 msgstr "La compilation de votre module a échoué : %s"
 
+#, fuzzy
+msgid "Failed to compute hostname"
+msgstr "Échec de la compilation de votre module."
+
 #, python-format
 msgid ""
 "Failed to contact ntop server '%s' with user '%s'. Please check your ntop "
@@ -18005,9 +18021,6 @@ msgstr "Échec de l'extraction de %s"
 #, python-format
 msgid "Failed to fetch peer certificate (%s)"
 msgstr "Échec de la récupération du certificat du pair (%s)"
-
-msgid "Failed to fetch the certificate chain"
-msgstr "Échec de la récupération de la chaîne de certificats"
 
 msgid "Failed to find matching certificate in chain"
 msgstr "Impossible de trouver le certificat correspondant dans la chaîne"
@@ -18768,6 +18781,10 @@ msgstr ""
 "Les attributs du dossier sont verrouillés (Vous ne pouvez pas modifier les "
 "attributs de ce dossier)"
 
+#, fuzzy
+msgid "Folder does not exist"
+msgstr "Le dossier %s n'existe pas"
+
 #, fuzzy, python-format
 msgid "Folder level %d"
 msgstr "Niveau du dossier WATO %d"
@@ -19326,6 +19343,10 @@ msgstr "Fraction"
 
 msgid "Frames"
 msgstr "Cadres"
+
+#, fuzzy
+msgid "Free"
+msgstr "RAM gratuit"
 
 msgid "Free DHCP leases"
 msgstr "Baux DHCP gratuits"
@@ -21726,6 +21747,10 @@ msgstr "Propriétés de l'hôte"
 msgid "Host properties of: %s"
 msgstr "Propriétés de l'hôte de : %s"
 
+#, fuzzy
+msgid "Host registration"
+msgstr "Version de l'agent"
+
 msgid "Host renaming"
 msgstr "Renommage de l'hôte"
 
@@ -21910,6 +21935,10 @@ msgstr "Hôtes contactés (en tant que client)"
 msgid "Hosts Contacts (as Server)"
 msgstr "Contacts des hôtes (en tant que serveur)"
 
+#, fuzzy
+msgid "Hosts already exist"
+msgstr "Le nom d'hôte %s existe déjà"
+
 msgid "Hosts and Folders"
 msgstr "Hôtes et dossiers"
 
@@ -21990,6 +22019,10 @@ msgstr "Nom de l'hôte / adresse IP"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hôtes n'utilisant pas Inline-SNMP"
+
+#, fuzzy
+msgid "Hosts successfully created"
+msgstr "L'index de recherche a été mis à jour avec succès"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Hôtes qui nous ont contactés au cours des dernières 24 heures"
@@ -24056,6 +24089,10 @@ msgstr ""
 msgid "Imported %d hosts into the current folder."
 msgstr "Importation de %d hôtes dans le dossier actuel."
 
+#, fuzzy
+msgid "Impose levels"
+msgstr "Ignorer les niveaux"
+
 msgid "Impose levels on number of processes"
 msgstr "Imposer des niveaux sur le nombre de processus"
 
@@ -24914,7 +24951,7 @@ msgid ""
 "Install only packages from trusted sources. Packages can potentially harm "
 "your Checkmk installation. It is recommended to use only packages from "
 "trusted sources.<br>Visit the <a href=\"https://exchange.checkmk.com/"
-"\">Checkmk Exchange<a>  for packages reviewed by Tribe 29."
+"\">Checkmk Exchange<a>  for packages reviewed by tribe29."
 msgstr ""
 
 msgid "Install this package"
@@ -26057,6 +26094,14 @@ msgstr "Utilisation de la mémoire des pods de Kubernetes Namespaced"
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetes Interfaces réseau"
 
+#, fuzzy
+msgid "Kubernetes Pod Resources: Clusters, Nodes"
+msgstr "Ressources Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes Pod Resources: Deployments"
+msgstr "Ressources Kubernetes"
+
 msgid "Kubernetes Port"
 msgstr "Port Kubernetes"
 
@@ -26412,6 +26457,10 @@ msgstr ""
 "Les anciens courriels ASCII ne prennent pas en charge le groupage. Vous "
 "pouvez soit désactiver le groupage des notifications, soit choisir un autre "
 "plugin de notification qui permet le groupage."
+
+#, fuzzy
+msgid "Legacy GUI extensions"
+msgstr "Extensions de l'interface graphique"
 
 msgid "Legacy SNMP devices using SNMP v2c"
 msgstr "Dispositifs SNMP traditionnels utilisant SNMP v2c"
@@ -27665,6 +27714,11 @@ msgstr "Enregistrer les occurrences des règles"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "Commutation des journaux au cours des 60 dernières minutes"
+
+msgid ""
+"Log the agent registration process of incoming requests by the Checkmk agent "
+"controller registration command."
+msgstr ""
 
 msgid "Log: State information"
 msgstr "Journal : Informations sur l'état"
@@ -31296,6 +31350,9 @@ msgstr "Pas de calcul réel des SLA"
 msgid "No agent labels present."
 msgstr ""
 
+msgid "No agent registration requests processed."
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr "Pas d'authentification, pas de vie privée"
 
@@ -31507,6 +31564,10 @@ msgstr "Aucun rôle attribué."
 
 msgid "No rows selected to perform actions for."
 msgstr "Aucune ligne sélectionnée pour laquelle effectuer des actions."
+
+#, fuzzy
+msgid "No rule match"
+msgstr "Cette règle correspond à"
 
 msgid "No rules found."
 msgstr "Aucune règle trouvée."
@@ -32865,10 +32926,6 @@ msgstr "ORACLE %s classe d'attente (FG)"
 msgid "ORACLE DB time statistics"
 msgstr "Statistiques de temps de la BD ORACLE"
 
-#, fuzzy
-msgid "ORACLE Databases (Linux, Solaris, AIX, Windows)"
-msgstr "Bases de données ORACLE (Linux, Solaris, AIX)"
-
 msgid "ORACLE IOSTAT Bytes"
 msgstr "Octets ORACLE IOSTAT"
 
@@ -32928,6 +32985,10 @@ msgstr "Classe d'attente ORACLE (les lignes FG sont en baisse)"
 
 msgid "ORACLE buffer pool statistics"
 msgstr "Statistiques du pool de mémoire tampon ORACLE"
+
+#, fuzzy
+msgid "ORACLE databases (Linux, Solaris, AIX, Windows)"
+msgstr "Bases de données ORACLE (Linux, Solaris, AIX)"
 
 msgid "ORACLE hit ratio"
 msgstr "Taux de réussite d'ORACLE"
@@ -39174,6 +39235,10 @@ msgstr "Liens Safenet NTLS"
 msgid "Salesforce"
 msgstr "Salesforce"
 
+#, fuzzy
+msgid "Same hostname"
+msgstr "Utiliser le nom d'hôte"
+
 msgid "Same times for all weekdays"
 msgstr "Mêmes horaires pour tous les jours de la semaine"
 
@@ -39666,6 +39731,10 @@ msgstr "Voir l'utilisateur %s"
 
 msgid "Select Datasource"
 msgstr "Sélectionner la source de données"
+
+msgid ""
+"Select a time period over which the alerts or notifications are added up"
+msgstr ""
 
 msgid "Select a timeperiod"
 msgstr "Sélectionnez une période de temps"
@@ -40643,6 +40712,10 @@ msgstr ""
 "définissez à la fois cette option et \"Ne pas supprimer les services "
 "disparus correspondants\", les deux règles doivent s'appliquer pour qu'un "
 "service soit supprimé."
+
+#, fuzzy
+msgid "Set state for unknown pods"
+msgstr "L'état du site est inconnu"
 
 msgid "Set state to"
 msgstr "Régler l'état sur"
@@ -44600,10 +44673,6 @@ msgstr "Port TCP pour l'écouteur"
 msgid "TIME_WAIT"
 msgstr "TIME_WAIT"
 
-#, fuzzy
-msgid "TLS/SSL Encryption"
-msgstr "Cryptage SSL"
-
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https désactivé"
 
@@ -44962,6 +45031,10 @@ msgstr "ID locataire / ID répertoire"
 #, fuzzy
 msgid "Terminated node containers"
 msgstr "Nœud Docker et conteneurs"
+
+#, fuzzy
+msgid "Terminated pod resources"
+msgstr "Ressources Kubernetes"
 
 msgid "Terse"
 msgstr "Terse"
@@ -53404,6 +53477,15 @@ msgstr ""
 "Cela va déployer le plugin d'agent <tt>mk_nfsiostat</tt> pour vérifier "
 "diverses statistiques d'entrées-sorties NFS côté client."
 
+#, fuzzy
+msgid ""
+"This will deploy the agent plugin <tt>mk_oracle</tt> on your target system. "
+"Currently not all options are available in all operating systems."
+msgstr ""
+"En activant cette option, vous allez déployer le plugin agent <tt>mk_oracle</"
+"tt> sur votre système cible. Actuellement, seul Linux est supporté, mais AIX "
+"et Windows suivront."
+
 msgid ""
 "This will deploy the agent plugin <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
@@ -58050,6 +58132,10 @@ msgstr "Niveau d'alerte pour le temps écoulé depuis le dernier autotest"
 
 msgid "Warning above"
 msgstr "Avertissement ci-dessus"
+
+#, fuzzy
+msgid "Warning after"
+msgstr "Avertissement après "
 
 msgid "Warning after "
 msgstr "Avertissement après "
@@ -63810,6 +63896,42 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
+#, fuzzy
+#~| msgid "By default the standard IMAP Port 143 is used."
+#~ msgid "By default the standard HTTPS Port 443 is used."
+#~ msgstr "Par défaut, le port standard IMAP 143 est utilisé."
+
+#, fuzzy
+#~| msgid "By default the standard IMAP Port 143 is used."
+#~ msgid "By default the standard HTTPS/TLS Port 443 is used."
+#~ msgstr "Par défaut, le port standard IMAP 143 est utilisé."
+
+#~ msgid "Do not deploy the ORACLE plugin"
+#~ msgstr "Ne pas déployer le plugin ORACLE"
+
+#, fuzzy
+#~| msgid "AES"
+#~ msgid "EWS"
+#~ msgstr "AES"
+
+#, fuzzy
+#~| msgid "DNS Server"
+#~ msgid "EWS Server"
+#~ msgstr "Serveur DNS"
+
+#, fuzzy
+#~| msgid "Encrypt SMTP communication using TLS"
+#~ msgid "Encrypt HTTP communication using SSL/TLS"
+#~ msgstr "Crypter la communication SMTP en utilisant TLS"
+
+#~ msgid "Failed to fetch the certificate chain"
+#~ msgstr "Échec de la récupération de la chaîne de certificats"
+
+#, fuzzy
+#~| msgid "SSL Encryption"
+#~ msgid "TLS/SSL Encryption"
+#~ msgstr "Cryptage SSL"
+
 #, python-format
 #~ msgid "Welcome to Checkmk %s"
 #~ msgstr "Bienvenue à Checkmk %s"
@@ -67479,9 +67601,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 #~ msgid "Factory Reset"
 #~ msgstr "Réinitialisation système"
 
-#~ msgid "Failed to compile your module."
-#~ msgstr "Échec de la compilation de votre module."
-
 #~ msgid "Files with performance counters"
 #~ msgstr "Fichier avec des compteurs de performance"
 
@@ -67501,9 +67620,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Hostgroups the host is member of"
 #~ msgstr "Groupes d'hôtes dont l'hôte fait partie"
-
-#~ msgid "Hostname %s already exists"
-#~ msgstr "Le nom d'hôte %s existe déjà"
 
 #~ msgid ""
 #~ "If you need the number or the name depends on the check. Just take a look "

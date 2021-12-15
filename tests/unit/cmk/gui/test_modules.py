@@ -47,12 +47,19 @@ def fixture_local_plugin(main_module_name):
 
 
 @pytest.mark.usefixtures("local_plugin")
-def test_load_local_plugin(main_module_name):
+def test_load_local_plugin(main_module_name) -> None:
     main_module = importlib.import_module(f"cmk.gui.{main_module_name}")
     assert "ding" not in main_module.__dict__
 
     try:
-        modules._call_load_plugins_hooks()
+        # Special case: watolib plugin loading is triggered by wato main module
+        modules._call_load_plugins_hooks(
+            [
+                main_module
+                if main_module_name != "watolib"
+                else importlib.import_module("cmk.gui.wato")
+            ]
+        )
         assert main_module.ding == "dong"  # type: ignore[attr-defined]
     finally:
         del main_module.__dict__["ding"]

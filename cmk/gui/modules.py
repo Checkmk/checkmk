@@ -47,11 +47,6 @@ if cmk_version.is_managed_edition():
 
 # TODO: Both kept for compatibility with old plugins. Drop this one day
 pagehandlers: Dict[Any, Any] = {}
-# Modules to be loaded within the application by default. These
-# modules are loaded on application initialization. The module
-# function load_plugins() is called for all these modules to
-# initialize them.
-_local_main_modules: List[ModuleType] = []
 
 
 def register_handlers(handlers: Dict) -> None:
@@ -68,12 +63,13 @@ def _imports() -> Iterator[str]:
 def load_plugins() -> None:
     """Loads and initializes main modules and plugins into the application
     Only builtin main modules are already imported."""
-    _import_local_main_modules()
-    _import_main_module_plugins()
-    _call_load_plugins_hooks()
+    local_main_modules = _import_local_main_modules()
+    main_modules = _cmk_gui_top_level_modules() + local_main_modules
+    _import_main_module_plugins(main_modules)
+    _call_load_plugins_hooks(main_modules)
 
 
-def _import_local_main_modules() -> None:
+def _import_local_main_modules() -> List[ModuleType]:
     """Imports all site local main modules
 
     We essentially load the site local pages plugins (`local/share/check_mk/web/plugins/pages`)
@@ -85,23 +81,18 @@ def _import_local_main_modules() -> None:
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.
     """
-    global _local_main_modules
-
-    _local_main_modules = []
-
     module_names_prev = set(_imports())
 
     # Load all multisite pages which will also perform imports of the needed modules
     utils.load_web_plugins("pages", globals())
 
-    # Save the modules loaded during the former steps in the modules list
-    _local_main_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
+    return [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
 
 
-def _import_main_module_plugins() -> None:
+def _import_main_module_plugins(main_modules: List[ModuleType]) -> None:
     logger.debug("Importing main module plugins")
 
-    for module in _cmk_gui_top_level_modules() + _local_main_modules:
+    for module in main_modules:
         main_module_name = module.__name__.split(".")[-1]
 
         for plugin_package_name in _plugin_package_names(main_module_name):
@@ -140,7 +131,7 @@ def _is_plugin_namespace(plugin_package_name: str) -> bool:
         return False
 
 
-def _call_load_plugins_hooks() -> None:
+def _call_load_plugins_hooks(main_modules: List[ModuleType]) -> None:
     """Call the load_plugins() function in all main modules
 
     Have a look at our Wiki: /books/concepts/page/how-cmkgui-is-organised
@@ -159,7 +150,7 @@ def _call_load_plugins_hooks() -> None:
     """
     logger.debug("Executing load_plugin hooks")
 
-    for module in _cmk_gui_top_level_modules() + _local_main_modules:
+    for module in main_modules:
         name = module.__name__
 
         if name == "cmk.gui.modules":

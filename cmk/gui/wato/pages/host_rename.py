@@ -9,6 +9,7 @@ import socket
 from typing import Optional, Type
 
 from cmk.utils.regex import regex
+from cmk.utils.site import omd_site
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
@@ -45,6 +46,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.changes import SiteChanges
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 
@@ -465,9 +467,20 @@ class ModeRenameHost(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
-        if watolib.get_pending_changes_info():
+        local_site = omd_site()
+        renamed_host_site = self._host.site_id()
+        if (
+            SiteChanges(SiteChanges.make_path(local_site)).read()
+            or SiteChanges(SiteChanges.make_path(renamed_host_site)).read()
+        ):
             raise MKUserError(
-                "newname", _("You cannot rename a host while you have pending changes.")
+                "newname",
+                _(
+                    "You cannot rename a host while you have "
+                    "pending changes on the central site (%s) or the "
+                    "site the host is monitored on (%s)."
+                )
+                % (local_site, renamed_host_site),
             )
 
         newname = request.var("newname")

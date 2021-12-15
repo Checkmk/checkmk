@@ -6,14 +6,12 @@
 
 from __future__ import annotations
 
-import itertools
 import json
 import time
-from typing import Iterator, List, Set, Tuple, TYPE_CHECKING
+from typing import Iterator, List, Tuple, TYPE_CHECKING
 
 from livestatus import SiteId
 
-import cmk.utils.render
 import cmk.utils.version as cmk_version
 from cmk.utils.defines import host_state_name, service_state_name
 from cmk.utils.type_defs import HostName, ServiceName
@@ -1035,55 +1033,11 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
 #   '----------------------------------------------------------------------'
 
 
-def get_relevant_annotations(annotations, by_host, what, avoptions):
-    time_range: AVTimeRange = avoptions["range"][0]
-    from_time, until_time = time_range
-
-    annos_to_render = []
-    annos_rendered: Set[int] = set()
-
-    for site_host, avail_entries in by_host.items():
-        for service in avail_entries.keys():
-            for search_what in ["host", "service"]:
-                if what == "host" and search_what == "service":
-                    continue  # Service annotations are not relevant for host
-
-                if search_what == "host":
-                    site_host_svc = site_host[0], site_host[1], None
-                else:
-                    site_host_svc = site_host[0], site_host[1], service  # service can be None
-
-                for annotation in annotations.get(site_host_svc, []):
-                    if _annotation_affects_time_range(
-                        annotation["from"], annotation["until"], from_time, until_time
-                    ):
-                        if id(annotation) not in annos_rendered:
-                            annos_to_render.append((site_host_svc, annotation))
-                            annos_rendered.add(id(annotation))
-
-    return annos_to_render
-
-
-def get_annotation_date_render_function(annotations, avoptions):
-    timestamps = list(
-        itertools.chain.from_iterable(
-            [(a[1]["from"], a[1]["until"]) for a in annotations] + [avoptions["range"][0]]
-        )
-    )
-
-    multi_day = len({time.localtime(t)[:3] for t in timestamps}) > 1
-    if multi_day:
-        return cmk.utils.render.date_and_time
-    return cmk.utils.render.time_of_day
-
-
-def _annotation_affects_time_range(annotation_from, annotation_until, from_time, until_time):
-    return not (annotation_until < from_time or annotation_from > until_time)
-
-
 def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
-    annos_to_render = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
-    render_date = get_annotation_date_render_function(annos_to_render, avoptions)
+    annos_to_render = availability.get_relevant_annotations(
+        annotations, av_rawdata, what, avoptions
+    )
+    render_date = availability.get_annotation_date_render_function(annos_to_render, avoptions)
 
     with table_element(title=_("Annotations"), omit_if_empty=True) as table:
         for (site_id, host, service), annotation in annos_to_render:

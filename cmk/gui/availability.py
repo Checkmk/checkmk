@@ -21,6 +21,12 @@ import cmk.utils.defines as defines
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.bi.bi_data_fetcher import (
+    BIHostSpec,
+    BIHostStatusInfoRow,
+    BIServiceWithFullState,
+    BIStatusInfo,
+)
 from cmk.utils.bi.bi_lib import NodeComputeResult, NodeResultBundle
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
 from cmk.utils.cpu_tracking import CPUTracker
@@ -29,9 +35,11 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
+from cmk.gui.bi import BIManager
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.plugins.views.utils import cmp_service_name_equiv
 from cmk.gui.type_defs import (
     FilterHeader,
     HTTPVariables,
@@ -131,14 +139,6 @@ AVTimelineStates = Dict[AVTimelineStateName, int]
 AVTimelineStatistics = Dict[AVTimelineStateName, _Tuple[int, int, int]]
 AVTimelineStyle = str
 
-from cmk.utils.bi.bi_data_fetcher import (
-    BIHostSpec,
-    BIHostStatusInfoRow,
-    BIServiceWithFullState,
-    BIStatusInfo,
-)
-
-from cmk.gui.bi import BIManager
 
 # Example for annotations:
 # {
@@ -2224,6 +2224,30 @@ BITreeState = Any
 BITimelineEntry = Any
 
 
+def get_bi_availability(
+    avoptions: AVOptions, aggr_rows: Rows, timewarp: _Optional[AVTimeStamp]
+) -> _Tuple[List[TimelineContainer], AVRawData, bool]:
+    logrow_limit = avoptions["logrow_limit"]
+    if logrow_limit == 0:
+        livestatus_limit = None
+    else:
+        livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
+
+    timeline_containers, fetched_rows = get_timeline_containers(
+        aggr_rows, avoptions, timewarp, livestatus_limit
+    )
+
+    has_reached_logrow_limit = bool(livestatus_limit and fetched_rows > livestatus_limit)
+
+    spans: List[AVSpan] = []
+    for timeline_container in timeline_containers:
+        spans.extend(timeline_container.timeline)
+
+    av_rawdata = spans_by_object(spans)
+
+    return timeline_containers, av_rawdata, has_reached_logrow_limit
+
+
 def get_bi_availability_rawdata(
     filterheaders: FilterHeader,
     only_sites: OnlySites,
@@ -2676,9 +2700,6 @@ def key_av_entry(
 ) -> _Tuple[
     _Tuple[Union[int, str], ...], int, _Tuple[Union[int, str], ...], _Tuple[Union[int, str], ...]
 ]:
-    # This local import currently needed
-    from cmk.gui.plugins.views.utils import cmp_service_name_equiv
-
     return (
         utils.key_num_split(a["service"]),
         cmp_service_name_equiv(a["service"]),

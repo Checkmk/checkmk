@@ -31,7 +31,6 @@ from cmk.gui.availability import (
     AVOptionValueSpecs,
     AVRawData,
     AVRowCells,
-    AVSpan,
     AVTimeRange,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -799,29 +798,6 @@ def render_timeline_bar(timeline_layout, style, timeline_nr=0):
 #   '----------------------------------------------------------------------'
 
 
-def _get_bi_availability(avoptions, aggr_rows, timewarp):
-
-    logrow_limit = avoptions["logrow_limit"]
-    if logrow_limit == 0:
-        livestatus_limit = None
-    else:
-        livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
-
-    timeline_containers, fetched_rows = availability.get_timeline_containers(
-        aggr_rows, avoptions, timewarp, livestatus_limit
-    )
-
-    has_reached_logrow_limit = livestatus_limit and fetched_rows > livestatus_limit
-
-    spans: List[AVSpan] = []
-    for timeline_container in timeline_containers:
-        spans.extend(timeline_container.timeline)
-
-    av_rawdata = availability.spans_by_object(spans)
-
-    return timeline_containers, av_rawdata, has_reached_logrow_limit
-
-
 # Render availability of a BI aggregate. This is currently
 # no view and does not support display options
 # TODO: Why should we handle this in a special way? Probably because we cannot
@@ -908,9 +884,11 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
             from_time, until_time = avoptions["range"][0]
             timewarp = int(min(until_time, max(from_time, timewarp)))
 
-        timeline_containers, av_rawdata, has_reached_logrow_limit = _get_bi_availability(
-            avoptions, aggr_rows, timewarp
-        )
+        (
+            timeline_containers,
+            av_rawdata,
+            has_reached_logrow_limit,
+        ) = availability.get_bi_availability(avoptions, aggr_rows, timewarp)
         view.process_tracking.amount_rows_after_limit = len(av_rawdata)
 
         for timeline_container in timeline_containers:

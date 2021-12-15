@@ -8,8 +8,9 @@ mod cli;
 mod config;
 mod monitoring_data;
 mod registration;
+mod status;
 mod tls_server;
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{Context, Result as AnyhowResult};
 use config::JSONLoader;
 use nix::unistd;
 use std::fs;
@@ -61,10 +62,6 @@ fn dump() -> AnyhowResult<()> {
         .context("Error writing monitoring data to stdout.")?;
 
     Ok(())
-}
-
-fn status(_registration: config::Registration) -> AnyhowResult<()> {
-    Err(anyhow!("Status mode not yet implemented"))
 }
 
 fn pull(registration: config::Registration) -> AnyhowResult<()> {
@@ -215,7 +212,7 @@ fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> 
         cli::Args::Push { .. } => push(registration),
         cli::Args::Pull { .. } => pull(registration),
         cli::Args::Dump { .. } => dump(),
-        cli::Args::Status { .. } => status(registration),
+        cli::Args::Status(status_args) => status::status(registration, status_args.json),
     }
 }
 

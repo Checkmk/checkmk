@@ -13,7 +13,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use string_enum::StringEnum;
 
-#[derive(StringEnum)]
+#[derive(StringEnum, PartialEq)]
 pub enum ConnectionType {
     /// `push-agent`
     Push,
@@ -162,6 +162,14 @@ impl Registration {
         self.connections.push.is_empty()
             & self.connections.pull.is_empty()
             & self.connections.pull_imported.is_empty()
+    }
+
+    pub fn standard_pull_connections(&self) -> impl Iterator<Item = (&String, &Connection)> {
+        self.connections.pull.iter()
+    }
+
+    pub fn imported_pull_connections(&self) -> impl Iterator<Item = &Connection> {
+        self.connections.pull_imported.iter()
     }
 
     pub fn pull_connections(&self) -> impl Iterator<Item = &Connection> {

@@ -24,6 +24,12 @@ pub struct RegistrationArgs {
 }
 
 #[derive(StructOpt)]
+pub struct StatusArgs {
+    #[structopt(long)]
+    pub json: bool,
+}
+
+#[derive(StructOpt)]
 #[structopt(name = "cmk-agent-ctl", about = "Checkmk agent controller.")]
 pub enum Args {
     #[structopt(about = "Register with a Checkmk instance for monitoring")]
@@ -39,5 +45,5 @@ pub enum Args {
     #[structopt(about = "Collects monitoring data and prints it to stdout")]
     Dump {},
     #[structopt(about = "Query the registration status of this host")]
-    Status {},
+    Status(StatusArgs),
 }

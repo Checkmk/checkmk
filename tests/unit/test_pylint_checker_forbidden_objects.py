@@ -9,7 +9,7 @@ from typing import Iterable, Tuple
 import astroid  # type: ignore[import]
 import pytest
 
-from tests.testlib.pylint_checker_forbidden_functions import (
+from tests.testlib.pylint_checker_forbidden_objects import (
     ForbiddenFunctionChecker,
     SixEnsureStrBinChecker,
     TypingNamedTupleChecker,

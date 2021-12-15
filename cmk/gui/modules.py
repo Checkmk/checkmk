@@ -4,53 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: Cleanup this whole module.
-
-# Once we drop the legacy plugin mechanism and changed the pages to be
-# registered in a better way, for example using the standard plugin
-# mechanism, we can change this to a module that is just importing
-# all other "top level" modules of the application. e.g. like this:
-#
-# -> index.py
-#  import cmk.gui.modules
-#  -> modules.py
-#      import cmk.gui.views
-#      import cmk.gui.default_permissions
-#      import ...
-#
-#      if not cmk_version.is_raw_edition():
-#          import cmk.gui.cee.modules
-#          -> cee/modules.py
-#              import cmk.gui.cee.sla
-#              import ...
-#
-
 import importlib
 import sys
 from types import ModuleType
-from typing import Any, Dict, Iterator, List
+from typing import Iterator, List
 
-import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
-import cmk.gui.pages
-import cmk.gui.plugins.main_modules
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
+# The following imports trigger loading of builtin main modules
+# isort: off
+import cmk.gui.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+
 if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module
+    import cmk.gui.cee.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
 
 if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module
-
-# TODO: Both kept for compatibility with old plugins. Drop this one day
-pagehandlers: Dict[Any, Any] = {}
-
-
-def register_handlers(handlers: Dict) -> None:
-    pagehandlers.update(handlers)
+    import cmk.gui.cme.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+# isort: on
 
 
 def _imports() -> Iterator[str]:
@@ -164,9 +138,6 @@ def _call_load_plugins_hooks(main_modules: List[ModuleType]) -> None:
         # hasattr above ensures the function is available. Mypy does not understand this.
         module.load_plugins()  # type: ignore[attr-defined]
 
-    # TODO: Clean this up once we drop support for the legacy plugins
-    for path, page_func in pagehandlers.items():
-        cmk.gui.pages.register_page_handler(path, page_func)
     logger.debug("Finished executing load_plugin hooks")
 
 

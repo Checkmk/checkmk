@@ -1302,7 +1302,8 @@ def _check_preview_table_row(
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
-    preview_params = (
+
+    effective_parameters: Union[LegacyCheckParameters, TimespecificParameters] = (
         config.compute_check_parameters(
             host_config.hostname,
             service.check_plugin_name,
@@ -1322,7 +1323,7 @@ def _check_preview_table_row(
         ip_address,
         service,
         plugin,
-        preview_params,
+        effective_parameters,
         value_store_manager=value_store_manager,
         persist_value_store_changes=False,  # never during discovery
     ).result
@@ -1334,8 +1335,8 @@ def _check_preview_table_row(
         description=service.description,
         check_source=check_source,
         ruleset_name=ruleset_name,
-        parameters=service.parameters,
-        preview_params=preview_params,
+        discovered_parameters=service.parameters,
+        effective_parameters=effective_parameters,
         exitcode=result.state,
         output=result.output,
         found_on_nodes=found_on_nodes,
@@ -1377,8 +1378,8 @@ def _active_check_preview_rows(
                 check_source="ignored_active"
                 if config.service_ignored(host_config.hostname, None, descr)
                 else "active",
-                parameters=params,
-                preview_params=params,
+                discovered_parameters=params,
+                effective_parameters=params,
             )
             for plugin_name, entries in host_config.active_checks
             for params in entries
@@ -1399,8 +1400,8 @@ def _make_check_preview_entry(
     description: ServiceName,
     check_source: str,
     ruleset_name: Optional[RulesetName] = None,
-    parameters: Union[LegacyCheckParameters, TimespecificParameters] = None,
-    preview_params: LegacyCheckParameters = None,
+    discovered_parameters: LegacyCheckParameters = None,
+    effective_parameters: Union[LegacyCheckParameters, TimespecificParameters] = None,
     exitcode: Optional[int] = None,
     output: str = "",
     found_on_nodes: Optional[Sequence[HostName]] = None,
@@ -1411,8 +1412,8 @@ def _make_check_preview_entry(
         check_plugin_name,
         ruleset_name,
         item,
-        _wrap_timespecific_for_preview(parameters),
-        _wrap_timespecific_for_preview(preview_params),
+        _wrap_timespecific_for_preview(discovered_parameters),
+        _wrap_timespecific_for_preview(effective_parameters),
         description,
         exitcode,
         output or f"WAITING - {check_source.split('_')[-1].title()} check, cannot be done offline",

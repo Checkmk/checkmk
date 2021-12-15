@@ -1149,9 +1149,9 @@ class APICallOther(APICallCollection):
             new = 0
             old = 0
             for entry in try_result.check_table:
-                if entry[0] == "new":
+                if entry.check_source == "new":
                     new += 1
-                elif entry[0] == "old":
+                elif entry.check_source == "old":
                     old += 1
 
             result = DiscoveryResult(self_new=new, self_kept=old, self_total=new + old)

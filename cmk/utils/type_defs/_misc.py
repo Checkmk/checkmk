@@ -305,19 +305,3 @@ class HostLabelValueDict(TypedDict):
 
 
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
-
-CheckPreviewEntry = Tuple[
-    str,
-    CheckPluginNameStr,
-    Optional[RulesetName],
-    Item,
-    LegacyCheckParameters,
-    LegacyCheckParameters,
-    str,
-    Optional[int],
-    str,
-    List[MetricTuple],
-    Dict[str, str],
-    List[HostName],
-]
-CheckPreviewTable = Sequence[CheckPreviewEntry]

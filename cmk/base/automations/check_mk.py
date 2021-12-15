@@ -220,7 +220,9 @@ class AutomationTryDiscovery(Automation):
 
     def _execute_discovery(
         self, args: List[str]
-    ) -> Tuple[discovery.CheckPreviewTable, discovery.QualifiedDiscovery[HostLabel]]:
+    ) -> Tuple[
+        Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
+    ]:
 
         use_cached_snmp_data = False
         if args[0] == "@noscan":

@@ -38,8 +38,6 @@ from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
-    CheckPreviewEntry,
-    CheckPreviewTable,
     DiscoveryResult,
     EVERYTHING,
     HostAddress,
@@ -47,6 +45,8 @@ from cmk.utils.type_defs import (
     RulesetName,
     ServiceName,
 )
+
+from cmk.automations.results import CheckPreviewEntry
 
 import cmk.core_helpers.cache
 from cmk.core_helpers.protocol import FetcherMessage
@@ -1216,7 +1216,7 @@ def get_check_preview(
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
     use_cached_snmp_data: bool,
     on_error: OnError,
-) -> Tuple[CheckPreviewTable, QualifiedDiscovery[HostLabel]]:
+) -> Tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -1302,7 +1302,6 @@ def _check_preview_table_row(
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
-
     effective_parameters: Union[LegacyCheckParameters, TimespecificParameters] = (
         config.compute_check_parameters(
             host_config.hostname,
@@ -1406,23 +1405,24 @@ def _make_check_preview_entry(
     found_on_nodes: Optional[Sequence[HostName]] = None,
     labels: Optional[Dict[str, str]] = None,
 ) -> CheckPreviewEntry:
-    return (
-        check_source,
-        check_plugin_name,
-        ruleset_name,
-        item,
-        discovered_parameters,
-        _wrap_timespecific_for_preview(effective_parameters),
-        description,
-        exitcode,
-        output or f"WAITING - {check_source.split('_')[-1].title()} check, cannot be done offline",
+    return CheckPreviewEntry(
+        check_source=check_source,
+        check_plugin_name=check_plugin_name,
+        ruleset_name=ruleset_name,
+        item=item,
+        discovered_parameters=discovered_parameters,
+        effective_parameters=_wrap_timespecific_for_preview(effective_parameters),
+        description=description,
+        state=exitcode,
+        output=output
+        or f"WAITING - {check_source.split('_')[-1].title()} check, cannot be done offline",
         # Service discovery never uses the perfdata in the check table. That entry
         # is constantly discarded, yet passed around(back and forth) as part of the
         # discovery result in the request elements. Some perfdata VALUES are not parsable
         # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
-        [],
-        labels or {},
-        [host_name] if found_on_nodes is None else list(found_on_nodes),
+        metrics=[],
+        labels=labels or {},
+        found_on_nodes=[host_name] if found_on_nodes is None else list(found_on_nodes),
     )
 
 

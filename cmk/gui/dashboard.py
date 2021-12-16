@@ -1859,7 +1859,10 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         no_preselect=True,
     )
 
-    dashboard = get_permitted_dashboards()[name]
+    try:
+        dashboard = get_permitted_dashboards()[name]
+    except KeyError:
+        raise MKUserError("name", _("The requested dashboard does not exist."))
 
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))

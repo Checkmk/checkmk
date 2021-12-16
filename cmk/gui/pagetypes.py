@@ -1285,9 +1285,10 @@ class Overridable(Base):
         else:
             page_name = request.get_str_input_mandatory("load_name")
             page = cls.find_foreign_page(owner_id, page_name)
-            page_dict = page.internal_representation()
             if page is None:
                 raise MKUserError(None, _("The requested %s does not exist") % cls.phrase("title"))
+
+            page_dict = page.internal_representation()
             if mode == "edit":
                 if not page.may_edit():
                     raise MKAuthException(

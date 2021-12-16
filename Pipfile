@@ -133,7 +133,7 @@ cachetools = "==4.1.1"  # needed by kubernetes
 google-auth = "==1.21.3"  # needed by kubernetes
 rsa = "==4.7.2"  # needed by kubernetes
 websocket_client = "==0.57.0"  # needed by kubernetes
-kubernetes = "==10.0.1"  # needed by kubernetes
+kubernetes = "==21.7.0"  # needed by kubernetes
 jmespath = "==0.10.0"  # needed by boto3 (aws)
 botocore = "==1.20.102"  # needed by boto3 (aws)
 s3transfer = "==0.4.2"  # needed by boto3 (aws)

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1ec79d6b24f2f64294a96ca40e48e5327d407faae22d157004b907edc1d6a6a7"
+            "sha256": "0718cdaf9f07966dddea3b4769f744065edcb0ddf669dac3549bbb2cbcaaadec"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -371,11 +371,11 @@
         },
         "kubernetes": {
             "hashes": [
-                "sha256:3770a496663396ad1def665eeadb947b3f45217a08b64b10c01a57e981ac8592",
-                "sha256:a6dee02a1b39ea4bb9c4c2cc415ea0ada33d8ea0a920f7d4fb6d166989dcac01"
+                "sha256:044c20253f8577491a87af8f9edea1f929ed6d62ce306376a6cb8aed24e572c5",
+                "sha256:c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977"
             ],
             "index": "pypi",
-            "version": "==10.0.1"
+            "version": "==21.7.0"
         },
         "markupsafe": {
             "hashes": [
@@ -1708,7 +1708,7 @@
             "hashes": [
                 "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==0.18.2"
         },
         "gitdb": {
@@ -2761,7 +2761,7 @@
                 "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b",
                 "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==0.10.2"
         },
         "tomli": {
@@ -2826,11 +2826,11 @@
         },
         "types-pymysql": {
             "hashes": [
-                "sha256:0589f4076bb37dbc3c95de14aa4b66c919b220cb3437ef7775c184ac7b27807b",
-                "sha256:2f43b8ba9357c0b158cba26b58b36951754db45b8c8e7d301d0208de598cb7d6"
+                "sha256:01b0e8d7e18963d664282e10fdc495f306b65b0f097cc0c5be70f3ca7e3efa1f",
+                "sha256:8b553effda99b43406b938384fe6b0f38d5844e6efb49d2da97fdddd000ef20a"
             ],
             "index": "pypi",
-            "version": "==1.0.6"
+            "version": "==1.0.7"
         },
         "types-python-dateutil": {
             "hashes": [
@@ -2858,19 +2858,19 @@
         },
         "types-redis": {
             "hashes": [
-                "sha256:0c980f5df48610b0933cfe914c75e7c7eed8cf10025c47391a016b844145233a",
-                "sha256:c7a99bdfea2e4fdf57952159614d85f0d08991007f0666dfa3c4220c3baa8fba"
+                "sha256:1b10a33f019125c60d5824c00d65627f993ed140441f0f4bd31b5634ed2f87d9",
+                "sha256:daef5a2229a4722ed0bde445911f92112accce101a27e2f9768f6a1db4fd8a45"
             ],
             "index": "pypi",
-            "version": "==4.0.3"
+            "version": "==4.0.4"
         },
         "types-requests": {
             "hashes": [
-                "sha256:0893e112e1510bbb67f537941c92192de7472e51bf7f236e0e583866f0ed933e",
-                "sha256:853571b3accc188976c0f4feffcaebf6cdfc170082b5e43f3358aa78de61f531"
+                "sha256:0e22d9cdeff4c3eb068eb883d59b127c98d80525f3d0412a1c4499c6ae1f711e",
+                "sha256:fabe1acc784708ac798ced6373568465b93642c8aa1ebd33e2921b60d4e7aa29"
             ],
             "index": "pypi",
-            "version": "==2.26.1"
+            "version": "==2.26.2"
         },
         "types-setuptools": {
             "hashes": [
@@ -2990,7 +2990,7 @@
                 "sha256:73aae30359291c14fa3b956f8b5ca31960e420c28c1bec002547fb04928cf89b",
                 "sha256:b64ef5141be559cfade448f044fa45c2260351edcb6a8ef6b7e00c7dcef0c323"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==1.8.7"
         },
         "websocket-client": {

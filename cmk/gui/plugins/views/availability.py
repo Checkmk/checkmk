@@ -86,43 +86,9 @@ if TYPE_CHECKING:
 #   '----------------------------------------------------------------------'
 
 
-def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
-    avoptions = availability.get_default_avoptions()
-
-    # Users of older versions might not have all keys set. The following
-    # trick will merge their options with our default options.
-    avoptions.update(user.load_file("avoptions", {}))
-
-    form_name = request.get_ascii_input("filled_in")
-    if form_name == "avoptions_display":
-        avoption_entries = availability.get_av_display_options(what)
-    elif form_name == "avoptions_computation":
-        avoption_entries = availability.get_av_computation_options()
-    else:
-        avoption_entries = []
-
-    if request.var("avoptions") == "set":
-        for name, _height, _show_in_reporting, vs in avoption_entries:
-            try:
-                avoptions[name] = vs.from_html_vars("avo_" + name)
-                vs.validate_value(avoptions[name], "avo_" + name)
-            except MKUserError as e:
-                user_errors.add(e)
-
-    range_vs = availability.vs_rangespec()
-    try:
-        range_, range_title = range_vs.compute_range(avoptions["rangespec"])
-        avoptions["range"] = range_, range_title
-    except MKUserError as e:
-        user_errors.add(e)
-
-    if request.var("_unset_logrow_limit") == "1":
-        avoptions["logrow_limit"] = 0
-
+def _save_availability_options_after_update(avoptions: AVOptions) -> None:
     if html.form_submitted():
         user.save_file("avoptions", avoptions)
-
-    return avoptions
 
 
 def _handle_availability_option_reset() -> None:
@@ -210,7 +176,8 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         what = "host"
 
     _handle_availability_option_reset()
-    avoptions = get_availability_options_from_request(what)
+    avoptions = availability.get_availability_options_from_request(what)
+    _save_availability_options_after_update(avoptions)
     time_range: AVTimeRange = avoptions["range"][0]
     range_title: str = avoptions["range"][1]
 
@@ -271,7 +238,8 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         request.del_var("filled_in")
     # Re-read the avoptions again, because the HTML vars have changed above (anno_ and editanno_ has
     # been removed, which must not be part of the form
-    avoptions = get_availability_options_from_request(what)
+    avoptions = availability.get_availability_options_from_request(what)
+    _save_availability_options_after_update(avoptions)
 
     # Now compute all data, we need this also for CSV export
     if not user_errors:
@@ -808,7 +776,8 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
     av_mode = request.get_ascii_input_mandatory("av_mode", "availability")
 
     _handle_availability_option_reset()
-    avoptions = get_availability_options_from_request("bi")
+    avoptions = availability.get_availability_options_from_request("bi")
+    _save_availability_options_after_update(avoptions)
 
     title = view_title(view.spec, view.context)
     if av_mode == "timeline":
@@ -866,7 +835,8 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
 
         html.top_heading(title, breadcrumb, page_menu)
 
-        avoptions = get_availability_options_from_request("bi")
+        avoptions = availability.get_availability_options_from_request("bi")
+        _save_availability_options_after_update(avoptions)
 
     if not user_errors:
         # iterate all aggregation rows

@@ -37,7 +37,8 @@ from cmk.utils.type_defs import HostName, ServiceName
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.bi import BIManager
-from cmk.gui.globals import request
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import request, user, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.views.utils import cmp_service_name_equiv
@@ -876,6 +877,42 @@ def get_outage_statistic_options(avoptions: AVOptions) -> AVOutageStatistics:
         if service_state in fixed_states:
             fixed_states.append(host_state)
     return aggrs, fixed_states
+
+
+def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
+    avoptions = get_default_avoptions()
+
+    # Users of older versions might not have all keys set. The following
+    # trick will merge their options with our default options.
+    avoptions.update(user.load_file("avoptions", {}))
+
+    form_name = request.get_ascii_input("filled_in")
+    if form_name == "avoptions_display":
+        avoption_entries = get_av_display_options(what)
+    elif form_name == "avoptions_computation":
+        avoption_entries = get_av_computation_options()
+    else:
+        avoption_entries = []
+
+    if request.var("avoptions") == "set":
+        for name, _height, _show_in_reporting, vs in avoption_entries:
+            try:
+                avoptions[name] = vs.from_html_vars("avo_" + name)
+                vs.validate_value(avoptions[name], "avo_" + name)
+            except MKUserError as e:
+                user_errors.add(e)
+
+    range_vs = vs_rangespec()
+    try:
+        range_, range_title = range_vs.compute_range(avoptions["rangespec"])
+        avoptions["range"] = range_, range_title
+    except MKUserError as e:
+        user_errors.add(e)
+
+    if request.var("_unset_logrow_limit") == "1":
+        avoptions["logrow_limit"] = 0
+
+    return avoptions
 
 
 # .

@@ -16224,6 +16224,10 @@ msgstr ""
 msgid "Error executing hook"
 msgstr ""
 
+#, python-format
+msgid "Error fetching data: %s"
+msgstr ""
+
 msgid "Error handling"
 msgstr ""
 
@@ -17211,6 +17215,10 @@ msgstr ""
 msgid "Failed to create sync archive [%d]: %s"
 msgstr ""
 
+#, fuzzy
+msgid "Failed to decode certificate data"
+msgstr " pe siteul de monitorizare: "
+
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -17468,6 +17476,9 @@ msgid "Fetch agent output"
 msgstr ""
 
 msgid "Fetch all available sub OIDs"
+msgstr ""
+
+msgid "Fetch certificate from server"
 msgstr ""
 
 msgid "Fetch chunked"
@@ -18442,6 +18453,9 @@ msgstr ""
 
 #, python-format
 msgid "Found multiple proxies using the title '%s'"
+msgstr ""
+
+msgid "Found no CA"
 msgstr ""
 
 msgid "Found no graph matching this definition."
@@ -20759,6 +20773,10 @@ msgstr ""
 msgid "Hostname computation"
 msgstr "foloseste configuratia locala"
 
+#, python-format
+msgid "Hostname contains illegal characters: %s"
+msgstr ""
+
 msgid "Hostname matching"
 msgstr ""
 
@@ -20792,6 +20810,10 @@ msgstr ""
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Hostname: %s"
+msgstr "Numele Elementului"
 
 msgid "Hostnames to query"
 msgstr ""
@@ -31511,8 +31533,8 @@ msgstr ""
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
-"is communicating only with the authentic update server. If you use self "
-"signed certificates for you server then enter that certificate here."
+"is communicating only with the authentic server. If you use self signed "
+"certificates for you server then enter that certificate here."
 msgstr ""
 
 #, fuzzy
@@ -33640,6 +33662,9 @@ msgid ""
 "Please note: the time range selected here is relative to the time when the "
 "report is being created. For example if you create a weekly report at Monday "
 "00:00 you need to select <i>last week</i>."
+msgstr ""
+
+msgid "Please provide a valid host and port"
 msgstr ""
 
 msgid "Please provide a valid name"
@@ -36760,6 +36785,9 @@ msgstr ""
 #, fuzzy
 msgid "Rule limit"
 msgstr "limita superioara"
+
+msgid "Rule match and stop"
+msgstr ""
 
 #, fuzzy
 msgid "Rule pack"
@@ -48185,6 +48213,10 @@ msgstr ""
 msgid "This rule matches."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "This rule matches: %s"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
 msgstr ""
@@ -52962,6 +52994,9 @@ msgid ""
 msgstr ""
 
 msgid "Valid till"
+msgstr ""
+
+msgid "Valid until"
 msgstr ""
 
 msgid "Valid until Checkmk version"
@@ -59695,10 +59730,6 @@ msgstr ""
 #~ msgstr "sesiuni"
 
 #, fuzzy
-#~ msgid "Hostname:"
-#~ msgstr "Numele Elementului"
-
-#, fuzzy
 #~ msgid "Please enter hostname"
 #~ msgstr " pe siteul de monitorizare: "
 
@@ -60529,10 +60560,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Exporta doar elementele si serviciile pentru care utilizatorul este "
 #~ "contact"
-
-#, fuzzy
-#~ msgid "Failed to fetch peer certificate"
-#~ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 #~ msgid "Fallback mail address for crash reports"

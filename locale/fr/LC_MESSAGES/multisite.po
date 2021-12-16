@@ -17038,6 +17038,10 @@ msgstr "Erreur d'exécution de la commande GIT <tt>%s</tt>:<br><br>%s"
 msgid "Error executing hook"
 msgstr "Erreur d'exécution du crochet"
 
+#, fuzzy, python-format
+msgid "Error fetching data: %s"
+msgstr "Erreur d'affichage : %s"
+
 msgid "Error handling"
 msgstr "Traitement des erreurs"
 
@@ -17987,6 +17991,10 @@ msgstr "Échec de la création d'un hôte à partir de la ligne %d : %s"
 msgid "Failed to create sync archive [%d]: %s"
 msgstr "Échec de la création de l'archive de synchronisation [%d] : %s"
 
+#, fuzzy
+msgid "Failed to decode certificate data"
+msgstr "Échec de la récupération de la chaîne de certificats"
+
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -18263,6 +18271,10 @@ msgstr "Récupérer la sortie de l'agent"
 
 msgid "Fetch all available sub OIDs"
 msgstr "Récupérer tous les sous-ID disponibles"
+
+#, fuzzy
+msgid "Fetch certificate from server"
+msgstr "Obtenir un fichier du serveur SFTP"
 
 msgid "Fetch chunked"
 msgstr "Récupérer les données par morceaux"
@@ -19301,6 +19313,9 @@ msgstr "J'ai trouvé plusieurs proxies utilisant l'ID '%s'."
 #, python-format
 msgid "Found multiple proxies using the title '%s'"
 msgstr "J'ai trouvé plusieurs proxies utilisant le titre '%s'."
+
+msgid "Found no CA"
+msgstr ""
 
 msgid "Found no graph matching this definition."
 msgstr "Aucun graphique ne correspond à cette définition."
@@ -21882,6 +21897,10 @@ msgstr "Nom d'hôte / adresse IP du serveur Graphite"
 msgid "Hostname computation"
 msgstr "Correspondance des noms d'hôtes"
 
+#, python-format
+msgid "Hostname contains illegal characters: %s"
+msgstr ""
+
 msgid "Hostname matching"
 msgstr "Correspondance des noms d'hôtes"
 
@@ -21916,6 +21935,10 @@ msgstr "Nom d'hôte/adresse IP de la console d'événements :"
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr "Nom d'hôte/adresse IP de la console d'événement maître :"
+
+#, fuzzy, python-format
+msgid "Hostname: %s"
+msgstr "Nom de l'Hôte : "
 
 msgid "Hostnames to query"
 msgstr "Noms d'hôtes à interroger"
@@ -33201,11 +33224,12 @@ msgstr "En ligne (Version : %s, Edition : %s)"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Seuls les caractères A-Z, a-z, 0-9 et moins (-) sont autorisés."
 
+#, fuzzy
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
-"is communicating only with the authentic update server. If you use self "
-"signed certificates for you server then enter that certificate here."
+"is communicating only with the authentic server. If you use self signed "
+"certificates for you server then enter that certificate here."
 msgstr ""
 "Accepter uniquement les connexions HTTPS avec un serveur dont le certificat "
 "est signé par l'une des autorités de certification répertoriées ici. De "
@@ -35458,6 +35482,10 @@ msgstr ""
 "Remarque : la plage de temps sélectionnée ici est relative au moment où le "
 "rapport est créé. Par exemple, si vous créez un rapport hebdomadaire le "
 "lundi 00:00, vous devez sélectionner <i>dernière semaine</i>."
+
+#, fuzzy
+msgid "Please provide a valid host and port"
+msgstr "Veuillez fournir un nom valide"
 
 msgid "Please provide a valid name"
 msgstr "Veuillez fournir un nom valide"
@@ -38585,6 +38613,10 @@ msgstr "Règles de frappe"
 
 msgid "Rule limit"
 msgstr "Limite de la règle"
+
+#, fuzzy
+msgid "Rule match and stop"
+msgstr "Modèle de correspondance des règles"
 
 msgid "Rule pack"
 msgstr "Paquet de règles"
@@ -52196,6 +52228,10 @@ msgstr ""
 msgid "This rule matches."
 msgstr "Cette règle correspond."
 
+#, fuzzy, python-format
+msgid "This rule matches: %s"
+msgstr "Cette règle correspond à"
+
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
 msgstr ""
@@ -57545,6 +57581,10 @@ msgstr ""
 "chiffres, des tirets, des traits de soulignement, des espaces et des points."
 
 msgid "Valid till"
+msgstr "Valable jusqu'à"
+
+#, fuzzy
+msgid "Valid until"
 msgstr "Valable jusqu'à"
 
 msgid "Valid until Checkmk version"
@@ -63924,9 +63964,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 #~ msgid "Encrypt HTTP communication using SSL/TLS"
 #~ msgstr "Crypter la communication SMTP en utilisant TLS"
 
-#~ msgid "Failed to fetch the certificate chain"
-#~ msgstr "Échec de la récupération de la chaîne de certificats"
-
 #, fuzzy
 #~| msgid "SSL Encryption"
 #~ msgid "TLS/SSL Encryption"
@@ -66925,10 +66962,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 #, fuzzy
 #~ msgid "Hint a service"
 #~ msgstr "services sélectionnés"
-
-#, fuzzy
-#~ msgid "Hostname:"
-#~ msgstr "Nom de l'Hôte : "
 
 #, fuzzy
 #~ msgid "<i>Generated automatically</i>"

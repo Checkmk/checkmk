@@ -16866,6 +16866,10 @@ msgstr "Errore nell'esecuzione del comando GIT <tt>%s</tt>:<br><br>%s"
 msgid "Error executing hook"
 msgstr "Errore nell'esecuzione del gancio"
 
+#, fuzzy, python-format
+msgid "Error fetching data: %s"
+msgstr "Errore che mostra la vista: %s"
+
 msgid "Error handling"
 msgstr "Gestione degli errori"
 
@@ -17812,6 +17816,10 @@ msgstr "Impossibile creare un host dalla linea %d: %s"
 msgid "Failed to create sync archive [%d]: %s"
 msgstr "Fallita la creazione dell'archivio di sincronizzazione [%d]: %s"
 
+#, fuzzy
+msgid "Failed to decode certificate data"
+msgstr "Fallito il recupero della catena del certificato"
+
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -18087,6 +18095,10 @@ msgstr "Recupera l'output dell'agente"
 
 msgid "Fetch all available sub OIDs"
 msgstr "Recupera tutti i sub OID disponibili"
+
+#, fuzzy
+msgid "Fetch certificate from server"
+msgstr "Ottenere file dal server SFTP"
 
 msgid "Fetch chunked"
 msgstr "Recupera chunked"
@@ -19113,6 +19125,9 @@ msgstr "Trovati più proxy che usano l'ID '%s'."
 #, python-format
 msgid "Found multiple proxies using the title '%s'"
 msgstr "Trovati più proxy che usano il titolo '%s'."
+
+msgid "Found no CA"
+msgstr ""
 
 msgid "Found no graph matching this definition."
 msgstr "Non ho trovato nessun grafico corrispondente a questa definizione."
@@ -21660,6 +21675,10 @@ msgstr "Hostname / indirizzo IP del server Graphite"
 msgid "Hostname computation"
 msgstr "Corrispondenza del nome dell'host"
 
+#, python-format
+msgid "Hostname contains illegal characters: %s"
+msgstr ""
+
 msgid "Hostname matching"
 msgstr "Corrispondenza del nome dell'host"
 
@@ -21693,6 +21712,10 @@ msgstr "Nome dell'host/indirizzo IP di Event Console:"
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr "Nome dell'host/indirizzo IP di Master Event Console:"
+
+#, fuzzy, python-format
+msgid "Hostname: %s"
+msgstr "Nome dell'host %s"
 
 msgid "Hostnames to query"
 msgstr "Nomi di host da interrogare"
@@ -32872,11 +32895,12 @@ msgstr "Online (Versione: %s, Edizione: %s)"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Solo A-Z, a-z, 0-9 e meno (-) sono ammessi."
 
+#, fuzzy
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
-"is communicating only with the authentic update server. If you use self "
-"signed certificates for you server then enter that certificate here."
+"is communicating only with the authentic server. If you use self signed "
+"certificates for you server then enter that certificate here."
 msgstr ""
 "Accettare solo connessioni HTTPS con un server il cui certificato è firmato "
 "con una delle CA che sono elencate qui. In questo modo è garantito che sta "
@@ -35106,6 +35130,10 @@ msgstr ""
 "Nota: l'intervallo di tempo selezionato qui è relativo al momento in cui il "
 "rapporto viene creato. Per esempio se crei un rapporto settimanale alle "
 "00:00 di lunedì devi selezionare <i>l'ultima settimana</i>."
+
+#, fuzzy
+msgid "Please provide a valid host and port"
+msgstr "Si prega di fornire un nome valido"
 
 msgid "Please provide a valid name"
 msgstr "Si prega di fornire un nome valido"
@@ -38207,6 +38235,10 @@ msgstr "La regola colpisce"
 
 msgid "Rule limit"
 msgstr "Limite della regola"
+
+#, fuzzy
+msgid "Rule match and stop"
+msgstr "Regole che corrispondono al modello"
 
 msgid "Rule pack"
 msgstr "Pacchetto di regole"
@@ -51648,6 +51680,10 @@ msgstr ""
 msgid "This rule matches."
 msgstr "Questa regola corrisponde."
 
+#, fuzzy, python-format
+msgid "This rule matches: %s"
+msgstr "Questa regola corrisponde a"
+
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
 msgstr ""
@@ -56929,6 +56965,10 @@ msgstr ""
 "trattini, underscore, spazi e punti."
 
 msgid "Valid till"
+msgstr "Valido fino a"
+
+#, fuzzy
+msgid "Valid until"
 msgstr "Valido fino a"
 
 msgid "Valid until Checkmk version"
@@ -63205,9 +63245,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~| msgid "Encrypt SMTP communication using TLS"
 #~ msgid "Encrypt HTTP communication using SSL/TLS"
 #~ msgstr "Crittografare la comunicazione SMTP usando TLS"
-
-#~ msgid "Failed to fetch the certificate chain"
-#~ msgstr "Fallito il recupero della catena del certificato"
 
 #, fuzzy
 #~| msgid "SSL Encryption"

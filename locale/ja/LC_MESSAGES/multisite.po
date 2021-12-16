@@ -16283,6 +16283,10 @@ msgstr "GITコマンドの実行中にエラー<tt>%s </ tt>:<br> <br>%s"
 msgid "Error executing hook"
 msgstr "フックの実行中にエラーが発生しました"
 
+#, fuzzy, python-format
+msgid "Error fetching data: %s"
+msgstr "ビューの表示中にエラーが発生しました: %s"
+
 msgid "Error handling"
 msgstr "エラー処理"
 
@@ -17214,6 +17218,10 @@ msgstr "行 %dからホストを作成できませんでした: %s"
 msgid "Failed to create sync archive [%d]: %s"
 msgstr "同期アーカイブの作成に失敗しました [%d]: %s"
 
+#, fuzzy
+msgid "Failed to decode certificate data"
+msgstr "証明書チェーンのフェッチに失敗しました"
+
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -17484,6 +17492,10 @@ msgstr "エージェント出力をフェッチします"
 
 msgid "Fetch all available sub OIDs"
 msgstr "利用可能なすべてのサブOIDを取得します"
+
+#, fuzzy
+msgid "Fetch certificate from server"
+msgstr "SFTPサーバーからファイルを取得する"
 
 msgid "Fetch chunked"
 msgstr "チャンクをフェッチ"
@@ -18473,6 +18485,9 @@ msgstr "ID '%s'を使用した複数のプロキシが見つかりました"
 #, python-format
 msgid "Found multiple proxies using the title '%s'"
 msgstr "タイトル '%s'を使用する複数のプロキシが見つかりました"
+
+msgid "Found no CA"
+msgstr ""
 
 msgid "Found no graph matching this definition."
 msgstr "この定義に一致するグラフが見つかりませんでした。"
@@ -20890,6 +20905,10 @@ msgstr ""
 msgid "Hostname computation"
 msgstr "ホスト名の一致"
 
+#, python-format
+msgid "Hostname contains illegal characters: %s"
+msgstr ""
+
 msgid "Hostname matching"
 msgstr "ホスト名の一致"
 
@@ -20923,6 +20942,10 @@ msgstr "イベントコンソールのホスト名/ IPアドレス:"
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr "マスターイベントコンソールのホスト名/ IPアドレス:"
+
+#, fuzzy, python-format
+msgid "Hostname: %s"
+msgstr "ホスト名 %s"
 
 msgid "Hostnames to query"
 msgstr "クエリするホスト名"
@@ -31694,8 +31717,8 @@ msgstr "A-Z、a-z、0-9およびマイナス(-)のみが許可されます。"
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
-"is communicating only with the authentic update server. If you use self "
-"signed certificates for you server then enter that certificate here."
+"is communicating only with the authentic server. If you use self signed "
+"certificates for you server then enter that certificate here."
 msgstr ""
 
 msgid "Only add matching hosts"
@@ -33831,6 +33854,10 @@ msgid ""
 "report is being created. For example if you create a weekly report at Monday "
 "00:00 you need to select <i>last week</i>."
 msgstr ""
+
+#, fuzzy
+msgid "Please provide a valid host and port"
+msgstr "有効な名前を入力してください"
 
 msgid "Please provide a valid name"
 msgstr "有効な名前を入力してください"
@@ -36846,6 +36873,10 @@ msgstr "ルールヒット"
 
 msgid "Rule limit"
 msgstr "ルール制限"
+
+#, fuzzy
+msgid "Rule match and stop"
+msgstr "パターンマッチングパターン"
 
 msgid "Rule pack"
 msgstr "ルールパック"
@@ -49313,6 +49344,10 @@ msgstr ""
 msgid "This rule matches."
 msgstr "このルールは一致します。"
 
+#, fuzzy, python-format
+msgid "This rule matches: %s"
+msgstr "このルールは一致します"
+
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
 msgstr ""
@@ -54301,6 +54336,10 @@ msgstr ""
 "よびドットのみを含めることができます。"
 
 msgid "Valid till"
+msgstr "まで有効"
+
+#, fuzzy
+msgid "Valid until"
 msgstr "まで有効"
 
 msgid "Valid until Checkmk version"
@@ -60182,9 +60221,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 #~| msgid "Encrypt SMTP communication using TLS"
 #~ msgid "Encrypt HTTP communication using SSL/TLS"
 #~ msgstr "TLSを使用してSMTP通信を暗号化する"
-
-#~ msgid "Failed to fetch the certificate chain"
-#~ msgstr "証明書チェーンのフェッチに失敗しました"
 
 #, fuzzy
 #~| msgid "SSL Encryption"

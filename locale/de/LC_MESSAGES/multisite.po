@@ -16865,6 +16865,10 @@ msgstr "Fehler beim Ausführen des GIT-Kommandos <tt>%s</tt>:<br><br>%s"
 msgid "Error executing hook"
 msgstr "Fehler bei hook-Ausführung"
 
+#, fuzzy, python-format
+msgid "Error fetching data: %s"
+msgstr "Fehler in Ansicht: %s"
+
 msgid "Error handling"
 msgstr "Fehlerbehandlung"
 
@@ -17812,6 +17816,10 @@ msgstr "Fehler beim Erzeugen eines Hosts aus Zeile %d: %s"
 msgid "Failed to create sync archive [%d]: %s"
 msgstr "Sync-Archiv [%d] konnte nicht erstellt werden: %s"
 
+#, fuzzy
+msgid "Failed to decode certificate data"
+msgstr "Die Zertifikatskette konnte nicht abgerufen werden"
+
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -18089,6 +18097,10 @@ msgstr "Agentenausgabe abfragen"
 
 msgid "Fetch all available sub OIDs"
 msgstr "Holt alle verfügbaren Sub-OIDs."
+
+#, fuzzy
+msgid "Fetch certificate from server"
+msgstr "Datei von SFTP-Server holen"
 
 msgid "Fetch chunked"
 msgstr "Anfrage chunked"
@@ -19123,6 +19135,9 @@ msgstr "Mehrere Proxies mit der ID'%s' gefunden."
 #, python-format
 msgid "Found multiple proxies using the title '%s'"
 msgstr "Mehrere Proxies mit dem Titel'%s' gefunden."
+
+msgid "Found no CA"
+msgstr ""
 
 msgid "Found no graph matching this definition."
 msgstr "Kein Graph zu dieser Definition gefunden"
@@ -21678,6 +21693,10 @@ msgstr "Hostname / IP-Adresse des Graphite-Servers"
 msgid "Hostname computation"
 msgstr "Matchen der Hostnamen"
 
+#, fuzzy, python-format
+msgid "Hostname contains illegal characters: %s"
+msgstr "Ihr Skriptname enthält ungültige Zeichen."
+
 msgid "Hostname matching"
 msgstr "Matchen der Hostnamen"
 
@@ -21712,6 +21731,10 @@ msgstr "Hostname/IP Adresse der Event Console:"
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr "Hostname/IP Adresse der Master Event Console:"
+
+#, fuzzy, python-format
+msgid "Hostname: %s"
+msgstr "Hostname:"
 
 msgid "Hostnames to query"
 msgstr "Abzurufende Hostnamen"
@@ -32856,11 +32879,12 @@ msgstr "Online (Version: %s, Edition: %s)"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Nur A-Z, a-z, 0-9 und Minus (-) sind erlaubt."
 
+#, fuzzy
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
-"is communicating only with the authentic update server. If you use self "
-"signed certificates for you server then enter that certificate here."
+"is communicating only with the authentic server. If you use self signed "
+"certificates for you server then enter that certificate here."
 msgstr ""
 "Der Agent wird nur HTTPS-Verbindungen nutzen, die mit einem Zertifikat einer "
 "der folgenden CAs signiert ist. So ist sichergestellt, dass er nur mit dem "
@@ -35087,6 +35111,10 @@ msgstr ""
 "Zeitpunkt, zu dem der Bericht erstellt wird. Wenn Sie z.B. einen "
 "wöchentlichen Bericht am Montag um 00:00 einplanen, denn müssen Sie "
 "<i>Letzte Woche</i> angeben."
+
+#, fuzzy
+msgid "Please provide a valid host and port"
+msgstr "Bitte geben Sie einen gültigen Namen an"
 
 msgid "Please provide a valid name"
 msgstr "Bitte geben Sie einen gültigen Namen an"
@@ -38177,6 +38205,10 @@ msgstr "Regelzugriffe"
 
 msgid "Rule limit"
 msgstr "Regel-Limit"
+
+#, fuzzy
+msgid "Rule match and stop"
+msgstr "Freitext-Suche"
 
 msgid "Rule pack"
 msgstr "Regelpaket"
@@ -51572,6 +51604,10 @@ msgstr ""
 msgid "This rule matches."
 msgstr "Diese Regel trifft zu"
 
+#, fuzzy, python-format
+msgid "This rule matches: %s"
+msgstr "Diese Regel trifft zu"
+
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
 msgstr ""
@@ -56854,6 +56890,10 @@ msgstr ""
 "Unterstriche, Leerzeichen und Punkte enthalten."
 
 msgid "Valid till"
+msgstr "Gültig bis"
+
+#, fuzzy
+msgid "Valid until"
 msgstr "Gültig bis"
 
 msgid "Valid until Checkmk version"
@@ -63116,9 +63156,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Encrypt HTTP communication using SSL/TLS"
 #~ msgstr "SMTP-Verbindung mit TLS verschlüsseln"
 
-#~ msgid "Failed to fetch the certificate chain"
-#~ msgstr "Die Zertifikatskette konnte nicht abgerufen werden"
-
 #, fuzzy
 #~| msgid "SSL Encryption"
 #~ msgid "TLS/SSL Encryption"
@@ -66166,9 +66203,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Hint a service"
 #~ msgstr "Einen Service vorschlagen"
-
-#~ msgid "Hostname:"
-#~ msgstr "Hostname:"
 
 #~ msgid "Metric compression (RRD)"
 #~ msgstr "Metrik Kompression (RRD)"
@@ -73486,9 +73520,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "This snapshot is broken!"
 #~ msgstr "Dieser Snaphost ist defekt!"
-
-#~ msgid "Your script name contains invalid characters."
-#~ msgstr "Ihr Skriptname enthält ungültige Zeichen."
 
 #~ msgid "Agent Bakery & Update"
 #~ msgstr "Agentenbäcker & Updates"

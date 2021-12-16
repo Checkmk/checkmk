@@ -16820,6 +16820,10 @@ msgstr "Fout bij het uitvoeren van het GIT-commando <tt>%s</tt>:<br><br>%s"
 msgid "Error executing hook"
 msgstr "Fout bij het uitvoeren van de haak"
 
+#, fuzzy, python-format
+msgid "Error fetching data: %s"
+msgstr "Fout bij het bekijken: %s"
+
 msgid "Error handling"
 msgstr "Foutafhandeling"
 
@@ -17759,6 +17763,10 @@ msgstr "Kan geen host aanmaken vanaf regel %d: %s"
 msgid "Failed to create sync archive [%d]: %s"
 msgstr "Kan geen sync-archief aanmaken [%d]: %s"
 
+#, fuzzy
+msgid "Failed to decode certificate data"
+msgstr "Kan de certificatenketen niet ophalen"
+
 #, python-format
 msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
@@ -18033,6 +18041,10 @@ msgstr "Agent output ophalen"
 
 msgid "Fetch all available sub OIDs"
 msgstr "Alle beschikbare sub-OID's ophalen"
+
+#, fuzzy
+msgid "Fetch certificate from server"
+msgstr "Bestand van SFTP-server halen"
 
 msgid "Fetch chunked"
 msgstr "Chunked ophalen"
@@ -19064,6 +19076,9 @@ msgstr "Meerdere proxies gevonden met de ID '%s'"
 #, python-format
 msgid "Found multiple proxies using the title '%s'"
 msgstr "Meerdere proxies gevonden met de titel '%s'"
+
+msgid "Found no CA"
+msgstr ""
 
 msgid "Found no graph matching this definition."
 msgstr "Geen grafiek gevonden die aan deze definitie voldoet."
@@ -21604,6 +21619,10 @@ msgstr "Hostnaam / IP-adres van Graphite server"
 msgid "Hostname computation"
 msgstr "Hostnaam matching"
 
+#, python-format
+msgid "Hostname contains illegal characters: %s"
+msgstr ""
+
 msgid "Hostname matching"
 msgstr "Hostnaam matching"
 
@@ -21637,6 +21656,10 @@ msgstr "Hostnaam/IP-adres van Event Console:"
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr "Hostnaam/IP-adres van Master Event Console:"
+
+#, fuzzy, python-format
+msgid "Hostname: %s"
+msgstr "Hostnaam %s"
 
 msgid "Hostnames to query"
 msgstr "Hostnamen voor zoekopdrachten"
@@ -32796,11 +32819,12 @@ msgstr "Online (Versie: %s, Editie: %s)"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Alleen A-Z, a-z, 0-9 en min (-) zijn toegestaan."
 
+#, fuzzy
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
-"is communicating only with the authentic update server. If you use self "
-"signed certificates for you server then enter that certificate here."
+"is communicating only with the authentic server. If you use self signed "
+"certificates for you server then enter that certificate here."
 msgstr ""
 "Accepteer alleen HTTPS-verbindingen met een server waarvan het certificaat "
 "is ondertekend door een van de CA's die hier worden vermeld. Op die manier "
@@ -35014,6 +35038,10 @@ msgstr ""
 "Let op: het hier geselecteerde tijdbereik is relatief aan het tijdstip "
 "waarop het rapport wordt gemaakt. Als u bijvoorbeeld een wekelijks rapport "
 "maakt op maandag 00:00 moet u <i>laatste week</i> selecteren."
+
+#, fuzzy
+msgid "Please provide a valid host and port"
+msgstr "Geef een geldige naam"
 
 msgid "Please provide a valid name"
 msgstr "Geef een geldige naam"
@@ -38095,6 +38123,10 @@ msgstr "Regel treffers"
 
 msgid "Rule limit"
 msgstr "Regel limiet"
+
+#, fuzzy
+msgid "Rule match and stop"
+msgstr "Regels die overeenkomen met patroon"
 
 msgid "Rule pack"
 msgstr "Regel pak"
@@ -51534,6 +51566,10 @@ msgstr ""
 msgid "This rule matches."
 msgstr "Deze regel komt overeen."
 
+#, fuzzy, python-format
+msgid "This rule matches: %s"
+msgstr "Deze regel komt overeen met"
+
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
 msgstr ""
@@ -56803,6 +56839,10 @@ msgstr ""
 "underscores, spaties en punten bevatten."
 
 msgid "Valid till"
+msgstr "Geldig tot"
+
+#, fuzzy
+msgid "Valid until"
 msgstr "Geldig tot"
 
 msgid "Valid until Checkmk version"
@@ -63078,9 +63118,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 #~| msgid "Encrypt SMTP communication using TLS"
 #~ msgid "Encrypt HTTP communication using SSL/TLS"
 #~ msgstr "SMTP-communicatie versleutelen met TLS"
-
-#~ msgid "Failed to fetch the certificate chain"
-#~ msgstr "Kan de certificatenketen niet ophalen"
 
 #, fuzzy
 #~| msgid "SSL Encryption"

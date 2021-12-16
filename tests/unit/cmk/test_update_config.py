@@ -9,6 +9,7 @@ import argparse
 import io
 import sys
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 from pytest_mock import MockerFixture
@@ -33,7 +34,7 @@ from tests.unit.cmk.gui.conftest import (  # noqa: F401 # pylint: disable=unused
 
 
 @pytest.fixture()
-def request_context():
+def request_context() -> Iterator[None]:
     with application_and_request_context():
         yield
 

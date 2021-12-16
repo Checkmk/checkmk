@@ -6999,6 +6999,14 @@ class RuleComment(TextAreaUnicode):
 
 
 def DocumentationURL() -> TextInput:
+    def _validate_documentation_url(value: str, varprefix: str) -> None:
+        if utils.is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+            return
+        raise MKUserError(
+            varprefix,
+            _("Not a valid URL (Only http and https URLs are allowed)."),
+        )
+
     return TextInput(
         title=_("Documentation URL"),
         help=HTML(
@@ -7011,6 +7019,7 @@ def DocumentationURL() -> TextInput:
             % html.render_icon("url")
         ),
         size=80,
+        validate=_validate_documentation_url,
     )
 
 

@@ -1335,7 +1335,7 @@ def _check_preview_table_row(
         description=service.description,
         check_source=check_source,
         ruleset_name=ruleset_name,
-        discovered_parameters=service.parameters,
+        discovered_parameters=service.parameters if isinstance(service, AutocheckService) else None,
         effective_parameters=effective_parameters,
         exitcode=result.state,
         output=result.output,
@@ -1378,7 +1378,6 @@ def _active_check_preview_rows(
                 check_source="ignored_active"
                 if config.service_ignored(host_config.hostname, None, descr)
                 else "active",
-                discovered_parameters=params,
                 effective_parameters=params,
             )
             for plugin_name, entries in host_config.active_checks
@@ -1412,7 +1411,7 @@ def _make_check_preview_entry(
         check_plugin_name,
         ruleset_name,
         item,
-        _wrap_timespecific_for_preview(discovered_parameters),
+        discovered_parameters,
         _wrap_timespecific_for_preview(effective_parameters),
         description,
         exitcode,

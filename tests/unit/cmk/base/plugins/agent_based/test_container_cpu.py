@@ -6,12 +6,21 @@
 
 import pytest
 
+from testlib import get_value_store_fixture
+
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base import item_state
-from cmk.base.item_state import MKCounterWrapped
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based import cpu_utilization_os
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    GetRateError,
+    Metric,
+    Result,
+    State,
+)
+
+# make value_store fixture available to tests in this file
+value_store_fixture = get_value_store_fixture(cpu_utilization_os)
 
 # the following string tables should display 150% cpu usage
 # two cpus were working at 75%
@@ -108,7 +117,7 @@ LXC_CONTAINER_CPU_CGROUPV1_10 = [
     [
         [
             "docker_container_cpu",
-            "docker_container_cpu",
+            "cpu_utilization_os",
             DOCKER_CONTAINER_CPU_CGROUPV1_0,
             DOCKER_CONTAINER_CPU_CGROUPV1_10,
             8,
@@ -116,7 +125,7 @@ LXC_CONTAINER_CPU_CGROUPV1_10 = [
         ],
         [
             "docker_container_cpu",
-            "docker_container_cpu",
+            "cpu_utilization_os",
             MK_DOCKER_CONTAINER_CPU_CGROUPV1_0,
             MK_DOCKER_CONTAINER_CPU_CGROUPV1_10,
             8,
@@ -124,7 +133,7 @@ LXC_CONTAINER_CPU_CGROUPV1_10 = [
         ],
         [
             "lxc_container_cpu",
-            "lxc_container_cpu",
+            "cpu_utilization_os",
             LXC_CONTAINER_CPU_CGROUPV1_0,
             LXC_CONTAINER_CPU_CGROUPV1_10,
             2,
@@ -141,23 +150,19 @@ def test_container_cpu_cgroupv1(
     num_cpu,
     util,
     mocker,
+    value_store,
 ) -> None:
-
-    # TODO: ist this the right way to do it? i doub it.
-    # this will probably change global state which will be changed for other tests?!
-    # make sure each test-run gets it's own counter values, otherwise MKCounterWrapped is not raised
-    item_state.set_item_state_prefix(str(util))
 
     agent_section = agent_based_register.get_section_plugin(SectionName(section_name))
     plugin = agent_based_register.get_check_plugin(CheckPluginName(plugin_name))
     assert plugin
     section_0_seconds = agent_section.parse_function(string_table_0)
     section_10_seconds = agent_section.parse_function(string_table_10)
-    with pytest.raises(MKCounterWrapped):
+    with pytest.raises(GetRateError):
         # first run, no rate metrics yet:
         _ = list(plugin.check_function(params={}, section=section_0_seconds))
     # now we have a rate:
     assert list(plugin.check_function(params={}, section=section_10_seconds)) == [
-        Result(state=State.OK, summary=f"Total CPU: {int(util)}%"),
-        Metric("util", util, boundaries=(0.0, num_cpu * 100.0)),
+        Result(state=State.OK, summary=f"Total CPU: {util:.2f}%"),
+        Metric("util", util, boundaries=(0.0, None)),
     ]

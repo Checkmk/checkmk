@@ -98,6 +98,8 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
     CheckPluginName("pdu_gude_8301"): CheckPluginName("pdu_gude"),
     CheckPluginName("pdu_gude_8310"): CheckPluginName("pdu_gude"),
+    CheckPluginName("lxc_container_cpu"): CheckPluginName("cpu_utilization_os"),
+    CheckPluginName("docker_container_cpu"): CheckPluginName("cpu_utilization_os"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

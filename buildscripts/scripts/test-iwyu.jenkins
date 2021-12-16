@@ -1,4 +1,4 @@
-def NODE = "both"
+def NODE = "linux"
 
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),

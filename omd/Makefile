@@ -5,11 +5,11 @@
 include omd.make
 include $(BUILD_BASE_DIR)/build-helper-files.make
 
-# You can build singele packages by calling macke <PACKAGENAME>
+# You can build single packages by calling make <PACKAGENAME>
 # e.g.: make nagios rrdtool
 #
 # You can select a subset of the packages by overriding this
-# variale, e.g. make PACKAGES='nagios rrdtool' pack
+# variable, e.g. make PACKAGES='nagios rrdtool' pack
 #
 # If you just want to test package building, you can reduce the
 # number of packages to just "omd" - to speed up your tests.

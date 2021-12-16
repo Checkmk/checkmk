@@ -30,10 +30,6 @@ elif [ "$SSH_CLIENT" ]; then
     export REMOTE=${SSH_CLIENT%% *}
 fi
 
-# let RTCs know about this remote
-[ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
-[ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
-
 # The package name gets patched for baked agents to either
 # "check-mk-agent" or the name set by the "name of agent packages" rule
 # TODO: rename (used for systemd as well), deal with when fixing CMK-8339
@@ -63,6 +59,10 @@ if [ "$1" = -d ]; then
 elif [ -z "$MK_FROM_NODE" ]; then
     exec </dev/null 2>/dev/null
 fi
+
+# let RTCs know about this remote
+[ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
+[ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
 
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests

@@ -1,0 +1,15 @@
+Title: Fetcher error if agent is run a non-root user
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1639660015
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p18
+
+When the agent was executed without the permission to write to <tt>${MK_VARDIR}</tt> (<i>/var/lib/check_mk_agent<i/> by default) the first line of the output would be an error message.
+This lead the fetcher to assume that the agent output must be encrypted.
+If encryption is disabled for the affeted host, the fetcher will fail.
+
+This error message is now suppressed (unless the debug option <tt>-d</tt> is passed to the agent).

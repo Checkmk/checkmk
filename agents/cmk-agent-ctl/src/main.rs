@@ -6,6 +6,7 @@ mod agent_receiver_api;
 mod certs;
 mod cli;
 mod config;
+mod delete_connection;
 mod dump;
 mod monitoring_data;
 mod pull;
@@ -149,7 +150,7 @@ fn init() -> (cli::Args, PathBuf, PathBuf) {
 
 fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> AnyhowResult<()> {
     let stored_config = config::ConfigFromDisk::load(config_path)?;
-    let registry = config::Registry::from_file(conn_path)
+    let mut registry = config::Registry::from_file(conn_path)
         .context("Error while loading registered connections.")?;
     let legacy_pull_marker = Path::new(HOME_DIR).join(LEGACY_PULL_FILE);
     match args {
@@ -166,6 +167,10 @@ fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> 
         cli::Args::Pull { .. } => pull::pull(&registry, &legacy_pull_marker),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(registry, status_args.json),
+        cli::Args::Delete(delete_args) => {
+            delete_connection::delete(&mut registry, &delete_args.connection)
+        }
+        cli::Args::DeleteAll { .. } => delete_connection::delete_all(&mut registry),
     }
 }
 

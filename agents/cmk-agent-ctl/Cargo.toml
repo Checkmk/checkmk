@@ -30,3 +30,4 @@ x509-parser = { version = "*" }
 thiserror = { version = "*" }
 tempfile = { version = "*" }
 flate2 = { version = "*" }
+regex = { version = "*" }

@@ -149,6 +149,7 @@ dependencies = [
  "log",
  "nix",
  "openssl",
+ "regex",
  "requestty",
  "reqwest",
  "rustls",

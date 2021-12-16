@@ -102,7 +102,7 @@ itsdangerous = "==2.0.1"  # needed by Flask
 Jinja2 = "==3.0.3"  # needed by Flask
 more-itertools = "==8.0.2"  # needed by connexion through zipp, pytest
 zipp = "==0.6.0"  # needed by importlib_metadata
-attrs = "21.2.0"  # needed by jsonschema
+attrs = "==21.2.0"  # needed by jsonschema
 importlib_metadata = "==4.8.2"  # needed by jsonschema
 pyrsistent = "==0.18.0"  # needed by jsonschema
 click = "==8.0.3"  # needed by Flask

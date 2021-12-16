@@ -235,6 +235,10 @@ def fake_version_and_paths():
         Path(cmk.utils.paths._r4r_base_dir, "DECLINED"),
     )
     monkeypatch.setattr(
+        "cmk.utils.paths.r4r_declined_bundles_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "DECLINED-BUNDLES"),
+    )
+    monkeypatch.setattr(
         "cmk.utils.paths.r4r_ready_dir",
         Path(cmk.utils.paths._r4r_base_dir, "READY"),
     )

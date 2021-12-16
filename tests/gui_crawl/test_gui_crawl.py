@@ -7,14 +7,18 @@
 # pylint: disable=redefined-outer-name,c-extension-no-member
 
 import asyncio
+import io
+import json
 import logging
 import os
+import re
+import tarfile
 import time
 from collections import deque
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
-from typing import Deque, Generator, Iterable, MutableMapping, MutableSequence, Optional, Set, Tuple
+from typing import Generator, Iterable, MutableMapping, MutableSequence, Optional, Set, Tuple
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api
@@ -29,6 +33,9 @@ from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
 
 logger = logging.getLogger()
+
+CrashIdRegex = r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}"
+CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
 
 
 class Progress:
@@ -147,15 +154,7 @@ class PageVisitor:
         return text, logs
 
 
-async def create_requests_session() -> requests.Session:
-    def blocking():
-        return requests.Session()
-
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, blocking)
-
-
-async def create_browser_and_context(
+async def create_browser_and_storage_state(
     site: Site,
 ) -> Tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
     pw = await async_playwright().start()
@@ -175,10 +174,10 @@ async def create_browser_and_context(
     return browser, storage_state
 
 
-async def create_visitor(site: Site) -> PageVisitor:
-    requests_session = await create_requests_session()
-    browser, storage_state = await create_browser_and_context(site)
+async def create_visitor(site: Site, requests_session: requests.Session) -> PageVisitor:
+    browser, storage_state = await create_browser_and_storage_state(site)
 
+    # makes sure authentication cookies is also available in the requests session.
     for cookie_dict in storage_state["cookies"]:
         requests_session.cookies.set(
             name=cookie_dict["name"],
@@ -213,8 +212,9 @@ class Crawler:
         self.results: MutableMapping[str, CrawlResult] = {}
         self.site = site
         self.report_file = Path(report_file or self.site.result_dir() + "/crawl.xml")
+        self.requests_session = requests.Session()
 
-        self._todos: Deque[Url] = deque([Url(self.site.internal_url)])
+        self._todos = deque([Url(self.site.internal_url)])
 
     def report(self) -> None:
         self.site.save_results()
@@ -281,10 +281,15 @@ class Crawler:
         testsuite.attrib["time"] = f"{self.duration:.3f}"
         testsuite.attrib["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
 
-        Path(self.report_file).write_bytes(etree.tostring(root, pretty_print=True))
+        report_file_path = Path(self.report_file)
+        try:
+            report_file_path.write_bytes(etree.tostring(root, pretty_print=True))
+        except PermissionError:
+            # write to the current directory when no permissions to write to the site directory
+            Path(report_file_path.name).write_bytes(etree.tostring(root, pretty_print=True))
 
     async def crawl(self, max_tasks: int = 10) -> None:
-        visitor = await create_visitor(self.site)
+        visitor = await create_visitor(self.site, self.requests_session)
         with Progress() as progress:
             tasks: Set = set()
             while tasks or self._todos:
@@ -327,6 +332,69 @@ class Crawler:
         self.results[url.url].duration = duration
         logger.info("page done in %.2f secs (%s)", duration, url.url)
         return self.results[url.url].skipped is None and len(self.results[url.url].errors) == 0
+
+    def handle_crash_reports(self) -> None:
+        crash_reports_url = urljoin(self.site.internal_url, "view.py?view_name=crash_reports")
+        try:
+            response = self.requests_session.get(crash_reports_url)
+        except requests.RequestException as exception:
+            self.handle_error(Url(url=crash_reports_url), "GetCrashReportsFailed", str(exception))
+            return
+
+        if response.status_code != 200:
+            self.handle_error(
+                Url(url=crash_reports_url), "CrashReportsPageFailed", str(response.status_code)
+            )
+
+        for crash_id_match in re.finditer(rf"crash_id=({CrashIdRegex})", response.text):
+            self.handle_crash_report(Url("unknown url"), crash_id_match.group(1))
+
+    def handle_crash_report(self, url: Url, crash_id: str) -> bool:
+        crash_report_url = urljoin(
+            self.site.internal_url,
+            f"download_crash_report.py?crash_id={crash_id}&site={self.site.id}",
+        )
+        try:
+            response = self.requests_session.get(crash_report_url)
+        except requests.RequestException as exception:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "CrashReportDownloadFailed",
+                str(exception),
+            )
+            return False
+
+        content_type = response.headers.get("content-type")
+        if response.status_code != 200 or content_type != "application/x-tar":
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "CrashReportDownloadFailed",
+                f"status code: {response.status_code}, content-type: {content_type}",
+            )
+            return False
+
+        try:
+            tar = tarfile.open(fileobj=io.BytesIO(response.content))
+        except tarfile.ReadError:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "InvalidCrashReportTarFile",
+                repr(response.content),
+            )
+            return False
+
+        crash_info = tar.extractfile("crash.info")
+        if crash_info is None:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "EmptyCrashReportTarFile",
+                message=crash_id,
+            )
+            return False
+
+        # reads the crash report and dumps it indented for better readability
+        crash_report = json.dumps(json.loads(crash_info.read().decode("utf-8")), indent=4)
+        return self.handle_error(url, "CrashReport", message=crash_report)
 
     async def visit_url(self, visitor: PageVisitor, url: Url) -> bool:
         start = time.time()
@@ -558,6 +626,7 @@ def test_crawl(site: Site) -> None:
     try:
         asyncio.run(crawler.crawl(max_tasks=max_crawler_tasks))
     finally:
+        crawler.handle_crash_reports()
         crawler.report()
 
 

@@ -35,7 +35,7 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
-from cmk.utils.type_defs import CheckPluginName, HostName, UserId
+from cmk.utils.type_defs import CheckPluginName, HostName, HostOrServiceConditionRegex, UserId
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -555,7 +555,18 @@ class UpdateConfig:
         if not ruleset:
             return
 
+        def _fix_up_escaped_service_pattern(pattern: str) -> HostOrServiceConditionRegex:
+            if pattern == (unescaped_pattern := unescape(pattern)):
+                # If there was nothing to unescape, escaping would break the pattern (e.g. '.foo').
+                # This still breaks half escaped patterns (e.g. '\.foo.')
+                return {"$regex": pattern}
+            return cmk.gui.watolib.rulesets.service_description_to_condition(
+                unescaped_pattern.rstrip("$")
+            )
+
         for _folder, _index, rule in ruleset.get_rules():
+            # We can't truly distinguish between user- and discovery generated rules.
+            # We try our best to detect them, but there will be false positives.
             if not rule.is_discovery_rule():
                 continue
 
@@ -564,9 +575,7 @@ class UpdateConfig:
             ) and rule.conditions.service_description.get("$nor"):
                 rule.conditions.service_description = {
                     "$nor": [
-                        cmk.gui.watolib.rulesets.service_description_to_condition(
-                            unescape(s["$regex"].rstrip("$"))
-                        )
+                        _fix_up_escaped_service_pattern(s["$regex"])
                         for s in rule.conditions.service_description["$nor"]
                         if "$regex" in s
                     ]
@@ -574,9 +583,7 @@ class UpdateConfig:
 
             else:
                 rule.conditions.service_description = [
-                    cmk.gui.watolib.rulesets.service_description_to_condition(
-                        unescape(s["$regex"].rstrip("$"))
-                    )
+                    _fix_up_escaped_service_pattern(s["$regex"])
                     for s in rule.conditions.service_description
                     if "$regex" in s
                 ]

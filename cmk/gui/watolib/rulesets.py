@@ -138,8 +138,14 @@ class RuleConditions:
         if self.service_description is None:
             return False
 
-        return all(
-            not isinstance(i, dict) or i["$regex"].endswith("$") for i in self.service_description
+        service_name_conditions = (
+            self.service_description.get("$nor", [])
+            if isinstance(self.service_description, dict)
+            else self.service_description
+        )
+
+        return bool(service_name_conditions) and all(
+            not isinstance(i, dict) or i["$regex"].endswith("$") for i in service_name_conditions
         )
 
     # Compatibility code for pre 1.6 WATO code
@@ -1170,6 +1176,8 @@ class Rule:
         return bool(
             self.conditions.host_name
             and len(self.conditions.host_name) == 1
+            and isinstance(self.conditions.host_name, list)
+            and isinstance(self.conditions.host_name[0], str)
             and self.conditions.host_tags == {}
             and self.conditions.has_only_explicit_service_conditions()
         )

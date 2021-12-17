@@ -21,7 +21,6 @@ from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
@@ -53,9 +52,6 @@ class _Builder:
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
-        self._fallback_ip: Final = ip_lookup.fallback_ip_for(
-            self.host_config.default_address_family
-        )
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -178,7 +174,7 @@ class _Builder:
         if datasource_program is not None:
             return DSProgramSource(
                 self.hostname,
-                self.ipaddress or self._fallback_ip,
+                self.ipaddress,
                 main_data_source=main_data_source,
                 template=datasource_program,
             )
@@ -201,7 +197,7 @@ class _Builder:
         return [
             SpecialAgentSource(
                 self.hostname,
-                self.ipaddress or self._fallback_ip,
+                self.ipaddress,
                 special_agent_id=agentname,
                 params=params,
             )

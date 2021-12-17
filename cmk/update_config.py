@@ -495,7 +495,17 @@ class UpdateConfig:
         if not ruleset:
             return
 
+        def _fix_up_escaped_service_pattern(pattern: str) -> Dict[str, str]:
+            if pattern == (unescaped_pattern := unescape(pattern)):
+                # If there was nothing to unescape, escaping would break the pattern (e.g. '.foo').
+                # This still breaks half escaped patterns (e.g. '\.foo.')
+                return {"$regex": pattern}
+            return cmk.gui.watolib.rulesets.service_description_to_condition(
+                unescaped_pattern.rstrip("$"))
+
         for _folder, _index, rule in ruleset.get_rules():
+            # We can't truly distinguish between user- and discovery generated rules.
+            # We try our best to detect them, but there will be false positives.
             if not rule.is_discovery_rule():
                 continue
 
@@ -503,8 +513,7 @@ class UpdateConfig:
                           dict) and rule.conditions.service_description.get("$nor"):
                 rule.conditions.service_description = {
                     "$nor": [
-                        cmk.gui.watolib.rulesets.service_description_to_condition(
-                            unescape(s["$regex"].rstrip("$")))
+                        _fix_up_escaped_service_pattern(s["$regex"])
                         for s in rule.conditions.service_description["$nor"]
                         if "$regex" in s
                     ]
@@ -512,8 +521,7 @@ class UpdateConfig:
 
             else:
                 rule.conditions.service_description = [
-                    cmk.gui.watolib.rulesets.service_description_to_condition(
-                        unescape(s["$regex"].rstrip("$")))
+                    _fix_up_escaped_service_pattern(s["$regex"])
                     for s in rule.conditions.service_description
                     if "$regex" in s
                 ]

@@ -165,6 +165,7 @@ dependencies = [
  "serde_json",
  "string_enum",
  "structopt",
+ "tempfile",
  "thiserror",
  "uuid",
  "x509-parser",

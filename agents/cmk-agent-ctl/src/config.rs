@@ -20,6 +20,7 @@ pub enum ConnectionType {
     /// `pull-agent`
     Pull,
 }
+
 pub trait JSONLoader: DeserializeOwned {
     fn new() -> AnyhowResult<Self> {
         Ok(serde_json::from_str("{}")?)
@@ -110,7 +111,7 @@ impl RegistrationConfig {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Connection {
     #[serde(default)]
     pub uuid: String,
@@ -125,7 +126,7 @@ pub struct Connection {
     pub root_cert: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct RegisteredConnections {
     #[serde(default)]
     pub push: HashMap<String, Connection>,
@@ -138,6 +139,8 @@ pub struct RegisteredConnections {
 }
 
 impl JSONLoader for RegisteredConnections {}
+
+#[derive(PartialEq, Debug)]
 pub struct Registry {
     pub connections: RegisteredConnections,
     pub path: PathBuf,
@@ -196,5 +199,146 @@ impl Registry {
         remove_connections.remove(&address);
         insert_connections.insert(address, connection);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test_registry {
+    use super::*;
+
+    fn registry() -> Registry {
+        let mut push = std::collections::HashMap::new();
+        let mut pull = std::collections::HashMap::new();
+
+        push.insert(
+            String::from("push_server:8000"),
+            Connection {
+                uuid: String::from("uuid-push"),
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            },
+        );
+
+        pull.insert(
+            String::from("pull_server:8000"),
+            Connection {
+                uuid: String::from("uuid-pull"),
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            },
+        );
+
+        Registry {
+            connections: RegisteredConnections {
+                push,
+                pull,
+                pull_imported: vec![Connection {
+                    uuid: String::from("uuid-imported"),
+                    private_key: String::from("private_key"),
+                    certificate: String::from("certificate"),
+                    root_cert: String::from("root_cert"),
+                }],
+            },
+            path: std::path::PathBuf::from(
+                &tempfile::NamedTempFile::new().unwrap().into_temp_path(),
+            ),
+        }
+    }
+
+    fn connection() -> Connection {
+        Connection {
+            uuid: String::from("abc-123"),
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        }
+    }
+
+    #[test]
+    fn test_io() {
+        let reg = registry();
+        assert!(!reg.path.exists());
+        reg.save().unwrap();
+        assert!(reg.path.exists());
+        assert_eq!(reg, Registry::from_file(&reg.path).unwrap());
+    }
+
+    #[test]
+    fn test_register_push_connection_new() {
+        let mut reg = registry();
+        reg.register_connection(
+            ConnectionType::Push,
+            String::from("new_server:1234"),
+            connection(),
+        )
+        .unwrap();
+        assert!(reg.connections.push.len() == 2);
+        assert!(reg.connections.pull.len() == 1);
+        assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_register_push_connection_from_pull() {
+        let mut reg = registry();
+        reg.register_connection(
+            ConnectionType::Push,
+            String::from("pull_server:8000"),
+            connection(),
+        )
+        .unwrap();
+        assert!(reg.connections.push.len() == 2);
+        assert!(reg.connections.pull.is_empty());
+        assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_register_pull_connection_new() {
+        let mut reg = registry();
+        reg.register_connection(
+            ConnectionType::Pull,
+            String::from("new_server:1234"),
+            connection(),
+        )
+        .unwrap();
+        assert!(reg.connections.push.len() == 1);
+        assert!(reg.connections.pull.len() == 2);
+        assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_register_pull_connection_from_push() {
+        let mut reg = registry();
+        reg.register_connection(
+            ConnectionType::Pull,
+            String::from("push_server:8000"),
+            connection(),
+        )
+        .unwrap();
+        assert!(reg.connections.push.is_empty());
+        assert!(reg.connections.pull.len() == 2);
+        assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_is_empty() {
+        let mut reg = registry();
+        assert!(!reg.is_empty());
+        reg.connections.push.clear();
+        assert!(!reg.is_empty());
+        reg.connections.pull.clear();
+        assert!(!reg.is_empty());
+        reg.connections.pull_imported.clear();
+        assert!(reg.is_empty());
+    }
+
+    #[test]
+    fn test_pull_connections() {
+        let reg = registry();
+        let pull_conns: Vec<&Connection> = reg.pull_connections().collect();
+        assert!(pull_conns.len() == 2);
+        assert!(pull_conns[0].uuid == "uuid-pull");
+        assert!(pull_conns[1].uuid == "uuid-imported");
     }
 }

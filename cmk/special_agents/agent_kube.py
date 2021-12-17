@@ -545,21 +545,38 @@ def filter_outdated_pods(
     return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
 
 
-def write_kube_set_performance_sections(pods: List[PerformancePod]) -> None:
+def write_kube_object_performance_section(
+    piggyback_name: str,
+    kube_obj: Union[Cluster, Node, Deployment],
+    performance_pods: Mapping[api.PodUID, PerformancePod],
+):
     """Write cluster, node & deployment sections based on collected performance metrics"""
-    if not pods:
+    if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
         return
 
-    containers = [container for pod in pods for container in pod.containers]
+    selected_pods = [performance_pods[pod.uid] for pod in pods if pod.uid in performance_pods]
+    if not selected_pods:
+        return
 
-    # Memory section
-    _write_performance_section(
-        section_name=SectionName("memory"),
-        section_output=section.Memory(
-            memory_usage_bytes=_aggregate_metric(containers, MetricName("memory_usage_bytes")),
-            memory_swap=_aggregate_metric(containers, MetricName("memory_swap")),
-        ),
-    )
+    with ConditionalPiggybackSection(piggyback_name):
+        containers = [container for pod in selected_pods for container in pod.containers]
+
+        # Memory section
+        _write_performance_section(
+            section_name=SectionName("memory"),
+            section_output=section.Memory(
+                memory_usage_bytes=_aggregate_metric(containers, MetricName("memory_usage_bytes")),
+                memory_swap=_aggregate_metric(containers, MetricName("memory_swap")),
+            ),
+        )
+
+        # CPU section
+        _write_performance_section(
+            section_name=SectionName("cpu_usage"),
+            section_output=section.CpuUsage(
+                usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
+            ),
+        )
 
 
 def pod_performance_sections(pod: PerformancePod) -> None:
@@ -861,7 +878,6 @@ def main(args: Optional[List[str]] = None) -> int:
             uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
 
             # Write performance sections
-            # TODO: remove non aggregated sections with future agent
             for pod in filter_outdated_pods(
                 list(performance_pods.values()), uid_piggyback_mappings
             ):
@@ -869,35 +885,15 @@ def main(args: Optional[List[str]] = None) -> int:
                     pod_performance_sections(pod)
 
             for node in cluster.nodes():
-                with ConditionalPiggybackSection(f"node_{node.name}"):
-                    write_kube_set_performance_sections(
-                        [
-                            performance_pods[pod.uid]
-                            for pod in node.pods(phase=api.Phase.RUNNING)
-                            if pod.uid in performance_pods
-                        ]
-                    )
+                write_kube_object_performance_section(f"node_{node.name}", node, performance_pods)
 
             for deployment in cluster.deployments():
-                with ConditionalPiggybackSection(
-                    f"deployment_{deployment.name(prepend_namespace=True)}"
-                ):
-                    write_kube_set_performance_sections(
-                        [
-                            performance_pods[pod.uid]
-                            for pod in deployment.pods(phase=api.Phase.RUNNING)
-                            if pod.uid in performance_pods
-                        ]
-                    )
-
-            with ConditionalPiggybackSection("cluster_kube"):  # TODO: make name configurable
-                write_kube_set_performance_sections(
-                    [
-                        performance_pods[pod.uid]
-                        for pod in cluster.pods(phase=api.Phase.RUNNING)
-                        if pod.uid in performance_pods
-                    ]
+                write_kube_object_performance_section(
+                    f"deployment_{deployment.name()}", deployment, performance_pods
                 )
+
+            # TODO: make name configurable
+            write_kube_object_performance_section("cluster_kube", cluster, performance_pods)
 
             # TODO: handle pods with no performance data (pod.uid not in performance pods)
 

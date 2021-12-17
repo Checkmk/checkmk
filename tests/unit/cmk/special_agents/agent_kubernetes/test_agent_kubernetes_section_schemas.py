@@ -24,9 +24,9 @@ from cmk.base.plugins.agent_based.utils.k8s import PodResources as PodResourcesC
 from cmk.base.plugins.agent_based.utils.k8s import (
     PodResourcesWithCapacity as PodResourcesWithCapacityC,
 )
-from cmk.base.plugins.agent_based.utils.k8s import Resources as ResourcesC
 from cmk.base.plugins.agent_based.utils.k8s import StartTime as StartTimeC
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle as PodLifeCycleC
+from cmk.base.plugins.agent_based.utils.kube import Resources as ResourcesC
 
 from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import ContainerInfo as ContainerInfoA
@@ -40,7 +40,6 @@ from cmk.special_agents.utils_kubernetes.schemata.api import (
     ContainerWaitingState as ContainerWaitingStateA,
 )
 from cmk.special_agents.utils_kubernetes.schemata.api import KubeletInfo as KubeletInfoA
-from cmk.special_agents.utils_kubernetes.schemata.api import Resources as ResourcesA
 from cmk.special_agents.utils_kubernetes.schemata.api import StartTime as StartTimeA
 from cmk.special_agents.utils_kubernetes.schemata.section import ContainerCount as ContainerCountA
 from cmk.special_agents.utils_kubernetes.schemata.section import Memory as MemoryA
@@ -55,6 +54,7 @@ from cmk.special_agents.utils_kubernetes.schemata.section import PodResources as
 from cmk.special_agents.utils_kubernetes.schemata.section import (
     PodResourcesWithCapacity as PodResourcesWithCapacityA,
 )
+from cmk.special_agents.utils_kubernetes.schemata.section import Resources as ResourcesA
 
 
 def test_schemata_did_not_diverge() -> None:

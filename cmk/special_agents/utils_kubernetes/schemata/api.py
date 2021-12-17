@@ -141,11 +141,6 @@ class Deployment(BaseModel):
     pods: Sequence[PodUID]
 
 
-class Resources(BaseModel):
-    limit: float = float("inf")
-    requests: float = 0.0
-
-
 class Phase(str, enum.Enum):
     RUNNING = "running"
     PENDING = "pending"
@@ -154,9 +149,19 @@ class Phase(str, enum.Enum):
     UNKNOWN = "unknown"
 
 
-class PodUsageResources(BaseModel):
-    cpu: Resources
-    memory: Resources
+class ResourcesRequirements(BaseModel):
+    memory: Optional[float] = None
+    cpu: Optional[float] = None
+
+
+class ContainerResources(BaseModel):
+    limits: ResourcesRequirements
+    requests: ResourcesRequirements
+
+
+class ContainerSpec(BaseModel):
+    resources: ContainerResources
+    name: str
 
 
 class PodSpec(BaseModel):
@@ -164,6 +169,7 @@ class PodSpec(BaseModel):
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
     restart_policy: RestartPolicy
+    containers: Sequence[ContainerSpec]
 
 
 class ContainerRunningState(BaseModel):
@@ -239,7 +245,6 @@ class Pod(BaseModel):
     metadata: MetaData
     status: PodStatus
     spec: PodSpec
-    resources: PodUsageResources
     containers: Mapping[str, ContainerInfo]
 
 

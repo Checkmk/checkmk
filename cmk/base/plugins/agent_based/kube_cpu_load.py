@@ -13,11 +13,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.k8s import Resources
+from cmk.base.plugins.agent_based.utils.kube import Resources
 
 
 def parse(string_table: StringTable) -> Resources:
-    """Parses limit and requests values into Resources"""
+    """Parses limit and request values into Resources"""
     return Resources(**json.loads(string_table[0][0]))
 
 
@@ -26,8 +26,8 @@ def discovery(section: Resources) -> DiscoveryResult:
 
 
 def check(params: Dict[str, Tuple[int, int]], section: Resources) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Request: {section.request}")
     yield Result(state=State.OK, summary=f"Limit: {section.limit}")
-    yield Result(state=State.OK, summary=f"Requests: {section.requests}")
 
 
 # TODO: suggest a new name for section

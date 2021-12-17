@@ -13,15 +13,16 @@ import pytest
 from cmk.base.api.agent_based.checking_classes import Metric
 from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result
+from cmk.base.plugins.agent_based.utils.kube import ExceptionalResource
 
 
 @pytest.fixture
-def requests():
+def resource_request():
     return 4000
 
 
 @pytest.fixture
-def limit():
+def resource_limit():
     return 12000
 
 
@@ -41,13 +42,22 @@ def string_table_performance(memory_performance):
 
 
 @pytest.fixture
-def string_table_resources(requests, limit):
-    return [[json.dumps({"limit": limit, "requests": requests})]]
+def string_table_resources(resource_request, resource_limit):
+    return [[json.dumps({"limit": resource_limit, "request": resource_request})]]
 
 
 @pytest.fixture
 def string_table_unset_resources():
-    return [[json.dumps({"limit": float("inf"), "requests": float("inf")})]]
+    return [
+        [
+            json.dumps(
+                {
+                    "limit": ExceptionalResource.unspecified,
+                    "request": ExceptionalResource.unspecified,
+                }
+            )
+        ]
+    ]
 
 
 @pytest.fixture
@@ -108,10 +118,10 @@ def test_register_check_plugin_calls(check_plugin):
     assert check_plugin.check_function.__wrapped__ == kube_memory.check
 
 
-def test_parse_resources(string_table_resources, requests, limit):
+def test_parse_resources(string_table_resources, resource_request, resource_limit):
     section = kube_memory.parse_memory_resources(string_table_resources)
-    assert section.requests == requests
-    assert section.limit == limit
+    assert section.request == resource_request
+    assert section.limit == resource_limit
 
 
 def test_parse_performance(string_table_performance, usage):
@@ -138,13 +148,13 @@ def test_check_metrics_count(check_result):
     assert len([m for m in check_result if isinstance(m, Metric)]) == 4
 
 
-def test_check_usage_value(check_result, usage, limit):
+def test_check_usage_value(check_result, usage, resource_limit):
     total_usage = usage
-    percentage_usage = total_usage / limit * 100
+    percentage_usage = total_usage / resource_limit * 100
     usage_result = next(check_result)
     assert (
         usage_result.summary
-        == f"Usage: {render.percent(percentage_usage)} - {render.bytes(total_usage)} of {render.bytes(limit)}"
+        == f"Usage: {render.percent(percentage_usage)} - {render.bytes(total_usage)} of {render.bytes(resource_limit)}"
     )
 
 

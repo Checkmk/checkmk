@@ -215,11 +215,6 @@ class NodeInfo(BaseModel):
     labels: Labels
 
 
-class Resources(BaseModel):
-    limit: float = float("inf")
-    requests: float = 0.0
-
-
 class StartTime(BaseModel):
     """section: kube_start_time_v1"""
 

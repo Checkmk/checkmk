@@ -157,14 +157,12 @@ class Pod:
         metadata: api.MetaData,
         status: api.PodStatus,
         spec: api.PodSpec,
-        resources: api.PodUsageResources,
         containers: Mapping[str, api.ContainerInfo],
     ) -> None:
         self.uid = uid
         self.metadata = metadata
         self.spec = spec
         self.status = status
-        self.resources = resources
         self.containers = containers
 
     @property
@@ -195,15 +193,24 @@ class Pod:
             uid=self.uid,
         )
 
-    def cpu_resources(self) -> api.Resources:
-        return api.Resources(
-            limit=self.resources.cpu.limit,
-            requests=self.resources.cpu.requests,
+    def cpu_limit(self) -> section.AggregatedLimit:
+        return aggregate_limit_values(
+            [container.resources.limits.cpu for container in self.spec.containers]
         )
 
-    def memory_resources(self) -> api.Resources:
-        return api.Resources(
-            limit=self.resources.memory.limit, requests=self.resources.memory.requests
+    def cpu_request(self) -> section.AggregatedRequest:
+        return aggregate_request_values(
+            [container.resources.requests.cpu for container in self.spec.containers]
+        )
+
+    def memory_limit(self) -> section.AggregatedLimit:
+        return aggregate_limit_values(
+            [container.resources.limits.memory for container in self.spec.containers]
+        )
+
+    def memory_request(self) -> section.AggregatedRequest:
+        return aggregate_request_values(
+            [container.resources.requests.memory for container in self.spec.containers]
         )
 
     def conditions(self) -> Optional[section.PodConditions]:
@@ -233,6 +240,26 @@ class Pod:
         if self.status.start_time is None:
             return None
         return api.StartTime(start_time=self.status.start_time)
+
+
+def aggregate_request_values(
+    request_values: Sequence[Optional[float]],
+) -> section.AggregatedRequest:
+    if None in request_values:
+        return section.ExceptionalResource.unspecified
+    return sum(request_values)  # type: ignore
+
+
+def aggregate_limit_values(limit_values: Sequence[Optional[float]]) -> section.AggregatedLimit:
+    contains_unspecified = None in limit_values
+    contains_zero = 0 in limit_values
+    if contains_unspecified and contains_zero:
+        return section.ExceptionalResource.zero_unspecified
+    if contains_zero:
+        return section.ExceptionalResource.zero
+    if contains_unspecified:
+        return section.ExceptionalResource.unspecified
+    return sum(limit_values)  # type: ignore
 
 
 class Deployment:
@@ -285,7 +312,7 @@ class Deployment:
     def conditions(self) -> section.DeploymentConditions:
         return section.DeploymentConditions(conditions=self.status.conditions)
 
-    def memory_resources(self) -> api.Resources:
+    def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
 
 
@@ -347,7 +374,7 @@ class Node:
 
         return result
 
-    def memory_resources(self) -> api.Resources:
+    def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
 
 
@@ -374,7 +401,6 @@ class Cluster:
                     pod.metadata,
                     pod.status,
                     pod.spec,
-                    pod.resources,
                     pod.containers,
                 )
             )
@@ -447,16 +473,42 @@ class Cluster:
             raise AttributeError("cluster_details was not provided")
         return self._cluster_details
 
-    def memory_resources(self) -> api.Resources:
+    def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(list(self._pods.values()))
 
 
-def _collect_memory_resources(pods: Sequence[Pod]) -> api.Resources:
-    resources: DefaultDict[str, float] = defaultdict(float)
-    for pod in pods:
-        for k, v in dict(pod.memory_resources()).items():
-            resources[k] += v
-    return api.Resources(**resources)
+# TODO aggregating this by combining the values from pods duplicates some of logic (compare this
+# function to aggregate_limit_values). In the future, Kubernetes objects such as cluster should
+# use aggregate_limit_values.
+def aggregate_limit_values_from_pods(
+    limit_values: Sequence[section.AggregatedLimit],
+) -> section.AggregatedLimit:
+    if section.ExceptionalResource.zero_unspecified in limit_values:
+        return section.ExceptionalResource.zero_unspecified
+    contains_unspecified = section.ExceptionalResource.unspecified in limit_values
+    contains_zero = section.ExceptionalResource.zero in limit_values
+    if contains_zero and contains_unspecified:
+        return section.ExceptionalResource.zero_unspecified
+    if contains_unspecified:
+        return section.ExceptionalResource.unspecified
+    if contains_zero:
+        return section.ExceptionalResource.zero
+    return sum(limit_values)
+
+
+def aggregate_request_values_from_pods(
+    request_values: Sequence[section.AggregatedRequest],
+) -> section.AggregatedRequest:
+    if section.ExceptionalResource.unspecified in request_values:
+        return section.ExceptionalResource.unspecified
+    return sum(request_values)
+
+
+def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
+    return section.Resources(
+        limit=aggregate_limit_values_from_pods([pod.memory_limit() for pod in pods]),
+        request=aggregate_request_values_from_pods([pod.memory_request() for pod in pods]),
+    )
 
 
 class JsonProtocol(Protocol):
@@ -527,13 +579,19 @@ def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
 
 def pod_api_based_checkmk_sections(pod: Pod):
     sections = (
-        ("kube_cpu_resources_v1", pod.cpu_resources),
         ("k8s_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.containers_infos),
         ("kube_start_time_v1", pod.start_time),
-        ("kube_memory_resources_v1", pod.memory_resources),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),
         ("kube_pod_info_v1", pod.info),
+        (
+            "kube_cpu_resources_v1",
+            lambda: section.Resources(limit=pod.cpu_limit(), request=pod.cpu_request()),
+        ),
+        (
+            "kube_memory_resources_v1",
+            lambda: section.Resources(limit=pod.memory_limit(), request=pod.memory_request()),
+        ),
     )
     for section_name, section_call in sections:
         yield section_name, section_call()

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import datetime
 import time
-from collections import defaultdict
 from typing import Dict, List, Mapping, Optional, Sequence, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
@@ -102,18 +101,45 @@ def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
     )
 
 
+def container_resources(container: client.V1Container) -> api.ContainerResources:
+    parsed_limits = api.ResourcesRequirements()
+    parsed_requests = api.ResourcesRequirements()
+    if container.resources is not None:
+        if limits := container.resources.limits:
+            parsed_limits = api.ResourcesRequirements(
+                memory=parse_memory(limits["memory"]) if "memory" in limits else None,
+                cpu=parse_frac_prefix(limits["cpu"]) if "cpu" in limits else None,
+            )
+        if requests := container.resources.requests:
+            parsed_requests = api.ResourcesRequirements(
+                memory=parse_memory(requests["memory"]) if "memory" in requests else None,
+                cpu=parse_frac_prefix(requests["cpu"]) if "cpu" in requests else None,
+            )
+
+    return api.ContainerResources(
+        limits=parsed_limits,
+        requests=parsed_requests,
+    )
+
+
+def containers_spec(containers: Sequence[client.V1Container]) -> Sequence[api.ContainerSpec]:
+    return [
+        api.ContainerSpec(name=container.name, resources=container_resources(container))
+        for container in containers
+    ]
+
+
 def pod_spec(pod: client.V1Pod) -> api.PodSpec:
-    info = {}
-    if pod.spec:
-        info.update(
-            {
-                "node": pod.spec.node_name,
-                "host_network": pod.spec.host_network,
-                "dns_policy": pod.spec.dns_policy,
-                "restart_policy": pod.spec.restart_policy,
-            }
-        )
-    return api.PodSpec(**info)
+    if not pod.spec:
+        return api.PodSpec()
+
+    return api.PodSpec(
+        node=pod.spec.node_name,
+        host_network=pod.spec.host_network,
+        dns_policy=pod.spec.dns_policy,
+        restart_policy=pod.spec.restart_policy,
+        containers=containers_spec(pod.spec.containers),
+    )
 
 
 def pod_status(pod: client.V1Pod) -> api.PodStatus:
@@ -131,29 +157,6 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
         pod_ip=api.IpAddress(pod.status.pod_ip) if pod.status.pod_ip else None,
         qos_class=pod.status.qos_class.lower(),
     )
-
-
-def pod_resources(pod: client.V1Pod) -> api.PodUsageResources:
-    memory: Dict[str, float] = defaultdict(float)
-    cpu: Dict[str, float] = defaultdict(float)
-
-    for container in pod.spec.containers:
-        resources = container.resources
-        if not resources:
-            continue
-
-        if resources.limits:
-            memory["limit"] += parse_memory(resources.limits.get("memory", "inf"))
-            cpu["limit"] += parse_frac_prefix(resources.limits.get("cpu", "inf"))
-        else:
-            memory["limit"] += float("inf")
-            cpu["limit"] += float("inf")
-
-        if resources.requests:
-            cpu["requests"] += parse_frac_prefix(resources.requests.get("cpu", "0.0"))
-            memory["requests"] += parse_memory(resources.requests.get("memory", "0.0"))
-
-    return api.PodUsageResources(cpu=api.Resources(**cpu), memory=api.Resources(**memory))
 
 
 def pod_containers(pod: client.V1Pod) -> Dict[str, api.ContainerInfo]:
@@ -319,7 +322,6 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
         metadata=parse_metadata(pod.metadata),
         status=pod_status(pod),
         spec=pod_spec(pod),
-        resources=pod_resources(pod),
         containers=pod_containers(pod),
     )
 

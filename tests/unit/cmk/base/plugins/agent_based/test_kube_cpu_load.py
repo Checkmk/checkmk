@@ -15,18 +15,18 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
 
 @pytest.fixture
-def limit():
+def resource_limit():
     return 0.3
 
 
 @pytest.fixture
-def requests():
+def resource_request():
     return 0.15
 
 
 @pytest.fixture
-def string_table_element(limit, requests):
-    return {"limit": limit, "requests": requests}
+def string_table_element(resource_limit, resource_request):
+    return {"limit": resource_limit, "request": resource_request}
 
 
 @pytest.fixture
@@ -69,10 +69,10 @@ def test_register_check_plugin_calls(check_plugin):
     assert check_plugin.check_default_parameters == {}
 
 
-def test_parse(string_table, limit, requests):
+def test_parse(string_table, resource_limit, resource_request):
     section = kube_cpu_load.parse(string_table)
-    assert section.limit == limit
-    assert section.requests == requests
+    assert section.limit == resource_limit
+    assert section.request == resource_request
 
 
 def test_discovery_returns_an_iterable(string_table):

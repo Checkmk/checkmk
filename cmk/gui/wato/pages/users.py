@@ -133,8 +133,8 @@ class ModeUsers(WatoMode):
                             entries=list(self._page_menu_entries_synchronized_users()),
                         ),
                         PageMenuTopic(
-                            title=_("Message users"),
-                            entries=list(self._page_menu_entries_message_users()),
+                            title=_("User messages"),
+                            entries=list(self._page_menu_entries_user_messages()),
                         ),
                         make_checkbox_selection_topic(self.name()),
                     ],
@@ -169,10 +169,10 @@ class ModeUsers(WatoMode):
                     item=make_simple_link(self._job.detail_url()),
                 )
 
-    def _page_menu_entries_message_users(self) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_user_messages(self) -> Iterator[PageMenuEntry]:
         if user.may("general.message"):
             yield PageMenuEntry(
-                title=_("Message users"),
+                title=_("Send user messages"),
                 icon_name="message",
                 item=make_simple_link("message.py"),
             )

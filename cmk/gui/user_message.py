@@ -79,7 +79,7 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
 def render_user_message_table(what: str) -> None:
     html.open_div()
     with table_element(
-        "message_users", sortable=False, searchable=False, omit_if_empty=True
+        "user_messages", sortable=False, searchable=False, omit_if_empty=True
     ) as table:
 
         for entry in sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True):

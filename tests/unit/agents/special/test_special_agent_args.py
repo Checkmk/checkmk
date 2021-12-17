@@ -130,6 +130,13 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "ADDRESS",
     ],
     "agent_mqtt": ["SERVER"],
+    "agent_smb_share": [
+        "REMOTE_NAME",
+        "ADDRESS",
+        "USERNAME",
+        "PASSWORD",
+        "Shared folder",
+    ],
 }
 
 

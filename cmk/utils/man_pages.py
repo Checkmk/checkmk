@@ -253,6 +253,7 @@ catalog_titles = {
     "unsorted": "Uncategorized",
     "zertificon": "Zertificon",
     "mqtt": "MQTT",
+    "smb_share": "SMB Share",
 }  # yapf: disable
 
 # TODO: Do we need a more generic place for this?

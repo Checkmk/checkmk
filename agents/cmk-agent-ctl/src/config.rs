@@ -138,14 +138,14 @@ pub struct RegisteredConnections {
 }
 
 impl JSONLoader for RegisteredConnections {}
-pub struct Registration {
+pub struct Registry {
     pub connections: RegisteredConnections,
     pub path: PathBuf,
 }
 
-impl Registration {
-    pub fn from_file(path: &Path) -> AnyhowResult<Registration> {
-        Ok(Registration {
+impl Registry {
+    pub fn from_file(path: &Path) -> AnyhowResult<Registry> {
+        Ok(Registry {
             connections: RegisteredConnections::load(path)?,
             path: PathBuf::from(path),
         })

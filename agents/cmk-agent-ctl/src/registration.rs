@@ -97,7 +97,7 @@ fn post_registration_conn_type(
 
 pub fn register(
     config: config::RegistrationConfig,
-    mut registration: config::Registration,
+    mut registry: config::Registry,
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let uuid = Uuid::new_v4().to_string();
@@ -142,7 +142,7 @@ pub fn register(
         }
     }
 
-    registration.register_connection(
+    registry.register_connection(
         post_registration_conn_type(
             &config.agent_receiver_address,
             &pairing_response.root_cert,
@@ -158,7 +158,7 @@ pub fn register(
         },
     )?;
 
-    registration.save()?;
+    registry.save()?;
 
     Ok(())
 }

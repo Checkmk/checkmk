@@ -35,10 +35,10 @@ const LOG_FILE: &str = "cmk-agent-ctl.log";
 const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 const TLS_ID: &[u8] = b"16";
 
-fn push(registration: config::Registration) -> AnyhowResult<()> {
+fn push(registry: config::Registry) -> AnyhowResult<()> {
     let mon_data = monitoring_data::collect().context("Error collecting monitoring data")?;
 
-    for (agent_receiver_address, server_spec) in registration.push_connections() {
+    for (agent_receiver_address, server_spec) in registry.push_connections() {
         agent_receiver_api::agent_data(
             agent_receiver_address,
             &server_spec.root_cert,
@@ -64,8 +64,8 @@ fn dump() -> AnyhowResult<()> {
     Ok(())
 }
 
-fn pull(registration: config::Registration) -> AnyhowResult<()> {
-    if is_legacy_pull(&registration) {
+fn pull(registry: config::Registry) -> AnyhowResult<()> {
+    if is_legacy_pull(&registry) {
         return dump();
     }
 
@@ -74,7 +74,7 @@ fn pull(registration: config::Registration) -> AnyhowResult<()> {
     stream.write_all(TLS_ID)?;
     stream.flush()?;
 
-    let mut tls_connection = tls_server::tls_connection(registration.pull_connections())
+    let mut tls_connection = tls_server::tls_connection(registry.pull_connections())
         .context("Could not initialize TLS.")?;
     let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
 
@@ -86,11 +86,11 @@ fn pull(registration: config::Registration) -> AnyhowResult<()> {
     Ok(())
 }
 
-fn is_legacy_pull(registration: &config::Registration) -> bool {
+fn is_legacy_pull(registry: &config::Registry) -> bool {
     if !Path::new(HOME_DIR).join(LEGACY_PULL_FILE).exists() {
         return false;
     }
-    if !registration.is_empty() {
+    if !registry.is_empty() {
         return false;
     }
     true
@@ -197,22 +197,22 @@ fn init() -> (cli::Args, PathBuf, PathBuf) {
 
 fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> AnyhowResult<()> {
     let stored_config = config::ConfigFromDisk::load(config_path)?;
-    let registration = config::Registration::from_file(conn_path)
+    let registry = config::Registry::from_file(conn_path)
         .context("Error while loading registered connections.")?;
     match args {
         cli::Args::Register(reg_args) => {
             registration::register(
                 config::RegistrationConfig::new(stored_config, reg_args)?,
-                registration,
+                registry,
             )?;
             disallow_legacy_pull().context(
                 "Registration successful, but could not delete marker for legacy pull mode",
             )
         }
-        cli::Args::Push { .. } => push(registration),
-        cli::Args::Pull { .. } => pull(registration),
+        cli::Args::Push { .. } => push(registry),
+        cli::Args::Pull { .. } => pull(registry),
         cli::Args::Dump { .. } => dump(),
-        cli::Args::Status(status_args) => status::status(registration, status_args.json),
+        cli::Args::Status(status_args) => status::status(registry, status_args.json),
     }
 }
 

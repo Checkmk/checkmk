@@ -272,24 +272,24 @@ impl std::fmt::Display for ConnectionStatus {
 }
 
 impl Status {
-    fn from(registration: config::Registration) -> Status {
+    fn from(registry: config::Registry) -> Status {
         let mut conn_stats = Vec::new();
 
-        for (server, push_conn) in registration.push_connections() {
+        for (server, push_conn) in registry.push_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 server,
                 push_conn,
                 config::ConnectionType::Push,
             ));
         }
-        for (server, pull_conn) in registration.standard_pull_connections() {
+        for (server, pull_conn) in registry.standard_pull_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 server,
                 pull_conn,
                 config::ConnectionType::Pull,
             ));
         }
-        for (idx, imp_pull_conn) in registration.imported_pull_connections().enumerate() {
+        for (idx, imp_pull_conn) in registry.imported_pull_connections().enumerate() {
             conn_stats.push(ConnectionStatus::from_imported_conn(imp_pull_conn, idx + 1));
         }
 
@@ -336,8 +336,8 @@ fn fmt_option_to_str(op: &Option<impl std::fmt::Display>, none_str: &str) -> Str
     }
 }
 
-pub fn status(registration: config::Registration, json: bool) -> AnyhowResult<()> {
-    println!("{}", Status::from(registration).to_string(json)?);
+pub fn status(registry: config::Registry, json: bool) -> AnyhowResult<()> {
+    println!("{}", Status::from(registry).to_string(json)?);
     Ok(())
 }
 

@@ -11,6 +11,7 @@ from datetime import datetime
 
 import pytest
 
+from tests.testlib import web  # pylint: disable=unused-import
 from tests.testlib import create_linux_test_host, on_time, repo_path
 from tests.testlib.site import Site
 
@@ -43,7 +44,7 @@ def cfg_setup_fixture(
 
     site.restart_core()
 
-    create_linux_test_host(request, site, "test-prediction")
+    create_linux_test_host(request, web, site, "test-prediction")
 
     site.write_text_file(
         "etc/check_mk/conf.d/linux_test_host_%s_cpu_load.mk" % hostname,
@@ -56,7 +57,7 @@ custom_checks = [
 """,
     )
 
-    site.activate_changes_and_wait_for_core_reload()
+    web.activate_changes()
 
     yield
 

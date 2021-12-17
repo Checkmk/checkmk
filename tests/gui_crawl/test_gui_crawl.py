@@ -20,13 +20,13 @@ from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urls
 import playwright.async_api
 import pytest
 import requests
-import requests.utils
 from bs4 import BeautifulSoup  # type: ignore[import]
 from lxml import etree
 from playwright.async_api import async_playwright
 
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
+from tests.testlib.web_session import CMKWebSession
 
 logger = logging.getLogger()
 
@@ -103,26 +103,41 @@ class Url:
 class PageVisitor:
     Timeout: int = 60
 
-    def __init__(
-        self,
-        requests_session: requests.Session,
-        browser: playwright.async_api.Browser,
-        storage_state: playwright.async_api.StorageState,
-    ) -> None:
-        self.requests_session = requests_session
-        self.browser = browser
-        self.storage_state = storage_state
+    def __init__(self, web_session: CMKWebSession) -> None:
+        self.web_session = web_session
 
     async def get_content_type(self, url: Url) -> str:
         def blocking():
             try:
-                response = self.requests_session.head(url.url, timeout=self.Timeout)
+                response = self.web_session.request(
+                    "head", url.url_without_host(), timeout=self.Timeout
+                )
             except requests.Timeout:
                 raise TimeoutError(url)
             return response.headers.get("content-type")
 
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, blocking)
+
+    async def get_text_and_logs(self, url: Url) -> Tuple[str, Iterable[str]]:
+        def blocking():
+            response = self.web_session.get(url.url_without_host())
+            return response.text
+
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, blocking), []
+
+
+class BrowserPageVisitor(PageVisitor):
+    def __init__(
+        self,
+        web_session: CMKWebSession,
+        browser: playwright.async_api.Browser,
+        storage_state: playwright.async_api.StorageState,
+    ) -> None:
+        super().__init__(web_session)
+        self.browser = browser
+        self.storage_state = storage_state
 
     async def get_text_and_logs(self, url: Url) -> Tuple[str, Iterable[str]]:
         logs = []
@@ -147,9 +162,14 @@ class PageVisitor:
         return text, logs
 
 
-async def create_requests_session() -> requests.Session:
+async def create_web_session(site: Site) -> CMKWebSession:
     def blocking():
-        return requests.Session()
+        web_session = CMKWebSession(site)
+        # disable content parsing on each request for performance reasons
+        web_session._handle_http_response = lambda *args, **kwargs: None  # type: ignore
+        web_session.login()
+        web_session.enforce_non_localized_gui()
+        return web_session
 
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, blocking)
@@ -175,17 +195,12 @@ async def create_browser_and_context(
     return browser, storage_state
 
 
-async def create_visitor(site: Site) -> PageVisitor:
-    requests_session = await create_requests_session()
-    browser, storage_state = await create_browser_and_context(site)
-
-    for cookie_dict in storage_state["cookies"]:
-        requests_session.cookies.set(
-            name=cookie_dict["name"],
-            value=cookie_dict["value"],
-        )
-
-    return PageVisitor(requests_session, browser, storage_state)
+async def create_visitor(site: Site, use_browser: bool) -> PageVisitor:
+    web_session = await create_web_session(site)
+    if use_browser:
+        browser, storage_state = await create_browser_and_context(site)
+        return BrowserPageVisitor(web_session, browser, storage_state)
+    return PageVisitor(web_session)
 
 
 @dataclass
@@ -283,8 +298,8 @@ class Crawler:
 
         Path(self.report_file).write_bytes(etree.tostring(root, pretty_print=True))
 
-    async def crawl(self, max_tasks: int = 10) -> None:
-        visitor = await create_visitor(self.site)
+    async def crawl(self, max_tasks: int = 10, use_browser: bool = True) -> None:
+        visitor = await create_visitor(self.site, use_browser=use_browser)
         with Progress() as progress:
             tasks: Set = set()
             while tasks or self._todos:
@@ -549,14 +564,15 @@ def site() -> Site:
 
 
 def test_crawl(site: Site) -> None:
-    max_crawler_tasks = int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 10))
+    use_browser = os.environ.get("USE_BROWSER", "1") == "1"
+    max_crawler_tasks = int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 10 if use_browser else 100))
     xss_crawl = os.environ.get("XSS_CRAWL", "0") == "1"
 
     crawler_type = XssCrawler if xss_crawl else Crawler
 
     crawler = crawler_type(site, report_file=os.environ.get("CRAWL_REPORT"))
     try:
-        asyncio.run(crawler.crawl(max_tasks=max_crawler_tasks))
+        asyncio.run(crawler.crawl(max_tasks=max_crawler_tasks, use_browser=use_browser))
     finally:
         crawler.report()
 

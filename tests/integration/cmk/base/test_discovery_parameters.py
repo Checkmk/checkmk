@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from tests.testlib import create_linux_test_host
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 
 from cmk.utils.type_defs import HostName
@@ -12,11 +13,13 @@ from cmk.utils.type_defs import HostName
 import cmk.base.autochecks as autochecks
 
 
-def test_test_check_1_merged_rule(request, site: Site, web):
+def test_test_check_1_merged_rule(
+    request, site: Site, web
+):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "disco-params-test-host"
 
-    create_linux_test_host(request, site, host_name)
+    create_linux_test_host(request, web, site, host_name)
     site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_1.py"
@@ -58,9 +61,9 @@ register.check_plugin(
 """,
     )
 
-    site.activate_changes_and_wait_for_core_reload()
+    web.activate_changes()
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    web.discover_services(host_name)
 
     # Verify that the discovery worked as expected
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
@@ -79,7 +82,7 @@ register.check_plugin(
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    web.discover_services(host_name)
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_1":
@@ -89,11 +92,13 @@ register.check_plugin(
         raise AssertionError('"test_check_1" not discovered')
 
 
-def test_test_check_1_all_rule(request, site: Site, web):
+def test_test_check_1_all_rule(
+    request, site: Site, web
+):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "disco-params-test-host"
 
-    create_linux_test_host(request, site, host_name)
+    create_linux_test_host(request, web, site, host_name)
     site.write_text_file(
         "var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n"
     )
@@ -137,9 +142,9 @@ register.check_plugin(
 """,
     )
 
-    site.activate_changes_and_wait_for_core_reload()
+    web.activate_changes()
 
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    web.discover_services(host_name)
 
     # Verify that the discovery worked as expected
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
@@ -159,7 +164,7 @@ register.check_plugin(
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    web.discover_services(host_name)
     entries = autochecks.AutochecksStore(HostName(host_name)).read()
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_2":

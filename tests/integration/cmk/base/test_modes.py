@@ -10,34 +10,35 @@ from typing import List, NamedTuple
 
 import pytest
 
+from tests.testlib import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(name="test_cfg", scope="module")
-def test_cfg_fixture(site: Site, web):
+def test_cfg_fixture(web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Applying default config")
-    site.openapi.create_host(
+    web.add_host(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    site.openapi.create_host(
+    web.add_host(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    web.add_host(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    web.add_host(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -61,12 +62,12 @@ def test_cfg_fixture(site: Site, web):
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    web.discover_services("modes-test-host")  # Replace with RestAPI call, see CMK-9249
-    web.discover_services("modes-test-host2")  # Replace with RestAPI call, see CMK-9249
-    web.discover_services("modes-test-host3")  # Replace with RestAPI call, see CMK-9249
+    web.discover_services("modes-test-host")
+    web.discover_services("modes-test-host2")
+    web.discover_services("modes-test-host3")
 
     try:
-        site.activate_changes_and_wait_for_core_reload()
+        web.activate_changes()
         yield None
     finally:
         #
@@ -78,12 +79,12 @@ def test_cfg_fixture(site: Site, web):
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        site.openapi.delete_host("modes-test-host")
-        site.openapi.delete_host("modes-test-host2")
-        site.openapi.delete_host("modes-test-host3")
-        site.openapi.delete_host("modes-test-host4")
+        web.delete_host("modes-test-host")
+        web.delete_host("modes-test-host2")
+        web.delete_host("modes-test-host3")
+        web.delete_host("modes-test-host4")
 
-        site.activate_changes_and_wait_for_core_reload()
+        web.activate_changes()
 
 
 class CommandOutput(NamedTuple):

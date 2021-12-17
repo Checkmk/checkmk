@@ -10,7 +10,7 @@ import shutil
 import tempfile
 from contextlib import suppress
 from pathlib import Path
-from typing import Mapping
+from uuid import UUID
 
 from agent_receiver.certificates import CertValidationRoute, uuid_from_pem_csr
 from agent_receiver.checkmk_rest_api import (
@@ -25,6 +25,7 @@ from agent_receiver.log import logger
 from agent_receiver.models import (
     HostTypeEnum,
     PairingBody,
+    PairingResponse,
     RegistrationStatus,
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
@@ -44,12 +45,12 @@ cert_validation_router = APIRouter(route_class=CertValidationRoute)
 security = HTTPBasic()
 
 
-@app.post("/pairing")
+@app.post("/pairing", response_model=PairingResponse)
 async def pairing(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
     pairing_body: PairingBody,
-) -> Mapping[str, str]:
+) -> PairingResponse:
     uuid = uuid_from_pem_csr(pairing_body.csr)
 
     if not (rest_api_root_cert_resp := get_root_cert(credentials)).ok:
@@ -87,10 +88,10 @@ async def pairing(
         uuid,
     )
 
-    return {
-        "root_cert": rest_api_root_cert_resp.json()["cert"],
-        "client_cert": rest_api_csr_resp.json()["cert"],
-    }
+    return PairingResponse(
+        root_cert=rest_api_root_cert_resp.json()["cert"],
+        client_cert=rest_api_csr_resp.json()["cert"],
+    )
 
 
 @app.post(
@@ -135,7 +136,7 @@ def _write_registration_file(
     (new_request := dir_new_requests / f"{registration_body.uuid}.json").write_text(
         json.dumps(
             {
-                "uuid": registration_body.uuid,
+                "uuid": str(registration_body.uuid),
                 "username": username,
                 "agent_labels": registration_body.agent_labels,
             }
@@ -173,7 +174,7 @@ async def register_with_labels(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-def _move_ready_file(uuid: str) -> None:
+def _move_ready_file(uuid: UUID) -> None:
     with suppress(FileNotFoundError):
         # TODO: use RegistrationState.READY.name
         (REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").rename(
@@ -186,7 +187,7 @@ def _move_ready_file(uuid: str) -> None:
     status_code=HTTP_204_NO_CONTENT,
 )
 async def agent_data(
-    uuid: str,
+    uuid: UUID,
     *,
     certificate: str = Header(...),
     monitoring_data: UploadFile = File(...),
@@ -245,7 +246,7 @@ async def agent_data(
 
 @cert_validation_router.get("/registration_status/{uuid}", response_model=RegistrationStatus)
 async def registration_status(
-    uuid: str,
+    uuid: UUID,
     certificate: str = Header(...),
 ) -> RegistrationStatus:
     host = Host(uuid)

@@ -6,26 +6,27 @@
 
 import time
 from pathlib import Path
+from uuid import UUID
 
 from agent_receiver import constants
 from agent_receiver.models import HostTypeEnum
 from agent_receiver.utils import Host, update_file_access_time
 
 
-def test_host_not_registered() -> None:
-    host = Host("1234")
+def test_host_not_registered(uuid: UUID) -> None:
+    host = Host(uuid)
 
     assert host.registered is False
     assert host.hostname is None
     assert host.host_type is None
 
 
-def test_pull_host_registered(tmp_path: Path) -> None:
-    source = constants.AGENT_OUTPUT_DIR / "1234"
+def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
+    source = constants.AGENT_OUTPUT_DIR / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
-    host = Host("1234")
+    host = Host(uuid)
 
     assert host.registered is True
     assert host.hostname == "hostname"
@@ -33,13 +34,13 @@ def test_pull_host_registered(tmp_path: Path) -> None:
     assert host.source_path == source
 
 
-def test_push_host_registered(tmp_path: Path) -> None:
-    source = constants.AGENT_OUTPUT_DIR / "1234"
+def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
+    source = constants.AGENT_OUTPUT_DIR / str(uuid)
     target_dir = tmp_path / "hostname"
     target_dir.touch()
     source.symlink_to(target_dir)
 
-    host = Host("1234")
+    host = Host(uuid)
 
     assert host.registered is True
     assert host.hostname == "hostname"

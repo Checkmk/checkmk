@@ -6,6 +6,7 @@
 
 from base64 import urlsafe_b64encode
 from pathlib import Path
+from uuid import UUID, uuid4
 
 import pytest
 from agent_receiver import constants
@@ -65,3 +66,8 @@ def fixture_untrusted_cert(tmp_path: Path) -> Certificate:
 @pytest.fixture(name="untrusted_cert_b64")
 def fixture_untrusted_cert_b64(untrusted_cert: Certificate) -> str:
     return urlsafe_b64encode(untrusted_cert.public_bytes(Encoding.DER)).decode()
+
+
+@pytest.fixture(name="uuid")
+def fixture_uuid() -> UUID:
+    return uuid4()

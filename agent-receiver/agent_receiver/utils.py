@@ -8,14 +8,15 @@ import json
 import os
 from pathlib import Path
 from typing import Optional
+from uuid import UUID
 
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
 
 
 class Host:
-    def __init__(self, uuid: str):
-        self._source_path = AGENT_OUTPUT_DIR / uuid
+    def __init__(self, uuid: UUID):
+        self._source_path = AGENT_OUTPUT_DIR / str(uuid)
 
         self._registered = self.source_path.is_symlink()
         target_path = self._get_target_path() if self.registered else None
@@ -69,7 +70,7 @@ def update_file_access_time(path: Path) -> None:
         pass
 
 
-def get_registration_status_from_file(uuid: str) -> Optional[RegistrationData]:
+def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
     for status in RegistrationStatusEnum:
         path = REGISTRATION_REQUESTS / status.name / f"{uuid}.json"
         if path.exists():

@@ -172,7 +172,7 @@ class IPMIFetcher(AgentFetcher):
             if "error" in rsp:
                 continue
 
-            reading = sensor.decode_sensor_reading(rsp["data"])
+            reading = sensor.decode_sensor_reading(self._command, rsp["data"])
             if reading is not None:
                 # sometimes (wrong) data for GPU sensors is reported, even if
                 # not installed

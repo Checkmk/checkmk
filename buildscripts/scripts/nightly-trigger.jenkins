@@ -3,7 +3,7 @@ FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
 
 def DISTRO_LIST_DEFAULT = ''
 withFolderProperties{
-    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    DISTRO_LIST_DEFAULT = env.DISTRO_LIST_DAILY
 }
 
 properties([
@@ -12,7 +12,7 @@ properties([
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
   ]),
   pipelineTriggers([
-    cron('H 0 * * *')
+    cron('H 4 * * *')
   ])
 ])
 

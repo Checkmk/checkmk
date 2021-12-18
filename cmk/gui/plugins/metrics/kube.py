@@ -111,6 +111,37 @@ metric_info["kube_cpu_limit_utilization"] = {
     "color": "46/a",
 }
 
+metric_info["kube_memory_usage"] = {
+    "title": _("Usage"),
+    "unit": "bytes",
+    "color": "31/a",
+}
+
+metric_info["kube_memory_request"] = {
+    "title": _("Request"),
+    "unit": "bytes",
+    "color": "42/a",
+}
+
+metric_info["kube_memory_limit"] = {
+    "title": _("Limit"),
+    "unit": "bytes",
+    "color": "42/b",
+}
+
+
+metric_info["kube_memory_request_utilization"] = {
+    "title": _("Request utilization"),
+    "unit": "%",
+    "color": "42/a",
+}
+
+metric_info["kube_memory_limit_utilization"] = {
+    "title": _("Limit utilization"),
+    "unit": "%",
+    "color": "42/b",
+}
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -173,4 +204,24 @@ graph_info["kube_cpu_utilization"] = {
         ("kube_cpu_limit_utilization", "line"),
     ],
     "optional_metrics": ["kube_cpu_request_utilization", "kube_cpu_limit_utilization"],
+}
+
+# TODO Add additional boundaries for percent. (only zero at the bottom)
+graph_info["kube_memory_usage"] = {
+    "title": _("Container memory"),
+    "metrics": [
+        ("kube_memory_request", "line"),
+        ("kube_memory_limit", "line"),
+        ("kube_memory_usage", "area"),
+    ],
+    "optional_metrics": ["kube_memory_request", "kube_memory_limit"],
+}
+
+graph_info["kube_memory_utilization"] = {
+    "title": _("Memory utilization"),
+    "metrics": [
+        ("kube_memory_request_utilization", "line"),
+        ("kube_memory_limit_utilization", "line"),
+    ],
+    "optional_metrics": ["kube_memory_request_utilization", "kube_memory_limit_utilization"],
 }

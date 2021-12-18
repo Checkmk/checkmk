@@ -242,6 +242,10 @@ class SpecialAgentSource(ProgramSource):
         params: Dict,
     ) -> Optional[str]:
         info_func = config.special_agent_info[special_agent_id]
+        # TODO: We call a user supplied function here.
+        # If this crashes during config generation, it can get quite ugly.
+        # We should really wrap this and implement proper sanitation and exception handling.
+        # Deal with this when modernizing the API (CMK-3812).
         agent_configuration = info_func(params, hostname, ipaddress)
         if isinstance(agent_configuration, SpecialAgentConfiguration):
             return agent_configuration.stdin
@@ -263,5 +267,6 @@ class SpecialAgentSource(ProgramSource):
         params: Dict,
     ) -> str:
         info_func = config.special_agent_info[special_agent_id]
+        # TODO: CMK-3812 (see above)
         agent_configuration = info_func(params, hostname, ipaddress)
         return core_config.active_check_arguments(hostname, None, agent_configuration)

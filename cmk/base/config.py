@@ -169,7 +169,7 @@ DiscoveryCheckParameters = Dict
 
 class SpecialAgentConfiguration(NamedTuple):
     args: List[str]
-    # None makes the stdin of suprocess /dev/null
+    # None makes the stdin of subprocess /dev/null
     stdin: Optional[str]
 
 

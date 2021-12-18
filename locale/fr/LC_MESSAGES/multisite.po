@@ -31956,6 +31956,9 @@ msgstr ""
 msgid "Not"
 msgstr "Non"
 
+msgid "Not a valid URL (Only http and https URLs are allowed)."
+msgstr ""
+
 msgid "Not activated"
 msgstr "Non activé"
 

@@ -115,6 +115,7 @@ timeout(time: 12, unit: 'HOURS') {
                 }
             }
         }
+
         try {
             if (!params.FAKE_WINDOWS_ARTIFACTS) {
                 // Clean up agent artifacts to not accidentally reuse things from
@@ -160,9 +161,11 @@ timeout(time: 12, unit: 'HOURS') {
         } catch(Exception e) {
             notify.notify_error(e)
         }
+
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            create_and_upload_bom(WORKSPACE, BRANCH_VERSION, VERSION)
+
             def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
-    
             BUILD_IMAGE.inside(DOCKER_ARGS) {
                 create_source_package(WORKSPACE, CMK_VERS)
     
@@ -318,6 +321,58 @@ def build_linux_agent_updater(AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO
             mkdir -p ${WORKSPACE}/agents
             cp ${WORKSPACE}/git/enterprise/agents/plugins/cmk-update-agent${SUFFIX} ${WORKSPACE}/agents
         """
+    }
+}
+
+def create_and_upload_bom(WORKSPACE, BRANCH_VERSION, VERSION) {
+    def CMK_DIR = WORKSPACE + "/git"
+    def SCANNER_DIR = WORKSPACE + "/dependencyscanner"
+    def BOM_PATH = CMK_DIR + "/omd/bill-of-materials.json"
+    def SCANNER_IMAGE
+
+    stage('Prepare BOM') {
+        dir(SCANNER_DIR) {
+            checkout([
+                $class: 'GitSCM',
+                branches: [
+                    [name: 'refs/heads/master']
+                ],
+                browser: [
+                    $class: 'GitWeb',
+                    repoUrl: 'https://review.lan.tribe29.com/git/?p=dependencyscanner.git'
+                ],
+                userRemoteConfigs: [
+                    [
+                        credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
+                        url: 'ssh://jenkins@review.lan.tribe29.com:29418/dependencyscanner'
+                    ]
+                ]
+            ])
+        }
+
+        dir(SCANNER_DIR) {
+            SCANNER_IMAGE = docker.build("dependencyscanner", "--tag dependencyscanner .")
+        }
+    }
+
+    stage('Create BOM') {
+        dir(SCANNER_DIR) {
+            SCANNER_IMAGE.inside("-v ${CMK_DIR}:${CMK_DIR}") {
+                sh("python3 -m dependencyscanner --outfile '${BOM_PATH}' '${CMK_DIR}'")
+            }
+        }
+    }
+
+    stage('Upload BOM') {
+        dir(SCANNER_DIR) {
+            withCredentials([string(credentialsId: 'dtrack', variable: 'DTRACK_API_KEY')]) {
+                withEnv(["DTRACK_URL=${DTRACK_URL}"]) {
+                    SCANNER_IMAGE.inside("-v ${CMK_DIR}:${CMK_DIR} --env DTRACK_URL,DTRACK_API_KEY") {
+                        sh("scripts/upload-bom --bom-path '${BOM_PATH}' --project-name 'Checkmk ${BRANCH_VERSION}' --project-version '${VERSION}'")
+                    }
+                }
+            }
+        }
     }
 }
 

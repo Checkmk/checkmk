@@ -20,8 +20,7 @@ RRDServiceName = str
 def rrd_pnp_host_dir(hostname: HostName) -> str:
     # We need /opt here because of bug in rrdcached
     return (
-        "/opt"
-        + cmk.utils.paths.omd_root
+        str(cmk.utils.paths.opt_root)
         + "/var/pnp4nagios/perfdata/"
         + cmk.utils.pnp_cleanup(hostname)
     )

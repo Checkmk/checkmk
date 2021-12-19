@@ -1105,21 +1105,21 @@ class html(ABCHTMLGenerator):
             min_parts = ["_min", ""]
 
         for min_part in min_parts:
-            path_pattern = (
-                cmk.utils.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
-            )
-            if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
-                filename_for_browser = "js/%s%s-%s.js" % (jsname, min_part, cmk_version.__version__)
+            fname = f"{jsname}{min_part}.js"
+            if (cmk.utils.paths.omd_root / rel_path / fname).exists() or (
+                cmk.utils.paths.omd_root / "local" / rel_path / fname
+            ).exists():
+                filename_for_browser = f"js/{jsname}{min_part}-{cmk_version.__version__}.js"
                 break
 
         return filename_for_browser
 
     def _css_filename_for_browser(self, css: str) -> Optional[str]:
-        rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
-        if os.path.exists(cmk.utils.paths.omd_root + rel_path) or os.path.exists(
-            cmk.utils.paths.omd_root + "/local" + rel_path
-        ):
-            return "%s-%s.css" % (css, cmk_version.__version__)
+        rel_path = f"/share/check_mk/web/htdocs/{css}.css"
+        if (cmk.utils.paths.omd_root / rel_path).exists() or (
+            cmk.utils.paths.omd_root / "local" / rel_path
+        ).exists():
+            return f"{css}-{cmk_version.__version__}.css"
         return None
 
     def html_head(

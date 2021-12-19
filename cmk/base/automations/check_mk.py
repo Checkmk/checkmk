@@ -507,33 +507,33 @@ class AutomationRenameHosts(Automation):
         actions = []
 
         # Temporarily stop processing of performance data
-        npcd_running = os.path.exists(omd_root + "/tmp/pnp4nagios/run/npcd.pid")
+        npcd_running = (omd_root / "tmp/pnp4nagios/run/npcd.pid").exists()
         if npcd_running:
             os.system("omd stop npcd >/dev/null 2>&1 </dev/null")
 
-        rrdcache_running = os.path.exists(omd_root + "/tmp/run/rrdcached.sock")
+        rrdcache_running = (omd_root / "tmp/run/rrdcached.sock").exists()
         if rrdcache_running:
             os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
 
         try:
             # Fix pathnames in XML files
             self.rename_host_in_files(
-                os.path.join(omd_root, "var/pnp4nagios/perfdata", oldname, "*.xml"),
+                str(omd_root / "var/pnp4nagios/perfdata" / oldname / "*.xml"),
                 "/perfdata/%s/" % oldregex,
                 "/perfdata/%s/" % newname,
             )
 
             # RRD files
-            if self._rename_host_dir(omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
+            if self._rename_host_dir(str(omd_root / "var/pnp4nagios/perfdata"), oldname, newname):
                 actions.append("rrd")
 
             # RRD files
-            if self._rename_host_dir(omd_root + "/var/check_mk/rrd", oldname, newname):
+            if self._rename_host_dir(str(omd_root / "var/check_mk/rrd"), oldname, newname):
                 actions.append("rrd")
 
             # entries of rrdcached journal
             if self.rename_host_in_files(
-                os.path.join(omd_root, "var/rrdcached/rrd.journal.*"),
+                str(omd_root / "var/rrdcached/rrd.journal.*"),
                 "/(perfdata|rrd)/%s/" % oldregex,
                 "/\\1/%s/" % newname,
                 extended_regex=True,
@@ -1025,14 +1025,14 @@ class AutomationRestart(Automation):
 
     def _time_of_last_core_restart(self) -> float:
         if config.monitoring_core == "cmc":
-            pidfile_path = omd_root + "/tmp/run/cmc.pid"
+            pidfile_path = omd_root / "/tmp/run/cmc.pid"
         else:
-            pidfile_path = omd_root + "/tmp/lock/nagios.lock"
+            pidfile_path = omd_root / "/tmp/lock/nagios.lock"
 
-        if os.path.exists(pidfile_path):
-            return os.stat(pidfile_path).st_mtime
-
-        return 0.0
+        try:
+            return pidfile_path.stat().st_mtime
+        except FileNotFoundError:
+            return 0.0
 
 
 automations.register(AutomationRestart())
@@ -1568,7 +1568,7 @@ class AutomationActiveCheck(Automation):
 
     def _load_resource_file(self, macros: Dict[str, str]) -> None:
         try:
-            for line in open(omd_root + "/etc/nagios/resource.cfg"):
+            for line in (omd_root / "etc/nagios/resource.cfg").open():
                 line = line.strip()
                 if not line or line[0] == "#":
                     continue

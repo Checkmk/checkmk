@@ -236,7 +236,7 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    diskspace_config = cmk.utils.paths.omd_root + "/etc/diskspace.conf"
+    diskspace_config = cmk.utils.paths.omd_root / "etc/diskspace.conf"
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -405,7 +405,7 @@ add_replication_paths(
         ReplicationPath(
             "file",
             "diskspace",
-            os.path.relpath(ConfigDomainDiskspace.diskspace_config, cmk.utils.paths.omd_root),
+            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
             [],
         ),
     ]

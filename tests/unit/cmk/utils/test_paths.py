@@ -12,12 +12,10 @@ from tests.testlib import import_module, repo_path
 
 _NON_STD_PREFIX: Mapping[str, str] = {
     "mkbackup_lock_dir": "/%.0s",
-    # "some_opt_requiring_path": "/opt/%s"
+    "opt_root": "/opt%s",
 }
 
 _STR_PATHS: Final = {
-    "omd_root",
-    "opt_root",
     "trusted_ca_file",
     "root_cert_file",
     "site_cert_file",
@@ -83,12 +81,12 @@ def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
 
         if var in _STR_PATHS:
             assert isinstance(value, str)
-            assert value.startswith("/opt" if var == "opt_root" else root)  # cleaned up right away!
+            assert value.startswith(root)
             continue
 
         assert isinstance(value, Path)
         required_prefix = _NON_STD_PREFIX.get(var, "%s") % root
-        assert str(value).startswith(required_prefix)
+        assert str(value).startswith(required_prefix), repr((var, value, required_prefix))
 
 
 def test_paths_in_omd_and_opt_root(monkeypatch):

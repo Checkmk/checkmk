@@ -17,7 +17,7 @@ def _path(*args: Union[str, Path]) -> str:
 
 
 def _omd_path(path: str) -> Path:
-    return Path(omd_root, path)
+    return omd_root / path
 
 
 def _omd_path_str(path: str) -> str:
@@ -30,8 +30,8 @@ def _local_path(global_path: Union[str, Path]) -> Path:
 
 # TODO: Add active_checks_dir and use it in code
 
-omd_root = _path(os.environ.get("OMD_ROOT", ""))
-opt_root = _path("/opt" + omd_root)
+omd_root = Path(os.environ.get("OMD_ROOT", ""))
+opt_root = "/opt" / omd_root.relative_to(omd_root.root)
 
 mkbackup_lock_dir = Path("/run/lock/mkbackup")
 trusted_ca_file = _omd_path_str("var/ssl/ca-certificates.crt")

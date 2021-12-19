@@ -231,15 +231,13 @@ def get_replication_paths() -> List[ReplicationPath]:
         ReplicationPath(
             "dir",
             "local",
-            os.path.relpath(cmk.utils.paths.omd_root + "/local", cmk.utils.paths.omd_root),
+            "local",
             [],
         ),
         ReplicationPath(
             "file",
             "omd",
-            os.path.relpath(
-                cmk.utils.paths.omd_root + "/etc/omd/sitespecific.mk", cmk.utils.paths.omd_root
-            ),
+            "etc/omd/sitespecific.mk",
             [],
         ),
     ]

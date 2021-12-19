@@ -16,9 +16,9 @@ from cmk.utils.type_defs import HostName
 opt_verbose = "-v" in sys.argv
 opt_force = "-f" in sys.argv
 
-config_file: str = omd_root + "/etc/diskspace.conf"
-plugin_dir: str = omd_root + "/share/diskspace"
-plugin_dir_local: str = omd_root + "/local/share/diskspace"
+config_file = str(omd_root / "etc/diskspace.conf")
+plugin_dir = str(omd_root / "share/diskspace")
+plugin_dir_local = str(omd_root / "local/share/diskspace")
 
 # Configuration variables
 min_free_bytes: Optional[int] = None
@@ -93,7 +93,7 @@ def _resolve_paths() -> None:
         for path in plugin.get("cleanup_paths", []):
             # Make relative paths absolute ones
             if path[0] != "/":
-                path = omd_root + "/" + path
+                path = str(omd_root / path)
 
             # This resolves given path patterns to really existing files.
             # It also ensures that the files in the resolved list do really exist.

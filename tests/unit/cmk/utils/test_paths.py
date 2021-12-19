@@ -15,6 +15,7 @@ system_paths = [
 
 pathlib_paths = [
     "core_helper_config_dir",
+    "alert_handlers_dir",
     "base_discovered_host_labels_dir",
     "discovered_host_labels_dir",
     "piggyback_dir",
@@ -27,6 +28,7 @@ pathlib_paths = [
     "crash_dir",
     "optional_packages_dir",
     "disabled_packages_dir",
+    "local_alert_handlers_dir",
     "local_share_dir",
     "local_checks_dir",
     "local_notifications_dir",

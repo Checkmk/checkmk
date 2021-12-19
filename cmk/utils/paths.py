@@ -99,6 +99,7 @@ mib_dir = _omd_path("share/snmp/mibs")
 optional_packages_dir = _omd_path("share/check_mk/optional_packages")
 disabled_packages_dir = _omd_path("var/check_mk/disabled_packages")
 protocols_dir = _omd_path("share/protocols")
+alert_handlers_dir = _omd_path("share/check_mk/alert_handlers")
 
 _base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
 agent_based_plugins_dir = _base_plugins_dir / "agent_based"
@@ -119,6 +120,7 @@ local_locale_dir = _local_path(locale_dir)
 local_bin_dir = _local_path(bin_dir)
 local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
+local_alert_handlers_dir = _local_path(alert_handlers_dir)
 
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)

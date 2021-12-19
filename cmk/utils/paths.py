@@ -16,8 +16,12 @@ def _path(*args: Union[str, Path]) -> str:
     return str(Path(*args))
 
 
+def _omd_path(path: str) -> Path:
+    return Path(omd_root, path)
+
+
 def _omd_path_str(path: str) -> str:
-    return _path(omd_root, path)
+    return str(_omd_path(path))
 
 
 def _local_path(global_path: Union[str, Path]) -> Path:
@@ -43,7 +47,7 @@ var_dir = _omd_path_str("var/check_mk")
 log_dir = _omd_path_str("var/log")
 precompiled_checks_dir = _omd_path_str("var/check_mk/precompiled_checks")
 base_autochecks_dir = _omd_path_str("var/check_mk/autochecks")
-core_helper_config_dir = Path(_omd_path_str("var/check_mk/core/helper_config"))
+core_helper_config_dir = _omd_path("var/check_mk/core/helper_config")
 autochecks_dir = base_autochecks_dir
 precompiled_hostchecks_dir = _omd_path_str("var/check_mk/precompiled")
 snmpwalks_dir = _omd_path_str("var/check_mk/snmpwalks")
@@ -70,7 +74,7 @@ inventory_output_dir = _omd_path_str("var/check_mk/inventory")
 inventory_archive_dir = _omd_path_str("var/check_mk/inventory_archive")
 status_data_dir = _omd_path_str("tmp/check_mk/status_data")
 robotmk_var_dir = _omd_path_str("var/robotmk")
-base_discovered_host_labels_dir = Path(_omd_path_str("var/check_mk/discovered_host_labels"))
+base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels")
 discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
@@ -81,20 +85,20 @@ site_config_dir = Path(var_dir, "site_configs")
 
 share_dir = _omd_path_str("share/check_mk")
 checks_dir = _omd_path_str("share/check_mk/checks")
-notifications_dir = Path(_omd_path_str("share/check_mk/notifications"))
+notifications_dir = _omd_path("share/check_mk/notifications")
 inventory_dir = _omd_path_str("share/check_mk/inventory")
 check_manpages_dir = _omd_path_str("share/check_mk/checkman")
 agents_dir = _omd_path_str("share/check_mk/agents")
 web_dir = _omd_path_str("share/check_mk/web")
-pnp_templates_dir = Path(_omd_path_str("share/check_mk/pnp-templates"))
-doc_dir = Path(_omd_path_str("share/doc/check_mk"))
-locale_dir = Path(_omd_path_str("share/check_mk/locale"))
+pnp_templates_dir = _omd_path("share/check_mk/pnp-templates")
+doc_dir = _omd_path("share/doc/check_mk")
+locale_dir = _omd_path("share/check_mk/locale")
 bin_dir = _omd_path_str("bin")
 lib_dir = _omd_path_str("lib")
-mib_dir = Path(_omd_path_str("share/snmp/mibs"))
-optional_packages_dir = Path(_omd_path_str("share/check_mk/optional_packages"))
-disabled_packages_dir = Path(_omd_path_str("var/check_mk/disabled_packages"))
-protocols_dir = Path(_omd_path_str("share/protocols"))
+mib_dir = _omd_path("share/snmp/mibs")
+optional_packages_dir = _omd_path("share/check_mk/optional_packages")
+disabled_packages_dir = _omd_path("var/check_mk/disabled_packages")
+protocols_dir = _omd_path("share/protocols")
 
 _base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
 agent_based_plugins_dir = _base_plugins_dir / "agent_based"

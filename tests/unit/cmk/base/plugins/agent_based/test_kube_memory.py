@@ -33,7 +33,7 @@ def usage():
 
 @pytest.fixture
 def memory_performance(usage):
-    return {"memory_usage_bytes": usage, "memory_swap": 0}
+    return {"memory_usage_bytes": usage}
 
 
 @pytest.fixture

@@ -624,7 +624,6 @@ def write_kube_object_performance_section(
             section_name=SectionName("memory"),
             section_output=section.Memory(
                 memory_usage_bytes=_aggregate_metric(containers, MetricName("memory_usage_bytes")),
-                memory_swap=_aggregate_metric(containers, MetricName("memory_swap")),
             ),
         )
 

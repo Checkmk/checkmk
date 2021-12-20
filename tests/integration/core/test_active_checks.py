@@ -9,7 +9,6 @@ from typing import NamedTuple
 
 import pytest
 
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
@@ -35,12 +34,12 @@ logger = logging.getLogger(__name__)
         ),
     ],
 )
-def test_cfg_fixture(request, web, site: Site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_cfg_fixture(request, site: Site):
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
     print("Applying default config")
-    web.add_host(
+    site.openapi.create_host(
         "test-host",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -48,7 +47,7 @@ def test_cfg_fixture(request, web, site: Site):  # noqa: F811 # pylint: disable=
         },
     )
 
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
     yield config
 
     #
@@ -56,14 +55,12 @@ def test_cfg_fixture(request, web, site: Site):  # noqa: F811 # pylint: disable=
     #
     print("Cleaning up test config")
 
-    web.delete_host("test-host")
+    site.openapi.delete_host("test-host")
 
 
-def test_active_check_execution(
-    test_cfg, site, web
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_active_check_execution(test_cfg, site: Site, web):
     try:
-        web.set_ruleset(
+        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
             "custom_checks",
             {
                 "ruleset": {
@@ -81,7 +78,7 @@ def test_active_check_execution(
                 }
             },
         )
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
         site.schedule_check("test-host", "\xc4ctive-Check", 0)
 
@@ -95,7 +92,7 @@ def test_active_check_execution(
         assert result[2] == 0
         assert result[3] == "123"
     finally:
-        web.set_ruleset(
+        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
             "custom_checks",
             {
                 "ruleset": {
@@ -103,12 +100,10 @@ def test_active_check_execution(
                 }
             },
         )
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
 
-def test_active_check_macros(
-    test_cfg, site, web
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_active_check_macros(test_cfg, site, web):
     macros = {
         "$HOSTADDRESS$": "127.0.0.1",
         "$HOSTNAME$": "test-host",
@@ -153,7 +148,7 @@ def test_active_check_macros(
         )
 
     try:
-        web.set_ruleset(
+        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
             "custom_checks",
             {
                 "ruleset": {
@@ -162,7 +157,7 @@ def test_active_check_macros(
                 }
             },
         )
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
         for var, value in macros.items():
             description = descr(var)
@@ -197,7 +192,7 @@ def test_active_check_macros(
             ), "Macro %s has wrong value (%r instead of %r)" % (var, plugin_output, expected_output)
 
     finally:
-        web.set_ruleset(
+        web.set_ruleset(  # Replace with RestAPI, see CMK-9251
             "custom_checks",
             {
                 "ruleset": {
@@ -205,4 +200,4 @@ def test_active_check_macros(
                 }
             },
         )
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()

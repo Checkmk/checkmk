@@ -23,16 +23,6 @@ class APIError(Exception):
 logger = logging.getLogger()
 
 
-def _get_automation_secret(site):
-    secret_path = "var/check_mk/web/automation/automation.secret"
-    secret = site.read_file(secret_path)
-
-    if secret == "":
-        raise Exception("Failed to read secret from %s" % secret_path)
-
-    return secret
-
-
 class CMKWebSession:
     def __init__(self, site):
         super().__init__()
@@ -232,11 +222,9 @@ class CMKWebSession:
     #
 
     def _automation_credentials(self):
-        secret = _get_automation_secret(self.site)
-
         return {
             "_username": "automation",
-            "_secret": secret,
+            "_secret": self.site.get_automation_secret(),
         }
 
     def _api_request(self, url, data, expect_error=False, output_format="json"):
@@ -422,106 +410,6 @@ class CMKWebSession:
 
         return result
 
-    def host_exists(self, hostname):
-        try:
-            result = self._api_request(
-                "webapi.py?action=get_host",
-                {
-                    "request": json.dumps(
-                        {
-                            "hostname": hostname,
-                        }
-                    ),
-                },
-            )
-        except AssertionError as e:
-            if "No such host" in "%s" % e:
-                return False
-            raise
-
-        assert isinstance(result, dict)
-        return "hostname" in result
-
-    def add_folder(self, folder_path, attributes=None, create_folders=True, expect_error=False):
-        if attributes is None:
-            attributes = {}
-
-        result = self._api_request(
-            "webapi.py?action=add_folder",
-            {
-                "request": json.dumps(
-                    {
-                        "folder": folder_path,
-                        "attributes": attributes or {},
-                        "create_parent_folders": create_folders,
-                    }
-                ),
-            },
-            expect_error=expect_error,
-        )
-
-        assert result is None
-
-        folder = self.get_folder(folder_path)
-
-        # Ignore the automatically generated meta_data attribute for the moment
-        del folder["attributes"]["meta_data"]
-
-        assert folder["attributes"] == attributes
-
-    def get_folder(self, folder_path, effective_attributes=False):
-        result = self._api_request(
-            "webapi.py?action=get_folder",
-            {
-                "request": json.dumps(
-                    {
-                        "folder": folder_path,
-                        "effective_attributes": effective_attributes,
-                    }
-                ),
-            },
-        )
-
-        assert isinstance(result, dict)
-        assert "attributes" in result
-
-        return result
-
-    def folder_exists(self, folder_path):
-        try:
-            result = self._api_request(
-                "webapi.py?action=get_folder",
-                {
-                    "request": json.dumps(
-                        {
-                            "folder": folder_path,
-                        }
-                    ),
-                },
-            )
-        except AssertionError as e:
-            if "does not exist" in "%s" % e:
-                return False
-            raise
-
-        assert isinstance(result, dict)
-        return "folder" in result
-
-    def delete_folder(self, folder_path):
-        result = self._api_request(
-            "webapi.py?action=delete_folder",
-            {
-                "request": json.dumps(
-                    {
-                        "folder": folder_path,
-                    }
-                ),
-            },
-        )
-
-        assert result is None
-        assert not self.folder_exists(folder_path)
-
     def get_ruleset(self, ruleset_name):
         result = self._api_request(
             "webapi.py?action=get_ruleset&output_format=python",
@@ -646,7 +534,6 @@ class CMKWebSession:
             {"request": pformat({"site_id": site_id, "site_config": site_config})},
             output_format="python",
         )
-
         assert result is None
 
     def get_site(self, site_id):
@@ -689,19 +576,6 @@ class CMKWebSession:
         result = self._api_request(
             "webapi.py?action=login_site",
             {"request": json.dumps({"site_id": site_id, "username": user, "password": password})},
-        )
-        assert result is None
-
-    def logout_site(self, site_id):
-        result = self._api_request(
-            "webapi.py?action=logout_site",
-            {
-                "request": json.dumps(
-                    {
-                        "site_id": site_id,
-                    }
-                )
-            },
         )
         assert result is None
 
@@ -869,60 +743,6 @@ class CMKWebSession:
         assert isinstance(result, dict)
         return result
 
-    def activate_changes(self, mode=None, allow_foreign_changes=None, relevant_sites=None):
-        self.site.ensure_running()
-
-        request = {}
-        if not relevant_sites:
-            relevant_sites = [self.site]
-
-        if mode is not None:
-            request["mode"] = mode
-
-        if allow_foreign_changes is not None:
-            request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
-
-        old_t = {}
-        logger.debug("Getting old program start")
-        for site in relevant_sites:
-            old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
-
-        logger.debug("Read replication changes of sites")
-        import glob
-
-        base_dir = self.site.path("var/check_mk/wato")
-        for site_changes_path in glob.glob(base_dir + "/replication_*"):
-            logger.debug("Replication changes of site: %r", site_changes_path)
-            if os.path.exists(site_changes_path):
-                logger.debug(
-                    self.site.read_file(base_dir + "/" + os.path.basename(site_changes_path))
-                )
-
-        logger.debug("Start activate changes: %r", request)
-        time_started = time.time()
-        result = self._api_request(
-            "webapi.py?action=activate_changes",
-            {
-                "request": json.dumps(request),
-            },
-        )
-
-        logger.debug("Result: %r", result)
-        assert isinstance(result, dict)
-        assert len(result["sites"]) > 0, repr(result)
-        involved_sites = list(result["sites"].keys())
-
-        for site_id, status in result["sites"].items():
-            assert status["_state"] == "success", "Failed to activate %s: %r" % (site_id, status)
-            assert status["_time_ended"] > time_started
-
-        logger.info("Waiting for core reloads of: %s", ", ".join(involved_sites))
-        for site in relevant_sites:
-            if site.id in involved_sites:
-                site.wait_for_core_reloaded(old_t[site.id])
-
-        self.site.ensure_running()
-
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request(
             "webapi.py?action=get_graph&output_format=json",
@@ -984,119 +804,3 @@ class CMKWebSession:
         for host in hosts:
             assert isinstance(result[host], dict)
         return result
-
-
-class CMKOpenAPISession:
-    VERSION = "v0"
-
-    def __init__(self, site):
-        self.site = site
-        self.session = self._get_session()
-        self.base_url = f"{site.url}api/{self.VERSION}"
-
-    def _get_session(self):
-        session = requests.session()
-        session.headers["Authorization"] = self._get_authentication_header()
-        session.headers["Accept"] = "application/json"
-
-        return session
-
-    def _get_authentication_header(self):
-        secret = _get_automation_secret(self.site).strip()
-        return f"Bearer automation {secret}"
-
-    def request(
-        self,
-        method,
-        endpoint,
-        header_params=None,
-        query_params=None,
-        request_params=None,
-        assertion=True,
-    ):
-        url = f"{self.base_url}/{endpoint}"
-        try:
-            resp = self.session.request(
-                method, url, headers=header_params, data=query_params, json=request_params
-            )
-            resp.raise_for_status()
-            return resp
-        except Exception:
-            if assertion:
-                raise AssertionError(f"REST API call failed: {resp.json()}") from Exception
-            raise
-
-    def add_host(self, host_name, folder="/", nodes=None, attributes=None, assertion=True):
-        request_params = {
-            "folder": folder,
-            "host_name": host_name,
-        }
-        if nodes:
-            request_params["nodes"] = nodes
-        if attributes:
-            request_params["attributes"] = attributes
-
-        resp = self.request(
-            "post",
-            "domain-types/host_config/collections/all",
-            request_params=request_params,
-            assertion=assertion,
-        )
-
-        return resp.json()
-
-    def activate_changes_async(self, assertion=True):
-        resp = self.request(
-            "post",
-            "domain-types/activation_run/actions/activate-changes/invoke",
-            assertion=assertion,
-        )
-        return resp.json()
-
-    def activate_changes_sync(self, assertion=True):
-        resp = self.request(
-            "post",
-            "domain-types/activation_run/actions/activate-changes/invoke",
-            assertion=assertion,
-        )
-        activation_id = resp.json()["id"]
-        self.request(
-            "get",
-            f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
-            assertion=assertion,
-        )
-
-    def get_baking_status(self, assertion=True):
-        return self.request(
-            "get",
-            "domain-types/agent/actions/baking_status/invoke",
-            assertion=assertion,
-        ).json()
-
-    def bake_agents(self, assertion=True):
-        resp = self.request(
-            "post",
-            "domain-types/agent/actions/bake/invoke",
-            assertion=assertion,
-        )
-        return resp
-
-    def bake_and_sign_agents(self, key_id, passphrase, assertion=True):
-        request_params = {"key_id": key_id, "passphrase": passphrase}
-        resp = self.request(
-            "post",
-            "domain-types/agent/actions/bake_and_sign/invoke",
-            request_params=request_params,
-            assertion=assertion,
-        )
-        return resp
-
-    def sign_agents(self, key_id, passphrase, assertion=True):
-        request_params = {"key_id": key_id, "passphrase": passphrase}
-        resp = self.request(
-            "post",
-            "domain-types/agent/actions/sign/invoke",
-            request_params=request_params,
-            assertion=assertion,
-        )
-        return resp

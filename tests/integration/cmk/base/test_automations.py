@@ -10,7 +10,6 @@ import subprocess
 
 import pytest
 
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
@@ -23,31 +22,31 @@ import cmk.base.autochecks as autochecks
 
 
 @pytest.fixture(name="test_cfg", scope="module")
-def test_cfg_fixture(web, site: Site):  # noqa: F811  # pylint: disable=redefined-outer-name
+def test_cfg_fixture(site: Site, web):
     site.ensure_running()
 
     print("Applying default config")
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -71,12 +70,12 @@ def test_cfg_fixture(web, site: Site):  # noqa: F811  # pylint: disable=redefine
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    web.discover_services("modes-test-host")
-    web.discover_services("modes-test-host2")
-    web.discover_services("modes-test-host3")
+    web.discover_services("modes-test-host")  # Replace with RestAPI call, see CMK-9249
+    web.discover_services("modes-test-host2")  # Replace with RestAPI call, see CMK-9249
+    web.discover_services("modes-test-host3")  # Replace with RestAPI call, see CMK-9249
 
     try:
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
         yield None
     finally:
         #
@@ -88,11 +87,11 @@ def test_cfg_fixture(web, site: Site):  # noqa: F811  # pylint: disable=redefine
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        web.delete_host("modes-test-host")
-        web.delete_host("modes-test-host2")
-        web.delete_host("modes-test-host3")
-        web.delete_host("modes-test-host4")
-        web.activate_changes()
+        site.openapi.delete_host("modes-test-host")
+        site.openapi.delete_host("modes-test-host2")
+        site.openapi.delete_host("modes-test-host3")
+        site.openapi.delete_host("modes-test-host4")
+        site.activate_changes_and_wait_for_core_reload()
 
 
 # .
@@ -318,17 +317,15 @@ def test_automation_set_autochecks(test_cfg, site: Site):
             site.delete_file("var/check_mk/autochecks/%s.mk" % hostname)
 
 
-def test_automation_update_dns_cache(
-    test_cfg, site: Site, web
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_automation_update_dns_cache(test_cfg, site: Site):
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
         site.delete_file(cache_path)
 
     try:
-        web.add_host("update-dns-cache-host")
-        web.add_host("localhost")
+        site.openapi.create_host("update-dns-cache-host")
+        site.openapi.create_host("localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
@@ -346,8 +343,8 @@ def test_automation_update_dns_cache(
         assert ("bla", 4) not in cache
 
     finally:
-        web.delete_host("localhost")
-        web.delete_host("update-dns-cache-host")
+        site.openapi.delete_host("localhost")
+        site.openapi.delete_host("update-dns-cache-host")
 
 
 # TODO: Test with the different cores

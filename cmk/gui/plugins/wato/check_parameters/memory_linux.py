@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal, Union
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.memory_arbor import (  # PredictiveMemoryChoice, # not yet implemented
     DualMemoryLevels,
@@ -17,10 +19,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Transform
+from cmk.gui.valuespec import CascadingDropdown, DEF_VALUE, Dictionary, Sentinel, Transform
 
 
-def UpperMemoryLevels(what, default_percents=None, of_what=None):
+def UpperMemoryLevels(
+    what,
+    default_percents=None,
+    of_what=None,
+    default_levels_type: Union[Literal["ignore", "abs_used", "perc_used"], Sentinel] = DEF_VALUE,
+):
     return CascadingDropdown(
         title=_("Upper levels for %s") % what,
         choices=[
@@ -33,6 +40,7 @@ def UpperMemoryLevels(what, default_percents=None, of_what=None):
             # PredictiveMemoryChoice(what), # not yet implemented
             ("ignore", _("Do not impose levels")),
         ],
+        default_value=default_levels_type,
     )
 
 

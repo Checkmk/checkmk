@@ -85,12 +85,12 @@ from cmk.gui.view_utils import render_labels
 seconds_per_day = 86400
 
 
-class _Sentinel:
+class Sentinel:
     pass
 
 
 # Some arbitrary object for checking whether or not default_value was set
-DEF_VALUE = _Sentinel()
+DEF_VALUE = Sentinel()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
 ValueSpecHelp = Union[str, HTML, Callable[[], Union[str, HTML]]]
@@ -143,7 +143,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         self,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, _VT, Callable[[], Union[_Sentinel, _VT]]] = DEF_VALUE,
+        default_value: Union[Sentinel, _VT, Callable[[], Union[Sentinel, _VT]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
         **kwargs,
     ):
@@ -209,7 +209,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         else:
             value = self._default_value
 
-        if isinstance(value, _Sentinel):
+        if isinstance(value, Sentinel):
             return self.canonical_value()
         return value
 
@@ -475,7 +475,7 @@ class Integer(ValueSpec[int]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, int] = DEF_VALUE,
+        default_value: Union[Sentinel, int] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -598,7 +598,7 @@ class TextInput(ValueSpec[str]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str, Callable[[], str]] = DEF_VALUE,
+        default_value: Union[Sentinel, str, Callable[[], str]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -1000,7 +1000,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ) -> TextInput:
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
 
@@ -1059,7 +1059,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ) -> TextInput:
     def _validate_value(value: str, varprefix: str):
         try:
@@ -1083,7 +1083,7 @@ def Hostname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ):
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
@@ -1127,7 +1127,7 @@ class HostAddress(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1239,7 +1239,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
     validate: _Optional[ValueSpecValidateFunc] = None,
 ) -> TextInput:
     return TextInput(
@@ -1281,7 +1281,7 @@ class Url(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1367,7 +1367,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
@@ -1387,7 +1387,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
 def CheckMKVersion(
     # ValueSpec
     title: _Optional[str] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ):
     return TextInput(
         regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
@@ -1424,7 +1424,7 @@ class TextAreaUnicode(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1521,7 +1521,7 @@ class Filename(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1600,7 +1600,7 @@ class ListOfStrings(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, list] = DEF_VALUE,
+        default_value: Union[Sentinel, list] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -1744,7 +1744,7 @@ def NetworkPort(  # pylint: disable=redefined-builtin
     help: _Optional[str] = None,
     minvalue: int = 1,
     maxvalue: int = 65535,
-    default_value: Union[_Sentinel, int] = DEF_VALUE,
+    default_value: Union[Sentinel, int] = DEF_VALUE,
 ) -> Integer:
     return Integer(
         title=title,
@@ -2282,7 +2282,7 @@ class Float(ValueSpec[float]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, float, Callable[[], Union[_Sentinel, float]]] = DEF_VALUE,
+        default_value: Union[Sentinel, float, Callable[[], Union[Sentinel, float]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2354,7 +2354,7 @@ class Percentage(Float):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, float] = DEF_VALUE,
+        default_value: Union[Sentinel, float] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -2398,7 +2398,7 @@ class Checkbox(ValueSpec[bool]):
         onclick: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, bool, Callable[[], Union[_Sentinel, bool]]] = DEF_VALUE,
+        default_value: Union[Sentinel, bool, Callable[[], Union[Sentinel, bool]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2921,7 +2921,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, CascadingDropdownChoiceValue] = DEF_VALUE,
+        default_value: Union[Sentinel, CascadingDropdownChoiceValue] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -4872,7 +4872,7 @@ class Alternative(ValueSpec):
         else:
             value = self._default_value
 
-        if isinstance(value, _Sentinel):
+        if isinstance(value, Sentinel):
             return self._elements[0].default_value()
         return value
 

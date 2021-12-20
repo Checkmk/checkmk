@@ -1389,9 +1389,9 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
     yield PageMenuEntry(
-        title="User notifications",
+        title="User messages",
         icon_name="notifications",
-        item=_dashboard_add_non_view_dashlet_link(name, "notify_users"),
+        item=_dashboard_add_non_view_dashlet_link(name, "user_messages"),
     )
 
     yield PageMenuEntry(

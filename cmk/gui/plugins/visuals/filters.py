@@ -113,7 +113,7 @@ class InputTextFilter(Filter):
         return self.query_filter.filter_table(context, rows)
 
 
-class FilterRegExp(InputTextFilter):
+class RegExpFilter(InputTextFilter):
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
         validate_regex(value.get(htmlvar, ""), htmlvar)
@@ -281,7 +281,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Service alternative display name"),
         sort_index=202,
         description=_l("Alternative display name of the service, regex match"),
@@ -633,7 +633,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Host Contact (Regex)"),
         sort_index=107,
         info="host",
@@ -657,7 +657,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Service Contact (Regex)"),
         sort_index=207,
         info="service",
@@ -701,7 +701,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Hostgroup (Regex)"),
         sort_index=101,
         description=_l(
@@ -830,7 +830,7 @@ class FilterHostgroupProblems(Filter):
 
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Servicegroup (Regex)"),
         sort_index=101,
         description=_l("Search field allowing regular expression and partial matches"),
@@ -1744,7 +1744,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Log: contact name"),
         sort_index=261,
         info="log",
@@ -1758,7 +1758,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Log: command"),
         sort_index=262,
         info="log",
@@ -2830,7 +2830,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterRegExp(
+    RegExpFilter(
         title=_l("Hostname of original event"),
         sort_index=201,
         info="event",

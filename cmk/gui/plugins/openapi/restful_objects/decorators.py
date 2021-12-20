@@ -883,7 +883,13 @@ class Endpoint:
         if not operation_spec["parameters"]:
             del operation_spec["parameters"]
 
-        docstring_name = _docstring_name(self.func.__doc__)
+        try:
+            docstring_name = _docstring_name(self.func.__doc__)
+        except ValueError as exc:
+            raise ValueError(
+                f"Function {module_obj.__name__}:{self.func.__name__} has no docstring."
+            ) from exc
+
         if docstring_name:
             operation_spec["summary"] = docstring_name
         else:

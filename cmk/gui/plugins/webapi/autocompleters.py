@@ -98,6 +98,19 @@ def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     return choices
 
 
+@autocompleter_registry.register_expression("check_cmd")
+def check_command_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    choices: Choices = [
+        (x, x)
+        for x in sites.live().query_column_unique("GET commands\nCache: reload\nColumns: name\n")
+        if value.lower() in x.lower()
+    ]
+    empty_choices: Choices = [("", "")]
+    return empty_choices + choices
+
+
 @autocompleter_registry.register_expression("monitored_service_description")
 def monitored_service_description_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices

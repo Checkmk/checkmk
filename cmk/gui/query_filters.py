@@ -328,6 +328,15 @@ class FilterText(Filter):
         )
 
 
+class FilterCheckCommand(FilterText):
+    def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return "Filter: %s %s ^%s(!.*)?\n" % (
+            self.column,
+            self.op,
+            livestatus.lqencode(value[self.request_vars[0]]),
+        )
+
+
 class FilterHostnameOrAlias(FilterText):
     def __init__(self):
         super().__init__(ident="hostnameoralias", column="host_name", op="~~", negateable=False)

@@ -184,6 +184,8 @@ class AjaxDropdownFilter(DropdownFilter):
             "service_contact_groups": "allgroups",
             "hostgroup_name": "allgroups",
             "servicegroup_name": "allgroups",
+            "host_check_command": "check_cmd",
+            "service_check_command": "check_cmd",
         }.get(self.query_filter.column)
         if endpoint_tag is None:
             raise MKUserError(self.query_filter.request_vars[0], "Unregistered ajax endpoint")
@@ -861,69 +863,27 @@ filter_registry.register(
 )
 
 
-class FilterQueryDropdown(Filter):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: Union[str, LazyString],
-        sort_index: int,
-        info: str,
-        query: str,
-        filterline: str,
-        is_show_more: bool = True,
-    ) -> None:
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=sort_index,
-            info=info,
-            htmlvars=[ident],
-            link_columns=[],
-        )
-        self.query = query
-        self.filterline = filterline
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.dropdown(
-            self.ident,
-            self._options(self.query),
-            deflt=value.get(self.htmlvars[0], ""),
-            ordered=True,
-        )
-
-    @staticmethod
-    def _options(query: livestatus.QueryTypes) -> Choices:
-        selection = sites.live().query_column_unique(query)
-        empty_choices: Choices = [("", "")]
-        sel: Choices = [(x, x) for x in selection]
-        return empty_choices + sel
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if current := value.get(self.ident):
-            return self.filterline % livestatus.lqencode(current)
-        return ""
-
-
 filter_registry.register(
-    FilterQueryDropdown(
-        ident="host_check_command",
+    AjaxDropdownFilter(
         title=_l("Host check command"),
         sort_index=110,
         info="host",
-        query="GET commands\nCache: reload\nColumns: name\n",
-        filterline="Filter: host_check_command ~ ^%s(!.*)?\n",
+        query_filter=query_filters.FilterCheckCommand(ident="host_check_command", op="~"),
+        options=[],
     )
 )
 
 filter_registry.register(
-    FilterQueryDropdown(
-        ident="check_command",
+    AjaxDropdownFilter(
         title=_l("Service check command"),
         sort_index=210,
         info="service",
-        query="GET commands\nCache: reload\nColumns: name\n",
-        filterline="Filter: service_check_command ~ ^%s(!.*)?$\n",
+        query_filter=query_filters.FilterCheckCommand(
+            ident="check_command",
+            op="~",
+            column="service_check_command",
+        ),
+        options=[],
     )
 )
 

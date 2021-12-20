@@ -809,7 +809,7 @@ function select2_vs_autocomplete(container, css_class, params) {
         });
 }
 
-function hostnames_autocompleter(css_class, container) {
+function single_autocompleter(css_class, container) {
     let params = elem => ({
         strict: elem.dataset.strict,
     });
@@ -858,8 +858,9 @@ function autocompleter_with_host_service_hints(css_class, container) {
 }
 
 export function initialize_autocompleters(container) {
-    hostnames_autocompleter("monitored_hostname", container);
-    hostnames_autocompleter("config_hostname", container);
+    single_autocompleter("monitored_hostname", container);
+    single_autocompleter("config_hostname", container);
+    single_autocompleter("check_cmd", container);
     service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);

@@ -143,7 +143,7 @@ filter_tests = [
     FilterTest(
         ident="check_command",
         request_vars=[("check_command", "blabla")],
-        expected_filters="Filter: service_check_command ~ ^blabla(!.*)?$\n",
+        expected_filters="Filter: service_check_command ~ ^blabla(!.*)?\n",
     ),
     # Testing base class FilterText
     FilterTest(
@@ -1123,6 +1123,3 @@ def _set_expected_queries(filt_ident, live):
         if filt_ident == "contactgroups":
             live.expect_query("GET contactgroups\nCache: reload\nColumns: name alias\n")
         return
-
-    if filt_ident in ["host_check_command", "check_command"]:
-        live.expect_query("GET commands\nCache: reload\nColumns: name\nColumnHeaders: off")

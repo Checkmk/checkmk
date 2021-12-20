@@ -115,6 +115,7 @@ RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-docker.sh
 RUN /opt/install-make-dist-deps.sh
 RUN /opt/install-clang.sh
+RUN /opt/install-shellcheck.sh
 RUN /opt/install-iwyu.sh
 RUN /opt/install-clang-tidy.sh
 

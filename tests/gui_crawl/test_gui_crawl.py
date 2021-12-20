@@ -18,7 +18,16 @@ from collections import deque
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
-from typing import Generator, Iterable, MutableMapping, MutableSequence, Optional, Set, Tuple
+from typing import (
+    Generator,
+    Iterable,
+    MutableMapping,
+    MutableSequence,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+)
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api
@@ -36,6 +45,12 @@ logger = logging.getLogger()
 
 CrashIdRegex = r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}"
 CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
+
+
+class PageContent(NamedTuple):
+    content_type: str
+    content: str
+    logs: Iterable[str]
 
 
 class Progress:
@@ -107,86 +122,6 @@ class Url:
         return urlunsplit(parsed)
 
 
-class PageVisitor:
-    Timeout: int = 60
-
-    def __init__(
-        self,
-        requests_session: requests.Session,
-        browser: playwright.async_api.Browser,
-        storage_state: playwright.async_api.StorageState,
-    ) -> None:
-        self.requests_session = requests_session
-        self.browser = browser
-        self.storage_state = storage_state
-
-    async def get_content_type(self, url: Url) -> str:
-        def blocking():
-            try:
-                response = self.requests_session.head(url.url, timeout=self.Timeout)
-            except requests.Timeout:
-                raise TimeoutError(url)
-            return response.headers.get("content-type")
-
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, blocking)
-
-    async def get_text_and_logs(self, url: Url) -> Tuple[str, Iterable[str]]:
-        logs = []
-
-        async def handle_console_messages(msg):
-            location = (
-                f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
-            )
-            logs.append(f"{msg.type}: {msg.text} ({location})")
-
-        page = await self.browser.new_page(storage_state=self.storage_state)
-        page.on("console", handle_console_messages)
-        try:
-            await page.goto(url.url, timeout=self.Timeout * 1000)
-            text = await page.content()
-        except playwright.async_api.TimeoutError:
-            await page.close()
-            raise TimeoutError(url)
-        except playwright.async_api.Error as e:
-            raise RuntimeError(f"{type(e)}: {e.message} ({e.name})")
-        await page.close()
-        return text, logs
-
-
-async def create_browser_and_storage_state(
-    site: Site,
-) -> Tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
-    pw = await async_playwright().start()
-    browser = await pw.chromium.launch()
-
-    context = await browser.new_context()
-    page = await context.new_page()
-    await page.goto(site.internal_url)
-    await page.fill('input[name="_username"]', "cmkadmin")
-    await page.fill('input[name="_password"]', "cmk")
-    async with page.expect_navigation():
-        await page.click("text=Login")
-    await page.close()
-    storage_state = await context.storage_state()
-    await context.close()
-
-    return browser, storage_state
-
-
-async def create_visitor(site: Site, requests_session: requests.Session) -> PageVisitor:
-    browser, storage_state = await create_browser_and_storage_state(site)
-
-    # makes sure authentication cookies is also available in the requests session.
-    for cookie_dict in storage_state["cookies"]:
-        requests_session.cookies.set(
-            name=cookie_dict["name"],
-            value=cookie_dict["value"],
-        )
-
-    return PageVisitor(requests_session, browser, storage_state)
-
-
 @dataclass
 class ErrorResult:
     message: str
@@ -216,89 +151,48 @@ class Crawler:
 
         self._todos = deque([Url(self.site.internal_url)])
 
-    def report(self) -> None:
-        self.site.save_results()
-        self._write_report_file()
-
-        error_messages = list(
-            chain.from_iterable(
-                (
-                    [
-                        f"[{url} - found on {error.referer_url}] {error.message}"
-                        for error in result.errors
-                    ]
-                    for url, result in self.results.items()
-                    if result.errors
-                )
-            )
-        )
-        if error_messages:
-            joined_error_messages = "\n".join(error_messages)
-            raise Exception(
-                f"Crawled {len(self.results)} URLs in {self.duration} seconds. Failures:\n{joined_error_messages}"
-            )
-
-    def _write_report_file(self) -> None:
-        root = etree.Element("testsuites")
-        testsuite = etree.SubElement(root, "testsuite")
-
-        tests, errors, skipped = 0, 0, 0
-        for url, result in self.results.items():
-            testcase = etree.SubElement(
-                testsuite,
-                "testcase",
-                attrib={
-                    "name": url,
-                    "classname": "crawled_urls",
-                    "time": f"{result.duration:.3f}",
-                },
-            )
-            if result.skipped is not None:
-                skipped += 1
-                etree.SubElement(
-                    testcase,
-                    "skipped",
-                    attrib={
-                        "type": result.skipped.reason,
-                        "message": result.skipped.message,
-                    },
-                )
-            elif result.errors:
-                errors += 1
-                for error in result.errors:
-                    failure = etree.SubElement(
-                        testcase, "failure", attrib={"message": error.message}
-                    )
-                    failure.text = f"referer_url: {error.referer_url}"
-
-            tests += 1
-
-        testsuite.attrib["name"] = "test-gui-crawl"
-        testsuite.attrib["tests"] = str(tests)
-        testsuite.attrib["skipped"] = str(skipped)
-        testsuite.attrib["errors"] = str(errors)
-        testsuite.attrib["failures"] = "0"
-        testsuite.attrib["time"] = f"{self.duration:.3f}"
-        testsuite.attrib["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-
-        report_file_path = Path(self.report_file)
-        try:
-            report_file_path.write_bytes(etree.tostring(root, pretty_print=True))
-        except PermissionError:
-            # write to the current directory when no permissions to write to the site directory
-            Path(report_file_path.name).write_bytes(etree.tostring(root, pretty_print=True))
-
     async def crawl(self, max_tasks: int = 10) -> None:
-        visitor = await create_visitor(self.site, self.requests_session)
+        browser, storage_state = await self.create_browser_and_storage_state()
+
+        # makes sure authentication cookies is also available in the requests session.
+        for cookie_dict in storage_state["cookies"]:
+            self.requests_session.cookies.set(
+                name=cookie_dict["name"],
+                value=cookie_dict["value"],
+            )
+
         with Progress() as progress:
             tasks: Set = set()
             while tasks or self._todos:
                 while self._todos and len(tasks) < max_tasks:
-                    tasks.add(asyncio.create_task(self.visit_url(visitor, self._todos.popleft())))
+                    tasks.add(
+                        asyncio.create_task(
+                            self.visit_url(browser, storage_state, self._todos.popleft())
+                        )
+                    )
 
                 done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                 progress.done(done=sum(1 for t in done if t.result()))
                 self.duration = progress.duration
+
+    async def create_browser_and_storage_state(
+        self,
+    ) -> Tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
+        pw = await async_playwright().start()
+        browser = await pw.chromium.launch()
+
+        context = await browser.new_context()
+        page = await context.new_page()
+        await page.goto(self.site.internal_url)
+        await page.fill('input[name="_username"]', "cmkadmin")
+        await page.fill('input[name="_password"]', "cmk")
+        async with page.expect_navigation():
+            await page.click("text=Login")
+        await page.close()
+        storage_state = await context.storage_state()
+        await context.close()
+
+        return browser, storage_state
 
     def _ensure_result(self, url: Url) -> None:
         if url.url not in self.results:
@@ -396,27 +290,32 @@ class Crawler:
         crash_report = json.dumps(json.loads(crash_info.read().decode("utf-8")), indent=4)
         return self.handle_error(url, "CrashReport", message=crash_report)
 
-    async def visit_url(self, visitor: PageVisitor, url: Url) -> bool:
+    async def visit_url(
+        self,
+        browser: playwright.async_api.Browser,
+        storage_state: playwright.async_api.StorageState,
+        url: Url,
+    ) -> bool:
         start = time.time()
-        try:
-            content_type = await visitor.get_content_type(url)
-        except TimeoutError:
-            self.handle_error(url, "Timeout")
-            return False
 
-        if content_type.startswith("text/html"):
-            try:
-                text, logs = await visitor.get_text_and_logs(url)
-                await self.validate(url, text, logs)
-            except TimeoutError:
-                self.handle_error(url, "Timeout")
-            except RuntimeError as e:
-                self.handle_error(url, "RuntimeError", repr(e))
+        try:
+            page_content = await self.get_page_content(browser, storage_state, url)
+        except playwright.async_api.Error as e:
+            self.handle_error(url, "BrowserError", repr(e))
+            return self.handle_page_done(url, duration=time.time() - start)
+
+        if page_content.content_type.startswith("text/html"):
+            await self.validate(url, page_content.content, page_content.logs)
         elif any(
-            (content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"])
+            (
+                page_content.content_type.startswith(ignored_start)
+                for ignored_start in ["text/plain", "text/csv"]
+            )
         ):
-            self.handle_skipped_reference(url, reason="content-type", message=content_type)
-        elif content_type in [
+            self.handle_skipped_reference(
+                url, reason="content-type", message=page_content.content_type
+            )
+        elif page_content.content_type in [
             "application/x-rpm",
             "application/x-deb",
             "application/x-debian-package",
@@ -435,11 +334,40 @@ class Crawler:
             "text/x-c++src",
             "text/x-sh",
         ]:
-            self.handle_skipped_reference(url, reason="content-type", message=content_type)
+            self.handle_skipped_reference(
+                url, reason="content-type", message=page_content.content_type
+            )
         else:
-            self.handle_error(url, error_type="UnknownContentType", message=content_type)
+            self.handle_error(
+                url, error_type="UnknownContentType", message=page_content.content_type
+            )
 
         return self.handle_page_done(url, duration=time.time() - start)
+
+    @staticmethod
+    async def get_page_content(
+        browser: playwright.async_api.Browser,
+        storage_state: playwright.async_api.StorageState,
+        url: Url,
+    ) -> PageContent:
+        logs = []
+
+        async def handle_console_messages(msg):
+            location = (
+                f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
+            )
+            logs.append(f"{msg.type}: {msg.text} ({location})")
+
+        page = await browser.new_page(storage_state=storage_state)
+        page.on("console", handle_console_messages)
+        try:
+            response = await page.goto(url.url, timeout=60 * 1000)
+            content = await page.content()
+            content_type = await response.header_value("content-type") if response else "unknown"
+
+            return PageContent(content_type=content_type or "unknown", content=content, logs=logs)
+        finally:
+            await page.close()
 
     async def validate(self, url: Url, text: str, logs: Iterable[str]) -> None:
         def blocking():
@@ -561,6 +489,78 @@ class Crawler:
         parsed = list(urlsplit(url))
         parsed[3] = urlencode(sorted(parse_qsl(parsed[3], keep_blank_values=True)))
         return urlunsplit(parsed)
+
+    def report(self) -> None:
+        self.site.save_results()
+        self._write_report_file()
+
+        error_messages = list(
+            chain.from_iterable(
+                (
+                    [
+                        f"[{url} - found on {error.referer_url}] {error.message}"
+                        for error in result.errors
+                    ]
+                    for url, result in self.results.items()
+                    if result.errors
+                )
+            )
+        )
+        if error_messages:
+            joined_error_messages = "\n".join(error_messages)
+            raise Exception(
+                f"Crawled {len(self.results)} URLs in {self.duration} seconds. Failures:\n{joined_error_messages}"
+            )
+
+    def _write_report_file(self) -> None:
+        root = etree.Element("testsuites")
+        testsuite = etree.SubElement(root, "testsuite")
+
+        tests, errors, skipped = 0, 0, 0
+        for url, result in self.results.items():
+            testcase = etree.SubElement(
+                testsuite,
+                "testcase",
+                attrib={
+                    "name": url,
+                    "classname": "crawled_urls",
+                    "time": f"{result.duration:.3f}",
+                },
+            )
+            if result.skipped is not None:
+                skipped += 1
+                etree.SubElement(
+                    testcase,
+                    "skipped",
+                    attrib={
+                        "type": result.skipped.reason,
+                        "message": result.skipped.message,
+                    },
+                )
+            elif result.errors:
+                errors += 1
+                for error in result.errors:
+                    failure = etree.SubElement(
+                        testcase, "failure", attrib={"message": error.message}
+                    )
+                    failure.text = f"referer_url: {error.referer_url}"
+
+            tests += 1
+
+        testsuite.attrib["name"] = "test-gui-crawl"
+        testsuite.attrib["tests"] = str(tests)
+        testsuite.attrib["skipped"] = str(skipped)
+        testsuite.attrib["errors"] = str(errors)
+        testsuite.attrib["failures"] = "0"
+        testsuite.attrib["time"] = f"{self.duration:.3f}"
+        testsuite.attrib["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+
+        report_file_path = Path(self.report_file)
+        try:
+            report_file_path.write_bytes(etree.tostring(root, pretty_print=True))
+        except PermissionError:
+            # write to the current directory when no permissions to write to the site directory
+            Path(report_file_path.name).write_bytes(etree.tostring(root, pretty_print=True))
 
 
 class XssCrawler(Crawler):

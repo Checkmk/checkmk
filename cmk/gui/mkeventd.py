@@ -86,11 +86,11 @@ syslog_facilities: List[DropdownChoiceEntry] = [
 ]
 
 phase_names = {
-    "counting": _l("counting"),
-    "delayed": _l("delayed"),
-    "open": _l("open"),
-    "ack": _l("acknowledged"),
-    "closed": _l("closed"),
+    "counting": _("counting"),
+    "delayed": _("delayed"),
+    "open": _("open"),
+    "ack": _("acknowledged"),
+    "closed": _("closed"),
 }
 
 action_whats = {

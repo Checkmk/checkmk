@@ -6,6 +6,7 @@
 
 import json
 import re
+from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import livestatus
@@ -411,7 +412,7 @@ filter_registry.register(
         title=_l("Host address family (Primary)"),
         sort_index=103,
         info="host",
-        query_filter=query_filters.FilterOption(
+        query_filter=query_filters.FilterSingleOption(
             ident="address_family",
             options=query_filters.ip_address_family_options(),
             filter_code=query_filters.address_family,
@@ -427,7 +428,7 @@ filter_registry.register(
         title=_l("Host address families"),
         sort_index=103,
         info="host",
-        query_filter=query_filters.FilterOption(
+        query_filter=query_filters.FilterSingleOption(
             ident="address_families",
             options=query_filters.ip_address_families_options(),
             filter_code=query_filters.address_families,
@@ -891,196 +892,99 @@ filter_registry.register(
 )
 
 
-class FilterServiceState(Filter):
+def checkbox_row(
+    request_vars: List[str], options: List[Tuple[str, str]], value: FilterHTTPVariables
+) -> None:
+    html.begin_checkbox_group()
+    checkbox_default = not any(value.values())
+    for var, text in options:
+        html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
+    html.end_checkbox_group()
+
+
+class CheckboxRowFilter(Filter):
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
-        prefix: str,
+        info: str,
+        query_filter: query_filters.FilterMultipleOptions,
         is_show_more: bool = False,
     ) -> None:
         super().__init__(
-            ident=ident,
+            ident=query_filter.ident,
             title=title,
             sort_index=sort_index,
-            info="service",
-            htmlvars=[
-                prefix + "_filled",
-                prefix + "st0",
-                prefix + "st1",
-                prefix + "st2",
-                prefix + "st3",
-                prefix + "stp",
-            ],
+            info=info,
+            htmlvars=query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
         )
-        self.prefix = prefix
+        self.query_filter = query_filter
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.begin_checkbox_group()
-        html.hidden_field(self.prefix + "_filled", "1", add_var=True)
-        checkbox_default = not self._filter_used(value)
-        for var, text in self._options(self.prefix):
-            html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
-        html.end_checkbox_group()
-
-    @staticmethod
-    def _options(prefix: str) -> List[Tuple[str, str]]:
-        return [
-            (prefix + "st0", _("OK")),
-            (prefix + "st1", _("WARN")),
-            (prefix + "st2", _("CRIT")),
-            (prefix + "st3", _("UNKN")),
-            (prefix + "stp", _("PEND")),
-        ]
-
-    def _filter_used(self, value: FilterHTTPVariables) -> bool:
-        return any(value.values())
+        checkbox_row(self.query_filter.request_vars, self.query_filter.options, value)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        headers = []
-        filter_is_used = self._filter_used(value)
-        for i in [0, 1, 2, 3]:
-            check_result = bool(value.get(self.prefix + "st%d" % i))
+        return self.query_filter.filter(value)
 
-            if filter_is_used and check_result is False:
-                if self.prefix == "hd":
-                    column = "service_last_hard_state"
-                else:
-                    column = "service_state"
-                headers.append(
-                    "Filter: %s = %d\n"
-                    "Filter: service_has_been_checked = 1\n"
-                    "And: 2\nNegate:\n" % (column, i)
-                )
-
-        if filter_is_used and bool(value.get(self.prefix + "stp")) is False:
-            headers.append("Filter: service_has_been_checked = 1\n")
-
-        if len(headers) == 5:  # none allowed = all allowed (makes URL building easier)
-            return ""
-        return "".join(headers)
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
 
 
 filter_registry.register(
-    FilterServiceState(
-        ident="svcstate",
+    CheckboxRowFilter(
         title=_l("Service states"),
         sort_index=215,
-        prefix="",
+        info="service",
+        query_filter=query_filters.FilterMultipleOptions(
+            ident="svcstate",
+            options=query_filters.svc_state_options(""),
+            filter_lq=partial(query_filters.service_state_filter, ""),
+        ),
     )
 )
 
 filter_registry.register(
-    FilterServiceState(
-        ident="svchardstate",
+    CheckboxRowFilter(
         title=_l("Service hard states"),
         sort_index=216,
-        prefix="hd",
+        info="service",
         is_show_more=True,
+        query_filter=query_filters.FilterMultipleOptions(
+            ident="svchardstate",
+            options=query_filters.svc_state_options("hd"),
+            filter_lq=partial(query_filters.service_state_filter, "hd"),
+        ),
     )
 )
 
-
-@filter_registry.register_instance
-class FilterHostState(Filter):
-    def __init__(self):
-        super().__init__(
+filter_registry.register(
+    CheckboxRowFilter(
+        title=_l("Host states"),
+        sort_index=115,
+        info="host",
+        query_filter=query_filters.FilterMultipleOptions(
             ident="hoststate",
-            title=_l("Host states"),
-            sort_index=115,
-            info="host",
-            htmlvars=["hoststate_filled", "hst0", "hst1", "hst2", "hstp"],
-            link_columns=[],
-        )
+            options=query_filters.host_state_options(),
+            filter_lq=query_filters.host_state_filter,
+        ),
+    )
+)
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.begin_checkbox_group()
-        html.hidden_field("hoststate_filled", "1", add_var=True)
-        checkbox_default = not self._filter_used(value)
-        for var, text in self._options():
-            html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
-        html.end_checkbox_group()
-
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [
-            ("hst0", _("UP")),
-            ("hst1", _("DOWN")),
-            ("hst2", _("UNREACH")),
-            ("hstp", _("PEND")),
-        ]
-
-    def _filter_used(self, value: FilterHTTPVariables) -> bool:
-        return any(value.values())
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        headers = []
-        filter_is_used = self._filter_used(value)
-        for i in [0, 1, 2]:
-            check_result = bool(value.get("hst%d" % i))
-
-            if filter_is_used and check_result is False:
-                headers.append(
-                    "Filter: host_state = %d\n"
-                    "Filter: host_has_been_checked = 1\n"
-                    "And: 2\nNegate:\n" % i
-                )
-
-        if filter_is_used and bool(value.get("hstp")) is False:
-            headers.append("Filter: host_has_been_checked = 1\n")
-
-        if len(headers) == 4:  # none allowed = all allowed (makes URL building easier)
-            return ""
-        return "".join(headers)
-
-
-@filter_registry.register_instance
-class FilterHostsHavingServiceProblems(Filter):
-    def __init__(self):
-        super().__init__(
+filter_registry.register(
+    CheckboxRowFilter(
+        title=_l("Hosts having certain service problems"),
+        sort_index=120,
+        info="host",
+        query_filter=query_filters.FilterMultipleOptions(
             ident="hosts_having_service_problems",
-            title=_l("Hosts having certain service problems"),
-            sort_index=120,
-            info="host",
-            htmlvars=[
-                "hosts_having_services_warn",
-                "hosts_having_services_crit",
-                "hosts_having_services_pending",
-                "hosts_having_services_unknown",
-            ],
-            link_columns=[],
-            is_show_more=True,
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.begin_checkbox_group()
-        checkbox_default = not any(value.values())  # everything by default
-        for var, text in self._options():
-            varname = "hosts_having_services_%s" % var
-            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=text)
-        html.end_checkbox_group()
-
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [
-            ("warn", _("WARN")),
-            ("crit", _("CRIT")),
-            ("pending", _("PEND")),
-            ("unknown", _("UNKNOWN")),
-        ]
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        conditions = [
-            "host_num_services_%s > 0" % var
-            for var in ["warn", "crit", "pending", "unknown"]
-            if bool(value.get("hosts_having_services_%s" % var)) is True
-        ]
-
-        return lq_logic("Filter:", conditions, "Or")
+            options=query_filters.host_having_svc_problems_options(),
+            filter_lq=query_filters.host_having_svc_problems_filter,
+        ),
+    )
+)
 
 
 def filter_state_type_with_register(
@@ -2342,42 +2246,18 @@ filter_registry.register(
     )
 )
 
-
-@filter_registry.register_instance
-class FilterDiscoveryState(Filter):
-    def __init__(self):
-        super().__init__(
+filter_registry.register(
+    CheckboxRowFilter(
+        title=_l("Discovery state"),
+        sort_index=601,
+        info="discovery",
+        query_filter=query_filters.FilterMultipleOptions(
             ident="discovery_state",
-            title=_l("Discovery state"),
-            sort_index=601,
-            info="discovery",
-            htmlvars=[o[0] for o in self._options()],
-            link_columns=[],
-        )
-
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return [
-            ("discovery_state_ignored", _("Hidden")),
-            ("discovery_state_vanished", _("Vanished")),
-            ("discovery_state_unmonitored", _("New")),
-        ]
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.begin_checkbox_group()
-        checkbox_default = not any(value.values())  # everything by default
-        for varname, title in self._options():
-            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=str(title))
-        html.end_checkbox_group()
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        filter_options = context.get(self.ident, {})
-        return [
-            row for row in rows if filter_options.get("discovery_state_" + row["discovery_state"])
-        ]
+            options=query_filters.discovery_state_options(),
+            filter_rows=partial(query_filters.discovery_state_filter_table, "discovery_state"),
+        ),
+    )
+)
 
 
 @filter_registry.register_instance
@@ -2896,86 +2776,55 @@ class FilterEventCount(Filter):
         return f
 
 
-class EventFilterState(Filter):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: Union[str, LazyString],
-        sort_index: int,
-        table: str,
-        choices: List[Tuple[str, Union[LazyString, str]]],
-    ) -> None:
-        varnames = [ident + "_" + c[0] for c in choices]
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=sort_index,
-            info=table,
-            htmlvars=varnames,
-            link_columns=[ident],
-        )
-        self._choices = choices
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.begin_checkbox_group()
-        checkbox_default = not any(value.values())  # everything by default
-        for name, title in self._choices:
-            varname = self.ident + "_" + name
-            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=str(title))
-        html.end_checkbox_group()
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if all(value.values()):  # everything on, skip filter
-            return ""
-
-        selected = (name for name, _title in self._choices if value.get(self.ident + "_" + name))
-
-        return lq_logic("Filter: %s =" % self.ident, sorted(selected), "Or")
-
-
 filter_registry.register(
-    EventFilterState(
-        ident="event_state",
+    CheckboxRowFilter(
         title=_l("State classification"),
         sort_index=206,
-        table="event",
-        choices=[
-            ("0", _l("OK")),
-            ("1", _l("WARN")),
-            ("2", _l("CRIT")),
-            ("3", _l("UNKNOWN")),
-        ],
+        info="event",
+        query_filter=query_filters.FilterMultipleOptions(
+            ident="event_state",
+            options=query_filters.svc_state_min_options("event_state_"),
+            filter_lq=partial(query_filters.options_toggled_filter, "event_state"),
+        ),
     )
 )
 
 filter_registry.register(
-    EventFilterState(
-        ident="event_phase",
+    CheckboxRowFilter(
         title=_l("Phase"),
         sort_index=207,
-        table="event",
-        choices=list(mkeventd.phase_names.items()),
+        info="event",
+        query_filter=query_filters.FilterMultipleOptions(
+            ident="event_phase",
+            options=[("event_phase_" + var, title) for var, title in mkeventd.phase_names.items()],
+            filter_lq=partial(query_filters.options_toggled_filter, "event_phase"),
+        ),
     )
 )
 
 filter_registry.register(
-    EventFilterState(
-        ident="event_priority",
+    CheckboxRowFilter(
         title=_l("Syslog Priority"),
         sort_index=209,
-        table="event",
-        choices=[(str(e[0]), e[1]) for e in mkeventd.syslog_priorities],
+        info="event",
+        query_filter=query_filters.FilterMultipleOptions(
+            ident="event_priority",
+            options=[("event_priority_%d" % e[0], e[1]) for e in mkeventd.syslog_priorities],
+            filter_lq=partial(query_filters.options_toggled_filter, "event_priority"),
+        ),
     )
 )
 
 filter_registry.register(
-    EventFilterState(
-        ident="history_what",
+    CheckboxRowFilter(
         title=_l("History action type"),
         sort_index=225,
-        table="history",
-        choices=[(k, k) for k in mkeventd.action_whats],
+        info="history",
+        query_filter=query_filters.FilterMultipleOptions(
+            ident="history_what",
+            options=[("history_what_%s" % k, k) for k in mkeventd.action_whats],
+            filter_lq=partial(query_filters.options_toggled_filter, "history_what"),
+        ),
     )
 )
 

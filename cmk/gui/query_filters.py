@@ -31,15 +31,43 @@ def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
 class Filter:
     "This is the Null filter and default class as it does nothing."
 
-    def __init__(self, *, ident: str, request_vars: List[str]):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        request_vars: List[str],
+        filter_lq: Optional[Callable[..., FilterHeader]] = None,
+        filter_rows: Optional[Callable[..., Rows]] = None,
+    ):
         self.ident = ident
         self.request_vars = request_vars
+        self.filter_lq = filter_lq or (lambda x: "")
+        self.filter_rows = filter_rows or (lambda _ctx, rows: rows)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""
+        return self.filter_lq(value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return rows
+        return self.filter_rows(context, rows)
+
+
+class FilterMultipleOptions(Filter):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        options: Options,
+        filter_lq: Optional[Callable[[FilterHTTPVariables], FilterHeader]] = None,
+        filter_rows: Optional[Callable[..., Rows]] = None,
+    ):
+        # TODO: options helps with data validation but conflicts with the Filter job
+        super().__init__(
+            ident=ident,
+            request_vars=[v[0] for v in options],
+            filter_lq=filter_lq,
+            filter_rows=filter_rows,
+        )
+        self.options = options
 
 
 ### Tri State filter
@@ -63,7 +91,7 @@ def tri_state_log_notifications_options() -> Options:
     ]
 
 
-class FilterOption(Filter):
+class FilterSingleOption(Filter):
     def __init__(
         self,
         *,
@@ -76,7 +104,9 @@ class FilterOption(Filter):
         # TODO: options helps with data validation but conflicts with the Filter job
         self.options = options
         self.filter_code = filter_code
-        self.filter_rows = filter_rows
+        self.filter_rows: Callable[[str, VisualContext, Rows], Rows] = filter_rows or (
+            lambda _s, _ctx, rows: rows
+        )
         self.ignore = self.options[-1][0]
 
     def selection_value(self, value: FilterHTTPVariables) -> str:
@@ -94,12 +124,12 @@ class FilterOption(Filter):
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         selection = self.selection_value(value)
-        if selection == self.ignore or self.filter_rows is None:
+        if selection == self.ignore:
             return rows
         return self.filter_rows(selection, context, rows)
 
 
-class FilterTristate(FilterOption):
+class FilterTristate(FilterSingleOption):
     def __init__(
         self,
         *,
@@ -458,3 +488,118 @@ class FilterMultiple(FilterText):
         joiner = "And" if negate else "Or"
 
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
+
+
+def service_state_filter(prefix: str, value: FilterHTTPVariables) -> FilterHeader:
+    headers = []
+    filter_is_used = any(value.values())
+    for i in [0, 1, 2, 3]:
+        check_result = bool(value.get(prefix + "st%d" % i))
+
+        if filter_is_used and check_result is False:
+            if prefix == "hd":
+                column = "service_last_hard_state"
+            else:
+                column = "service_state"
+            headers.append(
+                "Filter: %s = %d\n"
+                "Filter: service_has_been_checked = 1\n"
+                "And: 2\nNegate:\n" % (column, i)
+            )
+
+    if filter_is_used and bool(value.get(prefix + "stp")) is False:
+        headers.append("Filter: service_has_been_checked = 1\n")
+
+    if len(headers) == 5:  # none allowed = all allowed (makes URL building easier)
+        return ""
+    return "".join(headers)
+
+
+def host_state_filter(value: FilterHTTPVariables) -> FilterHeader:
+    headers = []
+    filter_is_used = any(value.values())
+    for i in [0, 1, 2]:
+        check_result = bool(value.get("hst%d" % i))
+
+        if filter_is_used and check_result is False:
+            headers.append(
+                "Filter: host_state = %d\n"
+                "Filter: host_has_been_checked = 1\n"
+                "And: 2\nNegate:\n" % i
+            )
+
+    if filter_is_used and bool(value.get("hstp")) is False:
+        headers.append("Filter: host_has_been_checked = 1\n")
+
+    if len(headers) == 4:  # none allowed = all allowed (makes URL building easier)
+        return ""
+    return "".join(headers)
+
+
+def host_having_svc_problems_filter(value: FilterHTTPVariables) -> FilterHeader:
+    conditions = [
+        "host_num_services_%s > 0" % var
+        for var in ["warn", "crit", "pending", "unknown"]
+        if bool(value.get("hosts_having_services_%s" % var)) is True
+    ]
+
+    return lq_logic("Filter:", conditions, "Or")
+
+
+def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHeader:
+    "When VALUE keys are the options, return filterheaders that equal column to option."
+    if all(value.values()):  # everything on, skip filter
+        return ""
+
+    def drop_column_prefix(var: str):
+        if var.startswith(column + "_"):
+            return var[len(column) + 1 :]
+        return var
+
+    selected = sorted(drop_column_prefix(name) for name, on in value.items() if on == "on")
+
+    return lq_logic("Filter: %s =" % column, selected, "Or")
+
+
+def svc_state_min_options(prefix: str):
+    return [
+        (prefix + "0", _("OK")),
+        (prefix + "1", _("WARN")),
+        (prefix + "2", _("CRIT")),
+        (prefix + "3", _("UNKN")),
+    ]
+
+
+def svc_state_options(prefix: str) -> List[Tuple[str, str]]:
+    return svc_state_min_options(prefix + "st") + [(prefix + "stp", _("PEND"))]
+
+
+def host_having_svc_problems_options() -> List[Tuple[str, str]]:
+    return [
+        ("hosts_having_services_warn", _("WARN")),
+        ("hosts_having_services_crit", _("CRIT")),
+        ("hosts_having_services_pending", _("PEND")),
+        ("hosts_having_services_unknown", _("UNKNOWN")),
+    ]
+
+
+def host_state_options() -> List[Tuple[str, str]]:
+    return [
+        ("hst0", _("UP")),
+        ("hst1", _("DOWN")),
+        ("hst2", _("UNREACH")),
+        ("hstp", _("PEND")),
+    ]
+
+
+def discovery_state_options() -> List[Tuple[str, str]]:
+    return [
+        ("discovery_state_ignored", _("Hidden")),
+        ("discovery_state_vanished", _("Vanished")),
+        ("discovery_state_unmonitored", _("New")),
+    ]
+
+
+def discovery_state_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
+    filter_options = context.get(ident, {})
+    return [row for row in rows if filter_options.get("discovery_state_" + row["discovery_state"])]

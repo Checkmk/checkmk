@@ -363,7 +363,7 @@ class FilterOption(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        query_filter: query_filters.FilterOption,
+        query_filter: query_filters.FilterSingleOption,
         is_show_more: bool = False,
     ):
         self.query_filter = query_filter

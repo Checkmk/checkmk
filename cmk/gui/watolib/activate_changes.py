@@ -1895,7 +1895,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._status_text = status_text
 
         if phase != PHASE_INITIALIZED:
-            self._set_status_details(phase, status_details)
+            self._status_details = self._calc_status_details(phase, status_details)
 
         self._time_updated = time.time()
         if phase == PHASE_DONE:
@@ -1919,31 +1919,31 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             },
         )
 
-    def _set_status_details(self, phase: Phase, status_details: Optional[str]) -> None:
+    def _calc_status_details(self, phase: Phase, status_details: Optional[str]) -> str:
         # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
-            self._status_details = _("Queued for update")
+            value = _("Queued for update")
         elif self._time_started is not None:
-            self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
+            value = _("Started at: %s.") % render.time_of_day(self._time_started)
         else:
-            self._status_details = _("Not started.")
+            value = _("Not started.")
 
         if phase == PHASE_DONE:
-            self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
+            value += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
         elif phase != PHASE_QUEUED:
             assert isinstance(self._time_started, (int, float))
             estimated_time_left = self._expected_duration - (time.time() - self._time_started)
             if estimated_time_left < 0:
-                self._status_details += " " + _("Takes %.1f seconds longer than expected") % abs(
+                value += " " + _("Takes %.1f seconds longer than expected") % abs(
                     estimated_time_left
                 )
             else:
-                self._status_details += (
-                    " " + _("Approximately finishes in %.1f seconds") % estimated_time_left
-                )
+                value += " " + _("Approximately finishes in %.1f seconds") % estimated_time_left
 
         if status_details:
-            self._status_details += "<br>%s" % status_details
+            value += "<br>%s" % status_details
+
+        return value
 
     def _save_state(
         self, activation_id: ActivationId, site_id: SiteId, state: SiteActivationState

@@ -5557,10 +5557,9 @@ class Foldable(ValueSpec):
                     pass
             return self._title_function(title_value)
 
-        title = self._valuespec.title()
-        if not title:
-            title = _("(no title)")
-        return title
+        if title := self._valuespec.title():
+            return title
+        return _("(no title)")
 
     def set_focus(self, varprefix: str) -> None:
         self._valuespec.set_focus(varprefix)

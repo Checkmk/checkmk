@@ -31,3 +31,5 @@ thiserror = { version = "*" }
 tempfile = { version = "*" }
 flate2 = { version = "*" }
 regex = { version = "*" }
+mockall = { version = "*" }
+mockall_double = { version = "*" }

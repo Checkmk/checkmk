@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+#![cfg_attr(test, allow(dead_code))]
+
 use super::certs;
 use super::config;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
@@ -30,116 +32,6 @@ struct RegistrationWithHNBody {
 struct RegistrationWithALBody {
     uuid: String,
     agent_labels: config::AgentLabels,
-}
-
-pub fn pairing(
-    server_address: &str,
-    root_cert: Option<&str>,
-    csr: String,
-    credentials: &config::Credentials,
-) -> AnyhowResult<PairingResponse> {
-    let response = certs::client(root_cert)?
-        .post(format!("https://{}/pairing", server_address))
-        .basic_auth(&credentials.username, Some(&credentials.password))
-        .json(&PairingBody { csr })
-        .send()?;
-    let status = response.status();
-    // Get the text() instead of directly calling json(), because both methods would consume the response.
-    // Otherwise, in case of a json parsing error, we would have no information about the body.
-    let body = response.text()?;
-
-    if let StatusCode::OK = status {
-        Ok(serde_json::from_str::<PairingResponse>(&body)
-            .context(format!("Error parsing this response body: {}", body))?)
-    } else {
-        Err(anyhow!("Request failed with code {}: {}", status, body))
-    }
-}
-
-fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
-    if let StatusCode::NO_CONTENT = response.status() {
-        Ok(())
-    } else {
-        Err(anyhow!(
-            "Request failed with code {}: {}",
-            response.status(),
-            response.text().unwrap_or_else(|_| String::from(""))
-        ))
-    }
-}
-
-pub fn register_with_hostname(
-    server_address: &str,
-    root_cert: &str,
-    credentials: &config::Credentials,
-    uuid: &str,
-    host_name: &str,
-) -> AnyhowResult<()> {
-    check_response_204(
-        certs::client(Some(root_cert))?
-            .post(format!("https://{}/register_with_hostname", server_address))
-            .basic_auth(&credentials.username, Some(&credentials.password))
-            .json(&RegistrationWithHNBody {
-                uuid: String::from(uuid),
-                host_name: String::from(host_name),
-            })
-            .send()?,
-    )
-}
-
-pub fn register_with_agent_labels(
-    server_address: &str,
-    root_cert: &str,
-    credentials: &config::Credentials,
-    uuid: &str,
-    agent_labels: &config::AgentLabels,
-) -> AnyhowResult<()> {
-    check_response_204(
-        certs::client(Some(root_cert))?
-            .post(format!("https://{}/register_with_labels", server_address))
-            .basic_auth(&credentials.username, Some(&credentials.password))
-            .json(&RegistrationWithALBody {
-                uuid: String::from(uuid),
-                agent_labels: agent_labels.clone(),
-            })
-            .send()?,
-    )
-}
-
-fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
-    Ok(base64::encode_config(
-        certs::parse_pem(cert)?.contents,
-        base64::URL_SAFE,
-    ))
-}
-
-pub fn agent_data(
-    agent_receiver_address: &str,
-    root_cert: &str,
-    uuid: &str,
-    certificate: &str,
-    compression_algorithm: &str,
-    monitoring_data: &[u8],
-) -> AnyhowResult<()> {
-    check_response_204(
-        certs::client(Some(root_cert))?
-            .post(format!(
-                "https://{}/agent_data/{}",
-                agent_receiver_address, uuid,
-            ))
-            .header("certificate", encode_pem_cert_base64(certificate)?)
-            .header("compression", compression_algorithm)
-            .multipart(
-                reqwest::blocking::multipart::Form::new().part(
-                    "monitoring_data",
-                    reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
-                        // Note: We need to set the file name, otherwise the request won't have the
-                        // right format. However, the value itself does not matter.
-                        .file_name("agent_data"),
-                ),
-            )
-            .send()?,
-    )
 }
 
 #[derive(StringEnum)]
@@ -180,34 +72,146 @@ pub enum StatusError {
     UnspecifiedError(#[from] AnyhowError),
 }
 
-pub fn status(
-    server_address: &str,
-    root_cert: &str,
-    uuid: &str,
-    certificate: &str,
-) -> Result<StatusResponse, StatusError> {
-    let response = certs::client(Some(root_cert))?
-        .get(format!(
-            "https://{}/registration_status/{}",
-            server_address, uuid
+fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
+    if let StatusCode::NO_CONTENT = response.status() {
+        Ok(())
+    } else {
+        Err(anyhow!(
+            "Request failed with code {}: {}",
+            response.status(),
+            response.text().unwrap_or_else(|_| String::from(""))
         ))
-        .header("certificate", encode_pem_cert_base64(certificate)?)
-        .send()
-        .map_err(StatusError::ConnectionRefused)?;
+    }
+}
 
-    match response.status() {
-        StatusCode::OK => Ok(serde_json::from_str::<StatusResponse>(
-            &response.text().context("Failed to obtain response body")?,
+fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
+    Ok(base64::encode_config(
+        certs::parse_pem(cert)?.contents,
+        base64::URL_SAFE,
+    ))
+}
+
+pub struct Api {}
+
+#[mockall::automock]
+impl Api {
+    pub fn pairing<'a>(
+        server_address: &str,
+        root_cert: Option<&'a str>,
+        csr: String,
+        credentials: &config::Credentials,
+    ) -> AnyhowResult<PairingResponse> {
+        let response = certs::client(root_cert)?
+            .post(format!("https://{}/pairing", server_address))
+            .basic_auth(&credentials.username, Some(&credentials.password))
+            .json(&PairingBody { csr })
+            .send()?;
+        let status = response.status();
+        // Get the text() instead of directly calling json(), because both methods would consume the response.
+        // Otherwise, in case of a json parsing error, we would have no information about the body.
+        let body = response.text()?;
+
+        if let StatusCode::OK = status {
+            Ok(serde_json::from_str::<PairingResponse>(&body)
+                .context(format!("Error parsing this response body: {}", body))?)
+        } else {
+            Err(anyhow!("Request failed with code {}: {}", status, body))
+        }
+    }
+
+    pub fn register_with_hostname(
+        server_address: &str,
+        root_cert: &str,
+        credentials: &config::Credentials,
+        uuid: &str,
+        host_name: &str,
+    ) -> AnyhowResult<()> {
+        check_response_204(
+            certs::client(Some(root_cert))?
+                .post(format!("https://{}/register_with_hostname", server_address))
+                .basic_auth(&credentials.username, Some(&credentials.password))
+                .json(&RegistrationWithHNBody {
+                    uuid: String::from(uuid),
+                    host_name: String::from(host_name),
+                })
+                .send()?,
         )
-        .context("Failed to deserialize response body")?),
-        StatusCode::UNAUTHORIZED => Err(StatusError::CertificateInvalid),
-        _ => Err(StatusError::UnspecifiedError(anyhow!(format!(
-            "{}",
-            response
-                .json::<serde_json::Value>()
-                .context("Failed to deserialize response body to JSON")?
-                .get("detail")
-                .context("Unknown failure")?
-        )))),
+    }
+
+    pub fn register_with_agent_labels(
+        server_address: &str,
+        root_cert: &str,
+        credentials: &config::Credentials,
+        uuid: &str,
+        agent_labels: &config::AgentLabels,
+    ) -> AnyhowResult<()> {
+        check_response_204(
+            certs::client(Some(root_cert))?
+                .post(format!("https://{}/register_with_labels", server_address))
+                .basic_auth(&credentials.username, Some(&credentials.password))
+                .json(&RegistrationWithALBody {
+                    uuid: String::from(uuid),
+                    agent_labels: agent_labels.clone(),
+                })
+                .send()?,
+        )
+    }
+
+    pub fn agent_data(
+        server_address: &str,
+        root_cert: &str,
+        uuid: &str,
+        certificate: &str,
+        compression_algorithm: &str,
+        monitoring_data: &[u8],
+    ) -> AnyhowResult<()> {
+        check_response_204(
+            certs::client(Some(root_cert))?
+                .post(format!("https://{}/agent_data/{}", server_address, uuid,))
+                .header("certificate", encode_pem_cert_base64(certificate)?)
+                .header("compression", compression_algorithm)
+                .multipart(
+                    reqwest::blocking::multipart::Form::new().part(
+                        "monitoring_data",
+                        reqwest::blocking::multipart::Part::bytes(monitoring_data.to_owned())
+                            // Note: We need to set the file name, otherwise the request won't have the
+                            // right format. However, the value itself does not matter.
+                            .file_name("agent_data"),
+                    ),
+                )
+                .send()?,
+        )
+    }
+
+    pub fn status(
+        server_address: &str,
+        root_cert: &str,
+        uuid: &str,
+        certificate: &str,
+    ) -> Result<StatusResponse, StatusError> {
+        let response = certs::client(Some(root_cert))?
+            .get(format!(
+                "https://{}/registration_status/{}",
+                server_address, uuid
+            ))
+            .header("certificate", encode_pem_cert_base64(certificate)?)
+            .send()
+            .map_err(StatusError::ConnectionRefused)?;
+
+        match response.status() {
+            StatusCode::OK => Ok(serde_json::from_str::<StatusResponse>(
+                &response.text().context("Failed to obtain response body")?,
+            )
+            .context("Failed to deserialize response body")?),
+            StatusCode::UNAUTHORIZED => Err(StatusError::CertificateInvalid),
+            _ => Err(StatusError::UnspecifiedError(anyhow!(format!(
+                "{}",
+                response
+                    .json::<serde_json::Value>()
+                    .context("Failed to deserialize response body to JSON")?
+                    .get("detail")
+                    .context("Unknown failure")?
+            )))),
+        }
     }
 }

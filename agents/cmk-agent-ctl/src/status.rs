@@ -118,7 +118,7 @@ impl RemoteConnectionStatusResponse {
         server_address: &str,
         connection: &config::Connection,
     ) -> RemoteConnectionStatusResponse {
-        match agent_receiver_api::status(
+        match agent_receiver_api::Api::status(
             server_address,
             &connection.root_cert,
             &connection.uuid,

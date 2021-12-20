@@ -31,7 +31,7 @@ fn push(registry: config::Registry) -> AnyhowResult<()> {
     .context("Error compressing monitoring data")?;
 
     for (agent_receiver_address, server_spec) in registry.push_connections() {
-        agent_receiver_api::agent_data(
+        agent_receiver_api::Api::agent_data(
             agent_receiver_address,
             &server_spec.root_cert,
             &server_spec.uuid,

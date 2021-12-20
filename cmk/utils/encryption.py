@@ -13,6 +13,7 @@ import contextlib
 import enum
 import hashlib
 import socket
+from pathlib import Path
 from typing import Callable, Iterable, List, NamedTuple, Tuple
 
 from Cryptodome.Cipher import AES
@@ -157,7 +158,7 @@ class ChainVerifyResult(NamedTuple):
 
 # NOTE: Use this function only in conjunction with the permission server_side_requests
 def fetch_certificate_details(
-    trusted_ca_file: str, address_family: socket.AddressFamily, address: Tuple[str, int]
+    trusted_ca_file: Path, address_family: socket.AddressFamily, address: Tuple[str, int]
 ) -> Iterable[CertificateDetails]:
     """Creates a list of certificate details for the chain certs"""
     verify_chain_results = _fetch_certificate_chain_verify_results(
@@ -203,7 +204,7 @@ def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
 
 
 def _fetch_certificate_chain_verify_results(
-    trusted_ca_file: str,
+    trusted_ca_file: Path,
     address_family: socket.AddressFamily,
     address: Tuple[str, int],
 ) -> List[ChainVerifyResult]:

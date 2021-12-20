@@ -181,7 +181,7 @@ class TCPFetcher(AgentFetcher):
 
         self._logger.debug("Reading data from agent via TLS socket")
         try:
-            ctx = ssl.create_default_context(cafile=paths.root_cert_file)
+            ctx = ssl.create_default_context(cafile=str(paths.root_cert_file))
             ctx.load_cert_chain(certfile=paths.site_cert_file)
             return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
         except ssl.SSLError as e:

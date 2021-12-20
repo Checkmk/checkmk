@@ -16,9 +16,6 @@ _NON_STD_PREFIX: Mapping[str, str] = {
 }
 
 _STR_PATHS: Final = {
-    "trusted_ca_file",
-    "root_cert_file",
-    "site_cert_file",
     "default_config_dir",
     "main_config_file",
     "final_config_file",

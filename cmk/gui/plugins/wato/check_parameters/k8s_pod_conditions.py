@@ -10,16 +10,21 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.valuespec import Age, CascadingDropdown, Dictionary, Tuple
 
 
 def __levels(title):
-    return Tuple(
+    return CascadingDropdown(
         title=title,
-        elements=[
-            Integer(title=_("Warning above"), unit=_("seconds")),
-            Integer(title=_("Critical above"), unit=_("seconds")),
+        choices=[
+            ("no_levels", _("No levels"), None),
+            (
+                "levels",
+                _("Impose levels"),
+                Tuple(elements=[Age(title=_("Warning above")), Age(title=_("Critical above"))]),
+            ),
         ],
+        default_value="no_levels",
     )
 
 
@@ -27,36 +32,16 @@ def _parameter_valuespec():
     return Dictionary(
         help=_(
             (
-                "A pod's status depends on an array of PodConditions through which the"
-                " Pod has or has not yet passed. This rule allows you to define tolerating"
-                " time periods for each of those conditions."
+                "A pod's status depends on an array of conditions through which the"
+                " Pod has or has not yet passed. You can set a time for how long a condition"
+                " is allowed to be in a failed state before the check alerts."
             )
         ),
         elements=[
-            (
-                "initialized",
-                __levels(_("Define a tolerating time period for non-initialized condition.")),
-            ),
-            (
-                "scheduled",
-                __levels(
-                    _("Define a tolerating time period for non-scheduled condition."),
-                ),
-            ),
-            (
-                "containersready",
-                __levels(
-                    _(
-                        "Define a tolerating time period for pod's containers not in ready condition."
-                    ),
-                ),
-            ),
-            (
-                "ready",
-                __levels(
-                    _("Define a tolerating time period for non-ready condition."),
-                ),
-            ),
+            ("scheduled", __levels(_("Time until alert, if pod not scheduled"))),
+            ("initialized", __levels(_("Time until alert, if pod not initialized"))),
+            ("containersready", __levels(_("Time until alert, if pod's containers not ready"))),
+            ("ready", __levels(_("Time until alert, if pod not ready"))),
         ],
         optional_keys=["initialized", "scheduled", "containersready", "ready"],
     )

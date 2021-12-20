@@ -142,7 +142,7 @@ fn run_requested_mode(args: cli::Args) -> AnyhowResult<()> {
         cli::Args::Register(reg_args) => {
             registration::register(
                 config::RegistrationConfig::new(stored_config, reg_args)?,
-                registry,
+                &mut registry,
             )?;
             pull::disallow_legacy_pull(&constants::legacy_pull_path()).context(
                 "Registration successful, but could not delete marker for legacy pull mode",

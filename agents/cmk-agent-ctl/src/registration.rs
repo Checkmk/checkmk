@@ -129,7 +129,7 @@ fn post_registration_conn_type(
 
 pub fn register(
     config: config::RegistrationConfig,
-    mut registry: config::Registry,
+    registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let (uuid, private_key, pairing_response) = pair(&config)?;
@@ -182,4 +182,237 @@ pub fn register(
     registry.save()?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::config::JSONLoader;
+    use super::*;
+
+    lazy_static::lazy_static! {
+        static ref MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    }
+
+    fn registry() -> config::Registry {
+        config::Registry::new(
+            config::RegisteredConnections::new().unwrap(),
+            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+        )
+    }
+
+    fn agent_labels() -> config::HostRegistrationData {
+        let mut al = std::collections::HashMap::new();
+        al.insert(String::from("a"), String::from("b"));
+        config::HostRegistrationData::Labels(al)
+    }
+
+    fn registration_config(
+        root_certificate: Option<String>,
+        host_reg_data: config::HostRegistrationData,
+        trust_server_cert: bool,
+    ) -> config::RegistrationConfig {
+        config::RegistrationConfig {
+            agent_receiver_address: String::from("server:8000"),
+            credentials: config::Credentials {
+                username: String::from("user"),
+                password: String::from("password"),
+            },
+            root_certificate,
+            host_reg_data,
+            trust_server_cert,
+        }
+    }
+
+    fn pairing_expect_no_root_cert(
+        _server_address: &str,
+        root_cert: Option<&str>,
+        _csr: String,
+        _credentials: &config::Credentials,
+    ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
+        if root_cert.is_none() {
+            return Ok(agent_receiver_api::PairingResponse {
+                root_cert: String::from("root_cert"),
+                client_cert: String::from("client_cert"),
+            });
+        }
+        panic!("No root certificate expected")
+    }
+
+    fn pairing_expect_root_cert(
+        _server_address: &str,
+        root_cert: Option<&str>,
+        _csr: String,
+        _credentials: &config::Credentials,
+    ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
+        if root_cert.is_some() {
+            return Ok(agent_receiver_api::PairingResponse {
+                root_cert: String::from("root_cert"),
+                client_cert: String::from("client_cert"),
+            });
+        }
+        panic!("No root certificate expected")
+    }
+
+    mod test_pair {
+        use super::*;
+
+        #[test]
+        fn test_interactive_trust() {
+            let _m = MUTEX.lock().unwrap();
+
+            let ask_for_trust_ctx = IactiveTrust::ask_for_trust_context();
+            let pairing_ctx = AgentRecvApi::pairing_context();
+
+            ask_for_trust_ctx.expect().times(1).returning(|_| Ok(()));
+            pairing_ctx
+                .expect()
+                .times(1)
+                .returning(pairing_expect_no_root_cert);
+
+            assert!(pair(&registration_config(
+                None,
+                config::HostRegistrationData::Name(String::from("host")),
+                false,
+            ))
+            .is_ok());
+        }
+
+        #[test]
+        fn test_blind_trust() {
+            let _m = MUTEX.lock().unwrap();
+
+            let pairing_ctx = AgentRecvApi::pairing_context();
+            pairing_ctx
+                .expect()
+                .times(1)
+                .returning(pairing_expect_no_root_cert);
+
+            assert!(pair(&registration_config(
+                None,
+                config::HostRegistrationData::Name(String::from("host")),
+                true,
+            ))
+            .is_ok());
+        }
+
+        #[test]
+        fn test_root_cert_from_config() {
+            let _m = MUTEX.lock().unwrap();
+
+            let pairing_ctx = AgentRecvApi::pairing_context();
+            pairing_ctx
+                .expect()
+                .times(1)
+                .returning(pairing_expect_root_cert);
+
+            assert!(pair(&registration_config(
+                Some(String::from("root_certificate")),
+                agent_labels(),
+                false,
+            ))
+            .is_ok());
+        }
+
+        #[test]
+        fn test_root_cert_from_config_and_blind_trust() {
+            let _m = MUTEX.lock().unwrap();
+
+            let pairing_ctx = AgentRecvApi::pairing_context();
+            pairing_ctx
+                .expect()
+                .times(1)
+                .returning(pairing_expect_root_cert);
+
+            assert!(pair(&registration_config(
+                Some(String::from("root_certificate")),
+                agent_labels(),
+                true,
+            ))
+            .is_ok());
+        }
+    }
+
+    mod test_register {
+        use super::*;
+
+        #[test]
+        fn test_host_name() {
+            let _m = MUTEX.lock().unwrap();
+
+            let ask_for_trust_ctx = IactiveTrust::ask_for_trust_context();
+            let pairing_ctx = AgentRecvApi::pairing_context();
+            let register_with_hostname_ctx = AgentRecvApi::register_with_hostname_context();
+            let status_ctx = AgentRecvApi::status_context();
+            ask_for_trust_ctx.expect().times(1).returning(|_| Ok(()));
+            pairing_ctx
+                .expect()
+                .times(1)
+                .returning(pairing_expect_no_root_cert);
+            register_with_hostname_ctx
+                .expect()
+                .times(1)
+                .returning(|_, _, _, _, _| Ok(()));
+            status_ctx.expect().times(1).returning(|_, _, _, _| {
+                Ok(agent_receiver_api::StatusResponse {
+                    hostname: Some(String::from("host")),
+                    status: None,
+                    connection_type: Some(config::ConnectionType::Pull),
+                    message: None,
+                })
+            });
+
+            let mut registry = registry();
+            assert!(!registry.path().exists());
+            assert!(register(
+                registration_config(
+                    None,
+                    config::HostRegistrationData::Name(String::from("host")),
+                    false,
+                ),
+                &mut registry,
+            )
+            .is_ok());
+            assert!(!registry.is_empty());
+            assert!(registry.path().exists());
+        }
+
+        #[test]
+        fn test_agent_labels() {
+            let _m = MUTEX.lock().unwrap();
+
+            let pairing_ctx = AgentRecvApi::pairing_context();
+            let register_with_agent_labels_ctx = AgentRecvApi::register_with_agent_labels_context();
+            let status_ctx = AgentRecvApi::status_context();
+            pairing_ctx
+                .expect()
+                .times(1)
+                .returning(pairing_expect_root_cert);
+            register_with_agent_labels_ctx
+                .expect()
+                .times(1)
+                .returning(|_, _, _, _, _| Ok(()));
+            status_ctx.expect().times(1).returning(|_, _, _, _| {
+                Ok(agent_receiver_api::StatusResponse {
+                    hostname: Some(String::from("host")),
+                    status: Some(agent_receiver_api::HostStatus::New),
+                    connection_type: Some(config::ConnectionType::Push),
+                    message: None,
+                })
+            });
+
+            let mut registry = registry();
+            assert!(!registry.path().exists());
+            assert!(register(
+                registration_config(
+                    Some(String::from("root_certificate")),
+                    agent_labels(),
+                    false,
+                ),
+                &mut registry,
+            )
+            .is_ok());
+            assert!(!registry.is_empty());
+            assert!(registry.path().exists());
+        }
+    }
 }

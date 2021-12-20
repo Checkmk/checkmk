@@ -146,6 +146,7 @@ dependencies = [
  "flate2",
  "flexi_logger",
  "http",
+ "lazy_static",
  "log",
  "mockall",
  "mockall_double",

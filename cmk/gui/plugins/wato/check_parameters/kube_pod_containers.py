@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec():
@@ -20,7 +20,10 @@ def _parameter_valuespec():
                 "failed_state",
                 MonitoringState(
                     title=_(
-                        "Monitoring state if a container terminates unsuccessfully (exit code 1)."
+                        (
+                            "Monitoring state if a container terminates "
+                            "unsuccessfully (non-zero exit code)"
+                        )
                     ),
                     default_value=2,
                 ),
@@ -33,6 +36,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="kube_pod_containers",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextInput(title=_("Name of the container")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
         title=lambda: _("Pod containers"),

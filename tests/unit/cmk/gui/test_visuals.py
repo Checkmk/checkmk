@@ -722,7 +722,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_address', 'host_address_prefix'],
         'info': 'host',
         'link_columns': ['host_address'],
@@ -802,7 +802,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_ipv4_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_ipv4_address', 'host_ipv4_address_prefix'],
         'info': 'host',
         'link_columns': [],
@@ -811,7 +811,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     },
     'host_ipv6_address': {
         'comment': None,
-        'filter_class': 'FilterIPAddress',
+        'filter_class': 'IPAddressFilter',
         'htmlvars': ['host_ipv6_address', 'host_ipv6_address_prefix'],
         'info': 'host',
         'link_columns': [],

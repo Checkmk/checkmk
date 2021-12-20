@@ -244,7 +244,7 @@ filter_tests = [
         request_vars=[("host", "blubber"), ("neg_host", "on")],
         expected_filters="Filter: host_name != blubber\n",
     ),
-    # Testing base class FilterIPAddress
+    # Testing base class IPAddressFilter
     FilterTest(
         ident="host_address",
         request_vars=[("host_address", "abc"), ("host_address_prefix", "yes")],

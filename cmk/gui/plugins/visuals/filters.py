@@ -320,7 +320,7 @@ filter_registry.register(
 )
 
 
-class FilterIPAddress(Filter):
+class IPAddressFilter(Filter):
     def __init__(
         self,
         *,
@@ -364,7 +364,7 @@ class FilterIPAddress(Filter):
 
 
 filter_registry.register(
-    FilterIPAddress(
+    IPAddressFilter(
         title=_l("Host address (Primary)"),
         sort_index=102,
         link_columns=["host_address"],
@@ -377,7 +377,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterIPAddress(
+    IPAddressFilter(
         title=_l("Host address (IPv4)"),
         sort_index=102,
         link_columns=[],
@@ -389,7 +389,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    FilterIPAddress(
+    IPAddressFilter(
         title=_l("Host address (IPv6)"),
         sort_index=102,
         link_columns=[],

@@ -18,12 +18,27 @@ oneTimeSetUp() {
     LOCA_CACHE="$MK_VARDIR/cache/local_my_local_check.cache"
     MRPE_CACHE="$MK_VARDIR/cache/mrpe_mrpetest.cache"
 
-    # create some caches. Note that mrpe includes a section header
-    echo 'P "This is local output"' >> "$LOCA_CACHE"
-    echo -e "<<<mrpe>>>\n(my_check) Description 0 This is mrpe output" \
-        >> "$MRPE_CACHE"
-    echo -e "<<<my_plugin>>>\nThis is a custom plugin output" \
-        >> "$PLUG_CACHE"
+    # create some caches.
+
+    # local plugin
+    {
+        echo 'P "This is local output"'
+        # the header is against the spec, but users do it so often that we ignore it
+        echo '<<<local>>>'
+    } > "$LOCA_CACHE"
+
+    # mrpe plugin
+    {
+        # Note that mrpe includes a section header
+        echo "<<<mrpe>>>"
+        echo "(my_check) Description 0 This is mrpe output"
+    } > "$MRPE_CACHE"
+
+    # agent plugin
+    {
+        echo "<<<my_plugin>>>"
+        echo "This is a custom plugin output"
+    } > "$PLUG_CACHE"
 
 }
 
@@ -32,9 +47,8 @@ test_run_cached_plugin() {
     MTIME="$(stat -c %X "$PLUG_CACHE")"
     OUTPUT="$(run_cached "plugins_my_plugin" "180" "run_agent_plugin" "180/my_plugin")"
 
-    assertEquals "$OUTPUT" \
-"<<<my_plugin:cached($MTIME,180)>>>
-This is a custom plugin output"
+    assertEquals "<<<my_plugin:cached($MTIME,180)>>>
+This is a custom plugin output" "$OUTPUT"
 
 }
 
@@ -43,8 +57,8 @@ test_run_cached_local() {
     MTIME="$(stat -c %X "$LOCA_CACHE")"
     OUTPUT=$(run_cached "local_my_local_check" "180" "run_agent_locals" "_log_section_time 'local_180/my_local_check' './180/my_local_check'")
 
-    assertEquals "$OUTPUT" \
-"cached($MTIME,180) P \"This is local output\""
+    assertEquals "cached($MTIME,180) P \"This is local output\"
+<<<local>>>" "$OUTPUT"
 
 }
 
@@ -55,9 +69,8 @@ test_run_cached_mrpe() {
     MTIME="$(stat -c %X "$MRPE_CACHE")"
     OUTPUT=$(run_cached "mrpe_$descr" "180" "_log_section_time 'mrpe_$descr' '$cmdline'")
 
-    assertEquals "$OUTPUT" \
-"<<<mrpe>>>
-cached($MTIME,180) (my_check) Description 0 This is mrpe output"
+    assertEquals "<<<mrpe>>>
+cached($MTIME,180) (my_check) Description 0 This is mrpe output" "$OUTPUT"
 
 }
 

@@ -48,7 +48,6 @@ CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
 
 
 class PageContent(NamedTuple):
-    content_type: str
     content: str
     logs: Iterable[str]
 
@@ -298,24 +297,18 @@ class Crawler:
     ) -> bool:
         start = time.time()
 
-        try:
-            page_content = await self.get_page_content(browser, storage_state, url)
-        except playwright.async_api.Error as e:
-            self.handle_error(url, "BrowserError", repr(e))
-            return self.handle_page_done(url, duration=time.time() - start)
-
-        if page_content.content_type.startswith("text/html"):
-            await self.validate(url, page_content.content, page_content.logs)
+        content_type = self.requests_session.head(url.url).headers["content-type"]
+        if content_type.startswith("text/html"):
+            try:
+                page_content = await self.get_page_content(browser, storage_state, url)
+                await self.validate(url, page_content.content, page_content.logs)
+            except playwright.async_api.Error as e:
+                self.handle_error(url, "BrowserError", repr(e))
         elif any(
-            (
-                page_content.content_type.startswith(ignored_start)
-                for ignored_start in ["text/plain", "text/csv"]
-            )
+            (content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"])
         ):
-            self.handle_skipped_reference(
-                url, reason="content-type", message=page_content.content_type
-            )
-        elif page_content.content_type in [
+            self.handle_skipped_reference(url, reason="content-type", message=content_type)
+        elif content_type in [
             "application/x-rpm",
             "application/x-deb",
             "application/x-debian-package",
@@ -334,13 +327,9 @@ class Crawler:
             "text/x-c++src",
             "text/x-sh",
         ]:
-            self.handle_skipped_reference(
-                url, reason="content-type", message=page_content.content_type
-            )
+            self.handle_skipped_reference(url, reason="content-type", message=content_type)
         else:
-            self.handle_error(
-                url, error_type="UnknownContentType", message=page_content.content_type
-            )
+            self.handle_error(url, error_type="UnknownContentType", message=content_type)
 
         return self.handle_page_done(url, duration=time.time() - start)
 
@@ -361,11 +350,8 @@ class Crawler:
         page = await browser.new_page(storage_state=storage_state)
         page.on("console", handle_console_messages)
         try:
-            response = await page.goto(url.url, timeout=60 * 1000)
-            content = await page.content()
-            content_type = await response.header_value("content-type") if response else "unknown"
-
-            return PageContent(content_type=content_type or "unknown", content=content, logs=logs)
+            await page.goto(url.url, timeout=60 * 1000)
+            return PageContent(content=await page.content(), logs=logs)
         finally:
             await page.close()
 

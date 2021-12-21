@@ -92,26 +92,30 @@ __all__ = [
 
 # ABCRawDataSection is wrong from a typing point of view.
 # AgentRawDataSection and SNMPRawDataSection are not correct either.
-ABCRawDataSection = Sequence[Union[AgentRawDataSection, SNMPRawDataSection]]
+ABCRawDataSection = Union[AgentRawDataSection, SNMPRawDataSection]
 TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 
 class PersistedSections(  # pylint: disable=too-many-ancestors
     Generic[TRawDataSection],
-    MutableMapping[SectionName, Tuple[int, int, TRawDataSection]],
+    MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]],
 ):
     __slots__ = ("_store",)
 
-    def __init__(self, store: MutableMapping[SectionName, Tuple[int, int, TRawDataSection]]):
+    def __init__(
+        self, store: MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]]
+    ):
         self._store = store
 
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._store)
 
-    def __getitem__(self, key: SectionName) -> Tuple[int, int, TRawDataSection]:
+    def __getitem__(self, key: SectionName) -> Tuple[int, int, Sequence[TRawDataSection]]:
         return self._store.__getitem__(key)
 
-    def __setitem__(self, key: SectionName, value: Tuple[int, int, TRawDataSection]) -> None:
+    def __setitem__(
+        self, key: SectionName, value: Tuple[int, int, Sequence[TRawDataSection]]
+    ) -> None:
         return self._store.__setitem__(key, value)
 
     def __delitem__(self, key: SectionName) -> None:
@@ -127,7 +131,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
     def from_sections(
         cls,
         *,
-        sections: Mapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
     ) -> "PersistedSections[TRawDataSection]":
         return cls(
@@ -181,12 +185,12 @@ class SectionStore(Generic[TRawDataSection]):
 
     def update(
         self,
-        sections: Mapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         cache_info: MutableMapping[SectionName, Tuple[int, int]],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
         now: int,
         keep_outdated: bool,
-    ) -> Mapping[SectionName, TRawDataSection]:
+    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
@@ -201,7 +205,7 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _update(
         self,
-        sections: Mapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
         *,
         now: int,
@@ -228,10 +232,10 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _add_persisted_sections(
         self,
-        sections: Mapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         cache_info: MutableMapping[SectionName, Tuple[int, int]],
         persisted_sections: PersistedSections[TRawDataSection],
-    ) -> Mapping[SectionName, TRawDataSection]:
+    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)
@@ -239,7 +243,7 @@ class SectionStore(Generic[TRawDataSection]):
                 if section_name not in sections
             }
         )
-        result: MutableMapping[SectionName, TRawDataSection] = dict(sections.items())
+        result: MutableMapping[SectionName, Sequence[TRawDataSection]] = dict(sections.items())
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format

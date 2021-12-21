@@ -38,7 +38,7 @@ class TestPersistedSections:
         fetch_interval = 42
         persist_info = {section_a: (cached_at, cached_at + fetch_interval), section_b: None}
 
-        persisted_sections = PersistedSections[List[AgentRawDataSection]].from_sections(
+        persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
             sections=sections,
             lookup_persist=persist_info.get,
         )

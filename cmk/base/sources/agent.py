@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Final, List, Optional
+from typing import Final, Optional
 
 import cmk.utils.misc
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
@@ -66,7 +66,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
         check_interval = config.HostConfig.make_host_config(self.hostname).check_mk_check_interval
         return AgentParser(
             self.hostname,
-            SectionStore[List[AgentRawDataSection]](
+            SectionStore[AgentRawDataSection](
                 self.persisted_sections_file_path,
                 logger=self._logger,
             ),

@@ -126,7 +126,7 @@ class AgentFetcher(Fetcher[AgentRawData]):
     pass
 
 
-AgentHostSections = HostSections[List[AgentRawDataSection]]
+AgentHostSections = HostSections[AgentRawDataSection]
 
 MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]
 ImmutableSection = Mapping[SectionMarker, List[AgentRawData]]
@@ -492,7 +492,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[List[AgentRawDataSection]],
+        section_store: SectionStore[AgentRawDataSection],
         *,
         check_interval: int,
         keep_outdated: bool,
@@ -659,7 +659,7 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     def summarize_check_mk_section(
         self,
-        cmk_section: Optional[List[AgentRawDataSection]],
+        cmk_section: Optional[Sequence[AgentRawDataSection]],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
@@ -696,7 +696,7 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     @staticmethod
     def _get_agent_info(
-        string_table: Optional[List[AgentRawDataSection]],
+        string_table: Optional[Sequence[AgentRawDataSection]],
     ) -> Dict[str, Optional[str]]:
         section: Dict[str, Optional[str]] = {}
 

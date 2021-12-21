@@ -22,7 +22,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
 
     def __init__(
         self,
-        sections: Optional[Mapping[SectionName, TRawDataSection]] = None,
+        sections: Optional[Mapping[SectionName, Sequence[TRawDataSection]]] = None,
         *,
         cache_info: Optional[Mapping[SectionName, Tuple[int, int]]] = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
@@ -45,7 +45,9 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         new_sections = copy.deepcopy(dict(self.sections))
         for section_name, section_content in other.sections.items():
             s = new_sections.get(section_name)
-            new_sections[section_name] = (s + section_content) if s else list(section_content)
+            new_sections[section_name] = (
+                (list(s) + list(section_content)) if s else list(section_content)
+            )
 
         new_piggybacked_raw_data: MutableMapping[HostName, List[bytes]] = {
             k: list(v) for k, v in self.piggybacked_raw_data.items()

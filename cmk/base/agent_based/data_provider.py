@@ -112,7 +112,7 @@ class SectionsParser:
             return None
 
         try:
-            return section.parse_function(raw_data)
+            return section.parse_function(list(raw_data))
         except Exception:
             if cmk.utils.debug.enabled():
                 raise

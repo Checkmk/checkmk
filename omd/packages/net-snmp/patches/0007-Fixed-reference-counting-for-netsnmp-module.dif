@@ -1,48 +1,12 @@
-From 61ee8d4db8846f905ceada743cd56ec80aca3340 Mon Sep 17 00:00:00 2001
-From: Sven Panne <sp@mathias-kettner.de>
-Date: Mon, 14 Nov 2016 14:30:20 +0100
-Subject: [PATCH 07/11] Fixed reference counting for netsnmp module.
-
-PyImport_ImportModule returns a new reference, so we should better decrement
-its reference count when we are done with it.
-
-As an addded bonus, use PyObject_GetAtrString instead of the deprecated
-PyModule_GetDict/PyDict_GetItemString combo.
----
- python/netsnmp/client_intf.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
-
 diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
-index 401a249..3e25feb 100644
+index 4c53cdc4f..6d3149b47 100644
 --- a/python/netsnmp/client_intf.c
 +++ b/python/netsnmp/client_intf.c
-@@ -968,15 +968,22 @@ static PyObject *
- py_netsnmp_construct_varbind(void)
- {
-   PyObject *module;
--  PyObject *dict;
-   PyObject *callable;
-+  PyObject *result;
- 
-   module = PyImport_ImportModule("netsnmp");
--  dict = PyModule_GetDict(module);
-+  if (module == NULL)
-+      return NULL;
-+
-+  callable = PyObject_GetAttrString(module, "Varbind");
-+  Py_DECREF(module);
-+  if (callable == NULL)
-+      return NULL;
- 
--  callable = PyDict_GetItemString(dict, "Varbind");
-+  result = PyObject_CallFunction(callable, NULL);
-+  Py_DECREF(callable);
- 
--  return PyObject_CallFunction(callable, "");
-+  return result;
- }
- 
- static int
--- 
-2.7.4
-
+@@ -851,6 +851,7 @@ py_netsnmp_construct_varbind(void)
+   if (!module)
+       return NULL;
+   dict = PyModule_GetDict(module);
++  Py_DECREF(module);  /* module is a new ref, dict/callable are borrowed!  */
+   if (!dict)
+       return NULL;
+   callable = PyDict_GetItemString(dict, "Varbind");

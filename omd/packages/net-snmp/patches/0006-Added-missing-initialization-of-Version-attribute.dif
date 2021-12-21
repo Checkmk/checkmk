@@ -11,14 +11,14 @@ diff --git a/python/netsnmp/client.py b/python/netsnmp/client.py
 index 6fc4b2e..40e5a0c 100644
 --- a/python/netsnmp/client.py
 +++ b/python/netsnmp/client.py
-@@ -124,6 +124,7 @@ class Session(object):
-         self.ErrorStr = ''
-         self.ErrorNum = 0
-         self.ErrorInd = 0
+@@ -130,6 +130,7 @@ class Session(object):
+         self.BestGuess = 0
+         self.RetryNoSuch = 0
+         self._clear_error()
 +        self.Version = None
-     
+
          sess_args = _parse_session_args(args)
- 
+
 -- 
 2.7.4
 

@@ -11,27 +11,29 @@ runtime, causing PyObject_CallFunction to return NULL.
  1 file changed, 4 insertions(+)
 
 diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
-index 3e25feb..f468760 100644
+index 4c53cdc4f..7a8cf486c 100644
 --- a/python/netsnmp/client_intf.c
 +++ b/python/netsnmp/client_intf.c
-@@ -2126,6 +2126,8 @@ netsnmp_walk(PyObject *self, PyObject *args)
+@@ -1829,6 +1829,9 @@ netsnmp_walk(PyObject *self, PyObject *args)
                }
- 
+
                varbind = py_netsnmp_construct_varbind();
 +              if (varbind == NULL)
-+                  break;
- 
-               if (PyObject_HasAttrString(varbind, "tag")) {
-                   str_buf[0] = '.';
-@@ -2382,6 +2384,8 @@ netsnmp_getbulk(PyObject *self, PyObject *args)
++                break;
++
+               if (varbind && build_python_varbind(varbind, vars, varlist_ind,
+                                        sprintval_flag, &len, &str_buf, getlabel_flag) !=
+                   TYPE_OTHER) {
+@@ -2052,6 +2055,9 @@ netsnmp_getbulk(PyObject *self, PyObject *args)
  	    vars = vars->next_variable, varbind_ind++) {
- 
+
  	  varbind = py_netsnmp_construct_varbind();
-+          if (varbind == NULL)
-+              break;
- 
- 	  if (PyObject_HasAttrString(varbind, "tag")) {
- 	    *str_buf = '.';
--- 
++	      if (varbind == NULL)
++	        break;
++
+           if (varbind && build_python_varbind(varbind, vars, varbind_ind,
+                               sprintval_flag, &len, &str_buf, getlabel_flag) != TYPE_OTHER) {
+             const int hex = is_hex(str_buf, len);
+--
 2.7.4
 

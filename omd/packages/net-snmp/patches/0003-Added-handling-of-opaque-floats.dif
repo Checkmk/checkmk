@@ -17,44 +17,24 @@ index ce46ab9..143f424 100644
  #define TYPE_UNSIGNED32     15
  #define TYPE_INTEGER32      16
 +#define TYPE_OPAQUE_FLOAT   17
- 
+
 -#define TYPE_SIMPLE_LAST    16
 +#define TYPE_SIMPLE_LAST    17
- 
- #define TYPE_TRAPTYPE	    20
+
+ #define TYPE_TRAPTYPE      20
  #define TYPE_NOTIFTYPE      21
 diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
 index 40a0201..7dbb0b3 100644
 --- a/python/netsnmp/client_intf.c
 +++ b/python/netsnmp/client_intf.c
-@@ -174,6 +174,8 @@ char* typestr;
- 	    return(TYPE_NETADDR);
- 	if (!strncasecmp(typestr,"COUNTER64",3))
- 	    return(TYPE_COUNTER64);
-+	if (!strncasecmp(typestr,"OPAQUE_FLOAT",3))
-+	    return(TYPE_OPAQUE_FLOAT);
- 	if (!strncasecmp(typestr,"NULL",3))
- 	    return(TYPE_NULL);
- 	if (!strncasecmp(typestr,"BITS",3))
-@@ -228,6 +230,8 @@ int type;
-             return(TYPE_UINTEGER);
- 	case ASN_COUNTER64:
-             return(TYPE_COUNTER64);
-+        case ASN_OPAQUE_FLOAT:
-+            return(TYPE_OPAQUE_FLOAT);
- 	default:
-             fprintf(stderr, "translate_asn_type: unhandled asn type (%d)\n",type);
-             return(TYPE_OTHER);
-@@ -439,6 +443,9 @@ char * str;
- 	case TYPE_COUNTER64:
-        		strcpy(str, "COUNTER64");
- 	        break;
-+	case TYPE_OPAQUE_FLOAT:
-+                strcpy(str, "OPAQUE_FLOAT");
-+	        break;
- 	case TYPE_NULL:
-                 strcpy(str, "NULL");
-                 break;
--- 
+@@ -72,6 +72,7 @@ static const struct type_table_entry type_table[] = {
+     { TYPE_OCTETSTR,	ASN_OCTET_STR,	3,	"OCTETSTR"	},
+     { TYPE_TIMETICKS,	ASN_TIMETICKS,	3,	"TICKS"		},
+     { TYPE_OPAQUE,	ASN_OPAQUE,	3,	"OPAQUE"	},
++    { TYPE_OPAQUE_FLOAT,ASN_OPAQUE_FLOAT,3,	"OPAQUE_FLOAT"	},
+     { TYPE_OBJID,	ASN_OBJECT_ID,	3,	"OBJECTID"	},
+     { TYPE_NETADDR,	0,		3,	"NETADDR"	},
+     { TYPE_COUNTER64,	ASN_COUNTER64,	3,	"COUNTER64"	},
+--
 2.7.4
 

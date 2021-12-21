@@ -360,7 +360,7 @@ check_info["bluenet2_powerrail.rcm"] = {
 #   '----------------------------------------------------------------------'
 
 check_info["bluenet2_powerrail.sockets"] = {
-    "inventory_function": lambda parsed: inventory_elphase(parsed["sockets"]),
+    "inventory_function": lambda parsed: discover()(parsed["sockets"]),
     "check_function": lambda item, params, parsed: check_elphase(item, params, parsed["sockets"]),
     "service_description": "Socket %s",
     "has_perfdata": True,
@@ -380,7 +380,7 @@ check_info["bluenet2_powerrail.sockets"] = {
 #   '----------------------------------------------------------------------'
 
 check_info["bluenet2_powerrail.fuses"] = {
-    "inventory_function": lambda parsed: inventory_elphase(parsed["fuses"]),
+    "inventory_function": lambda parsed: discover()(parsed["fuses"]),
     "check_function": lambda item, params, parsed: check_elphase(item, params, parsed["fuses"]),
     "service_description": "Fuse %s",
     "has_perfdata": True,

@@ -649,12 +649,11 @@ run_cached() {
             # The new file will not yet be available.
             CACHE_INFO="cached($MTIME,$MAXAGE)"
             if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-                # insert the cache info at the beginning of every non-header line
+                # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
                 sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
             else
-                # insert the cache info in the section header (^= after '!'),
-                # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+                # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
+                sed -e '/^<<<.*\(:cached(\).*>>>/n; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi

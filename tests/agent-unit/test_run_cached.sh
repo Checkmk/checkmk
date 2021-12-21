@@ -25,6 +25,7 @@ oneTimeSetUp() {
         echo 'P "This is local output"'
         # the header is against the spec, but users do it so often that we ignore it
         echo '<<<local>>>'
+        echo 'cached(123,456) P "leave my cache info alone!"'
     } > "$LOCA_CACHE"
 
     # mrpe plugin
@@ -58,7 +59,8 @@ test_run_cached_local() {
     OUTPUT=$(run_cached "local_my_local_check" "180" "run_agent_locals" "_log_section_time 'local_180/my_local_check' './180/my_local_check'")
 
     assertEquals "cached($MTIME,180) P \"This is local output\"
-<<<local>>>" "$OUTPUT"
+<<<local>>>
+cached(123,456) P \"leave my cache info alone!\"" "$OUTPUT"
 
 }
 

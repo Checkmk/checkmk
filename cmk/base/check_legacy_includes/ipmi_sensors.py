@@ -158,6 +158,10 @@ def parse_freeipmi(info):
             _sid, _name, _sensortype, reading_str, unit = stripped_line[:-1]
             add_valid_values([("value", reading_str, float), ("unit", unit, str)])
 
+        elif len(stripped_line) == 7:
+            _sid, _name, _sensortype, _sensorstatus, reading_str, unit = stripped_line[:-1]
+            add_valid_values([("value", reading_str, float), ("unit", unit, str)])
+
         elif len(stripped_line) == 13:
             (
                 _sid,

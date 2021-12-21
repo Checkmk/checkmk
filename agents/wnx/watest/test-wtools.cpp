@@ -136,6 +136,8 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     EXPECT_EQ(pid, 0);
 
     EXPECT_EQ(KillProcessesByDir(test_dir_), 0);
+    EXPECT_EQ(KillProcessesByDir(""), -1);
+    EXPECT_EQ(KillProcessesByDir("k:"), -1);
 }
 
 class WtoolsKillProcessTreeFixture : public ::testing::Test {

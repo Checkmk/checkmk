@@ -1683,13 +1683,13 @@ void ConfigInfo::mergeYamlData(YAML::Node& config_node,
     try {
         bakery_ok = TryMerge(config_node, bakery_data);
     } catch (...) {
-        XLOG::l.bp("Bakery {} is bad", bakery_data.path_);
+        XLOG::l("Bakery {} is bad", bakery_data.path_);
     }
 
     try {
         user_ok = TryMerge(config_node, user_data);
     } catch (...) {
-        XLOG::l.bp("User {} is bad", user_data.path_);
+        XLOG::l("User {} is bad", user_data.path_);
     }
 
     std::lock_guard lk(lock_);

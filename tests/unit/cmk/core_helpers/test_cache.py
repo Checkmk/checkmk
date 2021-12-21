@@ -7,6 +7,7 @@
 import copy
 import json
 import logging
+from typing import List
 
 from cmk.utils.type_defs import SectionName
 
@@ -29,15 +30,15 @@ class MockStore:
 class TestPersistedSections:
     def test_from_sections(self):
         section_a = SectionName("section_a")
-        content_a: AgentRawDataSection = [["first", "line"], ["second", "line"]]
+        content_a: List[AgentRawDataSection] = [["first", "line"], ["second", "line"]]
         section_b = SectionName("section_b")
-        content_b: AgentRawDataSection = [["third", "line"], ["forth", "line"]]
+        content_b: List[AgentRawDataSection] = [["third", "line"], ["forth", "line"]]
         sections = {section_a: content_a, section_b: content_b}
         cached_at = 69
         fetch_interval = 42
         persist_info = {section_a: (cached_at, cached_at + fetch_interval), section_b: None}
 
-        persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
+        persisted_sections = PersistedSections[List[AgentRawDataSection]].from_sections(
             sections=sections,
             lookup_persist=persist_info.get,
         )

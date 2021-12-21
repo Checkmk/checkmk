@@ -78,12 +78,12 @@ SECTION_FOUR = _test_section(
     supersedes={"one"},
 )
 
-NODE_1: AgentRawDataSection = [
+NODE_1: List[AgentRawDataSection] = [
     ["node1", "data 1"],
     ["node1", "data 2"],
 ]
 
-NODE_2: AgentRawDataSection = [
+NODE_2: List[AgentRawDataSection] = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]

@@ -11,7 +11,7 @@ import itertools
 import logging
 import time
 from collections import defaultdict
-from typing import Sequence
+from typing import List, Sequence
 
 import pytest
 
@@ -48,7 +48,7 @@ class TestAgentParser:
 
     @pytest.fixture
     def store(self, store_path, logger):
-        return SectionStore[AgentRawDataSection](store_path, logger=logger)
+        return SectionStore[List[AgentRawDataSection]](store_path, logger=logger)
 
     @pytest.fixture
     def parser(self, hostname: HostName, store, logger):
@@ -322,7 +322,7 @@ class TestAgentParser:
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (1000, 50)}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == PersistedSections[AgentRawDataSection](
+        assert store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("section"): (1000, 1050, [["first", "line"], ["second", "line"]]),
             }
@@ -334,7 +334,7 @@ class TestAgentParser:
         monkeypatch.setattr(
             SectionStore,
             "load",
-            lambda self: PersistedSections[AgentRawDataSection](
+            lambda self: PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("persisted"): (42, 69, [["content"]]),
                 }
@@ -364,7 +364,7 @@ class TestAgentParser:
             SectionName("persisted"): (42, 27),
         }
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == PersistedSections[AgentRawDataSection](
+        assert store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("persisted"): (42, 69, [["content"]]),
             }
@@ -403,7 +403,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {SectionName("selected"): (1000, 0)}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == PersistedSections[AgentRawDataSection](
+        assert store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("selected"): (
                     1000,
@@ -589,7 +589,7 @@ class TestSNMPParser:
         monkeypatch.setattr(
             SectionStore,
             "load",
-            lambda self: PersistedSections[AgentRawDataSection](
+            lambda self: PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("persisted"): (42, 69, [["content"]]),
                 }
@@ -629,7 +629,7 @@ class TestAgentPersistentSectionHandling:
     def test_update_with_empty_store_and_empty_raw_data(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection]({}),
+            PersistedSections[List[AgentRawDataSection]]({}),
             logger=logger,
         )
         raw_data = AgentRawData(b"")
@@ -653,7 +653,7 @@ class TestAgentPersistentSectionHandling:
     def test_update_with_store_and_empty_raw_data(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection](
+            PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("stored"): (0, 0, []),
                 }
@@ -676,7 +676,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.sections == {SectionName("stored"): []}
         assert ahs.cache_info == {SectionName("stored"): (0, 0)}
         assert ahs.piggybacked_raw_data == {}
-        assert section_store.load() == PersistedSections[AgentRawDataSection](
+        assert section_store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("stored"): (0, 0, []),
             }
@@ -686,7 +686,7 @@ class TestAgentPersistentSectionHandling:
         raw_data = AgentRawData(b"<<<fresh>>>")
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection]({}),
+            PersistedSections[List[AgentRawDataSection]]({}),
             logger=logger,
         )
         parser = AgentParser(
@@ -709,7 +709,7 @@ class TestAgentPersistentSectionHandling:
     def test_update_with_store_and_non_persisting_raw_data(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection](
+            PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("stored"): (0, 0, []),
                 }
@@ -735,7 +735,7 @@ class TestAgentPersistentSectionHandling:
         }
         assert ahs.cache_info == {SectionName("stored"): (0, 0)}
         assert ahs.piggybacked_raw_data == {}
-        assert section_store.load() == PersistedSections[AgentRawDataSection](
+        assert section_store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("stored"): (0, 0, []),
             }
@@ -745,7 +745,7 @@ class TestAgentPersistentSectionHandling:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection](
+            PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("stored"): (0, 0, [["canned", "section"]]),
                 }
@@ -774,7 +774,7 @@ class TestAgentPersistentSectionHandling:
             SectionName("fresh"): (1000, -990),
         }
         assert ahs.piggybacked_raw_data == {}
-        assert section_store.load() == PersistedSections[AgentRawDataSection](
+        assert section_store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("stored"): (0, 0, [["canned", "section"]]),
                 SectionName("fresh"): (1000, 10, [["hello", "section"]]),
@@ -784,7 +784,7 @@ class TestAgentPersistentSectionHandling:
     def test_update_store_with_newest(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection](
+            PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("section"): (0, 0, [["oldest"]]),
                 }
@@ -807,7 +807,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.sections == {SectionName("section"): [["newest"]]}
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert section_store.load() == PersistedSections[AgentRawDataSection](
+        assert section_store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("section"): (0, 0, [["oldest"]]),
             }
@@ -819,7 +819,7 @@ class TestAgentPersistentSectionHandling:
         raw_data = AgentRawData(b"<<<another_section>>>")
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection](
+            PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("section"): (500, 600, []),
                 }
@@ -849,7 +849,7 @@ class TestAgentPersistentSectionHandling:
         raw_data = AgentRawData(b"<<<another_section>>>")
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[AgentRawDataSection](
+            PersistedSections[List[AgentRawDataSection]](
                 {
                     SectionName("section"): (500, 600, []),
                 }
@@ -874,7 +874,7 @@ class TestAgentPersistentSectionHandling:
         }
         assert ahs.cache_info == {SectionName("section"): (500, 100)}
         assert ahs.piggybacked_raw_data == {}
-        assert section_store.load() == PersistedSections[AgentRawDataSection](
+        assert section_store.load() == PersistedSections[List[AgentRawDataSection]](
             {
                 SectionName("section"): (500, 600, []),
             }

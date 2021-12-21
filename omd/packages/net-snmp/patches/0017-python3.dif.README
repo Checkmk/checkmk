@@ -1,2 +1,0 @@
-- Original patch taken from https://fedora.pkgs.org/31/fedora-x86_64/python3-net-snmp-5.8-11.fc31.x86_64.rpm.html
-- modified to be able to patch our snapshot of net-snmp.

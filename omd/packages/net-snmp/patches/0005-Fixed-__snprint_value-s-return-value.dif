@@ -12,42 +12,42 @@ diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
 index 3efb26f..401a249 100644
 --- a/python/netsnmp/client_intf.c
 +++ b/python/netsnmp/client_intf.c
-@@ -310,12 +310,15 @@ int flag;
- 
+@@ -286,12 +286,15 @@ __snprint_value(char **buf, size_t *buf_len, const netsnmp_variable_list *var,
+
  	case SNMP_ENDOFMIBVIEW:
-           snprintf(buf, buf_len, "%s", "ENDOFMIBVIEW");
-+          len = STRLEN(buf);
+           snprintf(*buf, *buf_len, "%s", "ENDOFMIBVIEW");
++          len = STRLEN(*buf);
  	  break;
  	case SNMP_NOSUCHOBJECT:
- 	  snprintf(buf, buf_len, "%s", "NOSUCHOBJECT");
-+          len = STRLEN(buf);
+ 	  snprintf(*buf, *buf_len, "%s", "NOSUCHOBJECT");
++          len = STRLEN(*buf);
  	  break;
  	case SNMP_NOSUCHINSTANCE:
- 	  snprintf(buf, buf_len, "%s", "NOSUCHINSTANCE");
-+          len = STRLEN(buf);
+ 	  snprintf(*buf, *buf_len, "%s", "NOSUCHINSTANCE");
++          len = STRLEN(*buf);
  	  break;
- 
+
          case ASN_COUNTER64:
-@@ -340,13 +343,17 @@ int flag;
+@@ -319,13 +322,17 @@ __snprint_value(char **buf, size_t *buf_len, const netsnmp_variable_list *var,
              break;
  #ifdef OPAQUE_SPECIAL_TYPES
          case ASN_OPAQUE_FLOAT:
 -	  if (var->val.floatVal)
 +	  if (var->val.floatVal) {
- 	    snprintf(buf, buf_len, "%f", *var->val.floatVal);
-+            len = STRLEN(buf);
-+          }
+ 	    snprintf(*buf, *buf_len, "%f", *var->val.floatVal);
++	    len = STRLEN(*buf);
++	  }
           break;
-          
+
          case ASN_OPAQUE_DOUBLE:
 -	  if (var->val.doubleVal)
 +	  if (var->val.doubleVal) {
- 	    snprintf(buf, buf_len, "%f", *var->val.doubleVal);
-+            len = STRLEN(buf);
-+          }
+ 	    snprintf(*buf, *buf_len, "%f", *var->val.doubleVal);
++	    len = STRLEN(*buf);
++	  }
           break;
  #endif
-          
+
 -- 
 2.7.4
 

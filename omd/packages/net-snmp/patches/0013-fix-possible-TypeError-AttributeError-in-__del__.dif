@@ -1,14 +1,15 @@
-diff -Nur net-snmp-0b32548.orig/python/netsnmp/client.py net-snmp-0b32548/python/netsnmp/client.py
---- net-snmp-0b32548.orig/python/netsnmp/client.py	2016-11-19 19:00:50.000000000 +0100
-+++ net-snmp-0b32548/python/netsnmp/client.py	2019-07-03 12:35:36.048355381 +0200
-@@ -201,8 +201,16 @@
+diff --git a/python/netsnmp/client.py b/python/netsnmp/client.py
+index daf11a4c4..4aae1876f 100644
+--- a/python/netsnmp/client.py
++++ b/python/netsnmp/client.py
+@@ -217,8 +217,15 @@ class Session(object):
          return res
- 
+
      def __del__(self):
--        res = client_intf.delete_session(self)
+-        res = netsnmp.client_intf.delete_session(self)
 -        return res
 +        try:
-+            res = client_intf.delete_session(self)
++            res = netsnmp.client_intf.delete_session(self)
 +            return res
 +        except (AttributeError, TypeError):
 +            # Saw this exception:
@@ -16,7 +17,6 @@ diff -Nur net-snmp-0b32548.orig/python/netsnmp/client.py net-snmp-0b32548/python
 +            # Exception AttributeError: "'NoneType' object has no attribute 'delete_session'"
 +            # Add the exception handler here to catch this problem.
 +            pass
-+
- 
- import netsnmp
-         
+
+     def __str__(self):
+         return obj_to_str(self)

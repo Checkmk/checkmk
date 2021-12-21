@@ -1,0 +1,166 @@
+This patch mostly alters the API of the python binding.
+We *always* want to get bytes from the binding and not strings.
+Therefore we also omit the "is_hex" mechanism, introduced on mainline.
+
+--- a/python/netsnmp/client_intf.c       2022-02-03 15:49:46.029085166 +0100
++++ b/python/netsnmp/client_intf.c       2022-02-03 16:09:41.134284841 +0100
+@@ -2,12 +2,6 @@
+
+ #include <Python.h>
+
+-#if PY_VERSION_HEX < 0x02050000
+-typedef int Py_ssize_t;
+-#define PY_SSIZE_T_MAX INT_MAX
+-#define PY_SSIZE_T_MIN INT_MIN
+-#endif
+-
+ #include <net-snmp/net-snmp-config.h>
+ #include <net-snmp/net-snmp-includes.h>
+ #include <sys/types.h>
+@@ -894,6 +888,39 @@
+   return -1;
+ }
+
++static int
++py_netsnmp_attr_set_bytes(PyObject *obj, char *attr_name,
++         char *val, size_t len)
++{
++  int ret = -1;
++  if (obj && attr_name) {
++    PyObject* val_obj =  (val ?
++        PyBytes_FromStringAndSize(val, len) :
++        Py_BuildValue(""));
++    ret = PyObject_SetAttrString(obj, attr_name, val_obj);
++    Py_DECREF(val_obj);
++  }
++  return ret;
++}
++
++static int
++py_netsnmp_attr_bytes(PyObject *obj, char * attr_name, char **val,
++    Py_ssize_t *len)
++{
++  *val = NULL;
++  if (obj && attr_name && PyObject_HasAttrString(obj, attr_name)) {
++    PyObject *attr = PyObject_GetAttrString(obj, attr_name);
++    if (attr) {
++      int retval;
++      retval = PyBytes_AsStringAndSize(attr, val, len);
++      Py_DECREF(attr);
++      return retval;
++    }
++  }
++
++  return -1;
++}
++
+ /*
+  * Retrieve attribute @attr_name of @obj and return it as a long. Returns -1
+  * on error.
+@@ -1388,7 +1415,7 @@
+     *len = __snprint_value(str_buf, &str_buf_len, vars, tp, type,
+                            sprintval_flag);
+     (*str_buf)[*len] = '\0';
+-    py_netsnmp_attr_set_string(varbind, "val", *str_buf, *len);
++    py_netsnmp_attr_set_bytes(varbind, "val", *str_buf, *len);
+     return type;
+ }
+
+@@ -1554,11 +1580,8 @@
+               PyTuple_SetItem(val_tuple, varlist_ind,
+                               Py_BuildValue(""));
+           } else {
+-              const int hex = is_hex(str_buf, len);
+-
+               PyTuple_SetItem(val_tuple, varlist_ind,
+-                              Py_BuildValue(hex ? "y#" : "s#",
+-                                            str_buf, len));
++                              Py_BuildValue("y#", str_buf, len));
+           }
+           Py_DECREF(varbind);
+       } else {
+@@ -1572,6 +1595,14 @@
+ 		       NETSNMP_DS_LIB_OID_OUTPUT_FORMAT,
+ 		       old_format);
+
++    if (PyErr_Occurred()) {
++      /* propagate error */
++      if (verbose)
++        printf("error: get: unknown python error");
++      snmp_free_pdu(pdu);
++      goto done;
++    }
++
+     if (response)
+        snmp_free_pdu(response);
+   }
+@@ -1841,9 +1872,8 @@
+               if (varbind && build_python_varbind(varbind, vars, varlist_ind,
+                                        sprintval_flag, &len, &str_buf) !=
+                   TYPE_OTHER) {
+-                  const int hex = is_hex(str_buf, len);
+
+-                  py_netsnmp_attr_set_string(varbind, "val", str_buf, len);
++                  py_netsnmp_attr_set_bytes(varbind, "val", str_buf, len);
+
+                   /* push the varbind onto the return varbinds */
+                   PyList_Append(varbinds, varbind);
+@@ -1852,8 +1882,7 @@
+                   /* save in return tuple as well - steals ref */
+                   _PyTuple_Resize(&val_tuple, result_count+1);
+                   PyTuple_SetItem(val_tuple, result_count++,
+-                                  Py_BuildValue(hex ? "y#" : "s#", str_buf,
+-                                                len));
++                                  Py_BuildValue("y#", str_buf, len));
+               } else {
+                   /* Return None for this variable. */
+                   _PyTuple_Resize(&val_tuple, result_count+1);
+@@ -2066,7 +2095,6 @@
+
+           if (varbind && build_python_varbind(varbind, vars, varbind_ind,
+                               sprintval_flag, &len, &str_buf) != TYPE_OTHER) {
+-            const int hex = is_hex(str_buf, len);
+
+             /* push varbind onto varbinds */
+ 	    PyList_Append(varbinds, varbind);
+@@ -2074,7 +2102,7 @@
+ 	    /* save in return tuple as well - steals ref */
+ 	    _PyTuple_Resize(&val_tuple, varbind_ind+1);
+ 	    PyTuple_SetItem(val_tuple, varbind_ind,
+-                            Py_BuildValue(hex ? "y#" : "s#", str_buf, len));
++                            Py_BuildValue("y#", str_buf, len));
+
+ 	    Py_DECREF(varbind);
+
+@@ -2204,7 +2237,7 @@
+	  }
+	}
+
+-	if (py_netsnmp_attr_string(varbind, "val", &val, &tmplen) < 0) {
++	if (py_netsnmp_attr_bytes(varbind, "val", &val, &tmplen) < 0) {
+	  snmp_free_pdu(pdu);
+	  goto done;
+	}
+--- a/python/netsnmp/client.py      2022-02-03 15:05:47.049520547 +0100
++++ b/python/netsnmp/client.py   2022-02-03 15:06:37.793551045 +0100
+@@ -56,7 +56,7 @@
+     def __init__(self, tag=None, iid=None, val=None, type_arg=None):
+         self.tag = STR(tag)
+         self.iid = STR(iid)
+-        self.val = STR(val)
++        self.val = val
+         self.type = STR(type_arg)
+         # parse iid out of tag if needed
+         if iid is None and tag is not None:
+@@ -66,7 +66,10 @@
+                 (self.tag, self.iid) = match.group(1, 2)
+
+     def __setattr__(self, name, val):
+-        self.__dict__[name] = STR(val)
++        if name == 'val':
++            self.__dict__[name] = val
++        else:
++            self.__dict__[name] = STR(val)
+
+     def __str__(self):
+         return obj_to_str(self)

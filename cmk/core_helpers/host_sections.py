@@ -41,7 +41,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
             self.piggybacked_raw_data,
         )
 
-    def __add__(self, other: HostSections) -> HostSections:
+    def __add__(self, other: HostSections[TRawDataSection]) -> HostSections[TRawDataSection]:
         new_sections = copy.deepcopy(dict(self.sections))
         for section_name, section_content in other.sections.items():
             s = new_sections.get(section_name)
@@ -63,7 +63,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         new_cache_info = dict(self.cache_info)
         new_cache_info.update(other.cache_info)
 
-        return HostSections(
+        return HostSections[TRawDataSection](
             new_sections,
             cache_info=new_cache_info,
             piggybacked_raw_data=new_piggybacked_raw_data,

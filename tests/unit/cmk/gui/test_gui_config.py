@@ -434,6 +434,7 @@ def test_registered_permissions():
         "notification_plugin.ilert",
         "notification_plugin.slack",
         "notification_plugin.sms",
+        "notification_plugin.sms_ip",
         "notification_plugin.spectrum",
         "notification_plugin.victorops",
         "sidesnap.about",

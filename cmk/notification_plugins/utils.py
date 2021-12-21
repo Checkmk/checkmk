@@ -13,7 +13,7 @@ from email.utils import formataddr, formatdate
 from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 import requests
 
@@ -378,3 +378,49 @@ def process_by_result_map(
 
     sys.stderr.write(f"Details for Status Code are not defined\n{summary}\n")
     sys.exit(3)
+
+
+# TODO this will be used by the smstools and the sms via IP scripts later
+def get_sms_message_from_context(raw_context: Dict[str, str]) -> str:
+    notification_type = raw_context["NOTIFICATIONTYPE"]
+    max_len = 160
+    message = raw_context["HOSTNAME"] + " "
+    if raw_context["WHAT"] == "SERVICE":
+        if notification_type in ["PROBLEM", "RECOVERY"]:
+            message += raw_context["SERVICESTATE"][:2] + " "
+            avail_len = max_len - len(message)
+            message += raw_context["SERVICEDESC"][:avail_len] + " "
+            avail_len = max_len - len(message)
+            message += raw_context["SERVICEOUTPUT"][:avail_len]
+        else:
+            message += raw_context["SERVICEDESC"]
+    else:
+        if notification_type in ["PROBLEM", "RECOVERY"]:
+            message += "is " + raw_context["HOSTSTATE"]
+
+    if notification_type.startswith("FLAP"):
+        if "START" in notification_type:
+            message += " Started Flapping"
+        else:
+            message += " Stopped Flapping"
+
+    elif notification_type.startswith("DOWNTIME"):
+        what = notification_type[8:].title()
+        message += " Downtime " + what
+        message += " " + raw_context["NOTIFICATIONCOMMENT"]
+
+    elif notification_type == "ACKNOWLEDGEMENT":
+        message += " Acknowledged"
+        message += " " + raw_context["NOTIFICATIONCOMMENT"]
+
+    elif notification_type == "CUSTOM":
+        message += " Custom Notification"
+        message += " " + raw_context["NOTIFICATIONCOMMENT"]
+
+    return message
+
+
+def quote_message(message: str, max_length: Optional[int] = None):
+    if max_length:
+        return "'" + message.replace("'", "'\"'\"'")[: max_length - 2] + "'"
+    return "'" + message.replace("'", "'\"'\"'") + "'"

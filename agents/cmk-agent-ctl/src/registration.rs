@@ -6,7 +6,6 @@
 
 use super::{agent_receiver_api, certs, config};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use uuid::Uuid;
 
 struct InteractiveTrust {}
 
@@ -86,6 +85,27 @@ fn registration_server_cert(config: &config::RegistrationConfig) -> AnyhowResult
     }
 }
 
+pub fn pair(
+    config: &config::RegistrationConfig,
+) -> AnyhowResult<(String, String, agent_receiver_api::PairingResponse)> {
+    let uuid = uuid::Uuid::new_v4().to_string();
+    let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
+    Ok((
+        uuid,
+        private_key,
+        AgentRecvApi::pairing(
+            &config.agent_receiver_address,
+            registration_server_cert(config)?,
+            csr,
+            &config.credentials,
+        )
+        .context(format!(
+            "Error pairing with {}",
+            &config.agent_receiver_address
+        ))?,
+    ))
+}
+
 fn post_registration_conn_type(
     server: &str,
     root_cert: &str,
@@ -112,18 +132,7 @@ pub fn register(
     mut registry: config::Registry,
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
-    let uuid = Uuid::new_v4().to_string();
-    let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
-    let pairing_response = AgentRecvApi::pairing(
-        &config.agent_receiver_address,
-        registration_server_cert(&config)?,
-        csr,
-        &config.credentials,
-    )
-    .context(format!(
-        "Error pairing with {}",
-        &config.agent_receiver_address
-    ))?;
+    let (uuid, private_key, pairing_response) = pair(&config)?;
 
     match config.host_reg_data {
         config::HostRegistrationData::Name(hn) => {

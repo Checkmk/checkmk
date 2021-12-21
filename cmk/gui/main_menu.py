@@ -22,9 +22,9 @@ from cmk.utils.version import (
     is_free_edition,
 )
 
-from cmk.gui.globals import user
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.urls import manual_reference_url
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
@@ -88,7 +88,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="beginners_guide",
                     title=_("Beginner's guide"),
-                    url=user.get_docs_base_url() + "/intro_welcome.html",
+                    url=manual_reference_url("intro_welcome"),
                     target="_blank",
                     sort_index=10,
                     icon="learning_beginner",
@@ -96,7 +96,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="user_manual",
                     title=_("User manual"),
-                    url=user.get_docs_base_url(),
+                    url=manual_reference_url(),
                     target="_blank",
                     sort_index=20,
                     icon="learning_guide",
@@ -127,7 +127,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="plugin_api_introduction",
                     title=_("Check plugin API introduction"),
-                    url=user.get_docs_base_url() + "/devel_check_plugins.html",
+                    url=manual_reference_url("devel_check_plugins"),
                     target="_blank",
                     sort_index=10,
                     icon={
@@ -149,7 +149,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="rest_api_introduction",
                     title=_("REST API introduction"),
-                    url=user.get_docs_base_url() + "/rest_api.html",
+                    url=manual_reference_url("rest_api"),
                     target="_blank",
                     sort_index=30,
                     icon={

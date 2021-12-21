@@ -25,7 +25,12 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
+from cmk.gui.utils.urls import (
+    makeuri,
+    makeuri_contextless,
+    manual_reference_url,
+    requested_file_with_query,
+)
 
 
 def enable_page_menu_entry(name: str):
@@ -271,15 +276,12 @@ class PageMenu:
     def add_manual_reference(
         self, title: str, article_name: str, anchor_name: Optional[str] = None
     ) -> None:
-        anchor: str = "" if anchor_name is None else ("#" + anchor_name)
         help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
         help_dropdown.topics[1].entries.append(
             PageMenuEntry(
                 title=title,
                 icon_name="manual",
-                item=make_external_link(
-                    "%s/%s.html%s" % (user.get_docs_base_url(), article_name, anchor)
-                ),
+                item=make_external_link(manual_reference_url(article_name, anchor_name)),
             )
         )
 
@@ -360,7 +362,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                     PageMenuEntry(
                         title=_("The official Checkmk user guide"),
                         icon_name="manual",
-                        item=make_external_link(user.get_docs_base_url()),
+                        item=make_external_link(manual_reference_url()),
                     ),
                 ],
             ),

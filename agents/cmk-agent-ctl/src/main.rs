@@ -148,6 +148,12 @@ fn run_requested_mode(args: cli::Args) -> AnyhowResult<()> {
                 "Registration successful, but could not delete marker for legacy pull mode",
             )
         }
+        cli::Args::RegisterSurrogatePull(surr_pull_reg_args) => {
+            registration::register_surrogate_pull(config::RegistrationConfig::new(
+                stored_config,
+                surr_pull_reg_args,
+            )?)
+        }
         cli::Args::Push { .. } => push(registry),
         cli::Args::Pull { .. } => pull::pull(&registry, &constants::legacy_pull_path()),
         cli::Args::Dump { .. } => dump::dump(),

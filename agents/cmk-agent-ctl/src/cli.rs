@@ -43,6 +43,9 @@ pub enum Args {
     #[structopt(about = "Register with a Checkmk instance for monitoring")]
     Register(RegistrationArgs),
 
+    #[structopt(about = "Surrogate registration for hosts which cannot register themselves")]
+    RegisterSurrogatePull(RegistrationArgs),
+
     #[structopt(
         about = "Push monitoring data to all Checkmk instances where this host is registered"
     )]

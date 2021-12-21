@@ -4,6 +4,8 @@
 
 use std::path::{Path, PathBuf};
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[cfg(unix)]
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 

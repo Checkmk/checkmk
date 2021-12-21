@@ -4,7 +4,7 @@
 
 #![cfg_attr(test, allow(dead_code))]
 
-use super::{agent_receiver_api, certs, config};
+use super::{agent_receiver_api, certs, config, constants};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
 struct InteractiveTrust {}
@@ -181,6 +181,50 @@ pub fn register(
 
     registry.save()?;
 
+    Ok(())
+}
+
+#[derive(serde::Serialize)]
+struct SurrogatePullData {
+    agent_controller_version: String,
+    connection: config::Connection,
+}
+
+pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResult<()> {
+    let hn = match &config.host_reg_data {
+        config::HostRegistrationData::Name(hn) => hn,
+        _ => {
+            return Err(anyhow!(
+                "Surrogate pull registration does not support registration with agent labels"
+            ))
+        }
+    };
+    let (uuid, private_key, pairing_response) = pair(&config)?;
+
+    AgentRecvApi::register_with_hostname(
+        &config.agent_receiver_address,
+        &pairing_response.root_cert,
+        &config.credentials,
+        &uuid,
+        hn,
+    )
+    .context(format!(
+        "Error registering with hostname at {}",
+        &config.agent_receiver_address
+    ))?;
+
+    println!(
+        "{}",
+        serde_json::to_string(&SurrogatePullData {
+            agent_controller_version: String::from(constants::VERSION),
+            connection: config::Connection {
+                uuid,
+                private_key,
+                certificate: pairing_response.client_cert,
+                root_cert: pairing_response.root_cert,
+            }
+        })?
+    );
     Ok(())
 }
 
@@ -413,6 +457,40 @@ mod tests {
             .is_ok());
             assert!(!registry.is_empty());
             assert!(registry.path().exists());
+        }
+    }
+
+    mod test_register_surrogate_pull {
+        use super::*;
+
+        #[test]
+        fn test_host_name() {
+            let _m = MUTEX.lock().unwrap();
+
+            let pairing_ctx = AgentRecvApi::pairing_context();
+            let register_with_hostname_ctx = AgentRecvApi::register_with_hostname_context();
+            pairing_ctx
+                .expect()
+                .times(1)
+                .returning(pairing_expect_no_root_cert);
+            register_with_hostname_ctx
+                .expect()
+                .times(1)
+                .returning(|_, _, _, _, _| Ok(()));
+
+            assert!(register_surrogate_pull(registration_config(
+                None,
+                config::HostRegistrationData::Name(String::from("host")),
+                true,
+            ))
+            .is_ok());
+        }
+
+        #[test]
+        fn test_agent_labels() {
+            assert!(
+                register_surrogate_pull(registration_config(None, agent_labels(), true,)).is_err()
+            );
         }
     }
 }

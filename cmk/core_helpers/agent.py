@@ -129,7 +129,7 @@ class AgentFetcher(Fetcher[AgentRawData]):
 AgentHostSections = HostSections[AgentRawDataSection]
 
 MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]
-ImmutableSection = Mapping[SectionMarker, List[AgentRawData]]
+ImmutableSection = Mapping[SectionMarker, Sequence[AgentRawData]]
 
 
 class ParserState(abc.ABC):

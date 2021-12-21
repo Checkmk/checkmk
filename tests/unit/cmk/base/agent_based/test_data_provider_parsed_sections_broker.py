@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Callable, Iterable, List, Mapping
+from typing import Callable, Iterable, Mapping, Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -73,12 +73,12 @@ SECTION_FOUR = _test_section(
     supersedes={"one"},
 )
 
-NODE_1: List[AgentRawDataSection] = [
+NODE_1: Sequence[AgentRawDataSection] = [
     ["node1", "data 1"],
     ["node1", "data 2"],
 ]
 
-NODE_2: List[AgentRawDataSection] = [
+NODE_2: Sequence[AgentRawDataSection] = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]

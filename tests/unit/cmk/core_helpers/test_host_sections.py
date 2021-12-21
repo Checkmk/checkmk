@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
+from typing import Sequence
 
 import pytest
 
@@ -17,7 +17,7 @@ from cmk.core_helpers.type_defs import AgentRawDataSection
 class TestHostSections:
     @pytest.fixture
     def host_sections(self):
-        return HostSections[List[AgentRawDataSection]](
+        return HostSections[Sequence[AgentRawDataSection]](
             {
                 SectionName("section0"): [["first", "line"], ["second", "line"]],
                 SectionName("section1"): [["third", "line"], ["forth", "line"]],
@@ -49,7 +49,7 @@ class TestHostSections:
             )
 
     def test_add_other_adds_sections(self, host_sections):
-        other = HostSections[List[AgentRawDataSection]](
+        other = HostSections[Sequence[AgentRawDataSection]](
             {
                 SectionName("section2"): [["first", "line"], ["second", "line"]],
                 SectionName("section3"): [["third", "line"], ["forth", "line"]],

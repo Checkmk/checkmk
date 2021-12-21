@@ -7,7 +7,7 @@
 import copy
 import json
 import logging
-from typing import List
+from typing import Sequence
 
 from cmk.utils.type_defs import SectionName
 
@@ -30,9 +30,9 @@ class MockStore:
 class TestPersistedSections:
     def test_from_sections(self):
         section_a = SectionName("section_a")
-        content_a: List[AgentRawDataSection] = [["first", "line"], ["second", "line"]]
+        content_a: Sequence[AgentRawDataSection] = [["first", "line"], ["second", "line"]]
         section_b = SectionName("section_b")
-        content_b: List[AgentRawDataSection] = [["third", "line"], ["forth", "line"]]
+        content_b: Sequence[AgentRawDataSection] = [["third", "line"], ["forth", "line"]]
         sections = {section_a: content_a, section_b: content_b}
         cached_at = 69
         fetch_interval = 42

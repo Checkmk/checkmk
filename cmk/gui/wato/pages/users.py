@@ -677,6 +677,9 @@ class ModeEditUser(WatoMode):
         # Full name
         user_attrs["alias"] = request.get_unicode_input_mandatory("alias").strip()
 
+        # Connector
+        user_attrs["connector"] = self._user.get("connector")
+
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False

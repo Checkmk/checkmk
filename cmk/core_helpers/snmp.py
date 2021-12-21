@@ -443,14 +443,14 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             return None
 
         cache_info: MutableMapping[SectionName, Tuple[int, int]] = {}
-        self.section_store.update_and_mutate(
+        new_sections = self.section_store.update(
             sections,
             cache_info,
             lookup_persist,
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return SNMPHostSections(sections, cache_info=cache_info)
+        return SNMPHostSections(new_sections, cache_info=cache_info)
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):

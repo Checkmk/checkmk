@@ -593,7 +593,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 return now, until
             return None
 
-        self.section_store.update_and_mutate(
+        new_sections = self.section_store.update(
             sections,
             cache_info,
             lookup_persist,
@@ -601,7 +601,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             keep_outdated=self.keep_outdated,
         )
         return AgentHostSections(
-            sections,
+            new_sections,
             cache_info=cache_info,
             piggybacked_raw_data=piggybacked_raw_data,
         )

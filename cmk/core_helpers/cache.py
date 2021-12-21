@@ -179,21 +179,21 @@ class SectionStore(Generic[TRawDataSection]):
             {SectionName(k): v for k, v in raw_sections_data.items()}
         )
 
-    def update_and_mutate(
+    def update(
         self,
-        sections: MutableMapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, TRawDataSection],
         cache_info: MutableMapping[SectionName, Tuple[int, int]],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
         now: int,
         keep_outdated: bool,
-    ):
+    ) -> Mapping[SectionName, TRawDataSection]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
             now=now,
             keep_outdated=keep_outdated,
         )
-        self._add_persisted_sections(
+        return self._add_persisted_sections(
             sections,
             cache_info,
             persisted_sections,
@@ -228,10 +228,10 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _add_persisted_sections(
         self,
-        sections: MutableMapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, TRawDataSection],
         cache_info: MutableMapping[SectionName, Tuple[int, int]],
         persisted_sections: PersistedSections[TRawDataSection],
-    ) -> None:
+    ) -> Mapping[SectionName, TRawDataSection]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)
@@ -239,6 +239,7 @@ class SectionStore(Generic[TRawDataSection]):
                 if section_name not in sections
             }
         )
+        result: MutableMapping[SectionName, TRawDataSection] = dict(sections.items())
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format
@@ -252,7 +253,8 @@ class SectionStore(Generic[TRawDataSection]):
                 continue
 
             self._logger.debug("Using persisted section %r", section_name)
-            sections[section_name] = entry[-1]
+            result[section_name] = entry[-1]
+        return result
 
 
 TFileCache = TypeVar("TFileCache", bound="FileCache")

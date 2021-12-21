@@ -52,23 +52,23 @@ def run_pylint(base_path, check_files):
 
     pylint_cfg = repo_path() + "/.pylintrc"
 
-    cmd = (
-        [
-            "python",
-            "-m",
-            "pylint",
-            "--rcfile",
-            pylint_cfg,
-            "--jobs=%d" % num_jobs_to_use(),
-        ]
-        + pylint_args
-        + check_files
-    )
+    cmd = [
+        "python",
+        "-m",
+        "pylint",
+        "--rcfile",
+        pylint_cfg,
+        "--jobs=%d" % num_jobs_to_use(),
+    ]
+    files = pylint_args + check_files
 
-    print("Running pylint in '%s' with: %s" % (base_path, subprocess.list2cmdline(cmd)))
-    p = subprocess.Popen(cmd, shell=False, cwd=base_path)
+    print(
+        f"Running pylint in '{base_path}' with: {subprocess.list2cmdline(cmd)}"
+        f" [{len(files)} files omitted]"
+    )
+    p = subprocess.Popen(cmd + files, shell=False, cwd=base_path)
     exit_code = p.wait()
-    print("Finished with exit code: %d" % exit_code)
+    print(f"Finished with exit code: {exit_code}")
 
     return exit_code
 

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Sequence, Set
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
@@ -195,7 +195,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         host_config = config.HostConfig.make_host_config(self.hostname)
         return SNMPParser(
             self.hostname,
-            SectionStore[SNMPRawDataSection](
+            SectionStore[Sequence[SNMPRawDataSection]](
                 self.persisted_sections_file_path,
                 logger=self._logger,
             ),

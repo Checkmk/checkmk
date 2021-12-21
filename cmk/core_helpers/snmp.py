@@ -55,7 +55,7 @@ __all__ = [
     "SNMPSummarizer",
 ]
 
-SNMPHostSections = HostSections[SNMPRawDataSection]
+SNMPHostSections = HostSections[Sequence[SNMPRawDataSection]]
 
 
 class SNMPPluginStoreItem(NamedTuple):
@@ -191,7 +191,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
-        self._section_store = SectionStore[SNMPRawDataSection](
+        self._section_store = SectionStore[Sequence[SNMPRawDataSection]](
             section_store_path,
             logger=self._logger,
         )
@@ -343,7 +343,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         persisted_sections = (
             self._section_store.load()
             if mode is Mode.CHECKING
-            else PersistedSections[SNMPRawDataSection]({})
+            else PersistedSections[Sequence[SNMPRawDataSection]]({})
         )
         section_names = self._get_selection(mode)
         section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
@@ -362,7 +362,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                 ),
             )
 
-        fetched_data: MutableMapping[SectionName, SNMPRawDataSection] = {}
+        fetched_data: MutableMapping[SectionName, Sequence[SNMPRawDataSection]] = {}
         for section_name in self._sort_section_names(section_names):
             try:
                 _from, until, _section = persisted_sections[section_name]
@@ -413,7 +413,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[SNMPRawDataSection],
+        section_store: SectionStore[Sequence[SNMPRawDataSection]],
         *,
         check_intervals: Mapping[SectionName, Optional[int]],
         keep_outdated: bool,

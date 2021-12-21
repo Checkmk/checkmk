@@ -11,6 +11,7 @@ import itertools
 import logging
 import time
 from collections import defaultdict
+from typing import Sequence
 
 import pytest
 
@@ -888,7 +889,7 @@ class TestSNMPPersistedSectionHandling:
     def test_update_with_empty_store_and_persisted(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[SNMPRawDataSection]({}),
+            PersistedSections[Sequence[SNMPRawDataSection]]({}),
             logger=logger,
         )
         raw_data: SNMPRawData = {}
@@ -909,7 +910,7 @@ class TestSNMPPersistedSectionHandling:
     def test_update_with_empty_persisted(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[SNMPRawDataSection](
+            PersistedSections[Sequence[SNMPRawDataSection]](
                 {
                     SectionName("stored"): (0, 0, [["old"]]),
                 }
@@ -936,10 +937,10 @@ class TestSNMPPersistedSectionHandling:
     def test_update_with_empty_store(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[SNMPRawDataSection]({}),
+            PersistedSections[Sequence[SNMPRawDataSection]]({}),
             logger=logger,
         )
-        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        _new: Sequence[SNMPRawDataSection] = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
             HostName("testhost"),
@@ -958,14 +959,14 @@ class TestSNMPPersistedSectionHandling:
     def test_update_with_persisted_and_store(self, logger):
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[SNMPRawDataSection](
+            PersistedSections[Sequence[SNMPRawDataSection]](
                 {
                     SectionName("stored"): (0, 0, [["old"]]),
                 }
             ),
             logger=logger,
         )
-        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        _new: Sequence[SNMPRawDataSection] = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
             HostName("testhost"),
@@ -991,14 +992,14 @@ class TestSNMPPersistedSectionHandling:
 
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[SNMPRawDataSection](
+            PersistedSections[Sequence[SNMPRawDataSection]](
                 {
                     SectionName("section"): (0, 0, [["old"]]),
                 }
             ),
             logger=logger,
         )
-        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        _new: Sequence[SNMPRawDataSection] = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("section"): _new}
         parser = SNMPParser(
             HostName("testhost"),
@@ -1011,7 +1012,7 @@ class TestSNMPPersistedSectionHandling:
         assert shs.sections == {SectionName("section"): [["new"]]}
         assert shs.cache_info == {}
         assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == PersistedSections[SNMPRawDataSection](
+        assert section_store.load() == PersistedSections[Sequence[SNMPRawDataSection]](
             {
                 SectionName("section"): (1000, 1042, [["new"]]),
             }
@@ -1022,7 +1023,7 @@ class TestSNMPPersistedSectionHandling:
 
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[SNMPRawDataSection](
+            PersistedSections[Sequence[SNMPRawDataSection]](
                 {
                     SectionName("section"): (500, 600, [["old"]]),
                 }
@@ -1047,7 +1048,7 @@ class TestSNMPPersistedSectionHandling:
 
         section_store = MockStore(
             "/dev/null",
-            PersistedSections[SNMPRawDataSection](
+            PersistedSections[Sequence[SNMPRawDataSection]](
                 {
                     SectionName("section"): (500, 600, [["old"]]),
                 }
@@ -1067,7 +1068,7 @@ class TestSNMPPersistedSectionHandling:
             SectionName("section"): (500, 100),
         }
         assert shs.piggybacked_raw_data == {}
-        assert not section_store.load() == PersistedSections[SNMPRawDataSection](
+        assert not section_store.load() == PersistedSections[Sequence[SNMPRawDataSection]](
             {
                 SectionName("section"): (1000, 1042, [["old"]]),
             }

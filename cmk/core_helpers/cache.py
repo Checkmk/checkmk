@@ -64,6 +64,7 @@ from typing import (
     MutableMapping,
     NamedTuple,
     Optional,
+    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -91,7 +92,7 @@ __all__ = [
 
 # ABCRawDataSection is wrong from a typing point of view.
 # AgentRawDataSection and SNMPRawDataSection are not correct either.
-ABCRawDataSection = Union[AgentRawDataSection, SNMPRawDataSection]
+ABCRawDataSection = Union[AgentRawDataSection, Sequence[SNMPRawDataSection]]
 TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 

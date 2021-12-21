@@ -39,9 +39,9 @@ SNMPDecodedString = str
 SNMPDecodedBinary = Sequence[int]
 SNMPDecodedValues = Union[SNMPDecodedString, SNMPDecodedBinary]
 SNMPValueEncoding = Literal["string", "binary"]
-SNMPTable = Sequence[Sequence[SNMPDecodedValues]]
+SNMPTable = Sequence[SNMPDecodedValues]
 SNMPContext = Optional[str]
-SNMPRawDataSection = Union[SNMPTable, Sequence[SNMPTable]]
+SNMPRawDataSection = Sequence[Union[SNMPTable, Sequence[SNMPTable]]]
 # The SNMPRawData type is not useful.  See comments to `AgentRawDataSection`.
 #
 #     **WE DO NOT WANT `NewType` HERE** because this prevents us to
